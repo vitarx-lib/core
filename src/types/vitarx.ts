@@ -1,7 +1,7 @@
 import { Fragment as VFragment } from '../index'
 import { Widget } from '../core/widgets'
 import HtmlIntrinsicElements from './html-elements'
-import type { IS_PLAIN_PROXY_SYMBOL, IS_PROXY_SYMBOL } from '../core/proxy/proxy.js'
+import type { IS_PLAIN_PROXY_SYMBOL, IS_PROXY_SYMBOL } from '../core/responsive/proxy.js'
 
 declare global {
   /**

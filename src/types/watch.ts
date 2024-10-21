@@ -1,4 +1,4 @@
-import type { IS_PLAIN_PROXY_SYMBOL, IS_PROXY_SYMBOL } from '../core/proxy/proxy.js'
+import type { IS_PLAIN_PROXY_SYMBOL, IS_PROXY_SYMBOL } from '../core/responsive/proxy.js'
 // 提取函数源返回值类型
 type ExtractArraySourceType<T, D, P = true> = ExtractRefType<
   T,
