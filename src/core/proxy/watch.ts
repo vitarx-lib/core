@@ -234,7 +234,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
         try {
           delete item[WATCH_INDEX]
         } catch (e) {
-          console.error(e)
+          console.error('Vitarx.watch.error', e)
         }
       })
       // @ts-ignore
