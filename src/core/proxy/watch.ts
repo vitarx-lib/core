@@ -149,7 +149,7 @@ export class VariableObservers<T> {
     if (index.length === 0) {
       return CHANGE_EVENT_SYMBOL
     } else {
-      return index.join('.')
+      return index.map((item) => item.toString()).join('.')
     }
   }
 }
@@ -233,7 +233,9 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
       refs.forEach((item) => {
         try {
           delete item[WATCH_INDEX]
-        } catch (e) {}
+        } catch (e) {
+          console.error(e)
+        }
       })
       // @ts-ignore
       refs = undefined
