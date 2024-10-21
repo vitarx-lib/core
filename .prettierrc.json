@@ -6,7 +6,7 @@
   "semi": false,
   "endOfLine": "auto",
   "quoteProps": "as-needed",
-  "jsxSingleQuote": true,
+  "jsxSingleQuote": false,
   "trailingComma": "none",
   "bracketSameLine": false,
   "arrowParens": "always",

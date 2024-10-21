@@ -1,3 +1,5 @@
-import deepClone from './deepClone.js'
-
-export { deepClone }
+export * from './clone.js'
+export * from './detect.js'
+export * from './diff.js'
+export * from './conversion.js'
+export * from './uuid.js'

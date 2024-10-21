@@ -1,4 +1,9 @@
-function deepClone<T>(obj: T): T {
+/**
+ * 深拷贝
+ *
+ * @param obj
+ */
+export function deepClone<T>(obj: T): T {
   // 如果是 null 或者基本数据类型，直接返回
   if (obj === null || typeof obj !== 'object') {
     return obj
@@ -16,5 +21,3 @@ function deepClone<T>(obj: T): T {
   }
   return clonedObj as T // 返回克隆的对象，使用类型断言
 }
-
-export default deepClone
