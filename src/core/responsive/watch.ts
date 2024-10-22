@@ -2,25 +2,7 @@ import { Listener, Observers } from './observer.js'
 import { getProxyIndex, isPlainProxy, isProxy } from './proxy.js'
 import { getIndexValue, isArray, isFunction } from '../utils'
 import { Dep } from './track-dependencies'
-import { ChangeIndex, ChangeValue } from '../../types/watch'
-// 任意函数
-type AnyFunction = (...args: any[]) => any
-// 索引类型
-type WatchIndex = Array<string | symbol | number>
-/**
- * 回调函数类型
- *
- * @template T - 监听的目标
- * @param newValue - 新值
- * @param oldValue - 旧值
- * @param index - 当同时监听多个源时返回索引
- */
-export type WatchCallback<T> = (
-  newValue: ChangeValue<T>,
-  oldValue: ChangeValue<T>,
-  index: ChangeIndex<T>,
-  source: Vitarx.PlainProxy<any> | Vitarx.ObjectProxy<object>
-) => void
+import { AnyFunction, WatchCallback, WatchIndex } from '../../types/watch'
 // 事件标识
 const CHANGE_EVENT_SYMBOL = Symbol('VITARX_PROXY_CHANGE_EVENT_SYMBOL')
 // 监听器标识
@@ -214,7 +196,7 @@ export function getWatcher<T extends object>(proxy: T): VariableObservers<T> {
  *
  * @template T 任意类型，但不能是异步函数
  * @template C 回调函数类型
- * @param {T} source - 监听源，可以是对象、数组、函数
+ * @param {T} source - 监听源，可以是`对象`、`数组`、{@link watchFunc `函数`}
  * @param {C} callback - 回调函数
  * @param limit - 限制触发次数,默认为0，表示不限制触发次数
  */
@@ -224,7 +206,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
   limit: number = 0
 ): Listener<C> | undefined {
   if (isFunction(source)) {
-    return watchFuncDep(source as AnyFunction, callback as any, limit) as Listener<C>
+    return watchReturnSource(source as AnyFunction, callback as any, limit) as Listener<C>
   }
   if (isProxy(source)) {
     return getWatcher(source as object).register([], callback, limit)
@@ -278,15 +260,47 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
       listener = undefined
     }
   }
+  console.warn('Vitarx.watch方法只能监听通过ref方法创建的响应式变量，请勿用于监听普通变量。')
   return undefined
 }
 
 /**
- * 监听函数依赖
+ * ## 监听一次变化。
+ *
+ * 该方法是{@link watch watch()}的一个快捷方法，只会触发一次回调函数，触发后销毁监听器。
  *
  * @see watch
  */
-export function watchFuncDep<T extends AnyFunction, C extends AnyFunction = WatchCallback<T>>(
+export function watchOnce<T, C extends AnyFunction = WatchCallback<T>>(
+  source: T,
+  callback: C
+): Listener<C> | undefined {
+  return watch(source, callback, 1)
+}
+
+/**
+ * ## 监听函数返回值
+ *
+ * 该方法是{@link watch watch()}方法的一个分支，和调用`watch(source: ()=>any,...)`是一样的效果。
+ *
+ * 函数返回值可以是：
+ * * 包含多个响应式对象的数组，例如：`[refObject1,refObject2,...]`
+ * * 包含多个响应式对象属性的数组，例如：`[refObject1.key1,refObject1.key2,...]`|`[refObject1.key,refObject2.key,...]`
+ * * 单个响应式对象，例如：`refObject`
+ * * 单个响应式对象属性，例如：`refObject.key`
+ *
+ * > **注意**：如果该方法的返回值不包含响应式对象，则会使用`watchDep`方法监听其依赖，
+ * 例如`()=>refObject.key`这样的反回值不是响应式对象而是对象的属性值，则等于是调用的{@link watchDep watchDep()}。
+ *
+ * @template T - 函数类型
+ * @template C - 回调函数类型
+ * @param fn - 要监听的函数
+ * @param callback - 回调函数
+ * @param limit - 限制触发次数,默认为0，表示不限制触发次数
+ * @returns {Listener<C> | undefined} - 返回监听器，如果返回值是undefined，则表示监听失败
+ * @see watch
+ */
+export function watchReturnSource<T extends AnyFunction, C extends AnyFunction = WatchCallback<T>>(
   fn: T,
   callback: C,
   limit: number = 0
@@ -304,10 +318,30 @@ export function watchFuncDep<T extends AnyFunction, C extends AnyFunction = Watc
       return watch(source, callback, limit)
     }
   }
-  // 收集函数依赖的响应对象，并返回监听器，建议使用方式是监听对象的某些属性变化使用，其他使用方式亦可但是index无法定位准确
+  return watchDep(fn, callback, limit) as Listener<C>
+}
+
+/**
+ * ## 监听函数`依赖`
+ *
+ * `依赖`代表函数内部调用的`响应式`变量。
+ *
+ * @template T - 函数类型
+ * @template C - 回调函数类型
+ * @param {T} fn - 要解析依赖的函数
+ * @param {C} callback - 回调函数，可选的，如果不传则使用`fn`做为回调函数。
+ * @param {number} limit - 限制触发次数,默认为0，表示不限制触发次数
+ * @returns {Listener<C | T> | undefined} - 返回监听器，如果返回值是undefined，则表示没有任何`依赖`。
+ */
+export function watchDep<T extends AnyFunction, C extends AnyFunction>(
+  fn: T,
+  callback?: C,
+  limit: number = 0
+): Listener<C | T> | undefined {
+  // 收集函数依赖的响应对象
   const deps = Dep.collect(fn)
   if (deps.size > 0) {
-    const listener = new Listener(callback, limit)
+    const listener = new Listener(callback || fn, limit)
     for (const [proxy, keys] of deps) {
       const watcher = getWatcher(proxy)
       if (keys.has(undefined)) {
@@ -321,6 +355,5 @@ export function watchFuncDep<T extends AnyFunction, C extends AnyFunction = Watc
     }
     return listener
   }
-  console.warn('Vitarx.watch方法只能监听通过ref方法创建的响应式变量，请勿用于监听普通变量。')
   return undefined
 }
