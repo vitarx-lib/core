@@ -1,7 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
 type VoidCallback = () => void
-type EventName = string | number | symbol
 export type AnyCallback = (...args: any) => any
 
 /**
@@ -87,7 +86,7 @@ export class Listener<C extends AnyCallback> {
    *
    * 调用此方法会将监听器标记为弃用状态，并触发销毁回调。
    */
-  destroyed(): void {
+  destroy(): void {
     // 放入宏任务中执行，防止微任务中执行
     setTimeout(() => {
       if (!this.#isDispose) {
@@ -141,7 +140,7 @@ export class Listener<C extends AnyCallback> {
       this.#count++
       // 判断是否已达到预期的监听次数
       if (this.#limit != 0 && this.#count >= this.#limit) {
-        this.destroyed()
+        this.destroy()
         return false
       }
       return true
@@ -186,7 +185,7 @@ export class Listener<C extends AnyCallback> {
 /**
  * 观察者管理器
  */
-export class Observers<E extends EventName = EventName> {
+export class Observers<E> {
   #listeners: Map<E, Listener<AnyCallback>[]> = new Map()
 
   /**
@@ -241,7 +240,7 @@ export class Observers<E extends EventName = EventName> {
         listeners.forEach((listener) => {
           const isDispose = listener.trigger(params)
           if (dispose && isDispose) {
-            listener.destroyed()
+            listener.destroy()
           }
         })
       }
