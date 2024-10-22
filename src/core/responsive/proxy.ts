@@ -67,6 +67,12 @@ function toRefObject<T>(target: T, index: Index = []) {
     Object.defineProperty(source, IS_PLAIN_PROXY_SYMBOL, {
       value: true
     })
+    // 调整toString方法
+    Object.defineProperty(source, 'toString', {
+      value: function () {
+        return this.value.toString()
+      }
+    })
   }
   // 标识为代理对象
   Object.defineProperty(source, IS_PROXY_SYMBOL, {
@@ -117,13 +123,15 @@ function createProxy<T>(
           result = proxy as any
         }
       }
-      // 如果为基本类型或访问的不是对象自身属性则不记录依赖依赖的属性
-      if (plainProxy || !target.hasOwnProperty(prop)) {
-        // 追踪对象引用记录
-        Dep.track(target)
-      } else {
-        // 追踪对象属性引用记录
-        Dep.track(target, formatKey(target, prop))
+      if (target.hasOwnProperty(prop)) {
+        // 基本类型代理，跟踪整个对象的变更
+        if (plainProxy) {
+          // 追踪对象引用记录
+          Dep.track(target)
+        } else {
+          // 追踪对象属性引用记录
+          Dep.track(target, formatKey(target, prop))
+        }
       }
       return result
     },
