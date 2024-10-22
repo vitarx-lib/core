@@ -49,27 +49,20 @@ export class VariableObservers<T> {
     let lastIndex: any
     // change事件冒泡
     while (index.length) {
-      if (index.length > 0) lastIndex = index.pop()
+      lastIndex = index[index.length - 1]
       this.#pushTrigger(index, [
         getIndexValue(newValue, index),
         getIndexValue(oldValue, index),
         lastIndex,
         newValue
       ])
+      index.pop()
     }
-    // 默认事件，根对象变化事件
-    if (this.#observers.hasEvent(CHANGE_EVENT_SYMBOL)) {
-      // 如果是普通类型代理对象，则使用value做为change的值
-      let params = isPlainProxy(newValue)
-        ? [
-            (newValue as Vitarx.PlainProxy<any>).value,
-            (oldValue as Vitarx.PlainProxy<any>).value,
-            lastIndex,
-            newValue
-          ]
-        : [newValue, oldValue, lastIndex, newValue]
-      this.#pushTrigger(CHANGE_EVENT_SYMBOL, params)
-    }
+    // 如果是普通类型代理对象，则使用value做为change的值
+    let params = isPlainProxy(newValue)
+      ? [(newValue as any).value, (oldValue as any).value, lastIndex, newValue]
+      : [newValue, oldValue, lastIndex, newValue]
+    this.#pushTrigger(CHANGE_EVENT_SYMBOL, params)
   }
 
   /**
@@ -100,6 +93,13 @@ export class VariableObservers<T> {
     }
   }
 
+  /**
+   * 推送触发事件到队列或立即触发
+   *
+   * @param event
+   * @param params
+   * @private
+   */
   #pushTrigger(event: EventName, params: any[]) {
     if (this.#notBatchHandleObservers.hasEvent(event)) {
       this.#notBatchHandleObservers.trigger(event, params)
@@ -247,7 +247,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
           configurable: true
         })
         const watcher = withWatcher(item)
-        watcher.register([], listener)
+        watcher.register([], listener, options)
       }
     })
     if (refs.length) {
@@ -344,7 +344,7 @@ export function watchDep<T extends AnyFunction, C extends AnyFunction>(
     for (const [proxy, keys] of deps) {
       const watcher = withWatcher(proxy)
       if (keys.has(undefined)) {
-        watcher.register([], listener)
+        watcher.register([], listener, options)
       } else {
         const rootIndex = getProxyIndex(proxy)!
         const index: WatchIndex[] = []
