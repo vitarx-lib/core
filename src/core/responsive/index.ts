@@ -1,2 +1,2 @@
 export { ref, isProxy, isPlainProxy } from './proxy.js'
-export { watch, watchFuncDep } from './watch.js'
+export { watch, watchReturnSource, watchDep, watchOnce } from './watch.js'
