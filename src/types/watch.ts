@@ -36,3 +36,29 @@ export type ChangeIndex<T> = ExtractRefIndexType<
   T,
   ExtractFnIndexType<T, ExtractArrayIndexType<T, string | number | symbol>>
 >
+
+// 任意函数
+export type AnyFunction = (...args: any[]) => any
+// 索引类型
+export type WatchIndex = Array<string | symbol | number>
+/**
+ * 回调函数类型
+ *
+ * @template T - 监听的目标
+ * @template V - 回调函数类型
+ * @template I - 变更的键或索引
+ * @param {V} newValue - 新值
+ * @param {V} oldValue - 旧值
+ * @param {I} index - 变更的键或索引，当同时监听多个不同源对象时会是number类型，表示其在数组中的索引
+ * @param {Vitarx.PlainProxy<any> | Vitarx.ObjectProxy<object>} source - 源对象
+ */
+export type WatchCallback<
+  T,
+  V = ChangeValue<T>,
+  I extends number | string | symbol = ChangeIndex<T>
+> = (
+  newValue: V,
+  oldValue: V,
+  index: I,
+  source: Vitarx.PlainProxy<any> | Vitarx.ObjectProxy<object>
+) => void
