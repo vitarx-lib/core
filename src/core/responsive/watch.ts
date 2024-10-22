@@ -53,6 +53,18 @@ export class VariableObservers<T> {
     // 默认事件，根对象变化事件
     if (this.#observers.hasEvent(CHANGE_EVENT_SYMBOL)) {
       if (isPlainProxy(newValue)) {
+        // 兼容value改变事件
+        if (this.#observers.hasEvent('value')) {
+          this.#triggerQueue.push({
+            event: 'value',
+            params: [
+              (newValue as Vitarx.PlainProxy<any>).value,
+              (oldValue as Vitarx.PlainProxy<any>).value,
+              lastIndex,
+              newValue
+            ]
+          })
+        }
         // 普通代理对象，使用.value做为被更改的值
         this.#triggerQueue.push({
           event: CHANGE_EVENT_SYMBOL,
