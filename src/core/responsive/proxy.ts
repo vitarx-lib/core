@@ -1,5 +1,5 @@
 import { deepClone, diffIndex, isArray, isObject, isString, numStrToNum } from '../utils'
-import { getWatcher, WATCHER_TAG_SYMBOL } from './watch.js'
+import { WATCHER_TAG_SYMBOL, withWatcher } from './watch.js'
 import { Dep } from './track-dependencies.js'
 // 代理标识符
 export const IS_PROXY_SYMBOL = Symbol('VITARX_IS_PROXY_SYMBOL')
@@ -101,7 +101,7 @@ function createProxy<T>(
   const source = toRefObject(target, index)
   if (!root) {
     root = source
-    getWatcher(root)
+    withWatcher(root)
   }
   // 判断是否为值代理
   const plainProxy = isPlainProxy(source)
@@ -109,7 +109,7 @@ function createProxy<T>(
   return new Proxy(source, {
     get(target, prop, receiver): any {
       // 观察者管理器
-      if (prop === WATCHER_TAG_SYMBOL) return getWatcher(root)
+      if (prop === WATCHER_TAG_SYMBOL) return withWatcher(root)
       let result = Reflect.get(target, prop, receiver)
       // 获取索引直接返回值
       if (prop === IS_PROXY_SYMBOL || prop === IS_PLAIN_PROXY_SYMBOL) return result
@@ -140,7 +140,7 @@ function createProxy<T>(
         const oldRoot = deepClone(root)
         const result = Reflect.set(target, key, value, receiver)
         if (result) {
-          getWatcher(root).trigger(events, root, oldRoot)
+          withWatcher(root).trigger(events, root, oldRoot)
         }
         return result
       }
@@ -166,7 +166,7 @@ function createProxy<T>(
       if (result) {
         const change = plainProxy ? root.value : root
         if (isRef) {
-          const observers = getWatcher(root)
+          const observers = withWatcher(root)
           if (observers) {
             // 代理对象被删除触发代理对象变更的所有事件
             diffIndex(delData, {}).forEach((item) => {
@@ -174,7 +174,7 @@ function createProxy<T>(
             })
           }
         } else {
-          getWatcher(root).trigger([...index, formatKey(target, prop)], change, oldRoot)
+          withWatcher(root).trigger([...index, formatKey(target, prop)], change, oldRoot)
         }
       }
       return result
