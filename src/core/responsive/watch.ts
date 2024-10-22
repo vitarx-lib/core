@@ -31,7 +31,7 @@ type EventName = string | typeof CHANGE_EVENT_SYMBOL
 /**
  * 变量观察者管理器
  *
- * 内置微任务队列，自动合并相同事件，减少源调用次数。
+ * 内置微任务队列，自动合并相同事件，减少回调次数。
  *
  * @template T - 变量类型
  */
@@ -71,6 +71,7 @@ export class VariableObservers<T> {
     // 默认事件，根对象变化事件
     if (this.#observers.hasEvent(CHANGE_EVENT_SYMBOL)) {
       if (isPlainProxy(newValue)) {
+        // 普通代理对象，使用.value做为被更改的值
         this.#triggerQueue.push({
           event: CHANGE_EVENT_SYMBOL,
           params: [
@@ -81,6 +82,7 @@ export class VariableObservers<T> {
           ]
         })
       } else {
+        // 推送一个默认更新事件
         this.#triggerQueue.push({
           event: CHANGE_EVENT_SYMBOL,
           params: [newValue, oldValue, lastIndex, newValue]
@@ -109,11 +111,14 @@ export class VariableObservers<T> {
   ): Listener<C> {
     let events
     const isMultipleArrays = Array.isArray(index[0])
+    // 处理多事件
     if (isMultipleArrays) {
       events = index.map((item) => this.#indexToEvent(item as WatchIndex))
     } else {
+      // 处理单个事件
       events = this.#indexToEvent(index as WatchIndex)
     }
+    // 注册监听器
     return this.#observers.register(events, callback, limit)
   }
 
@@ -125,17 +130,21 @@ export class VariableObservers<T> {
   #flushTrigger() {
     while (this.#triggerQueue.length) {
       const trigger = this.#triggerQueue.shift()!
-      if (this.#triggerList.has(trigger.event)) {
-        this.#triggerList.get(trigger.event)![0] = trigger.params[0]
+      // 如果已经存在相同的事件，则更新参数
+      const eventParams = this.#triggerList.get(trigger.event)
+      if (eventParams) {
+        eventParams[0] = trigger.params[0]
       } else {
         this.#triggerList.set(trigger.event, trigger.params)
       }
     }
+    // 遍历triggerList，触发事件
     for (const [event, data] of this.#triggerList) {
       this.#observers.trigger(event, data)
     }
     // 清空 triggerList
     this.#triggerList.clear()
+    // 恢复状态
     this.#isFlushing = false
   }
 
@@ -224,10 +233,13 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
     // 代理数组
     let refs: any[] = []
     // 创建监听器
-    let listener = new Listener(function (n: any, o: any, i: any, s: any) {
-      const index = s?.[WATCH_INDEX]
-      callback(n, o, index === undefined ? i : index, s)
-    }, limit)
+    let listener = new Listener<C>(
+      function (n: any, o: any, i: any, s: any) {
+        const index = s?.[WATCH_INDEX]
+        callback(n, o, index === undefined ? i : index, s)
+      } as C,
+      limit
+    )
     listener.onDestroyed(() => {
       // 删除索引
       refs.forEach((item) => {
@@ -243,6 +255,8 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
       listener = undefined
       // @ts-ignore
       source = undefined
+      // @ts-ignore
+      callback = undefined
     })
     // 遍历源数组，获取代理对象
     source.forEach((item, i) => {
@@ -257,7 +271,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
       }
     })
     if (refs.length) {
-      return listener as Listener<C>
+      return listener
     } else {
       listener.destroyed()
       // @ts-ignore
@@ -287,7 +301,7 @@ export function watchFuncDep<T extends AnyFunction, C extends AnyFunction = Watc
     if (source.length === 0) return undefined
     // 如果数组中包含响应对象，则监听响应对象
     if (source.filter(isProxy).length > 0) {
-      return watch(source, callback as any, limit)
+      return watch(source, callback, limit)
     }
   }
   // 收集函数依赖的响应对象，并返回监听器，建议使用方式是监听对象的某些属性变化使用，其他使用方式亦可但是index无法定位准确
