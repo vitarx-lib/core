@@ -2,13 +2,13 @@ import { Listener, Observers } from './observer.js'
 import { getProxyIndex, isPlainProxy, isProxy } from './proxy.js'
 import { getIndexValue, isArray, isFunction } from '../utils'
 import { Dep } from './track-dependencies'
-import { AnyFunction, WatchCallback, WatchIndex } from '../../types/watch'
+import { AnyFunction, WatchCallback, WatchIndex, WatchOptions } from '../../types/watch'
 // 事件标识
 const CHANGE_EVENT_SYMBOL = Symbol('VITARX_PROXY_CHANGE_EVENT_SYMBOL')
-// 监听器标识
+// 观察者标识
 export const WATCHER_TAG_SYMBOL = Symbol('VITARX_PROXY_WATCHER_SYMBOL')
 // 事件标识类型
-type EventName = string | typeof CHANGE_EVENT_SYMBOL
+export type EventName = WatchIndex | typeof CHANGE_EVENT_SYMBOL
 
 /**
  * 变量观察者管理器
@@ -18,9 +18,15 @@ type EventName = string | typeof CHANGE_EVENT_SYMBOL
  * @template T - 变量类型
  */
 export class VariableObservers<T> {
+  // 观察者列表
   #observers = new Observers<EventName>()
+  // 不使用批处理的观察者
+  #notBatchHandleObservers = new Observers<EventName>()
+  // 微任务队列
   #triggerQueue: Array<{ event: EventName; params: any[] }> = []
-  #triggerList: Map<EventName, any[]> = new Map()
+  // 待触发队列
+  #waitTriggerList: Map<EventName, any[]> = new Map()
+  // 是否正在处理队列
   #isFlushing = false
 
   /**
@@ -32,61 +38,37 @@ export class VariableObservers<T> {
    * @param {T} newValue - 根对象的新值，源对象
    * @param {T} oldValue - 根对象的旧值，深度克隆
    */
-  trigger(index: WatchIndex, newValue: T, oldValue: T) {
+  trigger(index: WatchIndex, newValue: T, oldValue: T): void {
+    // 如果不在微任务中，则开始处理队列
+    if (!this.#isFlushing) {
+      this.#isFlushing = true
+      // 处理队列
+      Promise.resolve().then(this.#flushTrigger.bind(this))
+    }
+    // 最外层索引
     let lastIndex: any
     // change事件冒泡
     while (index.length) {
-      const event = this.#indexToEvent(index)
       if (index.length > 0) lastIndex = index.pop()
-      if (this.#observers.hasEvent(event)) {
-        this.#triggerQueue.push({
-          event,
-          params: [
-            getIndexValue(newValue, index),
-            getIndexValue(oldValue, index),
-            lastIndex,
-            newValue
-          ]
-        })
-      }
+      this.#pushTrigger(index, [
+        getIndexValue(newValue, index),
+        getIndexValue(oldValue, index),
+        lastIndex,
+        newValue
+      ])
     }
     // 默认事件，根对象变化事件
     if (this.#observers.hasEvent(CHANGE_EVENT_SYMBOL)) {
-      if (isPlainProxy(newValue)) {
-        // 兼容value改变事件
-        if (this.#observers.hasEvent('value')) {
-          this.#triggerQueue.push({
-            event: 'value',
-            params: [
-              (newValue as Vitarx.PlainProxy<any>).value,
-              (oldValue as Vitarx.PlainProxy<any>).value,
-              lastIndex,
-              newValue
-            ]
-          })
-        }
-        // 普通代理对象，使用.value做为被更改的值
-        this.#triggerQueue.push({
-          event: CHANGE_EVENT_SYMBOL,
-          params: [
+      // 如果是普通类型代理对象，则使用value做为change的值
+      let params = isPlainProxy(newValue)
+        ? [
             (newValue as Vitarx.PlainProxy<any>).value,
             (oldValue as Vitarx.PlainProxy<any>).value,
             lastIndex,
             newValue
           ]
-        })
-      } else {
-        // 推送一个默认更新事件
-        this.#triggerQueue.push({
-          event: CHANGE_EVENT_SYMBOL,
-          params: [newValue, oldValue, lastIndex, newValue]
-        })
-      }
-    }
-    if (!this.#isFlushing && this.#triggerQueue.length) {
-      this.#isFlushing = true
-      // 处理队列
-      Promise.resolve().then(this.#flushTrigger.bind(this))
+        : [newValue, oldValue, lastIndex, newValue]
+      this.#pushTrigger(CHANGE_EVENT_SYMBOL, params)
     }
   }
 
@@ -96,24 +78,38 @@ export class VariableObservers<T> {
    * @template C - 回调函数类型
    * @param {WatchIndex|WatchIndex[]} index - 索引
    * @param {C} callback - 回调函数
-   * @param {number} limit - 限制触发次数
+   * @param options
    */
   register<C extends AnyFunction>(
     index: WatchIndex | WatchIndex[],
     callback: C | Listener<C>,
-    limit: number = 0
+    options?: WatchOptions
   ): Listener<C> {
-    let events
-    const isMultipleArrays = Array.isArray(index[0])
-    // 处理多事件
-    if (isMultipleArrays) {
-      events = index.map((item) => this.#indexToEvent(item as WatchIndex))
+    let events: EventName | EventName[]
+    if (index.length === 0) {
+      events = CHANGE_EVENT_SYMBOL
     } else {
-      // 处理单个事件
-      events = this.#indexToEvent(index as WatchIndex)
+      events = index
     }
-    // 注册监听器
-    return this.#observers.register(events, callback, limit)
+    if (options?.isBatch === false) {
+      // 注册监听器
+      return this.#notBatchHandleObservers.register(events, callback, options?.limit)
+    } else {
+      // 注册监听器
+      return this.#observers.register(events, callback, options?.limit)
+    }
+  }
+
+  #pushTrigger(event: EventName, params: any[]) {
+    if (this.#notBatchHandleObservers.hasEvent(event)) {
+      this.#notBatchHandleObservers.trigger(event, params)
+    }
+    if (this.#observers.hasEvent(event)) {
+      this.#triggerQueue.push({
+        event: event,
+        params: params
+      })
+    }
   }
 
   /**
@@ -124,36 +120,23 @@ export class VariableObservers<T> {
   #flushTrigger() {
     while (this.#triggerQueue.length) {
       const trigger = this.#triggerQueue.shift()!
-      // 如果已经存在相同的事件，则更新参数
-      const eventParams = this.#triggerList.get(trigger.event)
+      const eventParams = this.#waitTriggerList.get(trigger.event)
       if (eventParams) {
+        // 如果已经存在相同的事件，则更新参数
         eventParams[0] = trigger.params[0]
       } else {
-        this.#triggerList.set(trigger.event, trigger.params)
+        // 如果不存在，则创建
+        this.#waitTriggerList.set(trigger.event, trigger.params)
       }
     }
     // 遍历triggerList，触发事件
-    for (const [event, data] of this.#triggerList) {
+    for (const [event, data] of this.#waitTriggerList) {
       this.#observers.trigger(event, data)
     }
-    // 清空 triggerList
-    this.#triggerList.clear()
+    // 清空 等待触发的事件
+    this.#waitTriggerList.clear()
     // 恢复状态
     this.#isFlushing = false
-  }
-
-  /**
-   * 将 index 转换为事件标识
-   *
-   * @param index - 索引，如果为空则触发默认事件
-   * @private
-   */
-  #indexToEvent(index: WatchIndex): EventName {
-    if (index.length === 0) {
-      return CHANGE_EVENT_SYMBOL
-    } else {
-      return index.map((item) => item.toString()).join('.')
-    }
   }
 }
 
@@ -169,7 +152,7 @@ export class VariableObservers<T> {
  * @template T - 代理对象类型
  * @param proxy - 代理对象
  */
-export function getWatcher<T extends object>(proxy: T): VariableObservers<T> {
+export function withWatcher<T extends object>(proxy: T): VariableObservers<T> {
   let watcher
   // 获取观察者管理器
   if ((proxy as any)[WATCHER_TAG_SYMBOL]) {
@@ -186,7 +169,7 @@ export function getWatcher<T extends object>(proxy: T): VariableObservers<T> {
 }
 
 /**
- * 监听数据变化
+ * ## 监听数据变化
  *
  * ```ts
  * import { ref, watch } from 'vitarx'
@@ -210,18 +193,21 @@ export function getWatcher<T extends object>(proxy: T): VariableObservers<T> {
  * @template C 回调函数类型
  * @param {T} source - 监听源，可以是`对象`、`数组`、{@link watchFunc `函数`}
  * @param {C} callback - 回调函数
- * @param limit - 限制触发次数,默认为0，表示不限制触发次数
+ * @param {WatchOptions} options - 监听选项
+ * @param {boolean} options.isBatch - 是否批处理，合并触发，默认为true
+ * @param {boolean} options.limit - 限制触发次数，默认为0，表示不限制触发次数
+ * @returns {Listener<C>} 监听器，可以调用`destroy()`方法取消监听，以及`pause()`方法暂停监听，`unpause()`方法恢复监听...
  */
 export function watch<T, C extends AnyFunction = WatchCallback<T>>(
   source: T,
   callback: C,
-  limit: number = 0
+  options?: WatchOptions
 ): Listener<C> | undefined {
   if (isFunction(source)) {
-    return watchReturnSource(source as AnyFunction, callback as any, limit) as Listener<C>
+    return watchReturnSource(source as AnyFunction, callback as any, options) as Listener<C>
   }
   if (isProxy(source)) {
-    return getWatcher(source as object).register([], callback, limit)
+    return withWatcher(source as object).register([], callback, options)
   } else if (isArray(source)) {
     const WATCH_INDEX = Symbol('WATCH_INDEX')
     // 代理数组
@@ -232,7 +218,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
         const index = s?.[WATCH_INDEX]
         callback(n, o, index === undefined ? i : index, s)
       } as C,
-      limit
+      options?.limit
     )
     listener.onDestroyed(() => {
       // 删除索引
@@ -260,14 +246,14 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
           value: i,
           configurable: true
         })
-        const watcher = getWatcher(item)
+        const watcher = withWatcher(item)
         watcher.register([], listener)
       }
     })
     if (refs.length) {
       return listener
     } else {
-      listener.destroyed()
+      listener.destroy()
       // @ts-ignore
       listener = undefined
     }
@@ -287,7 +273,7 @@ export function watchOnce<T, C extends AnyFunction = WatchCallback<T>>(
   source: T,
   callback: C
 ): Listener<C> | undefined {
-  return watch(source, callback, 1)
+  return watch(source, callback, { limit: 1 })
 }
 
 /**
@@ -306,31 +292,31 @@ export function watchOnce<T, C extends AnyFunction = WatchCallback<T>>(
  *
  * @template T - 函数类型
  * @template C - 回调函数类型
- * @param fn - 要监听的函数
- * @param callback - 回调函数
- * @param limit - 限制触发次数,默认为0，表示不限制触发次数
+ * @param {T} fn - 要监听的函数
+ * @param {C} callback - 回调函数
+ * @param {WatchOptions} options - 监听选项
  * @returns {Listener<C> | undefined} - 返回监听器，如果返回值是undefined，则表示监听失败
  * @see watch
  */
 export function watchReturnSource<T extends AnyFunction, C extends AnyFunction = WatchCallback<T>>(
   fn: T,
   callback: C,
-  limit: number = 0
+  options?: WatchOptions
 ): Listener<C> | undefined {
   const source = fn()
   // 如果是响应式对象，则直接监听
   if (isProxy(source)) {
-    return getWatcher(source as object).register([], callback, limit)
+    return withWatcher(source as object).register([], callback, options)
   }
   if (isArray(source)) {
     // 空数组不监听
     if (source.length === 0) return undefined
     // 如果数组中包含响应对象，则监听响应对象
     if (source.filter(isProxy).length > 0) {
-      return watch(source, callback, limit)
+      return watch(source, callback, options)
     }
   }
-  return watchDep(fn, callback, limit) as Listener<C>
+  return watchDep(fn, callback, options) as Listener<C>
 }
 
 /**
@@ -342,27 +328,28 @@ export function watchReturnSource<T extends AnyFunction, C extends AnyFunction =
  * @template C - 回调函数类型
  * @param {T} fn - 要解析依赖的函数
  * @param {C} callback - 回调函数，可选的，如果不传则使用`fn`做为回调函数。
- * @param {number} limit - 限制触发次数,默认为0，表示不限制触发次数
+ * @param {WatchOptions} options - 监听选项
  * @returns {Listener<C | T> | undefined} - 返回监听器，如果返回值是undefined，则表示没有任何`依赖`。
+ * @see watch
  */
 export function watchDep<T extends AnyFunction, C extends AnyFunction>(
   fn: T,
   callback?: C,
-  limit: number = 0
+  options?: WatchOptions
 ): Listener<C | T> | undefined {
   // 收集函数依赖的响应对象
   const deps = Dep.collect(fn)
   if (deps.size > 0) {
-    const listener = new Listener(callback || fn, limit)
+    const listener = new Listener(callback || fn, options?.limit)
     for (const [proxy, keys] of deps) {
-      const watcher = getWatcher(proxy)
+      const watcher = withWatcher(proxy)
       if (keys.has(undefined)) {
         watcher.register([], listener)
       } else {
         const rootIndex = getProxyIndex(proxy)!
         const index: WatchIndex[] = []
         keys.forEach((key) => index.push([...rootIndex, key!]))
-        watcher.register(index, listener)
+        watcher.register(index, listener, options)
       }
     }
     return listener
