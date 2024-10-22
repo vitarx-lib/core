@@ -277,7 +277,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
           configurable: true
         })
         const watcher = withWatcher(item)
-        watcher.register(getProxyIndex(source)!, listener, options)
+        watcher.register(getProxyIndex(item)!, listener, options)
       }
     })
     if (refs.length) {
