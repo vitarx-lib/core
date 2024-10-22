@@ -1,15 +1,15 @@
 // noinspection JSUnusedGlobalSymbols
 
-// 定义一个工具类型来提取函数类型的参数
-type FunctionParameters<T> = T extends (...args: infer P) => any ? P : never
 type VoidCallback = () => void
+type EventName = string | number | symbol
+export type AnyCallback = (...args: any) => any
 
 /**
  * 监听器
  *
  * @template C - 回调函数的类型
  */
-export class Listener<C extends Function> {
+export class Listener<C extends AnyCallback> {
   // 监听回调函数
   readonly #callback: C
   // 限制触发次数
@@ -78,7 +78,7 @@ export class Listener<C extends Function> {
    *
    * @returns {Listener<C>}
    */
-  static once<C extends Function>(callback: C): Listener<C> {
+  static once<C extends AnyCallback>(callback: C): Listener<C> {
     return new Listener(callback, 1)
   }
 
@@ -88,15 +88,19 @@ export class Listener<C extends Function> {
    * 调用此方法会将监听器标记为弃用状态，并触发销毁回调。
    */
   destroyed(): void {
-    if (!this.#isDispose && this.#onDestroyedCallback) {
-      this.#isDispose = true
-      this.#onDestroyedCallback.forEach((callback) => {
-        try {
-          callback()
-        } catch (e) {}
-      })
-      this.#onDestroyedCallback = undefined
-    }
+    // 放入宏任务中执行，防止微任务中执行
+    setTimeout(() => {
+      if (!this.#isDispose) {
+        this.#isDispose = true
+        if (!this.#onDestroyedCallback) return
+        this.#onDestroyedCallback.forEach((callback) => {
+          try {
+            callback()
+          } catch (e) {}
+        })
+        this.#onDestroyedCallback = undefined
+      }
+    }, 0)
   }
 
   /**
@@ -119,10 +123,12 @@ export class Listener<C extends Function> {
   /**
    * 触发监听，如果监听器被销毁，则返回false
    *
+   * > **注意**：该方法由ProxyHandler自动调用，如果是手动触发，需谨慎使用。
+   *
    * @param {any[]} params - 要传给回调函数的参数列表
    * @returns {boolean} 返回一个bool值表示当前监听器是否还具有效应
    */
-  trigger(params: FunctionParameters<C>): boolean {
+  trigger(params: Parameters<C>): boolean {
     if (this.#isDispose) return false
     if (this.#pause) return true
     // 如果没有限制触发次数或触发次数小于限制次数则触发回调
@@ -150,7 +156,8 @@ export class Listener<C extends Function> {
    * 调用此方法过后，trigger方法会忽略回调，直到unpause方法被调用
    */
   pause() {
-    this.#pause = true
+    // 放入宏任务中执行，防止微任务中执行
+    setTimeout(() => (this.#pause = true), 0)
   }
 
   /**
@@ -159,7 +166,7 @@ export class Listener<C extends Function> {
    * 调用此方法后，如果之前处于暂停状态，则继续触发回调。
    */
   unpause() {
-    this.#pause = false
+    setTimeout(() => (this.#pause = false), 0)
   }
 
   /**
@@ -175,9 +182,6 @@ export class Listener<C extends Function> {
     return true
   }
 }
-
-type EventName = string | number | symbol
-type AnyCallback = (...args: any) => any
 
 /**
  * 观察者管理器
@@ -195,7 +199,7 @@ export class Observers<E extends EventName = EventName> {
    * @param {number} limit - 限制触发次数，0为不限制，仅适用于回调函数
    * @returns {Listener<C>} - 返回监听器
    */
-  register<C extends Function>(
+  register<C extends AnyCallback>(
     events: E[] | E,
     callback: C | Listener<C>,
     limit: number = 0
