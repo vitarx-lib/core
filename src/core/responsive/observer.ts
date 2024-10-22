@@ -210,7 +210,14 @@ export class Observers<E> {
       listener = new Listener(callback, limit)
     }
     if (Array.isArray(events)) {
-      events.forEach((e) => this.register(e, listener, limit))
+      events.forEach((e) => {
+        this.#pushEventListener(e, listener)
+      })
+      listener.onDestroyed(() => {
+        events.forEach((e) => {
+          this.#listeners.get(e)?.splice(this.#listeners.get(e)!.indexOf(listener), 1)
+        })
+      })
     } else {
       this.#pushEventListener(events, listener)
       // 如果监听器销毁了，则删除监听器
@@ -254,7 +261,7 @@ export class Observers<E> {
    * @protected
    */
   hasEvent(event: E): boolean {
-    return this.#listeners.has(event) && this.#listeners.get(event)!.length > 0
+    return !!this.#listeners.get(event)?.length
   }
 
   // 添加观察者
