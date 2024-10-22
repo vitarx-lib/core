@@ -99,10 +99,10 @@ function createProxy<T>(
   // 避免循环代理
   if (isProxy(target)) return target as Ref<T>
   const source = toRefObject(target, index)
-  if (!root) {
-    root = source
-    withWatcher(root)
-  }
+  root ||= source
+  Object.defineProperty(source, WATCHER_TAG_SYMBOL, {
+    value: withWatcher(root)
+  })
   // 判断是否为值代理
   const plainProxy = isPlainProxy(source)
   // 代理对象
@@ -140,7 +140,7 @@ function createProxy<T>(
         const oldRoot = deepClone(root)
         const result = Reflect.set(target, key, value, receiver)
         if (result) {
-          withWatcher(root).trigger(events, root, oldRoot)
+          withWatcher(root, false)?.trigger(events, root, oldRoot)
         }
         return result
       }
@@ -166,7 +166,7 @@ function createProxy<T>(
       if (result) {
         const change = plainProxy ? root.value : root
         if (isRef) {
-          const observers = withWatcher(root)
+          const observers = withWatcher(root, false)
           if (observers) {
             // 代理对象被删除触发代理对象变更的所有事件
             diffIndex(delData, {}).forEach((item) => {
@@ -174,7 +174,7 @@ function createProxy<T>(
             })
           }
         } else {
-          withWatcher(root).trigger([...index, formatKey(target, prop)], change, oldRoot)
+          withWatcher(root, false)?.trigger([...index, formatKey(target, prop)], change, oldRoot)
         }
       }
       return result
