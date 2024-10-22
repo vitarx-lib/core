@@ -32,15 +32,15 @@ type ExtractFnIndexType<T, D> = T extends (...args: any[]) => infer R
   : D
 // 提取代理类型的索引
 type ExtractRefIndexType<T, D> = T extends Vitarx.Ref<T> ? ExcludeSymbol<keyof T> : D
-export type ChangeIndex<T> = ExtractRefIndexType<
+export type ExtractIndex<T> = ExtractRefIndexType<
   T,
   ExtractFnIndexType<T, ExtractArrayIndexType<T, string | number | symbol>>
 >
 
 // 任意函数
 export type AnyFunction = (...args: any[]) => any
-// 索引类型
-export type WatchIndex = Array<string | symbol | number>
+// 改变的键或索引
+export type ChangeIndex = Array<string | symbol | number>
 /**
  * 回调函数类型
  *
@@ -55,7 +55,7 @@ export type WatchIndex = Array<string | symbol | number>
 export type WatchCallback<
   T,
   V = ChangeValue<T>,
-  I extends number | string | symbol = ChangeIndex<T>
+  I extends number | string | symbol = ExtractIndex<T>
 > = (
   newValue: V,
   oldValue: V,
