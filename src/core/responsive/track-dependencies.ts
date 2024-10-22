@@ -44,7 +44,7 @@ export class Dep {
    * 会执行函数，并记录其依赖的响应式对象
    *
    * > **注意**：函数执行过程中，会自动收集依赖，无需手动调用{@link track}方法。
-   * 请勿传入异步函数，如果需要收集异步函数的依赖请使用{@link syncCollect}方法。
+   * 请勿传入异步函数，如果需要收集异步函数的依赖请使用{@link asyncCollect}方法。
    *
    * @alias get
    * @param {Function} fn 任意可执行的函数。
@@ -107,4 +107,17 @@ export class Dep {
     // 返回依赖集合
     return deps
   }
+}
+
+/**
+ * ## 跟踪依赖
+ *
+ * 此方法可以用于手动跟踪依赖，例如在函数中仅使用响应式对象本身，
+ * 而未使用其属性会跟踪不到依赖，则可在函数体中调用该方法手动跟踪依赖。
+ *
+ * @param { Vitarx.Ref<any> } proxy - 跟踪的响应式代理对象
+ * @param { string | symbol | number | undefined} key - 跟踪的响应式代理的键，不传入代表监听整个代理变量的变化
+ */
+export function track(proxy: Vitarx.Ref<any>, key?: string | symbol | number): void {
+  Dep.track(proxy, key)
 }
