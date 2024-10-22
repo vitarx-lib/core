@@ -2,7 +2,7 @@ import { Listener, Observers } from './observer.js'
 import { getProxyIndex, isPlainProxy, isProxy } from './proxy.js'
 import { getIndexValue, isArray, isFunction } from '../utils'
 import { Dep } from './track-dependencies'
-import { AnyFunction, WatchCallback, WatchIndex, WatchOptions } from '../../types/watch'
+import { AnyFunction, ChangeIndex, WatchCallback, WatchOptions } from '../../types/watch'
 // 事件标识
 const CHANGE_EVENT_SYMBOL = Symbol('VITARX_PROXY_CHANGE_EVENT_SYMBOL')
 // 观察者标识
@@ -34,11 +34,11 @@ export class VariableObservers<T> {
    *
    * 逐级触发，从最内层开始触发，触发 change 事件，直到根对象。
    *
-   * @param {WatchIndex} index - 变化的变量索引
+   * @param {ChangeIndex} index - 变化的变量索引
    * @param {T} newValue - 根对象的新值，源对象
    * @param {T} oldValue - 根对象的旧值，深度克隆
    */
-  trigger(index: WatchIndex, newValue: T, oldValue: T): void {
+  trigger(index: ChangeIndex, newValue: T, oldValue: T): void {
     // 如果不在微任务中，则开始处理队列
     if (!this.#isFlushing) {
       this.#isFlushing = true
@@ -72,12 +72,12 @@ export class VariableObservers<T> {
    * 注册监听器
    *
    * @template C - 回调函数类型
-   * @param {WatchIndex|WatchIndex[]} index - 索引
+   * @param {ChangeIndex|ChangeIndex[]} index - 索引
    * @param {C} callback - 回调函数
    * @param options
    */
   register<C extends AnyFunction>(
-    index: WatchIndex | WatchIndex[],
+    index: ChangeIndex | ChangeIndex[],
     callback: C | Listener<C>,
     options?: WatchOptions
   ): Listener<C> {
@@ -85,10 +85,10 @@ export class VariableObservers<T> {
     const isMultipleArrays = Array.isArray(index[0])
     // 处理多事件
     if (isMultipleArrays) {
-      events = index.map((item) => this.#indexToEvent(item as WatchIndex))
+      events = index.map((item) => this.#indexToEvent(item as ChangeIndex))
     } else {
       // 处理单个事件
-      events = this.#indexToEvent(index as WatchIndex)
+      events = this.#indexToEvent(index as ChangeIndex)
     }
     if (options?.isBatch === false) {
       // 注册监听器
@@ -151,7 +151,7 @@ export class VariableObservers<T> {
    * @param index - 索引，如果为空则触发默认事件
    * @private
    */
-  #indexToEvent(index: WatchIndex): EventName {
+  #indexToEvent(index: ChangeIndex): EventName {
     if (index.length === 0) {
       return CHANGE_EVENT_SYMBOL
     } else {
@@ -207,16 +207,30 @@ export function withWatcher<T extends object>(
  * const data = ref({name:'vitarx',address:{city:'guizhou'}})
  * // 监听对象变化
  * watch(data, (newValue, oldValue, index, source)) => {
+ *  // index为改变的属性名，例如name
  *  console.log(newValue, oldValue) // 监听对象
  * })
- * // 只监听对象的某个属性变化
+ * // 只监听对象的指定属性变化
  * watch(()=>data.name, (newValue:string, oldValue:string, index:'name')) => {
  *  console.log(newValue, oldValue) // 监听对象某个属性，index为属性名
  * })
- * // 只监听对象指定的属性变化
+ * // 监听对象部分属性变化
  * watch(()=>[data.name,data.address], (newValue:string, oldValue:string, index:'name'|'address')) => {
  *  console.log(newValue, oldValue)
  * })
+ * // 数组代理对象
+ * const list = ref([1,2,3])
+ * // 监听多个对象
+ * watch(()=>[data,list], (newValue:string, oldValue:string, index:0|1)) => {
+ *  console.log(newValue, oldValue)
+ * })
+ * // 基本类型的代理需要使用.value访问或修改
+ * const str = ref('hello')
+ * // 基本类型代理对象的监听回调的index为value，oldValue和newValue为实际目标值,source为代理对象本身
+ * watch(str, (newValue:string, oldValue:string, index:'value', source:Ref<string>)) => {
+ *  console.log(newValue, oldValue) // world , hello
+ * })
+ * str.value = 'world'
  * ```
  *
  * @template T 任意类型，但不能是异步函数
@@ -377,7 +391,7 @@ export function watchDep<T extends AnyFunction, C extends AnyFunction>(
       if (keys.has(undefined)) {
         watcher.register(rootIndex, listener, options)
       } else {
-        const index: WatchIndex[] = []
+        const index: ChangeIndex[] = []
         keys.forEach((key) => index.push([...rootIndex, key!]))
         watcher.register(index, listener, options)
       }
@@ -385,4 +399,43 @@ export function watchDep<T extends AnyFunction, C extends AnyFunction>(
     return listener
   }
   return undefined
+}
+
+/**
+ * ## 手动触发监听器
+ *
+ * 如果你更改了为深度代理的对象，则可以使用该方法触发监听器。
+ *
+ * @example
+ * ```ts
+ * import {ref,watch,trigger} from 'vitarx'
+ *
+ * // 创建一个不会自动深度代理的对象
+ * const obj = ref({a:{b:1}},false)
+ * // 监听对象
+ * watch(obj,()=>{
+ *   console.log('obj changed')
+ * })
+ * // 只监听对象的指定属性
+ * watch(()=>obj.a,()=>{
+ *   console.log('obj.a changed')
+ * })
+ * // 监听嵌套对象属性
+ * watch(()=>obj.a.b,()=>{
+ *   console.log('obj.a.b changed')
+ * })
+ * obj.a.b = 2 // 修改嵌套对象的属性值，不会触发监听器，使用下面的方式手动触发
+ * trigger(obj) // 只会触发 obj changed
+ * trigger(obj,['a']) // 会触发 obj changed 和 obj.a changed
+ * trigger(obj,['a','b']) // 会触发上面的三个监听器
+ * ```
+ *
+ * @param {Vitarx.Ref<any>} proxy - 要触发的代理对象
+ * @param {ChangeIndex} index - 触发的索引，空数组表示根节点。
+ */
+export function trigger(proxy: Vitarx.Ref<any>, index: ChangeIndex = []) {
+  if (isProxy(proxy)) {
+    const watcher = withWatcher(proxy)
+    watcher.trigger([], proxy, proxy)
+  }
 }
