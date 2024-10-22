@@ -50,13 +50,16 @@ export class VariableObservers<T> {
     // change事件冒泡
     while (index.length) {
       const event = this.#indexToEvent(index)
-      if (index.length > 0) lastIndex = index.pop()
-      this.#pushTrigger(event, [
-        getIndexValue(newValue, index),
-        getIndexValue(oldValue, index),
-        lastIndex,
-        newValue
-      ])
+      if (this.#observers.hasEvent(event) || this.#notBatchHandleObservers.hasEvent(event)) {
+        // 获取旧值
+        const n = getIndexValue(newValue, index)
+        // 获取新值
+        const o = getIndexValue(oldValue, index)
+        lastIndex = index.pop()
+        this.#pushTrigger(event, [n, o, lastIndex, newValue])
+      } else {
+        lastIndex = index.pop()
+      }
     }
     // 如果是普通类型代理对象，则使用value做为change的值
     let params = isPlainProxy(newValue)
@@ -157,10 +160,16 @@ export class VariableObservers<T> {
   }
 }
 
+// 重载签名 - 当 create 为 false 时
+export function withWatcher<T extends object>(
+  proxy: T,
+  create: false
+): VariableObservers<T> | undefined
+
+// 重载签名 - 当 create 为 true 或未指定时
+export function withWatcher<T extends object>(proxy: T, create?: true): VariableObservers<T>
 /**
  * ## 获取观察者管理器
- *
- * 不存在则创建。
  *
  * 该方法会赋予对象观察者管理器，该管理器会记录所有事件观察者，并提供了trigger方法，触发事件。
  *
@@ -168,18 +177,22 @@ export class VariableObservers<T> {
  *
  * @template T - 代理对象类型
  * @param proxy - 代理对象
+ * @param create - 不存在时是否创建观察者管理器，默认为 true
  */
-export function withWatcher<T extends object>(proxy: T): VariableObservers<T> {
-  let watcher
+export function withWatcher<T extends object>(
+  proxy: T,
+  create: boolean = true
+): VariableObservers<T> | undefined {
+  let watcher: VariableObservers<T> | undefined
   // 获取观察者管理器
   if ((proxy as any)[WATCHER_TAG_SYMBOL]) {
     watcher = (proxy as any)[WATCHER_TAG_SYMBOL]
   }
   // 创建观察者管理器
-  else {
+  else if (create) {
     watcher = new VariableObservers<T>()
     Object.defineProperty(proxy, WATCHER_TAG_SYMBOL, {
-      value: new VariableObservers<T>()
+      value: watcher
     })
   }
   return watcher
@@ -193,8 +206,8 @@ export function withWatcher<T extends object>(proxy: T): VariableObservers<T> {
  * // 创建代理对象
  * const data = ref({name:'vitarx',address:{city:'guizhou'}})
  * // 监听对象变化
- * watch(data, (newValue, oldValue, index:undefined)) => {
- *  console.log(newValue, oldValue) // 监听对象，index固定为undefined
+ * watch(data, (newValue, oldValue, index, source)) => {
+ *  console.log(newValue, oldValue) // 监听对象
  * })
  * // 只监听对象的某个属性变化
  * watch(()=>data.name, (newValue:string, oldValue:string, index:'name')) => {
@@ -224,7 +237,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
     return watchReturnSource(source as AnyFunction, callback as any, options) as Listener<C>
   }
   if (isProxy(source)) {
-    return withWatcher(source as object).register(getProxyIndex(source)!, callback, options)
+    return withWatcher(source as object)!.register(getProxyIndex(source)!, callback, options)
   } else if (isArray(source)) {
     const WATCH_INDEX = Symbol('WATCH_INDEX')
     // 代理数组
