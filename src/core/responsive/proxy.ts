@@ -64,9 +64,7 @@ function toRefObject<T>(target: T, index: Index = []) {
     source = {
       value: target
     } as unknown as Ref<T>
-    Object.defineProperty(source, IS_PLAIN_PROXY_SYMBOL, {
-      value: true
-    })
+    Object.defineProperty(source, IS_PLAIN_PROXY_SYMBOL, { value: true })
     // 调整toString方法
     Object.defineProperty(source, 'toString', {
       value: function () {
