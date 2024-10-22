@@ -1,4 +1,4 @@
-import type { IS_PLAIN_PROXY_SYMBOL, IS_PROXY_SYMBOL } from '../core/responsive/proxy.js'
+import type { IS_PLAIN_PROXY_SYMBOL, IS_PROXY_SYMBOL } from '../core/responsive/proxy'
 // 提取函数源返回值类型
 type ExtractArraySourceType<T, D, P = true> = ExtractRefType<
   T,
@@ -62,3 +62,25 @@ export type WatchCallback<
   index: I,
   source: Vitarx.PlainProxy<any> | Vitarx.ObjectProxy<object>
 ) => void
+
+/**
+ * ## 监听器选项
+ *
+ * - limit: 限制回调函数调用次数，默认为0，不限制，当为1时，表示只调用一次，当为2时，表示调用两次，以此类推。
+ * - isBatch: 是否采用批处理，默认为true，谨慎设置为false，假设监听的是一个数组，设置为false时，当执行array.slice等方法会触发多次回调。
+ */
+export interface WatchOptions {
+  /**
+   * 限制回调函数调用次数，默认为0，不限制，当为1时，表示只调用一次，当为2时，表示调用两次，以此类推。
+   *
+   * @default 0
+   */
+  limit?: number
+  /**
+   * 是否采用批处理，默认为true，需谨慎使用false，假设监听的是一个数组，
+   * 设置为false时，当执行array.slice等方法会触发多次回调。
+   *
+   * @default true
+   */
+  isBatch?: boolean
+}
