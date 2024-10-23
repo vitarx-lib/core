@@ -1,7 +1,11 @@
 import { Fragment as VFragment } from '../index'
 import { Widget } from '../core/widgets'
 import HtmlIntrinsicElements from './html-elements'
-import type { IS_PLAIN_PROXY_SYMBOL, IS_PROXY_SYMBOL } from '../core/responsive/proxy.js'
+import type {
+  IS_PLAIN_PROXY_SYMBOL,
+  IS_PROXY_SYMBOL,
+  VITARX_PROXY_GET_ROOT_SYMBOL
+} from '../core/responsive/proxy'
 
 declare global {
   /**
@@ -107,18 +111,33 @@ declare global {
      *
      * @template T - 被代理变量的类型
      */
-    type Ref<T> = T extends object ? ObjectProxy<T> : PlainProxy<T>
+    type Ref<T> = T extends Record<any, any> | any[] ? ObjectProxy<T> : PlainProxy<T>
     /**
      * 普通类型变量，如字符串、数字、布尔等。
      *
      * 需要使用`.value`访问和修改。
      */
-    type PlainProxy<T> = { value: T; [IS_PLAIN_PROXY_SYMBOL]: true; [IS_PROXY_SYMBOL]: true }
+    type PlainProxy<T> = {
+      value: T
+      [IS_PLAIN_PROXY_SYMBOL]: true
+      [IS_PROXY_SYMBOL]: true
+      [VITARX_PROXY_GET_ROOT_SYMBOL]: PlainProxy<T>
+    }
     /**
      * 对象响应式变量代理，如对象、数组等。
      *
      * 直接访问和修改。
      */
-    type ObjectProxy<T extends object> = T & { [IS_PROXY_SYMBOL]: true }
+    type ObjectProxy<T extends Record<any, any> | any[]> = T & { [IS_PROXY_SYMBOL]: true }
+    // 解除响应式变量类型
+    type UnRef<T> =
+      T extends Vitarx.Ref<infer R>
+        ? Exclude<
+            R,
+            | typeof IS_PLAIN_PROXY_SYMBOL
+            | typeof IS_PROXY_SYMBOL
+            | typeof VITARX_PROXY_GET_ROOT_SYMBOL
+          >
+        : T
   }
 }
