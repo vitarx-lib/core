@@ -47,16 +47,20 @@ export class VariableObservers<T> {
     }
     // 最外层索引
     let lastIndex: any
+    let lastSource: any = index.length ? getIndexValue(newValue, index) : undefined
     // change事件冒泡
     while (index.length) {
       const event = this.#indexToEvent(index)
       if (this.#observers.hasEvent(event) || this.#notBatchHandleObservers.hasEvent(event)) {
         // 获取旧值
-        const n = getIndexValue(newValue, index)
+        const n = lastSource
         // 获取新值
         const o = getIndexValue(oldValue, index)
+        // 当前层索引
         lastIndex = index.pop()
-        this.#pushTrigger(event, [n, o, lastIndex, newValue])
+        // 上一层值
+        lastSource = getIndexValue(newValue, index)
+        this.#pushTrigger(event, [n, o, lastIndex, isProxy(lastSource) ? lastSource : newValue])
       } else {
         lastIndex = index.pop()
       }
