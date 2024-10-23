@@ -1,3 +1,7 @@
+import * as Responsive from './core/responsive'
+
+export * from './core/responsive'
+
 /**
  * 创建虚拟元素
  *
@@ -22,6 +26,7 @@ export const Fragment: unique symbol = Symbol('Fragment')
 // 导出 Vitarx 对象
 export const Vitarx = {
   Fragment,
-  createVNode
+  createVNode,
+  ...Responsive
 }
 export default Vitarx
