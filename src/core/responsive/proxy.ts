@@ -5,6 +5,8 @@ import { Dep } from './track-dependencies.js'
 export const IS_PROXY_SYMBOL = Symbol('VITARX_IS_PROXY_SYMBOL')
 // 值代理标识符
 export const IS_PLAIN_PROXY_SYMBOL = Symbol('VITARX_IS_PLAIN_PROXY_SYMBOL')
+// 获取代理对象的所在的根对象
+export const VITARX_PROXY_GET_ROOT_SYMBOL = Symbol('VITARX_PROXY_GET_ROOT_SYMBOL')
 // 用于描述基于根对象的索引
 export type Index = Array<string | symbol | number>
 
@@ -97,11 +99,18 @@ function createProxy<T>(
   root?: Ref<any>
 ): Ref<T> {
   // 避免循环代理
-  if (isProxy(target)) return target as Ref<T>
+  if (isProxy(target)) {
+    console.trace('循环代理对象，这可能是无意的，请检查代码。')
+    return target as Ref<T>
+  }
   const source = toRefObject(target, index)
   root ||= source
   Object.defineProperty(source, WATCHER_TAG_SYMBOL, {
     value: withWatcher(root)
+  })
+  // 获取顶级代理对象
+  Object.defineProperty(source, VITARX_PROXY_GET_ROOT_SYMBOL, {
+    value: root
   })
   // 判断是否为值代理
   const plainProxy = isPlainProxy(source)
@@ -110,6 +119,8 @@ function createProxy<T>(
     get(target, prop, receiver): any {
       // 观察者管理器
       if (prop === WATCHER_TAG_SYMBOL) return withWatcher(root)
+      // 获取顶级代理对象
+      if (prop === VITARX_PROXY_GET_ROOT_SYMBOL) return root
       let result = Reflect.get(target, prop, receiver)
       // 获取索引直接返回值
       if (prop === IS_PROXY_SYMBOL || prop === IS_PLAIN_PROXY_SYMBOL) return result
@@ -158,23 +169,23 @@ function createProxy<T>(
       }
       // 获取被删除属性的值
       const delData = Reflect.get(target, prop)
-      // 判断被删除的值是否为代理对象
-      const isRef = isProxy(delData)
       const oldRoot = deepClone(root)
       // 实际删除属性
       const result = Reflect.deleteProperty(target, prop)
       if (result) {
-        const change = plainProxy ? root.value : root
-        if (isRef) {
+        const newRoot = plainProxy ? root.value : root
+        // 判断被删除的值是否为代理对象
+        if (isProxy(delData)) {
+          const k = formatKey(target, prop)
           const observers = withWatcher(root, false)
           if (observers) {
             // 代理对象被删除触发代理对象变更的所有事件
             diffIndex(delData, {}).forEach((item) => {
-              observers.trigger([...index, formatKey(target, prop), ...item], change, oldRoot)
+              observers.trigger([...index, k, ...item], newRoot, oldRoot)
             })
           }
         } else {
-          withWatcher(root, false)?.trigger([...index, formatKey(target, prop)], change, oldRoot)
+          withWatcher(root, false)?.trigger([...index, formatKey(target, prop)], newRoot, oldRoot)
         }
       }
       return result
@@ -183,13 +194,16 @@ function createProxy<T>(
 }
 
 /**
- * 创建响应式变量
+ * ## 创建响应式变量
+ *
+ * > **注意**：使用`deep`选项时需谨慎，当代理一个嵌套对象时会惰性的代理所有被访问的子孙级对象，
+ * 可能导致内存溢出，应该尽量避免对过于复杂的对象进行`deep`深度代理，使用`Vitarx.trigger`方法来触发更新事件更为合适。
  *
  * @template T - 目标变量类型
  * @param target - 任意目标变量
- * @param deep - 是否深度代理，如果是则会对其子孙嵌套对象进行惰性代理，默认为true
+ * @param deep - 是否深度代理，如果是则会对其子孙嵌套对象进行惰性代理，默认为false
  * @returns {Ref<T>} - 响应式变量
  */
-export function ref<T>(target: T, deep: boolean = true): Ref<T> {
+export function ref<T>(target: T, deep: boolean = false): Ref<T> {
   return createProxy(target, deep)
 }
