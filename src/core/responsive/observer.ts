@@ -10,7 +10,7 @@ export type AnyCallback = (...args: any) => any
  */
 export class Listener<C extends AnyCallback> {
   // 监听回调函数
-  readonly #callback: C
+  #callback: C
   // 限制触发次数
   readonly #limit: number
   // 已触发次数
@@ -87,19 +87,18 @@ export class Listener<C extends AnyCallback> {
    * 调用此方法会将监听器标记为弃用状态，并触发销毁回调。
    */
   destroy(): void {
-    // 放入宏任务中执行，防止微任务中执行
-    setTimeout(() => {
-      if (!this.#isDispose) {
-        this.#isDispose = true
-        if (!this.#onDestroyedCallback) return
-        this.#onDestroyedCallback.forEach((callback) => {
-          try {
-            callback()
-          } catch (e) {}
-        })
-        this.#onDestroyedCallback = undefined
-      }
-    }, 0)
+    if (!this.#isDispose) {
+      this.#isDispose = true
+      if (!this.#onDestroyedCallback) return
+      this.#onDestroyedCallback.forEach((callback) => {
+        try {
+          callback()
+        } catch (e) {}
+      })
+      this.#onDestroyedCallback = undefined
+      // @ts-ignore
+      this.#callback = undefined
+    }
   }
 
   /**
@@ -155,8 +154,7 @@ export class Listener<C extends AnyCallback> {
    * 调用此方法过后，trigger方法会忽略回调，直到unpause方法被调用
    */
   pause() {
-    // 放入宏任务中执行，防止微任务中执行
-    setTimeout(() => (this.#pause = true), 0)
+    this.#pause = true
   }
 
   /**
@@ -165,7 +163,7 @@ export class Listener<C extends AnyCallback> {
    * 调用此方法后，如果之前处于暂停状态，则继续触发回调。
    */
   unpause() {
-    setTimeout(() => (this.#pause = false), 0)
+    this.#pause = false
   }
 
   /**
@@ -262,6 +260,13 @@ export class Observers<E> {
    */
   hasEvent(event: E): boolean {
     return !!this.#listeners.get(event)?.length
+  }
+
+  /**
+   * 获取所有已注册的事件名称
+   */
+  getEventNames(): E[] {
+    return Array.from(this.#listeners.keys())
   }
 
   // 添加观察者
