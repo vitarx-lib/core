@@ -2,7 +2,7 @@ import { Listener, Observers } from './observer.js'
 import { getProxyIndex, isPlainProxy, isProxy } from './proxy.js'
 import { getIndexValue, isArray, isFunction } from '../utils'
 import { Dep } from './track-dependencies'
-import { AnyFunction, ChangeIndex, WatchCallback, WatchOptions } from '../../types/watch'
+import { AnyFunction, Callback, ChangeIndex, WatchCallback, WatchOptions } from '../../types/watch'
 // 事件标识
 const CHANGE_EVENT_SYMBOL = Symbol('VITARX_PROXY_CHANGE_EVENT_SYMBOL')
 // 观察者标识
@@ -60,12 +60,12 @@ export class VariableObservers<T> {
         lastIndex = index.pop()
         // 上一层值
         lastSource = getIndexValue(newValue, index)
-        this.#pushTrigger(event, [n, o, lastIndex, isProxy(lastSource) ? lastSource : newValue])
+        this.#pushTrigger(event, [n, o, lastIndex, lastSource])
       } else {
         lastIndex = index.pop()
       }
     }
-    // 如果是普通类型代理对象，则使用value做为change的值
+    // 触发默认事件
     let params = isPlainProxy(newValue)
       ? [(newValue as any).value, (oldValue as any).value, lastIndex, newValue]
       : [newValue, oldValue, lastIndex, newValue]
@@ -133,7 +133,8 @@ export class VariableObservers<T> {
       const eventParams = this.#waitTriggerList.get(trigger.event)
       if (eventParams) {
         // 如果已经存在相同的事件，则更新参数
-        eventParams[0] = trigger.params[0]
+        eventParams[0] = trigger.params[0] // 更新新值
+        eventParams[3] = trigger.params[3] // 更新源对象
       } else {
         // 如果不存在，则创建
         this.#waitTriggerList.set(trigger.event, trigger.params)
@@ -246,7 +247,7 @@ export function withWatcher<T extends object>(
  * @param {boolean} options.limit - 限制触发次数，默认为0，表示不限制触发次数
  * @returns {Listener<C>} 监听器，可以调用`destroy()`方法取消监听，以及`pause()`方法暂停监听，`unpause()`方法恢复监听...
  */
-export function watch<T, C extends AnyFunction = WatchCallback<T>>(
+export function watch<T, C extends AnyFunction = Callback<T>>(
   source: T,
   callback: C,
   options?: WatchOptions
@@ -257,56 +258,20 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
   if (isProxy(source)) {
     return withWatcher(source as object)!.register(getProxyIndex(source)!, callback, options)
   } else if (isArray(source)) {
-    const WATCH_INDEX = Symbol('WATCH_INDEX')
-    // 代理数组
-    let refs: any[] = []
-    // 创建监听器
-    let listener = new Listener<C>(
-      function (n: any, o: any, i: any, s: any) {
-        const index = s?.[WATCH_INDEX]
-        callback(n, o, index === undefined ? i : index, s)
-      } as C,
-      options?.limit
-    )
-    listener.onDestroyed(() => {
-      // 删除索引
+    const refs = new Set(source.filter(isProxy))
+    if (refs.size) {
+      // 创建监听器
+      const listener = new Listener<C>(callback, options?.limit || 0)
+      // 遍历源数组，获取代理对象
       refs.forEach((item) => {
-        try {
-          delete item[WATCH_INDEX]
-        } catch (e) {
-          console.error('Vitarx.watch.error', e)
-        }
+        withWatcher(item).register(getProxyIndex(item)!, listener, options)
       })
-      // @ts-ignore
-      refs = undefined
-      // @ts-ignore
-      listener = undefined
-      // @ts-ignore
-      source = undefined
-      // @ts-ignore
-      callback = undefined
-    })
-    // 遍历源数组，获取代理对象
-    source.forEach((item, i) => {
-      if (isProxy(item) && !refs.includes(item)) {
-        refs[i] = item
-        Object.defineProperty(item, WATCH_INDEX, {
-          value: i,
-          configurable: true
-        })
-        const watcher = withWatcher(item)
-        watcher.register(getProxyIndex(item)!, listener, options)
-      }
-    })
-    if (refs.length) {
       return listener
-    } else {
-      listener.destroy()
-      // @ts-ignore
-      listener = undefined
     }
   }
-  console.warn('Vitarx.watch方法只能监听通过ref方法创建的响应式变量，请勿用于监听普通变量。')
+  console.warn(
+    `Vitarx.watch方法只能监听通过ref方法创建的响应式变量，请勿用于监听普通变量。\n如果监听源是对象的属性(例如：refObj.key)，请改用监听函数返回值的方式监听，示例：watch(()=>refObj.key,...)。`
+  )
   return undefined
 }
 
@@ -317,7 +282,7 @@ export function watch<T, C extends AnyFunction = WatchCallback<T>>(
  *
  * @see watch
  */
-export function watchOnce<T, C extends AnyFunction = WatchCallback<T>>(
+export function watchOnce<T, C extends AnyFunction = Callback<T>>(
   source: T,
   callback: C
 ): Listener<C> | undefined {
@@ -346,7 +311,7 @@ export function watchOnce<T, C extends AnyFunction = WatchCallback<T>>(
  * @returns {Listener<C> | undefined} - 返回监听器，如果返回值是undefined，则表示监听失败
  * @see watch
  */
-export function watchReturnSource<T extends AnyFunction, C extends AnyFunction = WatchCallback<T>>(
+export function watchReturnSource<T extends AnyFunction, C extends AnyFunction = Callback<T>>(
   fn: T,
   callback: C,
   options?: WatchOptions
@@ -380,7 +345,7 @@ export function watchReturnSource<T extends AnyFunction, C extends AnyFunction =
  * @returns {Listener<C | T> | undefined} - 返回监听器，如果返回值是undefined，则表示没有任何`依赖`。
  * @see watch
  */
-export function watchDep<T extends AnyFunction, C extends AnyFunction>(
+export function watchDep<T extends AnyFunction, C extends WatchCallback>(
   fn: T,
   callback?: C,
   options?: WatchOptions
@@ -440,6 +405,6 @@ export function watchDep<T extends AnyFunction, C extends AnyFunction>(
 export function trigger(proxy: Vitarx.Ref<any>, index: ChangeIndex = []) {
   if (isProxy(proxy)) {
     const watcher = withWatcher(proxy)
-    watcher.trigger([], proxy, proxy)
+    watcher.trigger(index, proxy, proxy)
   }
 }
