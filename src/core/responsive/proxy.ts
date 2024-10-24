@@ -1,10 +1,10 @@
-import { deepClone, diffIndex, isArray, isObject, isString, numStrToNum } from '../utils'
+import { deepClone, isArray, isObject, isPlainObject, isString, numStrToNum } from '../utils'
 import { WATCHER_TAG_SYMBOL, withWatcher } from './watch.js'
 import { Dep } from './track-dependencies.js'
 // 代理标识符
-export const IS_PROXY_SYMBOL = Symbol('VITARX_IS_PROXY_SYMBOL')
+export const PROXY_SYMBOL = Symbol('VITARX_PROXY_SYMBOL')
 // 值代理标识符
-export const IS_PLAIN_PROXY_SYMBOL = Symbol('VITARX_IS_PLAIN_PROXY_SYMBOL')
+export const PLAIN_PROXY_SYMBOL = Symbol('VITARX_IS_PLAIN_PROXY_SYMBOL')
 // 获取代理对象的所在的根对象
 export const VITARX_PROXY_GET_ROOT_SYMBOL = Symbol('VITARX_PROXY_GET_ROOT_SYMBOL')
 // 用于描述基于根对象的索引
@@ -19,13 +19,24 @@ function formatKey(obj: any, key: any) {
 /**
  * 判断是否为代理对象
  *
+ * @alias isReactive
  * @param {any} target - 任意变量
  */
 export function isProxy(target: any): boolean {
   if (typeof target !== 'object') {
     return false
   }
-  return target[IS_PROXY_SYMBOL] !== undefined
+  return target[PROXY_SYMBOL] !== undefined
+}
+
+/**
+ * 与isProxy功能相同
+ *
+ * @alias isProxy
+ * @see isProxy
+ */
+export function isReactive(target: any): boolean {
+  return isProxy(target)
 }
 
 /**
@@ -33,9 +44,9 @@ export function isProxy(target: any): boolean {
  *
  * @param target
  */
-export function isPlainProxy(target: any): boolean {
+export function isRef(target: any): boolean {
   if (typeof target !== 'object') return false
-  return target[IS_PLAIN_PROXY_SYMBOL] === true
+  return target[PLAIN_PROXY_SYMBOL] === true
 }
 
 /**
@@ -46,37 +57,37 @@ export function isPlainProxy(target: any): boolean {
  */
 export function getProxyIndex(target: any): undefined | Index {
   if (typeof target !== 'object') return undefined
-  return target[IS_PROXY_SYMBOL]
+  return target[PROXY_SYMBOL]
 }
 
 /**
- * 变量转换为响应对象
+ * 获取根代理对象，
+ *
+ * 这在嵌套代理的时候非常有用，可以拿到其所在的根对象。
+ *
+ * @param proxy
+ */
+export function getProxyRoot(proxy: Vitarx.Ref<object>): any {
+  // @ts-ignore
+  return proxy?.[VITARX_PROXY_GET_ROOT_SYMBOL]
+}
+
+/**
+ * 将目标变量转换为值代理
  *
  * @param target
- * @param index
  */
-function toRefObject<T>(target: T, index: Index = []) {
-  let source: Ref<T>
+function toRef<T>(target: T): Vitarx.Ref<T> {
   // 对象代理
-  if (isObject(target)) {
-    source = target as Ref<T>
-  }
-  // 值代理
-  else {
-    source = {
-      value: target
-    } as unknown as Ref<T>
-    Object.defineProperty(source, IS_PLAIN_PROXY_SYMBOL, { value: true })
-    // 调整toString方法
-    Object.defineProperty(source, 'toString', {
-      value: function () {
-        return this.value.toString()
-      }
-    })
-  }
-  // 标识为代理对象
-  Object.defineProperty(source, IS_PROXY_SYMBOL, {
-    value: index
+  const source: Vitarx.Ref<T> = {
+    value: target
+  } as unknown as Vitarx.Ref<T>
+  Object.defineProperty(source, PLAIN_PROXY_SYMBOL, { value: true })
+  // 调整toString方法
+  Object.defineProperty(source, 'toString', {
+    value: function () {
+      return this.value.toString()
+    }
   })
   return source
 }
@@ -87,33 +98,26 @@ function toRefObject<T>(target: T, index: Index = []) {
  * 只需要传入target
  *
  * @template T - 目标变量类型
- * @param target - 任意目标变量
+ * @param source
  * @param deep - 是否深度代理，如果是则会对其子孙嵌套对象进行惰性代理，默认为true
  * @param index - 索引-递归时使用
  * @param root - 顶级代理对象-递归时使用
  */
-function createProxy<T>(
-  target: T,
+function createRefProxy<T extends object>(
+  source: T,
   deep: boolean = true,
   index: Index = [],
-  root?: Ref<any>
-): Ref<T> {
+  root?: any
+): T {
   // 避免循环代理
-  if (isProxy(target)) {
+  if (isProxy(source)) {
     console.trace('循环代理对象，这可能是无意的，请检查代码。')
-    return target as Ref<T>
+    return source
   }
-  const source = toRefObject(target, index)
+  Object.defineProperty(source, PROXY_SYMBOL, {
+    value: index
+  })
   root ||= source
-  Object.defineProperty(source, WATCHER_TAG_SYMBOL, {
-    value: withWatcher(root)
-  })
-  // 获取顶级代理对象
-  Object.defineProperty(source, VITARX_PROXY_GET_ROOT_SYMBOL, {
-    value: root
-  })
-  // 判断是否为值代理
-  const plainProxy = isPlainProxy(source)
   // 代理对象
   return new Proxy(source, {
     get(target, prop, receiver): any {
@@ -123,35 +127,31 @@ function createProxy<T>(
       if (prop === VITARX_PROXY_GET_ROOT_SYMBOL) return root
       let result = Reflect.get(target, prop, receiver)
       // 获取索引直接返回值
-      if (prop === IS_PROXY_SYMBOL || prop === IS_PLAIN_PROXY_SYMBOL) return result
+      if (prop === PROXY_SYMBOL || prop === PLAIN_PROXY_SYMBOL) return result
       // 子孙级惰性代理
-      if (isObject(result) && deep) {
-        if (!isProxy(result)) {
-          const proxy = createProxy(result, deep, [...index, formatKey(target, prop)], root)
-          ;(target as any)[prop] = proxy
-          result = proxy as any
-        }
+      if (
+        isObject(result) &&
+        !isProxy(result) &&
+        (deep || (isPlainObject(root) && index.length === 0))
+      ) {
+        const proxy = createRefProxy(result, deep, [...index, formatKey(target, prop)], root)
+        // 赋值给父对象
+        ;(target as any)[prop] = proxy
+        result = proxy as any
       }
       if (target.hasOwnProperty(prop)) {
-        // 基本类型代理，跟踪整个对象的变更
-        if (plainProxy) {
-          // 追踪对象引用记录
-          Dep.track(target)
-        } else {
-          // 追踪对象属性引用记录
-          Dep.track(target, formatKey(target, prop))
-        }
+        // 追踪对象属性引用记录
+        Dep.track(root, [...index, formatKey(target, prop)])
       }
       return result
     },
     set(target, key, value, receiver) {
       const oldValue = Reflect.get(target, key)
       if (oldValue !== value) {
-        const events = [...index, formatKey(target, key)]
         const oldRoot = deepClone(root)
         const result = Reflect.set(target, key, value, receiver)
         if (result) {
-          withWatcher(root, false)?.trigger(events, root, oldRoot)
+          withWatcher(root, false)?.trigger([...index, formatKey(target, key)], root, oldRoot)
         }
         return result
       }
@@ -159,34 +159,15 @@ function createProxy<T>(
     },
     deleteProperty(target, prop) {
       // 处理属性被删除
-      if (
-        prop === IS_PROXY_SYMBOL ||
-        prop === WATCHER_TAG_SYMBOL ||
-        prop === IS_PLAIN_PROXY_SYMBOL
-      ) {
-        console.error('不允许删除Vitarx代理对象的内部关键属性')
+      if (prop === PROXY_SYMBOL || prop === WATCHER_TAG_SYMBOL || prop === PLAIN_PROXY_SYMBOL) {
+        console.trace('不允许删除Vitarx代理对象的内部关键属性')
         return false
       }
-      // 获取被删除属性的值
-      const delData = Reflect.get(target, prop)
       const oldRoot = deepClone(root)
       // 实际删除属性
       const result = Reflect.deleteProperty(target, prop)
       if (result) {
-        const newRoot = plainProxy ? root.value : root
-        // 判断被删除的值是否为代理对象
-        if (isProxy(delData)) {
-          const k = formatKey(target, prop)
-          const observers = withWatcher(root, false)
-          if (observers) {
-            // 代理对象被删除触发代理对象变更的所有事件
-            diffIndex(delData, {}).forEach((item) => {
-              observers.trigger([...index, k, ...item], newRoot, oldRoot)
-            })
-          }
-        } else {
-          withWatcher(root, false)?.trigger([...index, formatKey(target, prop)], newRoot, oldRoot)
-        }
+        withWatcher(root, false)?.trigger([...index, formatKey(target, prop)], root, oldRoot)
       }
       return result
     }
@@ -194,16 +175,30 @@ function createProxy<T>(
 }
 
 /**
- * ## 创建响应式变量
+ * 响应式对象
  *
- * > **注意**：使用`deep`选项时需谨慎，当代理一个嵌套对象时会惰性的代理所有被访问的子孙级对象，
+ * @template T - 目标对象类型
+ * @param {T} obj - 对象或数组
+ * @param {boolean} deep - 是否深度代理，如果是则会对其子孙嵌套对象进行惰性代理，默认为true
+ */
+export function reactive<T extends Vitarx.ReactiveTargetType>(
+  obj: T,
+  deep: boolean = true
+): Vitarx.Reactive<T> {
+  return createRefProxy(obj as Vitarx.Reactive<T>, deep)
+}
+
+/**
+ * ## 创建一个值代理对象，使用`.value`访问或修改
+ *
+ * > **注意**：使用`deep`选项时需谨慎，当值是一个对象时会惰性的代理所有被访问的子孙级对象，
  * 可能导致内存溢出，应该尽量避免对过于复杂的对象进行`deep`深度代理，使用`Vitarx.trigger`方法来触发更新事件更为合适。
  *
  * @template T - 目标变量类型
  * @param target - 任意目标变量
- * @param deep - 是否深度代理，如果是则会对其子孙嵌套对象进行惰性代理，默认为false
- * @returns {Ref<T>} - 响应式变量
+ * @param deep - 是否深度代理，如果是则会对其子孙嵌套对象进行惰性代理，默认为true
+ * @returns {Vitarx.Ref<T>} - 响应式变量
  */
-export function ref<T>(target: T, deep: boolean = false): Ref<T> {
-  return createProxy(target, deep)
+export function ref<T>(target: T, deep: boolean = true): Vitarx.Ref<T> {
+  return createRefProxy(toRef(target), deep)
 }
