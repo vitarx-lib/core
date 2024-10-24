@@ -1,8 +1,10 @@
 // 提取监听源类型
 
+import { Computed } from '../core/responsive/computed'
+
 type ExtractWatchSourceType<T> = T extends () => any ? ReturnType<T> : T
 // 提取代理类型的索引
-type ExtractProxyIndexType<T, D> = T extends Vitarx.Ref
+type ExtractProxyIndexType<T, D> = T extends Vitarx.Ref | Computed<any>
   ? 'value'
   : T extends Vitarx.Reactive
     ? Vitarx.ExcludeProxySymbol<keyof T>
@@ -12,13 +14,13 @@ type ExtractIndexType<T, D = never> = T extends Array<any> ? number : ExtractPro
 // 推出数组元素类型
 type InferArrayType<T, D = never> = T extends Array<infer R> ? ExtractProxyType<R, D> : D
 // 提取父级类型
-type ExtractOriginType<T, D = any> = T extends Vitarx.Ref
+type ExtractOriginType<T, D = any> = T extends Vitarx.Ref | Computed<any>
   ? T
   : T extends Vitarx.RefObjectTarget
     ? Vitarx.Ref<T>
     : InferArrayType<T, D>
 // 提取代理类型，否则返回默认值
-export type ExtractProxyType<T, D> = T extends Vitarx.Ref
+export type ExtractProxyType<T, D> = T extends Vitarx.Ref | Computed<any>
   ? T['value']
   : T extends Vitarx.AllProxyInterface
     ? T extends Vitarx.Reactive<Vitarx.UnProxy<T>>
