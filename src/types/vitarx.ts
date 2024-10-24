@@ -13,7 +13,7 @@ declare global {
   /**
    * 响应式代理对象
    */
-  type Reactive<T extends Vitarx.ReactiveTargetType> = Vitarx.Reactive<T>
+  type Reactive<T extends Vitarx.ReactiveTarget> = Vitarx.Reactive<T>
   namespace Vitarx {
     namespace JSX {
       /**
@@ -80,6 +80,8 @@ declare global {
       children: Children
     }
 
+    // 响应式代理相关
+
     /**
      * ## 值代理对象
      *
@@ -99,15 +101,15 @@ declare global {
     }
 
     // 代理目标类型
-    type RefTarget<T> = T extends ReactiveTargetType ? RefObjectTarget<T> : T
+    type RefTarget<T> = T extends ReactiveTarget ? RefObjectTarget<T> : T
     // 代理对象目标
-    type RefObjectTarget<T extends ReactiveTargetType = ReactiveTargetType> = Reactive<T> & {
+    type RefObjectTarget<T extends ReactiveTarget = ReactiveTarget> = Reactive<T> & {
       [REF_OBJECT_TARGET_SYMBOL]: true
     }
     // 代理目标类型
-    type ReactiveTargetType = Record<any, any> | any[]
+    type ReactiveTarget = Record<any, any> | any[]
     // 响应式代理，对象、数组。
-    type Reactive<T extends ReactiveTargetType = ReactiveTargetType> = T & { [PROXY_SYMBOL]: true }
+    type Reactive<T extends ReactiveTarget = ReactiveTarget> = T & { [PROXY_SYMBOL]: true }
     // 代理类型
     type Proxy<T = any> = T extends object ? Reactive<T> | Ref<T> : Ref<T>
     // 排除代理符号类型
