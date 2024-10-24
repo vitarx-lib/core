@@ -8,6 +8,10 @@ import { CHANGE_EVENT_SYMBOL, type EventName, indexToEvent } from './watch.js'
  * 键为代理对象，值为引用的键set集合
  */
 type Deps = Map<Vitarx.Proxy, Set<EventName>>
+type Result = {
+  result: any
+  deps: Deps
+}
 
 /**
  * 依赖收集器
@@ -56,8 +60,8 @@ export class Dep {
    * @param {boolean} merge 合并依赖，默认为false, 如果为true，则会把依赖索引向上合并
    * @returns { Deps } `Map对象`，键为依赖的根代理对象，值为引用的键索引`Set对象`，存在`.`连接符代表多层引用
    */
-  static collect(fn: () => any, merge: boolean = false): Deps {
-    return this.#beginCollect(fn, merge) as Deps
+  static collect(fn: () => any, merge: boolean = false): Result {
+    return this.#beginCollect(fn, merge) as Result
   }
 
   /**
@@ -66,7 +70,7 @@ export class Dep {
    * @alias collect
    * @see collect
    */
-  static get(fn: () => any, merge: boolean = false): Deps {
+  static get(fn: () => any, merge: boolean = false): Result {
     return this.collect(fn, merge)
   }
 
@@ -77,7 +81,7 @@ export class Dep {
    * @param {boolean} merge 合并依赖，默认为false, 如果为true，则会把依赖索引向上合并
    * @returns { Promise<Deps> }
    */
-  static async asyncCollect(fn: () => Promise<any>, merge: boolean = false): Promise<Deps> {
+  static async asyncCollect(fn: () => Promise<any>, merge: boolean = false): Promise<Result> {
     return this.#beginCollect(fn, merge)
   }
 
@@ -88,7 +92,7 @@ export class Dep {
    * @param merge
    * @private
    */
-  static #beginCollect(fn: Function, merge: boolean = false): Promise<Deps> | Deps {
+  static #beginCollect(fn: Function, merge: boolean = false): Promise<Result> | Result {
     // 创建临时依赖id
     const id = unique_id(15)
     // 创建依赖集合
@@ -97,21 +101,22 @@ export class Dep {
     this.#collectors.set(id, deps)
     if (isAsyncFunction(fn)) {
       return fn()
-        .then(() => {
+        .then((result: any) => {
           if (merge) {
             deps.forEach((keys, proxy) => {
               // 添加合并过后的依赖
               deps.set(proxy, mergeDepIndex(keys))
             })
           }
-          return deps
+          return { result, deps }
         })
         .finally(() => {
           this.#collectors.delete(id)
         })
     }
+    let result
     try {
-      fn()
+      result = fn()
     } catch (e) {
       // 捕获并记录函数执行过程中的异常
       console.error('Error in function execution:', e)
@@ -126,7 +131,7 @@ export class Dep {
       })
     }
     // 返回依赖集合
-    return deps
+    return { result, deps }
   }
 }
 
