@@ -1,41 +1,19 @@
 import { Fragment as VFragment } from '../index'
 import { Widget } from '../core/widgets'
 import HtmlIntrinsicElements from './html-elements'
-import type {
-  IS_PLAIN_PROXY_SYMBOL,
-  IS_PROXY_SYMBOL,
-  VITARX_PROXY_GET_ROOT_SYMBOL
-} from '../core/responsive/proxy'
 
+declare const PLAIN_PROXY_SYMBOL: unique symbol
+declare const PROXY_SYMBOL: unique symbol
+declare const REF_OBJECT_TARGET_SYMBOL: unique symbol
 declare global {
   /**
-   * ## Vitarx响应式变量代理
-   *
-   * 基本类型变量，如字符串、数字、布尔等，需要使用`.value`访问和修改。
-   *
-   * 对象和数组类型，直接访问和修改。
-   *
-   * @example
-   * ```ts
-   * import { ref } from 'vitarx'
-   *
-   * // 创建基本类型响应式变量
-   * const count = ref(0)
-   * count.value++
-   *
-   * // 创建对象响应式变量
-   * const state = ref({ count: 0 })
-   * state.count++
-   *
-   * // 创建数组响应式变量
-   * const list = ref([1, 2, 3])
-   * list.push(4)
-   * console.log(list[3]) // 4
-   * ```
-   *
-   * @template T - 被代理变量的类型
+   * 值代理对象
    */
   type Ref<T> = Vitarx.Ref<T>
+  /**
+   * 响应式代理对象
+   */
+  type Reactive<T extends Vitarx.ReactiveTargetType> = Vitarx.Reactive<T>
   namespace Vitarx {
     namespace JSX {
       /**
@@ -103,7 +81,7 @@ declare global {
     }
 
     /**
-     * ## Vitarx响应式变量代理
+     * ## 值代理对象
      *
      * 普通类型变量，如字符串、数字、布尔等，需要使用`.value`访问和修改。
      *
@@ -111,33 +89,39 @@ declare global {
      *
      * @template T - 被代理变量的类型
      */
-    type Ref<T> = T extends Record<any, any> | any[] ? ObjectProxy<T> : PlainProxy<T>
-    /**
-     * 普通类型变量，如字符串、数字、布尔等。
-     *
-     * 需要使用`.value`访问和修改。
-     */
-    type PlainProxy<T> = {
-      value: T
-      [IS_PLAIN_PROXY_SYMBOL]: true
-      [IS_PROXY_SYMBOL]: true
-      [VITARX_PROXY_GET_ROOT_SYMBOL]: PlainProxy<T>
+    interface Ref<T = any> {
+      [PLAIN_PROXY_SYMBOL]: true
+      [PROXY_SYMBOL]: true
+
+      get value(): RefTarget<T>
+
+      set value(_: T)
     }
-    /**
-     * 对象响应式变量代理，如对象、数组等。
-     *
-     * 直接访问和修改。
-     */
-    type ObjectProxy<T extends Record<any, any> | any[]> = T & { [IS_PROXY_SYMBOL]: true }
-    // 解除响应式变量类型
-    type UnRef<T> =
-      T extends Vitarx.Ref<infer R>
-        ? Exclude<
-            R,
-            | typeof IS_PLAIN_PROXY_SYMBOL
-            | typeof IS_PROXY_SYMBOL
-            | typeof VITARX_PROXY_GET_ROOT_SYMBOL
-          >
-        : T
+
+    // 代理目标类型
+    type RefTarget<T> = T extends ReactiveTargetType ? RefObjectTarget<T> : T
+    // 代理对象目标
+    type RefObjectTarget<T extends ReactiveTargetType = ReactiveTargetType> = Reactive<T> & {
+      [REF_OBJECT_TARGET_SYMBOL]: true
+    }
+    // 代理目标类型
+    type ReactiveTargetType = Record<any, any> | any[]
+    // 响应式代理，对象、数组。
+    type Reactive<T extends ReactiveTargetType = ReactiveTargetType> = T & { [PROXY_SYMBOL]: true }
+    // 代理类型
+    type Proxy<T = any> = T extends object ? Reactive<T> | Ref<T> : Ref<T>
+    // 排除代理符号类型
+    type ExcludeProxySymbol<T> = Exclude<T, ProxySymbol>
+    // 所有代理类型
+    type AllProxyInterface = Reactive | Ref | RefObjectTarget
+    // 代理符号
+    type ProxySymbol =
+      | typeof PLAIN_PROXY_SYMBOL
+      | typeof PROXY_SYMBOL
+      | typeof REF_OBJECT_TARGET_SYMBOL
+    // 解除代理类型
+    type UnProxy<T extends AllProxyInterface> = {
+      [K in keyof Omit<T, ProxySymbol>]: T[K] extends AllProxyInterface ? UnProxy<T[K]> : T[K]
+    }
   }
 }
