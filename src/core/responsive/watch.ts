@@ -358,7 +358,7 @@ export function watchDep(
   options?: WatchOptions
 ): Listener<AnyFunction> | undefined {
   // 收集函数依赖的响应对象
-  const deps = Dep.collect(fn, true)
+  const { deps } = Dep.collect(fn, true)
   if (deps.size > 0) {
     const listener = new Listener(callback || fn, options?.limit)
     for (const [proxy, keys] of deps) {
