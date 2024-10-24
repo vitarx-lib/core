@@ -2,8 +2,7 @@ import { Listener, Observers } from './observer.js'
 import { getProxyIndex, getProxyRoot, isProxy, isRef } from './proxy.js'
 import { getIndexValue, isArray, isFunction } from '../utils'
 import { Dep } from './track-dependencies'
-import {
-  AnyFunction,
+import type {
   Callback,
   ChangeIndex,
   UnionOfValues,
@@ -11,6 +10,7 @@ import {
   WatchOptions,
   WatchSourceType
 } from '../../types/watch'
+import type { AnyFunction } from '../../types/common'
 // 事件标识
 export const CHANGE_EVENT_SYMBOL = Symbol('VITARX_PROXY_CHANGE_EVENT_SYMBOL')
 // 观察者标识

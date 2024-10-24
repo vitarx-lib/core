@@ -67,8 +67,6 @@ export type WatchCallback<NV = any, OV = any, I = any, O = any> = (
   index: I,
   origin: O
 ) => void
-// 任意函数
-export type AnyFunction = (...args: any[]) => any
 // 改变索引
 export type ChangeIndex = Array<string | symbol | number>
 
