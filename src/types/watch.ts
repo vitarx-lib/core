@@ -52,7 +52,7 @@ export type WatchSourceType =
   | Vitarx.Reactive
   | Array<Vitarx.Ref | Vitarx.Reactive>
   | Vitarx.RefObjectTarget
-  | Vitarx.ReactiveTargetType
+  | Vitarx.ReactiveTarget
   | (() => any)
 /**
  * 回调函数类型，接受四个参数：
