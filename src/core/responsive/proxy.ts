@@ -86,7 +86,7 @@ function toRef<T>(target: T): Vitarx.Ref<T> {
   // 调整toString方法
   Object.defineProperty(source, 'toString', {
     value: function () {
-      return this.value.toString()
+      return this.value?.toString() || 'undefined'
     }
   })
   return source
@@ -181,7 +181,7 @@ function createRefProxy<T extends object>(
  * @param {T} obj - 对象或数组
  * @param {boolean} deep - 是否深度代理，如果是则会对其子孙嵌套对象进行惰性代理，默认为true
  */
-export function reactive<T extends Vitarx.ReactiveTargetType>(
+export function reactive<T extends Vitarx.ReactiveTarget>(
   obj: T,
   deep: boolean = true
 ): Vitarx.Reactive<T> {
