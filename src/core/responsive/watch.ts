@@ -434,7 +434,7 @@ export function watchKeys<
  * @param {Vitarx.Ref<any>} proxy - 要触发的代理对象
  * @param {ChangeIndex} index - 触发的索引，空数组表示根节点。
  */
-export function trigger(proxy: Vitarx.Proxy, index: ChangeIndex = []) {
+export function trigger(proxy: Vitarx.Proxy, index: ChangeIndex = []): void {
   if (isProxy(proxy)) {
     const rootIndex = getProxyIndex(proxy) || []
     withWatcher(proxy).trigger([...rootIndex, ...index], getProxyRoot(proxy), getProxyRoot(proxy))
