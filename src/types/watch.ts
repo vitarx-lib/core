@@ -1,7 +1,6 @@
+import type { Computed } from '../core/responsive'
+
 // 提取监听源类型
-
-import { Computed } from '../core/responsive/computed'
-
 type ExtractWatchSourceType<T> = T extends () => any ? ReturnType<T> : T
 // 提取代理类型的索引
 type ExtractProxyIndexType<T, D> = T extends Vitarx.Ref | Computed<any>
