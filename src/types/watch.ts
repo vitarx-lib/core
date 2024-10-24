@@ -1,26 +1,32 @@
 // 提取监听源类型
-export type ExtractWatchSourceType<T> = T extends AnyFunction ? ReturnType<T> : T
-// 推出数组元素类型
-export type InferArrayType<T, D = never> = T extends Array<infer R> ? R : D
-// 推出代理类型，否则返回默认值
-export type ExtractRefType<T, D> =
-  T extends Vitarx.PlainProxy<any> ? T['value'] : T extends Vitarx.Ref<T> ? T : D
-// 创建一个联合类型，它包含了可能改变的值类型
-export type ExtractValueType<T> = ExtractRefType<T, InferArrayType<T, T>>
+
+type ExtractWatchSourceType<T> = T extends () => any ? ReturnType<T> : T
 // 提取代理类型的索引
-export type ExtractRefIndexType<T, D> = T extends Vitarx.Ref<T> ? keyof Vitarx.UnRef<T> : D
+type ExtractProxyIndexType<T, D> = T extends Vitarx.Ref
+  ? 'value'
+  : T extends Vitarx.Reactive
+    ? Vitarx.ExcludeProxySymbol<keyof T>
+    : D
 // 提取索引类型
-export type ExtractIndexType<T, D = string | number | symbol> =
-  T extends Array<any> ? number : ExtractRefIndexType<T, D>
-// 提取父节点类型
-export type ExtractOriginType<
-  T,
-  D =
-    | Vitarx.Ref<{
-        [k: string | number | symbol]: any
-      }>
-    | undefined
-> = T extends Vitarx.PlainProxy<any> ? T : T extends Vitarx.Ref<T> ? T : InferArrayType<T, D>
+type ExtractIndexType<T, D = never> = T extends Array<any> ? number : ExtractProxyIndexType<T, D>
+// 推出数组元素类型
+type InferArrayType<T, D = never> = T extends Array<infer R> ? ExtractProxyType<R, D> : D
+// 提取父级类型
+type ExtractOriginType<T, D = any> = T extends Vitarx.Ref
+  ? T
+  : T extends Vitarx.RefObjectTarget
+    ? Vitarx.Ref<T>
+    : InferArrayType<T, D>
+// 提取代理类型，否则返回默认值
+export type ExtractProxyType<T, D> = T extends Vitarx.Ref
+  ? T['value']
+  : T extends Vitarx.AllProxyInterface
+    ? T extends Vitarx.Reactive<Vitarx.UnProxy<T>>
+      ? T
+      : D
+    : D
+// 创建一个联合类型，它包含了可能改变的值类型
+export type ExtractValueType<T> = ExtractProxyType<T, InferArrayType<T, T>>
 /**
  * 回调函数类型
  *
@@ -28,10 +34,26 @@ export type ExtractOriginType<
  */
 export type Callback<T> = WatchCallback<
   ExtractValueType<ExtractWatchSourceType<T>>,
-  Vitarx.UnRef<ExtractValueType<ExtractWatchSourceType<T>>>,
+  Vitarx.ExcludeProxySymbol<ExtractValueType<ExtractWatchSourceType<T>>>,
   ExtractIndexType<ExtractWatchSourceType<T>>,
   ExtractOriginType<ExtractWatchSourceType<T>>
 >
+// 创建一个联合类型，它包含所有键对应的类型
+export type UnionOfValues<T extends Record<any, any> | any[], KS extends Array<keyof T>> =
+  T extends Array<infer R>
+    ? R
+    : {
+        [K in keyof KS]: KS[K] extends keyof T ? T[KS[K]] : never
+      }[number]
+
+// watch方法 监听源类型
+export type WatchSourceType =
+  | Vitarx.Ref
+  | Vitarx.Reactive
+  | Array<Vitarx.Ref | Vitarx.Reactive>
+  | Vitarx.RefObjectTarget
+  | Vitarx.ReactiveTargetType
+  | (() => any)
 /**
  * 回调函数类型，接受四个参数：
  * - newValue - 新值
