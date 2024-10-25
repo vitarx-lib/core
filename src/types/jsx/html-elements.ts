@@ -14,9 +14,6 @@ type HtmlProperties<T extends Element = HTMLElement> = GenerateProperties<T>
  *    - 小驼峰式语法，如onClick。
  */
 export default interface HtmlIntrinsicElements {
-  /**
-   * `<a>`标签
-   */
   a: HtmlProperties<HTMLAnchorElement>
   abbr: HtmlProperties
   address: HtmlProperties
