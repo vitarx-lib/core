@@ -13,185 +13,181 @@ type AnyObject = Record<any, any>
  *
  * @see https://www.w3schools.com/tags/ref_standardattributes.asp
  */
-const PropNames = [
-  'className',
-  'accept',
-  'accept-charset',
-  'acceptCharset',
-  'accesskey',
-  'action',
-  'align',
-  'alt',
-  'async',
-  'autocomplete',
-  'autofocus',
-  'autoplay',
-  'bgcolor',
-  'border',
-  'charset',
-  'checked',
-  'cite',
-  'class',
-  'color',
-  'cols',
-  'colspan',
-  'content',
-  'contenteditable',
-  'controls',
-  'coords',
-  'data',
-  'datetime',
-  'default',
-  'defer',
-  'dir',
-  'dirname',
-  'disabled',
-  'download',
-  'draggable',
-  'enctype',
-  'enterkeyhint',
-  'for',
-  'form',
-  'formaction',
-  'headers',
-  'height',
-  'hidden',
-  'high',
-  'href',
-  'hreflang',
-  'http-equiv',
-  'id',
-  'inert',
-  'inputmode',
-  'ismap',
-  'kind',
-  'label',
-  'lang',
-  'list',
-  'loop',
-  'low',
-  'max',
-  'maxlength',
-  'media',
-  'method',
-  'min',
-  'multiple',
-  'muted',
-  'name',
-  'novalidate',
-  'onabort',
-  'onafterprint',
-  'onbeforeprint',
-  'onbeforeunload',
-  'onblur',
-  'oncanplay',
-  'oncanplaythrough',
-  'onchange',
-  'onclick',
-  'oncontextmenu',
-  'oncopy',
-  'oncuechange',
-  'oncut',
-  'ondblclick',
-  'ondrag',
-  'ondragend',
-  'ondragenter',
-  'ondragleave',
-  'ondragover',
-  'ondragstart',
-  'ondrop',
-  'ondurationchange',
-  'onemptied',
-  'onended',
-  'onerror',
-  'onfocus',
-  'onhashchange',
-  'oninput',
-  'oninvalid',
-  'onkeydown',
-  'onkeypress',
-  'onkeyup',
-  'onload',
-  'onloadeddata',
-  'onloadedmetadata',
-  'onloadstart',
-  'onmousedown',
-  'onmousemove',
-  'onmouseout',
-  'onmouseover',
-  'onmouseup',
-  'onmousewheel',
-  'onoffline',
-  'ononline',
-  'onpagehide',
-  'onpageshow',
-  'onpaste',
-  'onpause',
-  'onplay',
-  'onplaying',
-  'onpopstate',
-  'onprogress',
-  'onratechange',
-  'onreset',
-  'onresize',
-  'onscroll',
-  'onsearch',
-  'onseeked',
-  'onseeking',
-  'onselect',
-  'onstalled',
-  'onstorage',
-  'onsubmit',
-  'onsuspend',
-  'ontimeupdate',
-  'ontoggle',
-  'onunload',
-  'onvolumechange',
-  'onwaiting',
-  'onwheel',
-  'open',
-  'optimum',
-  'pattern',
-  'placeholder',
-  'popover',
-  'popovertarget',
-  'popovertargetaction',
-  'poster',
-  'preload',
-  'readonly',
-  'rel',
-  'required',
-  'reversed',
-  'rows',
-  'rowspan',
-  'sandbox',
-  'scope',
-  'selected',
-  'shape',
-  'size',
-  'sizes',
-  'span',
-  'spellcheck',
-  'src',
-  'srcdoc',
-  'srclang',
-  'srcset',
-  'start',
-  'step',
-  'style',
-  'tabindex',
-  'target',
-  'title',
-  'translate',
-  'type',
-  'usemap',
-  'value',
-  'width',
-  'wrap'
-] as const
-
-// PropertyNames是联合类型，其中每个元素都是字符串，并且是 PropNames 数组中的元素，表示所有符合W3C标准的属性。
-type PropertyNames = (typeof PropNames)[number]
+type PropertyNames =
+  | 'className'
+  | 'accept'
+  | 'accept-charset'
+  | 'acceptCharset'
+  | 'accesskey'
+  | 'action'
+  | 'align'
+  | 'alt'
+  | 'async'
+  | 'autocomplete'
+  | 'autofocus'
+  | 'autoplay'
+  | 'bgcolor'
+  | 'border'
+  | 'charset'
+  | 'checked'
+  | 'cite'
+  | 'class'
+  | 'color'
+  | 'cols'
+  | 'colspan'
+  | 'content'
+  | 'contenteditable'
+  | 'controls'
+  | 'coords'
+  | 'data'
+  | 'datetime'
+  | 'default'
+  | 'defer'
+  | 'dir'
+  | 'dirname'
+  | 'disabled'
+  | 'download'
+  | 'draggable'
+  | 'enctype'
+  | 'enterkeyhint'
+  | 'for'
+  | 'form'
+  | 'formaction'
+  | 'headers'
+  | 'height'
+  | 'hidden'
+  | 'high'
+  | 'href'
+  | 'hreflang'
+  | 'http-equiv'
+  | 'id'
+  | 'inert'
+  | 'inputmode'
+  | 'ismap'
+  | 'kind'
+  | 'label'
+  | 'lang'
+  | 'list'
+  | 'loop'
+  | 'low'
+  | 'max'
+  | 'maxlength'
+  | 'media'
+  | 'method'
+  | 'min'
+  | 'multiple'
+  | 'muted'
+  | 'name'
+  | 'novalidate'
+  | 'onabort'
+  | 'onafterprint'
+  | 'onbeforeprint'
+  | 'onbeforeunload'
+  | 'onblur'
+  | 'oncanplay'
+  | 'oncanplaythrough'
+  | 'onchange'
+  | 'onclick'
+  | 'oncontextmenu'
+  | 'oncopy'
+  | 'oncuechange'
+  | 'oncut'
+  | 'ondblclick'
+  | 'ondrag'
+  | 'ondragend'
+  | 'ondragenter'
+  | 'ondragleave'
+  | 'ondragover'
+  | 'ondragstart'
+  | 'ondrop'
+  | 'ondurationchange'
+  | 'onemptied'
+  | 'onended'
+  | 'onerror'
+  | 'onfocus'
+  | 'onhashchange'
+  | 'oninput'
+  | 'oninvalid'
+  | 'onkeydown'
+  | 'onkeypress'
+  | 'onkeyup'
+  | 'onload'
+  | 'onloadeddata'
+  | 'onloadedmetadata'
+  | 'onloadstart'
+  | 'onmousedown'
+  | 'onmousemove'
+  | 'onmouseout'
+  | 'onmouseover'
+  | 'onmouseup'
+  | 'onmousewheel'
+  | 'onoffline'
+  | 'ononline'
+  | 'onpagehide'
+  | 'onpageshow'
+  | 'onpaste'
+  | 'onpause'
+  | 'onplay'
+  | 'onplaying'
+  | 'onpopstate'
+  | 'onprogress'
+  | 'onratechange'
+  | 'onreset'
+  | 'onresize'
+  | 'onscroll'
+  | 'onsearch'
+  | 'onseeked'
+  | 'onseeking'
+  | 'onselect'
+  | 'onstalled'
+  | 'onstorage'
+  | 'onsubmit'
+  | 'onsuspend'
+  | 'ontimeupdate'
+  | 'ontoggle'
+  | 'onunload'
+  | 'onvolumechange'
+  | 'onwaiting'
+  | 'onwheel'
+  | 'open'
+  | 'optimum'
+  | 'pattern'
+  | 'placeholder'
+  | 'popover'
+  | 'popovertarget'
+  | 'popovertargetaction'
+  | 'poster'
+  | 'preload'
+  | 'readonly'
+  | 'rel'
+  | 'required'
+  | 'reversed'
+  | 'rows'
+  | 'rowspan'
+  | 'sandbox'
+  | 'scope'
+  | 'selected'
+  | 'shape'
+  | 'size'
+  | 'sizes'
+  | 'span'
+  | 'spellcheck'
+  | 'src'
+  | 'srcdoc'
+  | 'srclang'
+  | 'srcset'
+  | 'start'
+  | 'step'
+  | 'style'
+  | 'tabindex'
+  | 'target'
+  | 'title'
+  | 'translate'
+  | 'type'
+  | 'usemap'
+  | 'value'
+  | 'width'
+  | 'wrap'
 
 // 判断一个属性P是否存在于W3C标准属性中
 type IsW3CHtmlProperties<P> = P extends string
