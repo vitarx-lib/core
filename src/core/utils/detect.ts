@@ -52,7 +52,7 @@ export function isEmpty(val: any): boolean {
  * @param func
  */
 export function isAsyncFunction(func: Function): boolean {
-  return func?.constructor?.name === 'AsyncFunction'
+  return typeof func === 'function' && func?.constructor?.name === 'AsyncFunction'
 }
 
 /**
