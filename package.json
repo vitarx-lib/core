@@ -14,9 +14,7 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "push": "npm publish",
-    "test": "tsx test.ts",
-    "test2": "node tests/test.js"
+    "push": "npm publish"
   },
   "devDependencies": {
     "@types/node": "^22.7.2",
@@ -28,5 +26,8 @@
     "dist",
     "LICENSE",
     "README.md"
-  ]
+  ],
+  "dependencies": {
+    "csstype": "^3.1.3"
+  }
 }

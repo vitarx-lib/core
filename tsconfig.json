@@ -4,6 +4,7 @@
     "module": "ES2020",
     "outDir": "dist",
     "esModuleInterop": true,
+    "jsx": "preserve",
     "strict": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
@@ -19,6 +20,7 @@
     ]
   },
   "include": [
-    "src"
+    "src",
+    "tests"
   ]
 }
