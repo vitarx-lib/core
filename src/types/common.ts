@@ -1,5 +1,9 @@
 // 任意函数
 export type AnyFunction = (...args: any[]) => any
+export type AnyObject = Record<string | symbol, any>
+export type AnyArray = Array<any>
+export type AnyObjectOrArray = AnyObject | AnyArray
+
 // 深度只读
 export type DeepReadonly<T> = T extends object
   ? {
