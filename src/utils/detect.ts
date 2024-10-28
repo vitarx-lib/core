@@ -1,3 +1,5 @@
+import { AnyCollection } from '../types/common'
+
 /**
  * 判断是否为对象
  *
@@ -62,4 +64,61 @@ export function isAsyncFunction(func: Function): boolean {
  */
 export function isFunction(val: any): val is Function {
   return typeof val === 'function'
+}
+
+/**
+ * 判断是否为纯数字字符串
+ *
+ * @param str
+ */
+export function isNumString(str: string): boolean {
+  const integerRegex = /\d+$/
+  return integerRegex.test(str)
+}
+
+/**
+ * 判断是否为Map对象
+ *
+ * @param obj
+ */
+export function isMap(obj: any): obj is Map<any, any> {
+  return Object.prototype.toString.call(obj) === '[object Map]'
+}
+
+/**
+ * 判断是否为Set对象
+ *
+ * @param obj
+ */
+export function isSet(obj: any): obj is Set<any> {
+  return Object.prototype.toString.call(obj) === '[object Set]'
+}
+
+/**
+ * 判断是否为WeakMap对象
+ *
+ * @param obj
+ */
+export function isWeakMap(obj: any): obj is WeakMap<WeakKey, any> {
+  return Object.prototype.toString.call(obj) === '[object WeakMap]'
+}
+
+/**
+ * 判断是否为WeakSet对象
+ *
+ * @param obj
+ */
+export function isWeakSet(obj: any): obj is WeakSet<WeakKey> {
+  return Object.prototype.toString.call(obj) === '[object WeakSet]'
+}
+
+/**
+ * 判断是否集合对象
+ *
+ * 不区分 Map、Set、WeakMap、WeakSet
+ *
+ * @param obj
+ */
+export function isCollection(obj: any): obj is AnyCollection {
+  return isMap(obj) || isSet(obj) || isWeakMap(obj) || isWeakSet(obj)
 }
