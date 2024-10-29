@@ -1,4 +1,4 @@
-import { isProxy, type PropName, type ProxySymbol } from './helper.js'
+import { AnyProxy, isProxy, type PropName } from './helper.js'
 import { isAsyncFunction } from '../../utils'
 import type { AnyFunction } from '../../types/common'
 
@@ -7,7 +7,7 @@ import type { AnyFunction } from '../../types/common'
  *
  * 键为代理对象，值为引用的键set集合
  */
-type Deps = Map<ProxySymbol, Set<PropName>>
+type Deps = Map<AnyProxy, Set<PropName>>
 /** 收集结果 */
 type Result = {
   /** 函数执行结果 */
@@ -37,7 +37,7 @@ export class Depend {
    * @param proxy 代理对象
    * @param prop 属性
    */
-  static track(proxy: ProxySymbol, prop: PropName): void {
+  static track(proxy: AnyProxy, prop: PropName): void {
     if (!isProxy(proxy)) return
     if (this.#collectors.size) {
       // 遍历收集器，并记录引用
@@ -139,7 +139,7 @@ export class Depend {
  * @param prop 属性
  * @see Depend.track
  */
-export function track(proxy: ProxySymbol, prop: PropName): void {
+export function track(proxy: AnyProxy, prop: PropName): void {
   Depend.track(proxy, prop)
 }
 
