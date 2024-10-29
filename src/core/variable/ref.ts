@@ -3,6 +3,7 @@ import { isProxy, ProxySymbol } from './helper.js'
 import { createReactive } from './reactive.js'
 import { Observers } from '../observers'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL } from './constants.js'
+import { track } from './depend'
 
 /** 解除响应式对象 */
 export type UnRef<T> = T extends Ref<any> ? T['value'] : T
@@ -18,15 +19,15 @@ export type UnRef<T> = T extends Ref<any> ? T['value'] : T
  *
  * @example
  * ```ts
- * const count = new Ref(0) // 或调用助手函数 ref(0)
+ * const count = new Ref(0) // 或使用助手函数 ref(0)
  * count.value++ // count 的值变为1
  * ```
  */
 export class Ref<T> implements ProxySymbol {
   /** 目标变量 */
-  #target: T
+  protected target: T
   /** 是否深度代理 */
-  readonly #deep: boolean
+  protected readonly deep: boolean
 
   /**
    * 构造函数
@@ -35,26 +36,29 @@ export class Ref<T> implements ProxySymbol {
    * @param deep - 是否深度代理，默认为true
    */
   constructor(target: T, deep: boolean = true) {
-    this.#target = target
-    this.#deep = deep
+    this.target = target
+    this.deep = deep
     this.#detectProxy(target)
   }
 
   /** 获取目标变量 */
   get value(): T {
     // 惰性代理子对象
-    if (this.#deep && isObject(this.#target) && !isProxy(this.#target)) {
-      this.#target = createReactive(this.#target, this.#deep, this.trigger.bind(this))
+    if (this.deep && isObject(this.target) && !isProxy(this.target)) {
+      this.target = createReactive(this.target, this.deep, this.trigger.bind(this))
+    } else {
+      console.log('记录依赖')
+      track(this, 'value')
     }
     // 返回目标变量
-    return this.#target
+    return this.target
   }
 
   /** 修改目标变量 */
   set value(newValue: T) {
-    if (newValue !== this.#target) {
+    if (newValue !== this.target) {
       this.#detectProxy(newValue)
-      this.#target = newValue
+      this.target = newValue
       this.trigger()
     }
   }
@@ -66,7 +70,7 @@ export class Ref<T> implements ProxySymbol {
 
   // 深度代理标识
   get [PROXY_DEEP_SYMBOL](): boolean {
-    return this.#deep
+    return this.deep
   }
 
   // 定义当对象需要转换成原始值时的行为
@@ -98,16 +102,16 @@ export class Ref<T> implements ProxySymbol {
    * @override
    */
   toString() {
-    if (this.#target?.toString) {
-      return this.#target.toString()
+    if (this.target?.toString) {
+      return this.target.toString()
     } else {
-      return `[Object Ref<${typeof this.#target}>]`
+      return `[Object Ref<${typeof this.target}>]`
     }
   }
 
   /** 检测代理 */
   #detectProxy(value: any) {
-    if (this.#deep && isProxy(value)) {
+    if (this.deep && isProxy(value)) {
       console.warn(
         `[Vitarx.Ref][WARN]：当deep属性为true时，Ref对象的引用值不应该是代理对象（Ref|Reactive）。`
       )
