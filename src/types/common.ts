@@ -18,7 +18,8 @@ export type AnySet = Set<any>
 export type AnyCollection = AnyMap | AnyWeakMap | AnyWeakSet | AnySet
 // 任意对象类型 函数除外
 export type AnyObject = AnyRecord | AnyArray | AnyMap | AnySet | AnyWeakMap | AnyWeakSet
-
+// 任意原始值类型
+export type AnyPrimitive = null | undefined | boolean | number | string | bigint | symbol
 // 深度只读
 export type DeepReadonly<T> = T extends object
   ? {
