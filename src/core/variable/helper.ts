@@ -1,6 +1,6 @@
 // 代理标识符
 import { isRef, type Ref, unRef } from './ref.js'
-import { isReactive, Reactive, ReactiveSymbol, type UnReactive, unReactive } from './reactive.js'
+import { isReactive, ReactiveSymbol, type UnReactive, unReactive } from './reactive.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL } from './constants.js'
 import { AnyCollection, AnyObject } from '../../types/common'
 
@@ -19,16 +19,15 @@ export type PropName = string | symbol | number
 /** 解除代理对象，不区分`Ref`、`Reactive` */
 export type UnProxy<T> = T extends Ref<any> ? T['value'] : UnReactive<T>
 /** 从类型中排除代理标识符 */
-type ExcludeProxyProp<T> = Exclude<T, keyof ProxySymbol | keyof ReactiveSymbol<AnyObject>>
+export type ExcludeProxyProp<T> = Exclude<T, keyof ProxySymbol | keyof ReactiveSymbol<AnyObject>>
 /** 从代理对象中提取出属性的联合类型 */
-export type ExtractProp<T> =
-  T extends Reactive<infer U>
-    ? U extends AnyCollection
-      ? 'size'
-      : ExcludeProxyProp<keyof U>
-    : T extends Ref<any>
-      ? 'value'
-      : keyof T
+export type ExtractProp<T> = T extends AnyCollection
+  ? 'size'
+  : T extends Ref<any>
+    ? 'value'
+    : T extends any[]
+      ? `${number}` | 'length'
+      : ExcludeProxyProp<keyof T>
 
 /**
  * ## 判断是否为代理对象
