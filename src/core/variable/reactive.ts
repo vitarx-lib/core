@@ -1,5 +1,5 @@
 import { AnyCollection, AnyMap, AnyObject, AnySet } from '../../types/common'
-import { isCollection, isFunction, isObject } from '../../utils'
+import { isArray, isCollection, isFunction, isObject } from '../../utils'
 import { Observers } from '../observer'
 import { PROXY_SYMBOL } from './constants.js'
 import { type ExtractProp, isProxy, type ProxySymbol } from './helper.js'
@@ -32,7 +32,7 @@ type Trigger<T> = (prop: ExtractProp<T>) => void
 /** 跟踪依赖 */
 type Track<T> = (prop: ExtractProp<T>) => void
 /** reactive 接口 */
-export type Reactive<T extends AnyObject> = T & ReactiveSymbol<T>
+export type Reactive<T extends AnyObject = AnyObject> = T & ReactiveSymbol<T>
 
 /** 解除响应式对象 */
 export type UnReactive<T> = T extends Reactive<infer U> ? U : T
@@ -138,18 +138,23 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   }
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
-    const oldValue = Reflect.get(target, prop, receiver)
+    // 处理数组长度修改
+    if (prop === 'length' && isArray(target)) {
+      const result = Reflect.set(target, prop, newValue, receiver)
+      if (result) this.#trigger(prop)
+      return result
+    }
+    const oldValue = Reflect.get(target, prop)
+    // 处理ref类型
     if (isRef(oldValue)) {
       if (oldValue.value !== newValue) {
         oldValue.value = newValue
         this.#trigger(prop)
       }
-    } else {
-      if (oldValue !== newValue) {
-        const result = Reflect.set(target, prop, newValue, receiver)
-        if (result) this.#trigger(prop)
-        return result
-      }
+    } else if (oldValue !== newValue) {
+      const result = Reflect.set(target, prop, newValue, receiver)
+      if (result) this.#trigger(prop)
+      return result
     }
     return true
   }
@@ -158,6 +163,11 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     const result = Reflect.deleteProperty(target, prop)
     if (result) this.#trigger(prop)
     return result
+  }
+
+  has(target: T, prop: ExtractProp<T>): boolean {
+    this.#trigger(prop)
+    return Reflect.has(target, prop)
   }
 }
 
