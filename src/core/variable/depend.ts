@@ -1,4 +1,4 @@
-import { isProxy, type PropName, type ProxySymbol } from '../variable'
+import { isProxy, type PropName, type ProxySymbol } from './helper.js'
 import { isAsyncFunction } from '../../utils'
 import type { AnyFunction } from '../../types/common'
 
