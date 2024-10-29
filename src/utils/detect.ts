@@ -62,7 +62,7 @@ export function isAsyncFunction(func: Function): boolean {
  *
  * @param val
  */
-export function isFunction(val: any): val is Function {
+export function isFunction(val: any): val is (...args: any[]) => any {
   return typeof val === 'function'
 }
 
