@@ -121,7 +121,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * 触发监听，如果监听器被销毁，则返回false
    *
    * @param {any[]} params - 要传给回调函数的参数列表
-   * @returns {boolean} 返回一个bool值表示当前监听器是否活跃
+   * @returns {boolean} 返回一个bool值表示当前监听器是否活跃，false代表已经销毁
    */
   trigger(params: Parameters<C>): boolean {
     if (this.#isDispose || !this.#callback) return false
@@ -131,7 +131,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
       try {
         this.#callback.apply(null, params)
       } catch (e) {
-        console.error('Observer.Callback.Error', e)
+        console.error('Listener.Callback.Error', e)
       }
       this.#count++
       // 判断是否已达到预期的监听次数
