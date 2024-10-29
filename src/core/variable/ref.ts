@@ -23,7 +23,7 @@ export type UnRef<T> = T extends Ref<any> ? T['value'] : T
  * count.value++ // count 的值变为1
  * ```
  */
-export class Ref<T> implements ProxySymbol {
+export class Ref<T = any> implements ProxySymbol {
   /** 目标变量 */
   protected target: T
   /** 是否深度代理 */
@@ -46,8 +46,7 @@ export class Ref<T> implements ProxySymbol {
     // 惰性代理子对象
     if (this.deep && isObject(this.target) && !isProxy(this.target)) {
       this.target = createReactive(this.target, this.deep, this.trigger.bind(this))
-    } else {
-      console.log('记录依赖')
+    } else if (!isProxy(this.target)) {
       track(this, 'value')
     }
     // 返回目标变量
