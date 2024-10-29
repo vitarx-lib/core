@@ -1,8 +1,10 @@
 import { AnyCollection, AnyMap, AnyObject, AnySet } from '../../types/common'
 import { isCollection, isFunction, isObject } from '../../utils'
-import { Observers } from '../observers'
-import { ExtractProp, isProxy, isRef, type ProxySymbol } from './index'
+import { Observers } from '../observer'
 import { PROXY_SYMBOL } from './constants.js'
+import { type ExtractProp, isProxy, type ProxySymbol } from './helper.js'
+import { isRef } from './ref.js'
+import { Depend } from './depend'
 
 /** 响应式对象的标识 */
 export const REACTIVE_SYMBOL = Symbol('reactive')
@@ -25,7 +27,10 @@ export interface ReactiveSymbol<T extends AnyObject> extends ProxySymbol {
   readonly [GET_RAW_TARGET_SYMBOL]: T
 }
 
+/** 触发监听器 */
 type Trigger<T> = (prop: ExtractProp<T>) => void
+/** 跟踪依赖 */
+type Track<T> = (prop: ExtractProp<T>) => void
 /** reactive 接口 */
 export type Reactive<T extends AnyObject> = T & ReactiveSymbol<T>
 
@@ -35,16 +40,18 @@ export type UnReactive<T> = T extends Reactive<infer U> ? U : T
 /**
  * 处理集合对象方法
  *
- * @param target
- * @param fn
- * @param trigger
+ * @param target - 目标集合
+ * @param fn - 方法名
+ * @param trigger - 触发器
+ * @param track - 跟踪器
  */
 function handlerCollection<T extends AnyCollection>(
   target: T,
   fn: string,
   trigger: Trigger<{
     size: number
-  }>
+  }>,
+  track: Track<any>
 ): Function {
   switch (fn) {
     case 'set':
@@ -75,6 +82,8 @@ function handlerCollection<T extends AnyCollection>(
         trigger('size')
       }
     default:
+      // 除了上述会改变集合长度的方法，都被视为获取集合数据，统一认定为跟踪size属性
+      track('size')
       return Reflect.get(target, fn) as Function
   }
 }
@@ -85,16 +94,19 @@ function handlerCollection<T extends AnyCollection>(
 class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   readonly #deep: boolean
   readonly #trigger: Trigger<T>
+  readonly #track: Track<T>
 
   /**
    * 构造函数
    *
    * @param deep - 是否深度监听
    * @param trigger - 触发器
+   * @param track - 跟踪器
    */
-  constructor(deep: boolean, trigger: Trigger<T>) {
+  constructor(deep: boolean, trigger: Trigger<T>, track: Track<T>) {
     this.#deep = deep
     this.#trigger = trigger
+    this.#track = track
   }
 
   get(target: T, prop: ExtractProp<T>, receiver: any) {
@@ -108,8 +120,8 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     // 如果是函数则绑定this为target
     if (isFunction(value)) {
       return isCollection(target)
-        ? handlerCollection(target, prop, this.#trigger as any).bind(target)
-        : value.bind(target)
+        ? handlerCollection(target, prop, this.#trigger as any, this.#track).bind(target)
+        : value.bind(receiver)
     }
     // 如果是对象，则判断是否需要进行深度代理
     if (this.#deep && isObject(value) && !isProxy(value)) {
@@ -117,20 +129,23 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
       // 替换原始对象为代理对象
       Reflect.set(target, prop, proxy)
       // 返回代理对象
-      return Reflect.get(target, prop)
+      return proxy
     }
+    // 非代理对象，则跟踪依赖
+    if (!isProxy(value)) this.#track(prop)
     // 如果是引用类型，则返回引用
     return isRef(value) ? value.value : value
   }
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
-    let oldValue = Reflect.get(target, prop, receiver)
-
-    if (oldValue.value !== newValue) {
-      if (isRef(oldValue)) {
+    const oldValue = Reflect.get(target, prop, receiver)
+    if (isRef(oldValue)) {
+      if (oldValue.value !== newValue) {
         oldValue.value = newValue
         this.#trigger(prop)
-      } else {
+      }
+    } else {
+      if (oldValue !== newValue) {
         const result = Reflect.set(target, prop, newValue, receiver)
         if (result) this.#trigger(prop)
         return result
@@ -163,13 +178,16 @@ export function createReactive<T extends AnyObject>(
     new ReactiveHandler<T>(
       deep,
       trigger
-        ? (prop: ExtractProp<T>) => {
+        ? function (prop: ExtractProp<T>) {
             Observers.trigger(proxy, prop)
             trigger?.()
           }
-        : (prop: ExtractProp<T>) => {
+        : function (prop: ExtractProp<T>) {
             Observers.trigger(proxy, prop)
-          }
+          },
+      function (prop: ExtractProp<T>) {
+        Depend.track(proxy, prop)
+      }
     )
   ) as Reactive<T>
   return proxy
