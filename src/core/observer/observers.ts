@@ -36,11 +36,27 @@ const DEFAULT_OPTIONS: Required<Options> = {
 /** 监听器映射MAP */
 type ListenersMap = Map<PropName | AllChangeSymbol, Set<Listener<AnyCallback>>>
 /**
+ * ## 回调函数类型
+ *
+ * 如果监听的是对象，则prop为变化的属性名数组，如果监听的是对象属性，则prop为变化的属性名称（单个属性名）
+ *
+ * @template P - 监听的属性名类型
+ * @template T - 监听源类型
+ * @param {any} prop - 属性名
+ */
+type Callback<P extends PropName | PropName[], T extends AnyObject> = (prop: P, origin: T) => void
+type WaitTriggerList = Array<{
+  origin: AnyObject
+  props: PropName[]
+}>
+/**
  * 全局观察者管理器
  */
 export default class Observers {
   // 全部变更事件监听标识
   static ALL_CHANGE_SYMBOL = Symbol('ALL_CHANGE_SYMBOL')
+  // 监听源锁
+  static #weakMapLock = new WeakSet<object>()
   // 批量处理的监听器
   static #listeners: WeakMap<object, ListenersMap> = new WeakMap()
   // 不批量处理的监听器
@@ -48,15 +64,12 @@ export default class Observers {
   // 微任务队列
   static #triggerQueue: Map<AnyObject, Set<PropName | AllChangeSymbol>> = new Map()
   // 待触发队列
-  static #waitTriggerList: Array<{
-    origin: AnyObject
-    props: PropName[]
-  }> = []
+  static #waitTriggerList: WaitTriggerList = []
   // 是否正在处理队列
   static #isHanding = false
 
   /**
-   * 触发监听器的回调函数
+   * ## 触发监听器的回调函数
    *
    * @param {AnyObject} origin - 要触发的源对象，一般是 `ref` | `reactive` 创建的对象
    * @param {PropName} prop - 变更的属性名
@@ -66,7 +79,7 @@ export default class Observers {
     if (!this.#isHanding) {
       this.#isHanding = true
       // 处理队列
-      Promise.resolve().then(this.#handleTrigger.bind(this))
+      Promise.resolve().then(this.#handleTriggerQueue.bind(this))
     }
     const props = isArray(prop) ? prop : [prop]
     const notBatchListeners = this.#notBatchHandleListeners.get(origin)
@@ -88,37 +101,86 @@ export default class Observers {
   }
 
   /**
-   * 注册监听器
+   * ## 注册监听器
    *
    * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
    * @param callback - 回调函数或监听器实例
    * @param prop - 属性名，默认为ALL_CHANGE_SYMBOL标记，监听全部变化
    * @param options - 监听器选项
    */
-  static register<C extends AnyCallback>(
+  static register<C extends Callback<any, any>>(
     origin: AnyObject,
     callback: C | Listener<C>,
     prop: PropName = this.ALL_CHANGE_SYMBOL,
     options?: Options
   ): Listener<C> {
-    // 合并默认选项
-    const mOptions: Required<Options> = Object.assign({}, DEFAULT_OPTIONS, options)
-    // 创建监听器
-    const listener: Listener<C> = isFunction(callback)
-      ? new Listener(callback, mOptions.limit)
-      : callback
-    // 监听器列表
-    const list = mOptions.batch ? this.#listeners : this.#notBatchHandleListeners
+    const { listener, list } = this.#createListener(callback, options)
     this.#addListener(list, origin, prop, listener)
     // 如果监听器销毁了，则删除监听器
     listener.onDestroyed(() => {
       this.#removeListener(list, origin, prop, listener)
     })
-    return listener
+    return listener as Listener<C>
   }
 
   /**
-   * 添加监听器
+   * ## 注册监听器
+   *
+   * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
+   * @param callback - 回调函数或监听器实例
+   * @param props - 属性名数组
+   * @param options - 监听器选项
+   */
+  static registerProps<C extends Callback<any, any>>(
+    origin: AnyObject,
+    callback: C | Listener<C>,
+    props: PropName[],
+    options?: Options
+  ): Listener<C> {
+    const { listener, list } = this.#createListener(callback, options)
+    props.forEach(p => this.#addListener(list, origin, p, listener))
+    // 如果监听器销毁了，则删除监听器
+    listener.onDestroyed(() => {
+      props.forEach(p => this.#removeListener(list, origin, p, listener))
+    })
+    return listener as Listener<C>
+  }
+
+  /**
+   * ## 同时注册给多个对象注册同一个监听器
+   *
+   * @param origins - 监听源列表
+   * @param callback - 回调函数或监听器实例
+   * @param options - 监听器选项
+   */
+  static registers<C extends Callback<any, any>>(
+    origins: Set<AnyObject> | AnyObject[],
+    callback: C | Listener<C>,
+    options?: Options
+  ): Listener<C> {
+    const { listener, list } = this.#createListener(callback, options)
+    // 监听器列表
+    origins.forEach(o => this.#addListener(list, o, this.ALL_CHANGE_SYMBOL, listener))
+    // 如果监听器销毁了，则删除监听器
+    listener.onDestroyed(() => {
+      origins.forEach(o => this.#removeListener(list, o, this.ALL_CHANGE_SYMBOL, listener))
+    })
+    return listener as Listener<C>
+  }
+
+  /** 创建监听器，并返回监听器列表 */
+  static #createListener(callback: AnyCallback | Listener<AnyCallback>, options?: Options) {
+    // 合并默认选项
+    const mOptions: Required<Options> = Object.assign({}, DEFAULT_OPTIONS, options)
+    // 创建监听器
+    const listener = isFunction(callback) ? new Listener(callback, mOptions.limit) : callback
+    // 监听器列表
+    const list = mOptions.batch ? this.#listeners : this.#notBatchHandleListeners
+    return { listener, list }
+  }
+
+  /**
+   * ## 添加监听器
    *
    * @param list - 监听器列表
    * @param proxy - 代理对象
@@ -131,6 +193,7 @@ export default class Observers {
     prop: PropName,
     listener: Listener<C>
   ): void {
+    const unLock = this.#lockWeakMap(proxy)
     if (!list.has(proxy)) {
       list.set(proxy, new Map())
     }
@@ -139,10 +202,11 @@ export default class Observers {
       propMap.set(prop, new Set())
     }
     propMap.get(prop)!.add(listener)
+    unLock()
   }
 
   /**
-   * 删除监听器
+   * ## 删除监听器
    *
    * @param list - 监听器列表
    * @param proxy - 代理对象
@@ -155,54 +219,70 @@ export default class Observers {
     prop: PropName,
     listener: Listener<C>
   ): void {
+    const unLock = this.#lockWeakMap(proxy)
     const set = list.get(proxy)?.get(prop)
     if (set) {
       set.delete(listener)
       if (set.size === 0) list.get(proxy)?.delete(prop)
+      if (list.get(proxy)?.size === 0) list.delete(proxy)
     }
+    unLock()
   }
 
   /**
-   * 处理触发队列
+   * ## 处理触发队列
    *
    * @private
    */
-  static #handleTrigger() {
+  static #handleTriggerQueue() {
     while (this.#triggerQueue.size) {
       const [target, props] = this.#triggerQueue.entries().next().value!
       this.#triggerQueue.delete(target)
       this.#waitTriggerList.push({ origin: target, props: Array.from(props) })
     }
     // 克隆 等待触发的目标
-    const list = this.#waitTriggerList
+    let list = this.#waitTriggerList
     // 清空 等待触发的目标
     this.#waitTriggerList = []
-    // 检查是否有新的任务加入队列 一般不会出现这种情况，为了避免极端情况，这里做一个日志记录
-    if (this.#triggerQueue.size > 0) {
-      console.debug(
-        `[Vitarx.Observers][DEBUG]：未知原因导致任务上下文切换！如果你看到了此日志，Vitarx希望您能将此情况提交ISSUE。`
-      )
-    }
     // 恢复状态
     this.#isHanding = false
     // 触发目标监听器
-    list.forEach(({ origin, props }) => {
-      props.forEach(p => {
-        this.#triggerListeners(this.#listeners.get(origin)?.get(p), origin, p)
-      })
-      // 如果存在ALL_CHANGE_SYMBOL的监听器，则触发它
-      this.#triggerListeners(
-        this.#listeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL),
-        origin,
-        props
-      )
-    })
+    this.#handleTriggerList(list)
     // 清空数组，释放引用
     list.length = 0
+    // @ts-ignore
+    list = null
   }
 
   /**
-   * 触发监听器
+   * 处理触发列表
+   *
+   * @param list
+   * @private
+   */
+  static #handleTriggerList(list: WaitTriggerList) {
+    list.forEach(({ origin, props }) => {
+      this.#triggerProps(origin, props)
+    })
+  }
+
+  /**
+   * 触发多个属性的监听器
+   *
+   * @param origin
+   * @param props
+   * @private
+   */
+  static #triggerProps(origin: AnyObject, props: any[]) {
+    props.forEach(p => {
+      this.#triggerListeners(this.#listeners.get(origin)?.get(p), origin, p)
+    })
+    // 如果存在ALL_CHANGE_SYMBOL的监听器，则触发它
+    this.#triggerListeners(this.#listeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL), origin, props)
+  }
+
+  /**
+   * ## 触发监听器
    *
    * @private
    * @param listeners
@@ -218,6 +298,20 @@ export default class Observers {
       Array.from(listeners).forEach(listener => {
         listener.trigger([p, origin])
       })
+    }
+  }
+
+  /**
+   * ## 将指定监听源映射锁定
+   *
+   * @param origin
+   * @private
+   */
+  static #lockWeakMap(origin: AnyObject) {
+    while (this.#weakMapLock.has(origin)) {}
+    this.#weakMapLock.add(origin)
+    return () => {
+      this.#weakMapLock.delete(origin)
     }
   }
 }
