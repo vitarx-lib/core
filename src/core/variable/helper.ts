@@ -1,7 +1,7 @@
 // 代理标识符
-import { isRef, type Ref, unRef } from './ref.js'
-import { isReactive, Reactive, ReactiveSymbol, type UnReactive, unReactive } from './reactive.js'
-import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL } from './constants.js'
+import { type Ref } from './ref.js'
+import { Reactive, ReactiveSymbol, type UnReactive } from './reactive.js'
+import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
 import { AnyCollection, AnyObject } from '../../types/common'
 
 /**
@@ -14,12 +14,23 @@ export interface ProxySymbol {
   readonly [PROXY_DEEP_SYMBOL]: boolean
 }
 
+/**
+ * 值代理对象需实现的接口
+ */
+export interface ValueProxy<T> extends ProxySymbol {
+  readonly [VALUE_PROXY_SYMBOL]: true
+
+  get value(): T
+
+  set value(newValue: T)
+}
+
 /** 属性类型 */
 export type PropName = string | symbol | number
 /** 任意代理对象 */
 export type AnyProxy = Ref | Reactive | (AnyObject & ProxySymbol)
 /** 解除代理对象，不区分`Ref`、`Reactive` */
-export type UnProxy<T> = T extends Ref<infer U> ? U : UnReactive<T>
+export type UnProxy<T> = T extends ValueProxy<infer U> ? U : UnReactive<T>
 /** 从类型中排除代理标识符 */
 export type ExcludeProxyProp<T> = Exclude<T, keyof ProxySymbol | keyof ReactiveSymbol<AnyObject>>
 /** 从代理对象中提取出属性的联合类型 */
@@ -52,16 +63,10 @@ export function isDeepProxy(proxy: ProxySymbol): boolean {
 }
 
 /**
- * ## 获取响应式对象的原始值，
+ * 判断是否为值代理对象，例如`Ref`、`Computed`
  *
- * @template T
- * @param obj - `Ref`|'Reactive'
+ * @param val
  */
-export function toRaw<T extends object>(obj: T): UnProxy<T> {
-  if (isRef(obj)) {
-    return unRef(obj) as UnProxy<T>
-  } else if (isReactive(obj)) {
-    return unReactive(obj) as UnProxy<T>
-  }
-  return obj as UnProxy<T>
+export function isValueProxy(val: any): val is ValueProxy<any> {
+  return typeof val === 'object' && val[VALUE_PROXY_SYMBOL] === true
 }
