@@ -4,7 +4,7 @@ import { Observers } from '../observer'
 import { PROXY_SYMBOL } from './constants.js'
 import { type ExtractProp, isProxy, type ProxySymbol } from './helper.js'
 import { isRef } from './ref.js'
-import { Depend } from './depend'
+import { Depend } from './depend.js'
 
 /** 响应式对象的标识 */
 export const REACTIVE_SYMBOL = Symbol('reactive')
