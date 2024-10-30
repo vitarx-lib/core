@@ -1,5 +1,5 @@
-import { ProxySymbol } from './helper.js'
-import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL } from './constants'
+import { ValueProxy } from './helper.js'
+import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants'
 import { Depend } from './depend'
 import Listener from '../observer/listener'
 import Observers from '../observer/observers'
@@ -13,11 +13,16 @@ import Observers from '../observer/observers'
  *
  * 与`Ref`代理对象的使用方式几乎是一致的，但不同的是它的`value`一般是只读的，因为`value`是根据依赖变化而变化的。
  */
-export class Computed<T> implements ProxySymbol {
+export class Computed<T> implements ValueProxy<T> {
+  // 标识为代理对象
   readonly [PROXY_SYMBOL] = true
   // 深度代理标识
   readonly [PROXY_DEEP_SYMBOL] = false
+  // 标识为值代理对象
+  readonly [VALUE_PROXY_SYMBOL] = true
+  // 计算结果
   #result: T
+  // 初始化标识
   #initialize: boolean = false
   readonly #getter
   readonly #setter
@@ -74,12 +79,15 @@ export class Computed<T> implements ProxySymbol {
   }
 
   /**
-   * 停止计算属性
+   * 停止监听依赖变化
    *
-   * 解除计算会停止对依赖的监听，并释放相关监听器。
+   * 调用此方法会停止对依赖的监听，并释放相关监听器。
    */
   stop() {
-    this.#listener?.destroy()
+    if (this.#listener) {
+      this.#listener.destroy()
+      this.#listener = undefined
+    }
   }
 
   /**
@@ -133,4 +141,13 @@ export class Computed<T> implements ProxySymbol {
  */
 export function computed<T>(getter: () => T, setter?: (newValue: T) => void): Computed<T> {
   return new Computed(getter, setter)
+}
+
+/**
+ * 判断是否为计算属性对象
+ *
+ * @param val
+ */
+export function isComputed(val: any): val is Computed<any> {
+  return val instanceof Computed
 }
