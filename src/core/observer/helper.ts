@@ -2,16 +2,16 @@ import { Depend, ExtractProp, isProxy, PropName } from '../variable'
 import { AnyCallback, AnyFunction, AnyObject, AnyPrimitive } from '../../types/common'
 import Listener from './listener.js'
 import Observers, { Options } from './observers.js'
-import { deepClone, isArray, isFunction } from '../../utils'
+import { deepClone, isArray, isFunction, isSimpleGetterFunction } from '../../utils'
 
 // 提取监听源
 type ExtractOrigin<T> = T extends AnyFunction ? ReturnType<T> : T
 // 提取属性名称 联合类型
 type ExtractPropName<T, O = ExtractOrigin<T>> = O extends object ? ExtractProp<O> : never
 /** 监听变化的回调，不需要在意旧值，只关心变化的属性 */
-export type WatchChangeCallback<T> = (prop: ExtractPropName<T>[], origin: ExtractOrigin<T>) => void
+type WatchChangeCallback<T> = (prop: ExtractPropName<T>[], origin: ExtractOrigin<T>) => void
 /** 监听新值和旧值的回调-如果值为对象会深度克隆 */
-export type WatchValueCallback<T> = (newValue: ExtractOrigin<T>, oldValue: ExtractOrigin<T>) => void
+type WatchValueCallback<T> = (newValue: ExtractOrigin<T>, oldValue: ExtractOrigin<T>) => void
 // 回调函数类型
 type WatchCallback<T> = T extends AnyFunction
   ? ReturnType<T> extends AnyPrimitive
@@ -27,10 +27,20 @@ type WatchCallback<T> = T extends AnyFunction
  * @template T - 监听源类型
  * @param {any} prop - 属性名
  */
-export type Callback<P extends PropName | PropName[], T extends AnyObject> = (
-  prop: P,
-  origin: T
-) => void
+type Callback<P extends PropName | PropName[], T extends AnyObject> = (prop: P, origin: T) => void
+
+/**
+ * 检测是否为代理对象
+ *
+ * @param obj
+ */
+function verifyProxy(obj: any) {
+  if (!isProxy(obj)) {
+    throw TypeError(
+      'origin参数必须是实现了ProxySymbol接口的对象，由ref或reactive方法创建的对象都实现了ProxySymbol接口'
+    )
+  }
+}
 
 /**
  * 创建值监听器
@@ -73,19 +83,23 @@ function createValueListener<T extends AnyObject>(
  * })
  *
  * // ## 监听嵌套对象的变化
- * watch(reactiveObj.c,...)
+ * watch(reactiveObj.c,...) // 等效于 watch(()=>reactiveObj.c,...)
  *
  * // ## 监听普通值属性，下面的写法等效于 watchPropValue(reactiveObj,'a',...)
  * watch(()=>reactiveObj.a,(newValue,oldValue)=>{
  *    // 第一个参数为新值，第二个参数为旧值
  * })
  *
- * // ## 同时监听多个对象
+ * // ## 同时监听多个对象 等效于 watch(()=>[reactiveObj,refObj])
  * watch([reactiveObj,refObj],function(index:`${number}`[],origin){
  *    // 注意： index参数值是变化的对象所在下标，例如：['0','1'] 则代表reactiveObj和refObj都发生了改变
  *    // origin 是[reactiveObj,refObj]
  * })
  * ```
+ * **origin**合法类型如下：
+ * - `object` ：任意实现了ProxySymbol的对象，一般是ref或reactive创建的响应式代理对象。也可以是一个实现了{@link ProxySymbol}接口中的标记属性的任意对象。
+ * - `array` : 非Proxy数组，可以在数组中包含多个响应式代理对象达到同时监听多个对象变化的效果，但不能包含非响应式代理对象。
+ * - `function`：如果返回的是一个基本类型值，例如：number|string|boolean|null...非对象类型的值，那函数的写法必须是`()=>obj.key`，会通过依赖收集监听对象的某个属性值变化，回调函数接收的参数也变为了新值和旧值，除了返回基本类型值，其他合法返回值同上述的`array`,`object`
  *
  * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
  * @param callback - 回调函数或监听器实例
@@ -96,10 +110,7 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
   callback: C,
   options?: Options
 ): Listener<C> {
-  if (isProxy(origin)) {
-    return Observers.register(origin, callback, Observers.ALL_CHANGE_SYMBOL, options)
-  }
-  if (isFunction(origin)) {
+  if (isSimpleGetterFunction(origin)) {
     const result = origin()
     // 处理监听普通类型
     if (result === null || typeof result !== 'object') {
@@ -111,30 +122,28 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
         return watchPropValue(obj, prop, callback as AnyCallback, options) as unknown as Listener<C>
       }
       throw new TypeError(
-        '当watch.origin参数为()=>any类型时，返回的非对象类型值，必须是某个响应式对象(Ref|Reactive)的属性值才能进行监听。'
+        '当origin参数为()=>any类型时，返回的非对象类型值，必须是某个响应式(实现了ProxySymbol接口)对象的属性值才能进行监听。'
       )
     } else {
       origin = result
     }
   }
+  if (isProxy(origin)) {
+    return Observers.register(origin, callback, Observers.ALL_CHANGE_SYMBOL, options)
+  }
   if (isArray(origin)) {
     if (origin.length === 0) {
       throw new TypeError(
-        'watch.origin参数不能是空数组(包括使用getter函数返回空数组)。正确示例：watch([RefObjOrReactiveObj,...],...)'
+        'origin参数不能是空数组(包括使用getter函数返回空数组)。正确示例(obj为实现了ProxySymbol接口的对象)：[obj,...]'
       )
     }
     const deps = origin.filter(isProxy)
-    if (deps.length === 0 || deps.length !== origin.length) {
-      throw new TypeError(
-        'watch.origin参数传入数组时，数组中的元素必须是响应式对象(Ref|Reactive)。正确示例：watch([refObj,reactiveObj,...],...)'
-      )
-    } else {
+    if (deps.length === origin.length) {
       const listener = Observers.register(deps, callback, Observers.ALL_CHANGE_SYMBOL, options)
       // 监听多个源的变化，把变化反应到listener
       Observers.registers(
         deps,
-        function (p, o) {
-          console.log('监听到改变')
+        function (_p, o) {
           Observers.trigger(deps, [`${origin.indexOf(o)}`])
         },
         options
@@ -143,7 +152,55 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
     }
   }
   throw new TypeError(
-    'watch.origin参数无效，可选值示例：()=>reactiveObj.key，refObj，reactiveObj，[refObj,reactiveObj...]'
+    'origin参数无效，正确值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | ()=>[obj,...] | obj | [obj,...]'
+  )
+}
+
+/**
+ * ## 监听对象改变
+ *
+ * > **注意**：`origin`参数不接受多个源，也就是不接受[origin,...]。
+ *
+ * @note 不同于{@link watch}方法，该方法会回调对象改变之后和改变之前的值做为参数，且深度克隆。
+ *
+ * @param origin - 监听源
+ * @param callback - 回调函数，第一个参数为`newValue`，第二个参数为`oldValue`
+ * @param options - 监听器配置选项
+ * @see watch
+ */
+export function watchValue<T extends AnyObject>(
+  origin: T,
+  callback: WatchValueCallback<T>,
+  options?: Options
+): Listener<() => void> {
+  if (isSimpleGetterFunction(origin)) {
+    const result = origin()
+    // 处理监听普通类型
+    if (result === null || typeof result !== 'object') {
+      const { deps } = Depend.collect(origin)
+      // 如果只有一个依赖，则进行监听
+      if (deps.size === 1 && deps.values().next().value!.size === 1) {
+        const obj = deps.keys().next().value!
+        const prop = deps.values().next().value!.values().next().value!
+        return watchPropValue(obj, prop, callback as AnyCallback, options)
+      }
+      throw new TypeError(
+        '当origin参数为()=>any类型时，返回的非对象类型值，必须是某个响应式(实现了ProxySymbol接口)对象的属性值才能进行监听。'
+      )
+    } else {
+      origin = result
+    }
+  }
+  if (isProxy(origin)) {
+    return Observers.register(
+      origin,
+      createValueListener(origin, undefined, callback, options),
+      Observers.ALL_CHANGE_SYMBOL,
+      options
+    )
+  }
+  throw new TypeError(
+    'origin参数无效，可选值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | obj'
   )
 }
 
@@ -162,6 +219,7 @@ export function watchProps<
   P extends ExtractProp<T>[],
   C extends AnyCallback = Callback<P, T>
 >(origin: T, props: P, callback: C | Listener<C>, options?: Options): Listener<C> {
+  verifyProxy(origin)
   let onProps = new Set(props)
   const func = isFunction(callback)
   const limit = options?.limit ?? 0
@@ -198,6 +256,7 @@ export function watchProp<
   P extends ExtractProp<T>,
   C extends AnyCallback = Callback<P, T>
 >(origin: T, prop: P, callback: C | Listener<C>, options?: Options): Listener<C> {
+  verifyProxy(origin)
   return Observers.register(origin, callback, prop, options)
 }
 
@@ -217,32 +276,11 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
   callback: WatchValueCallback<T[P]>,
   options?: Options
 ): Listener<() => void> {
+  verifyProxy(origin)
   return Observers.register(
     origin,
     createValueListener(origin, prop, callback, options),
     prop,
-    options
-  )
-}
-
-/**
- * ## 监听对象改变
- *
- * 不同于`watch`方法，该方法会回调对象改变之后和改变之前的值做为参数，且深度克隆。
- *
- * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
- * @param callback - 回调函数，第一个参数为`newValue`，第二个参数为`oldValue`
- * @param options - 监听器配置选项
- */
-export function watchValue<T extends AnyObject>(
-  origin: T,
-  callback: WatchValueCallback<T>,
-  options?: Options
-): Listener<() => void> {
-  return Observers.register(
-    origin,
-    createValueListener(origin, undefined, callback, options),
-    Observers.ALL_CHANGE_SYMBOL,
     options
   )
 }
