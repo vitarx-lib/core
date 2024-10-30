@@ -215,12 +215,13 @@ export function isReactive(val: any): val is Reactive<object> {
 /**
  * ## 解除响应式代理，返回真实对象
  *
- * @template T
+ * @template T - 对象类型
  * @param obj - 响应式对象
  * @returns {UnReactive<T>} 如果传入的是 'reactive' 创建的对象，则会返回其真实的原始对象，否则原样返回。
+ * @alias toRaw
  */
-export function unReactive<T extends object>(obj: T | Reactive<T>): T {
-  return isReactive(obj) ? obj[GET_RAW_TARGET_SYMBOL] : obj
+export function unReactive<T extends object>(obj: T | Reactive<T>): UnReactive<T> {
+  return isReactive(obj) ? (obj[GET_RAW_TARGET_SYMBOL] as UnReactive<T>) : (obj as UnReactive<T>)
 }
 
 /**
@@ -232,4 +233,16 @@ export function unReactive<T extends object>(obj: T | Reactive<T>): T {
  */
 export function reactive<T extends AnyObject>(target: T, deep: boolean = true): Reactive<T> {
   return createReactive(target, deep)
+}
+
+/**
+ * ## 获取响应式对象的原始值，
+ *
+ * @template T
+ * @param obj
+ * @returns {UnReactive<T>}
+ * @alias unReactive
+ */
+export function toRaw<T extends object>(obj: T | Reactive<T>): UnReactive<T> {
+  return unReactive(obj) as UnReactive<T>
 }
