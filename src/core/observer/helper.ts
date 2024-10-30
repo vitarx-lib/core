@@ -1,8 +1,8 @@
 import { Depend, ExtractProp, isProxy, PropName } from '../variable'
-import { AnyCallback, AnyFunction, AnyObject, AnyPrimitive } from '../../types/common'
+import { AnyCallback, AnyFunction, AnyObject, AnyPrimitive, VoidCallback } from '../../types/common'
 import Listener from './listener.js'
 import Observers, { Options } from './observers.js'
-import { deepClone, isArray, isFunction, isSimpleGetterFunction } from '../../utils'
+import { deepClone, isArray, isSimpleGetterFunction } from '../../utils'
 
 // 提取监听源
 type ExtractOrigin<T> = T extends AnyFunction ? ReturnType<T> : T
@@ -102,7 +102,7 @@ function createValueListener<T extends AnyObject>(
  * - `function`：如果返回的是一个基本类型值，例如：number|string|boolean|null...非对象类型的值，那函数的写法必须是`()=>obj.key`，会通过依赖收集监听对象的某个属性值变化，回调函数接收的参数也变为了新值和旧值，除了返回基本类型值，其他合法返回值同上述的`array`,`object`
  *
  * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
- * @param callback - 回调函数或监听器实例
+ * @param callback - 回调函数
  * @param options - 监听器配置选项
  */
 export function watch<T extends AnyObject, C extends WatchCallback<T>>(
@@ -139,16 +139,30 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
     }
     const deps = origin.filter(isProxy)
     if (deps.length === origin.length) {
-      const listener = Observers.register(deps, callback, Observers.ALL_CHANGE_SYMBOL, options)
+      let mainListener: Listener<any>
+      const isBatch = options?.batch === undefined || options?.batch
+      if (isBatch) {
+        // 如果需要批处理 则使用deps数组做为源注册一个监听器
+        mainListener = Observers.register(deps, callback, Observers.ALL_CHANGE_SYMBOL, options)
+      } else {
+        // 不进行批处理直接实例一个监听器，减少开销
+        mainListener = new Listener(callback, options?.limit ?? 0)
+      }
       // 监听多个源的变化，把变化反应到listener
-      Observers.registers(
+      const subListener = Observers.registers(
         deps,
         function (_p, o) {
-          Observers.trigger(deps, [`${origin.indexOf(o)}`])
+          if (isBatch) {
+            Observers.trigger(deps, [`${origin.indexOf(o)}`])
+          } else {
+            mainListener.trigger([[`${origin.indexOf(o)}`], deps])
+          }
         },
         options
       )
-      return listener
+      // 主监听器被销毁时，同时销毁辅助监听器
+      mainListener.onDestroyed(() => subListener.destroy())
+      return mainListener
     }
   }
   throw new TypeError(
@@ -211,36 +225,41 @@ export function watchValue<T extends AnyObject>(
  *
  * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
  * @param props - 要监听的属性名数组
- * @param callback - 回调函数或监听器实例
+ * @param callback - 回调函数
  * @param options - 监听器配置选项
  */
 export function watchProps<
   T extends AnyObject,
   P extends ExtractProp<T>[],
   C extends AnyCallback = Callback<P, T>
->(origin: T, props: P, callback: C | Listener<C>, options?: Options): Listener<C> {
+>(origin: T, props: P, callback: C, options?: Options): Listener<C> {
+  // 检测源是否为Proxy
   verifyProxy(origin)
-  let onProps = new Set(props)
-  const func = isFunction(callback)
-  const limit = options?.limit ?? 0
-  let count: number = 0
-  const listener = new Listener(function (prop: any[], origin) {
-    const change = prop.filter(item => onProps.has(item))
-    if (change.length) {
-      if (func) {
-        callback(change, origin)
-        count++
-        if (count >= limit) {
-          listener.destroy()
-        }
+  const isBatch = options?.batch === undefined || options?.batch
+  let mainListener: Listener<any>
+  if (isBatch) {
+    // @ts-ignore
+    props = new Set(props)
+    mainListener = Observers.register(props, callback, Observers.ALL_CHANGE_SYMBOL, options)
+  } else {
+    mainListener = new Listener(callback, options?.limit ?? 0)
+  }
+  // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
+  const subListener = Observers.registerProps(
+    origin,
+    props,
+    function (prop) {
+      if (isBatch) {
+        Observers.trigger(props, prop)
       } else {
-        // 触发用户监听器，如果销毁了则删除代理监听器
-        const result = listener.trigger([change, origin])
-        if (!result) listener.destroy()
+        mainListener.trigger([prop, origin])
       }
-    }
-  }, 0)
-  return Observers.register(origin, listener as Listener<C>, Observers.ALL_CHANGE_SYMBOL, options)
+    },
+    options
+  )
+  // 主监听器被销毁时，同时销毁辅助监听器
+  mainListener.onDestroyed(() => subListener.destroy())
+  return mainListener
 }
 
 /**
@@ -248,7 +267,7 @@ export function watchProps<
  *
  * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
  * @param prop - 要监听的属性名
- * @param callback - 回调函数或监听器实例
+ * @param callback - 回调函数
  * @param options - 监听器配置选项
  */
 export function watchProp<
@@ -283,4 +302,46 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
     prop,
     options
   )
+}
+
+/**
+ * ## 监听函数的依赖变化
+ *
+ * @note 该方法会监听函数的依赖，当依赖发生变化时，会触发回调函数，没有传入回调函数则触发传入的fn函数本身。
+ *
+ * @param fn - 要监听的函数
+ * @param callback - 回调函数
+ * @param options - 监听器配置选项
+ */
+export function watchDepend(
+  fn: () => any,
+  callback?: () => any,
+  options?: Options
+): Listener<VoidCallback> | undefined {
+  const { deps } = Depend.collect(fn)
+  if (deps.size > 0) {
+    const isBatch = options?.batch === undefined || options?.batch
+    let mainListener: Listener<VoidCallback>
+    if (isBatch) {
+      mainListener = Observers.register(deps, callback || fn, Observers.ALL_CHANGE_SYMBOL, options)
+    } else {
+      mainListener = new Listener(callback || fn, options?.limit ?? 0)
+    }
+    const change = Symbol('change') as any
+    // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
+    const subListener = new Listener(function () {
+      if (isBatch) {
+        Observers.trigger(deps, change)
+      } else {
+        mainListener.trigger([])
+      }
+    }, options?.limit ?? 0)
+    // 主监听器被销毁时，同时销毁辅助监听器
+    mainListener.onDestroyed(() => subListener.destroy())
+    deps.forEach((props, proxy) => {
+      Observers.registerProps(proxy, props, subListener)
+    })
+    return mainListener
+  }
+  return undefined
 }
