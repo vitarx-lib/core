@@ -84,7 +84,7 @@ export class Ref<T = any> implements ValueProxy<T> {
   }
 
   /**
-   * 触发更新事件
+   * 手动触发更新事件
    *
    * @private
    */
