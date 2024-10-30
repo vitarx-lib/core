@@ -345,7 +345,7 @@ export function watchDepend(
     } else {
       mainListener = new Listener(callback || fn, options?.limit ?? 0)
     }
-    const change = Symbol('change') as any
+    const change = Symbol('depend change') as any
     // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
     const subListener = new Listener(function () {
       if (isBatch) {
