@@ -12,6 +12,8 @@ export function isObject(val: any): val is object {
 /**
  * 判断变量是否为普通对象
  *
+ * @note 不包含数组
+ *
  * @param val
  * @returns {boolean}
  */
@@ -60,10 +62,27 @@ export function isAsyncFunction(func: Function): boolean {
 /**
  * 判断是否为函数
  *
+ * @note 不包含构造函数
+ *
  * @param val
  */
 export function isFunction(val: any): val is (...args: any[]) => any {
-  return typeof val === 'function'
+  if (typeof val !== 'function') return false
+  return !(val.prototype && typeof val.prototype === 'object' && val.prototype.constructor === val)
+}
+
+/**
+ * 判断是否为一个简单的getter函数
+ *
+ * @note 必须是 `()=>any` 写法
+ *
+ * @param fn
+ */
+export function isSimpleGetterFunction(fn: any): fn is () => any {
+  if (typeof fn !== 'function') return false
+  const fnString = fn.toString().trim()
+  const regex = /^\(\)=>[^{]+$/
+  return regex.test(fnString)
 }
 
 /**
