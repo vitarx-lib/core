@@ -1,7 +1,20 @@
-import { Depend, ExtractProp, isProxy, PropName } from '../variable'
-import { AnyCallback, AnyFunction, AnyObject, AnyPrimitive, VoidCallback } from '../../types/common'
+import {
+  Depend,
+  type ExtractProp,
+  isProxy,
+  isValueProxy,
+  type PropName,
+  type UnProxy
+} from '../variable'
+import type {
+  AnyCallback,
+  AnyFunction,
+  AnyObject,
+  AnyPrimitive,
+  VoidCallback
+} from '../../types/common'
 import Listener from './listener.js'
-import Observers, { Options } from './observers.js'
+import Observers, { type Options } from './observers.js'
 import { deepClone, isArray, isSimpleGetterFunction } from '../../utils'
 
 // 提取监听源
@@ -11,7 +24,10 @@ type ExtractPropName<T, O = ExtractOrigin<T>> = O extends object ? ExtractProp<O
 /** 监听变化的回调，不需要在意旧值，只关心变化的属性 */
 type WatchChangeCallback<T> = (prop: ExtractPropName<T>[], origin: ExtractOrigin<T>) => void
 /** 监听新值和旧值的回调-如果值为对象会深度克隆 */
-type WatchValueCallback<T> = (newValue: ExtractOrigin<T>, oldValue: ExtractOrigin<T>) => void
+type WatchValueCallback<T> = (
+  newValue: UnProxy<ExtractOrigin<T>>,
+  oldValue: UnProxy<ExtractOrigin<T>>
+) => void
 // 回调函数类型
 type WatchCallback<T> = T extends AnyFunction
   ? ReturnType<T> extends AnyPrimitive
@@ -206,9 +222,11 @@ export function watchValue<T extends AnyObject>(
     }
   }
   if (isProxy(origin)) {
+    // 处理值类型代理，让其返回value
+    const prop = isValueProxy(origin) ? 'value' : undefined
     return Observers.register(
       origin,
-      createValueListener(origin, undefined, callback, options),
+      createValueListener(origin, prop as any, callback, options),
       Observers.ALL_CHANGE_SYMBOL,
       options
     )
