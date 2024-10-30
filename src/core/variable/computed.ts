@@ -151,3 +151,13 @@ export function computed<T>(getter: () => T, setter?: (newValue: T) => void): Co
 export function isComputed(val: any): val is Computed<any> {
   return val instanceof Computed
 }
+
+/**
+ * 解除`Computed`对象，返回其value属性值
+ *
+ * @template T - 任意类型
+ * @param computed - 如果传入的是`Computed`对象则返回其value属性值，否则返回原值
+ */
+export function unComputed<T>(computed: T | Computed<T>): T {
+  return isComputed(computed) ? computed.value : computed
+}
