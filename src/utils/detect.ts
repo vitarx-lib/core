@@ -67,8 +67,7 @@ export function isAsyncFunction(func: Function): boolean {
  * @param val
  */
 export function isFunction(val: any): val is (...args: any[]) => any {
-  if (typeof val !== 'function') return false
-  return !(val.prototype && typeof val.prototype === 'object' && val.prototype.constructor === val)
+  return typeof val === 'function'
 }
 
 /**
