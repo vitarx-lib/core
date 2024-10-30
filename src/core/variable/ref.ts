@@ -127,11 +127,11 @@ export function isRef(val: any): val is Ref {
 }
 
 /**
- * 解除Ref对象，返回其value属性
+ * 解除Ref对象，返回其value属性值
  *
  * @template T - 任意类型
  * @param ref - 任意值或`Ref`对象
- * @return {T} 任意值或`Ref`对象的value属性
+ * @return {T} 如果传入的是`Ref`对象则返回其value属性值，否则返回原值
  */
 export function unRef<T>(ref: T | Ref<T>): T {
   return isRef(ref) ? ref.value : ref
