@@ -127,14 +127,14 @@ export default class Observers {
    * ## 注册监听器
    *
    * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
-   * @param callback - 回调函数或监听器实例
    * @param props - 属性名数组
+   * @param callback - 回调函数或监听器实例
    * @param options - 监听器选项
    */
   static registerProps<C extends Callback<any, any>>(
     origin: AnyObject,
+    props: PropName[] | Set<PropName>,
     callback: C | Listener<C>,
-    props: PropName[],
     options?: Options
   ): Listener<C> {
     const { listener, list } = this.#createListener(callback, options)
