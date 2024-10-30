@@ -277,8 +277,15 @@ export default class Observers {
     props.forEach(p => {
       this.#triggerListeners(this.#listeners.get(origin)?.get(p), origin, p)
     })
-    // 如果存在ALL_CHANGE_SYMBOL的监听器，则触发它
-    this.#triggerListeners(this.#listeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL), origin, props)
+    // 兼容prop传入ALL_CHANGE_SYMBOL
+    if (!props.includes(this.ALL_CHANGE_SYMBOL)) {
+      // 如果存在ALL_CHANGE_SYMBOL的监听器，则触发它
+      this.#triggerListeners(
+        this.#listeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL),
+        origin,
+        props
+      )
+    }
   }
 
   /**
