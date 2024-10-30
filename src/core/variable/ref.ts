@@ -3,10 +3,10 @@ import { isProxy, ProxySymbol } from './helper.js'
 import { createReactive } from './reactive.js'
 import { Observers } from '../observer'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL } from './constants.js'
-import { track } from './depend'
+import { track } from './depend.js'
 
 /** 解除响应式对象 */
-export type UnRef<T> = T extends Ref<any> ? T['value'] : T
+export type UnRef<T> = T extends Ref<infer U> ? U : T
 
 /**
  * # `Ref`对象，用于引用一个值，并可以监听其变化
