@@ -2,6 +2,10 @@
 export type AnyFunction = (...args: any[]) => any
 // 任意回调函数
 export type AnyCallback = AnyFunction
+// void 函数
+export type VoidFunction = () => void
+// void 回调函数
+export type VoidCallback = VoidFunction
 // 任意对象
 export type AnyRecord = Record<any, any>
 // 任意数组
