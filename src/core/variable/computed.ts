@@ -1,8 +1,7 @@
-import { ValueProxy } from './helper.js'
+import type { ValueProxy } from './helper.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants'
-import { Depend } from './depend'
-import Listener from '../observer/listener'
-import Observers from '../observer/observers'
+import { Depend } from './depend.js'
+import { Listener, Observers } from '../observer'
 
 /**
  * # 计算属性
