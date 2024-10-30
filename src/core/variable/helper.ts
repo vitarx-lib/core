@@ -19,7 +19,7 @@ export type PropName = string | symbol | number
 /** 任意代理对象 */
 export type AnyProxy = Ref | Reactive | (AnyObject & ProxySymbol)
 /** 解除代理对象，不区分`Ref`、`Reactive` */
-export type UnProxy<T> = T extends Ref ? T['value'] : UnReactive<T>
+export type UnProxy<T> = T extends Ref<infer U> ? U : UnReactive<T>
 /** 从类型中排除代理标识符 */
 export type ExcludeProxyProp<T> = Exclude<T, keyof ProxySymbol | keyof ReactiveSymbol<AnyObject>>
 /** 从代理对象中提取出属性的联合类型 */
