@@ -30,7 +30,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    */
   constructor(callback: C, limit: number = 0) {
     this.#callback = callback
-    this.#limit = limit
+    this.#limit = limit ?? 0
   }
 
   /**
