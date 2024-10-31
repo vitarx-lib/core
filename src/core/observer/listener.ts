@@ -17,7 +17,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
   // 暂停状态
   #pause = false
   // 弃用状态
-  #isDispose = false
+  #isDeprecated = false
   // 销毁回调
   #onDestroyedCallback?: VoidCallback[]
 
@@ -38,8 +38,8 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    *
    * @readonly
    */
-  get isDispose() {
-    return this.#isDispose
+  get isDeprecated() {
+    return this.#isDeprecated
   }
 
   /**
@@ -86,13 +86,15 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * 调用此方法会将监听器标记为弃用状态，并触发销毁回调。
    */
   destroy(): void {
-    if (!this.#isDispose) {
-      this.#isDispose = true
+    if (!this.#isDeprecated) {
+      this.#isDeprecated = true
       if (this.#onDestroyedCallback) {
         this.#onDestroyedCallback.forEach(callback => {
           try {
             callback()
-          } catch (e) {}
+          } catch (e) {
+            console.error('Listener.Callback.Error', e)
+          }
         })
         this.#onDestroyedCallback = undefined
         this.#callback = undefined
@@ -106,7 +108,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * @param callback
    */
   onDestroyed(callback: VoidCallback): void {
-    if (this.#isDispose) {
+    if (this.#isDeprecated) {
       callback()
     } else {
       if (this.#onDestroyedCallback) {
@@ -124,7 +126,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * @returns {boolean} 返回一个bool值表示当前监听器是否活跃，false代表已经销毁
    */
   trigger(params: Parameters<C>): boolean {
-    if (this.#isDispose || !this.#callback) return false
+    if (this.#isDeprecated || !this.#callback) return false
     if (this.#pause) return true
     // 如果没有限制触发次数或触发次数小于限制次数则触发回调
     if (this.#limit === 0 || this.#count < this.#limit) {
@@ -171,7 +173,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * @returns {boolean} 重置成功返回true，否则返回false。
    */
   reset(): boolean {
-    if (this.#isDispose) return false
+    if (this.#isDeprecated) return false
     this.#count = 0
     return true
   }
