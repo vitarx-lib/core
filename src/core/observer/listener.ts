@@ -1,12 +1,60 @@
-import { AnyCallback } from '../../types/common'
-import Dispose from './Dispose'
+import { AnyCallback, VoidFunction } from '../../types/common'
+import Dispose from './dispose.js'
+
+type DependListenerSet = Set<Listener>
+
+export class DependListener {
+  // 收集器集合
+  static #collectors = new Map<symbol, DependListenerSet>()
+
+  /**
+   * ## 跟踪监听器
+   *
+   * 用于跟踪闭包中所创建的监听器。
+   *
+   * @param listener
+   */
+  static track(listener: Listener) {
+    if (this.#collectors.size) {
+      // 遍历收集器，并记录引用
+      this.#collectors.forEach(collector => {
+        // 往收集器中添加监听器
+        collector.add(listener)
+        // 监听到销毁时自动从集合中移除
+        listener.onDestroyed(() => collector.delete(listener))
+      })
+    }
+  }
+
+  /**
+   * ## 收集监听器
+   *
+   * @param fn
+   */
+  static collect(fn: VoidFunction): DependListenerSet {
+    // 创建临时依赖id
+    const id = Symbol('id')
+    // 创建依赖集合
+    const deps: DependListenerSet = new Set()
+    // 添加收集器
+    this.#collectors.set(id, deps)
+    try {
+      fn()
+      // 返回依赖集合
+      return deps
+    } finally {
+      // 删除收集器
+      this.#collectors.delete(id)
+    }
+  }
+}
 
 /**
  * 监听器
  *
  * @template C - 回调函数的类型
  */
-export default class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
+export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
   // 监听回调函数
   #callback?: C
   // 限制触发次数
