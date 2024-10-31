@@ -74,7 +74,7 @@ function createValueListener<T extends AnyObject>(
   options?: Options
 ): Listener<() => void> {
   let oldValue = deepClone(prop !== undefined ? origin[prop] : origin)
-  return new Listener(function () {
+  return Listener.create(function () {
     const newValue = deepClone(prop !== undefined ? origin[prop] : origin)
     callback(oldValue as any, newValue as any)
     oldValue = newValue
@@ -155,30 +155,26 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
     }
     const deps = origin.filter(isProxy)
     if (deps.length === origin.length) {
-      let mainListener: Listener<any>
-      const isBatch = options?.batch === undefined || options?.batch
-      if (isBatch) {
+      let mainListener: Listener
+      let subCallback: AnyCallback
+      if (options?.batch === undefined || options?.batch) {
         // 如果需要批处理 则使用deps数组做为源注册一个监听器
         mainListener = Observers.register(deps, callback, Observers.ALL_CHANGE_SYMBOL, options)
+        subCallback = (_p, o) => Observers.trigger(deps, [`${origin.indexOf(o)}`])
       } else {
         // 不进行批处理直接实例一个监听器，减少开销
-        mainListener = new Listener(callback, options?.limit ?? 0)
+        mainListener = Listener.create(callback, options?.limit ?? 0)
+        subCallback = (_p, o) => mainListener.trigger([[`${origin.indexOf(o)}`], deps])
       }
+      // 辅助监听器
+      const subListener = new Listener(subCallback, options?.limit)
       // 监听多个源的变化，把变化反应到listener
-      const subListener = Observers.registers(
-        deps,
-        function (_p, o) {
-          if (isBatch) {
-            Observers.trigger(deps, [`${origin.indexOf(o)}`])
-          } else {
-            mainListener.trigger([[`${origin.indexOf(o)}`], deps])
-          }
-        },
-        options
-      )
+      Observers.registers(deps, subListener, options)
       // 主监听器被销毁时，同时销毁辅助监听器
-      mainListener.onDestroyed(() => subListener.destroy())
-      return mainListener
+      mainListener.onDestroyed(function () {
+        subListener.destroy()
+      })
+      return mainListener as unknown as Listener<C>
     }
   }
   throw new TypeError(
@@ -253,31 +249,24 @@ export function watchProps<
 >(origin: T, props: P, callback: C, options?: Options): Listener<C> {
   // 检测源是否为Proxy
   verifyProxy(origin)
-  const isBatch = options?.batch === undefined || options?.batch
-  let mainListener: Listener<any>
-  if (isBatch) {
-    // @ts-ignore
-    props = new Set(props)
+  if (props.length === 0) throw TypeError('props参数不能为空数组')
+  // 判断是否需要批处理
+  let mainListener: Listener
+  let subCallback: AnyCallback
+  if (options?.batch === undefined || options?.batch) {
     mainListener = Observers.register(props, callback, Observers.ALL_CHANGE_SYMBOL, options)
+    subCallback = p => Observers.trigger(props, p)
   } else {
-    mainListener = new Listener(callback, options?.limit ?? 0)
+    mainListener = Listener.create(callback, options?.limit ?? 0)
+    subCallback = p => mainListener.trigger([p, origin])
   }
   // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
-  const subListener = Observers.registerProps(
-    origin,
-    props,
-    function (prop) {
-      if (isBatch) {
-        Observers.trigger(props, prop)
-      } else {
-        mainListener.trigger([prop, origin])
-      }
-    },
-    options
-  )
+  const subListener = new Listener(subCallback)
+  // 监听多个属性变化
+  Observers.registerProps(origin, props, subListener, options)
   // 主监听器被销毁时，同时销毁辅助监听器
   mainListener.onDestroyed(() => subListener.destroy())
-  return mainListener
+  return mainListener as unknown as Listener<C>
 }
 
 /**
@@ -338,22 +327,18 @@ export function watchDepend(
 ): Listener<VoidCallback> | undefined {
   const { deps } = Depend.collect(fn)
   if (deps.size > 0) {
-    const isBatch = options?.batch === undefined || options?.batch
     let mainListener: Listener<VoidCallback>
-    if (isBatch) {
+    let subCallback: AnyCallback
+    if (options?.batch === undefined || options?.batch) {
       mainListener = Observers.register(deps, callback || fn, Observers.ALL_CHANGE_SYMBOL, options)
+      const change = Symbol('depend change')
+      subCallback = () => Observers.trigger(deps, change as any)
     } else {
-      mainListener = new Listener(callback || fn, options?.limit ?? 0)
+      mainListener = Listener.create(callback || fn, options?.limit ?? 0)
+      subCallback = () => mainListener.trigger([])
     }
-    const change = Symbol('depend change') as any
     // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
-    const subListener = new Listener(function () {
-      if (isBatch) {
-        Observers.trigger(deps, change)
-      } else {
-        mainListener.trigger([])
-      }
-    }, options?.limit ?? 0)
+    const subListener = new Listener(subCallback, options?.limit)
     // 主监听器被销毁时，同时销毁辅助监听器
     mainListener.onDestroyed(() => subListener.destroy())
     deps.forEach((props, proxy) => {
