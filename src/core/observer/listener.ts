@@ -1,12 +1,10 @@
 import { AnyCallback, VoidFunction } from '../../types/common'
-import Dispose from './dispose.js'
+import { Disposed, getCurrentScope } from '../scope'
 // 收集器类型
 type Collector = Set<Listener>
 
 /**
- * # 依赖监听器静态工具类
- *
- * 提供了一些静态方法，用于收集和跟踪监听器，在必要时对监听器进行销毁。
+ * # 该类用于收集监听器
  */
 export class DepListener {
   // 收集器集合
@@ -70,15 +68,13 @@ export class DepListener {
  *
  * @template C - 回调函数的类型
  */
-export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
+export class Listener<C extends AnyCallback = AnyCallback> extends Disposed {
   // 监听回调函数
   #callback?: C
   // 限制触发次数
   readonly #limit: number
   // 已触发次数
   #count = 0
-  // 暂停状态
-  #pause = false
 
   /**
    * 创建监听器
@@ -91,13 +87,6 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
     super()
     this.#callback = callback
     this.#limit = limit ?? 0
-  }
-
-  /**
-   * 判断是否为暂停状态
-   */
-  get isPaused(): boolean {
-    return this.#pause
   }
 
   /**
@@ -128,7 +117,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
    * @returns {Listener<C>}
    */
   static once<C extends AnyCallback>(callback: C): Listener<C> {
-    return DepListener.create(callback, 1)
+    return new Listener(callback, 1)
   }
 
   /**
@@ -144,8 +133,8 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
   static create<C extends AnyCallback>(callback: C, limit: number = 0): Listener<C> {
     // 创建监听器
     const instance = new Listener(callback, limit)
-    // 跟踪监听器
-    DepListener.track(instance)
+    // 添加到当前作用域进行自动管理
+    getCurrentScope()?.add(instance)
     return instance
   }
 
@@ -169,7 +158,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
    */
   trigger(params: Parameters<C>): boolean {
     if (this.isDeprecated || !this.#callback) return false
-    if (this.#pause) return true
+    if (this.isPaused) return true
     // 如果没有限制触发次数或触发次数小于限制次数则触发回调
     if (this.#limit === 0 || this.#count < this.#limit) {
       try {
@@ -192,19 +181,19 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
   /**
    * 暂停回调
    *
-   * 调用此方法过后，trigger方法会忽略回调，直到unpause方法被调用
+   * 调用此方法过后，trigger将会被忽略，直到unpause方法被调用
    */
-  pause() {
-    this.#pause = true
+  override pause() {
+    super.pause()
   }
 
   /**
    * 取消暂停回调
    *
-   * 调用此方法后，如果之前处于暂停状态，则继续触发回调。
+   * 调用此方法后，如果之前处于暂停状态，则会继续触发回调。
    */
-  unpause() {
-    this.#pause = false
+  override unpause() {
+    super.unpause()
   }
 
   /**
