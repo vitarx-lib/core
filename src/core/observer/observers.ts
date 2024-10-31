@@ -1,4 +1,4 @@
-import Listener from './listener.js'
+import { Listener } from './listener.js'
 import { ExtractProp, PropName } from '../variable'
 import { AnyCallback, AnyObject } from '../../types/common'
 import { isArray, isFunction } from '../../utils'
@@ -49,10 +49,11 @@ type WaitTriggerList = Array<{
   origin: AnyObject
   props: PropName[]
 }>
+
 /**
  * 全局观察者管理器
  */
-export default class Observers {
+export class Observers {
   // 全部变更事件监听标识
   static ALL_CHANGE_SYMBOL = Symbol('ALL_CHANGE_SYMBOL')
   // 监听源锁
