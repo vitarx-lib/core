@@ -9,7 +9,7 @@ export default abstract class Dispose {
   // 弃用状态
   #isDeprecated = false
   /**
-   * 判断是否已被弃用
+   * 是否已弃用/销毁
    *
    * @readonly
    */
