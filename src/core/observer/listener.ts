@@ -1,13 +1,12 @@
 import { AnyCallback } from '../../types/common'
-
-type VoidCallback = () => void
+import Dispose from './Dispose'
 
 /**
  * 监听器
  *
  * @template C - 回调函数的类型
  */
-export default class Listener<C extends AnyCallback = AnyCallback> {
+export default class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
   // 监听回调函数
   #callback?: C
   // 限制触发次数
@@ -16,10 +15,6 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
   #count = 0
   // 暂停状态
   #pause = false
-  // 弃用状态
-  #isDeprecated = false
-  // 销毁回调
-  #onDestroyedCallback?: VoidCallback[]
 
   /**
    * 创建监听器
@@ -29,17 +24,9 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * @param {number} limit - 限制触发次数，0为不限制
    */
   constructor(callback: C, limit: number = 0) {
+    super()
     this.#callback = callback
     this.#limit = limit ?? 0
-  }
-
-  /**
-   * 判断是否已被弃用
-   *
-   * @readonly
-   */
-  get isDeprecated() {
-    return this.#isDeprecated
   }
 
   /**
@@ -85,37 +72,10 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    *
    * 调用此方法会将监听器标记为弃用状态，并触发销毁回调。
    */
-  destroy(): void {
-    if (!this.#isDeprecated) {
-      this.#isDeprecated = true
-      if (this.#onDestroyedCallback) {
-        this.#onDestroyedCallback.forEach(callback => {
-          try {
-            callback()
-          } catch (e) {
-            console.error('Listener.Callback.Error', e)
-          }
-        })
-        this.#onDestroyedCallback = undefined
-        this.#callback = undefined
-      }
-    }
-  }
-
-  /**
-   * 监听销毁
-   *
-   * @param callback
-   */
-  onDestroyed(callback: VoidCallback): void {
-    if (this.#isDeprecated) {
-      callback()
-    } else {
-      if (this.#onDestroyedCallback) {
-        this.#onDestroyedCallback.push(callback)
-      } else {
-        this.#onDestroyedCallback = [callback]
-      }
+  override destroy(): void {
+    if (!this.isDeprecated) {
+      super.destroy()
+      this.#callback = undefined
     }
   }
 
@@ -126,7 +86,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * @returns {boolean} 返回一个bool值表示当前监听器是否活跃，false代表已经销毁
    */
   trigger(params: Parameters<C>): boolean {
-    if (this.#isDeprecated || !this.#callback) return false
+    if (this.isDeprecated || !this.#callback) return false
     if (this.#pause) return true
     // 如果没有限制触发次数或触发次数小于限制次数则触发回调
     if (this.#limit === 0 || this.#count < this.#limit) {
@@ -173,7 +133,7 @@ export default class Listener<C extends AnyCallback = AnyCallback> {
    * @returns {boolean} 重置成功返回true，否则返回false。
    */
   reset(): boolean {
-    if (this.#isDeprecated) return false
+    if (this.isDeprecated) return false
     this.#count = 0
     return true
   }
