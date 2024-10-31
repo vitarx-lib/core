@@ -1,11 +1,16 @@
 import { AnyCallback, VoidFunction } from '../../types/common'
 import Dispose from './dispose.js'
+// 收集器类型
+type Collector = Set<Listener>
 
-type DependListenerSet = Set<Listener>
-
-export class DependListener {
+/**
+ * # 依赖监听器静态工具类
+ *
+ * 提供了一些静态方法，用于收集和跟踪监听器，在必要时对监听器进行销毁。
+ */
+export class DepListener {
   // 收集器集合
-  static #collectors = new Map<symbol, DependListenerSet>()
+  static #collectors = new Map<symbol, Collector>()
 
   /**
    * ## 跟踪监听器
@@ -14,7 +19,7 @@ export class DependListener {
    *
    * @param listener
    */
-  static track(listener: Listener) {
+  static track(listener: Listener): void {
     if (this.#collectors.size) {
       // 遍历收集器，并记录引用
       this.#collectors.forEach(collector => {
@@ -29,28 +34,39 @@ export class DependListener {
   /**
    * ## 收集监听器
    *
-   * @param fn
+   * @param {VoidFunction} fn - 闭包函数
+   * @param {Set<Listener>} collector - 收集器，set集合！
    */
-  static collect(fn: VoidFunction): DependListenerSet {
+  static collect(fn: VoidFunction, collector: Collector = new Set()): Collector {
     // 创建临时依赖id
     const id = Symbol('id')
-    // 创建依赖集合
-    const deps: DependListenerSet = new Set()
     // 添加收集器
-    this.#collectors.set(id, deps)
+    this.#collectors.set(id, collector)
     try {
       fn()
       // 返回依赖集合
-      return deps
+      return collector
     } finally {
       // 删除收集器
       this.#collectors.delete(id)
     }
   }
+
+  /**
+   * 创建监听器，并跟踪监听器。
+   *
+   * 该方法与`Listener.create`方法一致。
+   *
+   * @param callback
+   * @param limit
+   */
+  static create<C extends AnyCallback>(callback: C, limit: number = 0): Listener<C> {
+    return Listener.create(callback, limit)
+  }
 }
 
 /**
- * 监听器
+ * # 监听器类
  *
  * @template C - 回调函数的类型
  */
@@ -112,7 +128,25 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
    * @returns {Listener<C>}
    */
   static once<C extends AnyCallback>(callback: C): Listener<C> {
-    return new Listener(callback, 1)
+    return DepListener.create(callback, 1)
+  }
+
+  /**
+   * 创建监听器
+   *
+   * 静态方法，用于创建监听器，并自动把监听器提交到依赖监听器中。
+   *
+   * 如果你不希望在依赖监听器中跟踪监听器，则可以直接使用`new Listener`。
+   *
+   * @param callback
+   * @param limit
+   */
+  static create<C extends AnyCallback>(callback: C, limit: number = 0): Listener<C> {
+    // 创建监听器
+    const instance = new Listener(callback, limit)
+    // 跟踪监听器
+    DepListener.track(instance)
+    return instance
   }
 
   /**
