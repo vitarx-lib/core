@@ -34,7 +34,7 @@ const DEFAULT_OPTIONS: Required<Options> = {
   limit: 0
 }
 /** 监听器映射MAP */
-type ListenersMap = Map<PropName | AllChangeSymbol, Set<Listener<AnyCallback>>>
+type ListenersMap = Map<PropName | AllChangeSymbol, Set<Listener>>
 /**
  * ## 回调函数类型
  *
@@ -170,11 +170,11 @@ export class Observers {
   }
 
   /** 创建监听器，并返回监听器列表 */
-  static #createListener(callback: AnyCallback | Listener<AnyCallback>, options?: Options) {
+  static #createListener(callback: AnyCallback | Listener, options?: Options) {
     // 合并默认选项
     const mOptions: Required<Options> = Object.assign({}, DEFAULT_OPTIONS, options)
     // 创建监听器
-    const listener = isFunction(callback) ? new Listener(callback, mOptions.limit) : callback
+    const listener = isFunction(callback) ? Listener.create(callback, mOptions.limit) : callback
     // 监听器列表
     const list = mOptions.batch ? this.#listeners : this.#notBatchHandleListeners
     return { listener, list }
@@ -298,7 +298,7 @@ export class Observers {
    * @param p
    */
   static #triggerListeners<T extends AnyObject>(
-    listeners: Set<Listener<AnyCallback>> | undefined,
+    listeners: Set<Listener> | undefined,
     origin: T,
     p: ExtractProp<T> | ExtractProp<T>[]
   ): void {
