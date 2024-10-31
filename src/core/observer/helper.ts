@@ -13,8 +13,8 @@ import type {
   AnyPrimitive,
   VoidCallback
 } from '../../types/common'
-import Listener from './listener.js'
-import Observers, { type Options } from './observers.js'
+import { Listener } from './listener.js'
+import { Observers, type Options } from './observers.js'
 import { deepClone, isArray, isSimpleGetterFunction } from '../../utils'
 
 // 提取监听源
