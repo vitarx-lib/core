@@ -114,18 +114,14 @@ export class Depend {
           this.#collectors.delete(id)
         })
     }
-    let result
     try {
-      result = fn()
-    } catch (e) {
-      // 捕获并记录函数执行过程中的异常
-      console.error('Error in function execution:', e)
+      const result = fn()
+      // 返回依赖集合
+      return { result, deps } as any
     } finally {
       // 删除收集器
       this.#collectors.delete(id)
     }
-    // 返回依赖集合
-    return { result, deps } as any
   }
 }
 
