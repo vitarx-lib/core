@@ -1,74 +1,12 @@
-import { AnyCallback, VoidFunction } from '../../types/common'
-import { Disposed, getCurrentScope } from '../scope'
-// 收集器类型
-type Collector = Set<Listener>
-
-/**
- * # 该类用于收集监听器
- */
-export class DepListener {
-  // 收集器集合
-  static #collectors = new Map<symbol, Collector>()
-
-  /**
-   * ## 跟踪监听器
-   *
-   * 用于跟踪闭包中所创建的监听器。
-   *
-   * @param listener
-   */
-  static track(listener: Listener): void {
-    if (this.#collectors.size) {
-      // 遍历收集器，并记录引用
-      this.#collectors.forEach(collector => {
-        // 往收集器中添加监听器
-        collector.add(listener)
-        // 监听到销毁时自动从集合中移除
-        listener.onDestroyed(() => collector.delete(listener))
-      })
-    }
-  }
-
-  /**
-   * ## 收集监听器
-   *
-   * @param {VoidFunction} fn - 闭包函数
-   * @param {Set<Listener>} collector - 收集器，set集合！
-   */
-  static collect(fn: VoidFunction, collector: Collector = new Set()): Collector {
-    // 创建临时依赖id
-    const id = Symbol('id')
-    // 添加收集器
-    this.#collectors.set(id, collector)
-    try {
-      fn()
-      // 返回依赖集合
-      return collector
-    } finally {
-      // 删除收集器
-      this.#collectors.delete(id)
-    }
-  }
-
-  /**
-   * 创建监听器，并跟踪监听器。
-   *
-   * 该方法与`Listener.create`方法一致。
-   *
-   * @param callback
-   * @param limit
-   */
-  static create<C extends AnyCallback>(callback: C, limit: number = 0): Listener<C> {
-    return Listener.create(callback, limit)
-  }
-}
+import { AnyCallback } from '../../types/common'
+import { Dispose, getCurrentScope } from '../scope'
 
 /**
  * # 监听器类
  *
  * @template C - 回调函数的类型
  */
-export class Listener<C extends AnyCallback = AnyCallback> extends Disposed {
+export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
   // 监听回调函数
   #callback?: C
   // 限制触发次数
@@ -105,19 +43,6 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Disposed {
    */
   get limit(): number {
     return this.#limit
-  }
-
-  /**
-   * 创建一个只触发一次的监听器
-   *
-   * @template C - 回调函数的类型
-   *
-   * @param {C} callback - 回调函数
-   *
-   * @returns {Listener<C>}
-   */
-  static once<C extends AnyCallback>(callback: C): Listener<C> {
-    return new Listener(callback, 1)
   }
 
   /**
