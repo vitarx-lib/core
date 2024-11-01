@@ -71,6 +71,15 @@ export function isFunction(val: any): val is (...args: any[]) => any {
 }
 
 /**
+ * 判断是否为类构造函数
+ *
+ * @param func
+ */
+export function isClass(func: any): func is new (...args: any[]) => any {
+  return typeof func === 'function' && func.toString().startsWith('class ')
+}
+
+/**
  * 判断是否为一个简单的getter函数
  *
  * @note 必须是 `()=>any` 写法
