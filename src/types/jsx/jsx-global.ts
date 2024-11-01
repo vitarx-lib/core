@@ -7,12 +7,10 @@ declare global {
      */
     interface IntrinsicElements extends HtmlIntrinsicElements {}
 
-    interface IntrinsicAttributes {
-      /**
-       * 节点唯一标识符，用于 diff，列表元素应当具有唯一key
-       */
-      key?: string
-    }
+    /**
+     * @inheritDoc
+     */
+    interface IntrinsicAttributes extends Vitarx.IntrinsicAttributes {}
 
     /**
      * 子孙类型检测
