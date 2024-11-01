@@ -29,6 +29,8 @@ export class Computed<T> implements ValueProxy<T> {
   #listener?: Listener
 
   /**
+   * 构造一个计算属性对象
+   *
    * @param getter - 计算属性的getter函数
    * @param setter - 计算属性的setter函数
    */
