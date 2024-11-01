@@ -174,9 +174,11 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 /**
  * 创建响应式代理对象
  *
- * @param target
- * @param deep
- * @param trigger
+ * @note 此方法由系统内部使用，开发者不应该使用此方法！。
+ *
+ * @param target - 目标对象
+ * @param deep - 是否深度监听
+ * @param trigger - 当前对象属性变更时需要触发的钩子，一般是父对象的触发器，用于将子对象的变化传递到父对象。
  */
 export function createReactive<T extends AnyObject>(
   target: T,
@@ -190,7 +192,7 @@ export function createReactive<T extends AnyObject>(
       trigger
         ? function (prop: ExtractProp<T>) {
             Observers.trigger(proxy, prop)
-            trigger?.()
+            trigger()
           }
         : function (prop: ExtractProp<T>) {
             Observers.trigger(proxy, prop)
