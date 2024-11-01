@@ -231,7 +231,7 @@ type ToPartialProperties<
 > = Partial<ExtractW3CHtmlProperties<T, M, E>>
 
 // 生成HTML标签可选属性，包括事件和自定义数据属性
-export type GenerateProperties<
+export type HtmlProperties<
   T extends Element,
   M extends AnyObject = OverwriteHtmlProperties,
   E extends string = never

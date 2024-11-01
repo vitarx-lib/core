@@ -1,4 +1,4 @@
-import HtmlIntrinsicElements from './html-elements'
+import { HtmlIntrinsicElements } from './html-elements'
 
 declare global {
   namespace JSX {
