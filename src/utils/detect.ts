@@ -10,14 +10,14 @@ export function isObject(val: any): val is object {
 }
 
 /**
- * 判断变量是否为普通对象
+ * 判断变量是否为键值对记录对象
  *
- * @note 不包含数组
+ * @note 数组类型除外
  *
  * @param val
  * @returns {boolean}
  */
-export function isPlainObject(val: any): val is object {
+export function isRecordObject(val: any): val is Record<any, any> {
   return val !== null && typeof val === 'object' && !Array.isArray(val)
 }
 
@@ -77,6 +77,15 @@ export function isFunction(val: any): val is (...args: any[]) => any {
  */
 export function isClass(func: any): func is new (...args: any[]) => any {
   return typeof func === 'function' && func.toString().startsWith('class ')
+}
+
+/**
+ * 判断是否为类组件
+ *
+ * @param type
+ */
+export function isClassWidget(type: Vitarx.VNodeType): type is Vitarx.ClassWidget {
+  return typeof type === 'function' && type.prototype && 'build' in type.prototype
 }
 
 /**
