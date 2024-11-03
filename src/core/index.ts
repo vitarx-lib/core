@@ -1,3 +1,6 @@
 export * from './variable'
 export * from './observer'
 export * from './scope'
+export * from './widgets'
+export * from './renderer'
+export * from './app.js'
