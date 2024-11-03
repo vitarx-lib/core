@@ -1,4 +1,4 @@
-import { isObject, isPlainObject } from './detect.js'
+import { isObject, isRecordObject } from './detect.js'
 
 type IndexPath = (string | number | symbol)[]
 
@@ -47,7 +47,7 @@ export function diffIndex(
   }
 
   // 处理对象的情况
-  if (isPlainObject(oldVal) && isPlainObject(newVal)) {
+  if (isRecordObject(oldVal) && isRecordObject(newVal)) {
     const oldKeys = getAllKeys(oldVal, symbol)
     const newKeys = getAllKeys(newVal, symbol)
     // 检查旧对象中的键
@@ -62,7 +62,7 @@ export function diffIndex(
         if (isObject(oldVal[key])) {
           const curr = [...path, key]
           // @ts-ignore
-          diffIndex(oldVal[key], {}).forEach((item) => {
+          diffIndex(oldVal[key], {}).forEach(item => {
             changes.push([...curr, ...item])
           })
         } else {
@@ -114,7 +114,7 @@ export function getIndexValue<T>(obj: T, index: IndexPath): any {
     }
     if (Array.isArray(current) && typeof key === 'number') {
       current = current[key]
-    } else if (isPlainObject(current) && current.hasOwnProperty(key)) {
+    } else if (isRecordObject(current) && current.hasOwnProperty(key)) {
       current = (current as any)[key]
     } else {
       return undefined
