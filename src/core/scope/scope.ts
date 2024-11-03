@@ -1,4 +1,4 @@
-import { Dispose, DisposeInterface } from './dispose'
+import { Dispose, DisposeInterface } from './dispose.js'
 
 /** 入口函数 */
 type MainFunction = () => void
