@@ -389,7 +389,7 @@ export interface OverwriteHtmlProperties extends PartProperties {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/style 完整的使用文档
    */
-  style?: string | CssProperties<string | number> | Partial<CSSStyleDeclaration>
+  style?: string | CssProperties | Partial<CSSStyleDeclaration>
   /**
    * accesskey全局属性，提供了为当前元素生成快捷键的方式。
    *
