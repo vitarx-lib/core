@@ -1,2 +1,2 @@
-export * from './dispose'
+export * from './dispose.js'
 export * from './scope.js'
