@@ -34,7 +34,7 @@ export interface CustomProperties {
   /**
    * class全局属性接受字符串、数组和`Record<string, boolean>`类型的对象。
    *
-   * 当为对象时`Key`为类名，`Value`为是否添加该类名的布尔值，和字符串都会自动转为字符串。
+   * 当为对象时`Key`为类名，`Value`为是否添加该类名的布尔值。
    *
    * ```jsx
    * // 键值对对象类型
