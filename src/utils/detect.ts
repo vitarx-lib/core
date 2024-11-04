@@ -80,15 +80,6 @@ export function isClass(func: any): func is new (...args: any[]) => any {
 }
 
 /**
- * 判断是否为类组件
- *
- * @param type
- */
-export function isClassWidget(type: Vitarx.VNodeType): type is Vitarx.ClassWidget {
-  return typeof type === 'function' && type.prototype && 'build' in type.prototype
-}
-
-/**
  * 判断是否为一个简单的getter函数
  *
  * @note 必须是 `()=>any` 写法
