@@ -1,4 +1,3 @@
-import { AnyCallback } from '../../types/common'
 import { Dispose, getCurrentScope } from '../scope'
 
 /**

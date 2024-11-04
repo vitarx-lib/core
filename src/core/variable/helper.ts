@@ -2,7 +2,6 @@
 import { type Ref } from './ref.js'
 import type { Reactive, ReactiveSymbol, UnReactive } from './reactive.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
-import type { AnyCollection, AnyObject } from '../../types/common'
 
 /**
  * 代理标识接口

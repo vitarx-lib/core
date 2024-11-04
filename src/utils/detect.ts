@@ -1,5 +1,3 @@
-import { AnyCollection } from '../types/common'
-
 /**
  * 判断是否为对象
  *

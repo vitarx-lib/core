@@ -12,7 +12,8 @@
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "clean:types": "node scripts/clean.js",
+    "build": "tsc -p tsconfig.json && npm run clean:js",
     "prepublishOnly": "npm run build",
     "push": "npm publish"
   },

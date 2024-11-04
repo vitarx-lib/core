@@ -1,6 +1,5 @@
 import { Listener } from './listener.js'
 import { ExtractProp, PropName } from '../variable'
-import { AnyCallback, AnyObject } from '../../types/common'
 import { isArray, isFunction } from '../../utils'
 
 /** 所有改变事件监听标识类型 */

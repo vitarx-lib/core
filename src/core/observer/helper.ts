@@ -6,13 +6,6 @@ import {
   type PropName,
   type UnProxy
 } from '../variable'
-import type {
-  AnyCallback,
-  AnyFunction,
-  AnyObject,
-  AnyPrimitive,
-  VoidCallback
-} from '../../types/common'
 import { Listener } from './listener.js'
 import { Observers, type Options } from './observers.js'
 import { deepClone, isArray, isSimpleGetterFunction } from '../../utils'

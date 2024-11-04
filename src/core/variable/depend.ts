@@ -1,6 +1,5 @@
 import { AnyProxy, isProxy, type PropName } from './helper.js'
 import { isAsyncFunction } from '../../utils'
-import type { AnyFunction } from '../../types/common'
 
 /**
  * 依赖集合

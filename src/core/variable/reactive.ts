@@ -1,4 +1,3 @@
-import { AnyCollection, AnyMap, AnyObject, AnySet } from '../../types/common'
 import { isArray, isCollection, isFunction, isObject } from '../../utils'
 import { Observers } from '../observer'
 import { PROXY_SYMBOL } from './constants.js'

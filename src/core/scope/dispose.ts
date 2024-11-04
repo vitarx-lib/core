@@ -1,5 +1,3 @@
-import { AnyCallback, VoidCallback } from '../../types/common'
-
 /**
  * 处置功能接口
  *
