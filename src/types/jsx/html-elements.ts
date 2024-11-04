@@ -1,6 +1,6 @@
 import { HtmlProperties } from './html-properties'
 
-type HtmlElementTagMap = HTMLElementTagNameMap &
+export type HtmlElementTagMap = HTMLElementTagNameMap &
   Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
 
 /**
