@@ -1,4 +1,5 @@
 import { HtmlIntrinsicElements } from './html-elements'
+import { Widget } from '../core/view/widget'
 
 declare global {
   /** 任意函数 */
@@ -39,15 +40,27 @@ declare global {
         }
       : T
   namespace JSX {
-    /**
-     * @inheritDoc
-     */
+    /** 函数组件返回值 */
+    type Element = Widget
+    /** 类组件实例 */
+    type ElementClass = Widget
+
+    /** 固有元素 */
     interface IntrinsicElements extends HtmlIntrinsicElements {}
 
-    /**
-     * @inheritDoc
-     */
-    interface IntrinsicAttributes {}
+    /** 全局固有属性 */
+    interface IntrinsicAttributes {
+      /**
+       * 控制一个 `Widget` 如何替换树中的另一个 `Widget`。
+       *
+       * 在运行时，如果两个widget的`key`相同，则会更新已渲染的widget，否则会移除旧widget，然后插入新widget。
+       *
+       * 这在某些情况下很有用，例如，当您想重新排序列表时。
+       *
+       * 通常，作为另一个 widget 的唯一子项的 widget 不需要显式键。
+       */
+      key?: string | symbol
+    }
 
     /**
      * 子孙类型检测

@@ -1,5 +1,5 @@
-import { isArray, isCollection, isFunction, isObject } from '../../utils'
-import { Observers } from '../observer'
+import { isArray, isCollection, isFunction, isObject } from '../../utils/index.js'
+import { Observers } from '../observer/index.js'
 import { PROXY_SYMBOL } from './constants.js'
 import { type ExtractProp, isProxy, type ProxySymbol } from './helper.js'
 import { isRef } from './ref.js'
@@ -108,6 +108,12 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     this.#track = track
   }
 
+  deleteProperty(target: T, prop: ExtractProp<T>): boolean {
+    const result = Reflect.deleteProperty(target, prop)
+    if (result) this.#trigger(prop)
+    return result
+  }
+
   get(target: T, prop: ExtractProp<T>, receiver: any) {
     // 检测是否为响应式对象
     if (prop === REACTIVE_SYMBOL) return true
@@ -136,6 +142,11 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     return isRef(value) ? value.value : value
   }
 
+  has(target: T, prop: ExtractProp<T>): boolean {
+    this.#trigger(prop)
+    return Reflect.has(target, prop)
+  }
+
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
     // 处理数组长度修改
     if (prop === 'length' && isArray(target)) {
@@ -156,17 +167,6 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
       return result
     }
     return true
-  }
-
-  deleteProperty(target: T, prop: ExtractProp<T>): boolean {
-    const result = Reflect.deleteProperty(target, prop)
-    if (result) this.#trigger(prop)
-    return result
-  }
-
-  has(target: T, prop: ExtractProp<T>): boolean {
-    this.#trigger(prop)
-    return Reflect.has(target, prop)
   }
 }
 

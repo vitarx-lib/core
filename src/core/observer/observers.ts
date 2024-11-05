@@ -1,6 +1,6 @@
 import { Listener } from './listener.js'
-import { ExtractProp, PropName } from '../variable'
-import { isArray, isFunction } from '../../utils'
+import { ExtractProp, PropName } from '../variable/index.js'
+import { isArray, isFunction } from '../../utils/index.js'
 
 /** 所有改变事件监听标识类型 */
 export type AllChangeSymbol = typeof Observers.ALL_CHANGE_SYMBOL

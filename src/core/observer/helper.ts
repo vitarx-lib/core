@@ -5,10 +5,10 @@ import {
   isValueProxy,
   type PropName,
   type UnProxy
-} from '../variable'
+} from '../variable/index.js'
 import { Listener } from './listener.js'
 import { Observers, type Options } from './observers.js'
-import { deepClone, isArray, isSimpleGetterFunction } from '../../utils'
+import { deepClone, isArray, isSimpleGetterFunction } from '../../utils/index.js'
 
 // 提取监听源
 type ExtractOrigin<T> = T extends AnyFunction ? ReturnType<T> : T

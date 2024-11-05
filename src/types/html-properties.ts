@@ -1,9 +1,6 @@
 import { CustomProperties, OverwriteHtmlProperties } from './html-global-properties'
 import { OutreachEventName } from './html-event'
 
-// 任意对象
-type AnyObject = Record<any, any>
-
 /**
  * 从W3C文档中提取到的合法标签属性，用于生成类型
  *
@@ -209,7 +206,7 @@ type IsW3CHtmlProperties<P> = P extends string
  */
 type ExtractW3CHtmlProperties<
   T extends Element,
-  M extends AnyObject = OverwriteHtmlProperties,
+  M extends AnyRecord = OverwriteHtmlProperties,
   E extends string = never
 > = {
   [K in keyof T as K extends E
@@ -219,21 +216,21 @@ type ExtractW3CHtmlProperties<
       : IsW3CHtmlProperties<K>]: K extends keyof M ? M[K] : T[K]
 }
 
-// 将接口的所有键转换为小写
+/** 将接口的所有键转换为小写 */
 type ToLowerCaseKeys<T extends Record<string, any>> = {
   [K in keyof T as K extends string ? Lowercase<K> : K]: T[K]
 }
-// 将接口转换为可选属性
+/** 将接口转换为可选属性 */
 type ToPartialProperties<
   T extends Element,
-  M extends AnyObject = OverwriteHtmlProperties,
+  M extends AnyRecord = OverwriteHtmlProperties,
   E extends string = never
 > = Partial<ExtractW3CHtmlProperties<T, M, E>>
 
-// 生成HTML标签可选属性，包括事件和自定义数据属性
+/** 生成HTML标签可选属性，包括事件和自定义数据属性 */
 export type HtmlProperties<
   T extends Element,
-  M extends AnyObject = OverwriteHtmlProperties,
+  M extends AnyRecord = OverwriteHtmlProperties,
   E extends string = never
 > = ToPartialProperties<T, M, E> &
   OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &

@@ -1,8 +1,10 @@
 import { HtmlProperties } from './html-properties'
 
+/** HTML元素标签映射 */
 export type HtmlElementTagMap = HTMLElementTagNameMap &
   Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
-
+/** HTML元素标签 */
+export type HtmlElementTags = keyof HtmlElementTagMap
 /**
  * ## HTML固有元素
  *

@@ -1,4 +1,4 @@
-import { Dispose, getCurrentScope } from '../scope'
+import { Dispose, getCurrentScope } from '../scope/index.js'
 
 /**
  * # 监听器类
@@ -75,6 +75,24 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
   }
 
   /**
+   * 暂停回调
+   *
+   * 调用此方法过后，trigger将会被忽略，直到unpause方法被调用
+   */
+  override pause() {
+    super.pause()
+  }
+
+  /**
+   * 取消暂停回调
+   *
+   * 调用此方法后，如果之前处于暂停状态，则会继续触发回调。
+   */
+  override unpause() {
+    super.unpause()
+  }
+
+  /**
    * 触发监听，如果监听器被销毁，则返回false
    *
    * @param {any[]} params - 要传给回调函数的参数列表
@@ -100,24 +118,6 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
     } else {
       return false
     }
-  }
-
-  /**
-   * 暂停回调
-   *
-   * 调用此方法过后，trigger将会被忽略，直到unpause方法被调用
-   */
-  override pause() {
-    super.pause()
-  }
-
-  /**
-   * 取消暂停回调
-   *
-   * 调用此方法后，如果之前处于暂停状态，则会继续触发回调。
-   */
-  override unpause() {
-    super.unpause()
   }
 
   /**

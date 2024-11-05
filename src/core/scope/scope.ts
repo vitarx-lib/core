@@ -77,6 +77,19 @@ export class Scope extends Dispose {
   }
 
   /**
+   * 销毁作用域下所有监听器
+   *
+   * @override
+   */
+  override destroy() {
+    if (!this.isDeprecated && this.#container) {
+      this.#container.forEach(dispose => dispose.destroy())
+      this.#container = undefined
+      super.destroy()
+    }
+  }
+
+  /**
    * 触发可处置的对象暂停
    *
    * @override
@@ -97,19 +110,6 @@ export class Scope extends Dispose {
     if (this.isPaused) {
       super.unpause()
       this.#container?.forEach(dispose => dispose?.unpause?.())
-    }
-  }
-
-  /**
-   * 销毁作用域下所有监听器
-   *
-   * @override
-   */
-  override destroy() {
-    if (!this.isDeprecated && this.#container) {
-      this.#container.forEach(dispose => dispose.destroy())
-      this.#container = undefined
-      super.destroy()
     }
   }
 }

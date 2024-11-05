@@ -1,7 +1,7 @@
 import { isObject } from '../../utils'
 import { isProxy, ValueProxy } from './helper.js'
 import { createReactive } from './reactive.js'
-import { Observers } from '../observer'
+import { Observers } from '../observer/index.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
 import { Depend } from './depend.js'
 
