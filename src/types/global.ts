@@ -1,5 +1,5 @@
 import { HtmlIntrinsicElements } from './html-elements'
-import { Widget } from '../core/view/widget'
+import { Widget } from '../core/index.js'
 
 declare global {
   /** 任意函数 */
