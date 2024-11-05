@@ -1,8 +1,7 @@
 import { Widget } from './widget.js'
-import type { HtmlElementTags } from '../../types/html-elements'
 import { isArray, isFunction, isRecordObject, isString, popProperty } from '../../utils/index.js'
 import { VElement } from './VElement.js'
-import type { CustomProperties, OverwriteHtmlProperties } from '../../types/html-global-properties'
+import type { CustomProperties, HtmlElementTags, OverwriteHtmlProperties } from '../../index.js'
 
 type Props<T extends HtmlElementTags> = {
   [K in keyof JSX.IntrinsicElements[T]]: JSX.IntrinsicElements[T][K]

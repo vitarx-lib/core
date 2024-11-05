@@ -2,26 +2,27 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "jsx": "preserve",
-    "strict": true,
-    "skipLibCheck": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
+    // 开启类型声明文件的生成
     "declaration": true,
+    // JavaScript 文件输出目录
+    "outDir": "dist",
+    // 开启严格模式（可选）
+    "strict": true,
+    // 模块解析策略
+    "moduleResolution": "node",
+    // 启用模块间互操作
+    "esModuleInterop": true,
+    // 跳过库文件检查（可选）
+    "skipLibCheck": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
     "sourceMap": false,
     "noImplicitOverride": true,
     "noUnusedLocals": false,
     "baseUrl": "./",
-    "forceConsistentCasingInFileNames": true,
-    "typeRoots": [
-      "node_modules/@types",
-      "src/types"
-    ]
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*",
-    "tests"
+    "src/**/*"
   ]
 }
