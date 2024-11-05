@@ -1,4 +1,4 @@
-import { isObject } from '../../utils'
+import { isObject } from '../../utils/index.js'
 import { isProxy, ValueProxy } from './helper.js'
 import { createReactive } from './reactive.js'
 import { Observers } from '../observer/index.js'
