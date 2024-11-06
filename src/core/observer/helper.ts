@@ -8,7 +8,7 @@ import {
 } from '../variable/index.js'
 import { Listener } from './listener.js'
 import { Observers, type Options } from './observers.js'
-import { deepClone, isArray, isSimpleGetterFunction } from '../../utils/index.js'
+import { deepClone, isArray, isSimpleGetterFunction, popProperty } from '../../utils/index.js'
 
 // 提取监听源
 type ExtractOrigin<T> = T extends AnyFunction ? ReturnType<T> : T
@@ -37,6 +37,15 @@ type WatchCallback<T> = T extends AnyFunction
  * @param {any} prop - 属性名
  */
 type Callback<P extends PropName | PropName[], T extends AnyObject> = (prop: P, origin: T) => void
+/**
+ * 监听依赖结果
+ */
+type WatchDependResult<R, GET> = GET extends boolean
+  ? {
+      listener: Listener<VoidCallback> | undefined
+      result: R
+    }
+  : Listener<VoidCallback> | undefined
 
 /**
  * 检测是否为代理对象
@@ -312,15 +321,19 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
  * @param fn - 要监听的函数
  * @param callback - 回调函数
  * @param options - 监听器配置选项
+ * @returns {Listener|undefined} - 如果收集到依赖则返回监听器，否则返回undefined
  */
-export function watchDepend(
-  fn: () => any,
-  callback?: () => any,
-  options?: Options
-): Listener<VoidCallback> | undefined {
-  const { deps } = Depend.collect(fn)
+export function watchDepend<GET, R>(
+  fn: () => R,
+  callback?: () => void,
+  options?: Options & {
+    getResult?: GET
+  }
+): WatchDependResult<R, GET> {
+  const getResult = options ? popProperty(options, 'getResult') : false
+  const { deps, result } = Depend.collect(fn)
+  let mainListener: Listener<VoidCallback> | undefined = undefined
   if (deps.size > 0) {
-    let mainListener: Listener<VoidCallback>
     let subCallback: AnyCallback
     if (options?.batch === undefined || options?.batch) {
       mainListener = Observers.register(deps, callback || fn, Observers.ALL_CHANGE_SYMBOL, options)
@@ -328,7 +341,7 @@ export function watchDepend(
       subCallback = () => Observers.trigger(deps, change as any)
     } else {
       mainListener = Listener.create(callback || fn, options?.limit ?? 0)
-      subCallback = () => mainListener.trigger([])
+      subCallback = () => mainListener!.trigger([])
     }
     // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
     const subListener = new Listener(subCallback, options?.limit)
@@ -337,7 +350,7 @@ export function watchDepend(
     deps.forEach((props, proxy) => {
       Observers.registerProps(proxy, props, subListener)
     })
-    return mainListener
   }
-  return undefined
+  // @ts-ignore
+  return getResult ? { listener: mainListener, result } : mainListener
 }
