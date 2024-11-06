@@ -1,6 +1,6 @@
 import type { Component } from './core/view/component.js'
 import type { Properties as CssProperties } from 'csstype'
-import type { VNode } from './core/view/VNode.js'
+import type { IntrinsicAttributes as IntrinsicProps, VNode } from './core/view/VNode.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -43,9 +43,13 @@ declare global {
           [P in keyof T]: unDeepReadonly<T[P]>
         }
       : T
+  /** 让接口的部分属性 为必填项 */
+  type MakeRequired<T extends object, K extends keyof T> = T & {
+    [P in K]-?: T[P] // 强制指定的属性 K 为必填
+  }
   namespace JSX {
     /** 函数组件返回值 */
-    type Element = () => VNode
+    type Element = VNode
     /** 类组件实例 */
     type ElementClass = Component
 
@@ -53,18 +57,7 @@ declare global {
     interface IntrinsicElements extends HtmlIntrinsicElements {}
 
     /** 全局固有属性 */
-    interface IntrinsicAttributes {
-      /**
-       * 控制一个 `Widget` 如何替换树中的另一个 `Widget`。
-       *
-       * 在运行时，如果两个widget的`key`相同，则会更新已渲染的widget，否则会移除旧widget，然后插入新widget。
-       *
-       * 这在某些情况下很有用，例如，当您想重新排序列表时。
-       *
-       * 通常，作为另一个 widget 的唯一子项的 widget 不需要显式键。
-       */
-      key?: string | symbol | number | bigint
-    }
+    interface IntrinsicAttributes extends IntrinsicProps {}
   }
 }
 
@@ -199,6 +192,9 @@ type AutoComplete =
   | 'bday-day'
   | string
 
+// HTML元素class属性类型
+export type HTMLClassProperties = string | string[] | Record<string, boolean>
+
 /**
  * 自定义数据属性
  */
@@ -219,7 +215,7 @@ export interface CustomProperties {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
    */
-  class?: string | string[] | Record<string, boolean>
+  class?: HTMLClassProperties
 
   [key: `data-${string}`]: string
 }
@@ -248,6 +244,9 @@ interface PartProperties {
   size?: number | string
   step?: number | string
 }
+
+// 样式属性
+export type HTMLStyleProperties = string | CssProperties | Partial<CSSStyleDeclaration>
 
 /**
  * 全局属性
