@@ -49,7 +49,7 @@ export type ExtractProp<T> = T extends AnyCollection
  * @param {any} val - 任意变量
  */
 export function isProxy(val: any): val is AnyProxy {
-  return typeof val === 'object' && val[PROXY_SYMBOL] === true
+  return val?.[PROXY_SYMBOL] === true
 }
 
 /**
@@ -67,5 +67,5 @@ export function isDeepProxy(proxy: ProxySymbol): boolean {
  * @param val
  */
 export function isValueProxy(val: any): val is ValueProxy<any> {
-  return typeof val === 'object' && val[VALUE_PROXY_SYMBOL] === true
+  return val?.[VALUE_PROXY_SYMBOL] === true
 }
