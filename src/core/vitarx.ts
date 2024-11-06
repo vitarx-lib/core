@@ -1,5 +1,3 @@
-import { Widget } from './view'
-
 declare global {
   namespace Vitarx {
     /** 应用配置 */
@@ -37,10 +35,7 @@ export class Vitarx {
     Vitarx.ssr = this.options.ssr
   }
 
-  render(widget: Widget): void {
-    // @ts-ignore 忽略受保护类型检查
-    widget.createElement().mount(this.container)
-  }
+  render(): void {}
 }
 
 /**
