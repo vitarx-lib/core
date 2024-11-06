@@ -60,8 +60,6 @@ export function isAsyncFunction(func: Function): boolean {
 /**
  * 判断是否为函数
  *
- * @note 不包含构造函数
- *
  * @param val
  */
 export function isFunction(val: any): val is (...args: any[]) => any {
@@ -73,7 +71,7 @@ export function isFunction(val: any): val is (...args: any[]) => any {
  *
  * @param func
  */
-export function isClass(func: any): func is new (...args: any[]) => any {
+export function isConstructor(func: any): func is new (...args: any[]) => any {
   return typeof func === 'function' && func.toString().startsWith('class ')
 }
 
