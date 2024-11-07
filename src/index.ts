@@ -1,6 +1,7 @@
-import type { Component } from './core/view/component.js'
+import type { Widget } from './core/view/widget.js'
 import type { Properties as CssProperties } from 'csstype'
 import type { IntrinsicAttributes as IntrinsicProps, VNode } from './core/view/VNode.js'
+import { Ref } from './core/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -51,7 +52,7 @@ declare global {
     /** 函数组件返回值 */
     type Element = () => VNode
     /** 类组件实例 */
-    type ElementClass = Component
+    type ElementClass = Widget
 
     /** 固有元素 */
     interface IntrinsicElements extends HtmlIntrinsicElements {}
@@ -59,8 +60,14 @@ declare global {
     /** 全局固有属性 */
     interface IntrinsicAttributes extends IntrinsicProps {}
 
+    /** 子节点类型校验 */
     export interface ElementChildrenAttribute {
       children: {}
+    }
+
+    /** 类组件属性 */
+    export interface IntrinsicClassAttributes<T> {
+      ref?: Ref<T>
     }
   }
 }
