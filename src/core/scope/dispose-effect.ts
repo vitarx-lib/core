@@ -25,6 +25,8 @@ export interface DisposeInterface {
 export class DisposeEffect implements DisposeInterface {
   // 销毁回调
   #onDestroyedCallback?: VoidCallback[]
+  #onPause?: VoidCallback[]
+  #onUnPause?: VoidCallback[]
   // 弃用状态
   #isDeprecated = false
   // 暂停状态
@@ -56,9 +58,10 @@ export class DisposeEffect implements DisposeInterface {
       this.#isDeprecated = true
       if (this.#onDestroyedCallback) {
         this.#onDestroyedCallback.forEach(callback => callback())
-        this.#onDestroyedCallback.length = 0
         this.#onDestroyedCallback = undefined
       }
+      this.#onPause = undefined
+      this.#onUnPause = undefined
     }
   }
 
@@ -67,6 +70,7 @@ export class DisposeEffect implements DisposeInterface {
    */
   pause() {
     this.#pause = true
+    this.#onPause?.forEach(callback => callback())
   }
 
   /**
@@ -74,6 +78,7 @@ export class DisposeEffect implements DisposeInterface {
    */
   unpause() {
     this.#pause = false
+    this.#onUnPause?.forEach(callback => callback())
   }
 
   /**
@@ -89,6 +94,36 @@ export class DisposeEffect implements DisposeInterface {
         this.#onDestroyedCallback.push(callback)
       } else {
         this.#onDestroyedCallback = [callback]
+      }
+    }
+  }
+
+  /**
+   * 监听暂停
+   *
+   * @param callback
+   */
+  onPause(callback: VoidCallback): void {
+    if (this.#isDeprecated) {
+      if (this.#onPause) {
+        this.#onPause.push(callback)
+      } else {
+        this.#onPause = [callback]
+      }
+    }
+  }
+
+  /**
+   * 监听取消暂停
+   *
+   * @param callback
+   */
+  onUnPause(callback: VoidCallback): void {
+    if (!this.#isDeprecated) {
+      if (this.#onUnPause) {
+        this.#onUnPause.push(callback)
+      } else {
+        this.#onUnPause = [callback]
       }
     }
   }
