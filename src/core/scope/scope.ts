@@ -23,7 +23,7 @@ export class Scope extends DisposeEffect {
   /** 临时记录当前作用域 */
   static #currentScope?: Scope
   /** 副作用 */
-  private _effects?: Set<DisposeInterface> = new Set()
+  #effects?: Set<DisposeInterface> = new Set()
 
   /**
    * 实例化一个作用域管理器
@@ -44,7 +44,7 @@ export class Scope extends DisposeEffect {
    * @readonly
    */
   get count() {
-    return this._effects?.size ?? 0
+    return this.#effects?.size ?? 0
   }
 
   /**
@@ -67,8 +67,8 @@ export class Scope extends DisposeEffect {
    */
   add(dispose: DisposeInterface): boolean {
     if (!this.isDeprecated) {
-      this._effects?.add(dispose)
-      dispose.onDestroyed(() => this._effects?.delete(dispose))
+      this.#effects?.add(dispose)
+      dispose.onDestroyed(() => this.#effects?.delete(dispose))
       return true
     } else {
       console.trace('当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象')
@@ -82,9 +82,9 @@ export class Scope extends DisposeEffect {
    * @override
    */
   override destroy() {
-    if (!this.isDeprecated && this._effects) {
-      this._effects.forEach(dispose => dispose.destroy())
-      this._effects = undefined
+    if (!this.isDeprecated && this.#effects) {
+      this.#effects.forEach(dispose => dispose.destroy())
+      this.#effects = undefined
       super.destroy()
     }
   }
@@ -97,7 +97,7 @@ export class Scope extends DisposeEffect {
   override pause() {
     if (!this.isPaused) {
       super.pause()
-      this._effects?.forEach(dispose => dispose?.pause?.())
+      this.#effects?.forEach(dispose => dispose?.pause?.())
     }
   }
 
@@ -109,7 +109,7 @@ export class Scope extends DisposeEffect {
   override unpause() {
     if (this.isPaused) {
       super.unpause()
-      this._effects?.forEach(dispose => dispose?.unpause?.())
+      this.#effects?.forEach(dispose => dispose?.unpause?.())
     }
   }
 }
