@@ -20,7 +20,7 @@ export class Computed<T> implements ValueProxy<T> {
   // 标识为值代理对象
   readonly [VALUE_PROXY_SYMBOL] = true
   // 计算结果
-  #result: T
+  private _result: T
   // 初始化标识
   #initialize: boolean = false
   readonly #getter
@@ -37,7 +37,7 @@ export class Computed<T> implements ValueProxy<T> {
   constructor(getter: () => T, setter?: (newValue: T) => void) {
     this.#getter = getter
     this.#setter = setter
-    this.#result = undefined as T
+    this._result = undefined as T
   }
 
   /**
@@ -48,7 +48,7 @@ export class Computed<T> implements ValueProxy<T> {
   get value(): T {
     if (!this.#initialize) this.#init()
     Depend.track(this, 'value')
-    return this.#result
+    return this._result
   }
 
   /**
@@ -72,10 +72,10 @@ export class Computed<T> implements ValueProxy<T> {
    * @returns - 转换后的字符串
    */
   toString() {
-    if (this.#result?.toString) {
-      return this.#result.toString()
+    if (this._result?.toString) {
+      return this._result.toString()
     } else {
-      return `[Object Computed<${typeof this.#result}>]`
+      return `[Object Computed<${typeof this._result}>]`
     }
   }
 
@@ -100,13 +100,13 @@ export class Computed<T> implements ValueProxy<T> {
     if (!this.#initialize) {
       this.#initialize = true
       const { result, deps } = Depend.collect(this.#getter)
-      this.#result = result
+      this._result = result
       if (deps.size > 0) {
         // 主监听器，用于依赖更新
         this.#listener = Observers.register(deps, () => {
           const newResult = this.#getter()
-          if (newResult !== this.#result) {
-            this.#result = newResult
+          if (newResult !== this._result) {
+            this._result = newResult
             Observers.trigger(this, 'value' as any)
           }
         })
