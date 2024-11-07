@@ -28,6 +28,11 @@ export class Ref<T = any> implements ValueProxy<T> {
   readonly [PROXY_SYMBOL] = true
   // 标识为值代理对象
   readonly [VALUE_PROXY_SYMBOL] = true
+  /** 是否深度代理 */
+  readonly #deep: boolean
+  /** 目标变量 */
+  #value: T
+
   /**
    * 构造函数
    *
@@ -35,41 +40,35 @@ export class Ref<T = any> implements ValueProxy<T> {
    * @param deep - 是否深度代理，默认为true
    */
   constructor(target: T, deep: boolean = true) {
-    this._value = target
-    this._deep = deep
+    this.#value = target
+    this.#deep = deep
     this.#detectProxy(target)
   }
-
-  /** 是否深度代理 */
-  private readonly _deep: boolean
-
-  /** 目标变量 */
-  private _value: T
 
   /** 获取目标变量 */
   get value(): T {
     // 惰性代理子对象
-    if (this._deep && isObject(this._value) && !isProxy(this._value)) {
-      this._value = createReactive(this._value, this._deep, this.trigger.bind(this))
-    } else if (!isProxy(this._value)) {
+    if (this.#deep && isObject(this.#value) && !isProxy(this.#value)) {
+      this.#value = createReactive(this.#value, this.#deep, this.trigger.bind(this))
+    } else if (!isProxy(this.#value)) {
       Depend.track(this, 'value')
     }
     // 返回目标变量
-    return this._value
+    return this.#value
   }
 
   /** 修改目标变量 */
   set value(newValue: T) {
-    if (newValue !== this._value) {
+    if (newValue !== this.#value) {
       this.#detectProxy(newValue)
-      this._value = newValue
+      this.#value = newValue
       this.trigger()
     }
   }
 
   // 深度代理标识
   get [PROXY_DEEP_SYMBOL](): boolean {
-    return this._deep
+    return this.#deep
   }
 
   // 定义当对象需要转换成原始值时的行为
@@ -101,16 +100,16 @@ export class Ref<T = any> implements ValueProxy<T> {
    * @override
    */
   toString() {
-    if (this._value?.toString) {
-      return this._value.toString()
+    if (this.#value?.toString) {
+      return this.#value.toString()
     } else {
-      return `[Object Ref<${typeof this._value}>]`
+      return `[Object Ref<${typeof this.#value}>]`
     }
   }
 
   /** 检测代理 */
   #detectProxy(value: any) {
-    if (this._deep && isProxy(value)) {
+    if (this.#deep && isProxy(value)) {
       console.warn(
         `[Vitarx.Ref][WARN]：当deep属性为true时，Ref对象的引用值不应该是代理对象（Ref|Reactive）。`
       )
