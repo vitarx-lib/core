@@ -28,11 +28,6 @@ export class Ref<T = any> implements ValueProxy<T> {
   readonly [PROXY_SYMBOL] = true
   // 标识为值代理对象
   readonly [VALUE_PROXY_SYMBOL] = true
-  /** 目标变量 */
-  private _target: T
-  /** 是否深度代理 */
-  private readonly _deep: boolean
-
   /**
    * 构造函数
    *
@@ -40,28 +35,34 @@ export class Ref<T = any> implements ValueProxy<T> {
    * @param deep - 是否深度代理，默认为true
    */
   constructor(target: T, deep: boolean = true) {
-    this._target = target
+    this._value = target
     this._deep = deep
     this.#detectProxy(target)
   }
 
+  /** 是否深度代理 */
+  private readonly _deep: boolean
+
+  /** 目标变量 */
+  private _value: T
+
   /** 获取目标变量 */
   get value(): T {
     // 惰性代理子对象
-    if (this._deep && isObject(this._target) && !isProxy(this._target)) {
-      this._target = createReactive(this._target, this._deep, this.trigger.bind(this))
-    } else if (!isProxy(this._target)) {
+    if (this._deep && isObject(this._value) && !isProxy(this._value)) {
+      this._value = createReactive(this._value, this._deep, this.trigger.bind(this))
+    } else if (!isProxy(this._value)) {
       Depend.track(this, 'value')
     }
     // 返回目标变量
-    return this._target
+    return this._value
   }
 
   /** 修改目标变量 */
   set value(newValue: T) {
-    if (newValue !== this._target) {
+    if (newValue !== this._value) {
       this.#detectProxy(newValue)
-      this._target = newValue
+      this._value = newValue
       this.trigger()
     }
   }
@@ -100,10 +101,10 @@ export class Ref<T = any> implements ValueProxy<T> {
    * @override
    */
   toString() {
-    if (this._target?.toString) {
-      return this._target.toString()
+    if (this._value?.toString) {
+      return this._value.toString()
     } else {
-      return `[Object Ref<${typeof this._target}>]`
+      return `[Object Ref<${typeof this._value}>]`
     }
   }
 
