@@ -49,7 +49,7 @@ declare global {
   }
   namespace JSX {
     /** 函数组件返回值 */
-    type Element = VNode
+    type Element = () => VNode
     /** 类组件实例 */
     type ElementClass = Component
 
@@ -58,6 +58,10 @@ declare global {
 
     /** 全局固有属性 */
     interface IntrinsicAttributes extends IntrinsicProps {}
+
+    export interface ElementChildrenAttribute {
+      children: {}
+    }
   }
 }
 
