@@ -22,7 +22,7 @@ export interface DisposeInterface {
  *
  * 用于销毁/弃用对象，并释放内存。
  */
-export class Dispose implements DisposeInterface {
+export class DisposeEffect implements DisposeInterface {
   // 销毁回调
   #onDestroyedCallback?: VoidCallback[]
   // 弃用状态

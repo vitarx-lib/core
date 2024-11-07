@@ -1,4 +1,4 @@
-import { Dispose, DisposeInterface } from './dispose.js'
+import { DisposeEffect, DisposeInterface } from './dispose-effect.js'
 
 /** 入口函数 */
 type MainFunction = () => void
@@ -8,7 +8,7 @@ type MainFunction = () => void
  *
  * 当类实例化时会自动将实例对象添加到当前 {@link Scope} 作用域中，当作用域销毁时，会自动触发该实例的销毁方法，从而实现自动清理。
  */
-export class AutoDisposed extends Dispose {
+export class AutoDisposed extends DisposeEffect {
   constructor() {
     super()
     // 添加到当前作用域中进行管理
@@ -19,7 +19,7 @@ export class AutoDisposed extends Dispose {
 /**
  * # 作用域管理器
  */
-export class Scope extends Dispose {
+export class Scope extends DisposeEffect {
   /** 临时记录当前作用域 */
   static #currentScope?: Scope
   /** 副作用 */
@@ -59,7 +59,7 @@ export class Scope extends Dispose {
   /**
    * 添加一个可处置的对象到作用域中。
    *
-   * 如果习惯类编程则可以继承自{@link Dispose} 或 {@link AutoDisposed} 类；
+   * 如果习惯类编程则可以继承自{@link DisposeEffect} 或 {@link AutoDisposed} 类；
    * 函数式编程则可以传入一个对象，对象必须具有`destroy`和`onDestroyed`属性方法。
    *
    * @param dispose - 处置对象

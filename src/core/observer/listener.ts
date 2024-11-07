@@ -1,11 +1,11 @@
-import { Dispose, getCurrentScope } from '../scope/index.js'
+import { DisposeEffect, getCurrentScope } from '../scope/index.js'
 
 /**
  * # 监听器类
  *
  * @template C - 回调函数的类型
  */
-export class Listener<C extends AnyCallback = AnyCallback> extends Dispose {
+export class Listener<C extends AnyCallback = AnyCallback> extends DisposeEffect {
   // 监听回调函数
   #callback?: C
   // 限制触发次数

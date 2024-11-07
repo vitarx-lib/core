@@ -1,2 +1,2 @@
-export * from './dispose.js'
+export * from './dispose-effect.js'
 export * from './scope.js'
