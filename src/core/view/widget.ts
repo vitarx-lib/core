@@ -54,9 +54,13 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 创建元素
+   * 该方法由`Vitarx`内部调用，用于创建DOM元素
+   *
+   * 请勿在外部调用，以及使用`WidgetElement`实例方法，避免内存泄露。
+   *
+   * @protected
    */
-  protected createElement(): WidgetElement {
+  createElement(): WidgetElement {
     if (!this._element) this._element = new WidgetElement(this)
     return this._element
   }
@@ -64,9 +68,12 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   /**
    * 返回一个 `VNode` 节点，用于描述`UI`结构。
    *
+   * 该方法应由子类实现，但该方法是受保护的，以便在`Vitarx`内部使用。
+   *
+   * @protected
    * @returns {VNode}
    */
-  protected abstract build(): VNode
+  abstract build(): VNode
 }
 
 class WidgetElement {
@@ -100,12 +107,9 @@ class WidgetElement {
 
   build(): VNode {
     try {
-      // @ts-ignore
       return this.widget.build()
     } catch (e) {
-      // @ts-ignore
       if (this.widget?.onError && isFunction(this.widget.onError)) {
-        // @ts-ignore
         const vnode = this.widget.onError(e)
         if (isVNode(vnode)) return vnode
       }
