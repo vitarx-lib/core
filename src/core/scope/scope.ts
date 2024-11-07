@@ -22,7 +22,7 @@ export class AutoDisposed extends Dispose {
 export class Scope extends Dispose {
   /** 临时记录当前作用域 */
   static #currentScope?: Scope
-  /** 依赖容器 */
+  /** 副作用 */
   private _effects?: Set<DisposeInterface> = new Set()
 
   /**
