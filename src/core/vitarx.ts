@@ -5,6 +5,8 @@ declare global {
       /** 是否启用服务端渲染 */
       ssr?: boolean
     }
+
+    type VNode = import('./view/VNode').VNode
   }
 }
 
