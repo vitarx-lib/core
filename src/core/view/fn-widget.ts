@@ -171,7 +171,7 @@ export function onUpdated(fn: VoidCallback) {
  *
  * @param fn
  */
-export function onError(fn: (error: Error) => Vitarx.VNode | void) {
+export function onError(fn: (error: any) => Vitarx.VNode | void) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle('onError', fn)
 }
