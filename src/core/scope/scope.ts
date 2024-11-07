@@ -33,6 +33,8 @@ export class Scope extends DisposeEffect {
   constructor(main: MainFunction) {
     super()
     const oldScope = Scope.#currentScope
+    // 添加到父级作用域中
+    oldScope?.add(this)
     Scope.#currentScope = this
     main()
     Scope.#currentScope = oldScope
