@@ -1,5 +1,4 @@
 import { AnyProxy, isProxy, type PropName } from './helper.js'
-import { isAsyncFunction } from '../../utils/index.js'
 
 /**
  * 依赖集合
@@ -8,12 +7,16 @@ import { isAsyncFunction } from '../../utils/index.js'
  */
 type Deps = Map<AnyProxy, Set<PropName>>
 /** 收集结果 */
-type Result = {
-  /** 函数执行结果 */
-  result: any
-  /** 依赖集合 */
-  deps: Deps
-}
+type Result<T> =
+  T extends Promise<infer R>
+    ? Promise<{
+        result: R
+        deps: Deps
+      }>
+    : {
+        result: T
+        deps: Deps
+      }
 
 /**
  * # 依赖变量收集
@@ -59,14 +62,35 @@ export class Depend {
    * 会执行函数，并记录其依赖的响应式对象
    *
    * > **注意**：函数执行过程中，会自动收集依赖，无需手动调用{@link track}方法。
-   * 请勿传入异步函数，如果需要收集异步函数的依赖请使用{@link asyncCollect}方法。
    *
    * @alias get
    * @param {Function} fn 任意可执行的函数。
    * @returns { Deps } `Map对象`，键为依赖的根代理对象，值为引用的键索引`Set对象`，存在`.`连接符代表多层引用
    */
-  static collect(fn: () => any): Result {
-    return this.#beginCollect(fn) as Result
+  static collect<T>(fn: () => T): Result<T> {
+    // 创建临时依赖id
+    const id = Symbol('id')
+    // 创建依赖集合
+    const deps: Deps = new Map()
+    // 添加收集器
+    this.#collectors.set(id, deps)
+    try {
+      const result = fn()
+      if (result instanceof Promise) {
+        return result
+          .then((result: any) => {
+            return { result, deps }
+          })
+          .finally(() => {
+            this.#collectors.delete(id)
+          }) as any
+      }
+      // 返回依赖集合
+      return { result, deps } as any
+    } finally {
+      // 删除收集器
+      this.#collectors.delete(id)
+    }
   }
 
   /**
@@ -75,52 +99,8 @@ export class Depend {
    * @alias collect
    * @see collect
    */
-  static get(fn: () => any): Result {
+  static get<T>(fn: () => T): Result<T> {
     return this.collect(fn)
-  }
-
-  /**
-   * ## 同步收集异步函数依赖
-   *
-   * @param fn
-   * @returns { Promise<Deps> }
-   */
-  static asyncCollect(fn: () => Promise<any>): Promise<Result> {
-    return this.#beginCollect(fn)
-  }
-
-  /**
-   * ## 开始收集
-   *
-   * @param fn
-   * @private
-   */
-  static #beginCollect<T extends AnyFunction>(
-    fn: T
-  ): ReturnType<T> extends Promise<any> ? Promise<Result> : Result {
-    // 创建临时依赖id
-    const id = Symbol('id')
-    // 创建依赖集合
-    const deps: Deps = new Map()
-    // 添加收集器
-    this.#collectors.set(id, deps)
-    if (isAsyncFunction(fn)) {
-      return fn()
-        .then((result: any) => {
-          return { result, deps }
-        })
-        .finally(() => {
-          this.#collectors.delete(id)
-        })
-    }
-    try {
-      const result = fn()
-      // 返回依赖集合
-      return { result, deps } as any
-    } finally {
-      // 删除收集器
-      this.#collectors.delete(id)
-    }
   }
 }
 
@@ -147,19 +127,6 @@ export function track(proxy: AnyProxy, prop: PropName): void {
  * @param fn - 可执行函数
  * @see Depend.collect
  */
-export function collect(fn: () => any) {
+export function collect<T>(fn: () => T): Result<T> {
   return Depend.collect(fn)
-}
-
-/**
- * ## 收集异步函数依赖
- *
- * @remarks
- * 该方法是`Depend.collect`方法的助手函数，可用于手动跟踪依赖
- *
- * @param fn - 可执行的异步函数
- * @see Depend.asyncCollect
- */
-export function asyncCollect(fn: () => Promise<any>): Promise<Result> {
-  return Depend.asyncCollect(fn)
 }
