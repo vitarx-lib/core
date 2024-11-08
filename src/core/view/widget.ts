@@ -1,14 +1,7 @@
-import {
-  type IntrinsicAttributes,
-  isVNode,
-  type VElement,
-  VElementToHTMLElement,
-  type VNode
-} from './VNode.js'
+import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
-import { createElement, type ElementNode } from './renderer.js'
-import { isConstructor, isFunction } from '../../utils/index.js'
-import { watchDepend } from '../observer/index.js'
+import { WidgetRenderer } from './renderer.js'
+import { isConstructor } from '../../utils/index.js'
 
 /**
  * 类组件构造器类型
@@ -28,7 +21,7 @@ export type WidgetChildren<P> = P extends { children: infer U }
  */
 export abstract class Widget<P extends Record<string, any> = {}> extends LifeCycle {
   private readonly _props: P
-  private _element?: WidgetElement
+  protected _renderer?: WidgetRenderer
   /**
    * ## 实例化
    *
@@ -41,10 +34,17 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 判断是否已经挂载
+   * 该方法由`Vitarx`内部调用，用于渲染
+   *
+   * 请勿在外部调用，以及使用`WidgetRenderer`实例方法，避免内存泄露。
+   *
+   * @protected
    */
-  get isMounted(): boolean {
-    return this._element !== undefined && this._element.el !== null
+  get renderer(): WidgetRenderer {
+    if (!this._renderer) {
+      this._renderer = new WidgetRenderer(this)
+    }
+    return this._renderer
   }
   /**
    * 外部传入的属性
@@ -61,28 +61,23 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 如果组件已经挂载，则返回对应的元素，否则返回`null`。
+   * 判断是否已经挂载
    */
-  get el(): VElement | null {
-    return this.createElement().el
+  get isMounted(): boolean {
+    return this._renderer !== undefined && this._renderer.el !== null
   }
 
   /**
-   * 该方法由`Vitarx`内部调用，用于创建DOM元素
-   *
-   * 请勿在外部调用，以及使用`WidgetElement`实例方法，避免内存泄露。
-   *
-   * @protected
+   * 如果组件已经挂载，则返回对应的元素，否则返回`null`。
    */
-  createElement(): WidgetElement {
-    if (!this._element) this._element = new WidgetElement(this)
-    return this._element
+  get el(): VElement | null {
+    return this.renderer.el
   }
 
   /**
    * 返回一个 `VNode` 节点，用于描述`UI`结构。
    *
-   * 该方法应由子类实现，但该方法是受保护的，以便在`Vitarx`内部使用。
+   * @note 该方法应由子类实现，且该方法是受保护的，仅供内部渲染逻辑使用。
    *
    * @protected
    * @returns {VNode}
@@ -99,64 +94,7 @@ export function isClassWidget(val: any): val is ClassWidget<any> {
   if (!isConstructor(val)) return false
   return val.prototype instanceof Widget
 }
-/**
- * 小部件元素管理器
- */
-class WidgetElement {
-  currentVNode: VNode
 
-  constructor(protected widget: Widget) {
-    const { result, listener } = watchDepend(
-      this.build.bind(this),
-      () => {
-        console.log(this.build())
-        console.log('监听到依赖变化，对比新旧node差异')
-      },
-      { getResult: true }
-    )
-    if (!isVNode(result)) {
-      listener?.destroy()
-      throw new Error('[Vitarx]：Widget.build方法必须返回VNode虚拟节点')
-    }
-    this.currentVNode = result
-  }
-
-  /**
-   * 获取元素节点
-   */
-  get el(): VElement | null {
-    return this.currentVNode.el
-  }
-
-  /**
-   * 挂载节点
-   *
-   * @param parent
-   */
-  mount(parent?: ElementNode) {
-    let el: ElementNode
-    if (this.currentVNode.el) {
-      el = VElementToHTMLElement(this.currentVNode.el)
-    } else {
-      el = createElement(this.currentVNode, parent)
-      this.widget.onMounted?.()
-    }
-    return el
-  }
-
-  private build(): VNode {
-    try {
-      return this.widget.build()
-    } catch (e) {
-      if (this.widget?.onError && isFunction(this.widget.onError)) {
-        const vnode = this.widget.onError(e)
-        if (isVNode(vnode)) return vnode
-      }
-      // 继续向上抛出异常
-      throw e
-    }
-  }
-}
 
 
 
