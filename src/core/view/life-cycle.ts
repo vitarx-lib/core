@@ -1,4 +1,20 @@
+import { getCurrentScope } from '../scope/index.js'
+
 export abstract class LifeCycle {
+  protected constructor() {
+    const scope = getCurrentScope()
+    if (scope) {
+      if (this.onDeactivate) {
+        scope.onPause(this.onDeactivate.bind(this))
+      }
+      if (this.onActivated) {
+        scope.onUnPause(this.onActivated.bind(this))
+      }
+      if (this.onUnmounted) {
+        scope.onDestroyed(this.onUnmounted.bind(this))
+      }
+    }
+  }
   /**
    * 生命周期钩子
    *
