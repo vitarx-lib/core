@@ -2,7 +2,6 @@ import {
   type HtmlElementTagMap,
   type HtmlElementTags,
   type HtmlIntrinsicElements,
-  isArray,
   isRecordObject,
   popProperty,
   Scope
@@ -122,42 +121,6 @@ export function createVNode<T extends VNodeType>(
  */
 export function isVNode(obj: any): obj is VNode {
   return obj?.[VNodeSymbol] === true
-}
-
-/**
- * node数组转换为片段
- *
- * @param nodes
- */
-export function nodesToFragment(nodes: VDocumentFragment): DocumentFragment {
-  const el = document.createDocumentFragment()
-  for (let i = 0; i < nodes.length; i++) {
-    el.appendChild(nodes[i])
-  }
-  return el
-}
-
-/**
- * 片段转node数组
- *
- * @param el
- */
-export function fragmentToNodes(el: DocumentFragment): VDocumentFragment {
-  const els: Node[] = []
-  for (let i = 0; i < el.childNodes.length; i++) {
-    els.push(el.childNodes[i])
-  }
-  return els as VDocumentFragment
-}
-
-/**
- * VElement 转 HTMLElement
- *
- * @param el
- * @constructor
- */
-export function VElementToHTMLElement(el: VElement) {
-  return isArray(el) ? nodesToFragment(el) : el
 }
 
 /**
