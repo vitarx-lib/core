@@ -23,8 +23,8 @@ export function popProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
  * @example
  * await sleep(1000)
  *
- * @param time
+ * @param time - 毫秒
  */
-function sleep(time: number) {
+export function sleep(time: number) {
   return new Promise(resolve => setTimeout(resolve, time))
 }
