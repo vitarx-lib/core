@@ -52,7 +52,7 @@ class UniqueIDGenerator {
 }
 
 /**
- * 利用计数器生成唯一id，线程安全
+ * 利用计数器生成唯一id
  *
  * @param length
  */
