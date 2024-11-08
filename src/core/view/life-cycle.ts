@@ -97,17 +97,12 @@ export abstract class LifeCycle {
   onError?(error: any): Vitarx.VNode | void
 }
 
-/**
- * 生命周期钩子方法
- */
-export const lifeCycleHookMethods = [
-  'onCreated',
-  'onMounted',
-  'onDeactivate',
-  'onActivated',
-  'onUnmounted',
-  'onUpdated',
-  'onError'
-] as const
-
-export type LifeCycleHookNames = (typeof lifeCycleHookMethods)[number]
+export enum LifeCycleHooks {
+  'created' = 'onCreated',
+  'mounted' = 'onMounted',
+  'deactivate' = 'onDeactivate',
+  'activated' = 'onActivated',
+  'unmounted' = 'onUnmounted',
+  'updated' = 'onUpdated',
+  'error' = 'onError'
+}
