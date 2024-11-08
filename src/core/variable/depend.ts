@@ -7,16 +7,10 @@ import { AnyProxy, isProxy, type PropName } from './helper.js'
  */
 type Deps = Map<AnyProxy, Set<PropName>>
 /** 收集结果 */
-type Result<T> =
-  T extends Promise<infer R>
-    ? Promise<{
-        result: R
-        deps: Deps
-      }>
-    : {
-        result: T
-        deps: Deps
-      }
+type Result<T> = {
+  result: T
+  deps: Deps
+}
 
 /**
  * # 依赖变量收集
@@ -76,15 +70,6 @@ export class Depend {
     this.#collectors.set(id, deps)
     try {
       const result = fn()
-      if (result instanceof Promise) {
-        return result
-          .then((result: any) => {
-            return { result, deps }
-          })
-          .finally(() => {
-            this.#collectors.delete(id)
-          }) as any
-      }
       // 返回依赖集合
       return { result, deps } as any
     } finally {
