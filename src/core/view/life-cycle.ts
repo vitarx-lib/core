@@ -7,15 +7,15 @@ export abstract class LifeCycle {
   protected constructor() {
     const scope = getCurrentScope()
     if (scope) {
-      if (this.onDeactivate) {
-        scope.onPause(this.onDeactivate.bind(this))
-      }
-      if (this.onActivated) {
-        scope.onUnPause(this.onActivated.bind(this))
-      }
-      if (this.onUnmounted) {
-        scope.onDestroyed(this.onUnmounted.bind(this))
-      }
+      scope.onPause(() => {
+        this.onDeactivate?.()
+      })
+      scope.onUnPause(() => {
+        this.onActivated?.()
+      })
+      scope.onDestroyed(() => {
+        this.onUnmounted?.()
+      })
     }
   }
   /**
@@ -74,6 +74,18 @@ export abstract class LifeCycle {
   onUnmounted?(): void
 
   /**
+   * 生命周期构造
+   *
+   * `onBeforeUnmount`钩子会在组件被销毁前触发。
+   *
+   * 此时组件的实例仍然可用，可以是异步函数，会等待该函数执行完成过后，移除dom。
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
+   */
+  onBeforeUnmount?(): void
+  /**
    * 生命周期钩子
    *
    * `onUpdated`钩子会在组件被更新时触发。
@@ -102,7 +114,8 @@ export enum LifeCycleHooks {
   'mounted' = 'onMounted',
   'deactivate' = 'onDeactivate',
   'activated' = 'onActivated',
-  'unmounted' = 'onUnmounted',
   'updated' = 'onUpdated',
-  'error' = 'onError'
+  'error' = 'onError',
+  'unmounted' = 'onUnmounted',
+  'beforeUnmount' = 'onBeforeUnmount'
 }
