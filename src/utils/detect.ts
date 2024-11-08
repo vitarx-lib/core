@@ -87,7 +87,7 @@ export function isConstructor(func: any): func is new (...args: any[]) => any {
 export function isSimpleGetterFunction(fn: any): fn is () => any {
   if (typeof fn !== 'function') return false
   const fnString = fn.toString().trim()
-  const regex = /^\(\)=>[^{]+$/
+  const regex = /^\(\s*\)\s*=>\s*[^{]+$/
   return regex.test(fnString)
 }
 
