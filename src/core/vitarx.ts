@@ -1,3 +1,11 @@
+import {
+  createFnWidget,
+  type IntrinsicAttributes,
+  isClassWidget,
+  type Widget
+} from './view/index.js'
+import { createScope } from './scope/index.js'
+
 declare global {
   namespace Vitarx {
     /** 应用配置 */
@@ -6,7 +14,10 @@ declare global {
       ssr?: boolean
     }
 
+    type GlobalIntrinsicAttributes = IntrinsicAttributes
     type VNode = import('./view/VNode').VNode
+    type ClassWidget<T extends Record<string, any> = {}> = import('./view/widget').ClassWidget<T>
+    type FnWidget<T extends Record<string, any> = {}> = import('./view/fn-widget').FnWidget<T>
   }
 }
 
@@ -30,14 +41,27 @@ export class Vitarx {
    */
   constructor(container: Element, options?: Vitarx.AppOptions) {
     if (!(container instanceof Element)) {
-      throw new Error('根容器必须是Element实例。')
+      throw new Error('[Vitarx]：根容器必须是Element实例。')
     }
     this.container = container
     this.options = Object.assign(this.options, options)
     Vitarx.ssr = this.options.ssr
   }
 
-  render(): void {}
+  render<P extends Record<string, any>>(
+    app: Vitarx.ClassWidget<P> | Vitarx.FnWidget<P>,
+    props: P
+  ): void {
+    createScope(() => {
+      let instance: Widget
+      if (isClassWidget(app)) {
+        instance = new app(props || {})
+      } else {
+        instance = createFnWidget(app as Vitarx.FnWidget<P>, props)
+      }
+      instance.createElement().mount(this.container)
+    })
+  }
 }
 
 /**
