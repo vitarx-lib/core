@@ -59,7 +59,7 @@ export class Vitarx {
       } else {
         instance = createFnWidget(app as Vitarx.FnWidget<P>, props)
       }
-      instance.createElement().mount(this.container)
+      instance.renderer.mount(this.container)
     })
   }
 }
