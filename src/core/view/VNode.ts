@@ -65,8 +65,8 @@ export type VNodeProps<T> = (T extends HtmlElementTags
 export type VNodeChild = string | VNode | Array<VNode | string>
 /** HTML片段节点数组 */
 export type VDocumentFragment = Array<Element | Text>
-/** 虚拟元素 */
-export type VElement = HTMLElement | Element | VDocumentFragment
+/** 真实元素对象，片段节点为数组 */
+export type VElement = Element | VDocumentFragment
 
 /**
  * 虚拟Node
