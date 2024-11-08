@@ -16,3 +16,15 @@ export function popProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
   }
   return undefined as T[K]
 }
+
+/**
+ * 休眠一段时间。
+ *
+ * @example
+ * await sleep(1000)
+ *
+ * @param time
+ */
+function sleep(time: number) {
+  return new Promise(resolve => setTimeout(resolve, time))
+}
