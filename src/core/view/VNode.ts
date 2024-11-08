@@ -1,19 +1,30 @@
 import {
+  type HtmlElementTagMap,
   type HtmlElementTags,
   type HtmlIntrinsicElements,
   isArray,
+  isRecordObject,
   popProperty,
-  Ref
+  Scope
 } from '../../index.js'
-import { type WidgetConstructor } from './widget.js'
+import { type ClassWidget } from './widget.js'
 import type { FnWidget } from './fn-widget.js'
-// 片段组件标识符
-export const Fragment: unique symbol = Symbol('Fragment')
-// 虚拟节点标识符
-const VNodeSymbol = Symbol('VNode')
-// 唯一标识符
-export type OnlyKey = string | number | bigint
 
+/** 片段组件标识符 */
+export const Fragment: unique symbol = Symbol('Fragment')
+const RefElSymbol = Symbol('RefEl')
+/** 片段类型标识符 */
+export type FragmentTag = typeof Fragment
+/** 虚拟节点标识符 */
+const VNodeSymbol = Symbol('VNode')
+/** 唯一标识符 */
+export type OnlyKey = string | number | bigint
+// 计算出元素类型
+type ComputedRefElType<T> = T extends HtmlElementTags ? HtmlElementTagMap[T] : T extends FragmentTag ? VDocumentFragment : T extends FnWidget ? Record<string, any> : T
+/** 引用元素类型 */
+export type RefEl<T> = {
+  value: ComputedRefElType<T> | null, readonly [RefElSymbol]: true
+}
 /**
  * 全局属性
  */
@@ -31,32 +42,29 @@ export interface IntrinsicAttributes {
   /**
    * 引用组件
    */
-  ref?: Ref
+  ref?: RefEl<any>
 }
 
 /**
  * HTML 节点类型
  */
-export type HtmlVNodeType = HtmlElementTags
+export type HtmlTagName = HtmlElementTags
 // 节点类型
-export type VNodeType =
-  | HtmlVNodeType
-  | typeof Fragment
-  | WidgetConstructor<Record<string, any>>
-  | FnWidget
+export type VNodeType = HtmlTagName | FragmentTag | ClassWidget<Record<string, any>> | FnWidget
 // 节点属性结构
 type VNodeProps<T> = T extends HtmlElementTags
   ? HtmlIntrinsicElements[T]
-  : T extends WidgetConstructor<infer P>
+  : T extends ClassWidget<infer P>
     ? P
     : T extends FnWidget<infer P>
       ? P
-      : never
+      : {}
 
-// 子节点类型
+/** 子节点类型 */
 export type VNodeChild = string | VNode | Array<VNode | string>
-// HTML 节点数组
+/** HTML片段节点数组 */
 export type VDocumentFragment = Array<Element | Text>
+/** 虚拟元素 */
 export type VElement = HTMLElement | VDocumentFragment
 
 /**
@@ -70,8 +78,9 @@ export interface VNode<T extends VNodeType = VNodeType> {
   props: VNodeProps<T>
   children: VNodeChild | undefined
   key: OnlyKey | null
-  ref: Ref | null
+  ref: RefEl<any> | null
   el: VElement | null
+  scope: Scope | null
   [VNodeSymbol]: true
 }
 
@@ -85,6 +94,11 @@ export function createVNode<T extends VNodeType>(
   type: T,
   props: IntrinsicAttributes & VNodeProps<T>
 ): VNode<T> {
+  if (!isRecordObject(props)) {
+    throw new TypeError(
+      `[Vitarx]：createVNode.props参数类型必须是一个键值对对象，给定${typeof props}`
+    )
+  }
   const key = popProperty(props, 'key') || null
   const ref = popProperty(props, 'ref') || null
   const children = popProperty(props as any, 'children')
@@ -95,7 +109,8 @@ export function createVNode<T extends VNodeType>(
     children,
     key,
     ref,
-    el: null
+    el: null,
+    scope: null
   }
 }
 
@@ -142,4 +157,25 @@ export function fragmentToNodes(el: DocumentFragment): VDocumentFragment {
  */
 export function VElementToHTMLElement(el: VElement) {
   return isArray(el) ? nodesToFragment(el) : el
+}
+
+/**
+ * 引用元素
+ *
+ * 会在widget或元素真实挂载到dom后自动赋值给该对象
+ */
+export function refEl<T>(): RefEl<T> {
+  return {
+    value: null,
+    [RefElSymbol]: true
+  }
+}
+
+/**
+ * 判断是否为引用元素
+ *
+ * @param obj
+ */
+export function isRefEl(obj: any): obj is RefEl<any> {
+  return obj?.[RefElSymbol] === true
 }
