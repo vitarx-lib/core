@@ -1,5 +1,8 @@
 import { getCurrentScope } from '../scope/index.js'
 
+/**
+ * 生命周期基类
+ */
 export abstract class LifeCycle {
   protected constructor() {
     const scope = getCurrentScope()
