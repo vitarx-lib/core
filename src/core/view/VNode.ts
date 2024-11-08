@@ -83,7 +83,6 @@ export interface VNode<T extends VNodeType = VNodeType> {
   scope: Scope | null
   [VNodeSymbol]: true
 }
-
 /**
  * 创建虚拟节点
  *
