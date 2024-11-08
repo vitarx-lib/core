@@ -1,4 +1,4 @@
-import type { VNode } from './VNode.js'
+import type { IntrinsicAttributes, VNode } from './VNode.js'
 import { Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
 import type { LifeCycleHookNames } from './life-cycle.js'
@@ -10,7 +10,9 @@ export type BuildVNode = () => VNode
 /**
  * 函数组件类型
  */
-export type FnWidget<P extends Record<string, any> = Record<string, any>> = (props: P) => BuildVNode
+export type FnWidget<P extends Record<string, any> = {}> = (
+  props: P & IntrinsicAttributes
+) => BuildVNode
 type LifeCycleHook = Record<LifeCycleHookNames, AnyCallback>
 
 interface CollectMap {
@@ -66,13 +68,15 @@ class FnWidgetHookHandler {
     }
   }
 
-  static collect(vnode: VNode<FnWidget>): CollectMap & { build: BuildVNode } {
+  static collect<P extends Record<string, any>>(fn: FnWidget<P>, props: P): CollectMap & {
+    build: BuildVNode
+  } {
     const oldBackup = this.#collectMap
     this.#collectMap = {
       exposed: undefined,
       lifeCycleHook: undefined
     }
-    const build = vnode.type({ ...vnode.props, children: vnode.children })
+    const build = fn(props || {})
     const collectMap = this.#collectMap
     this.#collectMap = oldBackup
     return { ...collectMap, build }
@@ -179,9 +183,13 @@ export function onError(fn: (error: any) => Vitarx.VNode | void) {
 /**
  * 创建函数组件
  *
- * @param VNode
+ * @param fn
+ * @param props
  */
-export function createFnWidget(VNode: VNode<FnWidget>): FnWidgetProxy {
-  const { build, exposed, lifeCycleHook } = FnWidgetHookHandler.collect(VNode)
+export function createFnWidget<P extends Record<string, any>>(
+  fn: FnWidget<P>,
+  props: P
+): FnWidgetProxy {
+  const { build, exposed, lifeCycleHook } = FnWidgetHookHandler.collect(fn, props)
   return new FnWidgetProxy(build, exposed, lifeCycleHook)
 }
