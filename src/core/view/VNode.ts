@@ -50,22 +50,23 @@ export interface IntrinsicAttributes {
  */
 export type HtmlTagName = HtmlElementTags
 // 节点类型
-export type VNodeType = HtmlTagName | FragmentTag | ClassWidget<Record<string, any>> | FnWidget
+export type VNodeType = HtmlTagName | FragmentTag | ClassWidget | FnWidget
 // 节点属性结构
-type VNodeProps<T> = T extends HtmlElementTags
+export type VNodeProps<T> = (T extends HtmlElementTags
   ? HtmlIntrinsicElements[T]
   : T extends ClassWidget<infer P>
     ? P
     : T extends FnWidget<infer P>
       ? P
-      : {}
+      : {}) &
+  IntrinsicAttributes
 
 /** 子节点类型 */
 export type VNodeChild = string | VNode | Array<VNode | string>
 /** HTML片段节点数组 */
 export type VDocumentFragment = Array<Element | Text>
 /** 虚拟元素 */
-export type VElement = HTMLElement | VDocumentFragment
+export type VElement = HTMLElement | Element | VDocumentFragment
 
 /**
  * 虚拟Node
