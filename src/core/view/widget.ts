@@ -1,4 +1,10 @@
-import { isVNode, type VElement, VElementToHTMLElement, type VNode } from './VNode.js'
+import {
+  type IntrinsicAttributes,
+  isVNode,
+  type VElement,
+  VElementToHTMLElement,
+  type VNode
+} from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { createElement, type ElementNode } from './renderer.js'
 import { isConstructor, isFunction } from '../../utils/index.js'
@@ -7,7 +13,7 @@ import { watchDepend } from '../observer/index.js'
 /**
  * 类组件构造器类型
  */
-export type ClassWidget<P extends Record<string, any>> = new (props: P) => Widget<P>
+export type ClassWidget<P extends Record<string, any> = {}> = new (props: P & IntrinsicAttributes) => Widget<P>
 // 获取组件子节点
 export type WidgetChildren<P> = P extends { children: infer U }
   ? U
@@ -85,6 +91,15 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
 }
 
 /**
+ * 判断是否为类构造器
+ *
+ * @param val
+ */
+export function isClassWidget(val: any): val is ClassWidget<any> {
+  if (!isConstructor(val)) return false
+  return val.prototype instanceof Widget
+}
+/**
  * 小部件元素管理器
  */
 class WidgetElement {
@@ -143,13 +158,5 @@ class WidgetElement {
   }
 }
 
-/**
- * 判断是否为类构造器
- *
- * @param val
- */
-export function isClassWidget(val: any): val is ClassWidget<any> {
-  if (!isConstructor(val)) return false
-  return val.prototype instanceof Widget
-}
+
 
