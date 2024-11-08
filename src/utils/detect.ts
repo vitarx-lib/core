@@ -49,11 +49,13 @@ export function isEmpty(val: any): boolean {
 }
 
 /**
- * 判断是否为异步函数
+ * 判断函数是否使用了async关键字声明
+ *
+ * @note 仅判断是否使用了async关键字，不判断返回Promise类型
  *
  * @param func
  */
-export function isAsyncFunction(func: Function): boolean {
+export function isAsyncFunction(func: Function): func is () => Promise<any> {
   return typeof func === 'function' && func?.constructor?.name === 'AsyncFunction'
 }
 
