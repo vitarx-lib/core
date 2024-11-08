@@ -2,6 +2,7 @@ import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
 import { isConstructor } from '../../utils/index.js'
+import { getCurrentScope } from '../scope/index.js'
 
 /**
  * 类组件构造器类型
@@ -20,8 +21,8 @@ export type WidgetChildren<P> = P extends { children: infer U }
  * 组件基类
  */
 export abstract class Widget<P extends Record<string, any> = {}> extends LifeCycle {
-  private readonly _props: P
-  protected _renderer?: WidgetRenderer
+  #props: P
+  #renderer?: WidgetRenderer
   /**
    * ## 实例化
    *
@@ -29,8 +30,20 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    */
   constructor(props: P) {
     super()
-    this._props = props
-    this.onCreated?.()
+    this.#props = props
+    const scope = getCurrentScope()
+    if (scope) {
+      scope.onPause(() => {
+        this.onDeactivate?.()
+      })
+      scope.onUnPause(() => {
+        this.onActivated?.()
+      })
+      scope.onDestroyed(() => {
+        this.onBeforeUnmount?.()
+        this.onUnmounted?.()
+      })
+    }
   }
 
   /**
@@ -41,16 +54,16 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @protected
    */
   get renderer(): WidgetRenderer {
-    if (!this._renderer) {
-      this._renderer = new WidgetRenderer(this)
+    if (!this.#renderer) {
+      this.#renderer = new WidgetRenderer(this)
     }
-    return this._renderer
+    return this.#renderer
   }
   /**
    * 外部传入的属性
    */
   get props(): DeepReadonly<P> {
-    return this._props as DeepReadonly<P>
+    return this.#props as DeepReadonly<P>
   }
 
   /**
@@ -64,7 +77,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * 判断是否已经挂载
    */
   get isMounted(): boolean {
-    return this._renderer !== undefined && this._renderer.el !== null
+    return !!this.#renderer?.mounted
   }
 
   /**
