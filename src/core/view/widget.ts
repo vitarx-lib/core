@@ -1,13 +1,13 @@
-import { isVNode, VElementToHTMLElement, type VNode } from './VNode.js'
+import { isVNode, type VElement, VElementToHTMLElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { createElement, type ElementNode } from './renderer.js'
-import { isFunction } from '../../utils/index.js'
+import { isConstructor, isFunction } from '../../utils/index.js'
 import { watchDepend } from '../observer/index.js'
 
 /**
- * 组件构造器
+ * 类组件构造器类型
  */
-export type WidgetConstructor<P extends Record<string, any>> = new (props: P) => Widget<P>
+export type ClassWidget<P extends Record<string, any>> = new (props: P) => Widget<P>
 // 获取组件子节点
 export type WidgetChildren<P> = P extends { children: infer U }
   ? U
@@ -23,7 +23,6 @@ export type WidgetChildren<P> = P extends { children: infer U }
 export abstract class Widget<P extends Record<string, any> = {}> extends LifeCycle {
   private readonly _props: P
   private _element?: WidgetElement
-
   /**
    * ## 实例化
    *
@@ -35,6 +34,12 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
     this.onCreated?.()
   }
 
+  /**
+   * 判断是否已经挂载
+   */
+  get isMounted(): boolean {
+    return this._element !== undefined && this._element.el !== null
+  }
   /**
    * 外部传入的属性
    */
@@ -49,7 +54,10 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
     return this.props.children as WidgetChildren<P>
   }
 
-  get el(): ElementNode {
+  /**
+   * 如果组件已经挂载，则返回对应的元素，否则返回`null`。
+   */
+  get el(): VElement | null {
     return this.createElement().el
   }
 
@@ -76,13 +84,17 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   abstract build(): VNode
 }
 
+/**
+ * 小部件元素管理器
+ */
 class WidgetElement {
   currentVNode: VNode
 
   constructor(protected widget: Widget) {
     const { result, listener } = watchDepend(
-      this.build,
+      this.build.bind(this),
       () => {
+        console.log(this.build())
         console.log('监听到依赖变化，对比新旧node差异')
       },
       { getResult: true }
@@ -97,15 +109,27 @@ class WidgetElement {
   /**
    * 获取元素节点
    */
-  get el(): ElementNode {
-    if (this.currentVNode.el) {
-      return VElementToHTMLElement(this.currentVNode.el)
-    } else {
-      return createElement(this.currentVNode)
-    }
+  get el(): VElement | null {
+    return this.currentVNode.el
   }
 
-  build(): VNode {
+  /**
+   * 挂载节点
+   *
+   * @param parent
+   */
+  mount(parent?: ElementNode) {
+    let el: ElementNode
+    if (this.currentVNode.el) {
+      el = VElementToHTMLElement(this.currentVNode.el)
+    } else {
+      el = createElement(this.currentVNode, parent)
+      this.widget.onMounted?.()
+    }
+    return el
+  }
+
+  private build(): VNode {
     try {
       return this.widget.build()
     } catch (e) {
@@ -117,13 +141,15 @@ class WidgetElement {
       throw e
     }
   }
-
-  /**
-   * 挂载节点
-   *
-   * @param el
-   */
-  mount(el: HTMLElement) {
-    el.appendChild(this.el)
-  }
 }
+
+/**
+ * 判断是否为类构造器
+ *
+ * @param val
+ */
+export function isClassWidget(val: any): val is ClassWidget<any> {
+  if (!isConstructor(val)) return false
+  return val.prototype instanceof Widget
+}
+
