@@ -1,8 +1,14 @@
-import { fragmentToNodes, type HtmlVNodeType, type VNode, type VNodeChild } from './VNode.js'
-import { isRef } from '../variable/index.js'
-import { isArray, isConstructor, isFunction, isRecordObject, isString } from '../../utils/index.js'
-import type { HTMLClassProperties, HtmlElementTags, HTMLStyleProperties } from '../../index.js'
+import { fragmentToNodes, type HtmlTagName, isRefEl, type VNode, type VNodeChild } from './VNode.js'
+import { isArray, isFunction, isRecordObject, isString } from '../../utils/index.js'
+import {
+  createScope,
+  type HTMLClassProperties,
+  type HtmlElementTags,
+  type HTMLStyleProperties,
+  isClassWidget
+} from '../../index.js'
 import { createFnWidget, type FnWidget } from './fn-widget.js'
+import type { Widget } from './widget.js'
 
 /**
  * 真实DOM元素
@@ -13,42 +19,48 @@ export type ElementNode = HTMLElement | DocumentFragment
  * 创建一个真实DOM元素
  *
  * @param vnode
+ * @param container
  */
-export function createElement(vnode: VNode): ElementNode {
+export function createElement(vnode: VNode, container?: ElementNode): ElementNode {
   let el: ElementNode
   switch (typeof vnode.type) {
     case 'string':
       // HTML 元素节点
-      el = createHtmlElement(vnode as VNode<HtmlVNodeType>)
+      el = createHtmlElement(vnode as VNode<HtmlTagName>)
+      if (isRefEl(vnode.ref)) vnode.ref.value = el
       break
     case 'symbol':
       // Fragment 节点
       el = document.createDocumentFragment()
       updateChildren(el, vnode.children)
+      if (isRefEl(vnode.ref)) vnode.ref.value = fragmentToNodes(el)
       break
     case 'function':
-      // 函数组件或类组件
-      const component = isConstructor(vnode.type)
-        ? new vnode.type({
-            ...vnode.props,
-            children: vnode.children
-          })
-        : createFnWidget(vnode as VNode<FnWidget>)
-      if (isRef(vnode.ref)) vnode.ref.value = component
-      el = component.el
+      let component: Widget
+      const scope = createScope(() => {
+        // 函数组件或类组件
+        component = isClassWidget(vnode.type)
+          ? new vnode.type({
+              ...vnode.props,
+              children: vnode.children
+            })
+          : createFnWidget(vnode as VNode<FnWidget>)
+      })
+      if (isRefEl(vnode.ref)) vnode.ref.value = component!
+      vnode.scope = scope
+      el = component!.createElement().mount()
       break
     default:
       throw new Error(`Unsupported vnode type: ${vnode.type}`)
   }
-
   if (el instanceof DocumentFragment) {
     vnode.el = fragmentToNodes(el)
   } else {
     vnode.el = el
   }
+  if (container) container.appendChild(el)
   return el
 }
-
 /**
  * 创建html元素
  *
@@ -76,13 +88,11 @@ function updateChildren(el: ElementNode, children?: VNodeChild) {
       if (typeof child === 'string') {
         el.appendChild(document.createTextNode(child))
       } else {
-        const childEl = createElement(child)
-        el.appendChild(childEl)
+        createElement(child, el)
       }
     })
   } else {
-    const childEl = createElement(children)
-    el.appendChild(childEl)
+    createElement(children, el)
   }
 }
 
