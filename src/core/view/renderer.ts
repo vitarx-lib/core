@@ -13,7 +13,7 @@ import type { Widget } from './widget.js'
 /**
  * 真实DOM元素
  */
-export type ElementNode = HTMLElement | DocumentFragment
+export type ElementNode = Element | DocumentFragment
 
 /**
  * 创建一个真实DOM元素
@@ -38,13 +38,14 @@ export function createElement(vnode: VNode, container?: ElementNode): ElementNod
     case 'function':
       let component: Widget
       const scope = createScope(() => {
+        const p = {
+          ...vnode.props,
+          children: vnode.children
+        }
         // 函数组件或类组件
         component = isClassWidget(vnode.type)
-          ? new vnode.type({
-              ...vnode.props,
-              children: vnode.children
-            })
-          : createFnWidget(vnode as VNode<FnWidget>)
+          ? new vnode.type(p)
+          : createFnWidget(vnode.type as FnWidget, p)
       })
       if (isRefEl(vnode.ref)) vnode.ref.value = component!
       vnode.scope = scope
