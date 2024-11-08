@@ -43,6 +43,11 @@ class FnWidgetProxy extends Widget {
     }
   }
 
+  /**
+   * @inheritDoc
+   *
+   * @protected
+   */
   public build(): VNode {
     return this.#buildVnode()
   }
@@ -191,5 +196,10 @@ export function createFnWidget<P extends Record<string, any>>(
   props: P
 ): FnWidgetProxy {
   const { build, exposed, lifeCycleHook } = FnWidgetHookHandler.collect(fn, props)
+  if (!isFunction(build)) {
+    throw new Error(
+      `[Vitarx]：函数式小部件需要返回一个build函数创建响应式UI，实例：()=>Vitarx.VNode`
+    )
+  }
   return new FnWidgetProxy(build, exposed, lifeCycleHook)
 }
