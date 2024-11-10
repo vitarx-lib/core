@@ -170,6 +170,15 @@ export function onUnmounted(fn: VoidCallback) {
 }
 
 /**
+ * 注册组件更新前的钩子
+ *
+ * @param fn
+ */
+export function onBeforeUpdate(fn: VoidCallback) {
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
+}
+/**
  * 注册组件更新钩子
  *
  * @param fn
