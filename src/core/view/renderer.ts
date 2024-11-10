@@ -19,7 +19,6 @@ import {
   type HtmlElementTags,
   type HTMLStyleProperties,
   isClassWidget,
-  Listener,
   reactive,
   watchDepend
 } from '../../index.js'
@@ -27,7 +26,7 @@ import { createFnWidget, type FnWidget } from './fn-widget.js'
 import type { Widget } from './widget.js'
 
 /**
- * 已经挂载的虚拟节点
+ * 已经渲染的虚拟节点
  */
 type RenderedVNode = Omit<VNode, 'el'> & { el: VElement }
 /**
@@ -39,10 +38,9 @@ export type ElementNode = Element | DocumentFragment | Text
  * 小部件元素管理器
  */
 export class WidgetRenderer {
+  #pendingUpdate = false
   // 当前虚拟节点
   currentVNode: VNode
-  // 依赖监听器
-  dependListener: Listener | undefined
   constructor(protected widget: Widget) {
     // 开始监听依赖变化并，自动刷新视图，该监听器不受当前作用域管理器控制
     const { result, listener } = watchDepend(this.build.bind(this), this.update.bind(this), {
@@ -53,7 +51,6 @@ export class WidgetRenderer {
       throw new Error('[Vitarx]：Widget.build方法必须返回VNode虚拟节点')
     }
     this.currentVNode = result
-    this.dependListener = listener
   }
 
   /**
@@ -109,6 +106,11 @@ export class WidgetRenderer {
     return el
   }
 
+  /**
+   * 打包虚拟节点
+   *
+   * @returns {VNode}
+   */
   build(): VNode {
     try {
       return this.widget.build()
@@ -122,16 +124,24 @@ export class WidgetRenderer {
     }
   }
 
-  update(force: boolean = false) {
-    // 如果挂载在DOM上，则进行更新
-    if (this.mounted) {
-      try {
-        const oldVNode = this.currentVNode
-        const newVNode = this.build()
-        this.currentVNode = this.patchUpdate(oldVNode as RenderedVNode, newVNode)
-      } catch (e) {
-        console.trace(`[Vitarx]：更新视图时出现了异常，${e}`)
-      }
+  /**
+   * 更新视图
+   */
+  update() {
+    if (this.#pendingUpdate) return
+    this.#pendingUpdate = true
+    try {
+      this.widget.onBeforeUpdate?.()
+      setTimeout(() => {
+        this.#pendingUpdate = false
+      })
+      const oldVNode = this.currentVNode
+      const newVNode = this.build()
+      this.currentVNode = this.patchUpdate(oldVNode as RenderedVNode, newVNode)
+      this.widget.onUpdated?.()
+    } catch (e) {
+      this.#pendingUpdate = false
+      console.trace(`[Vitarx]：更新视图时捕获到了异常，${e}`)
     }
   }
 
@@ -302,7 +312,9 @@ export class WidgetRenderer {
 function removeVNodeEl(vnode: VNodeChild) {
   if (isVNode(vnode)) {
     vnode.scope?.destroy()
-    if (vnode.el) removeElement(vnode.el)
+    if (vnode.el) {
+      removeElement(vnode.el)
+    }
   } else if (isTextVNode(vnode)) {
     if (vnode.el) vnode.el.remove()
   }
@@ -390,17 +402,17 @@ function createElement(vnode: VNode): ElementNode {
 
 // 创建小部件元素
 function createWidgetElement(vnode: VNode<FnWidget | ClassWidget>): ElementNode {
-  let component: Widget
-  const scope = createScope(() => {
+  let el: ElementNode
+  vnode.scope = createScope(() => {
     vnode.props = reactive(vnode.props, false)
     // 函数组件或类组件
-    component = isClassWidget(vnode.type)
+    const component = isClassWidget(vnode.type)
       ? new vnode.type(vnode.props)
       : createFnWidget(vnode.type as FnWidget, vnode.props)
+    if (isRefEl(vnode.ref)) vnode.ref.value = component!
+    el = component!.renderer.mount()
   })
-  if (isRefEl(vnode.ref)) vnode.ref.value = component!
-  vnode.scope = scope
-  return component!.renderer.mount()
+  return el!
 }
 
 // 创建html元素
