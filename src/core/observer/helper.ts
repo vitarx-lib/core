@@ -151,8 +151,7 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
   }
   if (isArray(origin)) {
     if (origin.length === 0) {
-      throw new TypeError(
-        'origin参数不能是空数组(包括使用getter函数返回空数组)。正确示例(obj为实现了ProxySymbol接口的对象)：[obj,...]'
+      throw new TypeError('watch.origin参数不能是空数组(包括使用getter函数返回空数组)。正确示例(obj为实现了ProxySymbol接口的对象)：[obj,...]'
       )
     }
     const deps = origin.filter(isProxy)
@@ -179,8 +178,7 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
       return mainListener as unknown as Listener<C>
     }
   }
-  throw new TypeError(
-    'origin参数无效，正确值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | ()=>[obj,...] | obj | [obj,...]'
+  throw new TypeError('watch.origin参数无效，正确值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | ()=>[obj,...] | obj | [obj,...]'
   )
 }
 
@@ -212,8 +210,7 @@ export function watchValue<T extends AnyObject>(
         const prop = deps.values().next().value!.values().next().value!
         return watchPropValue(obj, prop, callback as AnyCallback, options)
       }
-      throw new TypeError(
-        '当origin参数为()=>any类型时，返回的非对象类型值，必须是某个响应式(实现了ProxySymbol接口)对象的属性值才能进行监听。'
+      throw new TypeError('当watch.origin参数为()=>any类型时，返回的非对象类型值，必须是某个响应式(实现了ProxySymbol接口)对象的属性值才能进行监听。'
       )
     } else {
       origin = result
@@ -229,8 +226,7 @@ export function watchValue<T extends AnyObject>(
       options
     )
   }
-  throw new TypeError(
-    'origin参数无效，可选值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | obj'
+  throw new TypeError('watch.origin参数无效，可选值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | obj'
   )
 }
 
