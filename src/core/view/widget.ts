@@ -27,7 +27,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @param props
    */
-  constructor(props: P) {
+  protected constructor(props: P) {
     super()
     this.#props = props
     const scope = getCurrentScope()
