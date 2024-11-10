@@ -100,6 +100,7 @@ export class WidgetRenderer {
       el = VElementToHTMLElement(this.el)
     } else {
       el = this.createElement()
+      this.widget.onActivated?.()
       this.widget.onMounted?.()
     }
     parent?.appendChild(el)
