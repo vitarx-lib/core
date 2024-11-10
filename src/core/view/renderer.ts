@@ -1,9 +1,10 @@
 import {
   Fragment,
-  type FragmentTag,
   type HtmlTagName,
   isRefEl,
+  isTextVNode,
   isVNode,
+  type TextVNode,
   type VDocumentFragment,
   type VElement,
   type VNode,
@@ -27,7 +28,7 @@ import type { Widget } from './widget.js'
 /**
  * 真实DOM元素
  */
-export type ElementNode = Element | DocumentFragment
+export type ElementNode = Element | DocumentFragment | Text
 
 /**
  * 小部件元素管理器
@@ -83,7 +84,7 @@ export class WidgetRenderer {
    *
    * @param parent
    */
-  mount(parent: ElementNode): ElementNode {
+  mount(parent?: ElementNode): ElementNode {
     let el: ElementNode
     if (this.el) {
       el = VElementToHTMLElement(this.el)
@@ -91,7 +92,7 @@ export class WidgetRenderer {
       el = this.createElement()
       this.widget.onMounted?.()
     }
-    parent.append(el)
+    parent?.appendChild(el)
     return el
   }
 
@@ -123,16 +124,18 @@ export class WidgetRenderer {
   protected patchUpdate(oldVNode: VNode, newVNode: VNode) {
     // 类型不一致，替换原有节点
     if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
+      // 销毁旧节点作用域
       oldVNode.scope?.destroy()
+      // 删除旧节点元素
       const newEl = createElement(newVNode)
       replaceChild(getParentNode(oldVNode.el)!, newEl as VElement, oldVNode.el!)
       return newVNode
     } else {
-      // 片段类型不具有任何属性
+      // 非片段节点，则进行更新属性
       if (oldVNode.type !== Fragment) {
         this.patchAttrs(oldVNode, newVNode)
       }
-      // 更新子节点
+      // 非组件节点，则进行更新子节点
       if (!isFunction(oldVNode.type)) {
         this.patchChildren(oldVNode, newVNode)
       }
@@ -147,7 +150,8 @@ export class WidgetRenderer {
    * @param newVNode
    */
   protected patchAttrs(oldVNode: VNode, newVNode: VNode) {
-    const isWidget = isFunction(oldVNode.type), el = oldVNode.el as HTMLElement
+    const isWidget = isFunction(oldVNode.type),
+      el = oldVNode.el as HTMLElement
     const oldAttrs = oldVNode.props as Record<string, any>
     const newAttrs = newVNode.props as Record<string, any>
     // 使用 Set 记录 newAttrs 中的键
@@ -189,44 +193,102 @@ export class WidgetRenderer {
   }
 
   /**
-   * 差异化更新子节点
+   * 差异化更新子节点列表
    *
    * @param oldVNode
    * @param newVNode
    */
-  protected patchChildren(oldVNode: VNode, newVNode: VNode) {
+  protected patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
     const oldChildren = oldVNode.children
     const newChildren = newVNode.children
-    if (oldChildren === newChildren) return
-    const isFragment = oldVNode.type === Fragment
+    if (oldChildren === newChildren) return false
     // 如果没有旧的子节点
     if (!oldChildren && newChildren) {
-      createChildren(VElementToHTMLElement(oldVNode.el!), newChildren)
+      const el = VElementToHTMLElement(oldVNode.el!)
+      createChildren(el, newChildren)
+      // 如果是片段节点，则需要通过替换替换内容方式
+      if (oldVNode.type === Fragment) {
+        replaceChild(getParentNode(oldVNode.el!)!, el, oldVNode.el!)
+      }
       oldVNode.children = newChildren
-      return
+      return true
     }
     // 如果新子节点为空 则删除旧子节点
     if (!newChildren && oldChildren) {
+      oldChildren.forEach(child => removeVNode(child))
       oldVNode.children = newChildren
-      return
+      return true
     }
-    // 处理字符串差异
-    // if (typeof oldChildren === 'string' && typeof newChildren === 'string') {
-    //   if (oldChildren !== newChildren) {
-    //     if (!isFragment) {
-    //       if (isArray(oldVNode.el)) {
-    //         oldVNode.el[0].nodeValue = newChildren
-    //       } else {
-    //         oldVNode.el!.firstChild!.nodeValue = newChildren
-    //       }
-    //       ;(oldVNode.props as any).children = newChildren
-    //     }
-    //   }
-    //   return
-    // }
+    const maxLength = Math.max(oldChildren!.length, newChildren!.length)
+    for (let i = 0; i < maxLength; i++) {
+      const oldChild = oldChildren![i]
+      const newChild = newChildren![i]
+      oldChildren![i] = this.patchChild(oldVNode, oldChild, newChild)
+    }
+    return true
+  }
+
+  /**
+   * 差异化更新子节点
+   *
+   * @param oldVNode
+   * @param oldChild
+   * @param newChild
+   * @protected
+   */
+  protected patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild): VNodeChild {
+    // 删除节点
+    if (oldChild && !newChild) {
+      removeVNode(oldChild)
+      return newChild
+    }
+    // 新增节点
+    if (!oldChild && newChild) {
+      const container = VElementToHTMLElement(oldVNode.el!)
+      createChild(container, newChild)
+      // 如果是片段节点，则需要通过替换替换内容方式
+      if (oldVNode.type === Fragment) {
+        replaceChild(getParentNode(oldVNode.el!)!, container, oldVNode.el!)
+      }
+      return newChild
+    }
+    // 更新文本节点
+    if (isTextVNode(oldChild) && isTextVNode(newChild)) {
+      if (oldChild.value !== newChild.value) {
+        oldChild.value = newChild.value
+        oldChild.el!.nodeValue = newChild.value
+      }
+      return oldChild
+    }
+    // 更新节点
+    if (isVNode(oldChild) && isVNode(newChild)) {
+      return this.patchUpdate(oldChild, newChild)
+    }
+    // 替换节点
+    else {
+      const newEl = isTextVNode(newChild)
+        ? createTextElement(newChild)
+        : createElement(newChild as VNode)
+      replaceChild(VElementToHTMLElement(oldVNode.el!), newEl, (oldChild as VNode).el!)
+      return newChild
+    }
   }
 }
 
+/**
+ * 删除节点
+ *
+ * @protected
+ * @param vnode
+ */
+function removeVNode(vnode: VNodeChild) {
+  if (isVNode(vnode)) {
+    vnode.scope?.destroy()
+    if (vnode.el) removeElement(vnode.el)
+  } else if (isTextVNode(vnode)) {
+    if (vnode.el) vnode.el.remove()
+  }
+}
 /**
  * 从Vnode el中获取父节点
  *
@@ -244,7 +306,7 @@ function getParentNode(el: VElement | null): ParentNode | null {
  * @param newEl
  * @param oldEl
  */
-function replaceChild(parent: ParentNode, newEl: VElement | ElementNode, oldEl: VElement) {
+function replaceChild(parent: Node, newEl: VElement | ElementNode, oldEl: VElement) {
   if (isArray(oldEl)) {
     const old = oldEl.shift()!
     removeElement(oldEl)
@@ -253,7 +315,6 @@ function replaceChild(parent: ParentNode, newEl: VElement | ElementNode, oldEl: 
     parent.replaceChild(VElementToHTMLElement(newEl), oldEl)
   }
 }
-
 /**
  * 删除元素
  *
@@ -266,6 +327,17 @@ function removeElement(el: VElement) {
   } else {
     el.remove()
   }
+}
+
+/**
+ * 创建文本元素
+ *
+ * @param vnode
+ */
+function createTextElement(vnode: TextVNode): Text {
+  const textEl = document.createTextNode(vnode.value)
+  vnode.el = textEl
+  return textEl
 }
 /**
  * 创建一个真实DOM元素
@@ -281,7 +353,7 @@ function createElement(vnode: VNode): ElementNode {
       break
     case 'symbol':
       // Fragment 节点
-      el = createFragmentElement(vnode as VNode<FragmentTag>)
+      el = createFragmentElement(vnode as VNode<Fragment>)
       break
     case 'function':
       el = createWidgetElement(vnode as VNode<ClassWidget | FnWidget>)
@@ -320,7 +392,7 @@ function createHtmlElement(vnode: VNode<HtmlElementTags>) {
 }
 
 // 创建 Fragment 元素
-function createFragmentElement(vnode: VNode<FragmentTag>) {
+function createFragmentElement(vnode: VNode<Fragment>) {
   const el = document.createDocumentFragment()
   if (!vnode.children) {
     // 创建一个空文本节点，用于占位 document.createComment('注释节点占位')
@@ -352,8 +424,8 @@ function createChildren(parent: ElementNode, children: VNodeChildren | undefined
 function createChild(parent: ElementNode, child: VNodeChild) {
   if (isVNode(child)) {
     parent.appendChild(createElement(child))
-  } else if (child?.toString && isFunction(child?.toString)) {
-    parent.appendChild(document.createTextNode(child.toString()))
+  } else if (isTextVNode(child)) {
+    parent.appendChild(createTextElement(child))
   }
 }
 
@@ -365,7 +437,6 @@ function createChild(parent: ElementNode, child: VNodeChild) {
  */
 function setAttributes(el: HTMLElement, props: Record<string, any>) {
   Object.keys(props).forEach(key => {
-    if (key === 'children') return
     setAttr(el, key, props[key])
   })
 }
