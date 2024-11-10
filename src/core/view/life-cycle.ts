@@ -1,7 +1,26 @@
+import { getCurrentScope } from '../scope/index.js'
+
 /**
  * 生命周期基类
  */
 export abstract class LifeCycle {
+  protected constructor() {
+    const scope = getCurrentScope()
+    if (scope) {
+      // 放入微任务，保持触发顺序
+      Promise.resolve().then(() => {
+        scope.onPause(() => {
+          this.onDeactivate?.()
+        })
+        scope.onUnPause(() => {
+          this.onActivated?.()
+        })
+        scope.onDestroyed(() => {
+          this.onBeforeUnmount?.()
+        })
+      })
+    }
+  }
   /**
    * 生命周期钩子
    *

@@ -1,7 +1,6 @@
 import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
-import { getCurrentScope } from '../scope/index.js'
 
 /**
  * 类组件构造器类型
@@ -30,18 +29,6 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   protected constructor(props: P) {
     super()
     this.#props = props
-    const scope = getCurrentScope()
-    if (scope) {
-      scope.onPause(() => {
-        this.onDeactivate?.()
-      })
-      scope.onUnPause(() => {
-        this.onActivated?.()
-      })
-      scope.onDestroyed(() => {
-        this.onBeforeUnmount?.()
-      })
-    }
     this.onCreated?.()
   }
 
