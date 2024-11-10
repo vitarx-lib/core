@@ -11,6 +11,7 @@ import {
 } from '../../index.js'
 import { type ClassWidget } from './widget.js'
 import type { FnWidget } from './fn-widget.js'
+import type { ExcludeLifeCycleMethods } from './life-cycle.js'
 
 /** 响应式元素引用标记 */
 const RefElSymbol = Symbol('RefEl')
@@ -32,7 +33,13 @@ export interface TextVNode {
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint
 // 辅助计算出元素类型
-type ComputedRefElType<T> = T extends HtmlElementTags ? HtmlElementTagMap[T] : T extends Fragment ? VDocumentFragment : T extends FnWidget ? Record<string, any> : T
+type ComputedRefElType<T> = T extends HtmlElementTags
+  ? HtmlElementTagMap[T]
+  : T extends Fragment
+    ? VDocumentFragment
+    : T extends FnWidget
+      ? Record<string, any>
+      : ExcludeLifeCycleMethods<T>
 /** 引用元素类型 */
 export type RefEl<T> = {
   value: ComputedRefElType<T> | null, readonly [RefElSymbol]: true
@@ -82,7 +89,6 @@ export type VNodeChildren = Array<VNodeChild>
 export type VDocumentFragment = Array<Element | Text>
 /** 真实元素对象，片段节点为数组 */
 export type VElement = Element | Text | VDocumentFragment
-
 /**
  * 虚拟Node
  *
@@ -97,7 +103,7 @@ export interface VNode<T extends VNodeType = VNodeType> {
   type: T
   props: VNodeProps<T>
   key: OnlyKey | null
-  ref: RefEl<any> | null
+  ref: RefEl<T> | null
   el: VElement | null
   scope: Scope | null
   children: VNodeChildren | undefined
@@ -182,7 +188,7 @@ export function isTextVNode(obj: any): obj is TextVNode {
 /**
  * 引用元素
  *
- * 会在widget或元素真实挂载到dom后自动赋值给该对象
+ * 会在widget或元素挂载到dom后自动赋值给该value
  */
 export function refEl<T>(): RefEl<T> {
   return {
