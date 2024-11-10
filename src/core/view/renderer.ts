@@ -154,39 +154,31 @@ export class WidgetRenderer {
       el = oldVNode.el as HTMLElement
     const oldAttrs = oldVNode.props as Record<string, any>
     const newAttrs = newVNode.props as Record<string, any>
-    // 使用 Set 记录 newAttrs 中的键
-    const newKeysSet = new Set(Object.keys(newAttrs))
-    // 遍历 oldAttrs，删除不在 newAttrs 中的键
-    Object.keys(oldAttrs).forEach(key => {
-      if (!newKeysSet.has(key)) {
-        if (isWidget) {
-          // @ts-ignore
-          delete oldAttrs[key]
-        } else {
-          if (key === 'className') {
-            el.className = ''
-          } else {
-            el.removeAttribute(key)
-          }
-        }
-      } else if (oldAttrs[key] !== newAttrs[key]) {
-        // 更新 oldAttrs 中值有变化的键
+    // 使用 Set 记录 oldAttrs 中的键，以便在循环中检查需要删除的属性
+    const oldKeysSet = new Set(Object.keys(oldAttrs))
+    // 遍历 newAttrs，检查是否有新的属性或属性值需要更新
+    Object.keys(newAttrs).forEach(key => {
+      // 更新或新增属性
+      if (oldAttrs[key] !== newAttrs[key]) {
         if (isWidget) {
           oldAttrs[key] = newAttrs[key]
         } else {
           setAttr(el, key, newAttrs[key])
         }
       }
+      // 将已经处理过的 key 从 oldKeysSet 中删除
+      oldKeysSet.delete(key)
     })
-    // 遍历 newAttrs，添加不在 oldAttrs 中的键
-    Object.keys(newAttrs).forEach(key => {
+    // 删除 newAttrs 中不存在的旧属性
+    oldKeysSet.forEach(key => {
       if (isWidget) {
-        if (!(key in oldAttrs)) {
-          if (isWidget) {
-            oldAttrs[key] = newAttrs[key]
-          } else {
-            setAttr(el, key, newAttrs[key])
-          }
+        // @ts-ignore
+        delete oldAttrs[key]
+      } else {
+        if (key === 'className') {
+          el.className = ''
+        } else {
+          el.removeAttribute(key)
         }
       }
     })
@@ -370,12 +362,14 @@ function createElement(vnode: VNode): ElementNode {
 }
 
 // 创建小部件元素
-function createWidgetElement(vnode: VNode<FnWidget | ClassWidget>) {
+function createWidgetElement(vnode: VNode<FnWidget | ClassWidget>): ElementNode {
   let component: Widget
   const scope = createScope(() => {
     vnode.props = reactive(vnode.props, false)
     // 函数组件或类组件
-    component = isClassWidget(vnode.type) ? new vnode.type(vnode.props) : createFnWidget(vnode.type as FnWidget, vnode.props)
+    component = isClassWidget(vnode.type)
+      ? new vnode.type(vnode.props)
+      : createFnWidget(vnode.type as FnWidget, vnode.props)
   })
   if (isRefEl(vnode.ref)) vnode.ref.value = component!
   vnode.scope = scope
@@ -383,7 +377,7 @@ function createWidgetElement(vnode: VNode<FnWidget | ClassWidget>) {
 }
 
 // 创建html元素
-function createHtmlElement(vnode: VNode<HtmlElementTags>) {
+function createHtmlElement(vnode: VNode<HtmlElementTags>): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
   createChildren(el, vnode.children)
@@ -392,7 +386,7 @@ function createHtmlElement(vnode: VNode<HtmlElementTags>) {
 }
 
 // 创建 Fragment 元素
-function createFragmentElement(vnode: VNode<Fragment>) {
+function createFragmentElement(vnode: VNode<Fragment>): DocumentFragment {
   const el = document.createDocumentFragment()
   if (!vnode.children) {
     // 创建一个空文本节点，用于占位 document.createComment('注释节点占位')
@@ -410,7 +404,7 @@ function createFragmentElement(vnode: VNode<Fragment>) {
  * @param parent
  * @param children
  */
-function createChildren(parent: ElementNode, children: VNodeChildren | undefined) {
+function createChildren(parent: ElementNode, children: VNodeChildren | undefined): void {
   if (!children) return
   children.forEach(child => createChild(parent, child))
 }
@@ -421,7 +415,7 @@ function createChildren(parent: ElementNode, children: VNodeChildren | undefined
  * @param parent
  * @param child
  */
-function createChild(parent: ElementNode, child: VNodeChild) {
+function createChild(parent: ElementNode, child: VNodeChild): void {
   if (isVNode(child)) {
     parent.appendChild(createElement(child))
   } else if (isTextVNode(child)) {
@@ -435,14 +429,14 @@ function createChild(parent: ElementNode, child: VNodeChild) {
  * @param el - 目标元素
  * @param props - 属性对象
  */
-function setAttributes(el: HTMLElement, props: Record<string, any>) {
+function setAttributes(el: HTMLElement, props: Record<string, any>): void {
   Object.keys(props).forEach(key => {
     setAttr(el, key, props[key])
   })
 }
 
 // 设置Html元素属性
-function setAttr(el: HTMLElement, key: string, value: any, oldValue?: any) {
+function setAttr(el: HTMLElement, key: string, value: any, oldValue?: any): void {
   switch (key) {
     case 'style':
       setStyle(el, value)
@@ -486,7 +480,7 @@ function setAttr(el: HTMLElement, key: string, value: any, oldValue?: any) {
  * @param el
  * @param prop
  */
-function isHTMLNodeEvent(el: HTMLElement, prop: string) {
+function isHTMLNodeEvent(el: HTMLElement, prop: string): boolean {
   return prop.startsWith('on') && prop.toLowerCase() in el
 }
 
@@ -496,7 +490,7 @@ function isHTMLNodeEvent(el: HTMLElement, prop: string) {
  * @param el
  * @param style
  */
-function setStyle(el: HTMLElement, style: HTMLStyleProperties) {
+function setStyle(el: HTMLElement, style: HTMLStyleProperties): void {
   if (style && el.style) {
     if (isString(style)) {
       el.style.cssText = style
@@ -515,7 +509,7 @@ function setStyle(el: HTMLElement, style: HTMLStyleProperties) {
  * @param el
  * @param classData
  */
-function setClass(el: HTMLElement, classData: HTMLClassProperties) {
+function setClass(el: HTMLElement, classData: HTMLClassProperties): void {
   if (classData) {
     if (isString(classData)) {
       el.className = classData
