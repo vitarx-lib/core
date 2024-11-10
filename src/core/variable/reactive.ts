@@ -210,7 +210,7 @@ export function createReactive<T extends AnyObject>(
  * @param val
  */
 export function isReactive(val: any): val is Reactive<object> {
-  return typeof val === 'object' && Reflect.get(val, REACTIVE_SYMBOL)
+  return typeof val === 'object' && !!Reflect.get(val, REACTIVE_SYMBOL)
 }
 
 /**
