@@ -1,7 +1,6 @@
 import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
-import { isConstructor } from '../../utils/index.js'
 import { getCurrentScope } from '../scope/index.js'
 
 /**
@@ -21,7 +20,7 @@ export type WidgetChildren<P> = P extends { children: infer U }
  * 组件基类
  */
 export abstract class Widget<P extends Record<string, any> = {}> extends LifeCycle {
-  #props: P
+  readonly #props: P
   #renderer?: WidgetRenderer
   /**
    * ## 实例化
@@ -104,10 +103,6 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
  * @param val
  */
 export function isClassWidget(val: any): val is ClassWidget<any> {
-  if (!isConstructor(val)) return false
+  if (typeof val !== 'function') return false
   return val.prototype instanceof Widget
 }
-
-
-
-
