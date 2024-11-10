@@ -19,12 +19,17 @@ import {
   type HtmlElementTags,
   type HTMLStyleProperties,
   isClassWidget,
+  Listener,
   reactive,
   watchDepend
 } from '../../index.js'
 import { createFnWidget, type FnWidget } from './fn-widget.js'
 import type { Widget } from './widget.js'
 
+/**
+ * 已经挂载的虚拟节点
+ */
+type RenderedVNode = Omit<VNode, 'el'> & { el: VElement }
 /**
  * 真实DOM元素
  */
@@ -34,9 +39,12 @@ export type ElementNode = Element | DocumentFragment | Text
  * 小部件元素管理器
  */
 export class WidgetRenderer {
+  // 当前虚拟节点
   currentVNode: VNode
-
+  // 依赖监听器
+  dependListener: Listener | undefined
   constructor(protected widget: Widget) {
+    // 开始监听依赖变化并，自动刷新视图，该监听器不受当前作用域管理器控制
     const { result, listener } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
     })
@@ -45,13 +53,18 @@ export class WidgetRenderer {
       throw new Error('[Vitarx]：Widget.build方法必须返回VNode虚拟节点')
     }
     this.currentVNode = result
+    this.dependListener = listener
   }
 
   /**
-   * 是否已挂载
+   * 判断是否已挂载到DOM上
+   *
+   * 如果组件被临时停用，也会返回false
+   *
+   * @returns {boolean}
    */
   get mounted(): boolean {
-    return this.currentVNode.el !== null
+    return this.parentNode !== null
   }
 
   /**
@@ -110,9 +123,16 @@ export class WidgetRenderer {
   }
 
   update(force: boolean = false) {
-    const oldVNode = this.currentVNode
-    const newVNode = this.build()
-    this.currentVNode = this.patchUpdate(oldVNode, newVNode)
+    // 如果挂载在DOM上，则进行更新
+    if (this.mounted) {
+      try {
+        const oldVNode = this.currentVNode
+        const newVNode = this.build()
+        this.currentVNode = this.patchUpdate(oldVNode as RenderedVNode, newVNode)
+      } catch (e) {
+        console.trace(`[Vitarx]：更新视图时出现了异常，${e}`)
+      }
+    }
   }
 
   /**
@@ -121,15 +141,16 @@ export class WidgetRenderer {
    * @param oldVNode
    * @param newVNode
    */
-  protected patchUpdate(oldVNode: VNode, newVNode: VNode) {
+  protected patchUpdate(oldVNode: RenderedVNode, newVNode: VNode): RenderedVNode {
     // 类型不一致，替换原有节点
     if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
       // 销毁旧节点作用域
       oldVNode.scope?.destroy()
       // 删除旧节点元素
       const newEl = createElement(newVNode)
-      replaceChild(getParentNode(oldVNode.el)!, newEl as VElement, oldVNode.el!)
-      return newVNode
+      // 从父节点上替换旧节点为新节点
+      replaceChild(getParentNode(oldVNode.el), newEl as VElement, oldVNode.el)
+      return newVNode as RenderedVNode
     } else {
       // 非片段节点，则进行更新属性
       if (oldVNode.type !== Fragment) {
@@ -149,7 +170,7 @@ export class WidgetRenderer {
    * @param oldVNode
    * @param newVNode
    */
-  protected patchAttrs(oldVNode: VNode, newVNode: VNode) {
+  protected patchAttrs(oldVNode: RenderedVNode, newVNode: VNode) {
     const isWidget = isFunction(oldVNode.type),
       el = oldVNode.el as HTMLElement
     const oldAttrs = oldVNode.props as Record<string, any>
@@ -190,24 +211,25 @@ export class WidgetRenderer {
    * @param oldVNode
    * @param newVNode
    */
-  protected patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
+  protected patchChildren(oldVNode: RenderedVNode, newVNode: VNode): boolean {
     const oldChildren = oldVNode.children
     const newChildren = newVNode.children
     if (oldChildren === newChildren) return false
     // 如果没有旧的子节点
     if (!oldChildren && newChildren) {
-      const el = VElementToHTMLElement(oldVNode.el!)
+      const el = VElementToHTMLElement(oldVNode.el)
       createChildren(el, newChildren)
-      // 如果是片段节点，则需要通过替换替换内容方式
+      // 如果是片段节点，则需要将新元素替换到父节点
       if (oldVNode.type === Fragment) {
-        replaceChild(getParentNode(oldVNode.el!)!, el, oldVNode.el!)
+        // 如果存在父节点，在会挂载在父节点上
+        replaceChild(getParentNode(oldVNode.el), el, oldVNode.el)
       }
       oldVNode.children = newChildren
       return true
     }
     // 如果新子节点为空 则删除旧子节点
     if (!newChildren && oldChildren) {
-      oldChildren.forEach(child => removeVNode(child))
+      oldChildren.forEach(child => removeVNodeEl(child))
       oldVNode.children = newChildren
       return true
     }
@@ -228,19 +250,23 @@ export class WidgetRenderer {
    * @param newChild
    * @protected
    */
-  protected patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild): VNodeChild {
+  protected patchChild(
+    oldVNode: RenderedVNode,
+    oldChild: VNodeChild,
+    newChild: VNodeChild
+  ): VNodeChild {
     // 删除节点
     if (oldChild && !newChild) {
-      removeVNode(oldChild)
+      removeVNodeEl(oldChild)
       return newChild
     }
     // 新增节点
     if (!oldChild && newChild) {
       const container = VElementToHTMLElement(oldVNode.el!)
       createChild(container, newChild)
-      // 如果是片段节点，则需要通过替换替换内容方式
+      // 挂载到父节点
       if (oldVNode.type === Fragment) {
-        replaceChild(getParentNode(oldVNode.el!)!, container, oldVNode.el!)
+        replaceChild(getParentNode(oldVNode.el), container, oldVNode.el!)
       }
       return newChild
     }
@@ -254,7 +280,7 @@ export class WidgetRenderer {
     }
     // 更新节点
     if (isVNode(oldChild) && isVNode(newChild)) {
-      return this.patchUpdate(oldChild, newChild)
+      return this.patchUpdate(oldChild as RenderedVNode, newChild)
     }
     // 替换节点
     else {
@@ -273,7 +299,7 @@ export class WidgetRenderer {
  * @protected
  * @param vnode
  */
-function removeVNode(vnode: VNodeChild) {
+function removeVNodeEl(vnode: VNodeChild) {
   if (isVNode(vnode)) {
     vnode.scope?.destroy()
     if (vnode.el) removeElement(vnode.el)
@@ -298,7 +324,8 @@ function getParentNode(el: VElement | null): ParentNode | null {
  * @param newEl
  * @param oldEl
  */
-function replaceChild(parent: Node, newEl: VElement | ElementNode, oldEl: VElement) {
+function replaceChild(parent: Node | null, newEl: VElement | ElementNode, oldEl: VElement) {
+  if (!parent) return
   if (isArray(oldEl)) {
     const old = oldEl.shift()!
     removeElement(oldEl)
