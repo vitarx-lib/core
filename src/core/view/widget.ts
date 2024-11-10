@@ -80,7 +80,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 如果组件已经挂载，则返回对应的元素，否则返回`null`。
+   * 如果组件已经挂载，则返回组件的`DOM`元素，否则返回`null`。
    */
   get el(): VElement | null {
     return this.renderer.el
