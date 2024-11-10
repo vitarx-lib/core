@@ -68,6 +68,9 @@ export function isFunction(val: any): val is (...args: any[]) => any {
   return typeof val === 'function'
 }
 
+export function isPureFunction(val: any): val is (...args: any[]) => any {
+  return typeof val === 'function' && !val.toString().startsWith('class ')
+}
 /**
  * 判断是否为类构造函数
  *
