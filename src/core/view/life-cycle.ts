@@ -69,6 +69,17 @@ export abstract class LifeCycle {
    * @protected
    */
   onBeforeUnmount?(): void
+
+  /**
+   * 生命周期钩子
+   *
+   * `onBeforeUpdate`钩子会在组件更新之前触发。
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
+   */
+  onBeforeUpdate?(): void
   /**
    * 生命周期钩子
    *
@@ -93,13 +104,23 @@ export abstract class LifeCycle {
   onError?(error: any): Vitarx.VNode | void
 }
 
+/**
+ * 生命周期钩子枚举
+ */
 export enum LifeCycleHooks {
   'created' = 'onCreated',
   'mounted' = 'onMounted',
   'deactivate' = 'onDeactivate',
   'activated' = 'onActivated',
+  'beforeUpdate' = 'onBeforeUpdate',
   'updated' = 'onUpdated',
   'error' = 'onError',
   'unmounted' = 'onUnmounted',
   'beforeUnmount' = 'onBeforeUnmount'
 }
+
+/** 生命周期方法集合 */
+export type LifeCycleHookMethods = `${LifeCycleHooks}`
+
+/** 类型重载，排除接口中所有的生命周期方法 */
+export type ExcludeLifeCycleMethods<T> = Omit<T, LifeCycleHookMethods | 'build' | 'renderer'>
