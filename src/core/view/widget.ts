@@ -40,9 +40,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
       })
       scope.onDestroyed(() => {
         this.onBeforeUnmount?.()
-        this.onUnmounted?.()
       })
     }
+    this.onCreated?.()
   }
 
   /**
