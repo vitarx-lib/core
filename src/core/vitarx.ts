@@ -1,9 +1,4 @@
-import {
-  createFnWidget,
-  type IntrinsicAttributes,
-  isClassWidget,
-  type Widget
-} from './view/index.js'
+import { createFnWidget, type IntrinsicAttributes, isClassWidget, Widget } from './view/index.js'
 import { createScope } from './scope/index.js'
 
 declare global {
@@ -14,10 +9,74 @@ declare global {
       ssr?: boolean
     }
 
+    /**
+     * 全局属性
+     *
+     * - `ref`: 用于绑定元素实例。
+     * - `key`: 用于绑定元素节点的key，支持`key.value`获取key值。
+     */
     type GlobalIntrinsicAttributes = IntrinsicAttributes
+    /**
+     * 虚拟节点
+     */
     type VNode = import('./view/VNode').VNode
+    /**
+     * 类小部件
+     *
+     * @example
+     * ```ts
+     * import {Widget,createVNode} from 'vitarx'
+     * class App extends Widget{
+     *  build(){
+     *    return <div>widget</div>
+     *  }
+     * }
+     * ```
+     */
     type ClassWidget<T extends Record<string, any> = {}> = import('./view/widget').ClassWidget<T>
+    /**
+     * ## 函数式小部件
+     *
+     * ### JS|TS 语法示例
+     * @example
+     * ```ts
+     * function App(){
+     *  const count = ref(0)
+     *  return () => createVNode('div',{style:{color:'red'}},count.value)
+     * }
+     * ```
+     *
+     * ### JSX|TSX 语法示例
+     * @example
+     * ```tsx
+     * function App(){
+     *  const count = ref(0)
+     *  // 返回`build`构建器，引用的响应式变量发生变化时，会自动更新视图
+     *  return () => <div>{count.value}</div>
+     * }
+     * function StaticApp(){
+     *  // 如果组件是无状态的，则可以直接返回元素
+     *  return <div>hello world!</div>
+     * }
+     * ```
+     */
     type FnWidget<T extends Record<string, any> = {}> = import('./view/fn-widget').FnWidget<T>
+    /**
+     * 兼容JSX语法检测
+     *
+     * ```tsx
+     * function App(){
+     *  const count = ref(0)
+     *  // 返回`build`构建器，引用的响应式变量发生变化时，会自动更新视图
+     *  return () => <div>{count.value}</div>
+     * }
+     * function StaticApp(){
+     *  // 如果组件是无状态的，则可以直接返回元素
+     *  return <div>hello world!</div>
+     * }
+     * ```
+     */
+    type Element = () => Element
   }
 }
 
@@ -32,7 +91,10 @@ export class Vitarx {
   protected readonly options: Required<Vitarx.AppOptions> = {
     ssr: false
   }
-
+  /**
+   * 小部件基类
+   */
+  static Widget = Widget
   /**
    * 构建应用实例
    *
