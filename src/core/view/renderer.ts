@@ -35,14 +35,17 @@ type RenderedVNode = Omit<VNode, 'el'> & { el: VElement }
 export type ElementNode = Element | DocumentFragment | Text
 
 /**
- * 小部件元素管理器
+ * 小部件渲染器
+ *
+ * 用于渲染小部件，和管理小部件的生命周期。
  */
 export class WidgetRenderer {
+  // 当前组件的Child虚拟节点
+  currentChildVNode: VNode
+  // 等到更新
   #pendingUpdate = false
-  // 当前虚拟节点
-  currentVNode: VNode
+
   constructor(protected widget: Widget) {
-    // 开始监听依赖变化并，自动刷新视图，该监听器不受当前作用域管理器控制
     const { result, listener } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
     })
@@ -50,7 +53,7 @@ export class WidgetRenderer {
       listener?.destroy()
       throw new Error('[Vitarx]：Widget.build方法必须返回VNode虚拟节点')
     }
-    this.currentVNode = result
+    this.currentChildVNode = result
   }
 
   /**
@@ -61,32 +64,42 @@ export class WidgetRenderer {
    * @returns {boolean}
    */
   get mounted(): boolean {
-    return this.parentNode !== null
+    return this.container !== null
   }
 
   /**
-   * 获取节点对象
+   * 当前小部件的child虚拟节点元素
    *
    * @returns {VElement | null}
    */
   get el(): VElement | null {
-    return this.currentVNode.el
+    return this.currentChildVNode.el
   }
 
   /**
-   * 获取父真实节点
+   * 获取挂载的父元素
+   *
+   * @returns {ParentNode | null}
    */
-  get parentNode(): ParentNode | null {
+  get container(): ParentNode | null {
     return getParentNode(this.el)
   }
 
+  /**
+   * 当前小部件的`child`虚拟节点
+   *
+   * @returns {VNode}
+   */
+  get child(): VNode {
+    return this.currentChildVNode
+  }
   /**
    * 创建节点元素
    *
    * @returns {ElementNode}
    */
   createElement(): ElementNode {
-    return createElement(this.currentVNode)
+    return createElement(this.currentChildVNode)
   }
 
   /**
@@ -100,15 +113,18 @@ export class WidgetRenderer {
       el = VElementToHTMLElement(this.el)
     } else {
       el = this.createElement()
+      // 触发onActivated生命周期
       this.widget.onActivated?.()
+      // 触发onMounted生命周期
       this.widget.onMounted?.()
     }
+    // 挂载到父元素
     parent?.appendChild(el)
     return el
   }
 
   /**
-   * 打包虚拟节点
+   * 构建`child`虚拟节点
    *
    * @returns {VNode}
    */
@@ -136,9 +152,9 @@ export class WidgetRenderer {
       setTimeout(() => {
         this.#pendingUpdate = false
       })
-      const oldVNode = this.currentVNode
+      const oldVNode = this.currentChildVNode
       const newVNode = this.build()
-      this.currentVNode = this.patchUpdate(oldVNode as RenderedVNode, newVNode)
+      this.currentChildVNode = this.patchUpdate(oldVNode as RenderedVNode, newVNode)
       this.widget.onUpdated?.()
     } catch (e) {
       this.#pendingUpdate = false
@@ -181,7 +197,7 @@ export class WidgetRenderer {
    * @param oldVNode
    * @param newVNode
    */
-  protected patchAttrs(oldVNode: RenderedVNode, newVNode: VNode) {
+  protected patchAttrs(oldVNode: RenderedVNode, newVNode: VNode): void {
     const isWidget = isFunction(oldVNode.type),
       el = oldVNode.el as HTMLElement
     const oldAttrs = oldVNode.props as Record<string, any>
@@ -240,7 +256,7 @@ export class WidgetRenderer {
     }
     // 如果新子节点为空 则删除旧子节点
     if (!newChildren && oldChildren) {
-      oldChildren.forEach(child => removeVNodeEl(child))
+      oldChildren.forEach(child => this.destroyVNode(child))
       oldVNode.children = newChildren
       return true
     }
@@ -268,7 +284,7 @@ export class WidgetRenderer {
   ): VNodeChild {
     // 删除节点
     if (oldChild && !newChild) {
-      removeVNodeEl(oldChild)
+      this.destroyVNode(oldChild)
       return newChild
     }
     // 新增节点
@@ -302,30 +318,46 @@ export class WidgetRenderer {
       return newChild
     }
   }
+
+  /**
+   * 销毁节点
+   *
+   * @param vnode - 要销毁的节点
+   * @param unmount - 是否卸载元素
+   * @protected
+   */
+  protected destroyVNode(vnode: VNodeChild, unmount: boolean = true): void {
+    if (isVNode(vnode)) {
+      vnode.scope?.destroy()
+      if (unmount) removeElement(vnode.el)
+    } else if (isTextVNode(vnode)) {
+      if (vnode.el) vnode.el.remove()
+    }
+  }
+
+  /**
+   * 删除节点元素
+   *
+   * @protected
+   * @param vnode
+   */
+  protected removeVNodeEl(vnode: VNodeChild): void {
+    if (isVNode(vnode)) {
+      removeElement(vnode.el)
+    } else {
+      if (vnode.el) vnode.el.remove()
+    }
+  }
 }
 
 /**
- * 删除节点
+ * 获取父元素
  *
- * @protected
- * @param vnode
- */
-function removeVNodeEl(vnode: VNodeChild) {
-  if (isVNode(vnode)) {
-    vnode.scope?.destroy()
-    if (vnode.el) {
-      removeElement(vnode.el)
-    }
-  } else if (isTextVNode(vnode)) {
-    if (vnode.el) vnode.el.remove()
-  }
-}
-/**
- * 从Vnode el中获取父节点
+ * 等同于 `document.getElementById(id).parentNode`，只是对片段元素进行特殊处理。
  *
  * @param el
  */
-function getParentNode(el: VElement | null): ParentNode | null {
+export function getParentNode(el: VElement | null): ParentNode | null {
   if (!el) return null
   return isArray(el) ? el[0].parentNode : el.parentNode
 }
@@ -352,7 +384,8 @@ function replaceChild(parent: Node | null, newEl: VElement | ElementNode, oldEl:
  *
  * @param el
  */
-function removeElement(el: VElement) {
+function removeElement(el: VElement | null) {
+  if (!el) return
   if (isArray(el)) {
     // 删除旧节点
     el.forEach(item => item.remove())
