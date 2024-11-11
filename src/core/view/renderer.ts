@@ -144,7 +144,7 @@ export class WidgetRenderer {
   /**
    * 更新视图
    */
-  update() {
+  update(): void {
     if (this.#pendingUpdate) return
     this.#pendingUpdate = true
     try {
@@ -256,7 +256,7 @@ export class WidgetRenderer {
     }
     // 如果新子节点为空 则删除旧子节点
     if (!newChildren && oldChildren) {
-      oldChildren.forEach(child => this.destroyVNode(child))
+      oldChildren.forEach(child => this.destroy(child))
       oldVNode.children = newChildren
       return true
     }
@@ -284,7 +284,7 @@ export class WidgetRenderer {
   ): VNodeChild {
     // 删除节点
     if (oldChild && !newChild) {
-      this.destroyVNode(oldChild)
+      this.destroy(oldChild)
       return newChild
     }
     // 新增节点
@@ -323,28 +323,13 @@ export class WidgetRenderer {
    * 销毁节点
    *
    * @param vnode - 要销毁的节点
-   * @param unmount - 是否卸载元素
    * @protected
    */
-  protected destroyVNode(vnode: VNodeChild, unmount: boolean = true): void {
+  protected destroy(vnode: VNodeChild): void {
     if (isVNode(vnode)) {
       vnode.scope?.destroy()
-      if (unmount) removeElement(vnode.el)
-    } else if (isTextVNode(vnode)) {
-      if (vnode.el) vnode.el.remove()
-    }
-  }
-
-  /**
-   * 删除节点元素
-   *
-   * @protected
-   * @param vnode
-   */
-  protected removeVNodeEl(vnode: VNodeChild): void {
-    if (isVNode(vnode)) {
       removeElement(vnode.el)
-    } else {
+    } else if (isTextVNode(vnode)) {
       if (vnode.el) vnode.el.remove()
     }
   }
