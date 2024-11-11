@@ -1,4 +1,11 @@
-import { createFnWidget, type IntrinsicAttributes, isClassWidget, Widget } from './view/index.js'
+import {
+  type ClassWidget,
+  createFnWidget,
+  type FnWidget,
+  type IntrinsicAttributes,
+  isClassWidget,
+  Widget
+} from './view/index.js'
 import { createScope } from './scope/index.js'
 
 declare global {
@@ -21,7 +28,7 @@ declare global {
      */
     type VNode = import('./view/VNode').VNode
     /**
-     * 类小部件
+     * JSX类元素
      *
      * @example
      * ```ts
@@ -33,36 +40,9 @@ declare global {
      * }
      * ```
      */
-    type ClassWidget<T extends Record<string, any> = {}> = import('./view/widget').ClassWidget<T>
+    type ClassElement = Widget
     /**
-     * ## 函数式小部件
-     *
-     * ### JS|TS 语法示例
-     * @example
-     * ```ts
-     * function App(){
-     *  const count = ref(0)
-     *  return () => createVNode('div',{style:{color:'red'}},count.value)
-     * }
-     * ```
-     *
-     * ### JSX|TSX 语法示例
-     * @example
-     * ```tsx
-     * function App(){
-     *  const count = ref(0)
-     *  // 返回`build`构建器，引用的响应式变量发生变化时，会自动更新视图
-     *  return () => <div>{count.value}</div>
-     * }
-     * function StaticApp(){
-     *  // 如果组件是无状态的，则可以直接返回元素
-     *  return <div>hello world!</div>
-     * }
-     * ```
-     */
-    type FnWidget<T extends Record<string, any> = {}> = import('./view/fn-widget').FnWidget<T>
-    /**
-     * 兼容JSX语法检测
+     * JSX元素
      *
      * ```tsx
      * function App(){
@@ -110,16 +90,13 @@ export class Vitarx {
     Vitarx.ssr = this.options.ssr
   }
 
-  render<P extends Record<string, any>>(
-    app: Vitarx.ClassWidget<P> | Vitarx.FnWidget<P>,
-    props: P
-  ): void {
+  render<P extends Record<string, any>>(app: ClassWidget<P> | FnWidget<P>, props: P): void {
     createScope(() => {
       let instance: Widget
       if (isClassWidget(app)) {
         instance = new app(props || {})
       } else {
-        instance = createFnWidget(app as Vitarx.FnWidget<P>, props)
+        instance = createFnWidget(app as FnWidget<P>, props)
       }
       instance.renderer.mount(this.container)
     })
