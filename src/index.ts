@@ -1,5 +1,5 @@
 import type { Properties as CssProperties } from 'csstype'
-import { type Ref } from './core/index.js'
+import { type Children, type RefEl } from './core/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -48,14 +48,14 @@ declare global {
   }
   namespace JSX {
     /** 元素类型 */
-    type Element = Vitarx.Element
+    type Element = Vitarx.Jsx.Element
     /** 类组件实例 */
-    type ElementClass = Vitarx.ClassElement
+    type ElementClass = Vitarx.Jsx.ElementClass
 
     /** 固有元素 */
     interface IntrinsicElements extends HtmlIntrinsicElements {}
 
-    /** 全局固有属性 */
+    /** 固有属性 */
     interface IntrinsicAttributes extends Vitarx.GlobalIntrinsicAttributes {}
 
     /** 子节点类型校验 */
@@ -65,8 +65,11 @@ declare global {
 
     /** 类组件属性 */
     export interface IntrinsicClassAttributes<T> {
-      ref?: Ref<T>
+      ref?: RefEl<T>
     }
+
+    /** 子元素类型 */
+    type Children = string | Element | Array<string | Element>
   }
 }
 
@@ -537,4 +540,7 @@ export type HtmlProperties<
   E extends string = never
 > = ToPartialProperties<T, M, E> &
   OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
-  CustomProperties
+  CustomProperties &
+  Vitarx.GlobalIntrinsicAttributes & {
+    children?: JSX.Children | Children
+  }
