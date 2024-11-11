@@ -27,36 +27,12 @@ declare global {
      * 虚拟节点
      */
     type VNode = import('./view/VNode').VNode
-    /**
-     * JSX类元素
-     *
-     * @example
-     * ```ts
-     * import {Widget,createVNode} from 'vitarx'
-     * class App extends Widget{
-     *  build(){
-     *    return <div>widget</div>
-     *  }
-     * }
-     * ```
-     */
-    type ClassElement = Widget
-    /**
-     * JSX元素
-     *
-     * ```tsx
-     * function App(){
-     *  const count = ref(0)
-     *  // 返回`build`构建器，引用的响应式变量发生变化时，会自动更新视图
-     *  return () => <div>{count.value}</div>
-     * }
-     * function StaticApp(){
-     *  // 如果组件是无状态的，则可以直接返回元素
-     *  return <div>hello world!</div>
-     * }
-     * ```
-     */
-    type Element = () => Element
+    namespace Jsx {
+      /** 元素类型 */
+      type Element = () => Element
+      /** 类组件实例 */
+      type ElementClass = Widget
+    }
   }
 }
 
