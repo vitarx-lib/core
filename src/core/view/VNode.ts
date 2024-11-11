@@ -125,7 +125,7 @@ export interface VNode<T extends VNodeType = VNodeType> {
  */
 export function createVNode<T extends VNodeType>(
   type: T,
-  props: IntrinsicAttributes & VNodeProps<T>,
+  props: VNodeProps<T> & IntrinsicAttributes,
   children?: ComputedVNodeChildren<T>
 ): VNode<T> {
   if (!props) {
