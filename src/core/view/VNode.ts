@@ -125,7 +125,7 @@ export interface VNode<T extends VNodeType = VNodeType> {
  */
 export function createVNode<T extends VNodeType>(
   type: T,
-  props: VNodeProps<T> & IntrinsicAttributes,
+  props?: VNodeProps<T> & IntrinsicAttributes,
   children?: ComputedVNodeChildren<T>
 ): VNode<T> {
   if (!props) {
@@ -165,13 +165,13 @@ export function createVNode<T extends VNodeType>(
     }
   }
   // 取出唯一标识符
-  const key = popProperty(props, 'key') || null
+  const key = popProperty(props as any, 'key') || null
   // 引用元素
-  const ref = popProperty(props, 'ref') || null
+  const ref = popProperty(props as any, 'ref') || null
   return {
     [VNodeSymbol]: true,
     type,
-    props,
+    props: props as any,
     children: children as VNodeChildren,
     key,
     ref,
@@ -179,7 +179,6 @@ export function createVNode<T extends VNodeType>(
     scope: null
   }
 }
-
 /**
  * 判断是否为虚拟节点对象
  *
