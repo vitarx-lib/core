@@ -338,7 +338,12 @@ export function watchDepend<GET, R>(
   if (deps.size > 0) {
     let subCallback: AnyCallback
     if (options?.batch === undefined || options?.batch) {
-      mainListener = Observers.register(deps, callback || fn, Observers.ALL_CHANGE_SYMBOL, options)
+      mainListener = Observers.register(
+        deps,
+        callback ? () => callback() : () => fn(),
+        Observers.ALL_CHANGE_SYMBOL,
+        options
+      )
       const change = Symbol('depend change')
       subCallback = () => Observers.trigger(deps, change as any)
     } else {

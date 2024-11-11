@@ -115,9 +115,21 @@ export interface VNode<T extends VNodeType = VNodeType> {
   children: VNodeChildren | undefined
   [VNodeSymbol]: true
 }
+
 /**
  * 创建虚拟节点
  *
+ * 该方法是`createVNode`的别名。
+ *
+ * @see createVNode
+ */
+export function h<T extends VNodeType>(type: T, props?: VNodeProps<T> & IntrinsicAttributes, children?: ComputedVNodeChildren<T>): VNode<T> {
+  return createVNode(type, props, children)
+}
+/**
+ * 创建虚拟节点
+ *
+ * @alias h
  * @param type - 节点类型
  * @param props - 节点属性
  * @param children - 子节点，如果是小部件类型则会写入到 `props.children`
