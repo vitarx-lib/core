@@ -129,16 +129,19 @@ export class WidgetRenderer {
    * @returns {VNode}
    */
   build(): VNode {
+    let vnode: VNode
     try {
-      return this.widget.build()
+      vnode = this.widget.build() as VNode
     } catch (e) {
       if (this.widget?.onError && isFunction(this.widget.onError)) {
-        const vnode = this.widget.onError(e)
+        vnode = this.widget.onError(e) as VNode
         if (isVNode(vnode)) return vnode
       }
       // 继续向上抛出异常
       throw e
     }
+    if (isVNode(vnode)) return vnode
+    throw new Error('[Vitarx]：Widget.build方法必须返回有效的VNode')
   }
 
   /**
