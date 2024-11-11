@@ -87,7 +87,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @protected
    * @returns {VNode}
    */
-  abstract build(): VNode
+  abstract build(): Vitarx.VNode | Vitarx.Element
 }
 
 /**
