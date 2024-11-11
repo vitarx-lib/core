@@ -80,7 +80,7 @@ export type VNodeProps<T> = (T extends HtmlElementTags
       : {}) &
   IntrinsicAttributes
 // createVNode.children参数类型
-type Children = (VNodeChild | string) | (VNodeChild | string)[]
+export type Children = VNodeChild | string | (VNodeChild | string)[]
 // 辅助计算出Children类型
 type ComputedVNodeChildren<T> = T extends HtmlElementTags
   ? Children
