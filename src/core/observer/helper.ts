@@ -151,7 +151,8 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
   }
   if (isArray(origin)) {
     if (origin.length === 0) {
-      throw new TypeError('watch.origin参数不能是空数组(包括使用getter函数返回空数组)。正确示例(obj为实现了ProxySymbol接口的对象)：[obj,...]'
+      throw new TypeError(
+        'watch.origin参数不能是空数组(包括使用getter函数返回空数组)。正确示例(obj为实现了ProxySymbol接口的对象)：[obj,...]'
       )
     }
     const deps = origin.filter(isProxy)
@@ -178,7 +179,8 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
       return mainListener as unknown as Listener<C>
     }
   }
-  throw new TypeError('watch.origin参数无效，正确值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | ()=>[obj,...] | obj | [obj,...]'
+  throw new TypeError(
+    'watch.origin参数无效，正确值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | ()=>[obj,...] | obj | [obj,...]'
   )
 }
 
@@ -210,7 +212,8 @@ export function watchValue<T extends AnyObject>(
         const prop = deps.values().next().value!.values().next().value!
         return watchPropValue(obj, prop, callback as AnyCallback, options)
       }
-      throw new TypeError('当watch.origin参数为()=>any类型时，返回的非对象类型值，必须是某个响应式(实现了ProxySymbol接口)对象的属性值才能进行监听。'
+      throw new TypeError(
+        '当watch.origin参数为()=>any类型时，返回的非对象类型值，必须是某个响应式(实现了ProxySymbol接口)对象的属性值才能进行监听。'
       )
     } else {
       origin = result
@@ -226,7 +229,8 @@ export function watchValue<T extends AnyObject>(
       options
     )
   }
-  throw new TypeError('watch.origin参数无效，可选值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | obj'
+  throw new TypeError(
+    'watch.origin参数无效，可选值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | obj'
   )
 }
 
@@ -314,10 +318,12 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
  *
  * @note 该方法会监听函数的依赖，当依赖发生变化时，会触发回调函数，没有传入回调函数则触发传入的fn函数本身。
  *
+ * @template R - 返回值类型
+ * @template GET - 是否收集依赖的返回值
  * @param fn - 要监听的函数
  * @param callback - 回调函数
  * @param options - 监听器配置选项
- * @returns {Listener|undefined} - 如果收集到依赖则返回监听器，否则返回undefined
+ * @returns {WatchDependResult<R, GET>} - 如果收集到依赖则返回监听器，否则返回undefined
  */
 export function watchDepend<GET, R>(
   fn: () => R,
