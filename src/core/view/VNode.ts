@@ -79,10 +79,16 @@ export type VNodeProps<T> = (T extends HtmlElementTags
       ? P
       : {}) &
   IntrinsicAttributes
+// createVNode.children参数类型
+type Children = (VNodeChild | string) | (VNodeChild | string)[]
 // 辅助计算出Children类型
-type ComputedVNodeChildren<T> = T extends HtmlElementTags ? VNodeChild | VNodeChild[] : T extends Fragment ? VNodeChild | VNodeChild[] : WidgetChildren<VNodeProps<T>>
+type ComputedVNodeChildren<T> = T extends HtmlElementTags
+  ? Children
+  : T extends Fragment
+    ? Children
+    : WidgetChildren<VNodeProps<T>>
 /** 子节点类型 */
-export type VNodeChild = VNode | string | TextVNode
+export type VNodeChild = VNode | TextVNode
 /** 子节点列表 */
 export type VNodeChildren = Array<VNodeChild>
 /** HTML片段节点数组 */
@@ -122,21 +128,25 @@ export function createVNode<T extends VNodeType>(
   props: IntrinsicAttributes & VNodeProps<T>,
   children?: ComputedVNodeChildren<T>
 ): VNode<T> {
-  if (!isRecordObject(props)) {
+  if (!props) {
+    // @ts-ignore
+    props = {}
+  } else if (!isRecordObject(props)) {
     throw new TypeError(
-      `[Vitarx]：createVNode.props参数类型必须是一个键值对对象，给定${typeof props}`
+      `[Vitarx]：createVNode.props参数类型必须是Record(string,any)类型，给定${typeof props}`
     )
   }
-  // 如果不是函数，则将children转为数组，方便后续处理
   if (isFunction(type)) {
     if (children !== undefined) {
       // @ts-ignore
       props.children = children
       children = undefined
     }
-  } else {
-    const pc = popProperty(props as any, 'children')
-    children = children || pc
+  }
+  // 如果不是函数，则将children转为数组，方便后续处理
+  else {
+    const c = popProperty(props as any, 'children')
+    children = children || c
     if (children) {
       if (!isArray(children)) {
         // @ts-ignore
@@ -154,7 +164,9 @@ export function createVNode<T extends VNodeType>(
       })
     }
   }
+  // 取出唯一标识符
   const key = popProperty(props, 'key') || null
+  // 引用元素
   const ref = popProperty(props, 'ref') || null
   return {
     [VNodeSymbol]: true,
