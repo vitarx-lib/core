@@ -364,6 +364,7 @@ function replaceChild(parent: Node | null, newEl: VElement | ElementNode, oldEl:
     parent.replaceChild(VElementToHTMLElement(newEl), oldEl)
   }
 }
+
 /**
  * 删除元素
  *
@@ -389,6 +390,7 @@ function createTextElement(vnode: TextVNode): Text {
   vnode.el = textEl
   return textEl
 }
+
 /**
  * 创建一个真实DOM元素
  *
@@ -456,6 +458,7 @@ function createFragmentElement(vnode: VNode<Fragment>): DocumentFragment {
   }
   return el
 }
+
 /**
  * 更新DOM元素的子节点
  *
