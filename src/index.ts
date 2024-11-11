@@ -1,7 +1,5 @@
-import type { Widget } from './core/view/widget.js'
 import type { Properties as CssProperties } from 'csstype'
-import type { IntrinsicAttributes as IntrinsicProps, VNode } from './core/view/VNode.js'
-import { Ref } from './core/index.js'
+import type { Ref } from './core/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -49,16 +47,16 @@ declare global {
     [P in K]-?: T[P] // 强制指定的属性 K 为必填
   }
   namespace JSX {
-    /** 函数组件返回值 */
-    type Element = () => VNode
+    /** 元素类型 */
+    type Element = Vitarx.Element
     /** 类组件实例 */
-    type ElementClass = Widget
+    type ElementClass = Vitarx.ClassWidget
 
     /** 固有元素 */
     interface IntrinsicElements extends HtmlIntrinsicElements {}
 
     /** 全局固有属性 */
-    interface IntrinsicAttributes extends IntrinsicProps {}
+    interface IntrinsicAttributes extends Vitarx.GlobalIntrinsicAttributes {}
 
     /** 子节点类型校验 */
     export interface ElementChildrenAttribute {
