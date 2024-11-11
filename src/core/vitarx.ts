@@ -90,13 +90,19 @@ export class Vitarx {
     Vitarx.ssr = this.options.ssr
   }
 
-  render<P extends Record<string, any>>(app: ClassWidget<P> | FnWidget<P>, props: P): void {
+  /**
+   * 渲染小部件
+   *
+   * @param widget - 入口小部件
+   * @param props - 小部件的props参数
+   */
+  render<P extends Record<string, any>>(widget: ClassWidget<P> | FnWidget<P>, props?: P): void {
     createScope(() => {
       let instance: Widget
-      if (isClassWidget(app)) {
-        instance = new app(props || {})
+      if (isClassWidget(widget)) {
+        instance = new widget(props || {})
       } else {
-        instance = createFnWidget(app as FnWidget<P>, props)
+        instance = createFnWidget(widget as FnWidget<P>, props as any)
       }
       instance.renderer.mount(this.container)
     })
