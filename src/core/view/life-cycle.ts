@@ -17,6 +17,10 @@ export abstract class LifeCycle {
         })
         scope.onDestroyed(() => {
           this.onBeforeUnmount?.()
+          // 将已销毁回调放入队列，等待所有微任务执行完后，再执行销毁回调
+          Promise.resolve().then(() => {
+            this.onUnmounted?.()
+          })
         })
       })
     }
