@@ -53,7 +53,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 子节点
+   * 获取外部传入的子节点
+   *
+   * `children` 不会自动渲染，你可以将它视为一个参数，你可以在`build`方法中使用该参数，来实现插槽的效果。
    */
   get children(): WidgetChildren<P> {
     return this.props.children as WidgetChildren<P>
@@ -67,7 +69,11 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 如果组件已经挂载，则返回组件的`DOM`元素，否则返回`null`。
+   * 获取小部件的`DOM`元素
+   *
+   * 如果小部件已经渲染，则返回小部件的`DOM`元素，否则返回`null`。
+   *
+   * @returns {VElement | null}
    */
   get el(): VElement | null {
     return this.renderer.el
