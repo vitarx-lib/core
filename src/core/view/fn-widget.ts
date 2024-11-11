@@ -1,4 +1,4 @@
-import { type IntrinsicAttributes, type VNode } from './VNode.js'
+import { type IntrinsicAttributes, isVNode, type VNode } from './VNode.js'
 import { Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
 import { LifeCycleHooks } from './life-cycle.js'
@@ -22,15 +22,19 @@ interface CollectMap {
  * 函数组件代理
  */
 class FnWidgetProxy extends Widget {
-  readonly #buildVnode
+  readonly #buildVnode: BuildVNode
 
   constructor(
-    build: BuildVNode,
+    build: BuildVNode | VNode,
     exposed?: Record<string, any>,
     lifeCycleHooks?: Record<LifeCycleHooks, AnyCallback>
   ) {
     super({})
-    this.#buildVnode = build
+    if (isVNode(build)) {
+      this.#buildVnode = () => build
+    } else {
+      this.#buildVnode = build
+    }
     if (lifeCycleHooks) {
       Object.entries(lifeCycleHooks).forEach(item => {
         const [name, fn] = item
@@ -218,7 +222,7 @@ export function createFnWidget<P extends Record<string, any>>(
   props: P
 ): FnWidgetProxy {
   let { build, exposed, lifeCycleHooks } = FnWidgetHookHandler.collect(fn, props)
-  if (!isFunction(build)) {
+  if (!isFunction(build) && !isVNode(build)) {
     throw new Error(
       `[Vitarx]：函数式小部件需要返回一个build函数创建响应式UI，示例：()=>Vitarx.VNode`
     )
