@@ -1,5 +1,5 @@
 import type { Properties as CssProperties } from 'csstype'
-import type { Ref } from './core/index.js'
+import { type Ref } from './core/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -50,7 +50,7 @@ declare global {
     /** 元素类型 */
     type Element = Vitarx.Element
     /** 类组件实例 */
-    type ElementClass = Vitarx.ClassWidget
+    type ElementClass = Vitarx.ClassElement
 
     /** 固有元素 */
     interface IntrinsicElements extends HtmlIntrinsicElements {}
