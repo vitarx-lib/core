@@ -81,7 +81,7 @@ export type VNodeProps<T> = (T extends HtmlElementTags
  * - `TextVNode` - 文本节点
  * - `Array<VNodeChild | string>`: 子节点列表
  */
-export type ChildrenNode = VNodeChild | string | (VNodeChild | string)[]
+export type ChildrenNode = VNodeChild | AnyPrimitive | (VNodeChild | AnyPrimitive)[]
 // 辅助计算出Children类型
 type ComputedVNodeChildren<T> = T extends HtmlElementTags
   ? ChildrenNode
