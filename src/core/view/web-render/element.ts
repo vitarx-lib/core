@@ -102,7 +102,7 @@ export function renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment 
  *
  * @param el
  */
-export function removeElement(el: VElement | null) {
+export function removeElement(el: VElement | undefined) {
   if (!el) return
   if (Array.isArray(el)) {
     // 删除旧节点
