@@ -48,9 +48,9 @@ declare global {
   }
   namespace JSX {
     /** 元素类型 */
-    type Element = Vitarx.JSX.Element
+    type Element = Vitarx.Element
     /** 类组件实例 */
-    type ElementClass = Vitarx.JSX.ElementClass
+    type ElementClass = Vitarx.ElementClass
 
     /** 固有元素 */
     interface IntrinsicElements extends HtmlIntrinsicElements {}
@@ -67,9 +67,6 @@ declare global {
     export interface IntrinsicClassAttributes<T> {
       ref?: RefEl<T>
     }
-
-    /** 子元素类型 */
-    type Children = Vitarx.JSX.Children
   }
 }
 
