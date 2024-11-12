@@ -17,8 +17,10 @@ declare global {
       ssr?: boolean
     }
 
-    type JsxChildren = JSX.Element | string | (JSX.Element | string)[]
-    type Children = ChildrenNode | JsxChildren
+    /**
+     * 任意子节点类型，兼容JSX
+     */
+    type Children = ChildrenNode | JSX.Children
     /**
      * 全局属性
      *
@@ -35,6 +37,8 @@ declare global {
       type Element = () => Element
       /** 类组件实例 */
       type ElementClass = Widget
+      /** 子元素类型 */
+      type Children = string | Element | Array<string | Element>
     }
   }
 }
