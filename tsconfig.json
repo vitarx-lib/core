@@ -4,6 +4,8 @@
     "module": "ES2020",
     // 开启类型声明文件的生成
     "declaration": true,
+    // 类型声明文件输出目录
+    "declarationDir": "dist/types",
     // JavaScript 文件输出目录
     "outDir": "dist",
     // 开启严格模式（可选）

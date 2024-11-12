@@ -2,17 +2,17 @@
   "name": "vitarx",
   "private": false,
   "version": "0.0.1",
-  "description": "vitarx是基于jsx语法的前端开发框架。",
+  "description": "vitarx响应式前端框架。",
   "keywords": [
     "vitarx"
   ],
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/clean.js",
+    "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "push": "npm publish"
   },
