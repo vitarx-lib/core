@@ -2,7 +2,7 @@ import { isArray, isFunction, isRecordObject, isString } from '../../../utils/in
 import type { HTMLClassProperties, HTMLStyleProperties } from '../../../index.js'
 
 /**
- * 设置属性
+ * 设置元素的多个属性
  *
  * @param el - 目标元素
  * @param props - 属性对象
@@ -13,8 +13,15 @@ export function setAttributes(el: HTMLElement, props: Record<string, any>): void
   })
 }
 
-// 设置Html元素属性
-export function setAttribute(el: HTMLElement, key: string, value: any, oldValue?: any): void {
+/**
+ * 设置元素属性
+ *
+ * @param el - 目标元素
+ * @param key - 属性名
+ * @param value - 属性值
+ * @param oldCallback - 旧回调函数，仅对事件属性生效
+ */
+export function setAttribute(el: HTMLElement, key: string, value: any, oldCallback?: AnyCallback): void {
   switch (key) {
     case 'style':
       setStyle(el, value)
@@ -22,15 +29,16 @@ export function setAttribute(el: HTMLElement, key: string, value: any, oldValue?
     case 'class':
       setClass(el, value)
       break
+    case 'v-html':
+      el.innerHTML = value
+      break
     default:
-      if (isHTMLNodeEvent(el, key)) {
-        if (!isFunction(value)) {
-          throw new TypeError(`无效的事件处理程序，${key}: ${typeof value}`)
-        }
+      if (isFunction(value)) {
+        if (oldCallback === value) return
         const event = key.slice(2).toLowerCase()
         // 删除旧的事件
-        if (oldValue && isFunction(oldValue)) {
-          el.removeEventListener(event, oldValue)
+        if (oldCallback && isFunction(oldCallback)) {
+          el.removeEventListener(event, oldCallback)
         }
         el.addEventListener(event, value)
       } else if (key.startsWith('data-')) {
@@ -42,13 +50,12 @@ export function setAttribute(el: HTMLElement, key: string, value: any, oldValue?
             // @ts-ignore
             el[key] = value
           } else {
-            el.setAttribute(key, value) // 设置未知属性
+            el.setAttribute(key, value)
           }
         } catch (error) {
           console.error(`设置属性 ${key} 时发生错误:`, error)
         }
       }
-      break
   }
 }
 
@@ -56,10 +63,10 @@ export function setAttribute(el: HTMLElement, key: string, value: any, oldValue?
  * 判断是否为事件属性
  *
  * @param el
- * @param prop
+ * @param event
  */
-export function isHTMLNodeEvent(el: HTMLElement, prop: string): boolean {
-  return prop.startsWith('on') && prop.toLowerCase() in el
+export function isHTMLEvent(el: HTMLElement, event: string): boolean {
+  return event.startsWith('on') && event.toLowerCase() in el
 }
 
 /**
