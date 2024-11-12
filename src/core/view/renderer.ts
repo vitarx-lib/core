@@ -1,6 +1,6 @@
 import {
   Fragment,
-  type HtmlTagName,
+  type HtmlTag,
   isRefEl,
   isTextVNode,
   isVNode,
@@ -404,7 +404,7 @@ function createElement(vnode: VNode): ElementNode {
   switch (typeof vnode.type) {
     case 'string':
       // HTML 元素节点
-      el = createHtmlElement(vnode as VNode<HtmlTagName>)
+      el = createHtmlElement(vnode as VNode<HtmlTag>)
       break
     case 'symbol':
       // Fragment 节点
