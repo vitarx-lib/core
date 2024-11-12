@@ -46,18 +46,22 @@ export class Vitarx {
   protected readonly options: Required<Vitarx.AppOptions> = {
     ssr: false
   }
-  /**
-   * 小部件基类
-   */
-  static Widget = Widget
-  /**
-   * 片段类型
-   */
-  static Fragment = Fragment
-  /**
-   * 创建元素
-   */
-  static createElement = createElement
+
+  static get Fragment() {
+    return Fragment
+  }
+
+  static get Widget() {
+    return Widget
+  }
+
+  static get createElement() {
+    return createElement
+  }
+
+  static get h() {
+    return createElement
+  }
   /**
    * 构建应用实例
    *
