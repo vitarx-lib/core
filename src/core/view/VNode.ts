@@ -119,7 +119,7 @@ export type Children = Child[]
  */
 export function h<T extends VNodeType>(
   type: T,
-  props: VNodeProps<T> = {} as any,
+  props: VNodeProps<T> | null = null,
   ...children: Children
 ): VNode<T> {
   return createElement(type, props, ...children)
@@ -128,19 +128,7 @@ export function h<T extends VNodeType>(
 /**
  * 创建元素`VNode`
  *
- * 该方法是`createElement`的别名。
- *
- * @see createElement
- */
-export function jsx<T extends VNodeType>(type: T, props: VNodeProps<T> = {} as any, ...children: Children): VNode<T> {
-  return createElement(type, props, ...children)
-}
-
-/**
- * 创建元素`VNode`
- *
  * @alias h
- * @alias jsx
  * @param type - 节点类型
  * @param props - 节点属性
  * @param children - 子节点，如果是小部件类型则会写入到 `props.children`
