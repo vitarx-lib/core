@@ -2,12 +2,10 @@ import {
   type HtmlElementTagMap,
   type HtmlElementTags,
   type HtmlIntrinsicElements,
-  isArray,
   isFunction,
   isRecordObject,
   popProperty,
-  Scope,
-  type WidgetChildren
+  Scope
 } from '../../index.js'
 import { type ClassWidget } from './widget.js'
 import type { FnWidget } from './fn-widget.js'
@@ -63,7 +61,7 @@ export interface IntrinsicAttributes {
  */
 export type HtmlTag = HtmlElementTags
 // 节点类型
-export type VNodeType = HtmlTag | Fragment | Text | ClassWidget | FnWidget
+export type VNodeType = HtmlTag | Fragment | ClassWidget | FnWidget
 // 节点属性结构
 export type VNodeProps<T> = (T extends HtmlElementTags
   ? HtmlIntrinsicElements[T]
@@ -73,29 +71,23 @@ export type VNodeProps<T> = (T extends HtmlElementTags
       ? P
       : {}) &
   IntrinsicAttributes
-/**
- * 子节点类型
- *
- * - `string`: 文本节点，会被自动转换为`TextVNode`
- * - `VNode`: 任意虚拟节点
- * - `TextVNode` - 文本节点
- * - `Array<VNodeChild | string>`: 子节点列表
- */
-export type ChildrenNode = VNodeChild | AnyPrimitive | (VNodeChild | AnyPrimitive)[]
-// 辅助计算出Children类型
-type ComputedVNodeChildren<T> = T extends HtmlElementTags
-  ? ChildrenNode
-  : T extends Fragment
-    ? ChildrenNode
-    : WidgetChildren<VNodeProps<T>>
+type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
 /** 子节点类型 */
 export type VNodeChild = VNode | TextVNode
 /** 子节点列表 */
 export type VNodeChildren = Array<VNodeChild>
 /** HTML片段节点数组 */
 export type VDocumentFragment = Array<Element | Text>
-/** 真实元素对象，片段节点为数组 */
+/** 真实的元素实例对象，片段节点为数组 */
 export type VElement = Element | Text | VDocumentFragment
+
+/** 文本节点，内部自动转换 */
+export interface TextVNode {
+  value: string
+  el?: Text
+  [TextVNodeSymbol]: true
+}
+
 /**
  * 虚拟Node
  *
@@ -103,52 +95,39 @@ export type VElement = Element | Text | VDocumentFragment
  * - `props`: 节点属性
  * - `key`: 节点唯一标识
  * - `ref`: 节点引用
+ * - `el`: 节点元素实例
  * - `scope`: 作用域，内部创建，用于管理副作用
  * - `children`: 子节点列表，如果是函数小部件或类小部件，则此参数会覆盖到`props.children`
  */
-export interface VNode<T extends VNodeType = VNodeType> {
+export type VNode<T extends VNodeType = VNodeType> = {
   type: T
   props: VNodeProps<T>
-  key: OnlyKey | null
-  ref: RefEl<T> | null
-  el: VElement | null
-  scope: Scope | null
-  children: VNodeChildren | undefined
+  key?: OnlyKey
+  ref?: RefEl<T>
+  el?: VElement
+  scope?: Scope
+  children?: VNodeChildren
   [VNodeSymbol]: true
 }
 
-/** 特殊文本节点 */
-export interface TextVNode {
-  value: string
-  el: Text | null
-  [TextVNodeSymbol]: true
+/**
+ * 创建元素`VNode`
+ *
+ * 该方法是`createElement`的别名。
+ *
+ * @alias createElement
+ * @see createElement
+ */
+export function h<T extends VNodeType>(
+  type: T,
+  props: VNodeProps<T> = {} as any,
+  ...children: Child[]
+): VNode<T> {
+  return createElement(type, props, ...children)
 }
 
 /**
- * 创建元素
- *
- * 该方法是`createVNode`的别名。
- *
- * @alias createVNode
- * @see createVNode
- */
-export function h<T extends VNodeType>(type: T, props?: VNodeProps<T> & IntrinsicAttributes, children?: ComputedVNodeChildren<T>): VNode<T> {
-  return createVNode(type, props, children)
-}
-
-/**
- * 创建元素
- *
- * 该方法是`createVNode`的别名。
- *
- * @alias createVNode
- * @see createVNode
- */
-export function createElement<T extends VNodeType>(type: T, props?: VNodeProps<T> & IntrinsicAttributes, children?: ComputedVNodeChildren<T>): VNode<T> {
-  return createVNode(type, props, children)
-}
-/**
- * 创建虚拟节点
+ * 创建元素`VNode`
  *
  * @alias h
  * @alias createElement
@@ -157,59 +136,72 @@ export function createElement<T extends VNodeType>(type: T, props?: VNodeProps<T
  * @param children - 子节点，如果是小部件类型则会写入到 `props.children`
  * @returns {VNode} - 虚拟节点
  */
-export function createVNode<T extends VNodeType>(
+export function createElement<T extends VNodeType>(
   type: T,
   props: VNodeProps<T> = {} as any,
-  children?: ComputedVNodeChildren<T>
+  ...children: Child[]
 ): VNode<T> {
   if (!isRecordObject(props)) {
     throw new TypeError(
       `[Vitarx]：createVNode.props参数类型必须是Record(string,any)类型，给定${typeof props}`
     )
   }
-  if (isFunction(type)) {
-    if (children !== undefined) {
-      // @ts-ignore
-      props.children = children
-      children = undefined
-    }
-  }
-  // 如果不是函数，则将children转为数组，方便后续处理
-  else {
-    const c = popProperty(props as any, 'children')
-    children = children || c
-    if (children) {
-      if (!isArray(children)) {
-        // @ts-ignore
-        children = [children]
-      }
-      children.forEach((child, i) => {
-        if (!isVNode(child)) {
-          // @ts-ignore
-          children[i] = {
-            value: String(child),
-            el: null,
-            [TextVNodeSymbol]: true
-          }
-        }
-      })
-    }
-  }
-  // 取出唯一标识符
-  const key = popProperty(props as any, 'key') || null
-  // 引用元素
-  const ref = popProperty(props as any, 'ref') || null
-  return {
+  const vnode: VNode<T> = {
     [VNodeSymbol]: true,
     type,
-    props: props as any,
-    children: children as VNodeChildren,
-    key,
-    ref,
-    el: null,
-    scope: null
+    props: props
   }
+  const key = popProperty(props, 'key')
+  if (key) vnode.key = key
+  const ref = popProperty(props, 'ref')
+  if (isRefEl(ref)) vnode.ref = ref
+  if (isFunction(type)) {
+    if (children.length > 0) {
+      // @ts-ignore
+      props.children = children
+    }
+  } else {
+    // 合并属性中的children
+    if ('children' in props) {
+      const attrChildren = popProperty(props, 'children')
+      if (Array.isArray(attrChildren)) {
+        children = [...attrChildren, ...children]
+      } else {
+        children.push(attrChildren as any)
+      }
+    }
+    vnode.children = toVNodeChildren(children)
+  }
+  return vnode
 }
+
+/**
+ * 转换子节点列表
+ *
+ * @param children
+ */
+function toVNodeChildren(children: Child[]): VNodeChildren {
+  let childList: VNodeChildren = []
+
+  function flatten(child: Child) {
+    if (Array.isArray(child)) {
+      child.forEach(item => flatten(item))
+    } else {
+      childList.push(
+        isVNode(child)
+          ? child
+          : {
+              value: String(child),
+              [TextVNodeSymbol]: true
+            }
+      )
+    }
+  }
+
+  flatten(children)
+  return childList
+}
+
 /**
  * 判断是否为虚拟节点对象
  *
