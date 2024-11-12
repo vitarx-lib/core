@@ -1,5 +1,5 @@
 import type { Properties as CssProperties } from 'csstype'
-import { type RefEl } from './core/index.js'
+import { type RefEl, Vitarx } from './core/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -225,7 +225,7 @@ export interface CustomProperties {
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
    */
   class?: HTMLClassProperties
-  children?: Vitarx.Element | Vitarx.Element[] | AnyPrimitive
+  children?: Vitarx.Children
 
   [key: string]: any
 }
