@@ -1,5 +1,4 @@
 import {
-  type ChildrenNode,
   type ClassWidget,
   createElement,
   createFnWidget,
@@ -18,11 +17,6 @@ declare global {
       /** 是否启用服务端渲染 */
       ssr?: boolean
     }
-
-    /**
-     * 任意子节点类型，兼容JSX
-     */
-    type Children = ChildrenNode
     /**
      * 全局属性
      *
