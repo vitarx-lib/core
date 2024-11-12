@@ -1,8 +1,10 @@
 import {
   type ChildrenNode,
   type ClassWidget,
+  createElement,
   createFnWidget,
   type FnWidget,
+  Fragment,
   type IntrinsicAttributes,
   isClassWidget,
   Widget
@@ -54,6 +56,14 @@ export class Vitarx {
    * 小部件基类
    */
   static Widget = Widget
+  /**
+   * 片段类型
+   */
+  static Fragment = Fragment
+  /**
+   * 创建元素
+   */
+  static createElement = createElement
   /**
    * 构建应用实例
    *
