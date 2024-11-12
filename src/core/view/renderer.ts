@@ -49,7 +49,7 @@ export class WidgetRenderer {
    * @returns {VElement | null}
    */
   get el(): VElement | null {
-    return this.currentChildVNode.el
+    return this.currentChildVNode.el || null
   }
 
   /**
