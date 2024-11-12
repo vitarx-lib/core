@@ -222,6 +222,7 @@ export function isVNode(obj: any): obj is VNode {
 export function isTextVNode(obj: any): obj is TextVNode {
   return obj?.[TextVNodeSymbol] === true
 }
+
 /**
  * 引用元素
  *
