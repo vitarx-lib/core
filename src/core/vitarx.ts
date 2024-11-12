@@ -33,7 +33,7 @@ declare global {
      */
     type VNode = import('./view/VNode').VNode
     /** 元素类型 */
-    type Element = VNode
+    type Element = VNode | (() => Element)
     /** 类组件实例 */
     type ElementClass = Widget
   }
