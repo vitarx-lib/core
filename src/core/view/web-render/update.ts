@@ -1,7 +1,7 @@
 import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../VNode.js'
 import { isFunction } from '../../../utils/index.js'
 import { removeElement, renderElement, VElementToHTMLElement } from './element.js'
-import { setAttr } from './attributes.js'
+import { setAttribute } from './attributes.js'
 import { createChild, createChildren, replaceChild } from './children.js'
 
 /**
@@ -53,7 +53,7 @@ function patchAttrs(oldVNode: VNode, newVNode: VNode): void {
       if (isWidget) {
         oldAttrs[key] = newAttrs[key]
       } else {
-        setAttr(el, key, newAttrs[key])
+        setAttribute(el, key, newAttrs[key])
       }
     }
     // 将已经处理过的 key 从 oldKeysSet 中删除

@@ -9,12 +9,12 @@ import type { HTMLClassProperties, HTMLStyleProperties } from '../../../index.js
  */
 export function setAttributes(el: HTMLElement, props: Record<string, any>): void {
   Object.keys(props).forEach(key => {
-    setAttr(el, key, props[key])
+    setAttribute(el, key, props[key])
   })
 }
 
 // 设置Html元素属性
-export function setAttr(el: HTMLElement, key: string, value: any, oldValue?: any): void {
+export function setAttribute(el: HTMLElement, key: string, value: any, oldValue?: any): void {
   switch (key) {
     case 'style':
       setStyle(el, value)
