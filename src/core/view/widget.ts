@@ -1,4 +1,4 @@
-import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
+import { type IntrinsicAttributes, type VElement } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
 
@@ -87,7 +87,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @protected
    * @returns {VNode}
    */
-  abstract build(): Vitarx.VNode | Vitarx.Element
+  abstract build(): Vitarx.VNode | Vitarx.JSX.Element
 }
 
 /**

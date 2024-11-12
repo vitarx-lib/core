@@ -27,7 +27,7 @@ declare global {
      * 虚拟节点
      */
     type VNode = import('./view/VNode').VNode
-    namespace Jsx {
+    namespace JSX {
       /** 元素类型 */
       type Element = () => Element
       /** 类组件实例 */
