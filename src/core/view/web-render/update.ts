@@ -149,7 +149,7 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
   // 替换节点
   else {
-    const newEl = renderElement(newChild as VNode)
+    const newEl = renderElement(newChild)
     replaceChild(newEl, (oldChild as VNode).el!, VElementToHTMLElement(oldVNode.el!) as ParentNode)
     return newChild
   }
