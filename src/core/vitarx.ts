@@ -20,7 +20,7 @@ declare global {
     /**
      * 任意子节点类型，兼容JSX
      */
-    type Children = ChildrenNode | JSX.Children
+    type Children = ChildrenNode
     /**
      * 全局属性
      *
@@ -32,14 +32,10 @@ declare global {
      * 虚拟节点
      */
     type VNode = import('./view/VNode').VNode
-    namespace JSX {
-      /** 元素类型 */
-      type Element = () => Element
-      /** 类组件实例 */
-      type ElementClass = Widget
-      /** 子元素类型 */
-      type Children = string | Element | Array<string | Element>
-    }
+    /** 元素类型 */
+    type Element = VNode
+    /** 类组件实例 */
+    type ElementClass = Widget
   }
 }
 
