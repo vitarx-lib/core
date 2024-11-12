@@ -73,13 +73,20 @@ export type VNodeProps<T> = (T extends HtmlElementTags
       ? P
       : {}) &
   IntrinsicAttributes
-// createVNode.children参数类型
-export type Children = VNodeChild | string | (VNodeChild | string)[]
+/**
+ * 子节点类型
+ *
+ * - `string`: 文本节点，会被自动转换为`TextVNode`
+ * - `VNode`: 任意虚拟节点
+ * - `TextVNode` - 文本节点
+ * - `Array<VNodeChild | string>`: 子节点列表
+ */
+export type ChildrenNode = VNodeChild | string | (VNodeChild | string)[]
 // 辅助计算出Children类型
 type ComputedVNodeChildren<T> = T extends HtmlElementTags
-  ? Children
+  ? ChildrenNode
   : T extends Fragment
-    ? Children
+    ? ChildrenNode
     : WidgetChildren<VNodeProps<T>>
 /** 子节点类型 */
 export type VNodeChild = VNode | TextVNode
