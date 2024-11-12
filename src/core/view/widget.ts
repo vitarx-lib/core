@@ -2,10 +2,13 @@ import { type IntrinsicAttributes, type VElement } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
 
+export type Element = Vitarx.Element
 /**
  * 类组件构造器类型
  */
-export type ClassWidget<P extends Record<string, any> = {}> = new (props: P & IntrinsicAttributes) => Widget<P>
+export type ClassWidget<P extends Record<string, any> = {}> = new (
+  props: P & IntrinsicAttributes
+) => Widget<P>
 // 获取组件子节点
 export type WidgetChildren<P> = P extends { children: infer U }
   ? U
@@ -80,14 +83,28 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 返回一个 `VNode` 节点，用于描述`UI`结构。
+   * 构建`UI`元素。
    *
+   * 该方法会被多次调用，所以在方法内应该存在任何副作用。
+   *
+   * > **注意**：在类组件的build方法中不要返回 `()=> Element` 闭包，而是应直接返回`Element`。
+   *
+   * 示例：
+   * ```ts
+   * // JSX语法
+   * build() {
+   *   return <div>Hello World</div>
+   * }
+   * // 使用`h`或`createElement` API函数创建元素
+   * build() {
+   *  return h('div',{},'Hello World')
+   * }
+   * ```
    * @note 该方法应由子类实现，且该方法是受保护的，仅供内部渲染逻辑使用。
-   *
    * @protected
-   * @returns {VNode}
+   * @returns {Element} - 返回的是虚拟的VNode节点
    */
-  abstract build(): Vitarx.VNode | Vitarx.JSX.Element
+  abstract build(): Element
 }
 
 /**
