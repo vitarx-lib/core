@@ -3,10 +3,10 @@ import { isFunction } from '../../utils/index.js'
 import { watchDepend } from '../../index.js'
 import type { Widget } from './widget.js'
 import {
-  createElement,
   getParentNode,
   type HtmlElement,
   patchUpdate,
+  renderElement,
   VElementToHTMLElement
 } from './web-render/index.js'
 
@@ -76,7 +76,7 @@ export class WidgetRenderer {
    * @returns {HtmlElement}
    */
   createElement(): HtmlElement {
-    return createElement(this.currentChildVNode)
+    return renderElement(this.currentChildVNode)
   }
 
   /**
