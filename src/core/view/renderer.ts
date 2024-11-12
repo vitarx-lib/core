@@ -186,7 +186,7 @@ export class WidgetRenderer {
       if (oldVNode.type !== Fragment) {
         this.patchAttrs(oldVNode, newVNode)
       }
-      // 非组件节点，则进行更新子节点
+      // 非组件节点，更新子节点
       if (!isFunction(oldVNode.type)) {
         this.patchChildren(oldVNode, newVNode)
       }
