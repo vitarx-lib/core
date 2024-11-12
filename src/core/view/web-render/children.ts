@@ -1,5 +1,5 @@
 import { type VElement, type VNodeChild, type VNodeChildren } from '../VNode.js'
-import { createElement, type HtmlElement, removeElement, VElementToHTMLElement } from './element.js'
+import { type HtmlElement, removeElement, renderElement, VElementToHTMLElement } from './element.js'
 
 /**
  * 挂载子节点列表
@@ -19,7 +19,7 @@ export function createChildren(parent: HtmlElement, children: VNodeChildren | un
  * @param child
  */
 export function createChild(parent: HtmlElement, child: VNodeChild): void {
-  parent.appendChild(createElement(child))
+  parent.appendChild(renderElement(child))
 }
 
 /**

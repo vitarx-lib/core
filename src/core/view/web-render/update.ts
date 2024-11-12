@@ -1,6 +1,6 @@
 import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../VNode.js'
 import { isFunction } from '../../../utils/index.js'
-import { createElement, removeElement, VElementToHTMLElement } from './element.js'
+import { removeElement, renderElement, VElementToHTMLElement } from './element.js'
 import { setAttr } from './attributes.js'
 import { createChild, createChildren, replaceChild } from './children.js'
 
@@ -16,7 +16,7 @@ export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
     // 销毁旧节点作用域
     oldVNode.scope?.destroy()
     // 创建新元素
-    const newEl = createElement(newVNode)
+    const newEl = renderElement(newVNode)
     // 将旧元素替换为新元素
     replaceChild(newEl, oldVNode.el)
     return newVNode
@@ -149,7 +149,7 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
   // 替换节点
   else {
-    const newEl = createElement(newChild as VNode)
+    const newEl = renderElement(newChild as VNode)
     replaceChild(newEl, (oldChild as VNode).el!, VElementToHTMLElement(oldVNode.el!) as ParentNode)
     return newChild
   }

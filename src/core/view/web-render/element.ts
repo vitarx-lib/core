@@ -26,20 +26,20 @@ export type HtmlElement = Element | Text | DocumentFragment
  *
  * @param vnode
  */
-export function createElement(vnode: VNode | TextVNode): HtmlElement {
-  if (isTextVNode(vnode)) return createTextElement(vnode)
+export function renderElement(vnode: VNode | TextVNode): HtmlElement {
+  if (isTextVNode(vnode)) return renderTextElement(vnode)
   let el: HtmlElement
   switch (typeof vnode.type) {
     case 'string':
       // HTML 元素节点
-      el = createHtmlElement(vnode as VNode<HtmlTag>)
+      el = renderHtmlElement(vnode as VNode<HtmlTag>)
       break
     case 'symbol':
       // Fragment 节点
-      el = createFragmentElement(vnode as VNode<Fragment>)
+      el = renderFragmentElement(vnode as VNode<Fragment>)
       break
     case 'function':
-      el = createWidgetElement(vnode as VNode<ClassWidget | FnWidget>)
+      el = renderWidgetElement(vnode as VNode<ClassWidget | FnWidget>)
       break
     default:
       throw new Error(`Unsupported vnode type: ${vnode.type}`)
@@ -53,14 +53,14 @@ export function createElement(vnode: VNode | TextVNode): HtmlElement {
 }
 
 // 创建文本元素
-function createTextElement(vnode: TextVNode): Text {
+function renderTextElement(vnode: TextVNode): Text {
   const textEl = document.createTextNode(vnode.value)
   vnode.el = textEl
   return textEl
 }
 
 // 创建小部件元素
-function createWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement {
+function renderWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement {
   let el: HtmlElement
   vnode.scope = createScope(() => {
     vnode.props = reactive(vnode.props, false)
@@ -75,7 +75,7 @@ function createWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement 
 }
 
 // 创建html元素
-function createHtmlElement(vnode: VNode<HtmlElementTags>): HTMLElement {
+function renderHtmlElement(vnode: VNode<HtmlElementTags>): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
   createChildren(el, vnode.children)
@@ -84,7 +84,7 @@ function createHtmlElement(vnode: VNode<HtmlElementTags>): HTMLElement {
 }
 
 // 创建 Fragment 元素
-export function createFragmentElement(vnode: VNode<Fragment>): DocumentFragment {
+export function renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment {
   const el = document.createDocumentFragment()
   if (!vnode.children) {
     // 创建一个空文本节点，用于占位 document.createComment('注释节点占位')
