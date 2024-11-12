@@ -1,5 +1,5 @@
 import type { Properties as CssProperties } from 'csstype'
-import { type ChildrenNode, type RefEl } from './core/index.js'
+import { type RefEl } from './core/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -69,7 +69,7 @@ declare global {
     }
 
     /** 子元素类型 */
-    type Children = string | Element | Array<string | Element>
+    type Children = Vitarx.JSX.Children
   }
 }
 
@@ -542,5 +542,5 @@ export type HtmlProperties<
   OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
   CustomProperties &
   Vitarx.GlobalIntrinsicAttributes & {
-    children?: JSX.Children | ChildrenNode
+    children?: Vitarx.Children
   }
