@@ -125,19 +125,33 @@ export interface TextVNode {
 }
 
 /**
- * 创建虚拟节点
+ * 创建元素
  *
  * 该方法是`createVNode`的别名。
  *
+ * @alias createVNode
  * @see createVNode
  */
 export function h<T extends VNodeType>(type: T, props?: VNodeProps<T> & IntrinsicAttributes, children?: ComputedVNodeChildren<T>): VNode<T> {
+  return createVNode(type, props, children)
+}
+
+/**
+ * 创建元素
+ *
+ * 该方法是`createVNode`的别名。
+ *
+ * @alias createVNode
+ * @see createVNode
+ */
+export function createElement<T extends VNodeType>(type: T, props?: VNodeProps<T> & IntrinsicAttributes, children?: ComputedVNodeChildren<T>): VNode<T> {
   return createVNode(type, props, children)
 }
 /**
  * 创建虚拟节点
  *
  * @alias h
+ * @alias createElement
  * @param type - 节点类型
  * @param props - 节点属性
  * @param children - 子节点，如果是小部件类型则会写入到 `props.children`
