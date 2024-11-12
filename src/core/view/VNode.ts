@@ -71,7 +71,6 @@ export type VNodeProps<T> = (T extends HtmlElementTags
       ? P
       : {}) &
   IntrinsicAttributes
-type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
 /** 子节点类型 */
 export type VNodeChild = VNode | TextVNode
 /** 子节点列表 */
@@ -109,7 +108,8 @@ export type VNode<T extends VNodeType = VNodeType> = {
   children?: VNodeChildren
   [VNodeSymbol]: true
 }
-
+type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
+export type Children = Child[]
 /**
  * 创建元素`VNode`
  *
@@ -121,7 +121,7 @@ export type VNode<T extends VNodeType = VNodeType> = {
 export function h<T extends VNodeType>(
   type: T,
   props: VNodeProps<T> = {} as any,
-  ...children: Child[]
+  ...children: Children
 ): VNode<T> {
   return createElement(type, props, ...children)
 }
@@ -139,7 +139,7 @@ export function h<T extends VNodeType>(
 export function createElement<T extends VNodeType>(
   type: T,
   props: VNodeProps<T> = {} as any,
-  ...children: Child[]
+  ...children: Children
 ): VNode<T> {
   if (!isRecordObject(props)) {
     throw new TypeError(
@@ -158,7 +158,7 @@ export function createElement<T extends VNodeType>(
   if (isFunction(type)) {
     if (children.length > 0) {
       // @ts-ignore
-      props.children = children
+      props.children = children.length === 1 ? children[0] : children
     }
   } else {
     // 合并属性中的children
