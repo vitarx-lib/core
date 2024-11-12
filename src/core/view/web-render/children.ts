@@ -1,5 +1,6 @@
 import { type VElement, type VNodeChild, type VNodeChildren } from '../VNode.js'
 import { type HtmlElement, removeElement, renderElement, VElementToHTMLElement } from './element.js'
+import { isArray } from '../../../utils/index.js'
 
 /**
  * 挂载子节点列表
@@ -19,7 +20,11 @@ export function renderChildren(parent: HtmlElement, children: VNodeChildren | un
  * @param child
  */
 export function renderChild(parent: HtmlElement, child: VNodeChild): void {
-  parent.appendChild(renderElement(child))
+  if (isArray(child)) {
+    renderChildren(parent, child)
+  } else {
+    parent.appendChild(renderElement(child))
+  }
 }
 
 /**
@@ -31,7 +36,7 @@ export function renderChild(parent: HtmlElement, child: VNodeChild): void {
  */
 export function replaceChild(
   newEl: VElement | HtmlElement,
-  oldEl: VElement | null,
+  oldEl: VElement | undefined,
   parent?: ParentNode | null
 ): void {
   // 如果没有旧节点，或父节点不存在，则不处理
