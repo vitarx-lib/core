@@ -1,4 +1,5 @@
 import {
+  type ChildrenNode,
   type ClassWidget,
   createFnWidget,
   type FnWidget,
@@ -16,6 +17,8 @@ declare global {
       ssr?: boolean
     }
 
+    type JsxChildren = JSX.Element | string | (JSX.Element | string)[]
+    type Children = ChildrenNode | JsxChildren
     /**
      * 全局属性
      *
