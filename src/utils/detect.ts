@@ -45,7 +45,15 @@ export function isString(val: any): val is string {
  * @param val
  */
 export function isEmpty(val: any): boolean {
-  return !val?.length
+  if (!val) return true
+
+  if (typeof val === 'object') {
+    if (isArray(val)) {
+      return !val.length
+    }
+    return !Object.keys(val).length
+  }
+  return false
 }
 
 /**
