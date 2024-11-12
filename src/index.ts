@@ -225,8 +225,9 @@ export interface CustomProperties {
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
    */
   class?: HTMLClassProperties
+  children?: Vitarx.Element | Vitarx.Element[] | AnyPrimitive
 
-  [key: `data-${string}`]: string
+  [key: string]: any
 }
 
 /**
@@ -538,6 +539,4 @@ export type HtmlProperties<
 > = ToPartialProperties<T, M, E> &
   OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
   CustomProperties &
-  Vitarx.GlobalIntrinsicAttributes & {
-    children?: Vitarx.Children
-  }
+  Vitarx.GlobalIntrinsicAttributes
