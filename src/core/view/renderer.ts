@@ -107,7 +107,7 @@ export class WidgetRenderer {
    *
    * @param parent
    */
-  mount(parent?: ElementNode): ElementNode {
+  mount(parent?: Element | DocumentFragment): ElementNode {
     let el: ElementNode
     if (this.el) {
       el = VElementToHTMLElement(this.el)
