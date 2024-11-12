@@ -1,5 +1,5 @@
 import type { Properties as CssProperties } from 'csstype'
-import { type RefEl, Vitarx } from './core/index.js'
+import { type RefEl, type TextVNode, type VNode } from './core/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -67,6 +67,8 @@ declare global {
     export interface IntrinsicClassAttributes<T> {
       ref?: RefEl<T>
     }
+
+    type Children = Element | VNode | TextVNode | AnyPrimitive | Array<Children>
   }
 }
 
@@ -225,7 +227,7 @@ export interface CustomProperties {
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
    */
   class?: HTMLClassProperties
-  children?: Vitarx.Children
+  children?: JSX.Children
 
   [key: string]: any
 }
