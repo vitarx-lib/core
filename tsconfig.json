@@ -16,12 +16,28 @@
     "esModuleInterop": true,
     // 跳过库文件检查（可选）
     "skipLibCheck": true,
-    "jsx": "preserve",
+    // 使用react模式编译tsx
+    "jsx": "react",
+    // 使用h工厂函数
+    "jsxFactory": "h",
+    // 片段
+    "jsxFragmentFactory": "Fragment",
+    "noEmit": false,
+    // 删除注释
+    "removeComments": false,
+    // 允许 import json
     "resolveJsonModule": true,
+    // 不生成 .js.map
     "sourceMap": false,
+    // 确保覆盖重写
     "noImplicitOverride": true,
+    // 不允许未使用的变量
     "noUnusedLocals": false,
+    // 不允许使用js文件
+    "allowJs": false,
+    // 根目录
     "baseUrl": "./",
+    // 确保文件名大小写一致
     "forceConsistentCasingInFileNames": true
   },
   "include": [
