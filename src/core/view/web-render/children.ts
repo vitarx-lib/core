@@ -7,9 +7,9 @@ import { type HtmlElement, removeElement, renderElement, VElementToHTMLElement }
  * @param parent
  * @param children
  */
-export function createChildren(parent: HtmlElement, children: VNodeChildren | undefined): void {
+export function renderChildren(parent: HtmlElement, children: VNodeChildren | undefined): void {
   if (!children) return
-  children.forEach(child => createChild(parent, child))
+  children.forEach(child => renderChild(parent, child))
 }
 
 /**
@@ -18,7 +18,7 @@ export function createChildren(parent: HtmlElement, children: VNodeChildren | un
  * @param parent
  * @param child
  */
-export function createChild(parent: HtmlElement, child: VNodeChild): void {
+export function renderChild(parent: HtmlElement, child: VNodeChild): void {
   parent.appendChild(renderElement(child))
 }
 

@@ -2,7 +2,7 @@ import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../
 import { isFunction } from '../../../utils/index.js'
 import { removeElement, renderElement, VElementToHTMLElement } from './element.js'
 import { setAttribute } from './attributes.js'
-import { createChild, createChildren, replaceChild } from './children.js'
+import { renderChild, renderChildren, replaceChild } from './children.js'
 
 /**
  * 差异更新
@@ -87,7 +87,7 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
   // 如果没有旧的子节点
   if (!oldChildren && newChildren) {
     const el = VElementToHTMLElement(oldVNode.el!)
-    createChildren(el, newChildren)
+    renderChildren(el, newChildren)
     // 如果是片段节点，则需要将新元素替换到父节点
     if (oldVNode.type === Fragment) {
       // 如果存在父节点，在会挂载在父节点上
@@ -128,7 +128,7 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   // 新增节点
   if (!oldChild && newChild) {
     const container = VElementToHTMLElement(oldVNode.el!)
-    createChild(container, newChild)
+    renderChild(container, newChild)
     // 挂载到父节点
     if (oldVNode.type === Fragment) {
       replaceChild(container, oldVNode.el)

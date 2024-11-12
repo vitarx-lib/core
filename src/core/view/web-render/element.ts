@@ -14,7 +14,7 @@ import { type ClassWidget, isClassWidget } from '../widget.js'
 import { createFnWidget, type FnWidget } from '../fn-widget.js'
 import { type HtmlElementTags, isArray } from '../../../index.js'
 import { setAttributes } from './attributes.js'
-import { createChildren } from './children.js'
+import { renderChildren } from './children.js'
 
 /**
  * 渲染器创建的元素
@@ -78,7 +78,7 @@ function renderWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement 
 function renderHtmlElement(vnode: VNode<HtmlElementTags>): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
-  createChildren(el, vnode.children)
+  renderChildren(el, vnode.children)
   if (isRefEl(vnode.ref)) vnode.ref.value = el
   return el
 }
@@ -91,7 +91,7 @@ export function renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment 
     el.appendChild(document.createTextNode(''))
     if (isRefEl(vnode.ref)) vnode.ref.value = []
   } else {
-    createChildren(el, vnode.children)
+    renderChildren(el, vnode.children)
     if (isRefEl(vnode.ref)) vnode.ref.value = fragmentToArray(el)
   }
   return el
