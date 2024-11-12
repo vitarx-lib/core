@@ -61,9 +61,9 @@ export interface IntrinsicAttributes {
 /**
  * HTML 节点类型
  */
-export type HtmlTagName = HtmlElementTags
+export type HtmlTag = HtmlElementTags
 // 节点类型
-export type VNodeType = HtmlTagName | Fragment | Text | ClassWidget | FnWidget
+export type VNodeType = HtmlTag | Fragment | Text | ClassWidget | FnWidget
 // 节点属性结构
 export type VNodeProps<T> = (T extends HtmlElementTags
   ? HtmlIntrinsicElements[T]
