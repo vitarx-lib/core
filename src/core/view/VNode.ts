@@ -24,12 +24,6 @@ export type Fragment = typeof Fragment
 /** 虚拟节点标识符 */
 const VNodeSymbol = Symbol('VNode')
 
-/** 文本节点 */
-export interface TextVNode {
-  value: string
-  el: Text | null
-  [TextVNodeSymbol]: true
-}
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint
 // 辅助计算出元素类型
@@ -116,6 +110,13 @@ export interface VNode<T extends VNodeType = VNodeType> {
   [VNodeSymbol]: true
 }
 
+/** 特殊文本节点 */
+export interface TextVNode {
+  value: string
+  el: Text | null
+  [TextVNodeSymbol]: true
+}
+
 /**
  * 创建虚拟节点
  *
@@ -193,6 +194,8 @@ export function createVNode<T extends VNodeType>(
 }
 /**
  * 判断是否为虚拟节点对象
+ *
+ * 注意：该方法仅判断是否为VNode对象，文本节点请使用`isTextVNode`方法判断
  *
  * @param obj
  */
