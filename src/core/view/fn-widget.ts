@@ -14,7 +14,7 @@ export type BuildVNode = (() => VNode) | VNode
  */
 export type FnWidget<P extends Record<string, any> = {}> = (
   props: P & IntrinsicAttributes
-) => Vitarx.Element
+) => BuildVNode
 interface CollectMap {
   exposed: Record<string, any> | undefined
   lifeCycleHooks: Record<LifeCycleHooks, AnyCallback> | undefined
