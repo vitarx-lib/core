@@ -1,15 +1,12 @@
-import {
-  type HtmlElementTagMap,
-  type HtmlElementTags,
-  type HtmlIntrinsicElements,
-  isFunction,
-  isRecordObject,
-  popProperty,
-  Scope
-} from '../../index.js'
+import { isFunction, isRecordObject, popProperty, Scope } from '../../index.js'
 import { type ClassWidget } from './widget.js'
 import type { FnWidget } from './fn-widget.js'
 import type { ExcludeLifeCycleMethods } from './life-cycle.js'
+import type {
+  HtmlElementTagMap,
+  HtmlElementTags,
+  HtmlIntrinsicElements
+} from './web-render/index.js'
 
 /** 响应式元素引用标记 */
 const RefElSymbol = Symbol('RefEl')
