@@ -99,7 +99,7 @@ export class Computed<T> implements ValueProxy<T> {
   #init() {
     if (!this.#initialize) {
       this.#initialize = true
-      const { result, deps } = Depend.collect(this.#getter)
+      const { result, deps } = Depend.collect(this.#getter, 'self')
       this.#result = result
       if (deps.size > 0) {
         // 主监听器，用于依赖更新
