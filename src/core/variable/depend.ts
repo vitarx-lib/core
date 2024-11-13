@@ -44,8 +44,7 @@ export class Depend {
         const keys: Set<PropName> = new Set([prop])
         this.#collector.set(proxy, keys)
       }
-    }
-    if (this.#collectors.size) {
+    } else if (this.#collectors.size) {
       // 遍历收集器，并记录引用
       this.#collectors.forEach(collector => {
         if (collector.has(proxy)) {
@@ -69,13 +68,11 @@ export class Depend {
    *
    * @alias get
    * @param fn 任意可执行的函数。
-   * @param scope - 作用域，如果为all时，则会收集所有依赖，包括计算属性中的依赖。
+   * @param mode - 模式，默认为`all`共享模式,`self`为独占模式，会临时停用其他所有收集器，例如计算属性收集依赖则是使用self模式，确保计算属性管理的依赖，不会被其他收集器收集，造成多余的性能开销。
    * @returns { Deps } `Map对象`，键为依赖的根代理对象，值为引用的键索引`Set对象`，存在`.`连接符代表多层引用
    */
-  static collect<T>(fn: () => T, scope: 'self' | 'all' = 'self'): Result<T> {
-    if (scope === 'self') return this.get(fn, 'self')
-    const oldCollector = this.#collector
-    this.#collector = undefined
+  static collect<T>(fn: () => T, mode: 'self' | 'all' = 'all'): Result<T> {
+    if (mode === 'self') return this.get(fn, 'self')
     // 创建临时依赖id
     const id = Symbol('id')
     // 创建依赖集合
@@ -89,7 +86,6 @@ export class Depend {
     } finally {
       // 删除收集器
       this.#collectors.delete(id)
-      this.#collector = oldCollector
     }
   }
 
@@ -99,7 +95,7 @@ export class Depend {
    * @alias collect
    * @see collect
    */
-  static get<T>(fn: () => T, scope: 'self' | 'all' = 'self'): Result<T> {
+  static get<T>(fn: () => T, scope: 'self' | 'all' = 'all'): Result<T> {
     if (scope === 'all') return this.collect(fn, 'all')
     const oldCollector = this.#collector
     // 创建依赖集合
@@ -136,7 +132,7 @@ export function track(proxy: AnyProxy, prop: PropName): void {
  * 该方法是`Depend.collect`方法的助手函数
  *
  * @param fn - 可执行函数
- * @param scope - 作用域默认为self，如果为all时，则会收集所有依赖，包括计算属性中的依赖。
+ * @param scope - 模式，默认为`all`共享模式,`self`为独占模式，会临时通用其他所有收集器。
  * @see Depend.collect
  */
 export function collect<T>(fn: () => T, scope: 'self' | 'all' = 'self'): Result<T> {
