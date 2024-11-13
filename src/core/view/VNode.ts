@@ -139,7 +139,7 @@ export function createElement<T extends VNodeType>(
   if (!props) props = {} as any
   if (!isRecordObject(props)) {
     throw new TypeError(
-      `[Vitarx]：createVNode.props参数类型必须是Record(string,any)类型，给定${typeof props}`
+      `[Vitarx]：createElement.props参数类型必须是Record(string,any)类型，给定${typeof props}`
     )
   }
   const vnode: VNode<T> = {
