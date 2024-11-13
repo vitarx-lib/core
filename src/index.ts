@@ -32,7 +32,7 @@ declare global {
   }
   namespace JSX {
     /** 元素类型 */
-    type Element = Vitarx.VNode
+    type Element = Vitarx.Element
     /** 类组件实例 */
     type ElementClass = Vitarx.ElementClass
 
