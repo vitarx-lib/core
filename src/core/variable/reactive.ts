@@ -122,11 +122,11 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     // 获取原始对象
     if (prop === GET_RAW_TARGET_SYMBOL) return target
     const value = Reflect.get(target, prop, receiver)
-    // 如果是函数则绑定this为target
     if (isFunction(value)) {
+      // 集合目标函数需特殊处理
       return isCollection(target)
         ? handlerCollection(target, prop, this.#trigger as any, this.#track).bind(target)
-        : value.bind(receiver)
+        : value
     }
     // 如果是对象，则判断是否需要进行深度代理
     if (this.#deep && isObject(value) && !isProxy(value)) {
