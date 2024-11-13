@@ -60,13 +60,20 @@ export function setAttribute(el: HTMLElement, key: string, value: any, oldCallba
 }
 
 /**
- * 判断是否为事件属性
+ * 删除属性
  *
- * @param el
- * @param event
+ * @param el - 目标元素
+ * @param key - 属性名
+ * @param callback - 事件回调函数，仅对事件属性生效
  */
-export function isHTMLEvent(el: HTMLElement, event: string): boolean {
-  return event.startsWith('on') && event.toLowerCase() in el
+export function removeAttribute(el: HTMLElement, key: string, callback?: AnyCallback) {
+  if (key === 'className') {
+    el.className = ''
+  } else if (isFunction(callback)) {
+    el.removeEventListener(key.slice(2).toLowerCase(), callback)
+  } else {
+    el.removeAttribute(key)
+  }
 }
 
 /**
