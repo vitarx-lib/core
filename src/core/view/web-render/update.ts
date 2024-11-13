@@ -1,7 +1,7 @@
 import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../VNode.js'
 import { isFunction } from '../../../utils/index.js'
 import { removeElement, renderElement, VElementToHTMLElement } from './element.js'
-import { setAttribute } from './attributes.js'
+import { removeAttribute, setAttribute } from './attributes.js'
 import { renderChild, renderChildren, replaceChild } from './children.js'
 
 /**
@@ -53,7 +53,7 @@ function patchAttrs(oldVNode: VNode, newVNode: VNode): void {
       if (isWidget) {
         oldAttrs[key] = newAttrs[key]
       } else {
-        setAttribute(el, key, newAttrs[key])
+        setAttribute(el, key, newAttrs[key], oldAttrs[key])
       }
     }
     // 将已经处理过的 key 从 oldKeysSet 中删除
@@ -61,16 +61,10 @@ function patchAttrs(oldVNode: VNode, newVNode: VNode): void {
   })
   // 删除 newAttrs 中不存在的旧属性
   oldKeysSet.forEach(key => {
-    if (isWidget) {
-      // @ts-ignore
-      delete oldAttrs[key]
-    } else {
-      if (key === 'className') {
-        el.className = ''
-      } else {
-        el.removeAttribute(key)
-      }
+    if (!isWidget) {
+      removeAttribute(el, key, oldAttrs[key])
     }
+    delete oldAttrs[key]
   })
 }
 
