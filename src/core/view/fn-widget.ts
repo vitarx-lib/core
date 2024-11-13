@@ -8,7 +8,7 @@ import { LifeCycleHooks } from './life-cycle.js'
 /**
  * 构建虚拟节点函数类型
  */
-export type BuildVNode = () => VNode
+export type BuildVNode = (() => VNode) | VNode
 /**
  * 函数组件类型
  */
@@ -24,10 +24,10 @@ interface CollectMap {
  * 函数组件代理
  */
 class FnWidgetProxy extends Widget {
-  readonly #buildVnode: BuildVNode
+  readonly #buildVnode: () => VNode
 
   constructor(
-    build: BuildVNode | VNode,
+    build: BuildVNode,
     exposed?: Record<string, any>,
     lifeCycleHooks?: Record<LifeCycleHooks, AnyCallback>
   ) {
