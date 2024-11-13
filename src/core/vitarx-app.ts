@@ -1,66 +1,22 @@
 import {
   type ClassWidget,
-  createElement,
   createFnWidget,
   type FnWidget,
-  Fragment,
-  type IntrinsicAttributes,
   isClassWidget,
   Widget
 } from './view/index.js'
 import { createScope } from './scope/index.js'
 
-declare global {
-  namespace Vitarx {
-    /** 应用配置 */
-    interface AppOptions {
-      /** 是否启用服务端渲染 */
-      ssr?: boolean
-    }
-    /**
-     * 全局属性
-     *
-     * - `ref`: 用于绑定元素实例。
-     * - `key`: 用于绑定元素节点的key，支持`key.value`获取key值。
-     */
-    type GlobalIntrinsicAttributes = IntrinsicAttributes
-    /**
-     * 虚拟节点
-     */
-    type VNode = import('./view/VNode').VNode
-    /** 元素类型 */
-    type Element = VNode | (() => Element)
-    /** 类组件实例 */
-    type ElementClass = Widget
-  }
-}
-
 /**
  * # Vitarx App
  */
-export class Vitarx {
+export class VitarxApp {
   static ssr: boolean = false
   /** 元素容器 */
   protected readonly container: Element
   /** 配置选项 */
   protected readonly options: Required<Vitarx.AppOptions> = {
     ssr: false
-  }
-
-  static get Fragment() {
-    return Fragment
-  }
-
-  static get Widget() {
-    return Widget
-  }
-
-  static get createElement() {
-    return createElement
-  }
-
-  static get h() {
-    return createElement
   }
   /**
    * 构建应用实例
@@ -74,7 +30,7 @@ export class Vitarx {
     }
     this.container = container
     this.options = Object.assign(this.options, options)
-    Vitarx.ssr = this.options.ssr
+    VitarxApp.ssr = this.options.ssr
   }
 
   /**
@@ -103,9 +59,9 @@ export class Vitarx {
  * @param options - 应用配置
  * @returns {Vitarx} - 应用实例
  */
-export function createApp(container: Element | string, options?: Vitarx.AppOptions): Vitarx {
+export function createApp(container: Element | string, options?: Vitarx.AppOptions): VitarxApp {
   if (typeof container === 'string') {
     container = document.querySelector(container)!
   }
-  return new Vitarx(container, options)
+  return new VitarxApp(container, options)
 }
