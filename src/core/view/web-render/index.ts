@@ -177,8 +177,11 @@ export interface PartProperties {
   step?: number | string
 }
 
+// 合并CSS属性
+export type CssPropertiesMap = CssProperties &
+  Partial<Pick<CSSStyleDeclaration, Exclude<keyof CSSStyleDeclaration, keyof CssProperties>>>
 // 样式属性
-export type HTMLStyleProperties = string | CssProperties | Partial<CSSStyleDeclaration>
+export type HTMLStyleProperties = string | CssPropertiesMap
 
 /**
  * 全局属性
@@ -194,7 +197,7 @@ export interface OverwriteHtmlProperties extends PartProperties {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/style 完整的使用文档
    */
-  style?: string | CssProperties | Partial<CSSStyleDeclaration>
+  style?: string | HTMLStyleProperties
   accesskey?: string
   anchor?: string
   autocapitalize?: 'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters'
