@@ -333,7 +333,7 @@ export function watchDepend<GET, R>(
   }
 ): WatchDependResult<R, GET> {
   const getResult = options ? popProperty(options, 'getResult') : false
-  const { deps, result } = Depend.collect(fn, 'self')
+  const { deps, result } = Depend.collect(fn)
   let mainListener: Listener<VoidCallback> | undefined = undefined
   if (deps.size > 0) {
     let subCallback: AnyCallback
