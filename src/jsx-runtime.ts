@@ -6,7 +6,6 @@ import {
   type VNodeType
 } from './core/index.js'
 
-type Source = { fileName: string; lineNumber: number }
 
 /**
  * JSX构建VNode
@@ -29,25 +28,5 @@ function jsx<T extends VNodeType>(
   return createElement(type, props)
 }
 
-/**
- * JSX构建VNode(开发模式)
- *
- * @param type
- * @param props
- * @param key
- * @param isStatic
- * @param source
- * @param self
- */
-function jsxDEV<T extends VNodeType>(
-  type: T,
-  props: VNodeProps<T> | null,
-  key: Vitarx.GlobalIntrinsicAttributes['key'] | null,
-  isStatic: boolean,
-  source: Source,
-  self: any
-): VNode<T> {
-  return createElement(type, props, key)
-}
 
-export { Fragment, jsx, jsx as jsxs, jsxDEV }
+export { Fragment, jsx, jsx as jsxs }
