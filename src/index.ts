@@ -26,13 +26,13 @@ declare global {
      */
     type VNode = import('./core/view/VNode').VNode
     /** 元素类型 */
-    type Element = VNode | (() => Element)
+    type Element = VNode
     /** 类组件实例 */
     type ElementClass = Widget
   }
   namespace JSX {
     /** 元素类型 */
-    type Element = Vitarx.Element
+    type Element = Vitarx.VNode
     /** 类组件实例 */
     type ElementClass = Vitarx.ElementClass
 
