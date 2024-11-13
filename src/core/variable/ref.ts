@@ -3,7 +3,6 @@ import { isProxy, ValueProxy } from './helper.js'
 import { createReactive } from './reactive.js'
 import { Observers } from '../observer/index.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
-import { Depend } from './depend.js'
 
 /** 解除响应式对象 */
 export type UnRef<T> = T extends Ref<infer U> ? U : T
@@ -51,7 +50,7 @@ export class Ref<T = any> implements ValueProxy<T> {
     if (this.#deep && isObject(this.#value) && !isProxy(this.#value)) {
       this.#value = createReactive(this.#value, this.#deep, this.trigger.bind(this))
     } else if (!isProxy(this.#value)) {
-      Depend.track(this, 'value')
+      this.trigger()
     }
     // 返回目标变量
     return this.#value
