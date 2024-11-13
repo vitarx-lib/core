@@ -12,9 +12,9 @@ import { createScope } from '../../scope/index.js'
 import { reactive } from '../../variable/index.js'
 import { type ClassWidget, isClassWidget } from '../widget.js'
 import { createFnWidget, type FnWidget } from '../fn-widget.js'
-import { type HtmlElementTags, isArray } from '../../../index.js'
 import { setAttributes } from './attributes.js'
 import { renderChildren } from './children.js'
+import type { HtmlElementTags } from './index.js'
 
 /**
  * 渲染器创建的元素
@@ -147,5 +147,5 @@ export function fragmentToArray(el: DocumentFragment): VDocumentFragment {
 export function VElementToHTMLElement(
   el: VElement | DocumentFragment
 ): Element | Text | DocumentFragment {
-  return isArray(el) ? arrayToFragment(el) : el
+  return Array.isArray(el) ? arrayToFragment(el) : el
 }
