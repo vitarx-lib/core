@@ -1,0 +1,46 @@
+# Vitarx
+
+___
+
+## 介绍
+
+`Vitarx`是一款WEB前端开发框架，它融合了`React`的`JSX`语法，`Vue`的响应式数据绑定，且大部分API命名借鉴于`Vue`，使得开发者可以快速上手。
+
+## 特性
+
+- **JSX**：`vitarx`支持使用`JSX`语法，可以写出更简洁、更易于理解的代码。
+- **响应式数据**：`vitarx`支持使用`响应式数据`，且`API`命名和功能和`Vue`大部分一致，减少学习成本，例如`ref`、`reactive`、
+  `watch`、`computed`等。
+- **小部件**：在`vitarx`中万物皆为小部件`Widget`，支持函数式小部件，亦支持类小部件。
+- **状态管理**：`vitarx`与`Vue`的组件状态管理机制是一致的，当视图中绑定的`响应式数据`数据发生变化时，会自动更新视图。
+- **生命周期**：`vitarx`小部件支持生命周期钩子，开发者可以监听小部件的生命周期，例如`onMounted`、`onUnmounted`...等钩子。
+- **VNode**：`vitarx`和大部分现代化的前端框架一样，采用了虚拟DOM节点，以及高效的Diff算法，差异化更新视图降低渲染性能开销。
+
+## 示例
+
+```tsx
+import { h, ref } from 'vitarx'
+
+// JSX语法
+function App() {
+  const count = ref(0)
+  const add = () => {
+    count.value++
+  }
+  // 在内部渲染App小部件时，会自动收集视图中依赖的响应式数据，并监听其变化，自动更新视图。
+  return (<div>
+    <h1>count: {count.value}</h1>
+    <button onClick={add}>add</button>
+  </div>)
+}
+
+// 上述App小部件中使用了JSX语法，编译过后则会生成如下代码：
+function App() {
+  const count = ref(0)
+  const add = () => {
+    count.value++
+  }
+  // 可以看到编译过后，会形成一个UI构造器函数，该函数返回一个虚拟DOM节点，该虚拟DOM节点会被渲染并挂载到节点上，同时保持响应式。
+  return () => h('div', null, h('h1', null, 'count: ' + count.value), h('button', { onClick: add }, 'add'))
+}
+```
