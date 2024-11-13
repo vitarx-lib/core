@@ -26,7 +26,7 @@ declare global {
      */
     type VNode = import('./core/view/VNode').VNode
     /** 元素类型 */
-    type Element = VNode
+    type Element = import('./core/view/VNode').VNode
     /** 类组件实例 */
     type ElementClass = Widget
   }
