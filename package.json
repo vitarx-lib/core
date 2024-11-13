@@ -12,9 +12,9 @@
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc",
     "prepublishOnly": "npm run build",
-    "push": "npm publish"
+    "push": "npm publish --access=public"
   },
   "devDependencies": {
     "@types/node": "^22.7.2",
