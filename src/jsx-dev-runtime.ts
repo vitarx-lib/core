@@ -1,10 +1,5 @@
-import {
-  createElement,
-  Fragment,
-  type VNode,
-  type VNodeProps,
-  type VNodeType
-} from './core/index.js'
+import { Fragment, type VNode, type VNodeProps, type VNodeType } from './core/index.js'
+import { jsx } from './jsx-runtime.js'
 
 type Source = { fileName: string; lineNumber: number; columnNumber: number }
 
@@ -26,7 +21,7 @@ function jsxDEV<T extends VNodeType>(
   _source: Source,
   _self: any
 ): VNode<T> {
-  return createElement(type, props, key)
+  return jsx(type, props, key)
 }
 
 export { Fragment, jsxDEV }
