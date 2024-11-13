@@ -143,7 +143,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   }
 
   has(target: T, prop: ExtractProp<T>): boolean {
-    this.#trigger(prop)
+    this.#track(prop)
     return Reflect.has(target, prop)
   }
 
