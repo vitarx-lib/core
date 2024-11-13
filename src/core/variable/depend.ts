@@ -72,8 +72,10 @@ export class Depend {
    * @param scope - 作用域，如果为all时，则会收集所有依赖，包括计算属性中的依赖。
    * @returns { Deps } `Map对象`，键为依赖的根代理对象，值为引用的键索引`Set对象`，存在`.`连接符代表多层引用
    */
-  static collect<T>(fn: () => T, scope: 'self' | 'all' = 'all'): Result<T> {
+  static collect<T>(fn: () => T, scope: 'self' | 'all' = 'self'): Result<T> {
     if (scope === 'self') return this.get(fn, 'self')
+    const oldCollector = this.#collector
+    this.#collector = undefined
     // 创建临时依赖id
     const id = Symbol('id')
     // 创建依赖集合
@@ -83,10 +85,11 @@ export class Depend {
     try {
       const result = fn()
       // 返回依赖集合
-      return { result, deps } as any
+      return { result, deps }
     } finally {
       // 删除收集器
       this.#collectors.delete(id)
+      this.#collector = oldCollector
     }
   }
 
@@ -104,7 +107,7 @@ export class Depend {
     try {
       const result = fn()
       // 返回依赖集合
-      return { result, deps: this.#collector } as any
+      return { result, deps: this.#collector }
     } finally {
       // 删除收集器
       this.#collector = oldCollector
@@ -130,11 +133,12 @@ export function track(proxy: AnyProxy, prop: PropName): void {
  * ## 收集依赖
  *
  * @remarks
- * 该方法是`Depend.collect`方法的助手函数，可用于手动跟踪依赖
+ * 该方法是`Depend.collect`方法的助手函数
  *
  * @param fn - 可执行函数
+ * @param scope - 作用域默认为self，如果为all时，则会收集所有依赖，包括计算属性中的依赖。
  * @see Depend.collect
  */
-export function collect<T>(fn: () => T): Result<T> {
-  return Depend.collect(fn)
+export function collect<T>(fn: () => T, scope: 'self' | 'all' = 'self'): Result<T> {
+  return Depend.collect(fn, scope)
 }
