@@ -145,7 +145,7 @@ export function createElement<T extends VNodeType>(
   const vnode: VNode<T> = {
     [VNodeSymbol]: true,
     type,
-    props: props
+    props
   }
   const key = popProperty(props, 'key')
   if (key) vnode.key = key
