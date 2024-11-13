@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 import { type IntrinsicAttributes, isVNode, type VNode } from './VNode.js'
 import { Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
@@ -12,7 +14,7 @@ export type BuildVNode = () => VNode
  */
 export type FnWidget<P extends Record<string, any> = {}> = (
   props: P & IntrinsicAttributes
-) => BuildVNode
+) => Vitarx.Element
 interface CollectMap {
   exposed: Record<string, any> | undefined
   lifeCycleHooks: Record<LifeCycleHooks, AnyCallback> | undefined
@@ -82,7 +84,7 @@ class FnWidgetHookHandler {
     fn: FnWidget<P>,
     props: P
   ): CollectMap & {
-    build: BuildVNode
+    build: any
   } {
     const oldBackup = this.#collectMap
     this.#collectMap = {
@@ -223,9 +225,7 @@ export function createFnWidget<P extends Record<string, any>>(
 ): FnWidgetProxy {
   let { build, exposed, lifeCycleHooks } = FnWidgetHookHandler.collect(fn, props)
   if (!isFunction(build) && !isVNode(build)) {
-    throw new Error(
-      `[Vitarx]：函数式小部件需要返回一个build函数创建响应式UI，示例：()=>Vitarx.VNode`
-    )
+    throw new Error(`[Vitarx]：函数式小部件需返回一个闭包函数用于创建响应式UI，或返回VNode`)
   }
   return new FnWidgetProxy(build, exposed, lifeCycleHooks)
 }
