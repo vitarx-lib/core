@@ -107,7 +107,7 @@ export class WidgetRenderer {
     if (this.el) {
       el = VElementToHTMLElement(this.el)
     } else {
-      el = renderElement(this.#currentVNode)
+      el = renderElement(this.#currentVNode, parent)
       Promise.resolve().then(() => {
         this.#state = 'mounted'
         // 触发onActivated生命周期
