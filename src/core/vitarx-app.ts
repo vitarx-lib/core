@@ -18,6 +18,9 @@ export class VitarxApp {
   protected readonly options: Required<Vitarx.AppOptions> = {
     ssr: false
   }
+  /**
+   * 小部件实例
+   */
   widget: Widget | null = null
   /**
    * 构建应用实例
@@ -42,6 +45,7 @@ export class VitarxApp {
   static get version(): string {
     return '__VERSION__'
   }
+
   /**
    * 渲染小部件
    *
@@ -64,13 +68,23 @@ export class VitarxApp {
    */
   update(): void {
     if (!this.widget) {
-      console.warn('[Vitarx]：请先调用render方法初始化渲染App')
+      console.warn('[VitarxApp.update]：还未渲染小部件，或小部件已经卸载，不能执行更新操作。')
     } else {
       this.widget.renderer.update()
     }
   }
 
-  unmount(): void {}
+  /**
+   * 卸载小部件
+   */
+  unmount(): void {
+    if (!this.widget) {
+      console.warn('[VitarxApp.unmount]：还未渲染小部件，或小部件已经卸载，不能执行卸载操作。')
+    } else {
+      this.widget.renderer.unmount()
+      this.widget = null
+    }
+  }
 }
 
 /**
