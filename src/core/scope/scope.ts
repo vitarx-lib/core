@@ -1,8 +1,5 @@
 import { DisposeEffect, DisposeInterface } from './dispose-effect.js'
 
-/** 入口函数 */
-type MainFunction = () => void
-
 /**
  * # 自动处置
  *
@@ -30,7 +27,7 @@ export class Scope extends DisposeEffect {
    *
    * @param main
    */
-  constructor(main: MainFunction) {
+  constructor(main: () => void) {
     super()
     const oldScope = Scope.#currentScope
     // 添加到父级作用域中
@@ -59,7 +56,7 @@ export class Scope extends DisposeEffect {
   }
 
   /**
-   * 添加一个可处置的对象到作用域中。
+   * 添加一个可处置的副作用到当前作用域中。
    *
    * 如果习惯类编程则可以继承自{@link DisposeEffect} 或 {@link AutoDisposed} 类；
    * 函数式编程则可以传入一个对象，对象必须具有`destroy`和`onDestroyed`属性方法。
@@ -92,26 +89,26 @@ export class Scope extends DisposeEffect {
   }
 
   /**
-   * 触发可处置的对象暂停
+   * 暂停所有可处置的副作用
    *
    * @override
    */
   override pause() {
     if (!this.isPaused) {
-      super.pause()
       this.#effects?.forEach(dispose => dispose?.pause?.())
+      super.pause()
     }
   }
 
   /**
-   * 恢复暂停状态
+   * 恢复所有可处置的副作用
    *
    * @override
    */
   override unpause() {
     if (this.isPaused) {
-      super.unpause()
       this.#effects?.forEach(dispose => dispose?.unpause?.())
+      super.unpause()
     }
   }
 }
@@ -122,7 +119,7 @@ export class Scope extends DisposeEffect {
  * @param main 入口函数
  * @returns {Scope} 返回作用域实例，提供了`destroy`方法来销毁作用域
  */
-export function createScope(main: VoidFunction): Scope {
+export function createScope(main: () => void): Scope {
   return new Scope(main)
 }
 
