@@ -1,7 +1,7 @@
 {
   "name": "vitarx",
   "private": false,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "vitarx响应式前端框架。",
   "keywords": [
     "vitarx"
