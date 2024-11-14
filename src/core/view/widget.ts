@@ -94,7 +94,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @protected
    */
-  protected update() {
+  update() {
     this.renderer.update()
   }
 
