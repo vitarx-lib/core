@@ -87,13 +87,15 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
   if (!oldChildren && newChildren) {
     const parent = oldVNode.type === Fragment ? getParentNode(oldVNode.el) : oldVNode.el
     // 渲染新的子节点
-    if (parent) renderChildren(parent as HtmlElement, newChildren)
+    if (parent) renderChildren(parent as Element, newChildren)
     oldVNode.children = newChildren
     return true
   }
   // 删除旧子节点
   if (!newChildren && oldChildren) {
-    oldChildren.forEach(child => unmountVNode(child))
+    for (let i = 0; i < oldChildren.length; i++) {
+      unmountVNode(oldChildren[i])
+    }
     oldVNode.children = newChildren
     return true
   }
@@ -124,7 +126,7 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   if (!oldChild && newChild) {
     const parent = oldVNode.type === Fragment ? getParentNode(oldVNode.el) : oldVNode.el
     // 渲染新的子节点
-    if (parent) renderChild(parent as HtmlElement, newChild)
+    if (parent) renderChild(parent as Element, newChild)
     return newChild
   }
   // 更新文本节点
@@ -158,7 +160,11 @@ export function unmountVNode(vnode: VNodeChild): void {
       vnode.instance!.renderer.unmount()
     } else {
       // 递归卸载子级
-      vnode.children?.forEach(child => unmountVNode(child))
+      if (vnode.children) {
+        for (let i = 0; i < vnode.children.length; i++) {
+          unmountVNode(vnode.children[i])
+        }
+      }
       // 删除元素
       removeElement(vnode.el)
     }
