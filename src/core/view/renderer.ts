@@ -106,7 +106,13 @@ export class WidgetRenderer {
     let el: HtmlElement
     if (this.el) {
       el = VElementToHTMLElement(this.el)
+      // 挂载到父元素
+      parent?.appendChild(el)
     } else {
+      // 触发onBeforeMount生命周期
+      const target = this.widget.onBeforeMount?.()
+      // 挂载到指定元素
+      if (target instanceof Element) parent = target
       el = renderElement(this.#currentVNode, parent)
       Promise.resolve().then(() => {
         this.#state = 'mounted'
@@ -116,8 +122,6 @@ export class WidgetRenderer {
         this.widget.onMounted?.()
       })
     }
-    // 挂载到父元素
-    parent?.appendChild(el)
     return el
   }
 
