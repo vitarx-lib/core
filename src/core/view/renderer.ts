@@ -6,7 +6,9 @@ import {
   getParentNode,
   type HtmlElement,
   patchUpdate,
+  removeElement,
   renderElement,
+  unmountVNode,
   VElementToHTMLElement
 } from './web-render/index.js'
 
@@ -17,7 +19,7 @@ import {
  */
 export class WidgetRenderer {
   // 当前组件的Child虚拟节点
-  currentChildVNode: VNode
+  #currentVNode: VNode
   // 等到更新
   #pendingUpdate = false
 
@@ -29,7 +31,7 @@ export class WidgetRenderer {
       listener?.destroy()
       throw new Error('[Vitarx]：Widget.build方法必须返回VNode虚拟节点')
     }
-    this.currentChildVNode = result
+    this.#currentVNode = result
   }
 
   /**
@@ -49,7 +51,7 @@ export class WidgetRenderer {
    * @returns {VElement | null}
    */
   get el(): VElement | null {
-    return this.currentChildVNode.el || null
+    return this.#currentVNode.el || null
   }
 
   /**
@@ -67,7 +69,7 @@ export class WidgetRenderer {
    * @returns {VNode}
    */
   get child(): VNode {
-    return this.currentChildVNode
+    return this.#currentVNode
   }
 
   /**
@@ -76,7 +78,7 @@ export class WidgetRenderer {
    * @returns {HtmlElement}
    */
   createElement(): HtmlElement {
-    return renderElement(this.currentChildVNode)
+    return renderElement(this.#currentVNode)
   }
 
   /**
@@ -132,13 +134,30 @@ export class WidgetRenderer {
       setTimeout(() => {
         this.#pendingUpdate = false
       })
-      const oldVNode = this.currentChildVNode
+      const oldVNode = this.#currentVNode
       const newVNode = this.build()
-      this.currentChildVNode = patchUpdate(oldVNode, newVNode)
+      this.#currentVNode = patchUpdate(oldVNode, newVNode)
       this.widget.onUpdated?.()
     } catch (e) {
       this.#pendingUpdate = false
       console.trace(`[Vitarx]：更新视图时捕获到了异常，${e}`)
+    }
+  }
+
+  /**
+   * 卸载小部件
+   */
+  unmount() {
+    if (this.mounted) {
+      // 触发onDeactivated生命周期
+      const result = this.widget.onBeforeUnmount?.()
+      // 递归删除子节点
+      unmountVNode(this.child)
+      // 等待子节点删除完成然后移除当前节点
+      if (result !== true) {
+        removeElement(this.el)
+      }
+      this.widget.onUnmounted?.()
     }
   }
 }
