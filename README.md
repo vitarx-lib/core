@@ -1,6 +1,7 @@
 # Vitarx
 
-___
+具有活力的前端开发框架，帮助开发者快速构建交互式前端应用。
+________________________________________________________________________
 
 ## 介绍
 
@@ -16,7 +17,7 @@ ___
 - **生命周期**：`vitarx`小部件支持生命周期钩子，开发者可以监听小部件的生命周期，例如`onMounted`、`onUnmounted`...等钩子。
 - **VNode**：`vitarx`和大部分现代化的前端框架一样，采用了虚拟DOM节点，以及高效的Diff算法，差异化更新视图降低渲染性能开销。
 
-## 示例
+## 函数式组件
 
 ```tsx
 import { h, ref } from 'vitarx'
@@ -44,3 +45,41 @@ function App() {
   return () => h('div', null, h('h1', null, 'count: ' + count.value), h('button', { onClick: add }, 'add'))
 }
 ```
+
+## 类组件示例
+
+```tsx
+import { Widget, ref } from 'vitarx'
+
+interface Props {
+  title: string
+}
+
+class App extends Widget<Props> {
+  count = ref(0)
+
+  add() {
+    this.count.value++
+  }
+
+  onCreated() {
+    // 小部件已经创建完毕，但还没有挂载到节点上，此时可以做一些初始化工作，例如初始化数据等。
+    console.log(this.props.title)
+  }
+
+  onMounted() {
+    // 小部件已经挂载到节点上，此时可以做一些后续工作，例如订阅事件等。
+    console.log('App mounted')
+  }
+
+  build() {
+    return <div class="center-box">
+      <h1>{this.props.title}</h1>
+      <h1>count: {this.count.value}</h1>
+      <button onClick={this.add}>add</button>
+    </div>
+  }
+}
+```
+
+详细文档请见[Vitarx主页](https://vitarx.cn)。火速开发中......
