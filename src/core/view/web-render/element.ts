@@ -20,47 +20,50 @@ import type { HtmlElementTags } from './index.js'
  * 渲染器创建的元素
  */
 export type HtmlElement = Element | Text | DocumentFragment
-
+/**
+ * 父元素
+ */
+export type ParentElement = Element | DocumentFragment
 /**
  * 渲染小部件、html元素、fragment元素、文本元素
  *
  * @param vnode
+ * @param parent - 父元素
  */
-export function renderElement(vnode: VNode | TextVNode): HtmlElement {
-  if (isTextVNode(vnode)) return renderTextElement(vnode)
+export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement): HtmlElement {
+  if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
   let el: HtmlElement
   switch (typeof vnode.type) {
     case 'string':
       // HTML 元素节点
-      el = renderHtmlElement(vnode as VNode<HtmlTag>)
+      el = renderHtmlElement(vnode as VNode<HtmlTag>, parent)
       break
     case 'symbol':
       // Fragment 节点
-      el = renderFragmentElement(vnode as VNode<Fragment>)
+      el = renderFragmentElement(vnode as VNode<Fragment>, parent)
       break
     case 'function':
-      el = renderWidgetElement(vnode as VNode<ClassWidget | FnWidget>)
+      el = renderWidgetElement(vnode as VNode<ClassWidget | FnWidget>, parent)
       break
     default:
       throw new Error(`Unsupported vnode type: ${vnode.type}`)
-  }
-  if (el instanceof DocumentFragment) {
-    vnode.el = fragmentToArray(el)
-  } else {
-    vnode.el = el
   }
   return el
 }
 
 // 创建文本元素
-function renderTextElement(vnode: TextVNode): Text {
+function renderTextElement(vnode: TextVNode, parent?: ParentElement): Text {
   const textEl = document.createTextNode(vnode.value)
   vnode.el = textEl
+  if (parent) parent.appendChild(textEl)
   return textEl
 }
 
 // 创建小部件元素
-function renderWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement {
+function renderWidgetElement(
+  vnode: VNode<FnWidget | ClassWidget>,
+  parent?: ParentElement
+): HtmlElement {
   let el: HtmlElement
   createScope(() => {
     vnode.props = reactive(vnode.props, false)
@@ -69,22 +72,33 @@ function renderWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement 
       ? new vnode.type(vnode.props)
       : createFnWidget(vnode.type as FnWidget, vnode.props)
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
-    el = vnode.instance.renderer.mount()
+    el = vnode.instance.renderer.mount(parent)
+    if (el instanceof DocumentFragment) {
+      vnode.el = fragmentToArray(el)
+    } else {
+      vnode.el = el
+    }
   }, false)
   return el!
 }
 
 // 创建html元素
-function renderHtmlElement(vnode: VNode<HtmlElementTags>): HTMLElement {
+function renderHtmlElement(vnode: VNode<HtmlElementTags>, parent?: ParentElement): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
+  // 挂载到父节点
+  if (parent) parent.appendChild(el)
+  vnode.el = el
   renderChildren(el, vnode.children)
   if (isRefEl(vnode.ref)) vnode.ref.value = el
   return el
 }
 
 // 创建 Fragment 元素
-export function renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment {
+export function renderFragmentElement(
+  vnode: VNode<Fragment>,
+  parent?: ParentElement
+): DocumentFragment {
   const el = document.createDocumentFragment()
   if (!vnode.children) {
     // 创建一个空文本节点，用于占位 document.createComment('注释节点占位')
@@ -94,6 +108,8 @@ export function renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment 
     renderChildren(el, vnode.children)
     if (isRefEl(vnode.ref)) vnode.ref.value = fragmentToArray(el)
   }
+  vnode.el = fragmentToArray(el)
+  if (parent) parent.appendChild(el)
   return el
 }
 
