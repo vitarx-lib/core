@@ -16,13 +16,14 @@ export abstract class LifeCycle {
   /**
    * 挂载前生命周期钩子
    *
-   * `onBeforeMount`钩子会在组件挂载到dom树前触发，此时el还未渲染，所以不能使用`this.el`，操作真实dom。
+   * `onBeforeMount`钩子会在组件挂载到dom树前触发，此时el还未渲染，所以不能使用`this.el`操作真实dom。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
    * @protected
+   * @returns {Element | void} 返回一个dom元素，会作为组件的根节点，如果返回`undefined`，则使用默认的根节点。
    */
-  onBeforeMount?(): void
+  onBeforeMount?(): void | Element
   /**
    * 生命周期构造
    *
