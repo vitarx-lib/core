@@ -1,9 +1,11 @@
+import { isFunction } from '../../utils/index.js'
+
 /**
  * 处置功能接口
  *
  * 实现 `DisposeInterface` 接口
  */
-export interface DisposeInterface {
+export interface EffectInterface {
   /** 销毁 */
   destroy(): void
 
@@ -18,11 +20,11 @@ export interface DisposeInterface {
 }
 
 /**
- * # 可处置的对象
+ * # 可处置的副作用
  *
- * 用于销毁/弃用对象，并释放内存。
+ * 提供了销毁、暂停、取消暂停等能力，并且可以监听销毁、暂停、取消暂停等事件。
  */
-export class DisposeEffect implements DisposeInterface {
+export class Effect implements EffectInterface {
   // 销毁回调
   #onDestroyedCallback?: VoidCallback[]
   #onPause?: VoidCallback[]
@@ -127,4 +129,20 @@ export class DisposeEffect implements DisposeInterface {
       }
     }
   }
+}
+
+/**
+ * 检测是否为可处置副作用对象
+ *
+ * @param obj
+ * @param throwError
+ */
+export function isEffect(obj: any, throwError?: boolean): obj is EffectInterface {
+  if (!isFunction(obj?.destroy) || !isFunction(obj?.onDestroyed)) {
+    if (throwError) {
+      throw TypeError('[Vitarx]：createEffect参数必须为可一个可处置副作用对象，必须包含destroy和onDestroyed方法')
+    }
+    return false
+  }
+  return true
 }
