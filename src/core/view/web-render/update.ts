@@ -152,7 +152,7 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
  * @param vnode - 要卸载的虚拟节点
  * @protected
  */
-function unmountVNode(vnode: VNodeChild): void {
+export function unmountVNode(vnode: VNodeChild): void {
   if (isVNode(vnode)) {
     if (vnode.instance) {
       vnode.instance!.renderer.unmount()
