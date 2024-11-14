@@ -174,6 +174,31 @@ export function unmountVNode(vnode: VNodeChild): void {
 }
 
 /**
+ * 更新激活状态
+ *
+ * @param vnode - 子节点
+ * @param activate - 激活为true，停用为false
+ */
+export function updateActivateState(vnode: VNodeChild, activate: boolean) {
+  if (isVNode(vnode)) {
+    if (vnode.instance) {
+      if (activate) {
+        vnode.instance.renderer.activate(false)
+      } else {
+        vnode.instance.renderer.deactivate(false)
+      }
+    } else {
+      // 递归通用子级
+      if (vnode.children) {
+        for (let i = 0; i < vnode.children.length; i++) {
+          updateActivateState(vnode.children[i], activate)
+        }
+      }
+    }
+  }
+}
+
+/**
  * 替换节点
  *
  * @param newVNode
