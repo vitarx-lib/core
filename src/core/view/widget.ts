@@ -50,6 +50,8 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
   /**
    * 外部传入的属性
+   *
+   * 建议保持单向数据流，不要尝试修改`props`中数据。
    */
   get props(): DeepReadonly<P> {
     return this.#props as DeepReadonly<P>
@@ -68,18 +70,32 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * 判断是否已经挂载
    */
   get isMounted(): boolean {
-    return !!this.#renderer?.mounted
+    return !!this.#renderer?.isMounted
   }
 
   /**
-   * 获取小部件的`DOM`元素
+   * 获取小部件渲染的节点元素
    *
    * 如果小部件已经渲染，则返回小部件的`DOM`元素，否则返回`null`。
+   *
+   * > 注意：如果是片段元素，`el` 会是一个数组，如果片段元素没有子节点，
+   * 则数组中会存在一个占位的`Text`节点，它的内容的空的，在浏览器中不会显示视图。
    *
    * @returns {VElement | null}
    */
   get el(): VElement | null {
     return this.renderer.el
+  }
+
+  /**
+   * 强制更新视图
+   *
+   * 如果你修改了非响应式数据，则可以调用此方法，强制更新视图。
+   *
+   * @protected
+   */
+  protected update() {
+    this.renderer.update()
   }
 
   /**
