@@ -1,30 +1,7 @@
-import { getCurrentScope } from '../scope/index.js'
-
 /**
  * 生命周期基类
  */
 export abstract class LifeCycle {
-  protected constructor() {
-    const scope = getCurrentScope()
-    if (scope) {
-      // 放入微任务，保持触发顺序
-      Promise.resolve().then(() => {
-        scope.onPause(() => {
-          this.onDeactivate?.()
-        })
-        scope.onUnPause(() => {
-          this.onActivated?.()
-        })
-        scope.onDestroyed(() => {
-          // this.onBeforeUnmount?.()
-          // 将已销毁回调放入队列，等待所有微任务执行完后，再执行销毁回调
-          // Promise.resolve().then(() => {
-          //   this.onUnmounted?.()
-          // })
-        })
-      })
-    }
-  }
   /**
    * 生命周期钩子
    *
