@@ -10,7 +10,6 @@ import { isArray } from '../../../utils/index.js'
  */
 export function renderChildren(parent: ParentElement, children: VNodeChildren | null): void {
   if (!children) return
-  children.forEach(child => renderChild(parent, child))
   for (let i = 0; i < children.length; i++) {
     renderChild(parent, children[i])
   }
