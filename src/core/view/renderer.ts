@@ -12,7 +12,15 @@ import {
   VElementToHTMLElement
 } from './web-render/index.js'
 
-type State = 'notMounted' | 'mounted' | 'uninstalling' | 'unloaded'
+/**
+ * 渲染状态
+ *
+ * - notMounted：未挂载
+ * - mounted：已挂载
+ * - uninstalling：卸载中
+ * - unloaded：已卸载
+ */
+export type RenderState = 'notMounted' | 'mounted' | 'uninstalling' | 'unloaded'
 /**
  * 小部件渲染器
  *
@@ -26,7 +34,7 @@ export class WidgetRenderer {
   // 当前作用域
   #currentScope = getCurrentScope()
   // 是否已销毁
-  #state: State = 'notMounted'
+  #state: RenderState = 'notMounted'
   constructor(protected widget: Widget) {
     const { result, listener } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
@@ -50,9 +58,9 @@ export class WidgetRenderer {
   /**
    * 获取当前状态
    *
-   * @returns {State}
+   * @returns {RenderState}
    */
-  get state(): State {
+  get state(): RenderState {
     return this.#state
   }
 
