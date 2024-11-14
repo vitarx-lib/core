@@ -1,5 +1,5 @@
 import { type VNodeChild, type VNodeChildren } from '../VNode.js'
-import { type HtmlElement, renderElement } from './element.js'
+import { type ParentElement, renderElement } from './element.js'
 import { isArray } from '../../../utils/index.js'
 
 /**
@@ -8,9 +8,12 @@ import { isArray } from '../../../utils/index.js'
  * @param parent
  * @param children
  */
-export function renderChildren(parent: HtmlElement, children: VNodeChildren | null): void {
+export function renderChildren(parent: ParentElement, children: VNodeChildren | null): void {
   if (!children) return
   children.forEach(child => renderChild(parent, child))
+  for (let i = 0; i < children.length; i++) {
+    renderChild(parent, children[i])
+  }
 }
 
 /**
@@ -19,11 +22,10 @@ export function renderChildren(parent: HtmlElement, children: VNodeChildren | nu
  * @param parent
  * @param child
  */
-export function renderChild(parent: HtmlElement, child: VNodeChild): void {
+export function renderChild(parent: ParentElement, child: VNodeChild): void {
   if (isArray(child)) {
     renderChildren(parent, child)
   } else {
-    const el = renderElement(child)
-    parent?.appendChild(el)
+    renderElement(child, parent)
   }
 }
