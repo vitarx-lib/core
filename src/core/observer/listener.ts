@@ -1,11 +1,11 @@
-import { DisposeEffect, getCurrentScope } from '../scope/index.js'
+import { addEffect, Effect } from '../scope/index.js'
 
 /**
  * # 监听器类
  *
  * @template C - 回调函数的类型
  */
-export class Listener<C extends AnyCallback = AnyCallback> extends DisposeEffect {
+export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
   // 监听回调函数
   #callback?: C
   // 限制触发次数
@@ -58,7 +58,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends DisposeEffect
     // 创建监听器
     const instance = new Listener(callback, limit)
     // 添加到当前作用域进行自动管理
-    getCurrentScope()?.add(instance)
+    addEffect(instance)
     return instance
   }
 
@@ -106,7 +106,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends DisposeEffect
       try {
         this.#callback.apply(null, params)
       } catch (e) {
-        console.error('Listener.Callback.Error', e)
+        console.error('[Vitarx]：Listener.Callback.Error - ', e)
       }
       this.#count++
       // 判断是否已达到预期的监听次数
