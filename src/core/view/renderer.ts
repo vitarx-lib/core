@@ -9,6 +9,7 @@ import {
   removeElement,
   renderElement,
   unmountVNode,
+  updateActivateState,
   VElementToHTMLElement
 } from './web-render/index.js'
 
@@ -20,7 +21,7 @@ import {
  * - uninstalling：卸载中
  * - unloaded：已卸载
  */
-export type RenderState = 'notMounted' | 'mounted' | 'uninstalling' | 'unloaded'
+export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstalling' | 'unloaded'
 /**
  * 小部件渲染器
  *
@@ -33,8 +34,14 @@ export class WidgetRenderer {
   #pendingUpdate = false
   // 当前作用域
   #currentScope = getCurrentScope()
-  // 是否已销毁
-  #state: RenderState = 'notMounted'
+  /**
+   * 渲染器状态
+   *
+   * @protected
+   */
+  protected state: RenderState = 'notMounted'
+  // 上一次挂载的父元素
+  #lastParent: ParentNode | null = null
   constructor(protected widget: Widget) {
     const { result, listener } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
@@ -56,16 +63,11 @@ export class WidgetRenderer {
   }
 
   /**
-   * 获取当前状态
-   *
-   * @returns {RenderState}
-   */
-  get state(): RenderState {
-    return this.#state
-  }
-
-  /**
    * 当前作用域
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
    */
   get scope(): Scope | undefined {
     return this.#currentScope
@@ -80,11 +82,11 @@ export class WidgetRenderer {
   }
 
   /**
-   * 获取挂载的父元素
+   * 获取挂载的父节点
    *
-   * @returns {ParentNode | null}
+   * @returns {ParentNode | null} DOM元素实例
    */
-  get container(): ParentNode | null {
+  get parent(): ParentNode | null {
     return getParentNode(this.el)
   }
 
@@ -98,16 +100,27 @@ export class WidgetRenderer {
   }
 
   /**
+   * 获取当前状态
+   */
+  get currentState(): RenderState {
+    return this.state
+  }
+  /**
    * 挂载节点
    *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
    * @param parent
    */
   mount(parent?: Element | DocumentFragment): HtmlElement {
     let el: HtmlElement
     if (this.el) {
       el = VElementToHTMLElement(this.el)
-      // 挂载到父元素
-      parent?.appendChild(el)
+      if (parent) {
+        console.warn('[Vitarx]：同一个小部件实例不应该被多次挂载，这会从旧的容器，转移到新的容器。')
+        parent.appendChild(el)
+      }
     } else {
       // 触发onBeforeMount生命周期
       const target = this.widget.onBeforeMount?.()
@@ -115,7 +128,7 @@ export class WidgetRenderer {
       if (target instanceof Element) parent = target
       el = renderElement(this.#currentVNode, parent)
       Promise.resolve().then(() => {
-        this.#state = 'mounted'
+        this.state = 'activated'
         // 触发onActivated生命周期
         this.widget.onActivated?.()
         // 触发onMounted生命周期
@@ -128,6 +141,9 @@ export class WidgetRenderer {
   /**
    * 构建`child`虚拟节点
    *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
    * @returns {VNode}
    */
   build(): VNode {
@@ -173,10 +189,14 @@ export class WidgetRenderer {
 
   /**
    * 卸载小部件
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
    */
   unmount() {
-    if (this.state === 'mounted') {
-      this.#state = 'uninstalling'
+    if (this.state === 'activated' || this.state === 'deactivate') {
+      this.state = 'uninstalling'
       // 触发onDeactivated生命周期
       const result = this.widget.onBeforeUnmount?.()
       // 递归删除子节点
@@ -187,13 +207,67 @@ export class WidgetRenderer {
       }
       // 销毁当前作用域
       this.scope?.destroy()
-      this.#state = 'unloaded'
+      // 修改状态为已卸载
+      this.state = 'unloaded'
+      // 触发onUnmounted生命周期
       this.widget.onUnmounted?.()
       // @ts-ignore 释放资源
       this.#currentVNode = null
       this.#currentScope = undefined
       // @ts-ignore 释放资源
       this.widget = undefined
+      this.#lastParent = null
+    }
+  }
+
+  /**
+   * 让小部件恢复激活状态，重新挂载到父元素上。
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
+   * @param root - 该参数用于递归时内部判断是否需要重新挂载，请勿外部传入。
+   */
+  activate(root: boolean = true): void {
+    if (this.state === 'deactivate') {
+      this.state = 'activated'
+      if (root) {
+        // 恢复父元素
+        this.#lastParent?.appendChild(VElementToHTMLElement(this.el!))
+        this.#lastParent = null
+      }
+      // 恢复作用域
+      this.#currentScope?.unpause()
+      // 触发onActivated生命周期
+      this.widget.onActivated?.()
+      // 恢复子节点
+      updateActivateState(this.child, true)
+    }
+  }
+
+  /**
+   * 停用小部件
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
+   * @param root - 该参数用于递归时内部判断是否需要移除当前元素，请勿外部传入。
+   */
+  deactivate(root: boolean = true): void {
+    if (this.state === 'activated') {
+      this.state = 'deactivate'
+      this.#currentScope?.pause()
+      // 触发onDeactivated生命周期
+      this.widget.onDeactivate?.()
+      // 删除当前元素
+      if (root) {
+        this.#lastParent = this.parent
+        removeElement(this.el)
+      }
+      // 停用子节点
+      updateActivateState(this.child, false)
     }
   }
 }
+
+
