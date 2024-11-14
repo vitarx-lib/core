@@ -70,7 +70,7 @@ function renderWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement 
       : createFnWidget(vnode.type as FnWidget, vnode.props)
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
     el = vnode.instance.renderer.mount()
-  })
+  }, false)
   return el!
 }
 
