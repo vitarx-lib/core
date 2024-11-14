@@ -1,8 +1,15 @@
-import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../VNode.js'
+import {
+  Fragment,
+  isTextVNode,
+  isVNode,
+  type VElement,
+  type VNode,
+  type VNodeChild
+} from '../VNode.js'
 import { isFunction } from '../../../utils/index.js'
-import { removeElement, renderElement, VElementToHTMLElement } from './element.js'
+import { type HtmlElement, removeElement, renderElement, VElementToHTMLElement } from './element.js'
 import { removeAttribute, setAttribute } from './attributes.js'
-import { renderChild, renderChildren, replaceChild } from './children.js'
+import { renderChild, renderChildren } from './children.js'
 
 /**
  * 差异更新
@@ -13,12 +20,10 @@ import { renderChild, renderChildren, replaceChild } from './children.js'
 export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
   // 类型不一致，替换原有节点
   if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
-    // 销毁旧节点作用域
-    oldVNode.scope?.destroy()
-    // 创建新元素
-    const newEl = renderElement(newVNode)
-    // 将旧元素替换为新元素
-    replaceChild(newEl, oldVNode.el)
+    // 获取父节点
+    const parent = getParentNode(oldVNode.el)
+    // 替换旧节点为新节点
+    replaceVNode(newVNode, oldVNode, parent)
     return newVNode
   } else {
     // 非片段节点，则进行更新属性
@@ -78,21 +83,17 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
   const oldChildren = oldVNode.children
   const newChildren = newVNode.children
   if (oldChildren === newChildren) return false
-  // 如果没有旧的子节点
+  // 创建新子节点
   if (!oldChildren && newChildren) {
-    const el = VElementToHTMLElement(oldVNode.el!)
-    renderChildren(el, newChildren)
-    // 如果是片段节点，则需要将新元素替换到父节点
-    if (oldVNode.type === Fragment) {
-      // 如果存在父节点，在会挂载在父节点上
-      replaceChild(el, oldVNode.el)
-    }
+    const parent = oldVNode.type === Fragment ? getParentNode(oldVNode.el) : oldVNode.el
+    // 渲染新的子节点
+    if (parent) renderChildren(parent as HtmlElement, newChildren)
     oldVNode.children = newChildren
     return true
   }
-  // 如果新子节点为空 则删除旧子节点
+  // 删除旧子节点
   if (!newChildren && oldChildren) {
-    oldChildren.forEach(child => destroy(child))
+    oldChildren.forEach(child => unmountVNode(child))
     oldVNode.children = newChildren
     return true
   }
@@ -116,17 +117,14 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
 function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild): VNodeChild {
   // 删除节点
   if (oldChild && !newChild) {
-    destroy(oldChild)
+    unmountVNode(oldChild)
     return newChild
   }
   // 新增节点
   if (!oldChild && newChild) {
-    const container = VElementToHTMLElement(oldVNode.el!)
-    renderChild(container, newChild)
-    // 挂载到父节点
-    if (oldVNode.type === Fragment) {
-      replaceChild(container, oldVNode.el)
-    }
+    const parent = oldVNode.type === Fragment ? getParentNode(oldVNode.el) : oldVNode.el
+    // 渲染新的子节点
+    if (parent) renderChild(parent as HtmlElement, newChild)
     return newChild
   }
   // 更新文本节点
@@ -143,23 +141,91 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
   // 替换节点
   else {
-    const newEl = renderElement(newChild)
-    replaceChild(newEl, (oldChild as VNode).el!, VElementToHTMLElement(oldVNode.el!) as ParentNode)
+    replaceVNode(newChild, oldChild)
     return newChild
   }
 }
 
 /**
- * 销毁节点
+ * 卸载节点
  *
- * @param vnode - 要销毁的节点
+ * @param vnode - 要卸载的虚拟节点
  * @protected
  */
-function destroy(vnode: VNodeChild): void {
+function unmountVNode(vnode: VNodeChild): void {
   if (isVNode(vnode)) {
-    vnode.scope?.destroy()
-    removeElement(vnode.el)
+    if (vnode.instance) {
+      vnode.instance!.renderer.unmount()
+    } else {
+      // 递归卸载子级
+      vnode.children?.forEach(child => unmountVNode(child))
+      // 删除元素
+      removeElement(vnode.el)
+    }
   } else if (isTextVNode(vnode)) {
-    if (vnode.el) vnode.el.remove()
+    vnode.el?.remove()
   }
+}
+
+/**
+ * 替换节点
+ *
+ * @param newVNode
+ * @param oldVNode
+ * @param parent
+ */
+function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: ParentNode | null) {
+  if (parent === null) return
+  if (parent === undefined) parent = getParentNode(oldVNode.el)
+  // 创建新元素
+  const newEl = renderElement(newVNode)
+  if (parent) {
+    if (isTextVNode(oldVNode)) {
+      parent.replaceChild(newEl, oldVNode.el!)
+    } else if (oldVNode.instance) {
+      // 将新元素插入到旧元素之前
+      parent.insertBefore(newEl, VElementToHTMLElement(oldVNode.el!))
+      // 卸载旧节点
+      unmountVNode(oldVNode)
+    } else {
+      replaceChild(newEl, oldVNode.el, parent)
+      unmountVNode(oldVNode)
+    }
+  }
+}
+
+/**
+ * 替换节点
+ *
+ * @param newEl
+ * @param oldEl
+ * @param parent - 不传入父节点，自动使用旧节点的父节点
+ */
+function replaceChild(
+  newEl: VElement | HtmlElement,
+  oldEl: VElement | null,
+  parent: ParentNode
+): void {
+  if (!oldEl || !parent) return
+  if (Array.isArray(oldEl)) {
+    // 片段节点弹出第一个元素，用于替换
+    const oldFirst = oldEl.shift()!
+    // 删除其余元素
+    removeElement(oldEl)
+    parent.replaceChild(VElementToHTMLElement(newEl), oldFirst)
+  } else {
+    parent.replaceChild(VElementToHTMLElement(newEl), oldEl)
+  }
+}
+
+/**
+ * 获取父元素
+ *
+ * 等同于 `document.getElementById(id).parentNode`，只是对片段元素进行特殊处理。
+ *
+ * @param el
+ */
+export function getParentNode(el: VElement | null): ParentNode | null {
+  if (!el) return null
+  return Array.isArray(el) ? el[0].parentNode : el.parentNode
 }
