@@ -138,12 +138,15 @@ export function onCreated(fn: VoidCallback) {
 /**
  * 组件挂载前钩子
  *
+ * 可以返回一个`Element`，用于将组件挂载到指定的元素上
+ *
  * @param fn
  */
-export function onBeforeMount(fn: VoidCallback) {
+export function onBeforeMount(fn: () => void | Element) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
 }
+
 /**
  * 注册组件挂载钩子
  *
