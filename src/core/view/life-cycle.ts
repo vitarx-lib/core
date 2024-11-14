@@ -16,11 +16,11 @@ export abstract class LifeCycle {
           this.onActivated?.()
         })
         scope.onDestroyed(() => {
-          this.onBeforeUnmount?.()
+          // this.onBeforeUnmount?.()
           // 将已销毁回调放入队列，等待所有微任务执行完后，再执行销毁回调
-          Promise.resolve().then(() => {
-            this.onUnmounted?.()
-          })
+          // Promise.resolve().then(() => {
+          //   this.onUnmounted?.()
+          // })
         })
       })
     }
@@ -90,8 +90,9 @@ export abstract class LifeCycle {
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
    * @protected
+   * @returns {boolean | void} 返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`。
    */
-  onBeforeUnmount?(): void
+  onBeforeUnmount?(): void | boolean
 
   /**
    * 生命周期钩子

@@ -1,4 +1,4 @@
-import { isFunction, isRecordObject, popProperty, Scope } from '../../index.js'
+import { isFunction, isRecordObject, popProperty, Scope, Widget } from '../../index.js'
 import { type ClassWidget } from './widget.js'
 import type { FnWidget } from './fn-widget.js'
 import type { ExcludeLifeCycleMethods } from './life-cycle.js'
@@ -20,7 +20,7 @@ export type Fragment = typeof Fragment
 const VNodeSymbol = Symbol('VNode')
 
 /** 唯一标识符 */
-export type OnlyKey = string | number | bigint
+export type OnlyKey = string | number | bigint | symbol
 // 辅助计算出元素类型
 type ComputedRefElType<T> = T extends HtmlElementTags
   ? HtmlElementTagMap[T]
@@ -80,7 +80,7 @@ export type VElement = Element | Text | VDocumentFragment
 /** 文本节点，内部自动转换 */
 export interface TextVNode {
   value: string
-  el?: Text
+  el: Text | null
   [TextVNodeSymbol]: true
 }
 
@@ -89,24 +89,30 @@ export interface TextVNode {
  *
  * - `type`: 节点类型
  * - `props`: 节点属性
+ * - `children`: 子节点列表，如果是函数小部件或类小部件则写入到`props.children`
  * - `key`: 节点唯一标识
  * - `ref`: 节点引用
  * - `el`: 节点元素实例
- * - `scope`: 作用域，内部创建，用于管理副作用
- * - `children`: 子节点列表，如果是函数小部件或类小部件，则此参数会覆盖到`props.children`
+ * - `scope`: 节点作用域
+ * - `instance`: 仅用于函数或类小部件，表示小部件实例
  */
 export type VNode<T extends VNodeType = VNodeType> = {
   type: T
   props: VNodeProps<T>
-  key?: OnlyKey
-  ref?: RefEl<T>
-  el?: VElement
-  scope?: Scope
-  children?: VNodeChildren
+  children: VNodeChildren | null
+  key: OnlyKey | null
+  ref: RefEl<T> | null
+  el: VElement | null
+  scope: Scope | null
+  instance?: Widget
   [VNodeSymbol]: true
 }
+
+// 子元素类型
 type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
-export type Children = Child[]
+// 虚拟节点数组
+type Children = Child[]
+
 /**
  * 创建元素`VNode`
  *
@@ -145,7 +151,12 @@ export function createElement<T extends VNodeType>(
   const vnode: VNode<T> = {
     [VNodeSymbol]: true,
     type,
-    props
+    props,
+    key: popProperty(props, 'key') || null,
+    ref: null,
+    el: null,
+    scope: null,
+    children: null
   }
   const key = popProperty(props, 'key')
   if (key) vnode.key = key
@@ -156,15 +167,12 @@ export function createElement<T extends VNodeType>(
       // @ts-ignore
       props.children = children.length === 1 ? children[0] : children
     }
-  } else {
-    // 合并属性中的children
-    if ('children' in props) {
-      const attrChildren = popProperty(props, 'children')
-      if (Array.isArray(attrChildren)) {
-        children = [...attrChildren, ...children]
-      } else {
-        children.push(attrChildren as any)
-      }
+  } else if ('children' in props) {
+    const attrChildren = popProperty(props, 'children')
+    if (Array.isArray(attrChildren)) {
+      children = [...attrChildren, ...children]
+    } else {
+      children.push(attrChildren as any)
     }
     vnode.children = toVNodeChildren(children)
   }
@@ -188,6 +196,7 @@ function toVNodeChildren(children: Child[]): VNodeChildren {
           ? child
           : {
               value: String(child),
+              el: null,
               [TextVNodeSymbol]: true
             }
       )
