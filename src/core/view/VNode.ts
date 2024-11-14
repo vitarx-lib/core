@@ -1,4 +1,4 @@
-import { isFunction, isRecordObject, popProperty, Scope, Widget } from '../../index.js'
+import { isFunction, isRecordObject, popProperty, Widget } from '../../index.js'
 import { type ClassWidget } from './widget.js'
 import type { FnWidget } from './fn-widget.js'
 import type { ExcludeLifeCycleMethods } from './life-cycle.js'
@@ -93,7 +93,6 @@ export interface TextVNode {
  * - `key`: 节点唯一标识
  * - `ref`: 节点引用
  * - `el`: 节点元素实例
- * - `scope`: 节点作用域
  * - `instance`: 仅用于函数或类小部件，表示小部件实例
  */
 export type VNode<T extends VNodeType = VNodeType> = {
@@ -103,7 +102,6 @@ export type VNode<T extends VNodeType = VNodeType> = {
   key: OnlyKey | null
   ref: RefEl<T> | null
   el: VElement | null
-  scope: Scope | null
   instance?: Widget
   [VNodeSymbol]: true
 }
@@ -155,7 +153,6 @@ export function createElement<T extends VNodeType>(
     key: popProperty(props, 'key') || null,
     ref: null,
     el: null,
-    scope: null,
     children: null
   }
   const key = popProperty(props, 'key')
