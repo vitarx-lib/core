@@ -18,6 +18,7 @@ export class VitarxApp {
   protected readonly options: Required<Vitarx.AppOptions> = {
     ssr: false
   }
+  widget: Widget | null = null
   /**
    * 构建应用实例
    *
@@ -34,6 +35,14 @@ export class VitarxApp {
   }
 
   /**
+   * 获取版本号
+   *
+   * @returns {string} - 版本号
+   */
+  static get version(): string {
+    return '__VERSION__'
+  }
+  /**
    * 渲染小部件
    *
    * @param widget - 入口小部件
@@ -41,15 +50,27 @@ export class VitarxApp {
    */
   render<P extends Record<string, any>>(widget: ClassWidget<P> | FnWidget<P>, props?: P): void {
     createScope(() => {
-      let instance: Widget
       if (isClassWidget(widget)) {
-        instance = new widget(props || {})
+        this.widget = new widget(props || {})
       } else {
-        instance = createFnWidget(widget as FnWidget<P>, props as any)
+        this.widget = createFnWidget(widget as FnWidget<P>, props as any)
       }
-      instance.renderer.mount(this.container)
+      this.widget.renderer.mount(this.container)
     })
   }
+
+  /**
+   * 更新App
+   */
+  update(): void {
+    if (!this.widget) {
+      console.warn('[Vitarx]：请先调用render方法初始化渲染App')
+    } else {
+      this.widget.renderer.update()
+    }
+  }
+
+  unmount(): void {}
 }
 
 /**
