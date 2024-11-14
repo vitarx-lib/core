@@ -7,6 +7,8 @@ import {
 } from './view/index.js'
 import { createScope } from './scope/index.js'
 
+// 错误提示
+const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
 /**
  * # Vitarx App
  */
@@ -47,7 +49,7 @@ export class VitarxApp {
   }
 
   /**
-   * 渲染小部件
+   * ## 渲染小部件
    *
    * @param widget - 入口小部件
    * @param props - 小部件的props参数
@@ -64,25 +66,57 @@ export class VitarxApp {
   }
 
   /**
-   * 更新App
+   * ## 更新App
+   *
+   * 等于`widget.update()`强制更新视图
    */
   update(): void {
     if (!this.widget) {
-      console.warn('[VitarxApp.update]：还未渲染小部件，或小部件已经卸载，不能执行更新操作。')
+      console.warn(`[VitarxApp.update]：${ERROR_MESSAGE}，不能执行更新操作。`)
     } else {
       this.widget.renderer.update()
     }
   }
 
   /**
-   * 卸载小部件
+   * ## 卸载小部件
+   *
+   * 卸载小部件，释放资源，并移除挂载的元素。
+   *
+   * 该操作是不可逆的，如果你只是暂时性的移除`App`，请使用`deactivate`方法。
    */
   unmount(): void {
     if (!this.widget) {
-      console.warn('[VitarxApp.unmount]：还未渲染小部件，或小部件已经卸载，不能执行卸载操作。')
+      console.warn(`[VitarxApp.unmount]：${ERROR_MESSAGE}，不能执行卸载操作。`)
     } else {
       this.widget.renderer.unmount()
       this.widget = null
+    }
+  }
+
+  /**
+   * ## 激活App
+   *
+   * 恢复已经停用的小部件，重新挂载到目标容器中。
+   */
+  activate(): void {
+    if (!this.widget) {
+      console.warn(`[VitarxApp.activate]：${ERROR_MESSAGE}，不能执行停用操作。`)
+    } else {
+      this.widget?.renderer.activate()
+    }
+  }
+
+  /**
+   * ## 停用App
+   *
+   * 可以让渲染的小部件临时处于挂起状态，直到调用`activate`方法激活才会重新挂载到目标容器中。
+   */
+  deactivate(): void {
+    if (!this.widget) {
+      console.warn(`[VitarxApp.deactivate]：${ERROR_MESSAGE}，不能执行启用操作。`)
+    } else {
+      this.widget?.renderer.deactivate()
     }
   }
 }
