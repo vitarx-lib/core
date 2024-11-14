@@ -62,14 +62,14 @@ function renderTextElement(vnode: TextVNode): Text {
 // 创建小部件元素
 function renderWidgetElement(vnode: VNode<FnWidget | ClassWidget>): HtmlElement {
   let el: HtmlElement
-  vnode.scope = createScope(() => {
+  createScope(() => {
     vnode.props = reactive(vnode.props, false)
     // 函数组件或类组件
-    const component = isClassWidget(vnode.type)
+    vnode.instance = isClassWidget(vnode.type)
       ? new vnode.type(vnode.props)
       : createFnWidget(vnode.type as FnWidget, vnode.props)
-    if (isRefEl(vnode.ref)) vnode.ref.value = component!
-    el = component!.renderer.mount()
+    if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
+    el = vnode.instance.renderer.mount()
   })
   return el!
 }
@@ -102,7 +102,7 @@ export function renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment 
  *
  * @param el
  */
-export function removeElement(el: VElement | undefined) {
+export function removeElement(el: VElement | null) {
   if (!el) return
   if (Array.isArray(el)) {
     // 删除旧节点
