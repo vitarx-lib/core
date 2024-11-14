@@ -136,6 +136,15 @@ export function onCreated(fn: VoidCallback) {
 }
 
 /**
+ * 组件挂载前钩子
+ *
+ * @param fn
+ */
+export function onBeforeMount(fn: VoidCallback) {
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
+}
+/**
  * 注册组件挂载钩子
  *
  * @param fn
@@ -184,6 +193,7 @@ export function onBeforeUpdate(fn: VoidCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
 }
+
 /**
  * 注册组件更新钩子
  *
@@ -197,12 +207,15 @@ export function onUpdated(fn: VoidCallback) {
 /**
  * 注册组件销毁前的钩子
  *
+ * 在构造中返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`
+ *
  * @param fn
  */
-export function onBeforeUnmount(fn: VoidCallback) {
+export function onBeforeUnmount(fn: () => void | boolean) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUnmount, fn)
 }
+
 /**
  * 注册组件渲染错误时的钩子
  *
@@ -212,7 +225,6 @@ export function onError(fn: (error: any) => Vitarx.VNode | void) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.error, fn)
 }
-
 /**
  * 创建函数组件
  *

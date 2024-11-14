@@ -14,6 +14,16 @@ export abstract class LifeCycle {
   onCreated?(): void
 
   /**
+   * 挂载前生命周期钩子
+   *
+   * `onBeforeMount`钩子会在组件挂载到dom树前触发，此时el还未渲染，所以不能使用`this.el`，操作真实dom。
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
+   */
+  onBeforeMount?(): void
+  /**
    * 生命周期构造
    *
    * `onMounted`钩子会在组件挂载到dom树后触发，此时el已经渲染，可以安全使用`this.el`，操作真实dom。
@@ -62,8 +72,6 @@ export abstract class LifeCycle {
    *
    * `onBeforeUnmount`钩子会在组件被销毁前触发。
    *
-   * 此时组件的实例仍然可用，可以是异步函数，会等待该函数执行完成过后，移除dom。
-   *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
    * @protected
@@ -110,6 +118,7 @@ export abstract class LifeCycle {
  */
 export enum LifeCycleHooks {
   'created' = 'onCreated',
+  'beforeMount' = 'onBeforeMount',
   'mounted' = 'onMounted',
   'deactivate' = 'onDeactivate',
   'activated' = 'onActivated',
