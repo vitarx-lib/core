@@ -1,6 +1,6 @@
 import { isVNode, type VElement, type VNode } from './VNode.js'
 import { isFunction } from '../../utils/index.js'
-import { watchDepend } from '../../index.js'
+import { getCurrentScope, Scope, watchDepend } from '../../index.js'
 import type { Widget } from './widget.js'
 import {
   getParentNode,
@@ -12,6 +12,7 @@ import {
   VElementToHTMLElement
 } from './web-render/index.js'
 
+type State = 'notMounted' | 'mounted' | 'uninstalling' | 'unloaded'
 /**
  * 小部件渲染器
  *
@@ -22,7 +23,10 @@ export class WidgetRenderer {
   #currentVNode: VNode
   // 等到更新
   #pendingUpdate = false
-
+  // 当前作用域
+  #currentScope = getCurrentScope()
+  // 是否已销毁
+  #state: State = 'notMounted'
   constructor(protected widget: Widget) {
     const { result, listener } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
@@ -35,16 +39,29 @@ export class WidgetRenderer {
   }
 
   /**
-   * 判断是否已挂载到DOM上
-   *
-   * 如果组件被临时停用，也会返回false
+   * 判断是否已初次挂载
    *
    * @returns {boolean}
    */
-  get mounted(): boolean {
-    return this.container !== null
+  get isMounted(): boolean {
+    return this.#currentVNode.el !== null
   }
 
+  /**
+   * 获取当前状态
+   *
+   * @returns {State}
+   */
+  get state(): State {
+    return this.#state
+  }
+
+  /**
+   * 当前作用域
+   */
+  get scope(): Scope | undefined {
+    return this.#currentScope
+  }
   /**
    * 当前小部件的child虚拟节点元素
    *
@@ -73,15 +90,6 @@ export class WidgetRenderer {
   }
 
   /**
-   * 创建节点元素
-   *
-   * @returns {HtmlElement}
-   */
-  createElement(): HtmlElement {
-    return renderElement(this.#currentVNode)
-  }
-
-  /**
    * 挂载节点
    *
    * @param parent
@@ -91,11 +99,14 @@ export class WidgetRenderer {
     if (this.el) {
       el = VElementToHTMLElement(this.el)
     } else {
-      el = this.createElement()
-      // 触发onActivated生命周期
-      this.widget.onActivated?.()
-      // 触发onMounted生命周期
-      this.widget.onMounted?.()
+      el = renderElement(this.#currentVNode)
+      Promise.resolve().then(() => {
+        this.#state = 'mounted'
+        // 触发onActivated生命周期
+        this.widget.onActivated?.()
+        // 触发onMounted生命周期
+        this.widget.onMounted?.()
+      })
     }
     // 挂载到父元素
     parent?.appendChild(el)
@@ -127,6 +138,10 @@ export class WidgetRenderer {
    * 更新视图
    */
   update(): void {
+    if (this.state === 'unloaded') {
+      console.warn('[Vitarx]：渲染器已销毁，无法再更新视图！')
+      return
+    }
     if (this.#pendingUpdate) return
     this.#pendingUpdate = true
     try {
@@ -148,7 +163,8 @@ export class WidgetRenderer {
    * 卸载小部件
    */
   unmount() {
-    if (this.mounted) {
+    if (this.state === 'mounted') {
+      this.#state = 'uninstalling'
       // 触发onDeactivated生命周期
       const result = this.widget.onBeforeUnmount?.()
       // 递归删除子节点
@@ -157,7 +173,15 @@ export class WidgetRenderer {
       if (result !== true) {
         removeElement(this.el)
       }
+      // 销毁当前作用域
+      this.scope?.destroy()
+      this.#state = 'unloaded'
       this.widget.onUnmounted?.()
+      // @ts-ignore 释放资源
+      this.#currentVNode = null
+      this.#currentScope = undefined
+      // @ts-ignore 释放资源
+      this.widget = undefined
     }
   }
 }
