@@ -120,7 +120,8 @@ export class Ref<T = any> implements ValueProxy<T> {
 /**
  * 判断是否为 Ref 对象
  *
- * @param val
+ * @param {any} val - 任意值
+ * @return {boolean} 是否为 Ref 对象
  */
 export function isRef(val: any): val is Ref {
   return val instanceof Ref
@@ -130,7 +131,7 @@ export function isRef(val: any): val is Ref {
  * 解除Ref对象，返回其value属性值
  *
  * @template T - 任意类型
- * @param ref - 任意值或`Ref`对象
+ * @param {T | Ref<T>} ref - 任意值或`Ref`对象
  * @return {T} 如果传入的是`Ref`对象则返回其value属性值，否则返回原值
  */
 export function unRef<T>(ref: T | Ref<T>): T {
@@ -140,8 +141,10 @@ export function unRef<T>(ref: T | Ref<T>): T {
 /**
  * 创建一个Ref对象
  *
- * @param value - 目标值
- * @param deep - 是否深度代理，当值为object类型时有效
+ * @template T - 任意类型
+ * @param {T} value - 目标值
+ * @param {boolean} deep - 是否深度代理，当值为object类型时有效
+ * @return {Ref<T>} Ref对象
  */
 export function ref<T>(value: T, deep: boolean = true): Ref<T> {
   return new Ref(value, deep)
