@@ -119,9 +119,10 @@ function createValueListener<T extends AnyObject>(
  * - `array` : 非Proxy数组，可以在数组中包含多个响应式代理对象达到同时监听多个对象变化的效果，但不能包含非响应式代理对象。
  * - `function`：如果返回的是一个基本类型值，例如：number|string|boolean|null...非对象类型的值，那函数的写法必须是`()=>obj.key`，会通过依赖收集监听对象的某个属性值变化，回调函数接收的参数也变为了新值和旧值，除了返回基本类型值，其他合法返回值同上述的`array`,`object`
  *
- * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
- * @param callback - 回调函数
- * @param options - 监听器配置选项
+ * @template T - 监听源类型
+ * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
+ * @param {WatchCallback<T>} callback - 回调函数
+ * @param {Options} options - 监听器配置选项
  */
 export function watch<T extends AnyObject, C extends WatchCallback<T>>(
   origin: T,
@@ -191,9 +192,10 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
  *
  * @note 不同于{@link watch}方法，该方法会回调对象改变之后和改变之前的值做为参数，且深度克隆。
  *
- * @param origin - 监听源
- * @param callback - 回调函数，第一个参数为`newValue`，第二个参数为`oldValue`
- * @param options - 监听器配置选项
+ * @template T - 监听源类型
+ * @param {T} origin - 监听源
+ * @param {WatchValueCallback<T>} callback - 回调函数，第一个参数为`newValue`，第二个参数为`oldValue`
+ * @param {Options} options - 监听器配置选项
  * @see watch
  */
 export function watchValue<T extends AnyObject>(
@@ -239,10 +241,12 @@ export function watchValue<T extends AnyObject>(
  *
  * 该方法和watchProp不同的是，可以监听多个属性的变化，当监听多个属性时，回调函数的参数为变化的属性名数组。
  *
- * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
- * @param props - 要监听的属性名数组
- * @param callback - 回调函数
- * @param options - 监听器配置选项
+ * @template T - 监听源类型
+ * @template P - 属性名类型
+ * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
+ * @param {ExtractProp<T>[]} props - 要监听的属性名数组
+ * @param {Callback<P, T>} callback - 回调函数
+ * @param {Options} options - 监听器配置选项
  */
 export function watchProps<
   T extends AnyObject,
@@ -274,10 +278,12 @@ export function watchProps<
 /**
  * ## 监听单个属性变化
  *
- * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
- * @param prop - 要监听的属性名
- * @param callback - 回调函数
- * @param options - 监听器配置选项
+ * @template T - 监听源类型
+ * @template P - 属性名类型
+ * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
+ * @param {ExtractProp<T>} prop - 要监听的属性名
+ * @param {Callback<P, T>} callback - 回调函数
+ * @param {Options} options - 监听器配置选项
  */
 export function watchProp<
   T extends AnyObject,
@@ -293,10 +299,12 @@ export function watchProp<
  *
  * 不同于`watchProp`方法，`watchPropValue`方法的回调参数为新值和旧值，而`watchProp`回调参数为属性名称，和源对象。
  *
- * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
- * @param prop - 要监听的属性名
- * @param callback - 回调函数，第一个参数为`newValue`，第二个参数为`oldValue`
- * @param options - 监听器配置选项
+ * @template T - 监听源类型
+ * @template P - 属性名类型
+ * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
+ * @param {ExtractProp<T>} prop - 要监听的属性名
+ * @param {WatchValueCallback<T[P]>} callback - 回调函数，第一个参数为`newValue`，第二个参数为`oldValue`
+ * @param {Options} options - 监听器配置选项
  */
 export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
   origin: T,
@@ -320,9 +328,9 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
  *
  * @template R - 返回值类型
  * @template GET - 是否收集依赖的返回值
- * @param fn - 要监听的函数
- * @param callback - 回调函数
- * @param options - 监听器配置选项
+ * @param {() => R} fn - 要监听的函数
+ * @param {() => void} callback - 回调函数
+ * @param {Options} options - 监听器配置选项
  * @returns {WatchDependResult<R, GET>} - 如果收集到依赖则返回监听器，否则返回undefined
  */
 export function watchDepend<GET, R>(
