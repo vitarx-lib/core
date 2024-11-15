@@ -37,16 +37,16 @@ class FnWidgetProxy extends Widget {
     } else {
       this.#buildVnode = build
     }
-    if (lifeCycleHooks) {
-      Object.entries(lifeCycleHooks).forEach(item => {
-        const [name, fn] = item
-        ;(this as any)[name] = fn
-      })
-    }
     if (isRecordObject(exposed)) {
       Object.entries(exposed).forEach(item => {
         const [key, value] = item
         if (!(key in this)) (this as any)[key] = value
+      })
+    }
+    if (lifeCycleHooks) {
+      Object.entries(lifeCycleHooks).forEach(item => {
+        const [name, fn] = item
+        ;(this as any)[name] = fn
       })
     }
   }
