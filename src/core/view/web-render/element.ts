@@ -24,6 +24,9 @@ export type HtmlElement = Element | Text | DocumentFragment
  * 父元素
  */
 export type ParentElement = Element | DocumentFragment
+// 标记Widget实例的props中自身节点的引用
+export const __WidgetPropsSelfNodeSymbol__ = Symbol('WidgetSelfNodeSymbol')
+
 /**
  * 渲染小部件、html元素、fragment元素、文本元素
  *
@@ -52,17 +55,15 @@ export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement):
 }
 
 // 创建文本元素
-function renderTextElement(vnode: TextVNode, parent?: ParentElement): Text {
+export function renderTextElement(vnode: TextVNode, parent?: ParentElement): Text {
   const textEl = document.createTextNode(vnode.value)
   vnode.el = textEl
   if (parent) parent.appendChild(textEl)
   return textEl
 }
 
-// 标记Widget实例的props中自身节点的引用
-export const __WidgetPropsSelfNodeSymbol__ = Symbol('WidgetSelfNodeSymbol')
 // 创建小部件元素
-function renderWidgetElement(
+export function renderWidgetElement(
   vnode: VNode<FnWidget | ClassWidget>,
   parent?: ParentElement
 ): HtmlElement {
@@ -86,7 +87,10 @@ function renderWidgetElement(
 }
 
 // 创建html元素
-function renderHtmlElement(vnode: VNode<HtmlElementTags>, parent?: ParentElement): HTMLElement {
+export function renderHtmlElement(
+  vnode: VNode<HtmlElementTags>,
+  parent?: ParentElement
+): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
   // 挂载到父节点
