@@ -122,6 +122,7 @@ class FnWidgetHookHandler {
  *  return <div>foo</div>;
  * }
  * ```
+ * @returns {VNode<FnWidget>|undefined} 当前函数组件的虚拟节点，如果没有，则返回`undefined`
  */
 export function getCurrentVNode(): VNode<FnWidget> | undefined {
   return FnWidgetHookHandler.getCurrentVNode()
