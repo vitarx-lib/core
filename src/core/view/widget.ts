@@ -90,6 +90,13 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
+   * 获取小部件名称
+   */
+  get widgetName(): string {
+    return this.renderer.name
+  }
+  
+  /**
    * 强制更新视图
    *
    * 如果你修改了非响应式数据，则可以调用此方法，强制更新视图。
