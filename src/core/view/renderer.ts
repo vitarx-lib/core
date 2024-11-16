@@ -46,11 +46,11 @@ export class WidgetRenderer {
   #currentScope = getCurrentScope()
 
   constructor(widget: Widget) {
+    this.#widget = widget
     const { result } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
     })
     this.#currentChildVNode = result
-    this.#widget = widget
   }
 
   // 上一次挂载的父元素
