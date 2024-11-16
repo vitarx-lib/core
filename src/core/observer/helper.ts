@@ -188,12 +188,12 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
 /**
  * ## 监听对象改变
  *
- * > **注意**：`origin`参数不接受多个源，也就是不接受[origin,...]。
+ * 非必要不要使用，因为它会深度克隆对象，来维持新旧值的差异。
  *
  * @note 不同于{@link watch}方法，该方法会回调对象改变之后和改变之前的值做为参数，且深度克隆。
  *
  * @template T - 监听源类型
- * @param {T} origin - 监听源
+ * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
  * @param {WatchValueCallback<T>} callback - 回调函数，第一个参数为`newValue`，第二个参数为`oldValue`
  * @param {Options} options - 监听器配置选项
  * @see watch
