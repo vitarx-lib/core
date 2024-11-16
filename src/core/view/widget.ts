@@ -32,7 +32,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   constructor(props: P) {
     super()
     this.#props = props
-    this.onCreated?.()
+    Promise.resolve().then(() => {
+      this.onCreated?.()
+    })
   }
 
   /**
