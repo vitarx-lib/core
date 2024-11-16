@@ -26,9 +26,7 @@ type ComputedRefElType<T> = T extends HtmlElementTags
   ? HtmlElementTagMap[T]
   : T extends Fragment
     ? VDocumentFragment
-    : T extends FnWidget
-      ? Record<string, any>
-      : ExcludeLifeCycleMethods<T>
+    : ExcludeLifeCycleMethods<T>
 /** 引用元素类型 */
 export type RefEl<T> = {
   value: ComputedRefElType<T> | null, readonly [RefElSymbol]: true
@@ -210,11 +208,11 @@ function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
 /**
  * 获取节点的父节点
  *
- * @param VNode - 虚拟节点对象
  * @returns {VNode|undefined} - 如果存在父节点则返回虚拟节点对象
+ * @param vnode
  */
-export function getParentNode(VNode: VNode | TextVNode): VNode | undefined {
-  return __ParentMapping__.get(VNode)
+export function getParentNode(vnode: VNode | TextVNode): VNode | undefined {
+  return __ParentMapping__.get(vnode)
 }
 /**
  * 判断是否为虚拟节点对象
