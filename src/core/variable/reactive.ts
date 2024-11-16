@@ -184,6 +184,8 @@ export function createReactive<T extends AnyObject>(
   deep: boolean = true,
   trigger?: () => void
 ): Reactive<T> {
+  // 避免嵌套代理
+  if (isReactive(target)) return target
   const proxy = new Proxy(
     target,
     new ReactiveHandler<T>(
@@ -209,7 +211,7 @@ export function createReactive<T extends AnyObject>(
  *
  * @param val
  */
-export function isReactive(val: any): val is Reactive<object> {
+export function isReactive<T extends object>(val: T | Reactive<T>): val is Reactive<T> {
   return typeof val === 'object' && !!Reflect.get(val, REACTIVE_SYMBOL)
 }
 
