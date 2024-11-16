@@ -37,7 +37,7 @@ export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstall
  */
 export class WidgetRenderer {
   // 小部件实例
-  readonly #widget: Widget
+  #widget: Widget
   // 当前组件的Child虚拟节点
   #currentChildVNode: VNode
   // 等到更新
@@ -263,7 +263,7 @@ export class WidgetRenderer {
       this.#currentChildVNode = null
       this.#currentScope = undefined
       // @ts-ignore 释放资源
-      this.widget = undefined
+      this.#widget = null
       this.#lastParent = null
     }
   }
