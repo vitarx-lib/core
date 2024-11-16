@@ -1,10 +1,13 @@
-// noinspection JSUnusedGlobalSymbols
-
 import { type IntrinsicAttributes, isVNode, type VNode } from './VNode.js'
 import { Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
 import { LifeCycleHooks } from './life-cycle.js'
 
+
+/**
+ * 生命周期钩子回调函数
+ */
+type LifeCycleHookCallback<R = void> = (this: Widget) => R
 /**
  * 构建虚拟节点函数类型
  */
@@ -124,112 +127,110 @@ export function defineExpose(exposed: Record<string, any>) {
 }
 
 /**
- * 注册组件创建钩子
- *
- * 会立即执行`fn`回调，所以注册该钩子是无意义的
+ * 创建完成时触发的钩子
  *
  * @param fn
  */
-export function onCreated(fn: VoidCallback) {
+export function onCreated(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  fn()
+  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.created, fn)
 }
 
 /**
- * 组件挂载前钩子
+ * 挂载前要触发的钩子
  *
  * 可以返回一个`Element`，用于将组件挂载到指定的元素上
  *
  * @param fn
  */
-export function onBeforeMount(fn: () => void | Element) {
+export function onBeforeMount(fn: LifeCycleHookCallback<void | Element>) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
 }
 
 /**
- * 注册组件挂载钩子
+ * 挂载完成时触发的钩子
  *
  * @param fn
  */
-export function onMounted(fn: VoidCallback) {
+export function onMounted(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.mounted, fn)
 }
 
 /**
- * 注册组件暂时停用钩子
+ * 小部件被临时停用触发的钩子
  *
  * @param fn
  */
-export function onDeactivate(fn: VoidCallback) {
+export function onDeactivate(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.deactivate, fn)
 }
 
 /**
- * 注册组件恢复使用钩子
+ * 小部件从停用后又恢复时触发的钩子
  *
  * @param fn
  */
-export function onActivated(fn: VoidCallback) {
+export function onActivated(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.activated, fn)
 }
 
 /**
- * 注册组件销毁钩子
- *
- * @param fn
- */
-export function onUnmounted(fn: VoidCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.unmounted, fn)
-}
-
-/**
- * 注册组件更新前的钩子
- *
- * @param fn
- */
-export function onBeforeUpdate(fn: VoidCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
-}
-
-/**
- * 注册组件更新钩子
- *
- * @param fn
- */
-export function onUpdated(fn: VoidCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.updated, fn)
-}
-
-/**
- * 注册组件销毁前的钩子
+ * 小部件实例被销毁前触发的钩子
  *
  * 在构造中返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`
  *
  * @param fn
  */
-export function onBeforeUnmount(fn: () => void | boolean) {
+export function onBeforeUnmount(fn: LifeCycleHookCallback<void | boolean>) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUnmount, fn)
 }
 
 /**
- * 注册组件渲染错误时的钩子
+ * 小部件被卸载时完成触发的钩子
  *
  * @param fn
  */
-export function onError(fn: (error: any) => Vitarx.VNode | void) {
+export function onUnmounted(fn: LifeCycleHookCallback) {
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.unmounted, fn)
+}
+
+/**
+ * 小部件更新前触发的钩子
+ *
+ * @param fn
+ */
+export function onBeforeUpdate(fn: LifeCycleHookCallback) {
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
+}
+
+/**
+ * 小部件更新完成时触发的钩子
+ *
+ * @param fn
+ */
+export function onUpdated(fn: LifeCycleHookCallback) {
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.updated, fn)
+}
+
+/**
+ * ## 生命周期钩子
+ *
+ * @param fn
+ */
+export function onError(fn: LifeCycleHookCallback<Vitarx.VNode | void>) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.error, fn)
 }
 /**
- * 创建函数组件
+ * ## 创建函数组件
  *
  * @param fn
  * @param props
