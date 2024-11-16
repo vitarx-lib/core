@@ -133,7 +133,7 @@ export class WidgetRenderer {
    * @returns {string}
    */
   get name(): string {
-    return this.selfNode.type.constructor.name
+    return this.selfNode.type.name
   }
 
   /**
