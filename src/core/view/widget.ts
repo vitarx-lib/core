@@ -130,7 +130,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
  *
  * @param val
  */
-export function isClassWidget(val: any): val is ClassWidget<any> {
+export function isClassWidget(val: any): val is ClassWidget {
   if (typeof val !== 'function') return false
   return val.prototype instanceof Widget
 }
