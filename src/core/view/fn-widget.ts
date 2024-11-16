@@ -119,7 +119,6 @@ class FnWidgetHookHandler {
  *  onCreated(() => {
  *    console.log(vnode.instance); // 输出 FnWidgetProxy
  *  });
- *  ```
  *  return <div>foo</div>;
  * }
  * ```
