@@ -77,7 +77,7 @@ export function renderWidgetElement(
     // 实例化函数组件或类组件
     vnode.instance = isClassWidget(vnode.type)
       ? new vnode.type(vnode.props)
-      : createFnWidget(vnode.type as FnWidget, vnode.props)
+      : createFnWidget(vnode as VNode<FnWidget>)
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
     el = vnode.instance.renderer.mount(parent)
     // 记录el
