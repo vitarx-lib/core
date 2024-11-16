@@ -30,11 +30,12 @@ class FnWidgetProxy extends Widget {
   readonly #buildVnode: () => VNode
 
   constructor(
+    props: {},
     build: BuildVNode,
     exposed?: Record<string, any>,
     lifeCycleHooks?: Record<LifeCycleHooks, AnyCallback>
   ) {
-    super({})
+    super(props)
     if (isVNode(build)) {
       this.#buildVnode = () => build
     } else {
@@ -235,13 +236,10 @@ export function onError(fn: LifeCycleHookCallback<Vitarx.VNode | void>) {
  * @param fn
  * @param props
  */
-export function createFnWidget<P extends Record<string, any>>(
-  fn: FnWidget<P>,
-  props: P
-): FnWidgetProxy {
+export function createFnWidget<P extends {}>(fn: FnWidget<P>, props: P): FnWidgetProxy {
   let { build, exposed, lifeCycleHooks } = FnWidgetHookHandler.collect(fn, props)
   if (!isFunction(build) && !isVNode(build)) {
     throw new Error(`[Vitarx]：函数式小部件需返回一个闭包函数用于创建响应式UI，或返回VNode`)
   }
-  return new FnWidgetProxy(build, exposed, lifeCycleHooks)
+  return new FnWidgetProxy(props, build, exposed, lifeCycleHooks)
 }
