@@ -56,7 +56,7 @@ export interface IntrinsicAttributes {
  */
 export type HtmlTag = HtmlElementTags
 // 节点类型
-export type VNodeType = HtmlTag | Fragment | ClassWidget | FnWidget
+export type VNodeType = FnWidget | ClassWidget | Fragment | HtmlTag
 // 节点属性结构
 export type VNodeProps<T> = (T extends HtmlElementTags
   ? HtmlIntrinsicElements[T]
@@ -112,7 +112,7 @@ type Children = Child[]
 /**
  * 创建元素`VNode`
  *
- * 该方法是`createElement`的别名。
+ * 该方法是`createVNode`的别名。
  *
  * @see createElement
  */
@@ -127,13 +127,30 @@ export function h<T extends VNodeType>(
 /**
  * 创建元素`VNode`
  *
+ * 该方法是`createVNode`的别名。
+ *
+ * @see createElement
+ */
+export function createElement<T extends VNodeType>(
+  type: T,
+  props: VNodeProps<T> | null = null,
+  ...children: Children
+): VNode<T> {
+  return createVNode(type, props, ...children)
+}
+
+/**
+ * 创建元素`VNode`
+ *
  * @alias h
+ * @alias createElement
+ * @template T - 节点类型
  * @param type - 节点类型
  * @param props - 节点属性
  * @param children - 子节点，如果是小部件类型则会写入到 `props.children`
  * @returns {VNode} - 虚拟节点
  */
-export function createElement<T extends VNodeType>(
+export function createVNode<T extends VNodeType>(
   type: T,
   props: VNodeProps<T> | null = null,
   ...children: Children
