@@ -3,7 +3,7 @@ import {
   createFnWidget,
   type FnWidget,
   isClassWidget,
-  Widget
+  type Widget
 } from './view/index.js'
 import { createScope } from './scope/index.js'
 
