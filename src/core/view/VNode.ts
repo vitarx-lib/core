@@ -171,39 +171,51 @@ export function createElement<T extends VNodeType>(
     } else {
       children.push(attrChildren as any)
     }
-    vnode.children = toVNodeChildren(children)
+    vnode.children = toVNodeChildren(children, vnode)
   }
   return vnode
 }
 
+// VNode的父节点缓存
+const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>
 /**
  * 转换子节点列表
  *
  * @param children
+ * @param parent
  */
-function toVNodeChildren(children: Child[]): VNodeChildren {
+function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
   let childList: VNodeChildren = []
-
   function flatten(child: Child) {
     if (Array.isArray(child)) {
       child.forEach(item => flatten(item))
     } else {
-      childList.push(
-        isVNode(child)
-          ? child
-          : {
-              value: String(child),
-              el: null,
-              [TextVNodeSymbol]: true
-            }
-      )
+      const vnode: VNode | TextVNode = isVNode(child)
+        ? child
+        : {
+            value: String(child),
+            el: null,
+            [TextVNodeSymbol]: true
+          }
+      childList.push(vnode)
+      __ParentMapping__.set(vnode, parent)
     }
   }
 
   flatten(children)
+
   return childList
 }
 
+/**
+ * 获取节点的父节点
+ *
+ * @param VNode - 虚拟节点对象
+ * @returns {VNode|undefined} - 如果存在父节点则返回虚拟节点对象
+ */
+export function getParentNode(VNode: VNode | TextVNode): VNode | undefined {
+  return __ParentMapping__.get(VNode)
+}
 /**
  * 判断是否为虚拟节点对象
  *
