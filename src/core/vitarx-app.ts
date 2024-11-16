@@ -5,7 +5,6 @@ import {
   isClassWidget,
   isVNode,
   type VNode,
-  type VNodeProps,
   type Widget
 } from './view/index.js'
 import { renderWidgetElement } from './view/web-render/index.js'
@@ -13,7 +12,6 @@ import { isFunction } from '../utils/index.js'
 
 // 错误提示
 const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
-type AppMainWidget = ClassWidget | FnWidget | VNode<FnWidget | ClassWidget>
 /**
  * # Vitarx App
  */
@@ -59,12 +57,15 @@ export class VitarxApp {
    * @param {AppMainWidget} widget - 入口小部件
    * @param {object} props - 小部件的props参数，仅在widget为函数或类时可选。
    */
-  render<T extends AppMainWidget>(widget: AppMainWidget, props?: VNodeProps<T>): void {
+  render<P extends Record<string, any>>(
+    widget: ClassWidget<P> | FnWidget<P> | VNode,
+    props?: P
+  ): void {
     let vnode: VNode<FnWidget | ClassWidget>
     if (isFunction(widget) || isClassWidget(widget)) {
-      vnode = createVNode(widget, props)
+      vnode = createVNode(widget as FnWidget, props)
     } else {
-      vnode = widget
+      vnode = widget as VNode<FnWidget | ClassWidget>
     }
     if (!isVNode(vnode) || !isFunction(vnode.type)) {
       throw new Error(`[Vitarx]：入口小部件必须是函数声明小部件或类声明小部件。`)
