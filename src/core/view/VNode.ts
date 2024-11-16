@@ -256,4 +256,3 @@ export function refEl<T>(): RefEl<T> {
 export function isRefEl(obj: any): obj is RefEl<any> {
   return obj?.[RefElSymbol] === true
 }
-
