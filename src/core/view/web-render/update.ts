@@ -21,7 +21,7 @@ export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
   // 类型不一致，替换原有节点
   if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
     // 获取父节点
-    const parent = getParentNode(oldVNode.el)
+    const parent = getVElementParentEl(oldVNode.el)
     // 替换旧节点为新节点
     replaceVNode(newVNode, oldVNode, parent)
     return newVNode
@@ -85,7 +85,7 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
   if (oldChildren === newChildren) return false
   // 创建新子节点
   if (!oldChildren && newChildren) {
-    const parent = oldVNode.type === Fragment ? getParentNode(oldVNode.el) : oldVNode.el
+    const parent = oldVNode.type === Fragment ? getVElementParentEl(oldVNode.el) : oldVNode.el
     // 渲染新的子节点
     if (parent) renderChildren(parent as Element, newChildren)
     oldVNode.children = newChildren
@@ -124,7 +124,7 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
   // 新增节点
   if (!oldChild && newChild) {
-    const parent = oldVNode.type === Fragment ? getParentNode(oldVNode.el) : oldVNode.el
+    const parent = oldVNode.type === Fragment ? getVElementParentEl(oldVNode.el) : oldVNode.el
     // 渲染新的子节点
     if (parent) renderChild(parent as Element, newChild)
     return newChild
@@ -207,7 +207,7 @@ export function updateActivateState(vnode: VNodeChild, activate: boolean) {
  */
 function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: ParentNode | null) {
   if (parent === null) return
-  if (parent === undefined) parent = getParentNode(oldVNode.el)
+  if (parent === undefined) parent = getVElementParentEl(oldVNode.el)
   // 创建新元素
   const newEl = renderElement(newVNode)
   if (parent) {
@@ -256,7 +256,7 @@ function replaceChild(
  *
  * @param el
  */
-export function getParentNode(el: VElement | null): ParentNode | null {
+export function getVElementParentEl(el: VElement | null): ParentNode | null {
   if (!el) return null
   return Array.isArray(el) ? el[0].parentNode : el.parentNode
 }

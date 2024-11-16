@@ -3,7 +3,7 @@ import { isFunction } from '../../utils/index.js'
 import { getCurrentScope, Scope, watchDepend } from '../../index.js'
 import type { Widget } from './widget.js'
 import {
-  getParentNode,
+  getVElementParentEl,
   type HtmlElement,
   patchUpdate,
   removeElement,
@@ -87,7 +87,7 @@ export class WidgetRenderer {
    * @returns {ParentNode | null} DOM元素实例
    */
   get parent(): ParentNode | null {
-    return getParentNode(this.el)
+    return getVElementParentEl(this.el)
   }
 
   /**
