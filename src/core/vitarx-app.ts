@@ -54,7 +54,7 @@ export class VitarxApp {
   /**
    * ## 渲染小部件
    *
-   * @param {AppMainWidget} widget - 入口小部件
+   * @param {ClassWidget | FnWidget | VNode} widget - 入口小部件
    * @param {object} props - 小部件的props参数，仅在widget为函数或类时可选。
    */
   render<P extends Record<string, any>>(
