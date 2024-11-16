@@ -59,6 +59,8 @@ function renderTextElement(vnode: TextVNode, parent?: ParentElement): Text {
   return textEl
 }
 
+// 标记Widget实例的props中自身节点的引用
+export const __WidgetPropsSelfNodeSymbol__ = Symbol('WidgetSelfNodeSymbol')
 // 创建小部件元素
 function renderWidgetElement(
   vnode: VNode<FnWidget | ClassWidget>,
@@ -66,18 +68,19 @@ function renderWidgetElement(
 ): HtmlElement {
   let el: HtmlElement
   createScope(() => {
+    Object.defineProperty(vnode.props, __WidgetPropsSelfNodeSymbol__, {
+      value: vnode
+    })
+    // 包装props为响应式对象
     vnode.props = reactive(vnode.props, false)
-    // 函数组件或类组件
+    // 实例化函数组件或类组件
     vnode.instance = isClassWidget(vnode.type)
       ? new vnode.type(vnode.props)
       : createFnWidget(vnode.type as FnWidget, vnode.props)
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
     el = vnode.instance.renderer.mount(parent)
-    if (el instanceof DocumentFragment) {
-      vnode.el = fragmentToArray(el)
-    } else {
-      vnode.el = el
-    }
+    // 记录el
+    vnode.el = el instanceof DocumentFragment ? fragmentToArray(el) : el
   }, false)
   return el!
 }
