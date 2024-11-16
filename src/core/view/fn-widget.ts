@@ -69,6 +69,7 @@ class FnWidgetProxy extends Widget {
  */
 class FnWidgetHookHandler {
   static #collectMap: CollectMap | undefined = undefined
+  static #currentVNode: VNode<FnWidget> | undefined = undefined
 
   static trackExposed(exposed: Record<string, any>) {
     if (this.#collectMap) this.#collectMap.exposed = exposed
@@ -84,22 +85,47 @@ class FnWidgetHookHandler {
     }
   }
 
-  static collect<P extends Record<string, any>>(
-    fn: FnWidget<P>,
-    props: P
-  ): CollectMap & {
+  static collect(vnode: VNode<FnWidget>): CollectMap & {
     build: any
   } {
     const oldBackup = this.#collectMap
+    const oldVNode = this.#currentVNode
     this.#collectMap = {
       exposed: undefined,
       lifeCycleHooks: undefined
     }
-    const build = fn(props || {})
+    this.#currentVNode = vnode
+    const build = vnode.type(vnode.props)
     const collectMap = this.#collectMap
     this.#collectMap = oldBackup
+    this.#currentVNode = oldVNode
     return { ...collectMap, build }
   }
+
+  static getCurrentVNode(): VNode<FnWidget> | undefined {
+    return this.#currentVNode
+  }
+}
+
+/**
+ * 获取当前函数组件的虚拟节点
+ *
+ * ```ts
+ * import { defineExpose,ref } from 'vitarx'
+ *
+ * function Foo() {
+ *  const vnode = getCurrentVNode();
+ *  console.log(vnode.instance); // 输出 undefined，因为此时正在解析函数组件，还未创建实例。
+ *  onCreated(() => {
+ *    console.log(vnode.instance); // 输出 FnWidgetProxy
+ *  });
+ *  ```
+ *  return <div>foo</div>;
+ * }
+ * ```
+ */
+export function getCurrentVNode(): VNode<FnWidget> | undefined {
+  return FnWidgetHookHandler.getCurrentVNode()
 }
 
 /**
@@ -109,7 +135,7 @@ class FnWidgetHookHandler {
  *
  * @example
  * ```ts
- * import { defineExpose,ref,build } from 'vitarx'
+ * import { defineExpose,ref } from 'vitarx'
  *
  * function Foo() {
  *  const count = ref(0);
@@ -233,13 +259,12 @@ export function onError(fn: LifeCycleHookCallback<Vitarx.VNode | void>) {
 /**
  * ## 创建函数组件
  *
- * @param fn
- * @param props
+ * @param vnode
  */
-export function createFnWidget<P extends {}>(fn: FnWidget<P>, props: P): FnWidgetProxy {
-  let { build, exposed, lifeCycleHooks } = FnWidgetHookHandler.collect(fn, props)
+export function createFnWidget(vnode: VNode<FnWidget>): FnWidgetProxy {
+  let { build, exposed, lifeCycleHooks } = FnWidgetHookHandler.collect(vnode)
   if (!isFunction(build) && !isVNode(build)) {
     throw new Error(`[Vitarx]：函数式小部件需返回一个闭包函数用于创建响应式UI，或返回VNode`)
   }
-  return new FnWidgetProxy(props, build, exposed, lifeCycleHooks)
+  return new FnWidgetProxy(vnode.props, build, exposed, lifeCycleHooks)
 }
