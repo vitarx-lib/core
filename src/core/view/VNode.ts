@@ -176,7 +176,7 @@ export function createElement<T extends VNodeType>(
   return vnode
 }
 
-// VNode的父节点缓存
+// VNode的父节点映射关系缓存
 const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>
 /**
  * 转换子节点列表
