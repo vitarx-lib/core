@@ -214,6 +214,19 @@ function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
 export function getParentNode(vnode: VNode | TextVNode): VNode | undefined {
   return __ParentMapping__.get(vnode)
 }
+
+/**
+ * 更新父节点映射
+ *
+ * 该方法提供给框架内部逻辑调用，开发者谨慎调用本方法。
+ *
+ * @param vnode - 虚拟节点对象
+ * @param parent - 父节点
+ */
+export function __updateParentNode(vnode: VNode | TextVNode, parent: VNode): void {
+  __ParentMapping__.set(vnode, parent)
+}
+
 /**
  * 判断是否为虚拟节点对象
  *
