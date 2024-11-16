@@ -1,8 +1,16 @@
-import { isVNode, type VElement, type VNode } from './VNode.js'
+import { __updateParentNode, isVNode, type VElement, type VNode } from './VNode.js'
 import { isFunction } from '../../utils/index.js'
-import { getCurrentScope, Scope, watchDepend } from '../../index.js'
+import {
+  type ClassWidget,
+  type FnWidget,
+  getCurrentScope,
+  isClassWidget,
+  Scope,
+  watchDepend
+} from '../../index.js'
 import type { Widget } from './widget.js'
 import {
+  __WidgetPropsSelfNodeSymbol__,
   getVElementParentEl,
   type HtmlElement,
   patchUpdate,
@@ -28,38 +36,38 @@ export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstall
  * 用于渲染小部件，和管理小部件的生命周期。
  */
 export class WidgetRenderer {
+  // 小部件实例
+  readonly #widget: Widget
   // 当前组件的Child虚拟节点
-  #currentVNode: VNode
+  #currentChildVNode: VNode
   // 等到更新
   #pendingUpdate = false
   // 当前作用域
   #currentScope = getCurrentScope()
+
+  constructor(widget: Widget) {
+    const { result } = watchDepend(this.build.bind(this), this.update.bind(this), {
+      getResult: true
+    })
+    this.#currentChildVNode = result
+    this.#widget = widget
+  }
+
+  // 上一次挂载的父元素
+  #lastParent: ParentNode | null = null
+
   /**
    * 渲染器状态
    *
    * @protected
    */
-  protected state: RenderState = 'notMounted'
-  // 上一次挂载的父元素
-  #lastParent: ParentNode | null = null
-  constructor(protected widget: Widget) {
-    const { result, listener } = watchDepend(this.build.bind(this), this.update.bind(this), {
-      getResult: true
-    })
-    if (!isVNode(result)) {
-      listener?.destroy()
-      throw new Error('[Vitarx]：Widget.build方法必须返回VNode虚拟节点')
-    }
-    this.#currentVNode = result
-  }
+  protected _state: RenderState = 'notMounted'
 
   /**
-   * 判断是否已初次挂载
-   *
-   * @returns {boolean}
+   * 获取当前状态
    */
-  get isMounted(): boolean {
-    return this.#currentVNode.el !== null
+  get state(): RenderState {
+    return this._state
   }
 
   /**
@@ -72,13 +80,23 @@ export class WidgetRenderer {
   get scope(): Scope | undefined {
     return this.#currentScope
   }
+
+  /**
+   * 判断是否已初次挂载
+   *
+   * @returns {boolean}
+   */
+  get isMounted(): boolean {
+    return this.#currentChildVNode.el !== null
+  }
+
   /**
    * 当前小部件的child虚拟节点元素
    *
    * @returns {VElement | null}
    */
   get el(): VElement | null {
-    return this.#currentVNode.el || null
+    return this.#currentChildVNode.el || null
   }
 
   /**
@@ -86,7 +104,7 @@ export class WidgetRenderer {
    *
    * @returns {ParentNode | null} DOM元素实例
    */
-  get parent(): ParentNode | null {
+  get parentEl(): ParentNode | null {
     return getVElementParentEl(this.el)
   }
 
@@ -96,14 +114,35 @@ export class WidgetRenderer {
    * @returns {VNode}
    */
   get child(): VNode {
-    return this.#currentVNode
+    return this.#currentChildVNode
   }
 
   /**
-   * 获取当前状态
+   * 获取小部件自身的虚拟节点
+   *
+   * @returns {VNode}
    */
-  get currentState(): RenderState {
-    return this.state
+  get selfNode(): VNode<FnWidget | ClassWidget> {
+    // @ts-ignore
+    return this.widget.props[__WidgetPropsSelfNodeSymbol__]
+  }
+
+  /**
+   * 获取小部件名称
+   *
+   * @returns {string}
+   */
+  get name(): string {
+    return this.selfNode.type.constructor.name
+  }
+
+  /**
+   * 小部件实例
+   *
+   * @returns {Widget}
+   */
+  get widget(): Widget {
+    return this.#widget
   }
   /**
    * 挂载节点
@@ -126,9 +165,9 @@ export class WidgetRenderer {
       const target = this.widget.onBeforeMount?.()
       // 挂载到指定元素
       if (target instanceof Element) parent = target
-      el = renderElement(this.#currentVNode, parent)
+      el = renderElement(this.#currentChildVNode, parent)
       Promise.resolve().then(() => {
-        this.state = 'activated'
+        this._state = 'activated'
         // 触发onActivated生命周期
         this.widget.onActivated?.()
         // 触发onMounted生命周期
@@ -149,24 +188,33 @@ export class WidgetRenderer {
   build(): VNode {
     let vnode: VNode
     try {
-      vnode = this.widget.build() as VNode
+      vnode = this.widget.build()
     } catch (e) {
       if (this.widget?.onError && isFunction(this.widget.onError)) {
-        vnode = this.widget.onError(e) as VNode
-        if (isVNode(vnode)) return vnode
+        const errVNode = this.widget.onError(e) as VNode
+        if (!isVNode(errVNode)) throw e
+        vnode = errVNode
+      } else {
+        // 继续向上抛出异常
+        throw e
       }
-      // 继续向上抛出异常
-      throw e
     }
-    if (isVNode(vnode)) return vnode
-    throw new Error('[Vitarx]：Widget.build方法必须返回有效的VNode')
+    if (isVNode(vnode)) {
+      __updateParentNode(vnode, this.selfNode)
+      return vnode
+    }
+    if (isClassWidget(this.selfNode.type)) {
+      throw new Error(`[Vitarx]：${this.name}类Widget.build返回值非有效的VNode对象`)
+    } else {
+      throw new Error(`[Vitarx]：${this.name}函数Widget，返回值非有效的VNode对象|VNode构造器`)
+    }
   }
 
   /**
    * 更新视图
    */
   update(): void {
-    if (this.state === 'unloaded') {
+    if (this._state === 'unloaded') {
       console.warn('[Vitarx]：渲染器已销毁，无法再更新视图！')
       return
     }
@@ -177,9 +225,9 @@ export class WidgetRenderer {
       setTimeout(() => {
         this.#pendingUpdate = false
       })
-      const oldVNode = this.#currentVNode
+      const oldVNode = this.#currentChildVNode
       const newVNode = this.build()
-      this.#currentVNode = patchUpdate(oldVNode, newVNode)
+      this.#currentChildVNode = patchUpdate(oldVNode, newVNode)
       this.widget.onUpdated?.()
     } catch (e) {
       this.#pendingUpdate = false
@@ -195,8 +243,8 @@ export class WidgetRenderer {
    * @protected
    */
   unmount() {
-    if (this.state === 'activated' || this.state === 'deactivate') {
-      this.state = 'uninstalling'
+    if (this._state === 'activated' || this._state === 'deactivate') {
+      this._state = 'uninstalling'
       // 触发onDeactivated生命周期
       const result = this.widget.onBeforeUnmount?.()
       // 递归删除子节点
@@ -208,11 +256,11 @@ export class WidgetRenderer {
       // 销毁当前作用域
       this.scope?.destroy()
       // 修改状态为已卸载
-      this.state = 'unloaded'
+      this._state = 'unloaded'
       // 触发onUnmounted生命周期
       this.widget.onUnmounted?.()
       // @ts-ignore 释放资源
-      this.#currentVNode = null
+      this.#currentChildVNode = null
       this.#currentScope = undefined
       // @ts-ignore 释放资源
       this.widget = undefined
@@ -229,8 +277,8 @@ export class WidgetRenderer {
    * @param root - 该参数用于递归时内部判断是否需要重新挂载，请勿外部传入。
    */
   activate(root: boolean = true): void {
-    if (this.state === 'deactivate') {
-      this.state = 'activated'
+    if (this._state === 'deactivate') {
+      this._state = 'activated'
       if (root) {
         // 恢复父元素
         this.#lastParent?.appendChild(VElementToHTMLElement(this.el!))
@@ -254,14 +302,14 @@ export class WidgetRenderer {
    * @param root - 该参数用于递归时内部判断是否需要移除当前元素，请勿外部传入。
    */
   deactivate(root: boolean = true): void {
-    if (this.state === 'activated') {
-      this.state = 'deactivate'
+    if (this._state === 'activated') {
+      this._state = 'deactivate'
       this.#currentScope?.pause()
       // 触发onDeactivated生命周期
       this.widget.onDeactivate?.()
       // 删除当前元素
       if (root) {
-        this.#lastParent = this.parent
+        this.#lastParent = this.parentEl
         removeElement(this.el)
       }
       // 停用子节点
