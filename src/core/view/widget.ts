@@ -1,7 +1,6 @@
 import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
-import type { FnWidget } from './fn-widget.js'
 import { __WidgetPropsSelfNodeSymbol__ } from './web-render/index.js'
 
 export type Element = Vitarx.Element
@@ -34,7 +33,8 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   constructor(props: P) {
     super()
     this.#props = props
-    if (this.vnode.instance!) {
+    // 如果已存在实例，则是在热更新，不触发onCreate生命周期，仅在调试模式下会出现这种情况
+    if (!this.vnode.instance) {
       Promise.resolve().then(() => {
         this.onCreated?.()
       })
@@ -44,12 +44,13 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   /**
    * 获取小部件自身的虚拟节点
    *
-   * @returns {VNode}
+   * @returns {VNode<ClassWidget>}
    */
-  get vnode(): VNode<ClassWidget | FnWidget> {
+  get vnode(): VNode<ClassWidget> {
     // @ts-ignore
     return this.props[__WidgetPropsSelfNodeSymbol__]
   }
+
   /**
    * 该方法由`Vitarx`内部调用，用于渲染
    *
@@ -63,6 +64,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
     }
     return this.#renderer
   }
+
   /**
    * 外部传入的属性
    *
