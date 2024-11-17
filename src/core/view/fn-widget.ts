@@ -62,17 +62,6 @@ class FnWidgetProxy extends Widget {
   build(): VNode {
     return this.#buildVnode()
   }
-
-  /**
-   * 获取小部件自身的虚拟节点
-   *
-   * @returns {VNode<FnWidget>}
-   */
-  // @ts-ignore
-  override get vnode(): VNode<FnWidget> {
-    // @ts-ignore
-    return super.vnode
-  }
 }
 
 /**
