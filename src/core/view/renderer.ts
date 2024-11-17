@@ -44,24 +44,42 @@ export class WidgetRenderer {
   #pendingUpdate = false
   // 当前作用域
   #currentScope = getCurrentScope()
-
-  constructor(widget: Widget) {
-    this.#widget = widget
-    const { result } = watchDepend(this.build.bind(this), this.update.bind(this), {
-      getResult: true
-    })
-    this.#currentChildVNode = result
-  }
-
-  // 上一次挂载的父元素
-  #lastParent: ParentNode | null = null
-
   /**
    * 渲染器状态
    *
    * @protected
    */
   protected _state: RenderState = 'notMounted'
+  // 上一次挂载的父元素
+  #lastParent: ParentNode | null = null
+
+  constructor(widget: Widget) {
+    this.#widget = widget
+    const { result } = watchDepend(this.build.bind(this), this.update.bind(this), {
+      getResult: true
+    })
+    // @ts-ignore 兼容开发模式的，build自动移除该if块
+    if (import.meta.env?.MODE === 'development') {
+      // 热更新
+      if (widget.vnode.el) {
+        const oldRenderer = widget.vnode.instance!.renderer
+        // 销毁旧作用域
+        oldRenderer.scope?.destroy()
+        // 恢复子节点
+        this.#currentChildVNode = oldRenderer.child
+        // 恢复渲染器状态
+        this._state = oldRenderer.state
+        // 恢复最后一次挂载的父元素
+        this.#lastParent = oldRenderer.#lastParent
+        // 更新一次视图
+        this.update()
+      } else {
+        this.#currentChildVNode = result
+      }
+    } else {
+      this.#currentChildVNode = result
+    }
+  }
 
   /**
    * 获取当前状态
@@ -122,7 +140,7 @@ export class WidgetRenderer {
    *
    * @returns {VNode}
    */
-  get selfNode(): VNode<FnWidget | ClassWidget> {
+  get vnode(): VNode<FnWidget | ClassWidget> {
     // @ts-ignore
     return this.widget.props[__WidgetPropsSelfNodeSymbol__]
   }
@@ -133,7 +151,7 @@ export class WidgetRenderer {
    * @returns {string}
    */
   get name(): string {
-    return this.selfNode.type.name
+    return this.vnode.type.name
   }
 
   /**
@@ -200,10 +218,10 @@ export class WidgetRenderer {
       }
     }
     if (isVNode(vnode)) {
-      __updateParentNode(vnode, this.selfNode)
+      __updateParentNode(vnode, this.vnode)
       return vnode
     }
-    if (isClassWidget(this.selfNode.type)) {
+    if (isClassWidget(this.vnode.type)) {
       throw new Error(`[Vitarx]：${this.name}类Widget.build返回值非有效的VNode对象`)
     } else {
       throw new Error(`[Vitarx]：${this.name}函数Widget，返回值非有效的VNode对象|VNode构造器`)
