@@ -2,7 +2,11 @@ import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
 import { __WidgetPropsSelfNodeSymbol__ } from './web-render/index.js'
+import type { FnWidget } from './fn-widget.js'
 
+interface WidgetGetterInterface {
+  get vnode(): VNode<ClassWidget | FnWidget>
+}
 export type Element = Vitarx.Element
 /**
  * 类组件构造器类型
@@ -22,7 +26,10 @@ export type WidgetChildren<P> = P extends { children: infer U }
 /**
  * 组件基类
  */
-export abstract class Widget<P extends Record<string, any> = {}> extends LifeCycle {
+export abstract class Widget<P extends Record<string, any> = {}>
+  extends LifeCycle
+  implements WidgetGetterInterface
+{
   readonly #props: P
   #renderer?: WidgetRenderer
   /**
