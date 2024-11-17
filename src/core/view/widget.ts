@@ -1,6 +1,8 @@
-import { type IntrinsicAttributes, type VElement } from './VNode.js'
+import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
+import type { FnWidget } from './fn-widget.js'
+import { __WidgetPropsSelfNodeSymbol__ } from './web-render/index.js'
 
 export type Element = Vitarx.Element
 /**
@@ -32,11 +34,22 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   constructor(props: P) {
     super()
     this.#props = props
-    Promise.resolve().then(() => {
-      this.onCreated?.()
-    })
+    if (this.vnode.instance!) {
+      Promise.resolve().then(() => {
+        this.onCreated?.()
+      })
+    }
   }
 
+  /**
+   * 获取小部件自身的虚拟节点
+   *
+   * @returns {VNode}
+   */
+  get vnode(): VNode<ClassWidget | FnWidget> {
+    // @ts-ignore
+    return this.props[__WidgetPropsSelfNodeSymbol__]
+  }
   /**
    * 该方法由`Vitarx`内部调用，用于渲染
    *
@@ -95,7 +108,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   get widgetName(): string {
     return this.renderer.name
   }
-  
+
   /**
    * 强制更新视图
    *
