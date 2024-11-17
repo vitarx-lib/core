@@ -59,7 +59,7 @@ class FnWidgetProxy extends Widget {
    *
    * @protected
    */
-  public build(): VNode {
+  build(): VNode {
     return this.#buildVnode()
   }
 }
