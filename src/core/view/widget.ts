@@ -40,8 +40,14 @@ export abstract class Widget<P extends Record<string, any> = {}>
   constructor(props: P) {
     super()
     this.#props = props
-    // 如果已存在实例，则是在热更新，不触发onCreate生命周期，仅在调试模式下会出现这种情况
-    if (!this.vnode.instance) {
+    // @ts-ignore 兼容开发模式的，build自动移除该if块
+    if (import.meta.env?.MODE === 'development') {
+      if (!this.vnode.instance) {
+        Promise.resolve().then(() => {
+          this.onCreated?.()
+        })
+      }
+    } else {
       Promise.resolve().then(() => {
         this.onCreated?.()
       })
