@@ -7,7 +7,7 @@ import { LifeCycleHooks } from './life-cycle.js'
 /**
  * 生命周期钩子回调函数
  */
-type LifeCycleHookCallback<R = void> = (this: Widget) => R
+type LifeCycleHookCallback<R = void> = (this: FnWidgetProxy) => R
 /**
  * 构建虚拟节点函数类型
  */
@@ -61,6 +61,17 @@ class FnWidgetProxy extends Widget {
    */
   build(): VNode {
     return this.#buildVnode()
+  }
+
+  /**
+   * 获取小部件自身的虚拟节点
+   *
+   * @returns {VNode<FnWidget>}
+   */
+  // @ts-ignore
+  override get vnode(): VNode<FnWidget> {
+    // @ts-ignore
+    return super.vnode
   }
 }
 
