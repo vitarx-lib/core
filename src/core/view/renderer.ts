@@ -63,14 +63,14 @@ export class WidgetRenderer {
       // 热更新
       if (widget.vnode.el) {
         const oldRenderer = widget.vnode.instance!.renderer
-        // 销毁旧作用域
-        oldRenderer.scope?.destroy()
         // 恢复子节点
         this.#currentChildVNode = oldRenderer.child
         // 恢复渲染器状态
         this._state = oldRenderer.state
         // 恢复最后一次挂载的父元素
         this.#lastParent = oldRenderer.#lastParent
+        // 重置小部件实例
+        widget.vnode.instance = widget
         // 更新一次视图
         this.update()
       } else {
