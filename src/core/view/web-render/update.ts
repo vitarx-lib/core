@@ -55,11 +55,10 @@ function patchAttrs(oldVNode: VNode, newVNode: VNode): void {
   Object.keys(newAttrs).forEach(key => {
     // 更新或新增属性
     if (oldAttrs[key] !== newAttrs[key]) {
-      if (isWidget) {
-        oldAttrs[key] = newAttrs[key]
-      } else {
+      if (!isWidget) {
         setAttribute(el, key, newAttrs[key], oldAttrs[key])
       }
+      oldAttrs[key] = newAttrs[key]
     }
     // 将已经处理过的 key 从 oldKeysSet 中删除
     oldKeysSet.delete(key)
