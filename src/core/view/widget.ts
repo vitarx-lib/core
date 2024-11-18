@@ -138,7 +138,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
   /**
    * 构建`UI`元素。
    *
-   * 该方法会被多次调用，所以在方法内应该存在任何副作用。
+   * 该方法会被多次调用，所以在方法内不应该存在任何副作用。
    *
    * > **注意**：在类组件的build方法中不要返回 `()=> Element` 闭包，而是应直接返回`Element`。
    *
