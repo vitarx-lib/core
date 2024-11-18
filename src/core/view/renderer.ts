@@ -55,7 +55,7 @@ export class WidgetRenderer {
 
   constructor(widget: Widget) {
     this.#widget = widget
-    const { result } = watchDepend(this.build.bind(this), this.update.bind(this), {
+    const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
     })
     // @ts-ignore 兼容开发模式的，build自动移除该if块
@@ -74,12 +74,12 @@ export class WidgetRenderer {
         // 更新引用
         widget.vnode.ref && (widget.vnode.ref.value = widget)
         // 更新一次视图
-        this.update()
+        this.update(childVNode)
       } else {
-        this.#currentChildVNode = result
+        this.#currentChildVNode = childVNode
       }
     } else {
-      this.#currentChildVNode = result
+      this.#currentChildVNode = childVNode
     }
   }
 
@@ -233,8 +233,10 @@ export class WidgetRenderer {
 
   /**
    * 更新视图
+   *
+   * @param {VNode} newChildVNode - 可选的新`child`虚拟节点，如果不提供，则使用`build`方法构建。
    */
-  update(): void {
+  update(newChildVNode?: VNode): void {
     if (this._state === 'unloaded') {
       console.warn('[Vitarx]：渲染器已销毁，无法再更新视图！')
       return
@@ -247,7 +249,7 @@ export class WidgetRenderer {
         this.#pendingUpdate = false
       })
       const oldVNode = this.#currentChildVNode
-      const newVNode = this.build()
+      const newVNode = newChildVNode || this.build()
       this.#currentChildVNode = patchUpdate(oldVNode, newVNode)
       this.widget.onUpdated?.()
     } catch (e) {
