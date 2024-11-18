@@ -74,7 +74,8 @@ export abstract class Widget<P extends Record<string, any> = {}>
     if (!this.#renderer) {
       // @ts-ignore 兼容热更新
       if (import.meta.env?.MODE === 'development') {
-        if (this.vnode.instance) {
+        // 如果是类组件，恢复其属性值
+        if (isClassWidget(this.vnode.type) && this.vnode.instance) {
           for (const key in this.vnode.instance) {
             // @ts-ignore
             const oldValue = this.vnode.instance[key]
