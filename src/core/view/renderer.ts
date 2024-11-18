@@ -178,7 +178,7 @@ export class WidgetRenderer {
     if (this.state !== 'notMounted') {
       if (!this.el) throw new Error('[Vitarx]：渲染器实例已被销毁，不能重新进行挂载。')
       el = VElementToHTMLElement(this.el)
-      if (parent) {
+      if (parent && parent !== this.parentEl) {
         console.warn('[Vitarx]：同一个小部件实例不应该被多次挂载，这会从旧的容器，转移到新的容器。')
         parent.appendChild(el)
       }
