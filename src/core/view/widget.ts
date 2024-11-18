@@ -63,7 +63,6 @@ export abstract class Widget<P extends Record<string, any> = {}>
     // @ts-ignore
     return this.props[__WidgetPropsSelfNodeSymbol__]
   }
-
   /**
    * 该方法由`Vitarx`内部调用，用于渲染
    *
@@ -73,6 +72,20 @@ export abstract class Widget<P extends Record<string, any> = {}>
    */
   get renderer(): WidgetRenderer {
     if (!this.#renderer) {
+      // @ts-ignore 兼容热更新
+      if (import.meta.env?.MODE === 'development') {
+        if (this.vnode.instance) {
+          for (const key in this.vnode.instance) {
+            // @ts-ignore
+            const oldValue = this.vnode.instance[key]
+            // 函数类型不恢复
+            if (typeof oldValue !== 'function') {
+              // @ts-ignore
+              this[key] = oldValue
+            }
+          }
+        }
+      }
       this.#renderer = new WidgetRenderer(this)
     }
     return this.#renderer
