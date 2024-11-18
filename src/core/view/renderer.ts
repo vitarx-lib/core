@@ -71,6 +71,8 @@ export class WidgetRenderer {
         this.#lastParent = oldRenderer.#lastParent
         // 重置小部件实例
         widget.vnode.instance = widget
+        // 更新引用
+        widget.vnode.ref && (widget.vnode.ref.value = widget)
         // 更新一次视图
         this.update()
       } else {
