@@ -9,7 +9,7 @@
     // 开启严格模式（可选）
     "strict": true,
     // 模块解析策略
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     // 启用模块间互操作
     "esModuleInterop": true,
     // 跳过库文件检查（可选）
