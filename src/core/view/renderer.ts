@@ -43,7 +43,7 @@ export class WidgetRenderer {
   // 等到更新
   #pendingUpdate = false
   // 当前作用域
-  #currentScope = getCurrentScope()
+  #currentScope: Scope
   /**
    * 渲染器状态
    *
@@ -55,6 +55,7 @@ export class WidgetRenderer {
 
   constructor(widget: Widget) {
     this.#widget = widget
+    this.#currentScope = getCurrentScope()!
     const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
     })
@@ -284,6 +285,7 @@ export class WidgetRenderer {
       this.widget.onUnmounted?.()
       // @ts-ignore 释放资源
       this.#currentChildVNode = null
+      // @ts-ignore 释放资源
       this.#currentScope = undefined
       // @ts-ignore 释放资源
       this.#widget = null
