@@ -76,8 +76,13 @@ export abstract class Widget<P extends Record<string, any> = {}>
       if (import.meta.env?.MODE === 'development') {
         // @ts-ignore 如果是类组件，恢复其属性值
         if (this.vnode.instance && isClassWidget(this.vnode.type)) {
-          // 如果是修改build则恢复状态，修改其他方法则不恢复状态
-          if (this.vnode.instance.build.toString() !== this.build.toString()) {
+          // 如果是修改build则恢复状态，修改其他方法则不恢复状态，重新触发创建和挂载生命周期
+          if (this.vnode.instance.build.toString() === this.build.toString()) {
+            this.onCreated?.()
+            this.#renderer = new WidgetRenderer(this)
+            this.onMounted?.()
+            return this.#renderer
+          } else {
             for (const key in this.vnode.instance) {
               // @ts-ignore
               const oldValue = this.vnode.instance[key]
