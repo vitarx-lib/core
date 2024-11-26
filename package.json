@@ -1,7 +1,7 @@
 {
   "name": "vitarx",
   "private": false,
-  "version": "1.0.1",
+  "version": "1.0.0-beta.1",
   "description": "Vitarx具有活力的响应式前端框架",
   "keywords": [
     "vitarx"
@@ -16,6 +16,9 @@
     "prepublishOnly": "npm run build",
     "push": "npm publish --access=public"
   },
+  "dependencies": {
+    "csstype": "^3.1.3"
+  },
   "devDependencies": {
     "@types/node": "^22.7.2",
     "prettier": "^3.3.3",
@@ -25,9 +28,8 @@
   "files": [
     "dist",
     "LICENSE",
-    "README.md"
-  ],
-  "dependencies": {
-    "csstype": "^3.1.3"
-  }
+    "README.md",
+    "jsx-runtime",
+    "jsx-dev-runtime"
+  ]
 }
