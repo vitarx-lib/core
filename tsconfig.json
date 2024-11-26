@@ -2,6 +2,11 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     // 开启类型声明文件的生成
     "declaration": true,
     // JavaScript 文件输出目录
