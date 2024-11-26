@@ -1,17 +1,12 @@
-import {
-  type ClassWidget,
-  createVNode,
-  type FnWidget,
-  isClassWidget,
-  isVNode,
-  type VNode,
-  type Widget
-} from './view/index.js'
-import { renderWidgetElement } from './view/web-render/index.js'
-import { isFunction } from '../utils/index.js'
+import { renderWidgetElement } from './web-render/index.js'
+import { isFunction } from '../../utils/index.js'
+import { type ClassWidget, isClassWidget, Widget } from './widget.js'
+import type { FnWidget } from './fn-widget.js'
+import { createVNode, isVNode, type VNode } from './VNode.js'
 
 // 错误提示
 const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
+
 /**
  * # Vitarx App
  */
