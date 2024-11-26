@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ES2020",
+    "module": "ESNext",
     // 开启类型声明文件的生成
     "declaration": true,
     // JavaScript 文件输出目录
@@ -20,6 +20,7 @@
     "jsxFactory": "h",
     // 片段
     "jsxFragmentFactory": "Fragment",
+    // 不生成 .d.ts
     "noEmit": false,
     // 删除注释
     "removeComments": false,
