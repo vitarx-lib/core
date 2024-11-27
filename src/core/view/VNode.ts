@@ -1,6 +1,6 @@
 import { isFunction, isRecordObject, popProperty, Widget } from '../../index.js'
 import { type ClassWidget } from './widget.js'
-import type { FnWidget } from './fn-widget.js'
+import type { FnWidgetConstructor } from './fn-widget.js'
 import type { ExcludeLifeCycleMethods } from './life-cycle.js'
 import type {
   HtmlElementTagMap,
@@ -56,13 +56,13 @@ export interface IntrinsicAttributes {
  */
 export type HtmlTag = HtmlElementTags
 // 节点类型
-export type VNodeType = FnWidget | ClassWidget | Fragment | HtmlTag
+export type VNodeType = FnWidgetConstructor | ClassWidget | Fragment | HtmlTag
 // 节点属性结构
 export type VNodeProps<T> = (T extends HtmlElementTags
   ? HtmlIntrinsicElements[T]
   : T extends ClassWidget<infer P>
     ? P
-    : T extends FnWidget<infer P>
+    : T extends FnWidgetConstructor<infer P>
       ? P
       : {}) &
   IntrinsicAttributes
