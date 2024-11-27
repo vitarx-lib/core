@@ -352,6 +352,7 @@ export class WidgetRenderer {
    * @protected
    */
   protected triggerLifeCycle(hook: LifeCycleHooks, ...args: any[]): any {
+    // @ts-ignore
     return this.widget[__LifeCycleTrigger__](hook, ...args)
   }
 }
