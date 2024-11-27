@@ -7,18 +7,21 @@ import { LifeCycleHooks } from './life-cycle.js'
 /**
  * 生命周期钩子回调函数
  */
-type LifeCycleHookCallback<R = void> = (this: FnWidgetProxy) => R
+type LifeCycleHookCallback<R = void> = (this: FnWidget) => R
+
 /**
  * 构建虚拟节点函数类型
  */
 export type BuildVNode = (() => VNode) | VNode
+
 /**
  * 函数组件类型
  */
-export type FnWidget<P extends Record<string, any> = {}> = (
+export type FnWidgetConstructor<P extends Record<string, any> = {}> = (
   props: P & IntrinsicAttributes
 ) => BuildVNode
-interface CollectMap {
+
+interface CollectData {
   exposed: Record<string, any> | undefined
   lifeCycleHooks: Record<LifeCycleHooks, AnyCallback> | undefined
 }
@@ -26,14 +29,14 @@ interface CollectMap {
 /**
  * 函数组件代理
  */
-class FnWidgetProxy extends Widget {
+class FnWidget extends Widget {
   readonly #buildVnode: () => VNode
 
   constructor(
     props: {},
     build: BuildVNode,
-    exposed?: Record<string, any>,
-    lifeCycleHooks?: Record<LifeCycleHooks, AnyCallback>
+    exposed: Record<string, any> | undefined,
+    lifeCycleHooks: Record<LifeCycleHooks, AnyCallback> | undefined
   ) {
     super(props)
     if (isVNode(build)) {
@@ -65,11 +68,11 @@ class FnWidgetProxy extends Widget {
 }
 
 /**
- * 收集hook
+ * 收集钩子
  */
-class FnWidgetHookHandler {
-  static #collectMap: CollectMap | undefined = undefined
-  static #currentVNode: VNode<FnWidget> | undefined = undefined
+class HooksCollect {
+  static #collectMap: CollectData | undefined = undefined
+  static #currentVNode: VNode<FnWidgetConstructor> | undefined = undefined
 
   static trackExposed(exposed: Record<string, any>) {
     if (this.#collectMap) this.#collectMap.exposed = exposed
@@ -85,7 +88,8 @@ class FnWidgetHookHandler {
     }
   }
 
-  static collect(vnode: VNode<FnWidget>): CollectMap & {
+  // 收集函数中使用的HOOK
+  static collect(vnode: VNode<FnWidgetConstructor>): CollectData & {
     build: any
   } {
     const oldBackup = this.#collectMap
@@ -102,7 +106,7 @@ class FnWidgetHookHandler {
     return { ...collectMap, build }
   }
 
-  static getCurrentVNode(): VNode<FnWidget> | undefined {
+  static getCurrentVNode(): VNode<FnWidgetConstructor> | undefined {
     return this.#currentVNode
   }
 }
@@ -117,15 +121,15 @@ class FnWidgetHookHandler {
  *  const vnode = getCurrentVNode();
  *  console.log(vnode.instance); // 输出 undefined，因为此时正在解析函数组件，还未创建实例。
  *  onCreated(() => {
- *    console.log(vnode.instance); // 输出 FnWidgetProxy
+ *    console.log(vnode.instance); // 输出 FnWidget
  *  });
  *  return <div>foo</div>;
  * }
  * ```
- * @returns {VNode<FnWidget>|undefined} 当前函数组件的虚拟节点，如果没有，则返回`undefined`
+ * @returns {VNode<FnWidgetConstructor>|undefined} 当前函数组件的虚拟节点，如果没有，则返回`undefined`
  */
-export function getCurrentVNode(): VNode<FnWidget> | undefined {
-  return FnWidgetHookHandler.getCurrentVNode()
+export function getCurrentVNode(): VNode<FnWidgetConstructor> | undefined {
+  return HooksCollect.getCurrentVNode()
 }
 
 /**
@@ -150,7 +154,7 @@ export function getCurrentVNode(): VNode<FnWidget> | undefined {
  * @param exposed
  */
 export function defineExpose(exposed: Record<string, any>) {
-  FnWidgetHookHandler.trackExposed(exposed)
+  HooksCollect.trackExposed(exposed)
 }
 
 /**
@@ -160,7 +164,7 @@ export function defineExpose(exposed: Record<string, any>) {
  */
 export function onCreated(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.created, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.created, fn)
 }
 
 /**
@@ -172,7 +176,7 @@ export function onCreated(fn: LifeCycleHookCallback) {
  */
 export function onBeforeMount(fn: LifeCycleHookCallback<void | Element>) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
 }
 
 /**
@@ -182,7 +186,7 @@ export function onBeforeMount(fn: LifeCycleHookCallback<void | Element>) {
  */
 export function onMounted(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.mounted, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.mounted, fn)
 }
 
 /**
@@ -192,7 +196,7 @@ export function onMounted(fn: LifeCycleHookCallback) {
  */
 export function onDeactivate(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.deactivate, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.deactivate, fn)
 }
 
 /**
@@ -202,7 +206,7 @@ export function onDeactivate(fn: LifeCycleHookCallback) {
  */
 export function onActivated(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.activated, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.activated, fn)
 }
 
 /**
@@ -214,7 +218,7 @@ export function onActivated(fn: LifeCycleHookCallback) {
  */
 export function onBeforeUnmount(fn: LifeCycleHookCallback<void | boolean>) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUnmount, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.beforeUnmount, fn)
 }
 
 /**
@@ -224,7 +228,7 @@ export function onBeforeUnmount(fn: LifeCycleHookCallback<void | boolean>) {
  */
 export function onUnmounted(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.unmounted, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.unmounted, fn)
 }
 
 /**
@@ -234,7 +238,7 @@ export function onUnmounted(fn: LifeCycleHookCallback) {
  */
 export function onBeforeUpdate(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
 }
 
 /**
@@ -244,7 +248,7 @@ export function onBeforeUpdate(fn: LifeCycleHookCallback) {
  */
 export function onUpdated(fn: LifeCycleHookCallback) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.updated, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.updated, fn)
 }
 
 /**
@@ -254,17 +258,19 @@ export function onUpdated(fn: LifeCycleHookCallback) {
  */
 export function onError(fn: LifeCycleHookCallback<Vitarx.VNode | void>) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
-  FnWidgetHookHandler.trackLifeCycle(LifeCycleHooks.error, fn)
+  HooksCollect.trackLifeCycle(LifeCycleHooks.error, fn)
 }
+
 /**
  * ## 创建函数组件
  *
  * @param vnode
  */
-export function createFnWidget(vnode: VNode<FnWidget>): FnWidgetProxy {
-  let { build, exposed, lifeCycleHooks } = FnWidgetHookHandler.collect(vnode)
+export function createFnWidget(vnode: VNode<FnWidgetConstructor>): FnWidget {
+  let { build, exposed, lifeCycleHooks } = HooksCollect.collect(vnode)
   if (!isFunction(build) && !isVNode(build)) {
     throw new Error(`[Vitarx]：函数式小部件需返回一个闭包函数用于创建响应式UI，或返回VNode`)
   }
-  return new FnWidgetProxy(vnode.props, build, exposed, lifeCycleHooks)
+  return new FnWidget(vnode.props, build, exposed, lifeCycleHooks)
 }
+
