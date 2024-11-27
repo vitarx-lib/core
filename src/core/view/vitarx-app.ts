@@ -1,7 +1,7 @@
 import { renderWidgetElement } from './web-render/index.js'
 import { isFunction } from '../../utils/index.js'
 import { type ClassWidget, isClassWidget, Widget } from './widget.js'
-import type { FnWidget } from './fn-widget.js'
+import type { FnWidgetConstructor } from './fn-widget.js'
 import { createVNode, isVNode, type VNode } from './VNode.js'
 
 // 错误提示
@@ -49,18 +49,18 @@ export class VitarxApp {
   /**
    * ## 渲染小部件
    *
-   * @param {ClassWidget | FnWidget | VNode} widget - 入口小部件
+   * @param {ClassWidget | FnWidgetConstructor | VNode} widget - 入口小部件
    * @param {object} props - 小部件的props参数，仅在widget为函数或类时可选。
    */
   render<P extends Record<string, any>>(
-    widget: ClassWidget<P> | FnWidget<P> | VNode,
+    widget: ClassWidget<P> | FnWidgetConstructor<P> | VNode,
     props?: P
   ): void {
-    let vnode: VNode<FnWidget | ClassWidget>
+    let vnode: VNode<FnWidgetConstructor | ClassWidget>
     if (isFunction(widget) || isClassWidget(widget)) {
-      vnode = createVNode(widget as FnWidget, props)
+      vnode = createVNode(widget as FnWidgetConstructor, props)
     } else {
-      vnode = widget as VNode<FnWidget | ClassWidget>
+      vnode = widget as VNode<FnWidgetConstructor | ClassWidget>
     }
     if (!isVNode(vnode) || !isFunction(vnode.type)) {
       throw new Error(`[Vitarx]：入口小部件必须是函数声明小部件或类声明小部件。`)
