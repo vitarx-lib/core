@@ -36,7 +36,19 @@ export abstract class Widget<P extends Record<string, any> = {}>
   extends LifeCycle
   implements WidgetGetterInterface
 {
+  /**
+   * 内部私有属性，用于存放接收的`prop`
+   *
+   * @private
+   */
   readonly #props: P
+  /**
+   * 内部私有属性，用于存放渲染器实例。
+   *
+   * 如需自定义渲染器，可重写`renderer`属性获取器。
+   *
+   * @private
+   */
   #renderer?: WidgetRenderer
   /**
    * ## 实例化
