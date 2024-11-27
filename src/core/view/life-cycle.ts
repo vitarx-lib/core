@@ -1,3 +1,5 @@
+import { __LifeCycleTrigger__ } from './constant.js'
+
 /** 生命周期钩子枚举 */
 export enum LifeCycleHooks {
   created = 'onCreated',
@@ -16,7 +18,7 @@ export enum LifeCycleHooks {
  * 组件内部保留的属性关键字
  * 将生命周期钩子的值自动合并到这里
  */
-export const widgetIntrinsicPropKeywords = [
+export const __widgetIntrinsicPropKeywords = [
   'build',
   'update',
   'el',
@@ -33,12 +35,22 @@ export type LifeCycleHookMethods = `${LifeCycleHooks}`;
 /** 排除生命周期方法和保留属性的类型 */
 export type ExcludeLifeCycleMethods<T> = Omit<
   T,
-  LifeCycleHookMethods | typeof widgetIntrinsicPropKeywords[number]
->;
+  LifeCycleHookMethods | (typeof __widgetIntrinsicPropKeywords)[number]
+>
+
+
 /**
  * 生命周期基类
  */
 export abstract class LifeCycle {
+  /**
+   * 生命周期钩子统一触发器
+   */
+  [__LifeCycleTrigger__](hook: LifeCycleHookMethods, ...args: any[]): any {
+    // @ts-ignore
+    return this[hook]?.apply(this, args)
+  }
+
   /**
    * 生命周期钩子
    *
@@ -48,7 +60,7 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  onCreated?(): void
+  protected onCreated?(): void
 
   /**
    * 挂载前生命周期钩子
@@ -58,9 +70,9 @@ export abstract class LifeCycle {
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
    * @protected
-   * @returns {Element | void} 返回一个dom元素，会作为组件的根节点，如果返回`undefined`，则使用默认的根节点。
+   * @returns {Element | void} 返回一个真实的dom元素，会作为组件的父节点，如果返回`undefined`，则使用默认的父节点。
    */
-  onBeforeMount?(): void | Element
+  protected onBeforeMount?(): void | Element
 
   /**
    * 生命周期构造
@@ -71,7 +83,7 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  onMounted?(): void
+  protected onMounted?(): void
 
   /**
    * 生命周期钩子
@@ -82,7 +94,7 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  onDeactivate?(): void
+  protected onDeactivate?(): void
 
   /**
    * 生命周期钩子
@@ -93,7 +105,7 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  onActivated?(): void
+  protected onActivated?(): void
 
   /**
    * 生命周期钩子
@@ -104,7 +116,7 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  onUnmounted?(): void
+  protected onUnmounted?(): void
 
   /**
    * 生命周期构造
@@ -116,7 +128,7 @@ export abstract class LifeCycle {
    * @protected
    * @returns {boolean | void} 返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`。
    */
-  onBeforeUnmount?(): void | boolean
+  protected onBeforeUnmount?(): void | boolean
 
   /**
    * 生命周期钩子
@@ -127,7 +139,7 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  onBeforeUpdate?(): void
+  protected onBeforeUpdate?(): void
 
   /**
    * 生命周期钩子
@@ -138,7 +150,7 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  onUpdated?(): void
+  protected onUpdated?(): void
 
   /**
    * 生命周期钩子
@@ -150,7 +162,7 @@ export abstract class LifeCycle {
    * @param {any} error 捕获到的异常
    * @protected
    */
-  onError?(error: any): Vitarx.VNode | void
+  protected onError?(error: any): Vitarx.VNode | void
 }
 
 
