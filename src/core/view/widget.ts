@@ -1,20 +1,7 @@
 import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { WidgetRenderer } from './renderer.js'
 import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
-import type { FnWidgetConstructor } from './fn-widget.js'
 import { LifeCycle } from './life-cycle.js'
-
-interface WidgetGetterInterface<P> {
-  get vnode(): VNode<ClassWidget | FnWidgetConstructor>
-
-  get el(): VElement | null
-
-  get children(): WidgetChildren<P>
-
-  get props(): DeepReadonly<P>
-
-  get renderer(): WidgetRenderer
-}
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -40,10 +27,7 @@ export type WidgetChildren<P> = P extends { children: infer U }
 /**
  * 组件基类
  */
-export abstract class Widget<P extends Record<string, any> = {}>
-  extends LifeCycle
-  implements WidgetGetterInterface<P>
-{
+export abstract class Widget<P extends Record<string, any> = {}> extends LifeCycle {
   /**
    * 内部私有属性，用于存放接收的`prop`
    *
@@ -74,6 +58,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    * 该获取器被内部依赖，请勿重写！
    *
    * @returns {VNode<ClassWidget>}
+   * @protected
    */
   get vnode(): VNode<ClassWidget> {
     return this.#props[__WidgetPropsSelfNodeSymbol__ as any]
@@ -121,7 +106,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    *
    * 建议保持单向数据流，不要尝试修改`props`中数据。
    */
-  get props(): DeepReadonly<P> {
+  protected get props(): DeepReadonly<P> {
     return this.#props as DeepReadonly<P>
   }
 
@@ -130,7 +115,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    *
    * `children` 不会自动渲染，你可以将它视为一个参数，你可以在`build`方法中使用该参数，来实现插槽的效果。
    */
-  get children(): WidgetChildren<P> {
+  protected get children(): WidgetChildren<P> {
     return this.props.children as WidgetChildren<P>
   }
 
@@ -155,7 +140,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    *
    * @protected
    */
-  update() {
+  protected update() {
     this.renderer.update()
   }
 
@@ -181,7 +166,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    * @protected
    * @returns {Element} - 返回的是虚拟的VNode节点
    */
-  abstract build(): Element
+  protected abstract build(): Element
 }
 
 /**
