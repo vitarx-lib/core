@@ -10,7 +10,6 @@ import {
 } from '../../index.js'
 import type { Widget } from './widget.js'
 import {
-  __WidgetPropsSelfNodeSymbol__,
   getVElementParentEl,
   type HtmlElement,
   patchUpdate,
@@ -20,6 +19,7 @@ import {
   updateActivateState,
   VElementToHTMLElement
 } from './web-render/index.js'
+import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 
 /**
  * 渲染状态

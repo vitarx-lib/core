@@ -15,6 +15,7 @@ import { createFnWidget, type FnWidgetConstructor } from '../fn-widget.js'
 import { setAttributes } from './attributes.js'
 import { renderChildren } from './children.js'
 import type { HtmlElementTags } from './index.js'
+import { __WidgetPropsSelfNodeSymbol__ } from '../constant.js'
 
 /**
  * 渲染器创建的元素
@@ -24,8 +25,6 @@ export type HtmlElement = Element | Text | DocumentFragment
  * 父元素
  */
 export type ParentElement = Element | DocumentFragment
-// 标记Widget实例的props中自身节点的引用
-export const __WidgetPropsSelfNodeSymbol__ = Symbol('WidgetSelfNodeSymbol')
 
 /**
  * 渲染小部件、html元素、fragment元素、文本元素
