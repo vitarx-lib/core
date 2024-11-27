@@ -1,4 +1,4 @@
-import { __updateParentNode, isVNode, type VElement, type VNode } from './VNode.js'
+import { __updateParentVNode, isVNode, type VElement, type VNode } from './VNode.js'
 import { isFunction } from '../../utils/index.js'
 import {
   type ClassWidget,
@@ -222,7 +222,7 @@ export class WidgetRenderer {
       }
     }
     if (isVNode(vnode)) {
-      __updateParentNode(vnode, this.vnode)
+      __updateParentVNode(vnode, this.vnode)
       return vnode
     }
     if (isClassWidget(this.vnode.type)) {
