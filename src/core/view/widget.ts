@@ -81,7 +81,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    */
   get vnode(): VNode<ClassWidget> {
     // @ts-ignore
-    return this.props[__WidgetPropsSelfNodeSymbol__]
+    return this.#props[__WidgetPropsSelfNodeSymbol__]
   }
 
   /**
