@@ -1,6 +1,4 @@
 import type { IntrinsicAttributes, RefEl, TextVNode, VNode, Widget } from './core/index.js'
-import * as Core from './core/index.js'
-import * as Utils from './utils/index.js'
 import type { HtmlIntrinsicElements } from './core/view/web-render/index.js'
 
 export * from './core/index.js'
@@ -54,8 +52,4 @@ declare global {
 
     type Children = Element | VNode | TextVNode | AnyPrimitive | Array<Children>
   }
-}
-export default {
-  ...Core,
-  ...Utils
 }
