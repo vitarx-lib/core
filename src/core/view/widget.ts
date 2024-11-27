@@ -4,8 +4,16 @@ import { WidgetRenderer } from './renderer.js'
 import { __WidgetPropsSelfNodeSymbol__ } from './web-render/index.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
 
-interface WidgetGetterInterface {
+interface WidgetGetterInterface<P> {
   get vnode(): VNode<ClassWidget | FnWidgetConstructor>
+
+  get el(): VElement | null
+
+  get children(): WidgetChildren<P>
+
+  get props(): DeepReadonly<P>
+
+  get renderer(): WidgetRenderer
 }
 
 /**
@@ -34,7 +42,7 @@ export type WidgetChildren<P> = P extends { children: infer U }
  */
 export abstract class Widget<P extends Record<string, any> = {}>
   extends LifeCycle
-  implements WidgetGetterInterface
+  implements WidgetGetterInterface<P>
 {
   /**
    * 内部私有属性，用于存放接收的`prop`
