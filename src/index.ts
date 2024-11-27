@@ -8,7 +8,13 @@ declare global {
   namespace Vitarx {
     /** 应用配置 */
     interface AppOptions {
-      /** 是否启用服务端渲染 */
+      /**
+       * 是否为服务端渲染
+       *
+       * 此配置功能暂未支持，可能会在之后的版本中支持。
+       *
+       * @default false
+       */
       ssr?: boolean
     }
 
