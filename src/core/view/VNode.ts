@@ -92,6 +92,7 @@ export interface TextVNode {
  * - `ref`: 节点引用
  * - `el`: 节点元素实例
  * - `instance`: 仅用于函数或类小部件，表示小部件实例
+ * - `provide`: 小部件提供的数据
  */
 export type VNode<T extends VNodeType = VNodeType> = {
   type: T
@@ -101,6 +102,7 @@ export type VNode<T extends VNodeType = VNodeType> = {
   ref: RefEl<T> | null
   el: VElement | null
   instance?: Widget
+  provide?: Record<string | symbol, any>
   [VNodeSymbol]: true
 }
 
