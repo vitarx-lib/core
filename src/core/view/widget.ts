@@ -7,14 +7,20 @@ import type { FnWidget } from './fn-widget.js'
 interface WidgetGetterInterface {
   get vnode(): VNode<ClassWidget | FnWidget>
 }
+
+/**
+ * `Element`等同于`VNode`，兼容TSX类型检测。
+ */
 export type Element = Vitarx.Element
+
 /**
  * 类组件构造器类型
  */
 export type ClassWidget<P extends Record<string, any> = {}> = new (
   props: P & IntrinsicAttributes
 ) => Widget<P>
-// 获取组件子节点
+
+// 获取组件子节点类型
 export type WidgetChildren<P> = P extends { children: infer U }
   ? U
   : P extends {
@@ -30,7 +36,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
   extends LifeCycle
   implements WidgetGetterInterface
 {
-  readonly #props: P
+  #props: P
   #renderer?: WidgetRenderer
   /**
    * ## 实例化
@@ -57,12 +63,15 @@ export abstract class Widget<P extends Record<string, any> = {}>
   /**
    * 获取小部件自身的虚拟节点
    *
+   * 该获取器被内部依赖，请勿重写！
+   *
    * @returns {VNode<ClassWidget>}
    */
   get vnode(): VNode<ClassWidget> {
     // @ts-ignore
     return this.props[__WidgetPropsSelfNodeSymbol__]
   }
+
   /**
    * 该方法由`Vitarx`内部调用，用于渲染
    *
@@ -140,13 +149,6 @@ export abstract class Widget<P extends Record<string, any> = {}>
   }
 
   /**
-   * 获取小部件名称
-   */
-  get widgetName(): string {
-    return this.renderer.name
-  }
-
-  /**
    * 强制更新视图
    *
    * 如果你修改了非响应式数据，则可以调用此方法，强制更新视图。
@@ -162,7 +164,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    *
    * 该方法会被多次调用，所以在方法内不应该存在任何副作用。
    *
-   * > **注意**：在类组件的build方法中不要返回 `()=> Element` 闭包，而是应直接返回`Element`。
+   * > **注意**：在类组件的build方法中不要返回 `() => Element`，而是应返回`Element`。
    *
    * 示例：
    * ```ts
