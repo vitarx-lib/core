@@ -1,12 +1,12 @@
 import { isFunction, isRecordObject, popProperty, Widget } from '../../index.js'
 import { type ClassWidget } from './widget.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
-import type { ExcludeLifeCycleMethods } from './life-cycle.js'
 import type {
   HtmlElementTagMap,
   HtmlElementTags,
   HtmlIntrinsicElements
 } from './web-render/index.js'
+import type { ExcludeWidgetIntrinsicKeywords } from './constant.js'
 
 /** 响应式元素引用标记 */
 const RefElSymbol = Symbol('RefEl')
@@ -26,7 +26,7 @@ type ComputedRefElType<T> = T extends HtmlElementTags
   ? HtmlElementTagMap[T]
   : T extends Fragment
     ? VDocumentFragment
-    : ExcludeLifeCycleMethods<T>
+    : ExcludeWidgetIntrinsicKeywords<T>
 /** 引用元素类型 */
 export type RefEl<T> = {
   value: ComputedRefElType<T> | null, readonly [RefElSymbol]: true
