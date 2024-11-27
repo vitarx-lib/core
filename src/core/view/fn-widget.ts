@@ -124,12 +124,15 @@ class HooksCollect {
 /**
  * 获取当前函数组件的虚拟节点
  *
- * ```ts
+ * 注意：如果是类组件内部获取当前虚拟节点，则使用`this.vnode`即可访问，勿使用该函数。
+ *
+ * @example
+ * ```tsx
  * import { defineExpose,ref } from 'vitarx'
  *
  * function Foo() {
  *  const vnode = getCurrentVNode();
- *  console.log(vnode.instance); // 输出 undefined，因为此时正在解析函数组件，还未创建实例。
+ *  console.log(vnode.instance); // 输出 undefined，因为此时正在解析函数组件，还未映射为FnWidget实例。
  *  onCreated(() => {
  *    console.log(vnode.instance); // 输出 FnWidget
  *  });
