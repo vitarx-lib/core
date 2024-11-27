@@ -1,8 +1,8 @@
 import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
-import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
-import { __WidgetPropsSelfNodeSymbol__ } from './web-render/index.js'
+import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
+import { LifeCycle } from './life-cycle.js'
 
 interface WidgetGetterInterface<P> {
   get vnode(): VNode<ClassWidget | FnWidgetConstructor>
@@ -76,8 +76,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
    * @returns {VNode<ClassWidget>}
    */
   get vnode(): VNode<ClassWidget> {
-    // @ts-ignore
-    return this.#props[__WidgetPropsSelfNodeSymbol__]
+    return this.#props[__WidgetPropsSelfNodeSymbol__ as any]
   }
 
   /**
