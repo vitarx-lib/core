@@ -212,6 +212,7 @@ export class WidgetRenderer {
   build(): VNode {
     let vnode: VNode
     try {
+      // @ts-ignore
       vnode = this.widget.build()
     } catch (e) {
       const errVNode = this.triggerLifeCycle(LifeCycleHooks.error)
