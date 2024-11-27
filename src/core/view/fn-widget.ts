@@ -1,7 +1,11 @@
 import { type IntrinsicAttributes, isVNode, type VNode } from './VNode.js'
 import { Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
-import { LifeCycleHooks } from './life-cycle.js'
+import {
+  type LifeCycleHookMethods,
+  LifeCycleHooks,
+  widgetIntrinsicPropKeywords
+} from './life-cycle.js'
 
 
 /**
@@ -36,7 +40,7 @@ class FnWidget extends Widget {
     props: {},
     build: BuildVNode,
     exposed: Record<string, any> | undefined,
-    lifeCycleHooks: Record<LifeCycleHooks, AnyCallback> | undefined
+    lifeCycleHooks: Record<LifeCycleHookMethods, AnyCallback> | undefined
   ) {
     super(props)
     if (isVNode(build)) {
@@ -44,17 +48,23 @@ class FnWidget extends Widget {
     } else {
       this.#buildVnode = build
     }
+    const name = this.vnode.type?.name || 'anonymous'
     if (isRecordObject(exposed)) {
-      Object.entries(exposed).forEach(item => {
-        const [key, value] = item
-        if (!(key in this)) (this as any)[key] = value
-      })
+      for (const exposedKey in exposed) {
+        if (widgetIntrinsicPropKeywords.includes(exposedKey as any)) {
+          console.warn(
+            `[Vitarx]：${name} 函数组件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
+          )
+          continue
+        }
+        if (!(exposedKey in this)) (this as any)[exposedKey] = exposed[exposedKey]
+      }
     }
     if (lifeCycleHooks) {
-      Object.entries(lifeCycleHooks).forEach(item => {
-        const [name, fn] = item
-        ;(this as any)[name] = fn
-      })
+      for (const lifeCycleHook in lifeCycleHooks) {
+        const k = lifeCycleHook as LifeCycleHookMethods
+        this[k] = lifeCycleHooks[k]
+      }
     }
   }
   /**
@@ -144,14 +154,16 @@ export function getCurrentVNode(): VNode<FnWidgetConstructor> | undefined {
  * function Foo() {
  *  const count = ref(0);
  *  const add = () => count.value++;
- *  // 暴露 count 和 add
+ *  // 暴露 count 和 add，父组件可以通过refEl.value 访问到 count 和 add。
  *  defineExpose({ count, add });
  *  // 构建组件
- *  return () => <div onClick={add}>{count.value}</div>;
+ *  return <div onClick={add}>{count.value}</div>;
  * }
  * ```
  *
- * @param exposed
+ * 注意：键不能和{@link Widget}类中的属性或固有方法重名，包括但不限于`生命周期`，`build`方法
+ *
+ * @param {Record<string, any>} exposed 键值对形式的对象，其中键为暴露的名称，值为要暴露的值。
  */
 export function defineExpose(exposed: Record<string, any>) {
   HooksCollect.trackExposed(exposed)
