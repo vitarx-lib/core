@@ -2,10 +2,10 @@ import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from './renderer.js'
 import { __WidgetPropsSelfNodeSymbol__ } from './web-render/index.js'
-import type { FnWidget } from './fn-widget.js'
+import type { FnWidgetConstructor } from './fn-widget.js'
 
 interface WidgetGetterInterface {
-  get vnode(): VNode<ClassWidget | FnWidget>
+  get vnode(): VNode<ClassWidget | FnWidgetConstructor>
 }
 
 /**
