@@ -191,8 +191,7 @@ export function createVNode<T extends VNodeType>(
   return vnode
 }
 
-// VNode的父节点映射关系缓存
-const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>
+
 /**
  * 转换子节点列表
  *
@@ -222,14 +221,29 @@ function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
   return childList
 }
 
+// VNode的父节点映射关系缓存
+const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>
+
 /**
  * 获取节点的父节点
  *
  * @returns {VNode|undefined} - 如果存在父节点则返回虚拟节点对象
  * @param vnode
  */
-export function getParentNode(vnode: VNode | TextVNode): VNode | undefined {
+export function getParentVNode(vnode: VNode | TextVNode): VNode | undefined {
   return __ParentMapping__.get(vnode)
+}
+
+/**
+ * 更新父节点映射
+ *
+ * 该方法提供给框架内部逻辑调用，开发者谨慎调用本方法。
+ *
+ * @param vnode - 虚拟节点对象
+ * @param parent - 父节点
+ */
+export function __updateParentVNode(vnode: VNode | TextVNode, parent: VNode): void {
+  __ParentMapping__.set(vnode, parent)
 }
 
 /**
@@ -258,17 +272,6 @@ export function getParentNode(vnode: VNode | TextVNode): VNode | undefined {
 export function build(vnode: VNode | (() => VNode)): VNode {
   if (typeof vnode === 'function') return vnode as unknown as VNode
   return (() => vnode) as unknown as VNode
-}
-/**
- * 更新父节点映射
- *
- * 该方法提供给框架内部逻辑调用，开发者谨慎调用本方法。
- *
- * @param vnode - 虚拟节点对象
- * @param parent - 父节点
- */
-export function __updateParentNode(vnode: VNode | TextVNode, parent: VNode): void {
-  __ParentMapping__.set(vnode, parent)
 }
 
 /**
