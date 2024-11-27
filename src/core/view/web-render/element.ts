@@ -11,7 +11,7 @@ import {
 import { createScope } from '../../scope/index.js'
 import { reactive } from '../../variable/index.js'
 import { type ClassWidget, isClassWidget } from '../widget.js'
-import { createFnWidget, type FnWidget } from '../fn-widget.js'
+import { createFnWidget, type FnWidgetConstructor } from '../fn-widget.js'
 import { setAttributes } from './attributes.js'
 import { renderChildren } from './children.js'
 import type { HtmlElementTags } from './index.js'
@@ -46,7 +46,7 @@ export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement):
       el = renderFragmentElement(vnode as VNode<Fragment>, parent)
       break
     case 'function':
-      el = renderWidgetElement(vnode as VNode<ClassWidget | FnWidget>, parent)
+      el = renderWidgetElement(vnode as VNode<ClassWidget | FnWidgetConstructor>, parent)
       break
     default:
       throw new Error(`Unsupported vnode type: ${vnode.type}`)
@@ -64,7 +64,7 @@ export function renderTextElement(vnode: TextVNode, parent?: ParentElement): Tex
 
 // 创建小部件元素
 export function renderWidgetElement(
-  vnode: VNode<FnWidget | ClassWidget>,
+  vnode: VNode<FnWidgetConstructor | ClassWidget>,
   parent?: ParentElement
 ): HtmlElement {
   let el: HtmlElement
@@ -77,7 +77,7 @@ export function renderWidgetElement(
     // 实例化函数组件或类组件
     vnode.instance = isClassWidget(vnode.type)
       ? new vnode.type(vnode.props)
-      : createFnWidget(vnode as VNode<FnWidget>)
+      : createFnWidget(vnode as VNode<FnWidgetConstructor>)
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
     el = vnode.instance.renderer.mount(parent)
     // 记录el
