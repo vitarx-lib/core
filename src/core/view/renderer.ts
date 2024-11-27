@@ -1,10 +1,10 @@
 import { __updateParentVNode, isVNode, type VElement, type VNode } from './VNode.js'
-import { isFunction } from '../../utils/index.js'
 import {
   type ClassWidget,
   type FnWidgetConstructor,
   getCurrentScope,
   isClassWidget,
+  LifeCycleHooks,
   Scope,
   watchDepend
 } from '../../index.js'
@@ -19,7 +19,7 @@ import {
   updateActivateState,
   VElementToHTMLElement
 } from './web-render/index.js'
-import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
+import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 
 /**
  * 渲染状态
@@ -80,7 +80,8 @@ export class WidgetRenderer {
       }
     }
     this.#currentChildVNode = childVNode
-    widget.onCreated?.()
+    // 触发onCreated生命周期
+    this.triggerLifeCycle(LifeCycleHooks.created)
   }
 
   /**
@@ -102,12 +103,14 @@ export class WidgetRenderer {
   }
 
   /**
-   * 判断是否已初次挂载
+   * 判断是否已真实挂载到DOM
+   *
+   * 如果临时移除，也会返回false。
    *
    * @returns {boolean}
    */
   get isMounted(): boolean {
-    return this.#currentChildVNode.el !== null
+    return !!this.#currentChildVNode.el
   }
 
   /**
@@ -183,16 +186,16 @@ export class WidgetRenderer {
       }
     } else {
       // 触发onBeforeMount生命周期
-      const target = this.widget.onBeforeMount?.()
+      const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
       // 挂载到指定元素
       if (target instanceof Element) parent = target
       el = renderElement(this.#currentChildVNode, parent)
       Promise.resolve().then(() => {
         this._state = 'activated'
         // 触发onActivated生命周期
-        this.widget.onActivated?.()
+        this.triggerLifeCycle(LifeCycleHooks.activated)
         // 触发onMounted生命周期
-        this.widget.onMounted?.()
+        this.triggerLifeCycle(LifeCycleHooks.mounted)
       })
     }
     return el
@@ -211,14 +214,9 @@ export class WidgetRenderer {
     try {
       vnode = this.widget.build()
     } catch (e) {
-      if (this.widget?.onError && isFunction(this.widget.onError)) {
-        const errVNode = this.widget.onError(e) as VNode
-        if (!isVNode(errVNode)) throw e
-        vnode = errVNode
-      } else {
-        // 继续向上抛出异常
-        throw e
-      }
+      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error)
+      if (!isVNode(errVNode)) throw e
+      vnode = errVNode
     }
     if (isVNode(vnode)) {
       __updateParentVNode(vnode, this.vnode)
@@ -244,14 +242,17 @@ export class WidgetRenderer {
     if (this.#pendingUpdate) return
     this.#pendingUpdate = true
     try {
-      this.widget.onBeforeUpdate?.()
+      // 触发更新前生命周期
+      this.triggerLifeCycle(LifeCycleHooks.beforeUpdate)
+      // 延迟更新
       setTimeout(() => {
         this.#pendingUpdate = false
       })
       const oldVNode = this.#currentChildVNode
       const newVNode = newChildVNode || this.build()
       this.#currentChildVNode = patchUpdate(oldVNode, newVNode)
-      this.widget.onUpdated?.()
+      // 触发更新后生命周期
+      this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
       this.#pendingUpdate = false
       console.trace(`[Vitarx]：更新视图时捕获到了异常，${e}`)
@@ -269,7 +270,7 @@ export class WidgetRenderer {
     if (this._state === 'activated' || this._state === 'deactivate') {
       this._state = 'uninstalling'
       // 触发onDeactivated生命周期
-      const result = this.widget.onBeforeUnmount?.()
+      const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount)
       // 递归删除子节点
       unmountVNode(this.child)
       // 等待子节点删除完成然后移除当前节点
@@ -281,7 +282,7 @@ export class WidgetRenderer {
       // 修改状态为已卸载
       this._state = 'unloaded'
       // 触发onUnmounted生命周期
-      this.widget.onUnmounted?.()
+      this.triggerLifeCycle(LifeCycleHooks.unmounted)
       // @ts-ignore 释放资源
       this.#currentChildVNode = null
       // @ts-ignore 释放资源
@@ -311,7 +312,7 @@ export class WidgetRenderer {
       // 恢复作用域
       this.#currentScope?.unpause()
       // 触发onActivated生命周期
-      this.widget.onActivated?.()
+      this.triggerLifeCycle(LifeCycleHooks.activated)
       // 恢复子节点
       updateActivateState(this.child, true)
     }
@@ -330,7 +331,7 @@ export class WidgetRenderer {
       this._state = 'deactivate'
       this.#currentScope?.pause()
       // 触发onDeactivated生命周期
-      this.widget.onDeactivate?.()
+      this.triggerLifeCycle(LifeCycleHooks.deactivate)
       // 删除当前元素
       if (root) {
         this.#lastParent = this.parentEl
@@ -339,6 +340,18 @@ export class WidgetRenderer {
       // 停用子节点
       updateActivateState(this.child, false)
     }
+  }
+
+  /**
+   * 触发生命周期钩子
+   *
+   * @param hook - 生命周期钩子名称
+   * @param args - 参数列表
+   *
+   * @protected
+   */
+  protected triggerLifeCycle(hook: LifeCycleHooks, ...args: any[]): any {
+    return this.widget[__LifeCycleTrigger__](hook, ...args)
   }
 }
 
