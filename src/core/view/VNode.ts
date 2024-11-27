@@ -227,8 +227,8 @@ const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>
 /**
  * 获取节点的父节点
  *
- * @returns {VNode|undefined} - 如果存在父节点则返回虚拟节点对象
- * @param vnode
+ * @returns {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
+ * @param vnode - 自身的虚拟节点对象
  */
 export function getParentVNode(vnode: VNode | TextVNode): VNode | undefined {
   return __ParentMapping__.get(vnode)
