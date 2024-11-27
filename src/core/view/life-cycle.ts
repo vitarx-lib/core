@@ -14,30 +14,8 @@ export enum LifeCycleHooks {
   beforeUnmount = 'onBeforeUnmount'
 }
 
-/**
- * 组件内部保留的属性关键字
- * 将生命周期钩子的值自动合并到这里
- */
-export const __widgetIntrinsicPropKeywords = [
-  'build',
-  'update',
-  'el',
-  'vnode',
-  'children',
-  'props',
-  'renderer',
-  ...Object.values(LifeCycleHooks) // 将 LifeCycleHooks 中的所有值合并进来
-] as const
-
 /** 生命周期钩子类型 */
 export type LifeCycleHookMethods = `${LifeCycleHooks}`;
-
-/** 排除生命周期方法和保留属性的类型 */
-export type ExcludeLifeCycleMethods<T> = Omit<
-  T,
-  LifeCycleHookMethods | (typeof __widgetIntrinsicPropKeywords)[number]
->
-
 
 /**
  * 生命周期基类
@@ -46,7 +24,7 @@ export abstract class LifeCycle {
   /**
    * 生命周期钩子统一触发器
    */
-  [__LifeCycleTrigger__](hook: LifeCycleHookMethods, ...args: any[]): any {
+  [__LifeCycleTrigger__](hook: `${LifeCycleHooks}`, ...args: any[]): any {
     // @ts-ignore
     return this[hook]?.apply(this, args)
   }
