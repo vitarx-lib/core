@@ -36,7 +36,7 @@ export abstract class Widget<P extends Record<string, any> = {}>
   extends LifeCycle
   implements WidgetGetterInterface
 {
-  #props: P
+  readonly #props: P
   #renderer?: WidgetRenderer
   /**
    * ## 实例化
@@ -125,13 +125,6 @@ export abstract class Widget<P extends Record<string, any> = {}>
    */
   get children(): WidgetChildren<P> {
     return this.props.children as WidgetChildren<P>
-  }
-
-  /**
-   * 判断是否已经挂载
-   */
-  get isMounted(): boolean {
-    return !!this.#renderer?.isMounted
   }
 
   /**
