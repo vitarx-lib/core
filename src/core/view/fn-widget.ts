@@ -1,11 +1,8 @@
 import { type IntrinsicAttributes, isVNode, type VNode } from './VNode.js'
 import { Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
-import {
-  __widgetIntrinsicPropKeywords,
-  type LifeCycleHookMethods,
-  LifeCycleHooks
-} from './life-cycle.js'
+import { type LifeCycleHookMethods, LifeCycleHooks } from './life-cycle.js'
+import { __widgetIntrinsicPropKeywords__ } from './constant.js'
 
 
 /**
@@ -51,7 +48,7 @@ class FnWidget extends Widget {
     const name = this.vnode.type?.name || 'anonymous'
     if (isRecordObject(exposed)) {
       for (const exposedKey in exposed) {
-        if (__widgetIntrinsicPropKeywords.includes(exposedKey as any)) {
+        if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
           console.warn(
             `[Vitarx]：${name} 函数组件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
           )
