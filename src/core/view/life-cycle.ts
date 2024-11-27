@@ -1,3 +1,40 @@
+/** 生命周期钩子枚举 */
+export enum LifeCycleHooks {
+  created = 'onCreated',
+  beforeMount = 'onBeforeMount',
+  mounted = 'onMounted',
+  deactivate = 'onDeactivate',
+  activated = 'onActivated',
+  beforeUpdate = 'onBeforeUpdate',
+  updated = 'onUpdated',
+  error = 'onError',
+  unmounted = 'onUnmounted',
+  beforeUnmount = 'onBeforeUnmount'
+}
+
+/**
+ * 组件内部保留的属性关键字
+ * 将生命周期钩子的值自动合并到这里
+ */
+export const widgetIntrinsicPropKeywords = [
+  'build',
+  'update',
+  'el',
+  'vnode',
+  'children',
+  'props',
+  'renderer',
+  ...Object.values(LifeCycleHooks) // 将 LifeCycleHooks 中的所有值合并进来
+] as const
+
+/** 生命周期钩子类型 */
+export type LifeCycleHookMethods = `${LifeCycleHooks}`;
+
+/** 排除生命周期方法和保留属性的类型 */
+export type ExcludeLifeCycleMethods<T> = Omit<
+  T,
+  LifeCycleHookMethods | typeof widgetIntrinsicPropKeywords[number]
+>;
 /**
  * 生命周期基类
  */
@@ -24,6 +61,7 @@ export abstract class LifeCycle {
    * @returns {Element | void} 返回一个dom元素，会作为组件的根节点，如果返回`undefined`，则使用默认的根节点。
    */
   onBeforeMount?(): void | Element
+
   /**
    * 生命周期构造
    *
@@ -90,6 +128,7 @@ export abstract class LifeCycle {
    * @protected
    */
   onBeforeUpdate?(): void
+
   /**
    * 生命周期钩子
    *
@@ -114,24 +153,4 @@ export abstract class LifeCycle {
   onError?(error: any): Vitarx.VNode | void
 }
 
-/**
- * 生命周期钩子枚举
- */
-export enum LifeCycleHooks {
-  'created' = 'onCreated',
-  'beforeMount' = 'onBeforeMount',
-  'mounted' = 'onMounted',
-  'deactivate' = 'onDeactivate',
-  'activated' = 'onActivated',
-  'beforeUpdate' = 'onBeforeUpdate',
-  'updated' = 'onUpdated',
-  'error' = 'onError',
-  'unmounted' = 'onUnmounted',
-  'beforeUnmount' = 'onBeforeUnmount'
-}
 
-/** 生命周期方法集合 */
-export type LifeCycleHookMethods = `${LifeCycleHooks}`
-
-/** 类型重载，排除接口中所有的生命周期方法 */
-export type ExcludeLifeCycleMethods<T> = Omit<T, LifeCycleHookMethods | 'build' | 'renderer'>
