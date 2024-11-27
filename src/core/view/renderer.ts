@@ -2,7 +2,7 @@ import { __updateParentVNode, isVNode, type VElement, type VNode } from './VNode
 import { isFunction } from '../../utils/index.js'
 import {
   type ClassWidget,
-  type FnWidget,
+  type FnWidgetConstructor,
   getCurrentScope,
   isClassWidget,
   Scope,
@@ -143,7 +143,7 @@ export class WidgetRenderer {
    *
    * @returns {VNode}
    */
-  get vnode(): VNode<FnWidget | ClassWidget> {
+  get vnode(): VNode<FnWidgetConstructor | ClassWidget> {
     // @ts-ignore
     return this.widget.props[__WidgetPropsSelfNodeSymbol__]
   }
