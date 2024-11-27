@@ -1,4 +1,4 @@
-import { Fragment, type VNode, type VNodeProps, type VNodeType } from 'vitarx'
+import { Fragment, type VNode, type VNodeProps, type VNodeType } from './../dist/index.js'
 
 /**
  * JSX构建VNode
