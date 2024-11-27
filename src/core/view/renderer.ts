@@ -76,12 +76,11 @@ export class WidgetRenderer {
         widget.vnode.ref && (widget.vnode.ref.value = widget)
         // 更新一次视图
         this.update(childVNode)
-      } else {
-        this.#currentChildVNode = childVNode
+        return
       }
-    } else {
-      this.#currentChildVNode = childVNode
     }
+    this.#currentChildVNode = childVNode
+    widget.onCreated?.()
   }
 
   /**
