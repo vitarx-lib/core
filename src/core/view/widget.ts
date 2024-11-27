@@ -66,18 +66,6 @@ export abstract class Widget<P extends Record<string, any> = {}>
   constructor(props: P) {
     super()
     this.#props = props
-    // @ts-ignore 兼容开发模式的，build自动移除该if块
-    if (import.meta.env?.MODE === 'development') {
-      if (!this.vnode.instance) {
-        Promise.resolve().then(() => {
-          this.onCreated?.()
-        })
-      }
-    } else {
-      Promise.resolve().then(() => {
-        this.onCreated?.()
-      })
-    }
   }
 
   /**
