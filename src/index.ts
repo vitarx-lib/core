@@ -1,5 +1,6 @@
-import type { IntrinsicAttributes, RefEl, TextVNode, VNode, Widget } from './core/index.js'
-import type { HtmlIntrinsicElements } from './core/view/web-render/index.js'
+import { HtmlIntrinsicElements } from './core/index.js'
+import { IntrinsicAttributes, RefEl, TextVNode, VNode } from './core/vnode/VNode.js'
+import { Widget } from './core/widget/widget.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -28,9 +29,9 @@ declare global {
     /**
      * 虚拟节点
      */
-    type VNode = import('./core/view/VNode').VNode
+    type VNode = import('./core/vnode/VNode').VNode
     /** 元素类型 */
-    type Element = import('./core/view/VNode').VNode
+    type Element = VNode
     /** 类组件实例 */
     type ElementClass = Widget
   }

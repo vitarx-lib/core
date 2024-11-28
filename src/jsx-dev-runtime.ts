@@ -1,5 +1,5 @@
-import { Fragment, type VNode, type VNodeProps, type VNodeType } from './core/index.js'
 import { jsx } from './jsx-runtime.js'
+import type { Fragment, VNode, VNodeProps, VNodeType } from './core/index.js'
 
 type Source = { fileName: string; lineNumber: number; columnNumber: number }
 

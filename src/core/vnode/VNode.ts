@@ -1,12 +1,15 @@
-import { isFunction, isRecordObject, popProperty, Widget } from '../../index.js'
-import { type ClassWidget } from './widget.js'
-import type { FnWidgetConstructor } from './fn-widget.js'
-import type {
-  HtmlElementTagMap,
-  HtmlElementTags,
-  HtmlIntrinsicElements
-} from './web-render/index.js'
-import type { ExcludeWidgetIntrinsicKeywords } from './constant.js'
+import {
+  type HtmlElementTagMap,
+  type HtmlIntrinsicElements,
+  type HtmlTags,
+  isFunction,
+  isRecordObject,
+  popProperty,
+  type VDocumentFragment,
+  type VElement
+} from '../../index.js'
+import { type ClassWidgetConstructor, type FnWidgetConstructor, Widget } from '../widget/index.js'
+import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
 
 /** 响应式元素引用标记 */
 const RefElSymbol = Symbol('RefEl')
@@ -21,16 +24,20 @@ const VNodeSymbol = Symbol('VNode')
 
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint | symbol
+
 // 辅助计算出元素类型
-type ComputedRefElType<T> = T extends HtmlElementTags
+type ComputedRefElType<T> = T extends HtmlTags
   ? HtmlElementTagMap[T]
   : T extends Fragment
     ? VDocumentFragment
     : ExcludeWidgetIntrinsicKeywords<T>
+
 /** 引用元素类型 */
 export type RefEl<T> = {
-  value: ComputedRefElType<T> | null, readonly [RefElSymbol]: true
+  value: ComputedRefElType<T> | null
+  readonly [RefElSymbol]: true
 }
+
 /**
  * 全局属性
  */
@@ -51,29 +58,23 @@ export interface IntrinsicAttributes {
   ref?: RefEl<any>
 }
 
-/**
- * HTML 节点类型
- */
-export type HtmlTag = HtmlElementTags
 // 节点类型
-export type VNodeType = FnWidgetConstructor | ClassWidget | Fragment | HtmlTag
+export type VNodeType = FnWidgetConstructor | ClassWidgetConstructor | Fragment | HtmlTags
 // 节点属性结构
-export type VNodeProps<T> = (T extends HtmlElementTags
+export type VNodeProps<T> = (T extends HtmlTags
   ? HtmlIntrinsicElements[T]
-  : T extends ClassWidget<infer P>
+  : T extends ClassWidgetConstructor<infer P>
     ? P
     : T extends FnWidgetConstructor<infer P>
       ? P
       : {}) &
   IntrinsicAttributes
+
 /** 子节点类型 */
 export type VNodeChild = VNode | TextVNode
+
 /** 子节点列表 */
 export type VNodeChildren = Array<VNodeChild>
-/** HTML片段节点数组 */
-export type VDocumentFragment = Array<Element | Text>
-/** 真实的元素实例对象，片段节点为数组 */
-export type VElement = Element | Text | VDocumentFragment
 
 /** 文本节点，内部自动转换 */
 export interface TextVNode {
@@ -108,23 +109,9 @@ export type VNode<T extends VNodeType = VNodeType> = {
 
 // 子元素类型
 type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
+
 // 虚拟节点数组
 type Children = Child[]
-
-/**
- * 创建元素`VNode`
- *
- * 该方法是`createVNode`的别名。
- *
- * @see createElement
- */
-export function h<T extends VNodeType>(
-  type: T,
-  props: VNodeProps<T> | null = null,
-  ...children: Children
-): VNode<T> {
-  return createElement(type, props, ...children)
-}
 
 /**
  * 创建元素`VNode`
@@ -144,7 +131,6 @@ export function createElement<T extends VNodeType>(
 /**
  * 创建元素`VNode`
  *
- * @alias h
  * @alias createElement
  * @template T - 节点类型
  * @param type - 节点类型
@@ -193,7 +179,6 @@ export function createVNode<T extends VNodeType>(
   return vnode
 }
 
-
 /**
  * 转换子节点列表
  *
@@ -224,7 +209,7 @@ function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
 }
 
 // VNode的父节点映射关系缓存
-const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>
+const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>()
 
 /**
  * 获取节点的父节点

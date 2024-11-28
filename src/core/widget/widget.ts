@@ -1,7 +1,8 @@
-import { type IntrinsicAttributes, type VElement, type VNode } from './VNode.js'
-import { WidgetRenderer } from './renderer.js'
 import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 import { LifeCycle } from './life-cycle.js'
+import type { IntrinsicAttributes, VNode } from '../vnode/VNode.js'
+import { WidgetRenderer } from '../view/index.js'
+import type { VElement } from '../vnode/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -11,7 +12,7 @@ export type Element = Vitarx.Element
 /**
  * 类组件构造器类型
  */
-export type ClassWidget<P extends Record<string, any> = {}> = new (
+export type ClassWidgetConstructor<P extends Record<string, any> = {}> = new (
   props: P & IntrinsicAttributes
 ) => Widget<P>
 
@@ -57,10 +58,10 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * 该获取器被内部依赖，请勿重写！
    *
-   * @returns {VNode<ClassWidget>}
+   * @returns {VNode<ClassWidgetConstructor>}
    * @protected
    */
-  get vnode(): VNode<ClassWidget> {
+  get vnode(): VNode<ClassWidgetConstructor> {
     return this.#props[__WidgetPropsSelfNodeSymbol__ as any]
   }
 
@@ -76,7 +77,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
       // @ts-ignore 兼容热更新
       if (import.meta.env?.MODE === 'development') {
         // @ts-ignore 如果是类组件，恢复其属性值
-        if (this.vnode.instance && isClassWidget(this.vnode.type)) {
+        if (this.vnode.instance && isClassWidgetConstructor(this.vnode.type)) {
           // 如果是修改build则恢复状态，修改其他方法则不恢复状态，重新触发创建和挂载生命周期
           if (this.vnode.instance.build.toString() === this.build.toString()) {
             this.onCreated?.()
@@ -174,7 +175,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
  *
  * @param val
  */
-export function isClassWidget(val: any): val is ClassWidget {
+export function isClassWidgetConstructor(val: any): val is ClassWidgetConstructor {
   if (typeof val !== 'function') return false
   return val.prototype instanceof Widget
 }

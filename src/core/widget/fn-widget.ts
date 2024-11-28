@@ -1,8 +1,8 @@
-import { type IntrinsicAttributes, isVNode, type VNode } from './VNode.js'
 import { Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
 import { type LifeCycleHookMethods, LifeCycleHooks } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
+import { type IntrinsicAttributes, isVNode, type VNode } from '../vnode/index.js'
 
 
 /**

@@ -1,14 +1,4 @@
-import { __updateParentVNode, isVNode, type VElement, type VNode } from './VNode.js'
-import {
-  type ClassWidget,
-  type FnWidgetConstructor,
-  getCurrentScope,
-  isClassWidget,
-  LifeCycleHooks,
-  Scope,
-  watchDepend
-} from '../../index.js'
-import type { Widget } from './widget.js'
+import { __updateParentVNode, isVNode, type VElement, type VNode } from '../vnode/index.js'
 import {
   getVElementParentEl,
   type HtmlElement,
@@ -19,7 +9,16 @@ import {
   updateActivateState,
   VElementToHTMLElement
 } from './web-render/index.js'
-import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from './constant.js'
+import {
+  type ClassWidgetConstructor,
+  type FnWidgetConstructor,
+  isClassWidgetConstructor,
+  LifeCycleHooks,
+  Widget
+} from '../widget/index.js'
+import { getCurrentScope, Scope } from '../scope/index.js'
+import { watchDepend } from '../observer/index.js'
+import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from '../widget/constant.js'
 
 /**
  * 渲染状态
@@ -30,6 +29,7 @@ import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from './constant.
  * - unloaded：已卸载
  */
 export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstalling' | 'unloaded'
+
 /**
  * 小部件渲染器
  *
@@ -145,9 +145,8 @@ export class WidgetRenderer {
    *
    * @returns {VNode}
    */
-  get vnode(): VNode<FnWidgetConstructor | ClassWidget> {
-    // @ts-ignore
-    return this.widget.props[__WidgetPropsSelfNodeSymbol__]
+  get vnode(): VNode<FnWidgetConstructor | ClassWidgetConstructor> {
+    return (this.widget as any).props[__WidgetPropsSelfNodeSymbol__]
   }
 
   /**
@@ -212,8 +211,7 @@ export class WidgetRenderer {
   build(): VNode {
     let vnode: VNode
     try {
-      // @ts-ignore
-      vnode = this.widget.build()
+      vnode = (this.widget as any).build()
     } catch (e) {
       const errVNode = this.triggerLifeCycle(LifeCycleHooks.error)
       if (!isVNode(errVNode)) throw e
@@ -223,7 +221,7 @@ export class WidgetRenderer {
       __updateParentVNode(vnode, this.vnode)
       return vnode
     }
-    if (isClassWidget(this.vnode.type)) {
+    if (isClassWidgetConstructor(this.vnode.type)) {
       throw new Error(`[Vitarx]：${this.name}类Widget.build返回值非有效的VNode对象`)
     } else {
       throw new Error(`[Vitarx]：${this.name}函数Widget，返回值非有效的VNode对象|VNode构造器`)
@@ -352,8 +350,7 @@ export class WidgetRenderer {
    * @protected
    */
   protected triggerLifeCycle(hook: LifeCycleHooks, ...args: any[]): any {
-    // @ts-ignore
-    return this.widget[__LifeCycleTrigger__](hook, ...args)
+    return (this.widget as any)[__LifeCycleTrigger__](hook, ...args)
   }
 }
 

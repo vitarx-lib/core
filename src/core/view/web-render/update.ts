@@ -1,15 +1,9 @@
-import {
-  Fragment,
-  isTextVNode,
-  isVNode,
-  type VElement,
-  type VNode,
-  type VNodeChild
-} from '../VNode.js'
 import { isFunction } from '../../../utils/index.js'
 import { type HtmlElement, removeElement, renderElement, VElementToHTMLElement } from './element.js'
 import { removeAttribute, setAttribute } from './attributes.js'
 import { renderChild, renderChildren } from './children.js'
+import type { VElement, VNode, VNodeChild } from '../../vnode/index.js'
+import { Fragment, isTextVNode, isVNode } from '../../vnode/index.js'
 
 /**
  * 差异更新

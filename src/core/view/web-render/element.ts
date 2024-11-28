@@ -1,21 +1,24 @@
+import { createScope } from '../../scope/index.js'
+import { reactive } from '../../variable/index.js'
+import { setAttributes } from './attributes.js'
+import { renderChildren } from './children.js'
 import {
-  Fragment,
-  type HtmlTag,
+  type ClassWidgetConstructor,
+  createFnWidget,
+  type FnWidgetConstructor,
+  isClassWidgetConstructor
+} from '../../widget/index.js'
+import { __WidgetPropsSelfNodeSymbol__ } from '../../widget/constant.js'
+import {
+  type Fragment,
+  type HtmlTags,
   isRefEl,
   isTextVNode,
   type TextVNode,
   type VDocumentFragment,
   type VElement,
   type VNode
-} from '../VNode.js'
-import { createScope } from '../../scope/index.js'
-import { reactive } from '../../variable/index.js'
-import { type ClassWidget, isClassWidget } from '../widget.js'
-import { createFnWidget, type FnWidgetConstructor } from '../fn-widget.js'
-import { setAttributes } from './attributes.js'
-import { renderChildren } from './children.js'
-import type { HtmlElementTags } from './index.js'
-import { __WidgetPropsSelfNodeSymbol__ } from '../constant.js'
+} from '../../vnode/index.js'
 
 /**
  * 渲染器创建的元素
@@ -38,14 +41,14 @@ export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement):
   switch (typeof vnode.type) {
     case 'string':
       // HTML 元素节点
-      el = renderHtmlElement(vnode as VNode<HtmlTag>, parent)
+      el = renderHtmlElement(vnode as VNode<HtmlTags>, parent)
       break
     case 'symbol':
       // Fragment 节点
       el = renderFragmentElement(vnode as VNode<Fragment>, parent)
       break
     case 'function':
-      el = renderWidgetElement(vnode as VNode<ClassWidget | FnWidgetConstructor>, parent)
+      el = renderWidgetElement(vnode as VNode<ClassWidgetConstructor | FnWidgetConstructor>, parent)
       break
     default:
       throw new Error(`Unsupported vnode type: ${vnode.type}`)
@@ -63,7 +66,7 @@ export function renderTextElement(vnode: TextVNode, parent?: ParentElement): Tex
 
 // 创建小部件元素
 export function renderWidgetElement(
-  vnode: VNode<FnWidgetConstructor | ClassWidget>,
+  vnode: VNode<FnWidgetConstructor | ClassWidgetConstructor>,
   parent?: ParentElement
 ): HtmlElement {
   let el: HtmlElement
@@ -74,7 +77,7 @@ export function renderWidgetElement(
     // 包装props为响应式对象
     vnode.props = reactive(vnode.props, false)
     // 实例化函数组件或类组件
-    vnode.instance = isClassWidget(vnode.type)
+    vnode.instance = isClassWidgetConstructor(vnode.type)
       ? new vnode.type(vnode.props)
       : createFnWidget(vnode as VNode<FnWidgetConstructor>)
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
@@ -86,10 +89,7 @@ export function renderWidgetElement(
 }
 
 // 创建html元素
-export function renderHtmlElement(
-  vnode: VNode<HtmlElementTags>,
-  parent?: ParentElement
-): HTMLElement {
+export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ParentElement): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
   // 挂载到父节点

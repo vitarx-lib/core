@@ -1,6 +1,6 @@
-import { type VNodeChild, type VNodeChildren } from '../VNode.js'
 import { type ParentElement, renderElement } from './element.js'
 import { isArray } from '../../../utils/index.js'
+import type { VNodeChild, VNodeChildren } from '../../vnode/index.js'
 
 /**
  * 挂载子节点列表
