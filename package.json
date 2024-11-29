@@ -12,7 +12,7 @@
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc && node scripts/index.js",
+    "build": "rimraf dist && tsc && node scripts/index.js",
     "prepublishOnly": "npm run build",
     "push": "npm publish --access=public"
   },
