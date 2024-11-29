@@ -4,6 +4,8 @@ import type { IntrinsicAttributes, VNode } from '../vnode/VNode.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { VElement } from '../vnode/index.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
+import { isComputed } from '../variable/index.js'
+import { Effect } from '../scope/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -78,21 +80,22 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
       // @ts-ignore 兼容热更新，build时摇树优化会自动去除该if块
       if (import.meta.env?.MODE === 'development') {
         // @ts-ignore 如果是类组件，恢复其属性值
-        if (this.vnode.instance && isClassWidgetConstructor(this.vnode.type)) {
+        if (this.vnode.el && isClassWidgetConstructor(this.vnode.type)) {
           // 如果是修改build则恢复状态，修改其他方法则不恢复状态，重新触发创建和挂载生命周期
-          if (this.vnode.instance.build.toString() === this.build.toString()) {
-            this.onCreated?.()
+          if (this.vnode.instance!.build.toString() === this.build.toString()) {
             this.#renderer = new WidgetRenderer(this)
             this.onMounted?.()
             return this.#renderer
           } else {
             for (const key in this.vnode.instance) {
-              // @ts-ignore
-              const oldValue = this.vnode.instance[key]
-              // 函数类型不恢复
-              if (typeof oldValue !== 'function') {
-                // @ts-ignore
-                this[key] = oldValue
+              const oldValue = (this.vnode.instance as any)[key]
+              // 函数类型、计算属性、副作用对象均不恢复
+              if (
+                typeof oldValue !== 'function' &&
+                !isComputed(oldValue) &&
+                !(oldValue instanceof Effect)
+              ) {
+                ;(this as any)[key] = oldValue
               }
             }
           }
