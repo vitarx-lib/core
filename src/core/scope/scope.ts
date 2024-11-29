@@ -67,7 +67,11 @@ export class Scope extends Effect {
    */
   add(effect: EffectInterface): boolean {
     if (!this.isDeprecated) {
-      isEffect(effect, true)
+      if (!isEffect(effect)) {
+        throw new TypeError(
+          '添加到作用域中管理的对象必须是 Effect 或 AutoDisposed 的实例，或实现 EffectInterface 接口'
+        )
+      }
       this.#effects?.add(effect)
       effect.onDestroyed(() => this.#effects?.delete(effect))
       return true
