@@ -1,8 +1,8 @@
-import { renderWidgetElement } from './web-render/index.js'
 import { isFunction } from '../../utils/index.js'
 import { type ClassWidgetConstructor, isClassWidgetConstructor, Widget } from '../widget/widget.js'
 import type { FnWidgetConstructor } from '../widget/index.js'
 import { createVNode, isVNode, type VNode } from '../vnode/index.js'
+import { renderWidgetElement } from './web-runtime-dom/index.js'
 
 // 错误提示
 const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
@@ -10,7 +10,7 @@ const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
 /**
  * # Vitarx App
  */
-export class VitarxApp {
+export class AppRenderer {
   static ssr: boolean = false
   /** 元素容器 */
   protected readonly container: Element
@@ -22,6 +22,7 @@ export class VitarxApp {
    * 小部件实例
    */
   widget: Widget | null = null
+
   /**
    * 构建应用实例
    *
@@ -34,7 +35,7 @@ export class VitarxApp {
     }
     this.container = container
     this.options = Object.assign(this.options, options)
-    VitarxApp.ssr = this.options.ssr
+    AppRenderer.ssr = this.options.ssr
   }
 
   /**
@@ -132,9 +133,9 @@ export class VitarxApp {
  * @param options - 应用配置
  * @returns {Vitarx} - 应用实例
  */
-export function createApp(container: Element | string, options?: Vitarx.AppOptions): VitarxApp {
+export function createApp(container: Element | string, options?: Vitarx.AppOptions): AppRenderer {
   if (typeof container === 'string') {
     container = document.querySelector(container)!
   }
-  return new VitarxApp(container, options)
+  return new AppRenderer(container, options)
 }

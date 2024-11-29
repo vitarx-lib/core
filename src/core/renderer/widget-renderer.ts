@@ -8,7 +8,7 @@ import {
   unmountVNode,
   updateActivateState,
   VElementToHTMLElement
-} from './web-render/index.js'
+} from './web-runtime-dom/index.js'
 import {
   type ClassWidgetConstructor,
   type FnWidgetConstructor,
@@ -36,40 +36,38 @@ export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstall
  * 用于渲染小部件，和管理小部件的生命周期。
  */
 export class WidgetRenderer {
-  // 小部件实例
-  #widget: Widget
   // 当前组件的Child虚拟节点
-  #currentChildVNode: VNode
+  protected _currentChildVNode: VNode
   // 等到更新
-  #pendingUpdate = false
+  protected _pendingUpdate = false
   // 当前作用域
-  #currentScope: Scope
+  protected _currentScope: Scope
+  // 上一次挂载的父元素
+  protected _lastParent: ParentNode | null = null
   /**
    * 渲染器状态
    *
    * @protected
    */
   protected _state: RenderState = 'notMounted'
-  // 上一次挂载的父元素
-  #lastParent: ParentNode | null = null
 
   constructor(widget: Widget) {
-    this.#widget = widget
-    this.#currentScope = getCurrentScope()!
+    this._widget = widget
+    this._currentScope = getCurrentScope()!
     const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
     })
-    // @ts-ignore 兼容开发模式的，build自动移除该if块
+    // @ts-ignore 兼容开发模式的，build时摇树优化会自动去除该if块
     if (import.meta.env?.MODE === 'development') {
       // 热更新
       if (widget.vnode.el) {
         const oldRenderer = widget.vnode.instance!.renderer
         // 恢复子节点
-        this.#currentChildVNode = oldRenderer.child
+        this._currentChildVNode = oldRenderer.child
         // 恢复渲染器状态
         this._state = oldRenderer.state
         // 恢复最后一次挂载的父元素
-        this.#lastParent = oldRenderer.#lastParent
+        this._lastParent = oldRenderer._lastParent
         // 重置小部件实例
         widget.vnode.instance = widget
         // 更新引用
@@ -79,16 +77,9 @@ export class WidgetRenderer {
         return
       }
     }
-    this.#currentChildVNode = childVNode
+    this._currentChildVNode = childVNode
     // 触发onCreated生命周期
     this.triggerLifeCycle(LifeCycleHooks.created)
-  }
-
-  /**
-   * 获取当前状态
-   */
-  get state(): RenderState {
-    return this._state
   }
 
   /**
@@ -99,7 +90,14 @@ export class WidgetRenderer {
    * @protected
    */
   get scope(): Scope | undefined {
-    return this.#currentScope
+    return this._currentScope
+  }
+
+  /**
+   * 获取当前状态
+   */
+  get state(): RenderState {
+    return this._state
   }
 
   /**
@@ -110,7 +108,7 @@ export class WidgetRenderer {
    * @returns {boolean}
    */
   get isMounted(): boolean {
-    return !!this.#currentChildVNode.el
+    return !!this._currentChildVNode.el
   }
 
   /**
@@ -119,7 +117,16 @@ export class WidgetRenderer {
    * @returns {VElement | null}
    */
   get el(): VElement | null {
-    return this.#currentChildVNode.el || null
+    return this._currentChildVNode.el || null
+  }
+
+  /**
+   * 当前小部件的`child`虚拟节点
+   *
+   * @returns {VNode}
+   */
+  get child(): VNode {
+    return this._currentChildVNode
   }
 
   /**
@@ -131,14 +138,8 @@ export class WidgetRenderer {
     return getVElementParentEl(this.el)
   }
 
-  /**
-   * 当前小部件的`child`虚拟节点
-   *
-   * @returns {VNode}
-   */
-  get child(): VNode {
-    return this.#currentChildVNode
-  }
+  // 小部件实例
+  protected _widget: Widget
 
   /**
    * 获取小部件自身的虚拟节点
@@ -163,9 +164,10 @@ export class WidgetRenderer {
    *
    * @returns {Widget}
    */
-  get widget(): Widget {
-    return this.#widget
+  protected get widget(): Widget {
+    return this._widget
   }
+
   /**
    * 挂载节点
    *
@@ -188,7 +190,7 @@ export class WidgetRenderer {
       const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
       // 挂载到指定元素
       if (target instanceof Element) parent = target
-      el = renderElement(this.#currentChildVNode, parent)
+      el = renderElement(this._currentChildVNode, parent)
       Promise.resolve().then(() => {
         this._state = 'activated'
         // 触发onActivated生命周期
@@ -201,34 +203,6 @@ export class WidgetRenderer {
   }
 
   /**
-   * 构建`child`虚拟节点
-   *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
-   * @protected
-   * @returns {VNode}
-   */
-  build(): VNode {
-    let vnode: VNode
-    try {
-      vnode = (this.widget as any).build()
-    } catch (e) {
-      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error)
-      if (!isVNode(errVNode)) throw e
-      vnode = errVNode
-    }
-    if (isVNode(vnode)) {
-      __updateParentVNode(vnode, this.vnode)
-      return vnode
-    }
-    if (isClassWidgetConstructor(this.vnode.type)) {
-      throw new Error(`[Vitarx]：${this.name}类Widget.build返回值非有效的VNode对象`)
-    } else {
-      throw new Error(`[Vitarx]：${this.name}函数Widget，返回值非有效的VNode对象|VNode构造器`)
-    }
-  }
-
-  /**
    * 更新视图
    *
    * @param {VNode} newChildVNode - 可选的新`child`虚拟节点，如果不提供，则使用`build`方法构建。
@@ -238,22 +212,22 @@ export class WidgetRenderer {
       console.warn('[Vitarx]：渲染器已销毁，无法再更新视图！')
       return
     }
-    if (this.#pendingUpdate) return
-    this.#pendingUpdate = true
+    if (this._pendingUpdate) return
+    this._pendingUpdate = true
     try {
       // 触发更新前生命周期
       this.triggerLifeCycle(LifeCycleHooks.beforeUpdate)
       // 延迟更新
       setTimeout(() => {
-        this.#pendingUpdate = false
+        this._pendingUpdate = false
       })
-      const oldVNode = this.#currentChildVNode
+      const oldVNode = this._currentChildVNode
       const newVNode = newChildVNode || this.build()
-      this.#currentChildVNode = patchUpdate(oldVNode, newVNode)
+      this._currentChildVNode = patchUpdate(oldVNode, newVNode)
       // 触发更新后生命周期
       this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
-      this.#pendingUpdate = false
+      this._pendingUpdate = false
       console.trace(`[Vitarx]：更新视图时捕获到了异常，${e}`)
     }
   }
@@ -265,17 +239,15 @@ export class WidgetRenderer {
    *
    * @protected
    */
-  unmount() {
+  unmount(): void {
     if (this._state === 'activated' || this._state === 'deactivate') {
       this._state = 'uninstalling'
       // 触发onDeactivated生命周期
       const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount)
       // 递归删除子节点
       unmountVNode(this.child)
-      // 等待子节点删除完成然后移除当前节点
-      if (result !== true) {
-        removeElement(this.el)
-      }
+      // 如果没有返回true，则等待子节点删除完成然后移除当前节点
+      if (result !== true) removeElement(this.el)
       // 销毁当前作用域
       this.scope?.destroy()
       // 修改状态为已卸载
@@ -283,12 +255,12 @@ export class WidgetRenderer {
       // 触发onUnmounted生命周期
       this.triggerLifeCycle(LifeCycleHooks.unmounted)
       // @ts-ignore 释放资源
-      this.#currentChildVNode = null
+      this._currentChildVNode = null
       // @ts-ignore 释放资源
-      this.#currentScope = undefined
+      this._currentScope = null
       // @ts-ignore 释放资源
-      this.#widget = null
-      this.#lastParent = null
+      this._widget = null
+      this._lastParent = null
     }
   }
 
@@ -305,11 +277,11 @@ export class WidgetRenderer {
       this._state = 'activated'
       if (root) {
         // 恢复父元素
-        this.#lastParent?.appendChild(VElementToHTMLElement(this.el!))
-        this.#lastParent = null
+        this._lastParent?.appendChild(VElementToHTMLElement(this.el!))
+        this._lastParent = null
       }
       // 恢复作用域
-      this.#currentScope?.unpause()
+      this._currentScope?.unpause()
       // 触发onActivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.activated)
       // 恢复子节点
@@ -328,16 +300,44 @@ export class WidgetRenderer {
   deactivate(root: boolean = true): void {
     if (this._state === 'activated') {
       this._state = 'deactivate'
-      this.#currentScope?.pause()
+      this._currentScope?.pause()
       // 触发onDeactivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.deactivate)
       // 删除当前元素
       if (root) {
-        this.#lastParent = this.parentEl
+        this._lastParent = this.parentEl
         removeElement(this.el)
       }
       // 停用子节点
       updateActivateState(this.child, false)
+    }
+  }
+
+  /**
+   * 构建`child`虚拟节点
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
+   * @returns {VNode}
+   */
+  protected build(): VNode {
+    let vnode: VNode
+    try {
+      vnode = (this.widget as any).build()
+    } catch (e) {
+      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error)
+      if (!isVNode(errVNode)) throw e
+      vnode = errVNode
+    }
+    if (isVNode(vnode)) {
+      __updateParentVNode(vnode, this.vnode)
+      return vnode
+    }
+    if (isClassWidgetConstructor(this.vnode.type)) {
+      throw new Error(`[Vitarx]：${this.name}类Widget.build返回值非有效的VNode对象`)
+    } else {
+      throw new Error(`[Vitarx]：${this.name}函数Widget，返回值非有效的VNode对象|VNode构造器`)
     }
   }
 
