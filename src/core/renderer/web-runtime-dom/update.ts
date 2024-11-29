@@ -181,7 +181,7 @@ export function updateActivateState(vnode: VNodeChild, activate: boolean) {
         vnode.instance.renderer.deactivate(false)
       }
     } else {
-      // 递归通用子级
+      // 递归停用子级
       if (vnode.children) {
         for (let i = 0; i < vnode.children.length; i++) {
           updateActivateState(vnode.children[i], activate)
