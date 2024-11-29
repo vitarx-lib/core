@@ -1,8 +1,9 @@
 import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 import { LifeCycle } from './life-cycle.js'
 import type { IntrinsicAttributes, VNode } from '../vnode/VNode.js'
-import { WidgetRenderer } from '../view/index.js'
+import { WidgetRenderer } from '../renderer/index.js'
 import type { VElement } from '../vnode/index.js'
+import type { FnWidgetConstructor } from './fn-widget.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -48,7 +49,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @param props
    */
-  constructor(props: P) {
+  protected constructor(props: P) {
     super()
     this.#props = props
   }
@@ -58,10 +59,10 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * 该获取器被内部依赖，请勿重写！
    *
-   * @returns {VNode<ClassWidgetConstructor>}
+   * @returns {VNode<ClassWidgetConstructor | FnWidgetConstructor>}
    * @protected
    */
-  get vnode(): VNode<ClassWidgetConstructor> {
+  get vnode(): VNode<ClassWidgetConstructor | FnWidgetConstructor> {
     return this.#props[__WidgetPropsSelfNodeSymbol__ as any]
   }
 
@@ -74,7 +75,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    */
   get renderer(): WidgetRenderer {
     if (!this.#renderer) {
-      // @ts-ignore 兼容热更新
+      // @ts-ignore 兼容热更新，build时摇树优化会自动去除该if块
       if (import.meta.env?.MODE === 'development') {
         // @ts-ignore 如果是类组件，恢复其属性值
         if (this.vnode.instance && isClassWidgetConstructor(this.vnode.type)) {
