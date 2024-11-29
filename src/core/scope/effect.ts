@@ -135,14 +135,8 @@ export class Effect implements EffectInterface {
  * 检测是否为可处置副作用对象
  *
  * @param obj
- * @param throwError
  */
-export function isEffect(obj: any, throwError?: boolean): obj is EffectInterface {
-  if (!isFunction(obj?.destroy) || !isFunction(obj?.onDestroyed)) {
-    if (throwError) {
-      throw TypeError('[Vitarx]：createEffect参数必须为可一个可处置副作用对象，必须包含destroy和onDestroyed方法')
-    }
-    return false
-  }
-  return true
+export function isEffect(obj: any): obj is EffectInterface {
+  if (obj instanceof Effect) return true
+  return !(!isFunction(obj?.destroy) || !isFunction(obj?.onDestroyed))
 }
