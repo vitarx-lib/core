@@ -21,7 +21,7 @@ export type LifeCycleHookMethods = `${LifeCycleHooks}`;
  * 生命周期基类
  */
 export abstract class LifeCycle {
-  constructor() {
+  protected constructor() {
     // 挂载生命周期钩子
     Object.defineProperty(this, __LifeCycleTrigger__, {
       enumerable: false,
