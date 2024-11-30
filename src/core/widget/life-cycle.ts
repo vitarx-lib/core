@@ -50,8 +50,8 @@ export abstract class LifeCycle {
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
-   * @protected
    * @returns {Element | void} 返回一个真实的dom元素，会作为组件的父节点，如果返回`undefined`，则使用默认的父节点。
+   * @protected
    */
   protected onBeforeMount?(): void | Element
 
@@ -100,16 +100,22 @@ export abstract class LifeCycle {
   protected onUnmounted?(): void
 
   /**
-   * 生命周期构造
+   * ## 生命周期构造
    *
-   * `onBeforeUnmount`钩子会在组件被销毁前触发。
+   * `onBeforeUnmount`钩子会在组件被销毁前触发，此时`el`还未从`DOM`树中移除，可以返回一个`true`接管`el`的销毁逻辑。
+   *
+   * 关于`el`销毁逻辑接管的一些考虑：
+   *
+   * 1. 如果返回`true`，则`el`销毁逻辑由开发者自行接管，此时`el`不会从`DOM`树中移除，需要开发者则执行完逻辑后移除`el`。
+   * 2. 如果返回其他值，则渲染器内部会自动处理`el`的销毁逻辑。
+   * 3. 请务必判断`root`参数是否为`true`，不是true时请不要对`el`进行任何操作，这可能会导致布局混乱，以及性能浪费，因为它的祖父节点会在随后立即从dom树移除。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
-   * @protected
+   * @param {boolean} root 如果为true则代表卸载的正是当前节点，如果为false则卸载的是父节点。
    * @returns {boolean | void} 返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`。
+   * @protected
    */
-  protected onBeforeUnmount?(): void | boolean
+  protected onBeforeUnmount?(root: boolean): void | boolean
 
   /**
    * 生命周期钩子
