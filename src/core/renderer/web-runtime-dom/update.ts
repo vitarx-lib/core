@@ -145,20 +145,21 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
  * 卸载节点
  *
  * @param vnode - 要卸载的虚拟节点
+ * @param removeEl - 是否要删除元素
  * @protected
  */
-export function unmountVNode(vnode: VNodeChild): void {
+export function unmountVNode(vnode: VNodeChild, removeEl: boolean = true): void {
   if (isVNode(vnode)) {
     if (vnode.instance) {
-      vnode.instance!.renderer.unmount()
+      vnode.instance!.renderer.unmount(removeEl)
     } else {
       // 递归卸载子级
-      if (vnode.children) {
-        for (let i = 0; i < vnode.children.length; i++) {
-          unmountVNode(vnode.children[i])
-        }
-      }
+      vnode.children?.forEach(child => unmountVNode(child, removeEl))
+      // 删除元素
+      if (removeEl) removeElement(vnode.el)
     }
+  } else if (isTextVNode(vnode) && removeEl) {
+    vnode.el?.remove()
   }
 }
 
