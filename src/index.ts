@@ -1,9 +1,11 @@
-import { HtmlIntrinsicElements } from './core/index.js'
-import { IntrinsicAttributes, RefEl, TextVNode, VNode } from './core/vnode/VNode.js'
-import { Widget } from './core/widget/widget.js'
-
-export * from './core/index.js'
-export * from './utils/index.js'
+import type {
+  HtmlIntrinsicElements,
+  IntrinsicAttributes,
+  RefEl,
+  TextVNode,
+  VNode as _VNODE,
+  Widget
+} from './core/index.js'
 
 declare global {
   namespace Vitarx {
@@ -29,7 +31,7 @@ declare global {
     /**
      * 虚拟节点
      */
-    type VNode = import('./core/vnode/VNode').VNode
+    type VNode = _VNODE
     /** 元素类型 */
     type Element = VNode
     /** 类组件实例 */
@@ -57,6 +59,9 @@ declare global {
       ref?: RefEl<T>
     }
 
-    type Children = Element | VNode | TextVNode | AnyPrimitive | Array<Children>
+    type Children = Element | _VNODE | TextVNode | AnyPrimitive | Array<Children>
   }
 }
+
+export * from './core/index.js'
+export * from './utils/index.js'
