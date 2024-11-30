@@ -228,7 +228,7 @@ export function onActivated(fn: LifeCycleHookCallback) {
  *
  * @param fn
  */
-export function onBeforeUnmount(fn: LifeCycleHookCallback<void | boolean>) {
+export function onBeforeUnmount(fn: (this: FnWidget, root: boolean) => void | boolean) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.beforeUnmount, fn)
 }
