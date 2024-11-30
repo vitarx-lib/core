@@ -28,12 +28,12 @@ function jsxDEV<T extends VNodeType>(
   source: Source,
   self: any
 ): DevVNode<T> {
-  // @ts-ignore 开发模式获取新模块
-  if (import.meta.env?.MODE === 'development') {
-    if (typeof type === 'function') {
-      // @ts-ignore
-      const newModule = window['__$vitarx_widget_hmr_map$__']?.get?.(type)
-      if (newModule) type = newModule
+  if (typeof type === 'function') {
+    // 获取最新模块
+    let newModule = (window as any)?.__$vitarx_widget_hmr_map$__?.get?.(type)
+    while (newModule) {
+      type = newModule
+      newModule = (window as any)?.__$vitarx_widget_hmr_map$__?.get?.(newModule)
     }
   }
   const vnode = jsx(type, props, key) as DevVNode<T>
