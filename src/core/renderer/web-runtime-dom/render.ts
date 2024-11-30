@@ -120,21 +120,6 @@ export function renderFragmentElement(
 }
 
 /**
- * 删除元素
- *
- * @param el
- */
-export function removeElement(el: VElement | null) {
-  if (!el) return
-  if (Array.isArray(el)) {
-    // 删除旧节点
-    el.forEach(item => item.remove())
-  } else {
-    el?.remove()
-  }
-}
-
-/**
  * `Node`数组转换为片段
  *
  * @param nodes
