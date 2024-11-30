@@ -200,15 +200,16 @@ export class WidgetRenderer {
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
+   * @param {boolean} root - 用于递归时判断是否需要移除当前元素，内部逻辑使用，请勿外部传入。
    * @protected
    */
-  unmount(): void {
+  unmount(root: boolean = true): void {
     if (this._state === 'activated' || this._state === 'deactivate') {
       this._state = 'uninstalling'
       // 触发onDeactivated生命周期
-      const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount)
+      const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount, [root])
       // 递归卸载子节点
-      unmountVNode(this.child)
+      unmountVNode(this.child, false)
       // 如果没有返回true，则等待子节点删除完成然后移除当前节点
       if (result !== true) removeElement(this.el)
       // 销毁当前作用域
@@ -236,8 +237,8 @@ export class WidgetRenderer {
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
+   * @param {boolean} root - 该参数用于递归时内部判断是否需要重新挂载，请勿外部传入。
    * @protected
-   * @param root - 该参数用于递归时内部判断是否需要重新挂载，请勿外部传入。
    */
   activate(root: boolean = true): void {
     if (this._state === 'deactivate') {
@@ -261,8 +262,8 @@ export class WidgetRenderer {
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
-   * @protected
    * @param root - 该参数用于递归时内部判断是否需要移除当前元素，请勿外部传入。
+   * @protected
    */
   deactivate(root: boolean = true): void {
     if (this._state === 'activated') {
