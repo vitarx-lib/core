@@ -1,5 +1,5 @@
 import { isFunction } from '../../../utils/index.js'
-import { type HtmlElement, removeElement, renderElement, VElementToHTMLElement } from './element.js'
+import { type HtmlElement, renderElement, VElementToHTMLElement } from './render.js'
 import { removeAttribute, setAttribute } from './attributes.js'
 import { renderChild, renderChildren } from './children.js'
 import type { VElement, VNode, VNodeChild } from '../../vnode/index.js'
@@ -158,11 +158,7 @@ export function unmountVNode(vnode: VNodeChild): void {
           unmountVNode(vnode.children[i])
         }
       }
-      // 删除元素
-      removeElement(vnode.el)
     }
-  } else if (isTextVNode(vnode)) {
-    vnode.el?.remove()
   }
 }
 
@@ -181,13 +177,28 @@ export function updateActivateState(vnode: VNodeChild, activate: boolean) {
         vnode.instance.renderer.deactivate(false)
       }
     } else {
-      // 递归停用子级
+      // 递归激活/停用子节点
       if (vnode.children) {
         for (let i = 0; i < vnode.children.length; i++) {
           updateActivateState(vnode.children[i], activate)
         }
       }
     }
+  }
+}
+
+/**
+ * 删除元素
+ *
+ * @param el
+ */
+export function removeElement(el: VElement | null) {
+  if (!el) return
+  if (Array.isArray(el)) {
+    // 删除旧节点
+    el.forEach(item => item.remove())
+  } else {
+    el?.remove()
   }
 }
 
@@ -212,12 +223,11 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
       // 卸载旧节点
       unmountVNode(oldVNode)
     } else {
-      replaceChild(newEl, oldVNode.el, parent)
+      replaceElement(newEl, oldVNode.el, parent)
       unmountVNode(oldVNode)
     }
   }
 }
-
 /**
  * 替换节点
  *
@@ -225,7 +235,7 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
  * @param oldEl
  * @param parent - 不传入父节点，自动使用旧节点的父节点
  */
-function replaceChild(
+export function replaceElement(
   newEl: VElement | HtmlElement,
   oldEl: VElement | null,
   parent: ParentNode
