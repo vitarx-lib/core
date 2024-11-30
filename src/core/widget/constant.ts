@@ -27,7 +27,15 @@ export const __WidgetIntrinsicMethods__ = ['build', 'update', ...Object.values(L
 
 
 // 内置属性列表
-export const __WidgetIntrinsicProps__ = ['vnode', 'children', 'props', 'renderer', 'el'] as const
+export const __WidgetIntrinsicProps__ = [
+  'vnode',
+  'children',
+  'props',
+  'renderer',
+  'el',
+  '_renderer',
+  '_props'
+] as const
 
 /**
  * 组件内部保留的属性关键字
