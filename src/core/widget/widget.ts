@@ -4,8 +4,6 @@ import type { IntrinsicAttributes, VNode } from '../vnode/VNode.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { VElement } from '../vnode/index.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
-import { isComputed } from '../variable/index.js'
-import { Effect } from '../scope/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -37,15 +35,8 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @private
    */
-  readonly #props: P
-  /**
-   * 内部私有属性，用于存放渲染器实例。
-   *
-   * 如需自定义渲染器，可重写`renderer`属性获取器。
-   *
-   * @private
-   */
-  #renderer?: WidgetRenderer
+  private readonly _props: P
+
   /**
    * ## 实例化
    *
@@ -53,7 +44,30 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    */
   protected constructor(props: P) {
     super()
-    this.#props = props
+    this._props = props
+  }
+
+  /**
+   * 内部私有属性，用于存放渲染器实例。
+   *
+   * 如需自定义渲染器，可重写`renderer`属性获取器。
+   *
+   * @private
+   */
+  private _renderer?: WidgetRenderer
+
+  /**
+   * 该方法由`Vitarx`内部调用，用于渲染
+   *
+   * 请勿在外部调用，以及使用`WidgetRenderer`实例方法，避免内存泄露。
+   *
+   * @protected
+   */
+  get renderer(): WidgetRenderer {
+    if (!this._renderer) {
+      this._renderer = new WidgetRenderer(this)
+    }
+    return this._renderer
   }
 
   /**
@@ -65,45 +79,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @protected
    */
   get vnode(): VNode<ClassWidgetConstructor | FnWidgetConstructor> {
-    return this.#props[__WidgetPropsSelfNodeSymbol__ as any]
-  }
-
-  /**
-   * 该方法由`Vitarx`内部调用，用于渲染
-   *
-   * 请勿在外部调用，以及使用`WidgetRenderer`实例方法，避免内存泄露。
-   *
-   * @protected
-   */
-  get renderer(): WidgetRenderer {
-    if (!this.#renderer) {
-      // @ts-ignore 兼容热更新，build时摇树优化会自动去除该if块
-      if (import.meta.env?.MODE === 'development') {
-        // @ts-ignore 如果是类组件，恢复其属性值
-        if (this.vnode.el && isClassWidgetConstructor(this.vnode.type)) {
-          // 如果是修改build则恢复状态，修改其他方法则不恢复状态，重新触发创建和挂载生命周期
-          if (this.vnode.instance!.build.toString() === this.build.toString()) {
-            this.#renderer = new WidgetRenderer(this)
-            this.onMounted?.()
-            return this.#renderer
-          } else {
-            for (const key in this.vnode.instance) {
-              const oldValue = (this.vnode.instance as any)[key]
-              // 函数类型、计算属性、副作用对象均不恢复
-              if (
-                typeof oldValue !== 'function' &&
-                !isComputed(oldValue) &&
-                !(oldValue instanceof Effect)
-              ) {
-                ;(this as any)[key] = oldValue
-              }
-            }
-          }
-        }
-      }
-      this.#renderer = new WidgetRenderer(this)
-    }
-    return this.#renderer
+    return this._props[__WidgetPropsSelfNodeSymbol__ as any]
   }
 
   /**
@@ -112,7 +88,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * 建议保持单向数据流，不要尝试修改`props`中数据。
    */
   protected get props(): DeepReadonly<P> {
-    return this.#props as DeepReadonly<P>
+    return this._props as DeepReadonly<P>
   }
 
   /**
@@ -162,9 +138,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * build() {
    *   return <div>Hello World</div>
    * }
-   * // 使用`h`或`createElement` API函数创建元素
+   * // 使用`createVNode`或`createElement` API函数创建元素
    * build() {
-   *  return h('div',{},'Hello World')
+   *  return createVNode('div',{},'Hello World')
    * }
    * ```
    * @note 该方法应由子类实现，且该方法是受保护的，仅供内部渲染逻辑使用。
