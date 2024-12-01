@@ -2,8 +2,8 @@ import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 import { LifeCycle } from './life-cycle.js'
 import type { IntrinsicAttributes, VNode } from '../vnode/VNode.js'
 import { WidgetRenderer } from '../renderer/index.js'
-import type { VElement } from '../vnode/index.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
+import type { VElement } from '../renderer/web-runtime-dom/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -105,8 +105,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * 如果小部件已经渲染，则返回小部件的`DOM`元素，否则返回`null`。
    *
-   * > 注意：如果是片段元素，`el` 会是一个数组，如果片段元素没有子节点，
-   * 则数组中会存在一个占位的`Text`节点，它的内容的空的，在浏览器中不会显示视图。
+   * > 注意：如果是片段元素，`DocumentFragment` 则需要使用this.el.__backup数组访问元素。
    *
    * @returns {VElement | null}
    */
