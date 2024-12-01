@@ -24,7 +24,8 @@ import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from '../widget/c
  * 渲染状态
  *
  * - notMounted：未挂载
- * - mounted：已挂载
+ * - activated：活跃
+ * - deactivate：不活跃
  * - uninstalling：卸载中
  * - unloaded：已卸载
  */
