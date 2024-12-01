@@ -113,9 +113,6 @@ type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
 // 虚拟节点数组
 type Children = Child[]
 
-// 不显示的值
-const notShowValue = [false, true, undefined, null] as const
-
 /**
  * 创建元素`VNode`
  *
@@ -168,6 +165,22 @@ export function createVNode<T extends VNodeType>(
 }
 
 export { createVNode as createElement }
+
+/**
+ * 创建特殊，文本节点`VNode`
+ *
+ * @param {any} value - 任意值，非字符串值会自动使用`String(value)`强制转换为字符串。
+ * @param {boolean} notShowNullable - 自动转换`null`、`false`、`undefined`为空字符串
+ */
+export function createTextVNode(value: any, notShowNullable: boolean = true): TextVNode {
+  if (notShowNullable && [false, undefined, null].includes(value)) value = ''
+  return {
+    value: typeof value === 'string' ? value : String(value),
+    el: null,
+    [TextVNodeSymbol]: true
+  }
+}
+
 /**
  * 转换子节点列表
  *
@@ -180,13 +193,7 @@ function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
     if (Array.isArray(child)) {
       child.forEach(item => flatten(item))
     } else {
-      const vnode: VNode | TextVNode = isVNode(child)
-        ? child
-        : {
-            value: notShowValue.includes(child as any) ? '' : String(child),
-            el: null,
-            [TextVNodeSymbol]: true
-          }
+      const vnode: VNode | TextVNode = isVNode(child) ? child : createTextVNode(child)
       childList.push(vnode)
       __ParentMapping__.set(vnode, parent)
     }
