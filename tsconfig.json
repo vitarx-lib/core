@@ -21,9 +21,9 @@
     "skipLibCheck": true,
     // 使用react模式编译tsx
     "jsx": "react",
-    // 使用h工厂函数
-    "jsxFactory": "h",
-    // 片段
+    // 创建VNode工厂函数
+    "jsxFactory": "createVNode",
+    // 片段常量标识
     "jsxFragmentFactory": "Fragment",
     // 不生成 .d.ts
     "noEmit": false,
