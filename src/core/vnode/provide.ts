@@ -8,7 +8,7 @@ import { getCurrentVNode, Widget } from '../widget/index.js'
  * @param value - 提供的数据
  * @param instance - 组件实例，函数式组件无需提供，类组件必须传入当前组件实例`this`
  */
-export function provide(name: string, value: any, instance?: Widget): void {
+export function provide(name: string | symbol, value: any, instance?: Widget): void {
   const currentVNode = instance?.vnode || getCurrentVNode()
   if (!currentVNode) throw new Error('provide must be called in widget')
   if (!currentVNode.provide) currentVNode.provide = {}
@@ -23,7 +23,7 @@ export function provide(name: string, value: any, instance?: Widget): void {
  * @param instance - 组件实例，函数式组件无需提供，类组件必须传入当前组件实例`this`
  */
 export function inject<T = any>(
-  name: string,
+  name: string | symbol,
   defaultValue: T = undefined as T,
   instance?: Widget
 ): T {
