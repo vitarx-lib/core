@@ -1,5 +1,5 @@
 import { isFunction } from '../../../utils/index.js'
-import { type HtmlElement, renderElement, VElementToHTMLElement } from './render.js'
+import { type HtmlElement, renderElement, VElementToHtmlElement } from './render.js'
 import { removeAttribute, setAttribute } from './attributes.js'
 import { renderChild, renderChildren } from './children.js'
 import type { VElement, VNode, VNodeChild } from '../../vnode/index.js'
@@ -15,7 +15,7 @@ export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
   // 类型不一致，替换原有节点
   if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
     // 获取父节点
-    const parent = getVElementParentEl(oldVNode.el)
+    const parent = getVElementParentNode(oldVNode.el)
     // 替换旧节点为新节点
     replaceVNode(newVNode, oldVNode, parent)
     return newVNode
@@ -78,7 +78,7 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
   if (oldChildren === newChildren) return false
   // 创建新子节点
   if (!oldChildren && newChildren) {
-    const parent = oldVNode.type === Fragment ? getVElementParentEl(oldVNode.el) : oldVNode.el
+    const parent = oldVNode.type === Fragment ? getVElementParentNode(oldVNode.el) : oldVNode.el
     // 渲染新的子节点
     if (parent) renderChildren(parent as Element, newChildren)
     oldVNode.children = newChildren
@@ -117,7 +117,7 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
   // 新增节点
   if (!oldChild && newChild) {
-    const parent = oldVNode.type === Fragment ? getVElementParentEl(oldVNode.el) : oldVNode.el
+    const parent = oldVNode.type === Fragment ? getVElementParentNode(oldVNode.el) : oldVNode.el
     // 渲染新的子节点
     if (parent) renderChild(parent as Element, newChild)
     return newChild
@@ -212,7 +212,7 @@ export function removeElement(el: VElement | null) {
  */
 function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: ParentNode | null) {
   if (parent === null) return
-  if (parent === undefined) parent = getVElementParentEl(oldVNode.el)
+  if (parent === undefined) parent = getVElementParentNode(oldVNode.el!)
   // 创建新元素
   const newEl = renderElement(newVNode)
   if (parent) {
@@ -220,11 +220,11 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
       parent.replaceChild(newEl, oldVNode.el!)
     } else if (oldVNode.instance) {
       // 将新元素插入到旧元素之前
-      parent.insertBefore(newEl, VElementToHTMLElement(oldVNode.el!))
+      parent.insertBefore(newEl, VElementToHtmlElement(oldVNode.el!))
       // 卸载旧节点
       unmountVNode(oldVNode)
     } else {
-      replaceElement(newEl, oldVNode.el, parent)
+      replaceElement(newEl, oldVNode.el!, parent)
       unmountVNode(oldVNode)
     }
   }
@@ -238,18 +238,17 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
  */
 export function replaceElement(
   newEl: VElement | HtmlElement,
-  oldEl: VElement | null,
+  oldEl: VElement | HtmlElement,
   parent: ParentNode
 ): void {
-  if (!oldEl || !parent) return
   if (Array.isArray(oldEl)) {
     // 片段节点弹出第一个元素，用于替换
     const oldFirst = oldEl.shift()!
     // 删除其余元素
     removeElement(oldEl)
-    parent.replaceChild(VElementToHTMLElement(newEl), oldFirst)
+    parent.replaceChild(VElementToHtmlElement(newEl), oldFirst)
   } else {
-    parent.replaceChild(VElementToHTMLElement(newEl), oldEl)
+    parent.replaceChild(VElementToHtmlElement(newEl), oldEl)
   }
 }
 
@@ -260,7 +259,7 @@ export function replaceElement(
  *
  * @param el
  */
-export function getVElementParentEl(el: VElement | null): ParentNode | null {
+export function getVElementParentNode(el: VElement | HtmlElement | null): ParentNode | null {
   if (!el) return null
   return Array.isArray(el) ? el[0].parentNode : el.parentNode
 }
