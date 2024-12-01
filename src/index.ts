@@ -1,11 +1,11 @@
 import type {
-  HtmlIntrinsicElements,
   IntrinsicAttributes,
   RefEl,
   TextVNode,
   VNode as _VNODE,
   Widget
 } from './core/index.js'
+import { HtmlIntrinsicElements } from './core/renderer/web-runtime-dom/type.js'
 
 declare global {
   namespace Vitarx {
