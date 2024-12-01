@@ -169,6 +169,10 @@ export { createVNode as createElement }
 /**
  * 创建特殊，文本节点`VNode`
  *
+ * 开发者无需使用显示的声明文本节点，内部将非VNode节点内容转换为文本节点。
+ *
+ * 空的`<></>`片段节点内部会存在一个空的文本节点用于占位，它在窗口中是不可见的，但它在`DOM`树中真实存在，目的也只是为了保留位置信息。
+ *
  * @param {any} value - 任意值，非字符串值会自动使用`String(value)`强制转换为字符串。
  * @param {boolean} notShowNullable - 自动转换`null`、`false`、`undefined`为空字符串
  */
