@@ -113,6 +113,9 @@ type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
 // 虚拟节点数组
 type Children = Child[]
 
+// 不显示的值
+const notShowValue = [false, true, undefined, null] as const
+
 /**
  * 创建元素`VNode`
  *
@@ -191,12 +194,10 @@ function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
     if (Array.isArray(child)) {
       child.forEach(item => flatten(item))
     } else {
-      // 基本空值忽略掉
-      if (typeof child === 'boolean' || child === undefined || child === null) return
       const vnode: VNode | TextVNode = isVNode(child)
         ? child
         : {
-            value: String(child),
+            value: notShowValue.includes(child as any) ? '' : String(child),
             el: null,
             [TextVNodeSymbol]: true
           }
