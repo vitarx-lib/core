@@ -119,21 +119,6 @@ const notShowValue = [false, true, undefined, null] as const
 /**
  * 创建元素`VNode`
  *
- * 该方法是`createVNode`的别名。
- *
- * @see createElement
- */
-export function createElement<T extends VNodeType>(
-  type: T,
-  props: VNodeProps<T> | null = null,
-  ...children: Children
-): VNode<T> {
-  return createVNode(type, props, ...children)
-}
-
-/**
- * 创建元素`VNode`
- *
  * @alias createElement
  * @template T - 节点类型
  * @param type - 节点类型
@@ -182,6 +167,7 @@ export function createVNode<T extends VNodeType>(
   return vnode
 }
 
+export { createVNode as createElement }
 /**
  * 转换子节点列表
  *
