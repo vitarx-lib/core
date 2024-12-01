@@ -13,7 +13,6 @@ import {
 import {
   type ClassWidgetConstructor,
   type FnWidgetConstructor,
-  isClassWidgetConstructor,
   LifeCycleHooks,
   Widget
 } from '../widget/index.js'
@@ -45,6 +44,10 @@ export class WidgetRenderer {
   protected _pendingUpdate = false
   // 占位节点，仅在停用时才会记录
   protected _placeholderEl: Text | null = null
+  // 当前组件的Child虚拟节点
+  protected _child: VNode
+  // 当前作用域
+  protected _scope: Scope
 
   constructor(widget: Widget) {
     this._widget = widget
@@ -55,9 +58,6 @@ export class WidgetRenderer {
     this._child = childVNode
   }
 
-  // 当前组件的Child虚拟节点
-  protected _child: VNode
-
   /**
    * 当前小部件的`child`虚拟节点
    *
@@ -66,9 +66,6 @@ export class WidgetRenderer {
   get child(): VNode {
     return this._child
   }
-
-  // 当前作用域
-  protected _scope: Scope
 
   /**
    * 获取当前状态
@@ -107,6 +104,7 @@ export class WidgetRenderer {
   get parentEl(): ParentNode | null {
     return getVElementParentEl(this.el)
   }
+
   /**
    * 获取小部件自身的虚拟节点
    *
@@ -133,6 +131,7 @@ export class WidgetRenderer {
   protected get widget(): Widget {
     return this._widget
   }
+
   /**
    * 挂载节点
    *
@@ -144,10 +143,14 @@ export class WidgetRenderer {
   mount(parent?: Element | DocumentFragment): HtmlElement {
     let el: HtmlElement
     if (this.state !== 'notMounted') {
-      if (!this.el) throw new Error('[Vitarx]：渲染器实例已被销毁，不能重新进行挂载。')
+      if (!this.el) {
+        throw new Error('[Vitarx.WidgetRenderer]：渲染器实例已被销毁，不能重新进行挂载。')
+      }
       el = VElementToHTMLElement(this.el)
       if (parent && parent !== this.parentEl) {
-        console.warn('[Vitarx]：同一个小部件实例不应该被多次挂载，这会从旧的容器，转移到新的容器。')
+        console.warn(
+          '[Vitarx.WidgetRenderer]：同一个小部件实例不应该被多次挂载，这会从旧的容器，转移到新的容器。'
+        )
         parent.appendChild(el)
       }
     } else {
@@ -166,6 +169,7 @@ export class WidgetRenderer {
     }
     return el
   }
+
   /**
    * 更新视图
    *
@@ -304,11 +308,7 @@ export class WidgetRenderer {
       __updateParentVNode(vnode, this.vnode)
       return vnode
     }
-    if (isClassWidgetConstructor(this.vnode.type)) {
-      throw new Error(`[Vitarx]：${this.name}类Widget.build返回值非有效的VNode对象`)
-    } else {
-      throw new Error(`[Vitarx]：${this.name}函数Widget，返回值非有效的VNode对象|VNode构造器`)
-    }
+    throw new Error(`[Vitarx.WidgetRenderer]：${this.name}Widget.build返回值非有效的VNode对象`)
   }
 
   /**
