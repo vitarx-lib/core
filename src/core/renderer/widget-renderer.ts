@@ -1,6 +1,6 @@
-import { __updateParentVNode, isVNode, type VElement, type VNode } from '../vnode/index.js'
+import { __updateParentVNode, isVNode, type VNode } from '../vnode/index.js'
 import {
-  getVElementParentEl,
+  getVElementParentNode,
   type HtmlElement,
   patchUpdate,
   removeElement,
@@ -8,7 +8,7 @@ import {
   replaceElement,
   unmountVNode,
   updateActivateState,
-  VElementToHTMLElement
+  type VElement
 } from './web-runtime-dom/index.js'
 import {
   type ClassWidgetConstructor,
@@ -57,6 +57,15 @@ export class WidgetRenderer {
       getResult: true
     })
     this._child = childVNode
+    // @ts-ignore 如果是开发模式，则触发onCreated生命周期
+    if (import.meta.env?.MODE === 'development') {
+      if (!this.vnode.el) {
+        this.triggerLifeCycle(LifeCycleHooks.created)
+      }
+      return
+    }
+    // 触发onCreated生命周期
+    this.triggerLifeCycle(LifeCycleHooks.created)
   }
 
   /**
@@ -103,7 +112,7 @@ export class WidgetRenderer {
    * @returns {ParentNode | null} DOM元素实例
    */
   get parentEl(): ParentNode | null {
-    return getVElementParentEl(this.el)
+    return getVElementParentNode(this.el)
   }
 
   /**
@@ -134,6 +143,18 @@ export class WidgetRenderer {
   }
 
   /**
+   * 仅渲染小部件，但不挂载小部件
+   *
+   * @param force
+   */
+  render(force: boolean = false): Exclude<HtmlElement, Text> {
+    if (force || !this.el) {
+      return renderElement(this._child) as Element
+    }
+    return this.el
+  }
+
+  /**
    * 挂载节点
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
@@ -141,35 +162,23 @@ export class WidgetRenderer {
    * @protected
    * @param parent - 父元素
    */
-  mount(parent?: Element | DocumentFragment): HtmlElement {
-    let el: HtmlElement
+  mount(parent?: Element | DocumentFragment): Exclude<HtmlElement, Text> {
     if (this.state !== 'notMounted') {
-      if (!this.el) {
-        throw new Error('[Vitarx.WidgetRenderer]：渲染器实例已被销毁，不能重新进行挂载。')
-      }
-      el = VElementToHTMLElement(this.el)
-      if (parent && parent !== this.parentEl) {
-        console.warn(
-          '[Vitarx.WidgetRenderer]：同一个小部件实例不应该被多次挂载，这会从旧的容器，转移到新的容器。'
-        )
-        parent.appendChild(el)
-      }
-    } else {
-      // 触发onCreated生命周期
-      this.triggerLifeCycle(LifeCycleHooks.created)
-      // 触发onBeforeMount生命周期
-      const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
-      // 挂载到指定元素
-      if (target instanceof Element) parent = target
-      el = renderElement(this._child, parent)
-      this._state = 'activated'
-      Promise.resolve().then(() => {
-        // 触发onMounted生命周期
-        this.triggerLifeCycle(LifeCycleHooks.mounted)
-        // 触发onActivated生命周期
-        this.triggerLifeCycle(LifeCycleHooks.activated)
-      })
+      throw new Error('[Vitarx.WidgetRenderer]：不能对组件进行重复的挂载操作!')
     }
+    // 触发onBeforeMount生命周期
+    const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
+    // 挂载到指定元素
+    if (target instanceof Element) parent = target
+    const el = renderElement(this._child, parent) as Exclude<HtmlElement, Text>
+    this._state = 'activated'
+    // 延迟到下一个事件循环中执行，
+    Promise.resolve().then(() => {
+      // 触发onMounted生命周期
+      this.triggerLifeCycle(LifeCycleHooks.mounted)
+      // 触发onActivated生命周期
+      this.triggerLifeCycle(LifeCycleHooks.activated)
+    })
     return el
   }
 
@@ -199,7 +208,7 @@ export class WidgetRenderer {
       this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
       this._pendingUpdate = false
-      console.trace(`[Vitarx.WidgetRenderer.update]：更新视图时捕获到了异常，${e}`)
+      console.error('[Vitarx.WidgetRenderer.update]：更新视图时捕获到了异常', e)
     }
   }
   /**
@@ -283,7 +292,7 @@ export class WidgetRenderer {
         // 创建一个空文本节点用于记录位置
         this._placeholderEl = document.createTextNode('')
         // 使用占位节点替换真实节点
-        replaceElement(this._placeholderEl!, this.el, this.parentEl!)
+        replaceElement(this._placeholderEl!, this.el!, this.parentEl!)
       }
       // 停用子节点
       updateActivateState(this.child, false)
