@@ -1,9 +1,9 @@
 import { isFunction } from '../../../utils/index.js'
-import { type HtmlElement, renderElement, VElementToHtmlElement } from './render.js'
+import { isVDocumentFragment, renderElement } from './render.js'
 import { removeAttribute, setAttribute } from './attributes.js'
 import { renderChild, renderChildren } from './children.js'
-import type { VElement, VNode, VNodeChild } from '../../vnode/index.js'
-import { Fragment, isTextVNode, isVNode } from '../../vnode/index.js'
+import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../../vnode/index.js'
+import type { HtmlElement, VElement } from './type.js'
 
 /**
  * 差异更新
@@ -193,11 +193,11 @@ export function updateActivateState(vnode: VNodeChild, activate: boolean) {
  *
  * @param el
  */
-export function removeElement(el: VElement | null) {
+export function removeElement(el: HtmlElement | null) {
   if (!el) return
-  if (Array.isArray(el)) {
+  if (isVDocumentFragment(el)) {
     // 删除旧节点
-    el.forEach(item => item.remove())
+    el.__backup.forEach(item => item.remove())
   } else {
     el?.remove()
   }
@@ -220,7 +220,7 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
       parent.replaceChild(newEl, oldVNode.el!)
     } else if (oldVNode.instance) {
       // 将新元素插入到旧元素之前
-      parent.insertBefore(newEl, VElementToHtmlElement(oldVNode.el!))
+      parent.insertBefore(newEl, oldVNode.el!)
       // 卸载旧节点
       unmountVNode(oldVNode)
     } else {
@@ -236,19 +236,15 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
  * @param oldEl
  * @param parent - 不传入父节点，自动使用旧节点的父节点
  */
-export function replaceElement(
-  newEl: VElement | HtmlElement,
-  oldEl: VElement | HtmlElement,
-  parent: ParentNode
-): void {
-  if (Array.isArray(oldEl)) {
+export function replaceElement(newEl: HtmlElement, oldEl: HtmlElement, parent: ParentNode): void {
+  if (isVDocumentFragment(oldEl)) {
     // 片段节点弹出第一个元素，用于替换
-    const oldFirst = oldEl.shift()!
+    const oldFirst = oldEl.__backup.shift()!
     // 删除其余元素
     removeElement(oldEl)
-    parent.replaceChild(VElementToHtmlElement(newEl), oldFirst)
+    parent.replaceChild(newEl, oldFirst)
   } else {
-    parent.replaceChild(VElementToHtmlElement(newEl), oldEl)
+    parent.replaceChild(newEl, oldEl)
   }
 }
 
@@ -261,5 +257,5 @@ export function replaceElement(
  */
 export function getVElementParentNode(el: VElement | HtmlElement | null): ParentNode | null {
   if (!el) return null
-  return Array.isArray(el) ? el[0].parentNode : el.parentNode
+  return isVDocumentFragment(el) ? el.__backup[0].parentNode : el.parentNode
 }
