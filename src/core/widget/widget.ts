@@ -87,8 +87,8 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * 建议保持单向数据流，不要尝试修改`props`中数据。
    */
-  protected get props(): DeepReadonly<P> {
-    return this._props as DeepReadonly<P>
+  protected get props(): Readonly<P> {
+    return this._props as Readonly<P>
   }
 
   /**
