@@ -10,24 +10,18 @@ import {
 } from '../../widget/index.js'
 import { __WidgetPropsSelfNodeSymbol__ } from '../../widget/constant.js'
 import {
-  type Fragment,
+  type HtmlElement,
   type HtmlTags,
+  type ParentElement,
+  type VDocumentFragment
+} from './index.js'
+import {
+  type Fragment,
   isRefEl,
   isTextVNode,
   type TextVNode,
-  type VDocumentFragment,
-  type VElement,
   type VNode
 } from '../../vnode/index.js'
-
-/**
- * 渲染器创建的元素
- */
-export type HtmlElement = Element | DocumentFragment | Text
-/**
- * 父元素
- */
-export type ParentElement = Element | DocumentFragment
 
 /**
  * 渲染小部件、html元素、fragment元素、文本元素
@@ -86,7 +80,7 @@ export function renderWidgetElement(
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
     el = vnode.instance.renderer.mount(parent)
     // 记录el
-    vnode.el = el instanceof DocumentFragment ? fragmentToArray(el) : el
+    vnode.el = el
   }, false)
   return el!
 }
@@ -107,56 +101,54 @@ export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ParentElement
 export function renderFragmentElement(
   vnode: VNode<Fragment>,
   parent?: ParentElement
-): DocumentFragment {
-  const el = document.createDocumentFragment()
+): VDocumentFragment {
+  const el = document.createDocumentFragment() as VDocumentFragment
   if (!vnode.children || vnode.children.length === 0) {
     // 创建一个空文本节点，用于占位 可替换为 document.createComment('注释节点占位')
     el.appendChild(document.createTextNode(''))
   } else {
     renderChildren(el, vnode.children)
   }
-  vnode.el = fragmentToArray(el)
+  // 备份 节点
+  backupFragment(el)
+  vnode.el = el
   if (parent) parent.appendChild(el)
   return el
 }
 
+
 /**
- * `Node`数组转换为片段
+ * 判断是否为片段节点
  *
- * @param nodes
+ * @param el
  */
-function arrayToFragment(nodes: VDocumentFragment): DocumentFragment {
-  const el = document.createDocumentFragment()
-  for (let i = 0; i < nodes.length; i++) {
-    el.appendChild(nodes[i])
+export function isVDocumentFragment(el: any): el is VDocumentFragment {
+  return el instanceof DocumentFragment && '__backup' in el
+}
+
+/**
+ * 恢复 Fragment 元素
+ *
+ * @param el - DocumentFragment实例
+ */
+export function recoveryFragment<T>(el: T): T {
+  if (isVDocumentFragment(el)) {
+    for (let i = 0; i < el.__backup.length; i++) {
+      el.appendChild(el.__backup[i])
+    }
   }
   return el
 }
 
 /**
- * 片段转node数组
+ * 备份 Fragment 元素
  *
  * @param el
  */
-export function fragmentToArray(el: DocumentFragment): VDocumentFragment {
-  const els: Node[] = []
+export function backupFragment(el: DocumentFragment) {
+  const nodes: Node[] = []
   for (let i = 0; i < el.childNodes.length; i++) {
-    els.push(el.childNodes[i])
+    nodes.push(el.childNodes[i])
   }
-  return els as VDocumentFragment
-}
-
-/**
- * VElement 转 HTMLElement
- *
- * @param el
- * @constructor
- */
-export function VElementToHtmlElement<T extends VElement | HtmlElement>(
-  el: T
-): T extends VDocumentFragment ? DocumentFragment : T {
-  if (Array.isArray(el)) {
-    return arrayToFragment(el) as any
-  }
-  return el as any
+  ;(el as VDocumentFragment)['__backup'] = nodes as Array<Element | Text>
 }
