@@ -1,15 +1,13 @@
-import {
-  type HtmlElementTagMap,
-  type HtmlIntrinsicElements,
-  type HtmlTags,
-  isFunction,
-  isRecordObject,
-  popProperty,
-  type VDocumentFragment,
-  type VElement
-} from '../../index.js'
+import { isFunction, isRecordObject, popProperty } from '../../index.js'
 import { type ClassWidgetConstructor, type FnWidgetConstructor, Widget } from '../widget/index.js'
 import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
+import type {
+  HtmlElementTagMap,
+  HtmlIntrinsicElements,
+  HtmlTags,
+  VDocumentFragment,
+  VElement
+} from '../renderer/web-runtime-dom/index.js'
 
 /** 响应式元素引用标记 */
 const RefElSymbol = Symbol('RefEl')
