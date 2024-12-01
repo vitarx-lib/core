@@ -120,7 +120,7 @@ type Children = Child[]
  * @template T - 节点类型
  * @param type - 节点类型
  * @param props - 节点属性
- * @param children - 子节点，如果是小部件类型则会写入到 `props.children`
+ * @param children - 子节点，如果是组件类型则会覆盖到 `props.children`
  * @returns {VNode} - 虚拟节点
  */
 export function createVNode<T extends VNodeType>(
@@ -152,8 +152,8 @@ export function createVNode<T extends VNodeType>(
       // @ts-ignore
       props.children = children.length === 1 ? children[0] : children
     }
-  } else if ('children' in props) {
-    const attrChildren = popProperty(props, 'children')
+  } else {
+    const attrChildren = popProperty(props, 'children' as any)
     if (Array.isArray(attrChildren)) {
       children = [...attrChildren, ...children]
     } else {
