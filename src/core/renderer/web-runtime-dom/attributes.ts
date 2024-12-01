@@ -1,5 +1,5 @@
 import { isArray, isFunction, isRecordObject, isString } from '../../../utils/index.js'
-import type { HTMLClassProperties, HTMLStyleProperties } from '../../vnode/index.js'
+import type { HTMLClassProperties, HTMLStyleProperties } from './type.js'
 
 /**
  * 设置元素的多个属性
