@@ -31,11 +31,16 @@ declare global {
   /** 任意原始值类型 */
   type AnyPrimitive = null | undefined | boolean | number | string | bigint | symbol
   /** 深度只读 */
-  type DeepReadonly<T> = T extends object
-    ? {
-        readonly [P in keyof T]: DeepReadonly<T[P]>
-      }
-    : Readonly<T>
+  type DeepReadonly<T> =
+    T extends Promise<any>
+      ? T
+      : T extends AnyFunction
+        ? T
+        : T extends object
+          ? {
+              readonly [P in keyof T]: DeepReadonly<T[P]>
+            }
+          : Readonly<T>
   /** 深度可写 */
   type unDeepReadonly<T> =
     T extends Readonly<object>
