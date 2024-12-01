@@ -162,10 +162,12 @@ export class WidgetRenderer {
       if (target instanceof Element) parent = target
       el = renderElement(this._child, parent)
       this._state = 'activated'
-      // 触发onMounted生命周期
-      this.triggerLifeCycle(LifeCycleHooks.mounted)
-      // 触发onActivated生命周期
-      this.triggerLifeCycle(LifeCycleHooks.activated)
+      Promise.resolve().then(() => {
+        // 触发onMounted生命周期
+        this.triggerLifeCycle(LifeCycleHooks.mounted)
+        // 触发onActivated生命周期
+        this.triggerLifeCycle(LifeCycleHooks.activated)
+      })
     }
     return el
   }
@@ -196,7 +198,7 @@ export class WidgetRenderer {
       this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
       this._pendingUpdate = false
-      console.trace(`[Vitarx]：更新视图时捕获到了异常，${e}`)
+      console.trace(`[Vitarx.WidgetRenderer.update]：更新视图时捕获到了异常，${e}`)
     }
   }
   /**
@@ -211,7 +213,7 @@ export class WidgetRenderer {
     if (this._state === 'activated' || this._state === 'deactivate') {
       this._state = 'uninstalling'
       // 触发onDeactivated生命周期
-      const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount, [root])
+      const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount, root)
       // 递归卸载子节点
       unmountVNode(this.child, false)
       // 如果没有返回true，则等待子节点删除完成然后移除当前节点
@@ -308,7 +310,7 @@ export class WidgetRenderer {
       __updateParentVNode(vnode, this.vnode)
       return vnode
     }
-    throw new Error(`[Vitarx.WidgetRenderer]：${this.name}Widget.build返回值非有效的VNode对象`)
+    throw new Error(`[Vitarx.WidgetRenderer]：${this.name}，Widget.build返回值必须是VNode对象`)
   }
 
   /**
