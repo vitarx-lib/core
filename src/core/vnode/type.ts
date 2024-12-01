@@ -468,4 +468,4 @@ export type HtmlProperties<
 export type VDocumentFragment = Array<Element | Text>
 
 /** 真实的元素实例对象，片段节点为数组 */
-export type VElement = Element | Text | VDocumentFragment
+export type VElement = Element | VDocumentFragment
