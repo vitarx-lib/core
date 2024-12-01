@@ -119,10 +119,11 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * 如果你修改了非响应式数据，则可以调用此方法，强制更新视图。
    *
+   * @param {VNode} newChildVNode - 可选的新`child`虚拟节点，如果不提供，则使用`build`方法构建。
    * @protected
    */
-  protected update() {
-    this.renderer.update()
+  protected update(newChildVNode?: VNode) {
+    this.renderer.update(newChildVNode)
   }
 
   /**
