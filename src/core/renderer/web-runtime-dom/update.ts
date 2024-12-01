@@ -1,5 +1,5 @@
 import { isFunction } from '../../../utils/index.js'
-import { isVDocumentFragment, renderElement } from './render.js'
+import { isVDocumentFragment, recoveryFragment, renderElement } from './render.js'
 import { removeAttribute, setAttribute } from './attributes.js'
 import { renderChild, renderChildren } from './children.js'
 import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../../vnode/index.js'
@@ -242,9 +242,9 @@ export function replaceElement(newEl: HtmlElement, oldEl: HtmlElement, parent: P
     const oldFirst = oldEl.__backup.shift()!
     // 删除其余元素
     removeElement(oldEl)
-    parent.replaceChild(newEl, oldFirst)
+    parent.replaceChild(recoveryFragment(newEl), oldFirst)
   } else {
-    parent.replaceChild(newEl, oldEl)
+    parent.replaceChild(recoveryFragment(newEl), oldEl)
   }
 }
 
