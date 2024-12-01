@@ -23,7 +23,7 @@ import {
 /**
  * 渲染器创建的元素
  */
-export type HtmlElement = Element | Text | DocumentFragment
+export type HtmlElement = Element | DocumentFragment | Text
 /**
  * 父元素
  */
@@ -35,7 +35,10 @@ export type ParentElement = Element | DocumentFragment
  * @param vnode
  * @param parent - 父元素
  */
-export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement): HtmlElement {
+export function renderElement(
+  vnode: VNode | TextVNode,
+  parent?: ParentElement
+): HtmlElement | Text {
   if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
   let el: HtmlElement
   switch (typeof vnode.type) {
@@ -109,10 +112,8 @@ export function renderFragmentElement(
   if (!vnode.children || vnode.children.length === 0) {
     // 创建一个空文本节点，用于占位 可替换为 document.createComment('注释节点占位')
     el.appendChild(document.createTextNode(''))
-    if (isRefEl(vnode.ref)) vnode.ref.value = []
   } else {
     renderChildren(el, vnode.children)
-    if (isRefEl(vnode.ref)) vnode.ref.value = fragmentToArray(el)
   }
   vnode.el = fragmentToArray(el)
   if (parent) parent.appendChild(el)
@@ -151,8 +152,11 @@ export function fragmentToArray(el: DocumentFragment): VDocumentFragment {
  * @param el
  * @constructor
  */
-export function VElementToHTMLElement(
-  el: VElement | DocumentFragment
-): Element | Text | DocumentFragment {
-  return Array.isArray(el) ? arrayToFragment(el) : el
+export function VElementToHtmlElement<T extends VElement | HtmlElement>(
+  el: T
+): T extends VDocumentFragment ? DocumentFragment : T {
+  if (Array.isArray(el)) {
+    return arrayToFragment(el) as any
+  }
+  return el as any
 }
