@@ -32,8 +32,9 @@ declare global {
      * 虚拟节点
      */
     type VNode = _VNODE
-    /** 元素类型 */
-    type Element = VNode
+
+    /** 兼容JSX元素类型 */
+    interface Element extends _VNODE {}
     /** 类组件实例 */
     type ElementClass = Widget
   }
