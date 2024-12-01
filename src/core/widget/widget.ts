@@ -42,7 +42,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @param props
    */
-  protected constructor(props: P) {
+  constructor(props: P) {
     super()
     this._props = props
   }
