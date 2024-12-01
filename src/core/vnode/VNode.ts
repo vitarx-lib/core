@@ -151,16 +151,17 @@ export function createVNode<T extends VNodeType>(
     if (children.length > 0) {
       // @ts-ignore
       props.children = children.length === 1 ? children[0] : children
+      children = []
     }
-  } else {
+  } else if ('children' in props) {
     const attrChildren = popProperty(props, 'children' as any)
     if (Array.isArray(attrChildren)) {
       children = [...attrChildren, ...children]
     } else {
       children.push(attrChildren as any)
     }
-    vnode.children = toVNodeChildren(children, vnode)
   }
+  vnode.children = toVNodeChildren(children, vnode)
   return vnode
 }
 
