@@ -464,8 +464,28 @@ export type HtmlProperties<
   CustomProperties &
   Vitarx.GlobalIntrinsicAttributes
 
-/** HTML片段节点数组 */
-export type VDocumentFragment = Array<Element | Text>
+/**
+ * 片段节点
+ *
+ * 额外属性：__backup - 片段节点的备份，用于恢复片段节点
+ */
+export interface VDocumentFragment extends DocumentFragment {
+  /**
+   * 备份的节点列表
+   *
+   * 用于恢复片段节点
+   */
+  __backup: Array<Element | Text>
+}
 
 /** 真实的元素实例对象，片段节点为数组 */
 export type VElement = Element | VDocumentFragment
+
+/**
+ * 渲染器创建的元素
+ */
+export type HtmlElement = Element | VDocumentFragment | Text
+/**
+ * 父元素
+ */
+export type ParentElement = Element | DocumentFragment | VDocumentFragment
