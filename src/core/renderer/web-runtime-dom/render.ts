@@ -2,26 +2,18 @@ import { createScope } from '../../scope/index.js'
 import { reactive } from '../../variable/index.js'
 import { setAttributes } from './attributes.js'
 import { renderChildren } from './children.js'
-import {
-  createFnWidget,
-  type FnWidgetConstructor,
-  isClassWidgetConstructor,
-  type WidgetType
-} from '../../widget/index.js'
+import type { FnWidgetConstructor, WidgetType } from '../../widget/index.js'
+import { createFnWidget, isClassWidgetConstructor } from '../../widget/index.js'
 import { __WidgetPropsSelfNodeSymbol__ } from '../../widget/constant.js'
+import type { Fragment, TextVNode, VNode } from '../../vnode/index.js'
+import { isRefEl, isTextVNode } from '../../vnode/index.js'
 import {
+  type ContainerElement,
   type HtmlElement,
   type HtmlTags,
-  type ParentElement,
   type VDocumentFragment
 } from './index.js'
-import {
-  type Fragment,
-  isRefEl,
-  isTextVNode,
-  type TextVNode,
-  type VNode
-} from '../../vnode/index.js'
+
 
 /**
  * 渲染小部件、html元素、fragment元素、文本元素
@@ -29,7 +21,7 @@ import {
  * @param vnode - 虚拟节点
  * @param parent - 父元素
  */
-export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement): HtmlElement {
+export function renderElement(vnode: VNode | TextVNode, parent?: ContainerElement): HtmlElement {
   // 如果节点已渲染，则直接返回，避免重复渲染
   if (vnode.el) return vnode.el
   if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
@@ -58,7 +50,7 @@ export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement):
  * @param vnode - 文本节点
  * @param parent - 父元素
  */
-export function renderTextElement(vnode: TextVNode, parent?: ParentElement): Text {
+export function renderTextElement(vnode: TextVNode, parent?: ContainerElement): Text {
   const textEl = document.createTextNode(vnode.value)
   vnode.el = textEl
   if (parent) parent.appendChild(textEl)
@@ -71,8 +63,10 @@ export function renderTextElement(vnode: TextVNode, parent?: ParentElement): Tex
  * @param vnode - 组件虚拟节点对象
  * @param parent - 父元素
  */
-export function renderWidgetElement(vnode: VNode<WidgetType>, parent?: ParentElement): HtmlElement {
-  let el: HtmlElement
+export function renderWidgetElement(
+  vnode: VNode<WidgetType>,
+  parent?: ContainerElement
+): HtmlElement {
   createScope(() => {
     Object.defineProperty(vnode.props, __WidgetPropsSelfNodeSymbol__, {
       value: vnode
@@ -84,11 +78,9 @@ export function renderWidgetElement(vnode: VNode<WidgetType>, parent?: ParentEle
       ? new vnode.type(vnode.props)
       : createFnWidget(vnode as VNode<FnWidgetConstructor>)
     if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
-    el = vnode.instance.renderer.mount(parent)
-    // 记录el
-    vnode.el = el
+    vnode.el = vnode.instance.renderer.render(parent)
   }, false)
-  return el!
+  return vnode.el!
 }
 
 /**
@@ -97,7 +89,7 @@ export function renderWidgetElement(vnode: VNode<WidgetType>, parent?: ParentEle
  * @param vnode - html元素虚拟节点对象
  * @param parent - 父元素
  */
-export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ParentElement): HTMLElement {
+export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ContainerElement): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
   // 挂载到父节点
@@ -116,7 +108,7 @@ export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ParentElement
  */
 export function renderFragmentElement(
   vnode: VNode<Fragment>,
-  parent?: ParentElement
+  parent?: ContainerElement
 ): VDocumentFragment {
   const el = document.createDocumentFragment() as VDocumentFragment
   if (!vnode.children || vnode.children.length === 0) {
@@ -128,10 +120,9 @@ export function renderFragmentElement(
   // 备份 节点
   backupFragment(el)
   vnode.el = el
-  if (parent) parent.appendChild(el)
+  parent?.appendChild(el)
   return el
 }
-
 
 /**
  * 判断是否为片段节点
