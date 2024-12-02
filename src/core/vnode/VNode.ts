@@ -96,7 +96,7 @@ export interface TextVNode {
 export type VNode<T extends VNodeType = VNodeType> = {
   type: T
   props: VNodeProps<T>
-  children: VNodeChildren | null
+  children: VNodeChildren
   key: OnlyKey | null
   ref: RefEl<T> | null
   el: VElement | null
@@ -139,7 +139,7 @@ export function createVNode<T extends VNodeType>(
     key: popProperty(props, 'key') || null,
     ref: null,
     el: null,
-    children: null
+    children: []
   }
   const key = popProperty(props, 'key')
   if (key) vnode.key = key
@@ -198,7 +198,7 @@ function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
     } else {
       const vnode: VNode | TextVNode = isVNode(child) ? child : createTextVNode(child)
       childList.push(vnode)
-      __ParentMapping__.set(vnode, parent)
+      __updateParentVNode(vnode, parent)
     }
   }
 
