@@ -1,14 +1,16 @@
 import { isFunction } from '../../utils/index.js'
 import { type ClassWidgetConstructor, isClassWidgetConstructor, Widget } from '../widget/widget.js'
-import type { FnWidgetConstructor } from '../widget/index.js'
+import type { FnWidgetConstructor, WidgetType } from '../widget/index.js'
 import { createVNode, isVNode, type VNode } from '../vnode/index.js'
-import { renderWidgetElement } from './web-runtime-dom/index.js'
+import { mountVNode, renderWidgetElement } from './web-runtime-dom/index.js'
 
 // 错误提示
 const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
 
 /**
- * # Vitarx App
+ * ## Vitarx App
+ *
+ * Vitarx 应用渲染器
  */
 export class AppRenderer {
   static ssr: boolean = false
@@ -50,13 +52,11 @@ export class AppRenderer {
   /**
    * ## 渲染小部件
    *
-   * @param {ClassWidgetConstructor | FnWidgetConstructor | VNode} widget - 入口小部件
+   * @template P - 小部件的props参数
+   * @param {WidgetType<P> | VNode<WidgetType<P>>} widget - 入口小部件
    * @param {object} props - 小部件的props参数，仅在widget为函数或类时可选。
    */
-  render<P extends Record<string, any>>(
-    widget: ClassWidgetConstructor<P> | FnWidgetConstructor<P> | VNode,
-    props?: P
-  ): void {
+  render<P extends Record<string, any>>(widget: WidgetType<P> | VNode, props?: P): void {
     let vnode: VNode<FnWidgetConstructor | ClassWidgetConstructor>
     if (isFunction(widget) || isClassWidgetConstructor(widget)) {
       vnode = createVNode(widget as FnWidgetConstructor, props)
@@ -64,10 +64,11 @@ export class AppRenderer {
       vnode = widget as VNode<FnWidgetConstructor | ClassWidgetConstructor>
     }
     if (!isVNode(vnode) || !isFunction(vnode.type)) {
-      throw new Error(`[Vitarx]：入口小部件必须是函数声明小部件或类声明小部件。`)
+      throw new Error(`[Vitarx.AppRenderer.render]：入口小部件必须是函数声明小部件或类声明小部件。`)
     }
     renderWidgetElement(vnode, this.container)
     this.widget = vnode.instance!
+    mountVNode(vnode)
   }
 
   /**
@@ -77,7 +78,7 @@ export class AppRenderer {
    */
   update(): void {
     if (!this.widget) {
-      console.warn(`[VitarxApp.update]：${ERROR_MESSAGE}，不能执行更新操作。`)
+      console.warn(`[Vitarx.AppRenderer.update]：${ERROR_MESSAGE}，不能执行更新操作。`)
     } else {
       this.widget.renderer.update()
     }
@@ -92,7 +93,7 @@ export class AppRenderer {
    */
   unmount(): void {
     if (!this.widget) {
-      console.warn(`[VitarxApp.unmount]：${ERROR_MESSAGE}，不能执行卸载操作。`)
+      console.warn(`[Vitarx.AppRenderer.unmount]：${ERROR_MESSAGE}，不能执行卸载操作。`)
     } else {
       this.widget.renderer.unmount()
       this.widget = null
@@ -106,7 +107,7 @@ export class AppRenderer {
    */
   activate(): void {
     if (!this.widget) {
-      console.warn(`[VitarxApp.activate]：${ERROR_MESSAGE}，不能执行停用操作。`)
+      console.warn(`[Vitarx.AppRenderer.activate]：${ERROR_MESSAGE}，不能执行激活操作。`)
     } else {
       this.widget?.renderer.activate()
     }
@@ -119,7 +120,7 @@ export class AppRenderer {
    */
   deactivate(): void {
     if (!this.widget) {
-      console.warn(`[VitarxApp.deactivate]：${ERROR_MESSAGE}，不能执行启用操作。`)
+      console.warn(`[Vitarx.AppRenderer.deactivate]：${ERROR_MESSAGE}，不能执行停用操作。`)
     } else {
       this.widget?.renderer.deactivate()
     }
