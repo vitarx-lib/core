@@ -217,10 +217,18 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
   if (!parent) return
   // 创建新元素
   const newEl = renderElement(newVNode)
+  // 如果元素已被挂载，则直接卸载旧节点即可，兼容自定义挂载
+  if (getVElementParentNode(newEl)) {
+    // 卸载旧节点
+    unmountVNode(oldVNode)
+    return
+  }
+  // 替换文本节点
   if (isTextVNode(oldVNode)) {
     parent.replaceChild(newEl, oldVNode.el!)
     return
   }
+  // 替换元素节点
   if (oldVNode.instance) {
     // 将新元素插入到旧元素之前
     parent.insertBefore(newEl, oldVNode.el!)
@@ -230,6 +238,7 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
   // 卸载旧节点
   unmountVNode(oldVNode)
 }
+
 /**
  * 替换节点
  *
