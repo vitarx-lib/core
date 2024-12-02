@@ -486,6 +486,6 @@ export type VElement = Element | VDocumentFragment
  */
 export type HtmlElement = Element | VDocumentFragment | Text
 /**
- * 父元素
+ * 可作为容器的元素类型
  */
-export type ParentElement = Element | DocumentFragment | VDocumentFragment
+export type ContainerElement = Element | VDocumentFragment
