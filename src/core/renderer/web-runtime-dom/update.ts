@@ -1,15 +1,15 @@
 import { isFunction } from '../../../utils/index.js'
 import { isVDocumentFragment, recoveryFragment, renderElement } from './render.js'
 import { removeAttribute, setAttribute } from './attributes.js'
-import { renderChild, renderChildren } from './children.js'
+import { renderChildren } from './children.js'
 import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../../vnode/index.js'
 import type { HtmlElement, VElement } from './type.js'
 
 /**
  * 差异更新
  *
- * @param oldVNode
- * @param newVNode
+ * @param oldVNode - 旧虚拟节点
+ * @param newVNode - 新虚拟节点
  */
 export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
   // 类型不一致，替换原有节点
@@ -69,34 +69,54 @@ function patchAttrs(oldVNode: VNode, newVNode: VNode): void {
 /**
  * 差异化更新子节点列表
  *
- * @param oldVNode
- * @param newVNode
+ * @param oldVNode - 旧虚拟节点
+ * @param newVNode - 新虚拟节点
  */
 function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
-  const oldChildren = oldVNode.children
-  const newChildren = newVNode.children
+  const oldChildren = oldVNode.children!
+  const newChildren = newVNode.children!
   if (oldChildren === newChildren) return false
   // 创建新子节点
-  if (!oldChildren && newChildren) {
+  if (newChildren && !oldChildren) {
     const parent = oldVNode.type === Fragment ? getVElementParentNode(oldVNode.el) : oldVNode.el
     // 渲染新的子节点
-    if (parent) renderChildren(parent as Element, newChildren)
+    renderChildren(parent as Element, newChildren, true)
     oldVNode.children = newChildren
     return true
   }
   // 删除旧子节点
   if (!newChildren && oldChildren) {
-    for (let i = 0; i < oldChildren.length; i++) {
-      unmountVNode(oldChildren[i])
+    for (const oldChild of oldChildren) {
+      unmountVNode(oldChild)
     }
     oldVNode.children = newChildren
     return true
   }
-  const maxLength = Math.max(oldChildren!.length, newChildren!.length)
+  const maxLength = Math.max(oldChildren!.length, newChildren.length)
+  const isFragment = isVDocumentFragment(oldVNode.el)
+
+  // 正序遍历，使用偏移量管理索引
+  let offset = 0
   for (let i = 0; i < maxLength; i++) {
-    const oldChild = oldChildren![i]
-    const newChild = newChildren![i]
-    oldChildren![i] = patchChild(oldVNode, oldChild, newChild)
+    const adjustedIndex = i - offset // 调整后的索引，考虑删除带来的偏移
+    const oldChild = oldChildren[adjustedIndex]
+    const newChild = patchChild(oldVNode, oldChild, newChildren[i])
+
+    if (newChild) {
+      oldVNode.children[adjustedIndex] = newChild
+      if (isFragment) {
+        // @ts-ignore
+        oldVNode.el.__backup[adjustedIndex] = newChild.el
+      }
+    } else {
+      // 删除当前节点并调整偏移量
+      oldChildren.splice(adjustedIndex, 1)
+      offset++ // 偏移量增加，下一次遍历时索引需要校正
+      if (isFragment) {
+        // @ts-ignore
+        oldVNode.el.__backup.splice(adjustedIndex, 1)
+      }
+    }
   }
   return true
 }
@@ -104,9 +124,9 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
 /**
  * 差异化更新子节点
  *
- * @param oldVNode
- * @param oldChild
- * @param newChild
+ * @param oldVNode - 旧虚拟节点
+ * @param oldChild - 旧子节点
+ * @param newChild - 新子节点
  * @protected
  */
 function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild): VNodeChild {
@@ -117,9 +137,9 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
   // 新增节点
   if (!oldChild && newChild) {
-    const parent = oldVNode.type === Fragment ? getVElementParentNode(oldVNode.el) : oldVNode.el
+    const parent = oldVNode.type === Fragment ? getVElementParentNode(oldVNode.el)! : oldVNode.el!
     // 渲染新的子节点
-    if (parent) renderChild(parent as Element, newChild)
+    renderChildren(parent as Element, newChild, true)
     return newChild
   }
   // 更新文本节点
@@ -144,8 +164,8 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
 /**
  * 卸载节点
  *
- * @param vnode - 要卸载的虚拟节点
- * @param removeEl - 是否要删除元素
+ * @param {VNodeChild} vnode - 要卸载的虚拟节点
+ * @param {boolean} removeEl - 是否要从DOM树中移除元素，内部递归时使用，无需外部指定！
  * @protected
  */
 export function unmountVNode(vnode: VNodeChild, removeEl: boolean = true): void {
@@ -160,6 +180,26 @@ export function unmountVNode(vnode: VNodeChild, removeEl: boolean = true): void 
     }
   } else if (isTextVNode(vnode) && removeEl) {
     vnode.el?.remove()
+  }
+}
+
+/**
+ * 卸载节点
+ *
+ * @param vnode - 要卸载的虚拟节点
+ * @protected
+ */
+export function mountVNode(vnode: VNodeChild): void {
+  if (isVNode(vnode)) {
+    if (vnode.instance) {
+      // 递归挂载子节点
+      mountVNode(vnode.instance.renderer.child)
+      // 挂载当前节点
+      vnode.instance.renderer.mount()
+    } else {
+      // 递归挂载子级
+      vnode.children?.forEach(child => mountVNode(child))
+    }
   }
 }
 
@@ -214,29 +254,54 @@ function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: Paren
   if (parent === undefined) {
     parent = getVElementParentNode(oldVNode.el!)
   }
-  if (!parent) return
-  // 创建新元素
+  if (!parent) {
+    throw new Error('被替换的旧节点未挂载，无法获取其所在的容器元素实例，无法完成替换操作。')
+  }
   const newEl = renderElement(newVNode)
-  // 如果元素已被挂载，则直接卸载旧节点即可，兼容自定义挂载
-  if (getVElementParentNode(newEl)) {
-    // 卸载旧节点
+  // 如果新节点是传送节点，则不进行替换，直接卸载旧节点
+  if ('instance' in newVNode && newVNode.instance!.renderer.teleport) {
     unmountVNode(oldVNode)
+    mountVNode(newVNode)
     return
   }
   // 替换文本节点
   if (isTextVNode(oldVNode)) {
     parent.replaceChild(newEl, oldVNode.el!)
+    mountVNode(newVNode)
     return
   }
-  // 替换元素节点
   if (oldVNode.instance) {
-    // 将新元素插入到旧元素之前
-    parent.insertBefore(newEl, oldVNode.el!)
+    if (oldVNode.instance.renderer.teleport) {
+      // 将新元素替换掉旧节点的传送占位元素
+      replaceElement(newEl, oldVNode.instance.renderer.teleport.placeholder, parent)
+    } else {
+      // 将新元素插入到旧元素之前，兼容卸载动画
+      insertElement(newEl, oldVNode.el!, parent)
+    }
   } else {
     replaceElement(newEl, oldVNode.el!, parent)
   }
   // 卸载旧节点
   unmountVNode(oldVNode)
+  // 挂载新节点
+  mountVNode(newVNode)
+}
+
+/**
+ * 在旧元素之前插入新元素
+ *
+ * 兼容`VDocumentFragment`
+ *
+ * @param newEl - 新元素
+ * @param oldEl - 旧元素
+ * @param parent - 父元素
+ */
+export function insertElement(newEl: HtmlElement, oldEl: HtmlElement, parent: ParentNode) {
+  if (isVDocumentFragment(oldEl)) {
+    parent.insertBefore(recoveryFragment(newEl), oldEl.__backup[0])
+  } else {
+    parent.insertBefore(recoveryFragment(newEl), oldEl)
+  }
 }
 
 /**
