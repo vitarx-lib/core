@@ -142,14 +142,14 @@ export abstract class LifeCycle {
   /**
    * 生命周期钩子
    *
-   * `onError`钩子会在组件抛出异常时触发，可以返回一个`Vitarx.VNode`做为异常组件显示。
+   * `onError`钩子会在组件抛出异常时触发，可以返回一个`Vitarx.Element`做为异常UI显示。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
    * @param {any} error 捕获到的异常
    * @protected
    */
-  protected onError?(error: any): Vitarx.VNode | void
+  protected onError?(error: any): Vitarx.Element | void
 }
 
 
