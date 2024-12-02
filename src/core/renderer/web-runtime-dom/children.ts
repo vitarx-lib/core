@@ -1,31 +1,28 @@
 import { renderElement } from './render.js'
-import { isArray } from '../../../utils/index.js'
 import type { VNodeChild, VNodeChildren } from '../../vnode/index.js'
-import { ParentElement } from './type.js'
+import { ContainerElement } from './type.js'
+import { mountVNode } from './update.js'
 
 /**
  * 挂载子节点列表
  *
- * @param parent
- * @param children
+ * @param {ContainerElement} parent - 父元素
+ * @param {VNodeChildren} children - 子节点列表
+ * @param {boolean} triggerMountHook - 自动触发挂载钩子
  */
-export function renderChildren(parent: ParentElement, children: VNodeChildren | null): void {
+export function renderChildren(
+  parent: ContainerElement,
+  children: VNodeChildren | VNodeChild | null,
+  triggerMountHook: boolean = false
+): void {
   if (!children) return
-  for (let i = 0; i < children.length; i++) {
-    renderChild(parent, children[i])
-  }
-}
-
-/**
- * 创建并挂载子节点
- *
- * @param parent
- * @param child
- */
-export function renderChild(parent: ParentElement, child: VNodeChild): void {
-  if (isArray(child)) {
-    renderChildren(parent, child)
+  if (Array.isArray(children)) {
+    for (const child of children) {
+      renderElement(child, parent)
+      if (triggerMountHook) mountVNode(child)
+    }
   } else {
-    renderElement(child, parent)
+    renderElement(children, parent)
+    if (triggerMountHook) mountVNode(children)
   }
 }
