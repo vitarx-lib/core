@@ -3,10 +3,10 @@ import { reactive } from '../../variable/index.js'
 import { setAttributes } from './attributes.js'
 import { renderChildren } from './children.js'
 import {
-  type ClassWidgetConstructor,
   createFnWidget,
   type FnWidgetConstructor,
-  isClassWidgetConstructor
+  isClassWidgetConstructor,
+  type WidgetType
 } from '../../widget/index.js'
 import { __WidgetPropsSelfNodeSymbol__ } from '../../widget/constant.js'
 import {
@@ -26,13 +26,12 @@ import {
 /**
  * 渲染小部件、html元素、fragment元素、文本元素
  *
- * @param vnode
+ * @param vnode - 虚拟节点
  * @param parent - 父元素
  */
-export function renderElement(
-  vnode: VNode | TextVNode,
-  parent?: ParentElement
-): HtmlElement | Text {
+export function renderElement(vnode: VNode | TextVNode, parent?: ParentElement): HtmlElement {
+  // 如果节点已渲染，则直接返回，避免重复渲染
+  if (vnode.el) return vnode.el
   if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
   let el: HtmlElement
   switch (typeof vnode.type) {
@@ -45,7 +44,7 @@ export function renderElement(
       el = renderFragmentElement(vnode as VNode<Fragment>, parent)
       break
     case 'function':
-      el = renderWidgetElement(vnode as VNode<ClassWidgetConstructor | FnWidgetConstructor>, parent)
+      el = renderWidgetElement(vnode as VNode<WidgetType>, parent)
       break
     default:
       throw new Error(`Unsupported vnode type: ${vnode.type}`)
@@ -53,7 +52,12 @@ export function renderElement(
   return el
 }
 
-// 创建文本元素
+/**
+ * 创建文本元素
+ *
+ * @param vnode - 文本节点
+ * @param parent - 父元素
+ */
 export function renderTextElement(vnode: TextVNode, parent?: ParentElement): Text {
   const textEl = document.createTextNode(vnode.value)
   vnode.el = textEl
@@ -61,11 +65,13 @@ export function renderTextElement(vnode: TextVNode, parent?: ParentElement): Tex
   return textEl
 }
 
-// 创建小部件元素
-export function renderWidgetElement(
-  vnode: VNode<FnWidgetConstructor | ClassWidgetConstructor>,
-  parent?: ParentElement
-): HtmlElement {
+/**
+ * 渲染小部件
+ *
+ * @param vnode - 组件虚拟节点对象
+ * @param parent - 父元素
+ */
+export function renderWidgetElement(vnode: VNode<WidgetType>, parent?: ParentElement): HtmlElement {
   let el: HtmlElement
   createScope(() => {
     Object.defineProperty(vnode.props, __WidgetPropsSelfNodeSymbol__, {
@@ -85,7 +91,12 @@ export function renderWidgetElement(
   return el!
 }
 
-// 创建html元素
+/**
+ * 创建html元素
+ *
+ * @param vnode - html元素虚拟节点对象
+ * @param parent - 父元素
+ */
 export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ParentElement): HTMLElement {
   const el = document.createElement(vnode.type)
   setAttributes(el, vnode.props)
@@ -97,7 +108,12 @@ export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ParentElement
   return el
 }
 
-// 创建 Fragment 元素
+/**
+ * 渲染Fragment元素
+ *
+ * @param vnode - Fragment虚拟节点对象
+ * @param parent - 父元素
+ */
 export function renderFragmentElement(
   vnode: VNode<Fragment>,
   parent?: ParentElement
