@@ -1,7 +1,7 @@
 import { __updateParentVNode, isVNode, type VNode } from '../vnode/index.js'
 import {
+  type ContainerElement,
   getVElementParentNode,
-  type HtmlElement,
   patchUpdate,
   removeElement,
   renderElement,
@@ -10,12 +10,7 @@ import {
   updateActivateState,
   type VElement
 } from './web-runtime-dom/index.js'
-import {
-  type ClassWidgetConstructor,
-  type FnWidgetConstructor,
-  LifeCycleHooks,
-  Widget
-} from '../widget/index.js'
+import { LifeCycleHooks, Widget, type WidgetType } from '../widget/index.js'
 import { getCurrentScope, Scope } from '../scope/index.js'
 import { watchDepend } from '../observer/index.js'
 import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from '../widget/constant.js'
@@ -30,7 +25,10 @@ import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from '../widget/c
  * - unloaded：已卸载
  */
 export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstalling' | 'unloaded'
-
+type Teleport = {
+  to: Element
+  placeholder: Text
+}
 /**
  * 小部件渲染器
  *
@@ -49,7 +47,8 @@ export class WidgetRenderer {
   protected _child: VNode
   // 当前作用域
   protected _scope: Scope
-
+  // 传送功能相关数据
+  protected _teleport: Teleport | null = null
   constructor(widget: Widget) {
     this._widget = widget
     this._scope = getCurrentScope()!
@@ -75,6 +74,15 @@ export class WidgetRenderer {
    */
   get child(): VNode {
     return this._child
+  }
+
+  /**
+   * 判断节点是否需要传送
+   *
+   * 该属性需在渲染之后调用获取的结果才准确！！
+   */
+  get teleport(): null | Teleport {
+    return this._teleport
   }
 
   /**
@@ -120,7 +128,7 @@ export class WidgetRenderer {
    *
    * @returns {VNode}
    */
-  get vnode(): VNode<FnWidgetConstructor | ClassWidgetConstructor> {
+  get vnode(): VNode<WidgetType> {
     return (this.widget as any).props[__WidgetPropsSelfNodeSymbol__]
   }
 
@@ -143,43 +151,55 @@ export class WidgetRenderer {
   }
 
   /**
-   * 仅渲染小部件，但不挂载小部件
+   * 渲染小部件，并返回渲染的真实元素
    *
-   * @param force
+   * 该方法仅触发 `beforeMount`生命周期，但不会触发`mounted`生命周期，需额外调用`mount`方法触发`mounted`生命周期。
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @param {ContainerElement} container - 容器元素，如果`beforeMount`钩子返回了指定的容器元素，则此参数无效。
+   * @returns {ContainerElement} - 渲染的元素实例
+   * @protected
    */
-  render(force: boolean = false): Exclude<HtmlElement, Text> {
-    if (force || !this.el) {
-      return renderElement(this._child) as Element
+  render(container?: ContainerElement): ContainerElement {
+    if (this.el) throw new Error('[Vitarx.WidgetRenderer.container]：组件已渲染，请勿重复渲染！')
+    // 触发onBeforeMount生命周期
+    const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
+    if (target instanceof Element) {
+      // 如果指定了父元素，则不继续往下传递父元素，避免提前展示视图
+      this._teleport = {
+        to: target,
+        placeholder: document.createTextNode('')
+      }
+      // 将占位符节点插入到正常的父容器中
+      container?.appendChild(this._teleport.placeholder)
+      return renderElement(this.child) as ContainerElement
+    } else {
+      return renderElement(this.child, container) as ContainerElement
     }
-    return this.el
   }
 
   /**
-   * 挂载节点
+   * 该方法用于在元素真实挂载到文档中时调用。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
    * @protected
-   * @param parent - 父元素
    */
-  mount(parent?: Element | DocumentFragment): Exclude<HtmlElement, Text> {
+  mount(): void {
     if (this.state !== 'notMounted') {
-      throw new Error('[Vitarx.WidgetRenderer]：不能对组件进行重复的挂载操作!')
+      throw new Error('[Vitarx.WidgetRenderer.mount]：不能对组件进行重复的挂载操作!')
     }
-    // 触发onBeforeMount生命周期
-    const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
-    // 挂载到指定元素
-    if (target instanceof Element) parent = target
-    const el = renderElement(this._child, parent) as Exclude<HtmlElement, Text>
+    if (!this.el) {
+      throw new Error('[Vitarx.WidgetRenderer.mount]：组件没有渲染，请先调用render方法渲染组件！')
+    }
+    // 挂载到传送节点上
+    if (this.teleport) {
+      this.teleport.to.appendChild(this.el)
+    }
     this._state = 'activated'
-    // 延迟到下一个事件循环中执行，
-    Promise.resolve().then(() => {
-      // 触发onMounted生命周期
-      this.triggerLifeCycle(LifeCycleHooks.mounted)
-      // 触发onActivated生命周期
-      this.triggerLifeCycle(LifeCycleHooks.activated)
-    })
-    return el
+    // 触发onMounted生命周期
+    this.triggerLifeCycle(LifeCycleHooks.mounted)
+    // 触发onActivated生命周期
+    this.triggerLifeCycle(LifeCycleHooks.activated)
   }
 
   /**
@@ -211,11 +231,11 @@ export class WidgetRenderer {
       console.error('[Vitarx.WidgetRenderer.update]：更新视图时捕获到了异常', e)
     }
   }
+
   /**
    * 卸载小部件
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
    * @param {boolean} root - 用于递归时判断是否需要移除当前元素，内部逻辑使用，请勿外部传入。
    * @protected
    */
@@ -230,6 +250,9 @@ export class WidgetRenderer {
       if (result !== true) removeElement(this.el)
       // 销毁当前作用域
       this.scope?.destroy()
+      // 移除占位元素
+      this._placeholderEl?.remove()
+      this.teleport?.placeholder.remove()
       // 修改状态为已卸载
       this._state = 'unloaded'
       // 触发onUnmounted生命周期
@@ -240,11 +263,8 @@ export class WidgetRenderer {
       this._scope = null
       // @ts-ignore 释放资源
       this._widget = null
-      // 如果有占位节点则删除占位节点
-      if (this._placeholderEl) {
-        this._placeholderEl.remove()
-        this._placeholderEl = null
-      }
+      this._placeholderEl = null
+      this._teleport = null
     }
   }
 
@@ -252,7 +272,6 @@ export class WidgetRenderer {
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
    * @param {boolean} root - 该参数用于递归时内部判断是否需要重新挂载，请勿外部传入。
    * @protected
    */
@@ -277,7 +296,6 @@ export class WidgetRenderer {
    * 停用小部件
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
    * @param root - 该参数用于递归时内部判断是否需要移除当前元素，请勿外部传入。
    * @protected
    */
@@ -303,7 +321,6 @@ export class WidgetRenderer {
    * 构建`child`虚拟节点
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
    * @protected
    * @returns {VNode}
    */
@@ -328,7 +345,6 @@ export class WidgetRenderer {
    *
    * @param hook - 生命周期钩子名称
    * @param args - 参数列表
-   *
    * @protected
    */
   protected triggerLifeCycle(hook: LifeCycleHooks, ...args: any[]): any {
