@@ -154,7 +154,7 @@ export function unmountVNode(vnode: VNodeChild, removeEl: boolean = true): void 
       vnode.instance!.renderer.unmount(removeEl)
     } else {
       // 递归卸载子级
-      vnode.children?.forEach(child => unmountVNode(child, removeEl))
+      vnode.children?.forEach(child => unmountVNode(child, false))
       // 删除元素
       if (removeEl) removeElement(vnode.el)
     }
@@ -211,23 +211,24 @@ export function removeElement(el: HtmlElement | null) {
  * @param parent
  */
 function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: ParentNode | null) {
-  if (parent === null) return
-  if (parent === undefined) parent = getVElementParentNode(oldVNode.el!)
+  if (parent === undefined) {
+    parent = getVElementParentNode(oldVNode.el!)
+  }
+  if (!parent) return
   // 创建新元素
   const newEl = renderElement(newVNode)
-  if (parent) {
-    if (isTextVNode(oldVNode)) {
-      parent.replaceChild(newEl, oldVNode.el!)
-    } else if (oldVNode.instance) {
-      // 将新元素插入到旧元素之前
-      parent.insertBefore(newEl, oldVNode.el!)
-      // 卸载旧节点
-      unmountVNode(oldVNode)
-    } else {
-      replaceElement(newEl, oldVNode.el!, parent)
-      unmountVNode(oldVNode)
-    }
+  if (isTextVNode(oldVNode)) {
+    parent.replaceChild(newEl, oldVNode.el!)
+    return
   }
+  if (oldVNode.instance) {
+    // 将新元素插入到旧元素之前
+    parent.insertBefore(newEl, oldVNode.el!)
+  } else {
+    replaceElement(newEl, oldVNode.el!, parent)
+  }
+  // 卸载旧节点
+  unmountVNode(oldVNode)
 }
 /**
  * 替换节点
