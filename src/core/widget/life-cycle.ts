@@ -22,11 +22,11 @@ export type LifeCycleHookMethods = `${LifeCycleHooks}`;
  */
 export abstract class LifeCycle {
   protected constructor() {
-    // 挂载生命周期钩子
+    // 定义一个__LifeCycleTrigger__属性，用于触发生命周期钩子的入口函数，方便管理
     Object.defineProperty(this, __LifeCycleTrigger__, {
       enumerable: false,
       writable: false,
-      value(hook: `${LifeCycleHooks}`, ...args: any[]) {
+      value(hook: LifeCycleHookMethods, ...args: any[]): any {
         return this[hook]?.apply(this, args)
       }
     })
