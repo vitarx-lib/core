@@ -25,10 +25,12 @@ import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from '../widget/c
  * - unloaded：已卸载
  */
 export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstalling' | 'unloaded'
-type Teleport = {
+
+type TeleportData = {
   to: Element
   placeholder: Text
 }
+
 /**
  * 小部件渲染器
  *
@@ -48,7 +50,7 @@ export class WidgetRenderer {
   // 当前作用域
   protected _scope: Scope
   // 传送功能相关数据
-  protected _teleport: Teleport | null = null
+  protected _teleport: TeleportData | null = null
   constructor(widget: Widget) {
     this._widget = widget
     this._scope = getCurrentScope()!
@@ -81,7 +83,7 @@ export class WidgetRenderer {
    *
    * 该属性需在渲染之后调用获取的结果才准确！！
    */
-  get teleport(): null | Teleport {
+  get teleport(): null | TeleportData {
     return this._teleport
   }
 
@@ -162,19 +164,28 @@ export class WidgetRenderer {
    */
   render(container?: ContainerElement): ContainerElement {
     if (this.el) throw new Error('[Vitarx.WidgetRenderer.container]：组件已渲染，请勿重复渲染！')
-    // 触发onBeforeMount生命周期
-    const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
-    if (target instanceof Element) {
-      // 如果指定了父元素，则不继续往下传递父元素，避免提前展示视图
-      this._teleport = {
-        to: target,
-        placeholder: document.createTextNode('')
+    try {
+      // 触发onBeforeMount生命周期
+      const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
+      if (target instanceof Element) {
+        // 如果指定了父元素，则不继续往下传递父元素，避免提前展示视图
+        this._teleport = {
+          to: target,
+          placeholder: document.createTextNode('')
+        }
+        // 将占位符节点插入到正常的父容器中
+        container?.appendChild(this._teleport.placeholder)
+        return renderElement(this.child) as ContainerElement
+      } else {
+        return renderElement(this.child, container) as ContainerElement
       }
-      // 将占位符节点插入到正常的父容器中
-      container?.appendChild(this._teleport.placeholder)
+    } catch (e) {
+      // 触发onError生命周期
+      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, 'render')
+      // 如果返回的内容不是一个VNode虚拟节点，则继续抛出错误
+      if (!isVNode(errVNode)) throw e
+      this._child = errVNode
       return renderElement(this.child) as ContainerElement
-    } else {
-      return renderElement(this.child, container) as ContainerElement
     }
   }
 
@@ -329,7 +340,7 @@ export class WidgetRenderer {
     try {
       vnode = (this.widget as any).build()
     } catch (e) {
-      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error)
+      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, 'build')
       if (!isVNode(errVNode)) throw e
       vnode = errVNode
     }
