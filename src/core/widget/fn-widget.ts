@@ -1,6 +1,6 @@
-import { Widget } from './widget.js'
+import { Element, Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
-import { type LifeCycleHookMethods, LifeCycleHooks } from './life-cycle.js'
+import { type ErrorInfo, type LifeCycleHookMethods, LifeCycleHooks } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
 import { type IntrinsicAttributes, isVNode, type VNode } from '../vnode/index.js'
 
@@ -9,6 +9,15 @@ import { type IntrinsicAttributes, isVNode, type VNode } from '../vnode/index.js
  * 生命周期钩子回调函数
  */
 type LifeCycleHookCallback<R = void> = (this: FnWidget) => R
+
+/**
+ * onError生命周期钩子
+ *
+ * @param {unknown} error - 捕获到的异常对象
+ * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
+ * @returns {void|Element} - 返回一个`Vitarx.Element`，做为后备内容展示。
+ */
+type OnErrorCallback = (this: FnWidget, error: unknown, info: ErrorInfo) => void | Element
 
 /**
  * 构建虚拟节点函数类型
@@ -49,8 +58,8 @@ class FnWidget extends Widget {
     if (isRecordObject(exposed)) {
       for (const exposedKey in exposed) {
         if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
-          console.warn(
-            `[Vitarx]：${name} 函数组件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
+          console.error(
+            `[Vitarx.FnWidget]：${name} 函数组件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
           )
           continue
         }
@@ -175,7 +184,7 @@ export function defineExpose(exposed: Record<string, any>) {
  * @param fn
  */
 export function onCreated(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.created, fn)
 }
 
@@ -187,7 +196,7 @@ export function onCreated(fn: LifeCycleHookCallback) {
  * @param fn
  */
 export function onBeforeMount(fn: LifeCycleHookCallback<void | Element>) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
 }
 
@@ -197,7 +206,7 @@ export function onBeforeMount(fn: LifeCycleHookCallback<void | Element>) {
  * @param fn
  */
 export function onMounted(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.mounted, fn)
 }
 
@@ -207,7 +216,7 @@ export function onMounted(fn: LifeCycleHookCallback) {
  * @param fn
  */
 export function onDeactivate(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.deactivate, fn)
 }
 
@@ -217,7 +226,7 @@ export function onDeactivate(fn: LifeCycleHookCallback) {
  * @param fn
  */
 export function onActivated(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.activated, fn)
 }
 
@@ -226,10 +235,12 @@ export function onActivated(fn: LifeCycleHookCallback) {
  *
  * 在构造中返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`
  *
+ * 如果返回`true`过后，务必在执行完自定义的卸载逻辑过后删除`el`，否则它将永远存在于视图中。
+ *
  * @param fn
  */
 export function onBeforeUnmount(fn: (this: FnWidget, root: boolean) => void | boolean) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.beforeUnmount, fn)
 }
 
@@ -239,7 +250,7 @@ export function onBeforeUnmount(fn: (this: FnWidget, root: boolean) => void | bo
  * @param fn
  */
 export function onUnmounted(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.unmounted, fn)
 }
 
@@ -249,27 +260,33 @@ export function onUnmounted(fn: LifeCycleHookCallback) {
  * @param fn
  */
 export function onBeforeUpdate(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
 }
 
 /**
  * 小部件更新完成时触发的钩子
  *
- * @param fn
+ * @param fn - 钩子回调函数
  */
 export function onUpdated(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.updated, fn)
 }
 
 /**
- * ## 生命周期钩子
+ * 小部件渲染或构建过程中捕获到异常时触发的钩子
+ *
+ * @example
+ * onError((error, info) => {
+ *   console.error(error, info)
+ *   return <div>{error}</div>
+ * })
  *
  * @param fn
  */
-export function onError(fn: LifeCycleHookCallback<Vitarx.VNode | void>) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子函数，${typeof fn}`)
+export function onError(fn: OnErrorCallback) {
+  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   HooksCollect.trackLifeCycle(LifeCycleHooks.error, fn)
 }
 
