@@ -106,7 +106,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
       try {
         this.#callback.apply(null, params)
       } catch (e) {
-        console.error('[Vitarx]：Listener.Callback.Error - ', e)
+        console.error('[Vitarx.Listener.Callback]：', e)
       }
       this.#count++
       // 判断是否已达到预期的监听次数
