@@ -16,7 +16,8 @@ export enum LifeCycleHooks {
 
 /** 生命周期钩子类型 */
 export type LifeCycleHookMethods = `${LifeCycleHooks}`;
-
+/** 错误信息类型 */
+export type ErrorInfo = 'build' | 'render'
 /**
  * 生命周期基类
  */
@@ -142,14 +143,15 @@ export abstract class LifeCycle {
   /**
    * 生命周期钩子
    *
-   * `onError`钩子会在组件抛出异常时触发，可以返回一个`Vitarx.Element`做为异常UI显示。
+   * `onError`钩子会在组件渲染或构建时抛出异常，可以返回一个`Vitarx.Element`做为备用展示。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
-   * @param {any} error 捕获到的异常
+   * @param {unknown} error - 捕获到的异常对象
+   * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
    * @protected
    */
-  protected onError?(error: any): Vitarx.Element | void
+  protected onError?(error: unknown, info: ErrorInfo): Vitarx.Element | void
 }
 
 
