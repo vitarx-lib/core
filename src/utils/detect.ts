@@ -64,7 +64,7 @@ const __asyncFunction = Object.getPrototypeOf(async function () {})
  *
  * @param func
  */
-export function isAsyncFunction(func: Function): func is () => Promise<any> {
+export function isAsyncFunction(func: Function): func is (...args: any[]) => Promise<any> {
   return Object.getPrototypeOf(func) === __asyncFunction
 }
 
