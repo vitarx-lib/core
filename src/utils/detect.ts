@@ -64,7 +64,7 @@ export function isEmpty(val: any): boolean {
  * @param func
  */
 export function isAsyncFunction(func: Function): func is () => Promise<any> {
-  return typeof func === 'function' && func?.constructor?.name === 'AsyncFunction'
+  return Object.getPrototypeOf(func) === Object.getPrototypeOf(async function () {})
 }
 
 /**
