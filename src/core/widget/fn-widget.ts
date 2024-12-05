@@ -36,6 +36,10 @@ interface CollectData {
   lifeCycleHooks: Record<LifeCycleHooks, AnyCallback> | undefined
 }
 
+interface CollectResult extends CollectData {
+  build: any
+}
+
 /**
  * 函数组件代理
  */
@@ -105,9 +109,7 @@ class HooksCollect {
   }
 
   // 收集函数中使用的HOOK
-  static collect(vnode: VNode<FnWidgetConstructor>): CollectData & {
-    build: any
-  } {
+  static collect(vnode: VNode<FnWidgetConstructor>): CollectResult {
     const oldBackup = this.#collectMap
     const oldVNode = this.#currentVNode
     this.#collectMap = {
@@ -125,6 +127,8 @@ class HooksCollect {
   static getCurrentVNode(): VNode<FnWidgetConstructor> | undefined {
     return this.#currentVNode
   }
+
+  static asyncCollect() {}
 }
 
 /**
@@ -302,4 +306,5 @@ export function createFnWidget(vnode: VNode<FnWidgetConstructor>): FnWidget {
   }
   return new FnWidget(vnode.props, build, exposed, lifeCycleHooks)
 }
+
 
