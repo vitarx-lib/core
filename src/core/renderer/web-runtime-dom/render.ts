@@ -23,7 +23,10 @@ import {
  */
 export function renderElement(vnode: VNode | TextVNode, parent?: ContainerElement): HtmlElement {
   // 如果节点已渲染，则直接返回，避免重复渲染
-  if (vnode.el) return vnode.el
+  if (vnode.el) {
+    parent?.appendChild(recoveryFragment(vnode.el))
+    return vnode.el
+  }
   if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
   let el: HtmlElement
   switch (typeof vnode.type) {
