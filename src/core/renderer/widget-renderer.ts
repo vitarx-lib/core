@@ -18,13 +18,20 @@ import { __LifeCycleTrigger__, __WidgetPropsSelfNodeSymbol__ } from '../widget/c
 /**
  * 渲染状态
  *
+ * - notRendered：未渲染
  * - notMounted：未挂载
  * - activated：活跃
  * - deactivate：不活跃
  * - uninstalling：卸载中
  * - unloaded：已卸载
  */
-export type RenderState = 'notMounted' | 'activated' | 'deactivate' | 'uninstalling' | 'unloaded'
+export type RenderState =
+  | 'notRendered'
+  | 'notMounted'
+  | 'activated'
+  | 'deactivate'
+  | 'uninstalling'
+  | 'unloaded'
 
 type TeleportData = {
   to: Element
@@ -40,7 +47,7 @@ export class WidgetRenderer {
   // 小部件实例
   protected _widget: Widget
   // 渲染器状态
-  protected _state: RenderState = 'notMounted'
+  protected _state: RenderState = 'notRendered'
   // 等到更新
   protected _pendingUpdate = false
   // 占位节点，仅在停用时才会记录
@@ -88,7 +95,7 @@ export class WidgetRenderer {
   }
 
   /**
-   * 获取当前状态
+   * 当前小部件的状态
    */
   get state(): RenderState {
     return this._state
@@ -163,7 +170,8 @@ export class WidgetRenderer {
    * @protected
    */
   render(container?: ContainerElement): ContainerElement {
-    if (this.el) throw new Error('[Vitarx.WidgetRenderer.container]：组件已渲染，请勿重复渲染！')
+    if (this.el) throw new Error('[Vitarx.WidgetRenderer.render]：组件已渲染，请勿重复渲染！')
+    let el: ContainerElement | null = null
     try {
       // 触发onBeforeMount生命周期
       const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
@@ -175,9 +183,9 @@ export class WidgetRenderer {
         }
         // 将占位符节点插入到正常的父容器中
         container?.appendChild(this._teleport.placeholder)
-        return renderElement(this.child) as ContainerElement
+        el = renderElement(this.child) as ContainerElement
       } else {
-        return renderElement(this.child, container) as ContainerElement
+        el = renderElement(this.child, container) as ContainerElement
       }
     } catch (e) {
       // 触发onError生命周期
@@ -185,8 +193,10 @@ export class WidgetRenderer {
       // 如果返回的内容不是一个VNode虚拟节点，则继续抛出错误
       if (!isVNode(errVNode)) throw e
       this._child = errVNode
-      return renderElement(this.child) as ContainerElement
+      el = renderElement(this.child) as ContainerElement
     }
+    this._state = 'notMounted'
+    return el
   }
 
   /**
@@ -197,14 +207,11 @@ export class WidgetRenderer {
    */
   mount(): void {
     if (this.state !== 'notMounted') {
-      throw new Error('[Vitarx.WidgetRenderer.mount]：不能对组件进行重复的挂载操作!')
-    }
-    if (!this.el) {
-      throw new Error('[Vitarx.WidgetRenderer.mount]：组件没有渲染，请先调用render方法渲染组件！')
+      return console.warn('[Vitarx.WidgetRenderer.mount]：非待挂载状态，不能进行挂载！')
     }
     // 挂载到传送节点上
     if (this.teleport) {
-      this.teleport.to.appendChild(this.el)
+      this.teleport.to.appendChild(this.el!)
     }
     this._state = 'activated'
     // 触发onMounted生命周期
@@ -219,11 +226,10 @@ export class WidgetRenderer {
    * @param {VNode} newChildVNode - 可选的新`child`虚拟节点，如果不提供，则使用`build`方法构建。
    */
   update(newChildVNode?: VNode): void {
-    if (this._state === 'unloaded') {
-      console.warn('[Vitarx]：渲染器已销毁，无法再更新视图！')
-      return
+    if (this.state === 'unloaded') {
+      return console.warn('[Vitarx.WidgetRenderer.update]：渲染器已销毁，不能再更新视图！')
     }
-    if (this._pendingUpdate) return
+    if (this._pendingUpdate || this.state === 'notRendered') return
     this._pendingUpdate = true
     try {
       // 触发更新前生命周期
@@ -235,6 +241,8 @@ export class WidgetRenderer {
       const oldVNode = this._child
       const newVNode = newChildVNode || this.build()
       this._child = patchUpdate(oldVNode, newVNode)
+      // 更新节点真实el
+      this.vnode.el = this._child.el
       // 触发更新后生命周期
       this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
@@ -251,7 +259,7 @@ export class WidgetRenderer {
    * @protected
    */
   unmount(root: boolean = true): void {
-    if (this._state === 'activated' || this._state === 'deactivate') {
+    if (this._state !== 'uninstalling' && this._state !== 'unloaded') {
       this._state = 'uninstalling'
       // 触发onDeactivated生命周期
       const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount, root)
@@ -348,7 +356,7 @@ export class WidgetRenderer {
       __updateParentVNode(vnode, this.vnode)
       return vnode
     }
-    throw new Error(`[Vitarx.WidgetRenderer]：${this.name}，Widget.build返回值必须是VNode对象`)
+    throw new Error(`[Vitarx.WidgetRenderer]：${this.name}.build返回值必须是VNode对象`)
   }
 
   /**
