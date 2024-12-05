@@ -56,6 +56,7 @@ export function isEmpty(val: any): boolean {
   return false
 }
 
+const __asyncFunction = Object.getPrototypeOf(async function () {})
 /**
  * 判断函数是否使用了async关键字声明
  *
@@ -64,7 +65,7 @@ export function isEmpty(val: any): boolean {
  * @param func
  */
 export function isAsyncFunction(func: Function): func is () => Promise<any> {
-  return Object.getPrototypeOf(func) === Object.getPrototypeOf(async function () {})
+  return Object.getPrototypeOf(func) === __asyncFunction
 }
 
 /**
