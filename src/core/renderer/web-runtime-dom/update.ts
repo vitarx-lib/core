@@ -283,7 +283,7 @@ export function replaceVNode(
   }
   // 替换文本节点
   if (isTextVNode(oldVNode)) {
-    parent.replaceChild(newEl, oldVNode.el!)
+    parent.replaceChild(recoveryFragment(newEl), oldVNode.el!)
     mountVNode(newVNode)
     return
   }
