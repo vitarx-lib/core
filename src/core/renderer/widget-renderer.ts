@@ -1,13 +1,12 @@
 import { __updateParentVNode, isVNode, type VNode } from '../vnode/index.js'
 import {
   type ContainerElement,
-  getVElementParentNode,
+  getElParentNode,
   patchUpdate,
   renderElement,
   replaceElement,
   unmountVNode,
-  updateActivateState,
-  type VElement
+  updateActivateState
 } from './web-runtime-dom/index.js'
 import { LifeCycleHooks, Widget, type WidgetType } from '../widget/index.js'
 import { getCurrentScope, Scope } from '../scope/index.js'
@@ -114,9 +113,9 @@ export class WidgetRenderer {
   /**
    * 当前小部件的child虚拟节点元素
    *
-   * @returns {VElement | null}
+   * @returns {ContainerElement | null}
    */
-  get el(): VElement | null {
+  get el(): ContainerElement | null {
     return this._child?.el || null
   }
 
@@ -128,7 +127,7 @@ export class WidgetRenderer {
    * @returns {ParentNode | null} DOM元素实例
    */
   get parentEl(): ParentNode | null {
-    return getVElementParentNode(this.el)
+    return getElParentNode(this.el)
   }
 
   /**
