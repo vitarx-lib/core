@@ -3,7 +3,7 @@ import { isVDocumentFragment, recoveryFragment, renderElement } from './render.j
 import { removeAttribute, setAttribute } from './attributes.js'
 import { renderChildren } from './children.js'
 import { Fragment, isTextVNode, isVNode, type VNode, type VNodeChild } from '../../vnode/index.js'
-import type { HtmlElement, VElement } from './type.js'
+import type { HtmlElement, VDocumentFragment, VElement } from './type.js'
 
 /**
  * 差异更新
@@ -93,15 +93,14 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
     return true
   }
   const maxLength = Math.max(oldChildren!.length, newChildren.length)
-  const isFragment = isVDocumentFragment(oldVNode.el)
+  const isFragment = oldVNode.type === Fragment
 
   // 正序遍历，使用偏移量管理索引
   let offset = 0
   for (let i = 0; i < maxLength; i++) {
     const adjustedIndex = i - offset // 调整后的索引，考虑删除带来的偏移
     const oldChild = oldChildren[adjustedIndex]
-    const newChild = patchChild(oldVNode, oldChild, newChildren[i])
-
+    const newChild = patchChild(oldVNode, oldChild, newChildren[i], isFragment)
     if (newChild) {
       oldVNode.children[adjustedIndex] = newChild
       if (isFragment) {
@@ -111,11 +110,11 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
     } else {
       // 删除当前节点并调整偏移量
       oldChildren.splice(adjustedIndex, 1)
-      offset++ // 偏移量增加，下一次遍历时索引需要校正
       if (isFragment) {
         // @ts-ignore
         oldVNode.el.__backup.splice(adjustedIndex, 1)
       }
+      offset++ // 偏移量增加，下一次遍历时索引需要校正
     }
   }
   return true
@@ -127,9 +126,15 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
  * @param oldVNode - 旧虚拟节点
  * @param oldChild - 旧子节点
  * @param newChild - 新子节点
+ * @param isFragment - 旧节点是否为片段节点
  * @protected
  */
-function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild): VNodeChild {
+function patchChild(
+  oldVNode: VNode,
+  oldChild: VNodeChild,
+  newChild: VNodeChild,
+  isFragment: boolean
+): VNodeChild {
   // 删除节点
   if (oldChild && !newChild) {
     unmountVNode(oldChild)
@@ -137,9 +142,18 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
   // 新增节点
   if (!oldChild && newChild) {
-    const parent = oldVNode.type === Fragment ? getVElementParentNode(oldVNode.el)! : oldVNode.el!
-    // 渲染新的子节点
-    renderChildren(parent as Element, newChild, true)
+    // 如果父节点是片段节点
+    if (isFragment) {
+      const el = renderElement(newChild)
+      const targetElement = oldVNode.el as VDocumentFragment
+      // 往片段节点的最后一个元素之后插入新元素
+      insertAfterExactly(el, targetElement.__backup[targetElement.__backup.length - 1])
+      /// 触发挂载钩子
+      mountVNode(newChild)
+    } else {
+      // 其他容器父节点直接渲染新的子节点并挂载到父节点
+      renderChildren(oldVNode.el!, newChild, true)
+    }
     return newChild
   }
   // 更新文本节点
@@ -161,6 +175,45 @@ function patchChild(oldVNode: VNode, oldChild: VNodeChild, newChild: VNodeChild)
   }
 }
 
+/**
+ * 往指定元素之后插入一个元素
+ *
+ * @param newElement - 新元素
+ * @param targetElement - 目标元素
+ */
+export function insertAfterExactly(
+  newElement: HtmlElement,
+  targetElement: Exclude<HtmlElement, VDocumentFragment>
+) {
+  const parent = targetElement.parentNode // 获取父节点
+  if (parent) {
+    const next = targetElement.nextSibling // 获取目标元素的下一个兄弟节点
+    if (next) {
+      parent.insertBefore(recoveryFragment(newElement), next) // 插入到目标元素下一个兄弟节点的后面
+    } else {
+      parent.appendChild(recoveryFragment(newElement))
+    }
+  } else {
+    throw new Error('无法插入：目标元素没有父节点')
+  }
+}
+
+/**
+ * 在旧元素之前插入新元素
+ *
+ * 兼容`VDocumentFragment`
+ *
+ * @param newEl - 新元素
+ * @param oldEl - 旧元素
+ * @param parent - 父元素
+ */
+export function insertBeforeExactly(newEl: HtmlElement, oldEl: HtmlElement, parent: ParentNode) {
+  if (isVDocumentFragment(oldEl)) {
+    parent.insertBefore(recoveryFragment(newEl), oldEl.__backup[0])
+  } else {
+    parent.insertBefore(recoveryFragment(newEl), oldEl)
+  }
+}
 /**
  * 卸载节点
  *
@@ -204,6 +257,54 @@ export function mountVNode(vnode: VNodeChild): void {
 }
 
 /**
+ * 替换节点
+ *
+ * @param newVNode
+ * @param oldVNode
+ * @param parent
+ */
+export function replaceVNode(
+  newVNode: VNodeChild,
+  oldVNode: VNodeChild,
+  parent?: ParentNode | null
+) {
+  if (parent === undefined) {
+    parent = getVElementParentNode(oldVNode.el!)
+  }
+  if (!parent) {
+    throw new Error('被替换的旧节点未挂载，无法获取其所在的容器元素实例，无法完成替换操作。')
+  }
+  const newEl = renderElement(newVNode)
+  // 如果新节点是传送节点，则不进行替换，直接卸载旧节点
+  if ('instance' in newVNode && newVNode.instance!.renderer.teleport) {
+    unmountVNode(oldVNode)
+    mountVNode(newVNode)
+    return
+  }
+  // 替换文本节点
+  if (isTextVNode(oldVNode)) {
+    parent.replaceChild(newEl, oldVNode.el!)
+    mountVNode(newVNode)
+    return
+  }
+  if (oldVNode.instance) {
+    if (oldVNode.instance.renderer.teleport) {
+      // 将新元素替换掉旧节点的传送占位元素
+      replaceElement(newEl, oldVNode.instance.renderer.teleport.placeholder, parent)
+    } else {
+      // 将新元素插入到旧元素之前，兼容卸载动画
+      insertBeforeExactly(newEl, oldVNode.el!, parent)
+    }
+  } else {
+    replaceElement(newEl, oldVNode.el!, parent)
+  }
+  // 卸载旧节点
+  unmountVNode(oldVNode)
+  // 挂载新节点
+  mountVNode(newVNode)
+}
+
+/**
  * 更新激活状态
  *
  * @param vnode - 子节点
@@ -240,67 +341,6 @@ export function removeElement(el: HtmlElement | null) {
     el.__backup.forEach(item => item.remove())
   } else {
     el?.remove()
-  }
-}
-
-/**
- * 替换节点
- *
- * @param newVNode
- * @param oldVNode
- * @param parent
- */
-function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild, parent?: ParentNode | null) {
-  if (parent === undefined) {
-    parent = getVElementParentNode(oldVNode.el!)
-  }
-  if (!parent) {
-    throw new Error('被替换的旧节点未挂载，无法获取其所在的容器元素实例，无法完成替换操作。')
-  }
-  const newEl = renderElement(newVNode)
-  // 如果新节点是传送节点，则不进行替换，直接卸载旧节点
-  if ('instance' in newVNode && newVNode.instance!.renderer.teleport) {
-    unmountVNode(oldVNode)
-    mountVNode(newVNode)
-    return
-  }
-  // 替换文本节点
-  if (isTextVNode(oldVNode)) {
-    parent.replaceChild(newEl, oldVNode.el!)
-    mountVNode(newVNode)
-    return
-  }
-  if (oldVNode.instance) {
-    if (oldVNode.instance.renderer.teleport) {
-      // 将新元素替换掉旧节点的传送占位元素
-      replaceElement(newEl, oldVNode.instance.renderer.teleport.placeholder, parent)
-    } else {
-      // 将新元素插入到旧元素之前，兼容卸载动画
-      insertElement(newEl, oldVNode.el!, parent)
-    }
-  } else {
-    replaceElement(newEl, oldVNode.el!, parent)
-  }
-  // 卸载旧节点
-  unmountVNode(oldVNode)
-  // 挂载新节点
-  mountVNode(newVNode)
-}
-
-/**
- * 在旧元素之前插入新元素
- *
- * 兼容`VDocumentFragment`
- *
- * @param newEl - 新元素
- * @param oldEl - 旧元素
- * @param parent - 父元素
- */
-export function insertElement(newEl: HtmlElement, oldEl: HtmlElement, parent: ParentNode) {
-  if (isVDocumentFragment(oldEl)) {
-    parent.insertBefore(recoveryFragment(newEl), oldEl.__backup[0])
-  } else {
-    parent.insertBefore(recoveryFragment(newEl), oldEl)
   }
 }
 
