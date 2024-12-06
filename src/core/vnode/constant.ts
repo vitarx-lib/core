@@ -13,3 +13,9 @@ export type Fragment = typeof Fragment
 /** 响应式元素引用标记 */
 export const RefElSymbol = Symbol('RefEl')
 export type RefElSymbol = typeof RefElSymbol
+
+/**
+ * 注释节点标识符
+ */
+export const CommentVNodeSymbol = Symbol('CommentVNode')
+export type CommentVNodeSymbol = typeof CommentVNodeSymbol
