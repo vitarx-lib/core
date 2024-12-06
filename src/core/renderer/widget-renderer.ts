@@ -3,7 +3,6 @@ import {
   type ContainerElement,
   getVElementParentNode,
   patchUpdate,
-  removeElement,
   renderElement,
   replaceElement,
   unmountVNode,
@@ -262,9 +261,7 @@ export class WidgetRenderer {
       // 触发onDeactivated生命周期
       const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount, root)
       // 递归卸载子节点
-      unmountVNode(this.child, false)
-      // 如果没有返回true，则等待子节点删除完成然后移除当前节点
-      if (result !== true) removeElement(this.el)
+      unmountVNode(this.child, root && result !== true)
       // 销毁当前作用域
       this.scope?.destroy()
       // 移除占位元素
