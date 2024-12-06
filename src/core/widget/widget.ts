@@ -1,9 +1,9 @@
 import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 import { LifeCycle } from './life-cycle.js'
-import type { IntrinsicAttributes, VNode } from '../vnode/VNode.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
 import type { VElement } from '../renderer/web-runtime-dom/index.js'
+import type { IntrinsicAttributes, VNode } from '../vnode/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
