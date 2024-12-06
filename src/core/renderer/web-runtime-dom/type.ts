@@ -413,12 +413,15 @@ export type PropertyNames =
   | 'width'
   | 'wrap'
 
-// 判断一个属性P是否存在于W3C标准属性中
+/**
+ * 判断一个属性P是否存在于W3C标准属性中
+ */
 export type IsW3CHtmlProperties<P> = P extends string
   ? Lowercase<P> extends Lowercase<PropertyNames>
     ? P
     : never
   : never
+
 /**
  * 从对象接口中提取出符合W3C标准的属性，并返回一个新对象接口。
  *
@@ -447,6 +450,7 @@ export type ExtractW3CHtmlProperties<
 export type ToLowerCaseKeys<T extends Record<string, any>> = {
   [K in keyof T as K extends string ? Lowercase<K> : K]: T[K]
 }
+
 /** 将接口转换为可选属性 */
 export type ToPartialProperties<
   T extends Element,
@@ -464,23 +468,35 @@ export type HtmlProperties<
   CustomProperties &
   Vitarx.GlobalIntrinsicAttributes
 
-/** 真实的元素实例对象，片段节点为数组 */
-export type VElement = Element | DocumentFragment
+/**
+ * 片段节点
+ *
+ * 额外属性：__backup - 片段节点的备份，用于恢复片段节点
+ */
+export interface VDocumentFragment extends DocumentFragment {
+  /**
+   * 备份的节点列表
+   *
+   * 用于恢复片段节点
+   */
+  __backup: Array<Element | Text>
+}
 
 /**
  * 渲染器创建的元素
  */
-export type HtmlElement = Element | DocumentFragment | Text
+export type HtmlElement = Element | VDocumentFragment | Text | Comment
+
 /**
  * 可作为容器的元素类型
  */
-export type ContainerElement = Element | DocumentFragment
+export type ContainerElement = Element | VDocumentFragment
 
 /**
  * 判断是否为片段元素
  *
  * @param el
  */
-export function isDocumentFragment(el: any): el is DocumentFragment {
-  return el instanceof DocumentFragment
+export function isVDocumentFragment(el: any): el is VDocumentFragment {
+  return el instanceof DocumentFragment && '__backup' in el
 }
