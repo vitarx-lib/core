@@ -1,12 +1,19 @@
 import type {
+  ContainerElement,
   HtmlElementTagMap,
   HtmlIntrinsicElements,
   HtmlTags,
-  VElement
+  VDocumentFragment
 } from '../renderer/web-runtime-dom/index.js'
-import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
+import type { ExcludeWidgetIntrinsicKeywords, WidgetType } from '../widget/constant.js'
 import { type ClassWidgetConstructor, type FnWidgetConstructor, Widget } from '../widget/index.js'
-import { Fragment, RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
+import {
+  CommentVNodeSymbol,
+  Fragment,
+  RefElSymbol,
+  TextVNodeSymbol,
+  VNodeSymbol
+} from './constant.js'
 
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint | symbol
@@ -58,16 +65,56 @@ export type VNodeProps<T> = (T extends HtmlTags
   IntrinsicAttributes
 
 /** 子节点类型 */
-export type VNodeChild = VNode | TextVNode
+export type VNodeChild = VNode | TextVNode | CommentVNode
 
 /** 子节点列表 */
 export type VNodeChildren = Array<VNodeChild>
 
+
+/** HtmlVNode元素实例类型 */
+type HtmlVNodeInstanceType<T> = T extends Fragment
+  ? VDocumentFragment
+  : T extends HtmlTags
+    ? HtmlElementTagMap[T]
+    : T
+
+/**
+ * 实例类型
+ *
+ * - 函数小部件实例
+ * - 类小部件实例
+ * - HTML元素实例
+ * - Fragment实例为`DocumentFragment`
+ */
+type HtmlElementType<T> = T extends WidgetType
+  ? ContainerElement
+  : HtmlVNodeInstanceType<T>
 /** 文本节点，内部自动转换 */
 export interface TextVNode {
+  /**
+   * 文本值
+   */
   value: string
+  /**
+   * 元素实例
+   */
   el: Text | null
   [TextVNodeSymbol]: true
+}
+
+/**
+ * 注释节点，暂未对外提供使用
+ */
+export interface CommentVNode {
+  /**
+   * 文本值
+   */
+  value: string
+  /**
+   * 元素实例
+   */
+  el: Comment | null
+  [CommentVNodeSymbol]: true
 }
 
 /**
@@ -78,19 +125,41 @@ export interface TextVNode {
  * - `children`: 子节点列表，如果是函数小部件或类小部件则写入到`props.children`
  * - `key`: 节点唯一标识
  * - `ref`: 节点引用
- * - `el`: 节点元素实例
  * - `instance`: 仅用于函数或类小部件，表示小部件实例
- * - `provide`: 小部件提供的数据
+ * - `provide`: 节点向下提供的数据
  */
-export type VNode<T extends VNodeType = VNodeType> = {
+export interface VNode<T extends VNodeType = VNodeType> {
   type: T
+  /**
+   * 节点属性
+   */
   props: VNodeProps<T>
+  /**
+   * 子节点列表
+   *
+   * 如果是`Widget`类型的节点，则写入到`vnode.props.children`，`vnode.children`始终为空数组
+   */
   children: VNodeChildren
+  /**
+   * 唯一标识符
+   */
   key: OnlyKey | null
+  /**
+   * 引用
+   */
   ref: RefEl<T> | null
-  el: VElement | null
-  instance?: Widget
-  provide?: Record<string | symbol, any>
+  /**
+   * 节点实例
+   */
+  el: HtmlElementType<T> | null
+  instance: Widget | null
+  /**
+   * 向下提供的数据
+   */
+  provide: Record<string | symbol, any> | null
+  /**
+   * VNode对象标识符
+   */
   [VNodeSymbol]: true
 }
 
@@ -106,12 +175,50 @@ export function isVNode(obj: any): obj is VNode {
 }
 
 /**
+ * 判断是否为Html元素节点
+ *
+ * @param obj
+ */
+export function isHtmlVNode(obj: any): obj is VNode<HtmlTags> {
+  return typeof obj?.type === 'string'
+}
+
+/**
+ * 判断是否为小部件节点
+ *
+ * @param obj
+ */
+export function isWidgetVNode(
+  obj: any
+): obj is VNode<FnWidgetConstructor | ClassWidgetConstructor> {
+  return typeof obj?.type === 'function'
+}
+
+/**
+ * 判断是否为Fragment节点
+ *
+ * @param obj
+ */
+export function isFragmentVNode(obj: any): obj is VNode<Fragment> {
+  return obj?.type === Fragment
+}
+
+/**
  * 判断是否为文本节点
  *
  * @param obj
  */
 export function isTextVNode(obj: any): obj is TextVNode {
   return obj?.[TextVNodeSymbol] === true
+}
+
+/**
+ * 判断是否为注释节点
+ *
+ * @param obj
+ */
+export function isCommentVNode(obj: any): obj is CommentVNode {
+  return obj?.[CommentVNodeSymbol] === true
 }
 
 /**

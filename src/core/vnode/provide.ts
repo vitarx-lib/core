@@ -1,5 +1,6 @@
-import { getParentVNode, type VNode } from './VNode.js'
 import { getCurrentVNode, Widget } from '../widget/index.js'
+import type { VNode } from './type.js'
+import { getParentVNode } from './query.js'
 
 /**
  * 提供数据

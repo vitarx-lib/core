@@ -1,5 +1,7 @@
 import {
   __updateParentVNode,
+  type CommentVNode,
+  CommentVNodeSymbol,
   isFunction,
   isRecordObject,
   isRefEl,
@@ -7,7 +9,7 @@ import {
   popProperty
 } from '../../index.js'
 import type { RefEl, TextVNode, VNode, VNodeChildren, VNodeProps, VNodeType } from './type.js'
-import { Fragment, RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
+import { RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
 
 // 子元素类型
 type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
@@ -42,8 +44,10 @@ export function createVNode<T extends VNodeType>(
     props,
     key: popProperty(props, 'key') || null,
     ref: null,
+    children: [],
     el: null,
-    children: []
+    instance: null,
+    provide: null
   }
   const key = popProperty(props, 'key')
   if (key) vnode.key = key
@@ -63,19 +67,14 @@ export function createVNode<T extends VNodeType>(
       children.push(attrChildren as any)
     }
   }
-  if (type === Fragment && vnode.children.length === 0) {
-    // 为空的片段节点创建一个空文本节点，用于占位
-    vnode.children = [createTextVNode('')]
-  } else {
-    vnode.children = toVNodeChildren(children, vnode)
-  }
+  vnode.children = toVNodeChildren(children, vnode)
   return vnode
 }
 
 export { createVNode as createElement }
 
 /**
- * 创建特殊的文本节点`TextVNode`
+ * 创建文本节点`TextVNode`
  *
  * 开发者无需使用显示的声明文本节点，内部将非VNode节点内容转换为文本节点。
  *
@@ -90,6 +89,22 @@ export function createTextVNode(value: any, notShowNullable: boolean = true): Te
     value: typeof value === 'string' ? value : String(value),
     el: null,
     [TextVNodeSymbol]: true
+  }
+}
+
+/**
+ * 创建注释节点
+ *
+ * 暂未对外提供使用，后续可能会开放使用。
+ *
+ * @internal
+ * @param value
+ */
+export function createCommentVNode(value: string): CommentVNode {
+  return {
+    value,
+    el: null,
+    [CommentVNodeSymbol]: true
   }
 }
 
