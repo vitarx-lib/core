@@ -321,6 +321,34 @@ export function onError(fn: OnErrorCallback) {
 }
 
 /**
+ * ## 构建器。
+ *
+ * > 注意：在类组件中不要使用`build`函数，类中的build方法就是构建器。
+ *
+ * 主要作用是优化TSX类型校验。
+ *
+ * 代码块中的顶级return语句如果是jsx语法，则会被自动添加箭头函数，使其成为一个UI构造器。
+ *
+ * 如果你的代码不是位于函数的一级块中，或你返回的是一个三元运算等不被支持自动优化的情况，请使用`build`函数包裹。
+ *
+ * 如果你没有使用tsx，则可以直接使用 `return () => <div>...</div>` 这样的语法。
+ *
+ * ```tsx
+ *
+ * // 下面的两个return语句的效果是一致的
+ * // 它们的不同之处是在tsx文件中返回箭头函数用于构建ui会导致类型错误，所以在tsx文件中需要使用build包裹
+ * return build(() => state ? <div>真</div> : <div>假</div>)
+ * return () => state ? <div>真</div> : <div>假</div>
+ * ```
+ *
+ * @param vnode - 虚拟节点对象或闭包函数返回虚拟节点对象
+ */
+export function build(vnode: VNode | (() => VNode)): VNode {
+  if (typeof vnode === 'function') return vnode as unknown as VNode
+  return (() => vnode) as unknown as VNode
+}
+
+/**
  * ## 创建函数组件
  *
  * @param vnode
