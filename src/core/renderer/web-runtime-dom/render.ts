@@ -1,33 +1,81 @@
 import { createScope } from '../../scope/index.js'
 import { reactive } from '../../variable/index.js'
 import { setAttributes } from './attributes.js'
-import { renderChildren } from './children.js'
 import type { FnWidgetConstructor, WidgetType } from '../../widget/index.js'
 import { createFnWidget, isClassWidgetConstructor } from '../../widget/index.js'
 import { __WidgetPropsSelfNodeSymbol__ } from '../../widget/constant.js'
-import type { Fragment, TextVNode, VNode } from '../../vnode/index.js'
-import { isRefEl, isTextVNode } from '../../vnode/index.js'
 import {
+  type CommentVNode,
+  type Fragment,
+  isCommentVNode,
+  isRefEl,
+  isTextVNode,
+  type TextVNode,
+  type VNode,
+  type VNodeChild,
+  type VNodeChildren
+} from '../../vnode/index.js'
+import {
+  backupFragment,
   type ContainerElement,
   type HtmlElement,
   type HtmlTags,
+  mountVNode,
+  recoveryFragment,
   type VDocumentFragment
 } from './index.js'
 
 
 /**
- * 渲染小部件、html元素、fragment元素、文本元素
+ * 渲染小部件节点
+ *
+ * @param {VNode<WidgetType>} vnode - 小部件虚拟节点
+ * @param {ContainerElement} parent - 父元素
+ */
+export function renderElement(vnode: VNode<WidgetType>, parent?: ContainerElement): HtmlElement
+/**
+ * 渲染html元素节点
+ *
+ * @param {VNode<HtmlTags>} vnode - 小部件虚拟节点
+ * @param {ContainerElement} parent - 父元素
+ */
+export function renderElement(vnode: VNode<HtmlTags>, parent?: ContainerElement): Element
+/**
+ * 渲染片段节点
+ *
+ * @param {VNode<Fragment>} vnode - 片段虚拟节点
+ * @param {ContainerElement} parent - 父元素
+ */
+export function renderElement(vnode: VNode<Fragment>, parent?: ContainerElement): VDocumentFragment
+/**
+ * 渲染注释节点
+ *
+ * @param {CommentVNode} vnode - 注释虚拟节点
+ * @param {ContainerElement} parent - 父元素
+ */
+export function renderElement(vnode: CommentVNode, parent?: ContainerElement): Comment
+/**
+ * 渲染文本节点
+ *
+ * @param {TextVNode} vnode - 文本虚拟节点
+ * @param parent - 父元素
+ */
+export function renderElement(vnode: TextVNode, parent?: ContainerElement): Text
+/**
+ * 渲染小部件、html元素、fragment元素、文本元素，注释元素
  *
  * @param vnode - 虚拟节点
  * @param parent - 父元素
  */
-export function renderElement(vnode: VNode | TextVNode, parent?: ContainerElement): HtmlElement {
+export function renderElement(vnode: VNodeChild, parent?: ContainerElement): HtmlElement
+export function renderElement(vnode: VNodeChild, parent?: ContainerElement): HtmlElement {
   // 如果节点已渲染，则直接返回，避免重复渲染
   if (vnode.el) {
     parent?.appendChild(recoveryFragment(vnode.el))
-    return vnode.el
+    return vnode.el as HtmlElement
   }
   if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
+  if (isCommentVNode(vnode)) return renderCommentElement(vnode, parent)
   let el: HtmlElement
   switch (typeof vnode.type) {
     case 'string':
@@ -48,7 +96,7 @@ export function renderElement(vnode: VNode | TextVNode, parent?: ContainerElemen
 }
 
 /**
- * 创建文本元素
+ * 渲染文本元素
  *
  * @param vnode - 文本节点
  * @param parent - 父元素
@@ -56,8 +104,22 @@ export function renderElement(vnode: VNode | TextVNode, parent?: ContainerElemen
 export function renderTextElement(vnode: TextVNode, parent?: ContainerElement): Text {
   const textEl = document.createTextNode(vnode.value)
   vnode.el = textEl
-  if (parent) parent.appendChild(textEl)
+  parent?.appendChild(textEl)
   return textEl
+}
+
+
+/**
+ * 渲染注释元素
+ *
+ * @param vnode
+ * @param parent
+ */
+export function renderCommentElement(vnode: CommentVNode, parent?: ContainerElement) {
+  const commentEl = document.createComment(vnode.value)
+  vnode.el = commentEl
+  parent?.appendChild(commentEl)
+  return commentEl
 }
 
 /**
@@ -136,37 +198,24 @@ export function renderFragmentElement(
 }
 
 /**
- * 判断是否为片段节点
+ * 渲染子节点列表
  *
- * @param el
+ * @param {ContainerElement} parent - 父元素
+ * @param {VNodeChildren} children - 子节点列表
+ * @param {boolean} triggerMountHook - 自动触发挂载钩子
  */
-export function isVDocumentFragment(el: any): el is VDocumentFragment {
-  return el instanceof DocumentFragment && '__backup' in el
-}
-
-/**
- * 恢复 Fragment 元素
- *
- * @param el - DocumentFragment实例
- */
-export function recoveryFragment<T>(el: T): T {
-  if (isVDocumentFragment(el)) {
-    for (let i = 0; i < el.__backup.length; i++) {
-      el.appendChild(el.__backup[i])
+export function renderChildren(
+  parent: ContainerElement,
+  children: VNodeChildren | VNodeChild,
+  triggerMountHook: boolean = false
+): void {
+  if (Array.isArray(children)) {
+    for (const child of children) {
+      renderElement(child, parent)
+      if (triggerMountHook) mountVNode(child)
     }
+  } else {
+    renderElement(children, parent)
+    if (triggerMountHook) mountVNode(children)
   }
-  return el
-}
-
-/**
- * 备份 Fragment 元素
- *
- * @param el
- */
-export function backupFragment(el: DocumentFragment) {
-  const nodes: Node[] = []
-  for (let i = 0; i < el.childNodes.length; i++) {
-    nodes.push(el.childNodes[i])
-  }
-  ;(el as VDocumentFragment)['__backup'] = nodes as Array<Element | Text>
 }
