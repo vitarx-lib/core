@@ -1,10 +1,10 @@
-import { __updateParentVNode, createVNode, Fragment, isVNode } from '../../vnode/VNode.js'
 import { __WidgetPropsSelfNodeSymbol__ } from '../constant.js'
 import { createScope } from '../../scope/index.js'
 import { getSuspenseCounter } from './Suspense.js'
 import type { Ref } from '../../variable/index.js'
 import { type AsyncVNode, createAsyncFnWidget, type FnWidgetConstructor } from '../fn-widget.js'
 import { type Element, Widget } from '../widget.js'
+import { __updateParentVNode, createVNode, Fragment, isVNode } from '../../vnode/index.js'
 
 /** 异步函数组件类型 */
 export type AsyncFnWidget = () => Promise<Element>
