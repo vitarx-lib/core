@@ -2,7 +2,7 @@ import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
-import type { VElement } from '../renderer/web-runtime-dom/index.js'
+import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
 import type { IntrinsicAttributes, VNode } from '../vnode/index.js'
 
 /**
@@ -107,9 +107,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * > 注意：如果是片段元素，`DocumentFragment` 则需要使用this.el.__backup数组访问元素。
    *
-   * @returns {VElement | null}
+   * @returns {ContainerElement | null}
    */
-  get el(): VElement | null {
+  get el(): ContainerElement | null {
     return this.renderer.el
   }
 
