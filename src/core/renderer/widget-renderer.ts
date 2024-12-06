@@ -118,7 +118,7 @@ export class WidgetRenderer {
    * @returns {VElement | null}
    */
   get el(): VElement | null {
-    return this._child.el || null
+    return this._child?.el || null
   }
 
   /**
@@ -241,8 +241,6 @@ export class WidgetRenderer {
       const oldVNode = this._child
       const newVNode = newChildVNode || this.build()
       this._child = patchUpdate(oldVNode, newVNode)
-      // 更新节点真实el
-      this.vnode.el = this._child.el
       // 触发更新后生命周期
       this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
@@ -259,7 +257,7 @@ export class WidgetRenderer {
    * @protected
    */
   unmount(root: boolean = true): void {
-    if (this._state !== 'uninstalling' && this._state !== 'unloaded') {
+    if (this.state !== 'uninstalling' && this.state !== 'unloaded') {
       this._state = 'uninstalling'
       // 触发onDeactivated生命周期
       const result = this.triggerLifeCycle(LifeCycleHooks.beforeUnmount, root)
