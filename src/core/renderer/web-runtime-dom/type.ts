@@ -464,28 +464,23 @@ export type HtmlProperties<
   CustomProperties &
   Vitarx.GlobalIntrinsicAttributes
 
-/**
- * 片段节点
- *
- * 额外属性：__backup - 片段节点的备份，用于恢复片段节点
- */
-export interface VDocumentFragment extends DocumentFragment {
-  /**
-   * 备份的节点列表
-   *
-   * 用于恢复片段节点
-   */
-  __backup: Array<Element | Text>
-}
-
 /** 真实的元素实例对象，片段节点为数组 */
-export type VElement = Element | VDocumentFragment
+export type VElement = Element | DocumentFragment
 
 /**
  * 渲染器创建的元素
  */
-export type HtmlElement = Element | VDocumentFragment | Text
+export type HtmlElement = Element | DocumentFragment | Text
 /**
  * 可作为容器的元素类型
  */
-export type ContainerElement = Element | VDocumentFragment
+export type ContainerElement = Element | DocumentFragment
+
+/**
+ * 判断是否为片段元素
+ *
+ * @param el
+ */
+export function isDocumentFragment(el: any): el is DocumentFragment {
+  return el instanceof DocumentFragment
+}

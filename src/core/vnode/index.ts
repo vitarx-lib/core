@@ -1,2 +1,5 @@
+export * from './constant.js'
+export * from './type.js'
 export * from './provide.js'
 export * from './VNode.js'
+export * from './query.js'
