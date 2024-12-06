@@ -1,13 +1,42 @@
 import { type Element, Widget } from '../widget'
 import { Ref, ref } from '../../variable/index.js'
-import { __updateParentVNode, inject, isVNode, provide } from '../../vnode/index.js'
+import {
+  __updateParentVNode,
+  createVNode,
+  Fragment,
+  inject,
+  isVNode,
+  provide
+} from '../../vnode/index.js'
 import { watch } from '../../observer/index.js'
 import { renderElement } from '../../renderer/web-runtime-dom/index.js'
+import type { ErrorInfo } from '../life-cycle.js'
+
+/**
+ * onError生命周期钩子
+ *
+ * @param {unknown} error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
+ * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
+ * @returns {void|Element} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
+ */
+type OnErrorCallback = (this: Suspense, error: unknown, info: ErrorInfo) => void | Element
 
 interface SuspenseProps {
-  fallback: Element
+  /**
+   * 回退内容
+   *
+   * 在异步子节点加载完成之前会显示该属性传入的节点，
+   * 加载完成过后会立即切换为子节点内容。
+   */
+  fallback?: Element
+  /**
+   * 子节点
+   */
   children: Element
-  error?: Element
+  /**
+   * 异常处理钩子
+   */
+  onError?: OnErrorCallback
 }
 
 const provideSymbol = Symbol('SuspenseSymbol')
@@ -25,6 +54,20 @@ export default class Suspense extends Widget<SuspenseProps> {
 
   constructor(props: SuspenseProps) {
     super(props)
+    if (props.fallback && !isVNode(props.fallback)) {
+      console.warn(
+        `[Vitarx.Suspense]：fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`
+      )
+    }
+    if (props.onError) {
+      if (typeof props.onError !== 'function') {
+        console.warn(
+          `[Vitarx.Suspense]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
+        )
+      } else {
+        this.onError = props.onError
+      }
+    }
     provide(provideSymbol, this.counter, this)
     // 监听计数器变化，手动管理视图更新，优化性能
     watch(this.counter, () => {
@@ -37,7 +80,6 @@ export default class Suspense extends Widget<SuspenseProps> {
       }
     })
   }
-
   /**
    * 挂载完成后开始预渲染子节点
    *
@@ -51,15 +93,7 @@ export default class Suspense extends Widget<SuspenseProps> {
   }
 
   protected build(): Element {
-    return this.showFallback ? this.props.fallback : this.children
-  }
-
-  protected override onError(error: Error) {
-    if (this.props.error && isVNode(this.props.error)) {
-      return this.props.error
-    } else {
-      throw error
-    }
+    return createVNode(Fragment, null, this.showFallback ? this.props.fallback : this.children)
   }
 }
 
