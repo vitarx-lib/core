@@ -1,9 +1,13 @@
 import { type Element, Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
-import { type ErrorInfo, type LifeCycleHookMethods, LifeCycleHooks } from './life-cycle.js'
+import {
+  type ErrorInfo,
+  type LifeCycleHookMethods,
+  LifeCycleHooks,
+  type TargetContainerElement
+} from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
 import { type IntrinsicAttributes, isVNode, type VNode } from '../vnode/index.js'
-import type { ContainerElement, VDocumentFragment } from '../renderer/web-runtime-dom/index.js'
 
 /**
  * 生命周期钩子回调函数
@@ -226,9 +230,7 @@ export function onCreated(fn: LifeCycleHookCallback) {
  *
  * @param fn
  */
-export function onBeforeMount(
-  fn: LifeCycleHookCallback<void | Exclude<ContainerElement, VDocumentFragment>>
-) {
+export function onBeforeMount(fn: LifeCycleHookCallback<void | TargetContainerElement>) {
   if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
   _HooksCollector.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
 }

@@ -1,4 +1,5 @@
 import { __LifeCycleTrigger__ } from './constant.js'
+import type { ContainerElement, VDocumentFragment } from '../renderer/web-runtime-dom/index.js'
 
 /** 生命周期钩子枚举 */
 export enum LifeCycleHooks {
@@ -16,8 +17,15 @@ export enum LifeCycleHooks {
 
 /** 生命周期钩子类型 */
 export type LifeCycleHookMethods = `${LifeCycleHooks}`;
+
 /** 错误信息类型 */
 export type ErrorInfo = 'build' | 'render'
+
+/**
+ * 目标容器元素
+ */
+export type TargetContainerElement = Exclude<ContainerElement, VDocumentFragment>
+
 /**
  * 生命周期基类
  */
@@ -51,10 +59,10 @@ export abstract class LifeCycle {
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
-   * @returns {Element | void} 返回一个真实的dom元素，会作为组件的父节点，如果返回`undefined`，则使用默认的父节点。
+   * @returns {TargetContainerElement | void} 返回一个真实的dom元素，会作为组件的父节点，如果返回`undefined`，则使用默认的父节点。
    * @protected
    */
-  protected onBeforeMount?(): void | Element
+  protected onBeforeMount?(): void | TargetContainerElement
 
   /**
    * 生命周期构造
