@@ -166,8 +166,11 @@ function patchChild(
     }
     return newChild
   }
-  // 更新文本节点
-  if (isTextVNode(oldChild) && isTextVNode(newChild)) {
+  // 更新文本节点 或注释节点
+  if (
+    (isTextVNode(oldChild) && isTextVNode(newChild)) ||
+    (isCommentVNode(oldChild) && isCommentVNode(newChild))
+  ) {
     if (oldChild.value !== newChild.value) {
       oldChild.value = newChild.value
       oldChild.el!.nodeValue = newChild.value
