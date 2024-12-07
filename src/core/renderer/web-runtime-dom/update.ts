@@ -260,8 +260,8 @@ export function unmountVNode(vnode: VNodeChild, removeEl: boolean = true): void 
 /**
  * 卸载节点
  *
+ * @internal
  * @param vnode - 要卸载的虚拟节点
- * @protected
  */
 export function mountVNode(vnode: VNodeChild): void {
   if (isVNode(vnode)) {
@@ -280,8 +280,9 @@ export function mountVNode(vnode: VNodeChild): void {
 /**
  * 替换节点
  *
- * @param newVNode
- * @param oldVNode
+ * @internal
+ * @param {newVNode} newVNode - 新虚拟节点
+ * @param {oldVNode} oldVNode - 旧虚拟节点
  */
 export function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild): void {
   const newEl = renderElement(newVNode)
@@ -331,8 +332,9 @@ export function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild): void {
 /**
  * 更新激活状态
  *
- * @param vnode - 子节点
- * @param activate - 激活为true，停用为false
+ * @internal
+ * @param {VNodeChild} vnode - 子节点
+ * @param {boolean} activate - 激活为true，停用为false
  */
 export function updateActivateState(vnode: VNodeChild, activate: boolean): void {
   if (isVNode(vnode)) {
@@ -356,7 +358,7 @@ export function updateActivateState(vnode: VNodeChild, activate: boolean): void 
 /**
  * 删除元素
  *
- * @param el
+ * @param {HtmlElement} el - 删除dom元素
  */
 export function removeElement(el: HtmlElement): void {
   if (isVDocumentFragment(el)) {
