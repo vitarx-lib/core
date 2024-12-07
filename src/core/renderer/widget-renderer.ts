@@ -37,9 +37,24 @@ export type RenderState =
  *
  * 用于渲染小部件，和管理小部件的生命周期。
  */
-export class WidgetRenderer {
-  // 小部件实例
-  protected _widget: Widget
+export class WidgetRenderer<T extends Widget> {
+  constructor(widget: T) {
+    this._widget = widget
+    this._scope = getCurrentScope()!
+    const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
+      getResult: true
+    })
+    this._child = childVNode
+    // @ts-ignore 如果是开发模式，则触发onCreated生命周期
+    if (import.meta.env?.MODE === 'development') {
+      if (!this.vnode.el) {
+        this.triggerLifeCycle(LifeCycleHooks.created)
+      }
+      return
+    }
+    // 触发onCreated生命周期
+    this.triggerLifeCycle(LifeCycleHooks.created)
+  }
   // 渲染器状态
   protected _state: RenderState = 'notRendered'
   // 等到更新
@@ -62,23 +77,9 @@ export class WidgetRenderer {
     }
     return this._shadowElement
   }
-  constructor(widget: Widget) {
-    this._widget = widget
-    this._scope = getCurrentScope()!
-    const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
-      getResult: true
-    })
-    this._child = childVNode
-    // @ts-ignore 如果是开发模式，则触发onCreated生命周期
-    if (import.meta.env?.MODE === 'development') {
-      if (!this.vnode.el) {
-        this.triggerLifeCycle(LifeCycleHooks.created)
-      }
-      return
-    }
-    // 触发onCreated生命周期
-    this.triggerLifeCycle(LifeCycleHooks.created)
-  }
+
+  // 小部件实例
+  protected _widget: T
 
   /**
    * 当前小部件的`child`虚拟节点
@@ -153,7 +154,7 @@ export class WidgetRenderer {
    *
    * @returns {Widget}
    */
-  protected get widget(): Widget {
+  protected get widget(): T {
     return this._widget
   }
 

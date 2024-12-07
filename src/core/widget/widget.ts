@@ -54,7 +54,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @private
    */
-  private _renderer?: WidgetRenderer
+  private _renderer?: WidgetRenderer<this>
 
   /**
    * 该方法由`Vitarx`内部调用，用于渲染
@@ -63,7 +63,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @protected
    */
-  get renderer(): WidgetRenderer {
+  get renderer(): WidgetRenderer<this> {
     if (!this._renderer) {
       this._renderer = new WidgetRenderer(this)
     }
