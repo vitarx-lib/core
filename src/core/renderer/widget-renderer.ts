@@ -3,6 +3,7 @@ import {
   type ContainerElement,
   getElParentNode,
   patchUpdate,
+  removeElement,
   renderElement,
   replaceElement,
   unmountVNode,
@@ -31,11 +32,6 @@ export type RenderState =
   | 'uninstalling'
   | 'unloaded'
 
-type TeleportData = {
-  to: Element
-  placeholder: Text
-}
-
 /**
  * 小部件渲染器
  *
@@ -48,14 +44,24 @@ export class WidgetRenderer {
   protected _state: RenderState = 'notRendered'
   // 等到更新
   protected _pendingUpdate = false
-  // 占位节点，仅在停用时才会记录
-  protected _placeholderEl: Text | null = null
+  // 影子占位元素
+  protected _shadowElement: Comment | null = null
   // 当前组件的Child虚拟节点
   protected _child: VNode
   // 当前作用域
   protected _scope: Scope
-  // 传送功能相关数据
-  protected _teleport: TeleportData | null = null
+
+  /**
+   * 获取影子元素
+   *
+   * 仅传送节点和被挂起的顶层节点使用影子节点记录其所在位置。
+   */
+  get shadowElement(): Comment {
+    if (!this._shadowElement) {
+      this._shadowElement = document.createComment('')
+    }
+    return this._shadowElement
+  }
   constructor(widget: Widget) {
     this._widget = widget
     this._scope = getCurrentScope()!
@@ -83,14 +89,8 @@ export class WidgetRenderer {
     return this._child
   }
 
-  /**
-   * 判断节点是否需要传送
-   *
-   * 该属性需在渲染之后调用获取的结果才准确！！
-   */
-  get teleport(): null | TeleportData {
-    return this._teleport
-  }
+  // 传送功能相关数据
+  protected _teleport: Element | null = null
 
   /**
    * 当前小部件的状态
@@ -158,6 +158,15 @@ export class WidgetRenderer {
   }
 
   /**
+   * 判断节点是否需要传送
+   *
+   * 该属性需在渲染之后调用获取的结果才准确！！
+   */
+  get teleport(): null | Element {
+    return this._teleport
+  }
+
+  /**
    * 渲染小部件，并返回渲染的真实元素
    *
    * 该方法仅触发 `beforeMount`生命周期，但不会触发`mounted`生命周期，需额外调用`mount`方法触发`mounted`生命周期。
@@ -175,12 +184,9 @@ export class WidgetRenderer {
       const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
       if (target instanceof Element) {
         // 如果指定了父元素，则不继续往下传递父元素，避免提前展示视图
-        this._teleport = {
-          to: target,
-          placeholder: document.createTextNode('')
-        }
+        this._teleport = target
         // 将占位符节点插入到正常的父容器中
-        container?.appendChild(this._teleport.placeholder)
+        container?.appendChild(this.shadowElement)
         el = renderElement(this.child) as ContainerElement
       } else {
         el = renderElement(this.child, container) as ContainerElement
@@ -195,27 +201,6 @@ export class WidgetRenderer {
     }
     this._state = 'notMounted'
     return el
-  }
-
-  /**
-   * 该方法用于在元素真实挂载到文档中时调用。
-   *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   * @protected
-   */
-  mount(): void {
-    if (this.state !== 'notMounted') {
-      return console.warn('[Vitarx.WidgetRenderer.mount]：非待挂载状态，不能进行挂载！')
-    }
-    // 挂载到传送节点上
-    if (this.teleport) {
-      this.teleport.to.appendChild(this.el!)
-    }
-    this._state = 'activated'
-    // 触发onMounted生命周期
-    this.triggerLifeCycle(LifeCycleHooks.mounted)
-    // 触发onActivated生命周期
-    this.triggerLifeCycle(LifeCycleHooks.activated)
   }
 
   /**
@@ -248,6 +233,27 @@ export class WidgetRenderer {
   }
 
   /**
+   * 该方法用于在元素真实挂载到文档中时调用。
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @protected
+   */
+  mount(): void {
+    if (this.state !== 'notMounted') {
+      return console.warn('[Vitarx.WidgetRenderer.mount]：非待挂载状态，不能进行挂载！')
+    }
+    // 挂载到传送节点上
+    if (this.teleport) {
+      this.teleport.appendChild(this.el!)
+    }
+    this._state = 'activated'
+    // 触发onMounted生命周期
+    this.triggerLifeCycle(LifeCycleHooks.mounted)
+    // 触发onActivated生命周期
+    this.triggerLifeCycle(LifeCycleHooks.activated)
+  }
+
+  /**
    * 卸载小部件
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
@@ -264,19 +270,19 @@ export class WidgetRenderer {
       // 销毁当前作用域
       this.scope?.destroy()
       // 移除占位元素
-      this._placeholderEl?.remove()
-      this.teleport?.placeholder.remove()
+      this._shadowElement?.remove()
       // 修改状态为已卸载
       this._state = 'unloaded'
       // 触发onUnmounted生命周期
       this.triggerLifeCycle(LifeCycleHooks.unmounted)
-      // @ts-ignore 释放资源
+      // 释放内存
+      // @ts-ignore
       this._child = null
-      // @ts-ignore 释放资源
+      // @ts-ignore
       this._scope = null
-      // @ts-ignore 释放资源
+      // @ts-ignore
       this._widget = null
-      this._placeholderEl = null
+      this._shadowElement = null
       this._teleport = null
     }
   }
@@ -291,17 +297,19 @@ export class WidgetRenderer {
   activate(root: boolean = true): void {
     if (this._state === 'deactivate') {
       this._state = 'activated'
-      if (root) {
-        // 使用真实节点替换占位节点
-        replaceElement(this.el!, this._placeholderEl!, this._placeholderEl!.parentNode!)
-        this._placeholderEl = null
+      // 激活子节点
+      updateActivateState(this.child, true)
+      if (this.teleport) {
+        // 复原传送节点元素
+        this.teleport.appendChild(this.el!)
+      } else if (root) {
+        // 使用真实元素替换占位元素
+        replaceElement(this.el!, this.shadowElement)
       }
       // 恢复作用域
       this._scope?.unpause()
       // 触发onActivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.activated)
-      // 激活子节点
-      updateActivateState(this.child, true)
     }
   }
 
@@ -316,17 +324,16 @@ export class WidgetRenderer {
     if (this._state === 'activated') {
       this._state = 'deactivate'
       this._scope?.pause()
+      // 递归停用子节点
+      updateActivateState(this.child, false)
       // 触发onDeactivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.deactivate)
-      // 删除当前元素
-      if (root) {
-        // 创建一个空文本节点用于记录位置
-        this._placeholderEl = document.createTextNode('')
-        // 使用占位节点替换真实节点
-        replaceElement(this._placeholderEl!, this.el!, this.parentEl!)
+      // 如果是传送节点则删除元素
+      if (this.teleport) {
+        removeElement(this.el!)
+      } else if (root) {
+        replaceElement(this.shadowElement, this.el!)
       }
-      // 停用子节点
-      updateActivateState(this.child, false)
     }
   }
 
