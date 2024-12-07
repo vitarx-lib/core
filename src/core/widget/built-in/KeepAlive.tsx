@@ -1,6 +1,6 @@
 import { type Element, Widget } from '../widget.js'
 import { WidgetRenderer } from '../../renderer/index.js'
-import { createVNode, isWidgetVNode, type VNode } from '../../vnode/index.js'
+import { createVNode, type VNode } from '../../vnode/index.js'
 import type { WidgetType } from '../constant.js'
 import { watchProp } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
@@ -45,8 +45,10 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
 
   constructor(props: KeepAliveProps) {
     super(props)
-    if (!isWidgetVNode(this.children)) {
-      throw new Error('KeepAlive children must be a widget')
+    if (typeof this.children !== 'function') {
+      throw new Error(
+        `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof this.children}`
+      )
     }
     // 缓存当前展示的小部件
     this.currentChild = createVNode(this.children)
