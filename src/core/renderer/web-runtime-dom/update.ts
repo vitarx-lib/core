@@ -191,8 +191,12 @@ function patchChild(
  *
  * @param {HtmlElement} newElement - 新元素
  * @param {HtmlElement} targetElement - 目标元素
+ * @returns {ParentNode} - 父容器节点
  */
-export function insertAfterExactly(newElement: HtmlElement, targetElement: HtmlElement): void {
+export function insertAfterExactly(
+  newElement: HtmlElement,
+  targetElement: HtmlElement
+): ParentNode {
   if (isVDocumentFragment(targetElement)) {
     targetElement = getVDocumentFragmentLastEl(targetElement)
   }
@@ -207,6 +211,7 @@ export function insertAfterExactly(newElement: HtmlElement, targetElement: HtmlE
   } else {
     throw new Error('无法插入：目标元素没有父节点')
   }
+  return parent
 }
 
 /**
@@ -216,8 +221,9 @@ export function insertAfterExactly(newElement: HtmlElement, targetElement: HtmlE
  *
  * @param {HtmlElement} newEl - 新元素
  * @param {HtmlElement} targetElement - 旧元素
+ * @returns {ParentNode} - 父容器节点
  */
-export function insertBeforeExactly(newEl: HtmlElement, targetElement: HtmlElement) {
+export function insertBeforeExactly(newEl: HtmlElement, targetElement: HtmlElement): ParentNode {
   const parent = getElParentNode(targetElement)
   if (!parent) {
     throw new Error('无法插入：目标元素没有父节点')
@@ -227,6 +233,7 @@ export function insertBeforeExactly(newEl: HtmlElement, targetElement: HtmlEleme
   } else {
     parent.insertBefore(recoveryFragment(newEl), targetElement)
   }
+  return parent
 }
 /**
  * 卸载节点
@@ -276,10 +283,7 @@ export function mountVNode(vnode: VNodeChild): void {
  * @param newVNode
  * @param oldVNode
  */
-export function replaceVNode(
-  newVNode: VNodeChild,
-  oldVNode: VNodeChild,
-) {
+export function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild): void {
   const newEl = renderElement(newVNode)
   // 如果新节点是传送节点则特殊处理
   if (isWidgetVNode(newVNode) && newVNode.instance!.renderer.teleport) {
@@ -330,7 +334,7 @@ export function replaceVNode(
  * @param vnode - 子节点
  * @param activate - 激活为true，停用为false
  */
-export function updateActivateState(vnode: VNodeChild, activate: boolean) {
+export function updateActivateState(vnode: VNodeChild, activate: boolean): void {
   if (isVNode(vnode)) {
     if (vnode.instance) {
       if (activate) {
@@ -354,7 +358,7 @@ export function updateActivateState(vnode: VNodeChild, activate: boolean) {
  *
  * @param el
  */
-export function removeElement(el: HtmlElement) {
+export function removeElement(el: HtmlElement): void {
   if (isVDocumentFragment(el)) {
     // 删除旧节点
     el.__backup.forEach(item => removeElement(item))
@@ -368,8 +372,9 @@ export function removeElement(el: HtmlElement) {
  *
  * @param {HTMLElement} newEl - 新元素
  * @param {HTMLElement} oldEl - 旧元素，目标元素
+ * @returns {ParentNode} - 父容器节点
  */
-export function replaceElement(newEl: HtmlElement, oldEl: HtmlElement): void {
+export function replaceElement(newEl: HtmlElement, oldEl: HtmlElement): ParentNode {
   if (isVDocumentFragment(oldEl)) {
     // 片段节点弹出第一个元素，用于替换
     let oldFirstEl = oldEl.__backup.shift()!
@@ -383,11 +388,13 @@ export function replaceElement(newEl: HtmlElement, oldEl: HtmlElement): void {
     // 删除其余元素
     removeElement(oldEl)
     parent.replaceChild(recoveryFragment(newEl), oldFirstEl)
+    return parent
   } else {
     if (!oldEl.parentNode) {
       throw new Error('无法替换：目标元素没有父节点')
     }
     oldEl.parentNode.replaceChild(recoveryFragment(newEl), oldEl)
+    return oldEl.parentNode
   }
 }
 
