@@ -284,6 +284,8 @@ export class WidgetRenderer {
       this._shadowElement?.remove()
       // 修改状态为已卸载
       this._state = 'unloaded'
+      // 触发onDeactivated生命周期
+      this.triggerLifeCycle(LifeCycleHooks.deactivate)
       // 触发onUnmounted生命周期
       this.triggerLifeCycle(LifeCycleHooks.unmounted)
       // 释放内存
