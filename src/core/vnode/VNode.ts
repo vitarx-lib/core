@@ -55,8 +55,7 @@ export function createVNode<T extends VNodeType>(
   if (isRefEl(ref)) vnode.ref = ref
   if (isFunction(type)) {
     if (children.length > 0) {
-      // @ts-ignore
-      props.children = children.length === 1 ? children[0] : children
+      ;(props as Record<string, any>).children = children.length === 1 ? children[0] : children
       children = []
     }
   } else if ('children' in props) {
@@ -67,7 +66,7 @@ export function createVNode<T extends VNodeType>(
       children.push(attrChildren as any)
     }
   }
-  vnode.children = toVNodeChildren(children, vnode)
+  vnode.children = formatChildren(children, vnode)
   return vnode
 }
 
@@ -76,17 +75,13 @@ export { createVNode as createElement }
 /**
  * 创建文本节点`TextVNode`
  *
- * 开发者无需使用显示的声明文本节点，内部将非VNode节点内容转换为文本节点。
- *
- * 空的`<></>`片段节点内部会存在一个空的文本节点用于占位，它在窗口中是不可见的，但它在`DOM`树中真实存在，目的也只是为了保留位置信息。
+ * 开发者无需使用显示的声明文本节点，内部将非VNode节点内容转换为文本节点，`null,undefined,false`会被转换为`CommentVNode`。
  *
  * @param {any} value - 任意值，非字符串值会自动使用`String(value)`强制转换为字符串。
- * @param {boolean} notShowNullable - 自动转换`null`、`false`、`undefined`为空字符串
  */
-export function createTextVNode(value: any, notShowNullable: boolean = true): TextVNode {
-  if (notShowNullable && [false, undefined, null].includes(value)) value = ''
+export function createTextVNode(value: any): TextVNode {
   return {
-    value: typeof value === 'string' ? value : String(value),
+    value: String(value),
     el: null,
     [TextVNodeSymbol]: true
   }
@@ -100,9 +95,9 @@ export function createTextVNode(value: any, notShowNullable: boolean = true): Te
  * @internal
  * @param value
  */
-export function createCommentVNode(value: string): CommentVNode {
+export function createCommentVNode(value: any): CommentVNode {
   return {
-    value,
+    value: String(value),
     el: null,
     [CommentVNodeSymbol]: true
   }
@@ -114,13 +109,20 @@ export function createCommentVNode(value: string): CommentVNode {
  * @param children
  * @param parent
  */
-function toVNodeChildren(children: Child[], parent: VNode): VNodeChildren {
+function formatChildren(children: Child[], parent: VNode): VNodeChildren {
   let childList: VNodeChildren = []
   function flatten(child: Child) {
     if (Array.isArray(child)) {
       child.forEach(item => flatten(item))
     } else {
-      const vnode: VNode | TextVNode = isVNode(child) ? child : createTextVNode(child)
+      let vnode: VNode | TextVNode | CommentVNode
+      if (isVNode(child)) {
+        vnode = child
+      } else if ([false, undefined, null].includes(child as any)) {
+        vnode = createCommentVNode(child)
+      } else {
+        vnode = createTextVNode(child)
+      }
       childList.push(vnode)
       __updateParentVNode(vnode, parent)
     }
