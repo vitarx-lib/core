@@ -6,7 +6,7 @@ import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from '.
  * @param el - DocumentFragment实例
  */
 export function recoveryFragment<T>(el: T): T {
-  if (isVDocumentFragment(el)) {
+  if (isVDocumentFragment(el) && el.childNodes.length !== el.__backup.length) {
     for (let i = 0; i < el.__backup.length; i++) {
       el.appendChild(el.__backup[i])
     }
