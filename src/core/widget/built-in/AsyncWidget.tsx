@@ -5,9 +5,19 @@ import type { Ref } from '../../variable/index.js'
 import { type AsyncVNode, createAsyncFnWidget, type FnWidgetConstructor } from '../fn-widget.js'
 import { type Element, Widget } from '../widget.js'
 import { __updateParentVNode, createVNode, Fragment, isVNode } from '../../vnode/index.js'
+import type { ErrorInfo } from '../life-cycle.js'
 
 /** 异步函数组件类型 */
 export type AsyncFnWidget = () => Promise<Element>
+
+/**
+ * onError生命周期钩子
+ *
+ * @param {unknown} error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
+ * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
+ * @returns {void|Element} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
+ */
+type OnErrorCallback = (this: AsyncWidget, error: unknown, info: ErrorInfo) => void | Element
 
 interface AsyncWidgetProps {
   /**
@@ -34,7 +44,7 @@ interface AsyncWidgetProps {
   /**
    * 加载失败时要显示的组件
    */
-  error?: Element
+  onError?: OnErrorCallback
 }
 
 export default class AsyncWidget extends Widget<AsyncWidgetProps> {
@@ -52,6 +62,15 @@ export default class AsyncWidget extends Widget<AsyncWidgetProps> {
       this.suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
       if (this.suspenseCounter) this.suspenseCounter.value++
+    }
+    if (props.onError) {
+      if (typeof props.onError !== 'function') {
+        console.warn(
+          `[Vitarx.AsyncWidget]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
+        )
+      } else {
+        this.onError = props.onError
+      }
     }
     this.load()
   }
@@ -86,10 +105,11 @@ export default class AsyncWidget extends Widget<AsyncWidgetProps> {
           this.updateChildVNode(asyncVnode)
         })
       } catch (e) {
-        if (this.props.error && isVNode(this.props.error)) {
-          this.updateChildVNode(this.props.error)
-        } else {
-          throw e
+        if ('onError' in this) {
+          const el = this.onError!(e, 'build')
+          if (isVNode(el)) {
+            return this.updateChildVNode(el)
+          }
         }
       }
     })
