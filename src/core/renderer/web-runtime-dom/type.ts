@@ -479,7 +479,7 @@ export interface VDocumentFragment extends DocumentFragment {
    *
    * 用于恢复片段节点
    */
-  __backup: Array<Element | Text>
+  __backup: HtmlElement[]
 }
 
 /**
