@@ -185,8 +185,8 @@ export function renderFragmentElement(
 ): VDocumentFragment {
   const el = document.createDocumentFragment() as VDocumentFragment
   if (!vnode.children || vnode.children.length === 0) {
-    // 创建一个空文本节点，用于占位 可替换为 document.createComment('注释节点占位')
-    el.appendChild(document.createTextNode(''))
+    // 创建一个空节点 document.createComment('') 或 document.createTextNode('')
+    el.appendChild(document.createComment(''))
   } else {
     renderChildren(el, vnode.children)
   }
