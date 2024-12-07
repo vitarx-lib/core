@@ -1,6 +1,6 @@
 import { type Element, Widget } from '../widget.js'
 import { WidgetRenderer } from '../../renderer/index.js'
-import { createVNode, type VNode } from '../../vnode/index.js'
+import { createVNode, type OnlyKey, type VNode } from '../../vnode/index.js'
 import type { WidgetType } from '../constant.js'
 import { watchProp } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
@@ -30,6 +30,14 @@ interface KeepAliveProps {
    * @default 10
    */
   max?: number
+  /**
+   * 唯一键
+   *
+   * 同类型小部件可以根据onlyKey的不同创建出多个实例。
+   *
+   * 该唯一键会被传递给children，你可以在小部件中通过`getCurrentVNode().key`|`this.vnode.key`获得
+   */
+  onlyKey?: OnlyKey
 }
 
 /**
@@ -40,7 +48,7 @@ interface KeepAliveProps {
  * 这在某些场景下非常有用，例如：数据列表，频繁从树中移除又创建的小部件。
  */
 export default class KeepAlive extends Widget<KeepAliveProps> {
-  protected cache: Map<WidgetType, VNode<WidgetType>> = new Map()
+  protected cache: Map<WidgetType, Map<OnlyKey | undefined, VNode<WidgetType>>> = new Map()
   protected currentChild: VNode<WidgetType>
 
   constructor(props: KeepAliveProps) {
@@ -48,7 +56,7 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
     // 验证 props.children
     this.validation(this.children)
     // 缓存当前展示的小部件
-    this.currentChild = createVNode(this.children)
+    this.currentChild = createVNode(this.children, { key: this.props.onlyKey })
     // 开始监听 props.children
     watchProp(this.props, 'children', this.handleChildChange.bind(this))
   }
@@ -71,6 +79,53 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
     return true
   }
 
+  /**
+   * 添加缓存
+   *
+   * @param vnode
+   */
+  addCache(vnode: VNode<WidgetType>) {
+    const type = vnode.type
+    const key = vnode.key ?? undefined
+    if (this.isKeep(type)) {
+      // 确保缓存存在对应的类型映射
+      if (!this.cache.has(type)) {
+        this.cache.set(type, new Map())
+      }
+
+      const typeCache = this.cache.get(type)!
+
+      // 如果同 key 已存在，先移除旧缓存
+      if (typeCache.has(key)) {
+        typeCache.delete(key)
+      }
+
+      // 添加到缓存
+      typeCache.set(key, vnode)
+
+      // 检查缓存总大小
+      if (this.max > 0) {
+        let totalSize = 0
+        for (const typeMap of this.cache.values()) {
+          totalSize += typeMap.size
+        }
+
+        if (totalSize > this.max) {
+          // 超出限制，移除第一个缓存（按插入顺序）
+          const firstType = this.cache.keys().next().value!
+          const firstTypeMap = this.cache.get(firstType)!
+          const firstKey = firstTypeMap.keys().next().value!
+          firstTypeMap.get(firstKey)?.instance?.renderer.unmount()
+          firstTypeMap.delete(firstKey)
+
+          // 如果该类型的缓存已空，移除类型
+          if (firstTypeMap.size === 0) {
+            this.cache.delete(firstType)
+          }
+        }
+      }
+    }
+  }
   get include() {
     if (!this.props.include) return []
     return this.props.include
@@ -103,43 +158,51 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
   }
 
   /**
-   * 添加缓存
-   *
-   * @param vnode
-   */
-  addCache(vnode: VNode<WidgetType>) {
-    const type = vnode.type
-    if (this.isKeep(type)) {
-      // 如果缓存中已存在该类型，先移除
-      if (this.cache.has(type)) {
-        this.cache.delete(type)
-      }
-      // 添加到缓存（更新顺序）
-      this.cache.set(type, vnode)
-      // 检查缓存大小是否超过限制
-      if (this.max > 0 && this.cache.size > this.max) {
-        // 超出限制，移除第一个缓存（最旧的）
-        const firstKey = this.cache.keys().next().value!
-        // 销毁节点
-        this.cache.get(firstKey)?.instance?.renderer?.unmount()
-        this.cache.delete(firstKey)
-      }
-    }
-  }
-
-  /**
    * 处理子部件类型变化
    *
    * @protected
    */
   protected handleChildChange() {
-    if (this.children !== this.currentChild.type) {
-      if (this.validation(this.children, 'console')) {
-        this.addCache(this.currentChild)
-        const cacheVNode = this.cache.get(this.children)
-        this.currentChild = cacheVNode || createVNode(this.children)
-        this.update()
+    const newType = this.children // 新的组件类型
+    const newKey = this.props.onlyKey // 新的组件唯一键
+    const currentType = this.currentChild.type // 当前组件类型
+    const currentKey = this.currentChild.key // 当前组件的唯一键
+
+    // 验证新组件的类型是否合法
+    if (!this.validation(newType, 'console')) return
+
+    // 如果类型或 key 不同，表示需要切换组件
+    if (newType !== currentType || newKey !== currentKey) {
+      // 缓存当前组件
+      this.addCache(this.currentChild)
+
+      // 查找缓存中是否存在新组件实例
+      const typeCache = this.cache.get(newType)
+      const cacheVNode = typeCache?.get(newKey)
+
+      if (cacheVNode) {
+        // 如果缓存中有符合的新组件实例，直接复用
+        this.currentChild = cacheVNode
+      } else {
+        // 如果没有缓存，创建新的组件实例
+        this.currentChild = createVNode(newType, { key: newKey })
       }
+
+      // 更新组件
+      this.update()
+    }
+  }
+
+  protected override onBeforeUnmount(root: boolean): void {
+    if (root) {
+      // 遍历缓存中的所有 VNode 并卸载其实例
+      this.cache.forEach(typeCache => {
+        typeCache.forEach(vnode => {
+          vnode.instance?.renderer.unmount()
+        })
+      })
+      // 清空缓存
+      this.cache.clear()
     }
   }
 
@@ -147,12 +210,14 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
     return this.currentChild
   }
 
-  protected override onBeforeUnmount(root: boolean): void {
-    if (root) {
-      this.cache.forEach(vnode => {
-        vnode.instance?.renderer.unmount()
-      })
-    }
+  /**
+   * 生成缓存的唯一标识
+   *
+   * @param type 小部件类型
+   * @param key 唯一键
+   */
+  private getCacheKey(type: WidgetType, key?: OnlyKey): [WidgetType, OnlyKey | undefined] {
+    return [type, key]
   }
 }
 
