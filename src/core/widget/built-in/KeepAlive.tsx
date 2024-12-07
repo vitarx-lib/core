@@ -45,15 +45,30 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
 
   constructor(props: KeepAliveProps) {
     super(props)
-    if (typeof this.children !== 'function') {
-      throw new Error(
-        `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof this.children}`
-      )
-    }
+    // 验证 props.children
+    this.validation(this.children)
     // 缓存当前展示的小部件
     this.currentChild = createVNode(this.children)
     // 开始监听 props.children
     watchProp(this.props, 'children', this.handleChildChange.bind(this))
+  }
+
+  /**
+   * 验证 children
+   *
+   * @protected
+   */
+  protected validation(children: any, tip: 'throw' | 'console' = 'throw'): boolean {
+    if (typeof children !== 'function') {
+      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof children}`
+      if (tip === 'throw') {
+        throw new Error(message)
+      } else {
+        console.warn(message)
+      }
+      return false
+    }
+    return true
   }
 
   get include() {
@@ -119,10 +134,12 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
    */
   protected handleChildChange() {
     if (this.children !== this.currentChild.type) {
-      this.addCache(this.currentChild)
-      const cacheVNode = this.cache.get(this.children)
-      this.currentChild = cacheVNode || createVNode(this.children)
-      this.update()
+      if (this.validation(this.children, 'console')) {
+        this.addCache(this.currentChild)
+        const cacheVNode = this.cache.get(this.children)
+        this.currentChild = cacheVNode || createVNode(this.children)
+        this.update()
+      }
     }
   }
 
