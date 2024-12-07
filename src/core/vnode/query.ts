@@ -1,7 +1,7 @@
-import type { TextVNode, VNode } from './type.js'
+import type { VNode, VNodeChild } from './type.js'
 
 // VNode的父节点映射关系缓存
-const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>()
+const __ParentMapping__ = new WeakMap<VNodeChild, VNode>()
 
 /**
  * 获取节点的父节点
@@ -9,7 +9,7 @@ const __ParentMapping__ = new WeakMap<VNode | TextVNode, VNode>()
  * @returns {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
  * @param vnode - 自身的虚拟节点对象
  */
-export function getParentVNode(vnode: VNode | TextVNode): VNode | undefined {
+export function getParentVNode(vnode: VNodeChild): VNode | undefined {
   return __ParentMapping__.get(vnode)
 }
 
@@ -21,6 +21,6 @@ export function getParentVNode(vnode: VNode | TextVNode): VNode | undefined {
  * @param vnode - 虚拟节点对象
  * @param parent - 父节点
  */
-export function __updateParentVNode(vnode: VNode | TextVNode, parent: VNode): void {
+export function __updateParentVNode(vnode: VNodeChild, parent: VNode): void {
   __ParentMapping__.set(vnode, parent)
 }
