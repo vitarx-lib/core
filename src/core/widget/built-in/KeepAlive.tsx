@@ -39,7 +39,7 @@ interface KeepAliveProps {
  *
  * 这在某些场景下非常有用，例如：数据列表，频繁从树中移除又创建的小部件。
  */
-class KeepAlive extends Widget<KeepAliveProps> {
+export default class KeepAlive extends Widget<KeepAliveProps> {
   protected cache: Map<WidgetType, VNode<WidgetType>> = new Map()
   protected currentChild: VNode<WidgetType>
 
