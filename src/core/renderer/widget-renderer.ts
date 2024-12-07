@@ -206,7 +206,7 @@ export class WidgetRenderer {
   /**
    * 更新视图
    *
-   * @param {VNode} newChildVNode - 可选的新`child`虚拟节点，如果不提供，则使用`build`方法构建。
+   * @param {VNode} newChildVNode - 新子节点，没有则使用`build`方法构建。
    */
   update(newChildVNode?: VNode): void {
     if (this.state === 'unloaded') {
@@ -223,13 +223,24 @@ export class WidgetRenderer {
       })
       const oldVNode = this._child
       const newVNode = newChildVNode || this.build()
-      this._child = patchUpdate(oldVNode, newVNode)
+      this._child = this.patchUpdate(oldVNode, newVNode)
       // 触发更新后生命周期
       this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
       this._pendingUpdate = false
       console.error('[Vitarx.WidgetRenderer.update]：更新视图时捕获到了异常', e)
     }
+  }
+
+  /**
+   * 差异更新
+   *
+   * @param {VNode} oldVNode - 旧子节点
+   * @param {VNode} newVNode - 新子节点
+   * @protected
+   */
+  protected patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
+    return patchUpdate(oldVNode, newVNode)
   }
 
   /**
@@ -371,5 +382,3 @@ export class WidgetRenderer {
     return (this.widget as any)[__LifeCycleTrigger__](hook, ...args)
   }
 }
-
-
