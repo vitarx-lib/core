@@ -1,27 +1,24 @@
+// noinspection JSUnusedGlobalSymbols
+
 import { type Element, Widget } from './widget.js'
 import { isFunction, isRecordObject } from '../../utils/index.js'
 import {
-  type ErrorInfo,
+  type HookParameter,
+  type HookReturnType,
   type LifeCycleHookMethods,
-  LifeCycleHooks,
-  type TargetContainerElement
+  LifeCycleHooks
 } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
 import { type IntrinsicAttributes, isVNode, type VNode } from '../vnode/index.js'
+import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
 
 /**
  * 生命周期钩子回调函数
  */
-type LifeCycleHookCallback<R = void> = (this: FnWidget) => R
-
-/**
- * onError生命周期钩子
- *
- * @param {unknown} error - 捕获到的异常对象
- * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
- * @returns {void|Element} - 返回一个`Vitarx.Element`，做为后备内容展示。
- */
-type OnErrorCallback = (this: FnWidget, error: unknown, info: ErrorInfo) => void | Element
+type LifeCycleHookCallback<T extends LifeCycleHooks> = (
+  this: FnWidget,
+  ...params: HookParameter<T>
+) => HookReturnType<T>
 
 /**
  * 构建虚拟节点函数类型
@@ -29,13 +26,13 @@ type OnErrorCallback = (this: FnWidget, error: unknown, info: ErrorInfo) => void
 export type BuildVNode = (() => VNode) | VNode
 
 /**
- * 函数组件类型
+ * 函数小部件类型
  */
 export type FnWidgetConstructor<P extends Record<string, any> = {}> = (
   props: P & IntrinsicAttributes
 ) => BuildVNode
 
-/** 异步函数式组件虚拟节点 */
+/** 异步函数式小部件虚拟节点 */
 export interface AsyncVNode extends Omit<VNode, 'type'> {
   type: () => Promise<Element>
 }
@@ -49,8 +46,13 @@ interface CollectResult extends CollectData {
   build: any
 }
 
+type BeforeRemoveCallback<T extends ContainerElement> = (
+  el: T,
+  type: 'unmount' | 'deactivate'
+) => Promise<void> | void
+
 /**
- * 函数组件代理
+ * 函数小部件代理
  */
 class FnWidget extends Widget {
   readonly #buildVnode: () => VNode
@@ -72,7 +74,7 @@ class FnWidget extends Widget {
       for (const exposedKey in exposed) {
         if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
           console.error(
-            `[Vitarx.FnWidget]：${name} 函数组件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
+            `[Vitarx.FnWidget]：${name} 函数小部件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
           )
           continue
         }
@@ -99,7 +101,7 @@ class FnWidget extends Widget {
 /**
  * 钩子收集器
  */
-export class _HooksCollector {
+class HooksCollector {
   static #collectMap: CollectData | undefined = undefined
   static #currentVNode: VNode<FnWidgetConstructor> | undefined = undefined
 
@@ -163,9 +165,9 @@ export class _HooksCollector {
 }
 
 /**
- * 获取当前函数组件的虚拟节点
+ * 获取当前函数小部件的虚拟节点
  *
- * 注意：如果是类组件内部获取当前虚拟节点，则使用`this.vnode`即可访问，勿使用该函数。
+ * 注意：如果是类小部件内部获取当前虚拟节点，则使用`this.vnode`即可访问，勿使用该函数。
  *
  * @example
  * ```tsx
@@ -173,23 +175,23 @@ export class _HooksCollector {
  *
  * function Foo() {
  *  const vnode = getCurrentVNode();
- *  console.log(vnode.instance); // 输出 undefined，因为此时正在解析函数组件，还未映射为FnWidget实例。
+ *  console.log(vnode.instance); // 输出 undefined，因为此时正在解析函数小部件，还未映射为FnWidget实例。
  *  onCreated(() => {
  *    console.log(vnode.instance); // 输出 FnWidget
  *  });
  *  return <div>foo</div>;
  * }
  * ```
- * @returns {VNode<FnWidgetConstructor>|undefined} 当前函数组件的虚拟节点，如果没有，则返回`undefined`
+ * @returns {VNode<FnWidgetConstructor>|undefined} 当前函数小部件的虚拟节点，如果没有，则返回`undefined`
  */
 export function getCurrentVNode(): VNode<FnWidgetConstructor> | undefined {
-  return _HooksCollector.getCurrentVNode()
+  return HooksCollector.getCurrentVNode()
 }
 
 /**
- * 暴露函数组件的内部方法或变量，供外部使用。
+ * 暴露函数小部件的内部方法或变量，供外部使用。
  *
- * 一般情况下是用于暴露一个函数，给父组件调用，但也可以暴露一个变量
+ * 一般情况下是用于暴露一个函数，给父小部件调用，但也可以暴露一个变量
  *
  * @example
  * ```ts
@@ -198,9 +200,9 @@ export function getCurrentVNode(): VNode<FnWidgetConstructor> | undefined {
  * function Foo() {
  *  const count = ref(0);
  *  const add = () => count.value++;
- *  // 暴露 count 和 add，父组件可以通过refEl.value 访问到 count 和 add。
+ *  // 暴露 count 和 add，父小部件可以通过refEl.value 访问到 count 和 add。
  *  defineExpose({ count, add });
- *  // 构建组件
+ *  // 构建小部件
  *  return <div onClick={add}>{count.value}</div>;
  * }
  * ```
@@ -209,105 +211,88 @@ export function getCurrentVNode(): VNode<FnWidgetConstructor> | undefined {
  *
  * @param {Record<string, any>} exposed 键值对形式的对象，其中键为暴露的名称，值为要暴露的值。
  */
-export function defineExpose(exposed: Record<string, any>) {
-  _HooksCollector.trackExposed(exposed)
+export function defineExpose(exposed: Record<string, any>): void {
+  HooksCollector.trackExposed(exposed)
+}
+
+/**
+ * 钩子工厂函数，返回具体的钩子注册方法
+ */
+function createLifeCycleHook<T extends LifeCycleHooks>(
+  hook: T
+): (cb: LifeCycleHookCallback<T>) => void {
+  return function (cb: LifeCycleHookCallback<T>) {
+    if (typeof cb !== 'function') {
+      throw new TypeError(`[Vitarx.LifeCycle]：${hook}钩子必须是回调函数，给定${typeof cb}`)
+    }
+    HooksCollector.trackLifeCycle(hook, cb)
+  }
 }
 
 /**
  * 创建完成时触发的钩子
  *
- * @param fn
+ * @param cb - 回调函数，小部件实例创建后触发
  */
-export function onCreated(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.created, fn)
-}
+export const onCreated = createLifeCycleHook(LifeCycleHooks.created)
 
 /**
  * 挂载前要触发的钩子
  *
- * 可以返回一个`Element`，用于将组件挂载到指定的元素上
+ * 可以返回一个 DOM 元素作为挂载目标容器
  *
- * @param fn
+ * @param cb - 回调函数，小部件挂载之前触发
  */
-export function onBeforeMount(fn: LifeCycleHookCallback<void | TargetContainerElement>) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.beforeMount, fn)
-}
+export const onBeforeMount = createLifeCycleHook(LifeCycleHooks.beforeMount)
 
 /**
  * 挂载完成时触发的钩子
  *
- * @param fn
+ * @param cb - 回调函数，小部件挂载完成后触发
  */
-export function onMounted(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.mounted, fn)
-}
+export const onMounted = createLifeCycleHook(LifeCycleHooks.mounted)
 
 /**
  * 小部件被临时停用触发的钩子
  *
- * @param fn
+ * @param cb - 回调函数，当小部件被临时停用时触发
  */
-export function onDeactivate(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.deactivate, fn)
-}
+export const onDeactivate = createLifeCycleHook(LifeCycleHooks.deactivate)
 
 /**
  * 小部件从停用后又恢复时触发的钩子
  *
- * @param fn
+ * @param cb - 回调函数，当小部件从停用状态恢复时触发
  */
-export function onActivated(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.activated, fn)
-}
+export const onActivated = createLifeCycleHook(LifeCycleHooks.activated)
 
 /**
  * 小部件实例被销毁前触发的钩子
  *
- * 在构造中返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`
- *
- * 如果返回`true`过后，务必在执行完自定义的卸载逻辑过后删除`el`，否则它将永远存在于视图中。
- *
- * @param fn
+ * @param cb - 回调函数，小部件实例销毁前触发
  */
-export function onBeforeUnmount(fn: (this: FnWidget, root: boolean) => void | boolean) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.beforeUnmount, fn)
-}
+export const onBeforeUnmount = createLifeCycleHook(LifeCycleHooks.beforeUnmount)
 
 /**
  * 小部件被卸载时完成触发的钩子
  *
- * @param fn
+ * @param cb - 回调函数，小部件卸载完成后触发
  */
-export function onUnmounted(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.unmounted, fn)
-}
+export const onUnmounted = createLifeCycleHook(LifeCycleHooks.unmounted)
 
 /**
  * 小部件更新前触发的钩子
  *
- * @param fn
+ * @param cb - 回调函数，在小部件更新之前触发
  */
-export function onBeforeUpdate(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.beforeUpdate, fn)
-}
+export const onBeforeUpdate = createLifeCycleHook(LifeCycleHooks.beforeUpdate)
 
 /**
  * 小部件更新完成时触发的钩子
  *
- * @param fn - 钩子回调函数
+ * @param cb - 回调函数，小部件更新完成后触发
  */
-export function onUpdated(fn: LifeCycleHookCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.updated, fn)
-}
+export const onUpdated = createLifeCycleHook(LifeCycleHooks.updated)
 
 /**
  * 小部件渲染或构建过程中捕获到异常时触发的钩子
@@ -318,17 +303,30 @@ export function onUpdated(fn: LifeCycleHookCallback) {
  *   return <div>{error}</div>
  * })
  *
- * @param fn
+ * @param cb - 回调函数，遇到错误时触发
  */
-export function onError(fn: OnErrorCallback) {
-  if (!isFunction(fn)) throw new TypeError(`无效的钩子回调函数，${typeof fn}`)
-  _HooksCollector.trackLifeCycle(LifeCycleHooks.error, fn)
+export const onError = createLifeCycleHook(LifeCycleHooks.error)
+
+/**
+ * 真实的`Element`被移除前触发的钩子
+ *
+ * 可以返回`Promise`来延迟移除
+ *
+ * @param cb - 回调函数，元素从DOM中被移除前触发
+ */
+export function onBeforeRemove<T extends ContainerElement>(cb: BeforeRemoveCallback<T>) {
+  if (typeof cb !== 'function') {
+    throw new TypeError(
+      `[Vitarx.LifeCycle]：${LifeCycleHooks.beforeRemove}钩子必须是回调函数，给定${typeof cb}`
+    )
+  }
+  HooksCollector.trackLifeCycle(LifeCycleHooks.beforeRemove, cb)
 }
 
 /**
  * ## 构建器。
  *
- * > 注意：在类组件中不要使用`build`函数，类中的build方法就是构建器。
+ * > 注意：在类小部件中不要使用`build`函数，类中的build方法就是构建器。
  *
  * 主要作用是优化TSX类型校验。
  *
@@ -339,7 +337,6 @@ export function onError(fn: OnErrorCallback) {
  * 如果你没有使用tsx，则可以直接使用 `return () => <div>...</div>` 这样的语法。
  *
  * ```tsx
- *
  * // 下面的两个return语句的效果是一致的
  * // 它们的不同之处是在tsx文件中返回箭头函数用于构建ui会导致类型错误，所以在tsx文件中需要使用build包裹
  * return build(() => state ? <div>真</div> : <div>假</div>)
@@ -354,12 +351,12 @@ export function build(vnode: VNode | (() => VNode)): VNode {
 }
 
 /**
- * ## 创建函数组件
+ * ## 创建函数小部件
  *
  * @param vnode
  */
 export function createFnWidget(vnode: VNode<FnWidgetConstructor>): Widget {
-  let { build, exposed, lifeCycleHooks } = _HooksCollector.collect(
+  let { build, exposed, lifeCycleHooks } = HooksCollector.collect(
     vnode as VNode<FnWidgetConstructor>
   )
   if (!isFunction(build) && !isVNode(build)) {
@@ -371,12 +368,12 @@ export function createFnWidget(vnode: VNode<FnWidgetConstructor>): Widget {
 }
 
 /**
- * 创建异步函数组件
+ * 创建异步函数小部件
  *
  * @param vnode
  */
 export async function createAsyncFnWidget(vnode: AsyncVNode): Promise<FnWidget> {
-  let { build, exposed, lifeCycleHooks } = await _HooksCollector.asyncCollect(vnode)
+  let { build, exposed, lifeCycleHooks } = await HooksCollector.asyncCollect(vnode)
   if (!isFunction(build) && !isVNode(build)) {
     throw new Error(
       `[Vitarx.createAsyncFnWidget]：${vnode.type.name} 函数不是一个有效的函数式声明小部件，返回值必须是虚拟节点或build构造器！`
