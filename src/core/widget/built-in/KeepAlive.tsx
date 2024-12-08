@@ -193,17 +193,15 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
     }
   }
 
-  protected override onBeforeUnmount(root: boolean): void {
-    if (root) {
-      // 遍历缓存中的所有 VNode 并卸载其实例
-      this.cache.forEach(typeCache => {
-        typeCache.forEach(vnode => {
-          vnode.instance?.renderer.unmount()
-        })
+  protected override onBeforeUnmount(): void {
+    // 遍历缓存中的所有 VNode 并卸载其实例
+    this.cache.forEach(typeCache => {
+      typeCache.forEach(vnode => {
+        vnode.instance?.renderer.unmount()
       })
-      // 清空缓存
-      this.cache.clear()
-    }
+    })
+    // 清空缓存
+    this.cache.clear()
   }
 
   protected build(): Element {
