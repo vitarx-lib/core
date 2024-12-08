@@ -1,5 +1,12 @@
-import { __LifeCycleTrigger__ } from './constant.js'
 import type { ContainerElement, VDocumentFragment } from '../renderer/web-runtime-dom/index.js'
+
+/**
+ * 目标容器元素
+ */
+export type TargetContainerElement = Exclude<ContainerElement, VDocumentFragment>
+
+/** 错误信息类型 */
+export type ErrorInfo = 'build' | 'render'
 
 /** 生命周期钩子枚举 */
 export enum LifeCycleHooks {
@@ -12,35 +19,24 @@ export enum LifeCycleHooks {
   updated = 'onUpdated',
   error = 'onError',
   unmounted = 'onUnmounted',
-  beforeUnmount = 'onBeforeUnmount'
+  beforeUnmount = 'onBeforeUnmount',
+  beforeRemove = 'onBeforeRemove'
 }
 
 /** 生命周期钩子类型 */
 export type LifeCycleHookMethods = `${LifeCycleHooks}`;
 
-/** 错误信息类型 */
-export type ErrorInfo = 'build' | 'render'
+/** 生命周期钩子需要接收的参数 */
+export type HookParameter<T> = T extends LifeCycleHooks.error ? [error: unknown, info: ErrorInfo] : T extends LifeCycleHooks.beforeRemove ? [el: ContainerElement, type: 'unmount' | 'deactivate'] : []
 
-/**
- * 目标容器元素
- */
-export type TargetContainerElement = Exclude<ContainerElement, VDocumentFragment>
+/** 生命周期钩子返回值类型 */
+export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount ? void | TargetContainerElement : T extends LifeCycleHooks.error ? Vitarx.Element | void : T extends LifeCycleHooks.beforeRemove ? Promise<void> | void : void
 
+// noinspection JSUnusedGlobalSymbols
 /**
  * 生命周期基类
  */
 export abstract class LifeCycle {
-  protected constructor() {
-    // 定义一个__LifeCycleTrigger__属性，用于触发生命周期钩子的入口函数，方便管理
-    Object.defineProperty(this, __LifeCycleTrigger__, {
-      enumerable: false,
-      writable: false,
-      value(hook: LifeCycleHookMethods, ...args: any[]): any {
-        return this[hook]?.apply(this, args)
-      }
-    })
-  }
-
   /**
    * 生命周期钩子
    *
@@ -111,20 +107,12 @@ export abstract class LifeCycle {
   /**
    * ## 生命周期构造
    *
-   * `onBeforeUnmount`钩子会在组件被销毁前触发，此时`el`还未从`DOM`树中移除，可以返回一个`true`接管`el`的销毁逻辑。
-   *
-   * 关于`el`销毁逻辑接管的一些考虑：
-   *
-   * 1. 如果返回`true`，则`el`销毁逻辑由开发者自行接管，此时`el`不会从`DOM`树中移除，需要开发者则执行完逻辑后移除`el`。
-   * 2. 如果返回其他值，则渲染器内部会自动处理`el`的销毁逻辑。
-   * 3. 请务必判断`root`参数是否为`true`，不是true时请不要对`el`进行任何操作，这可能会导致布局混乱，以及性能浪费，因为它的祖父节点会在随后立即从dom树移除。
+   * `onBeforeUnmount`钩子会在组件被销毁前触发。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   * @param {boolean} root 如果为true则代表卸载的正是当前节点，如果为false则卸载的是父节点。
-   * @returns {boolean | void} 返回`true`可告知渲染器`el`销毁逻辑已被接管，渲染器会跳过`el.remove()`。
    * @protected
    */
-  protected onBeforeUnmount?(root: boolean): void | boolean
+  protected onBeforeUnmount?(): void
 
   /**
    * 生命周期钩子
@@ -132,7 +120,6 @@ export abstract class LifeCycle {
    * `onBeforeUpdate`钩子会在组件更新之前触发。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
    * @protected
    */
   protected onBeforeUpdate?(): void
@@ -160,6 +147,48 @@ export abstract class LifeCycle {
    * @protected
    */
   protected onError?(error: unknown, info: ErrorInfo): Vitarx.Element | void
-}
 
+  /**
+   * 元素从`DOM`树移除之前触发的钩子
+   *
+   * 仅在unmount、deactivate之前被调用
+   *
+   * 淡出动画示例：
+   * ```ts
+   * return new Promise((resolve) => {
+   *   el.style.opacity = 0
+   *   setTimeout(resolve, 300)
+   * })
+   * ```
+   *
+   * @param {ContainerElement} el - 当前小部件的根元素。
+   * @param type - 触发类型，可以是`unmount`或`deactivate`。
+   * @returns {Promise<void>} 返回一个Promise，渲染器会等待其运行完成后再移除根元素。
+   * @protected
+   */
+  protected onBeforeRemove?<T extends ContainerElement>(
+    el: T,
+    type: 'unmount' | 'deactivate'
+  ): Promise<void>
+
+  /**
+   * 调用生命周期钩子
+   *
+   * 内部方法，开发者勿调用。
+   *
+   * @internal
+   * @protected
+   */
+  protected callLifeCycleHook<K extends LifeCycleHooks>(
+    hook: K,
+    ...args: HookParameter<K>
+  ): HookReturnType<K> {
+    // 使用断言来安全调用受保护方法
+    const method = this[hook] as unknown as (...args: HookParameter<K>) => any
+    if (typeof method === 'function') {
+      return method.apply(this, args)
+    }
+    return undefined as any
+  }
+}
 
