@@ -106,7 +106,7 @@ export class Effect implements EffectInterface {
    * @param callback
    */
   onPause(callback: VoidCallback): void {
-    if (this.#isDeprecated) {
+    if (!this.#isDeprecated) {
       if (this.#onPause) {
         this.#onPause.push(callback)
       } else {
