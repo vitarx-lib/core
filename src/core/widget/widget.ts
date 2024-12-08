@@ -3,26 +3,23 @@ import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { FnWidgetConstructor } from './fn-widget.js'
 import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
-import type { IntrinsicAttributes, VNode } from '../vnode/index.js'
+import type { VNode } from '../vnode/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
  */
 export type Element = Vitarx.Element
-
 /**
  * 类组件构造器类型
  */
-export type ClassWidgetConstructor<P extends Record<string, any> = {}> = new (
-  props: P & IntrinsicAttributes
+export type ClassWidgetConstructor<P extends Record<string, any> = any> = new (
+  props: P
 ) => Widget<P>
 
 // 获取组件子节点类型
 export type WidgetChildren<P> = P extends { children: infer U }
   ? U
-  : P extends {
-        children?: infer U
-      }
+  : P extends { children?: infer U }
     ? U | undefined
     : undefined
 
