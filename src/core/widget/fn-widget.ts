@@ -47,6 +47,7 @@ interface CollectResult extends CollectData {
 }
 
 type BeforeRemoveCallback<T extends ContainerElement> = (
+  this: FnWidget,
   el: T,
   type: 'unmount' | 'deactivate'
 ) => Promise<void> | void
