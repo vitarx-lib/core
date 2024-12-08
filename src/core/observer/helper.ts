@@ -369,3 +369,16 @@ export function watchDepend<GET, R>(
   // @ts-ignore
   return getResult ? { listener: mainListener, result } : mainListener
 }
+
+/**
+ * 在下一次微任务开始之前执行回调函数
+ *
+ * @param {function} cb - 回调函数，不传入则需使用await
+ */
+export function nextTick(cb?: () => void): Promise<void> {
+  if (cb) {
+    return Promise.resolve().then(cb)
+  } else {
+    return Promise.resolve().then()
+  }
+}
