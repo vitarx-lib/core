@@ -19,11 +19,12 @@ export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
 
 export const __WidgetPropsSelfNodeSymbol__ = Symbol('WidgetSelfNodeSymbol')
 
-// 标记生命周期触发器
-export const __LifeCycleTrigger__ = Symbol('Trigger')
-
 // 内置方法列表
-export const __WidgetIntrinsicMethods__ = ['build', 'update', ...Object.values(LifeCycleHooks)] as const
+export const __WidgetIntrinsicMethods__ = [
+  'build',
+  'update',
+  ...Object.values(LifeCycleHooks)
+] as const
 
 
 // 内置属性列表
