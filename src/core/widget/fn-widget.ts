@@ -28,7 +28,7 @@ export type BuildVNode = (() => VNode) | VNode
 /**
  * 函数小部件类型
  */
-export type FnWidgetConstructor<P extends Record<string, any> = {}> = (
+export type FnWidgetConstructor<P extends Record<string, any> = any> = (
   props: P & IntrinsicAttributes
 ) => BuildVNode
 
