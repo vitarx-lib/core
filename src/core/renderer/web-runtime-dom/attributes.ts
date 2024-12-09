@@ -7,7 +7,7 @@ import type { HTMLClassProperties, HTMLStyleProperties } from './type.js'
  * @param el - 目标元素
  * @param props - 属性对象
  */
-export function setAttributes(el: HTMLElement, props: Record<string, any>): void {
+export function setAttributes(el: HTMLElement | SVGElement, props: Record<string, any>): void {
   Object.keys(props).forEach(key => {
     setAttribute(el, key, props[key])
   })
@@ -21,7 +21,12 @@ export function setAttributes(el: HTMLElement, props: Record<string, any>): void
  * @param value - 属性值
  * @param oldCallback - 旧回调函数，仅对事件属性生效
  */
-export function setAttribute(el: HTMLElement, key: string, value: any, oldCallback?: AnyCallback): void {
+export function setAttribute(
+  el: HTMLElement | SVGElement,
+  key: string,
+  value: any,
+  oldCallback?: AnyCallback
+): void {
   switch (key) {
     case 'style':
       setStyle(el, value)
@@ -65,9 +70,9 @@ export function setAttribute(el: HTMLElement, key: string, value: any, oldCallba
  * @param key - 属性名
  * @param callback - 事件回调函数，仅对事件属性生效
  */
-export function removeAttribute(el: HTMLElement, key: string, callback?: AnyCallback) {
+export function removeAttribute(el: HTMLElement | SVGElement, key: string, callback?: AnyCallback) {
   if (key === 'className') {
-    el.className = ''
+    el.removeAttribute('class')
   } else if (isFunction(callback)) {
     el.removeEventListener(key.slice(2).toLowerCase(), callback)
   } else {
@@ -81,7 +86,7 @@ export function removeAttribute(el: HTMLElement, key: string, callback?: AnyCall
  * @param el
  * @param style
  */
-export function setStyle(el: HTMLElement, style: HTMLStyleProperties): void {
+export function setStyle(el: HTMLElement | SVGElement, style: HTMLStyleProperties): void {
   if (style && el.style) {
     if (isString(style)) {
       el.style.cssText = style
@@ -100,12 +105,13 @@ export function setStyle(el: HTMLElement, style: HTMLStyleProperties): void {
  * @param el
  * @param classData
  */
-export function setClass(el: HTMLElement, classData: HTMLClassProperties): void {
+export function setClass(el: HTMLElement | SVGElement, classData: HTMLClassProperties): void {
   if (classData) {
     if (isString(classData)) {
-      el.className = classData
+      el.setAttribute('class', classData)
     } else if (isArray(classData)) {
-      el.classList.add(...classData)
+      // 替换类名：清空后添加新的类名
+      el.setAttribute('class', classData.join(' '))
     } else if (isRecordObject(Object)) {
       for (const key in classData) {
         if (classData[key]) {
