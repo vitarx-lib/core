@@ -12,7 +12,7 @@ import type { RefEl, TextVNode, VNode, VNodeChildren, VNodeProps, VNodeType } fr
 import { RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
 
 // 子元素类型
-type Child = VNode | TextVNode | AnyPrimitive | Array<Child>
+type Child = VNode | TextVNode | CommentVNode | AnyPrimitive | Array<Child>
 
 // 虚拟节点数组
 type Children = Child[]
