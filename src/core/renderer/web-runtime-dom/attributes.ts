@@ -31,6 +31,7 @@ export function setAttribute(
     case 'style':
       setStyle(el, value)
       break
+    case 'className':
     case 'class':
       setClass(el, value)
       break
@@ -50,11 +51,19 @@ export function setAttribute(
         el.dataset[key.slice(5)] = value
       } else {
         try {
-          // 处理其他属性
+          // 检查属性是否可写
           if (key in el) {
-            ;(el as any)[key] = value
+            const descriptor = Object.getOwnPropertyDescriptor(el, key)
+            // 如果该属性是可写的，直接赋值
+            if (descriptor && descriptor.set) {
+              ;(el as any)[key] = value
+            } else {
+              // 否则使用 setAttribute
+              el.setAttribute(key, String(value))
+            }
           } else {
-            el.setAttribute(key, value)
+            // 如果属性不存在，使用 setAttribute
+            el.setAttribute(key, String(value))
           }
         } catch (error) {
           console.error(`[Vitarx.WebRuntimeDom]：设置属性 ${key} 时发生错误`, error)
