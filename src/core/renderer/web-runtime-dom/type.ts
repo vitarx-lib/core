@@ -172,6 +172,8 @@ export interface PartProperties {
   required?: boolean
   size?: number | string
   step?: number | string
+  width: string | number
+  height: string | number
 }
 
 // 合并CSS属性
