@@ -47,13 +47,12 @@ export function setAttribute(el: HTMLElement, key: string, value: any, oldCallba
         try {
           // 处理其他属性
           if (key in el) {
-            // @ts-ignore
-            el[key] = value
+            ;(el as any)[key] = value
           } else {
             el.setAttribute(key, value)
           }
         } catch (error) {
-          console.error(`设置属性 ${key} 时发生错误:`, error)
+          console.error(`[Vitarx.WebRuntimeDom]：设置属性 ${key} 时发生错误`, error)
         }
       }
   }
