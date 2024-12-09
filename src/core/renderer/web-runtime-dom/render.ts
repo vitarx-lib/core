@@ -20,6 +20,7 @@ import {
   type ContainerElement,
   type HtmlElement,
   type HtmlTags,
+  isSvgElement,
   mountVNode,
   recoveryFragment,
   type VDocumentFragment
@@ -162,8 +163,13 @@ export function renderWidgetElement(
  * @param vnode - html元素虚拟节点对象
  * @param parent - 父元素
  */
-export function renderHtmlElement(vnode: VNode<HtmlTags>, parent?: ContainerElement): HTMLElement {
-  const el = document.createElement(vnode.type)
+export function renderHtmlElement(
+  vnode: VNode<HtmlTags>,
+  parent?: ContainerElement
+): HTMLElement | SVGElement {
+  const el = isSvgElement(vnode)
+    ? document.createElementNS('http://www.w3.org/2000/svg', vnode.type)
+    : document.createElement(vnode.type)
   setAttributes(el, vnode.props)
   // 挂载到父节点
   if (parent) parent.appendChild(el)
