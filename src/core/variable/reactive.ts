@@ -230,12 +230,24 @@ export function unReactive<T extends object>(obj: T | Reactive<T>): UnReactive<T
 /**
  * ## 创建响应式对象
  *
- * @template T
+ * @template T - 目标对象类型
  * @param {T} target - 目标对象
  * @param {boolean} deep - 是否深度代理子对象，默认为true
  */
 export function reactive<T extends AnyObject>(target: T, deep: boolean = true): Reactive<T> {
   return createReactive(target, deep)
+}
+
+/**
+ * ## 创建浅层响应式对象
+ *
+ * 该方法与`reactive({},false)`的效果是一致的。
+ *
+ * @template T - 目标对象类型
+ * @param {T} target - 目标对象
+ */
+export function shallowReactive<T extends AnyObject>(target: T): Reactive<T> {
+  return createReactive(target, false)
 }
 
 /**
