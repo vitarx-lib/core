@@ -97,8 +97,12 @@ export default class Suspense extends Widget<SuspenseProps> {
     }
   }
 
+  get fallback() {
+    return this.props.fallback || createVNode(Fragment)
+  }
+
   protected build(): Element {
-    return createVNode(Fragment, null, this.showFallback ? this.props.fallback : this.children)
+    return this.showFallback ? this.fallback : this.children
   }
 }
 
