@@ -9,7 +9,7 @@ import { Depend } from './depend.js'
 export type UnRef<T> = T extends Ref<infer U> ? U : T
 
 /**
- * # `Ref`对象，用于引用一个值，并可以监听其变化
+ * # `Ref`值代理对象，用于代理一个值，使其成为响应式变量。
  *
  * @template T - 任意类型
  * @remarks
@@ -132,20 +132,46 @@ export function isRef(val: any): val is Ref {
  *
  * @template T - 任意类型
  * @param {T | Ref<T>} ref - 任意值或`Ref`对象
- * @return {T} 如果传入的是`Ref`对象则返回其value属性值，否则返回原值
+ * @return {T} 如果传入的是`Ref`对象则返回其value属性值，否则原样返回
  */
 export function unRef<T>(ref: T | Ref<T>): T {
   return isRef(ref) ? ref.value : ref
 }
 
 /**
- * 创建一个Ref对象
+ * 创建 {@link Ref} 值代理对象
  *
- * @template T - 任意类型
- * @param {T} value - 目标值
- * @param {boolean} deep - 是否深度代理，当值为object类型时有效
+ * 用法:
+ * 1. `ref(value)`：传入值时，返回 `Ref<值的类型>`。
+ * 2. `ref()`：不传值时，返回 `Ref<any>`，初始值为 `undefined`。
+ * 3. `ref<T>()`：显式指定泛型时，不传值返回 `Ref<T | undefined>`。
+ *
+ * @template T - 值类型
+ * @param {T} [value] - 代理的值
+ * @param {boolean} [deep=true] - 是否深度代理，仅值为对象时有效。
  * @return {Ref<T>} Ref对象
  */
-export function ref<T>(value: T, deep: boolean = true): Ref<T> {
+export function ref<T>(value: T, deep?: boolean): Ref<T>
+
+/**
+ * 创建 {@link Ref} 值代理对象
+ *
+ * 未传值时，返回 `Ref<any>`，初始值为 `undefined`。
+ *
+ * @return {Ref<any>}
+ */
+export function ref(value?: undefined, deep?: boolean): Ref<any>
+
+/**
+ * 创建 {@link Ref} 值代理对象
+ *
+ * 显式指定泛型时，不传值返回 `Ref<T | undefined>`。
+ *
+ * @template T - 值类型
+ * @return {Ref<T | undefined>}
+ */
+export function ref<T>(value?: undefined, deep?: boolean): Ref<T | undefined>
+
+export function ref<T>(value?: T, deep: boolean = true): Ref<T | undefined> {
   return new Ref(value, deep)
 }
