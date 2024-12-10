@@ -175,3 +175,40 @@ export function ref<T>(value?: undefined, deep?: boolean): Ref<T | undefined>
 export function ref<T>(value?: T, deep: boolean = true): Ref<T | undefined> {
   return new Ref(value, deep)
 }
+
+/**
+ * 创建 {@link Ref} 值代理对象(浅代理)
+ *
+ * 用法:
+ * 1. `shallowRef(value)`：传入值时，返回 `Ref<值的类型>`。
+ * 2. `shallowRef()`：不传值时，返回 `Ref<any>`，初始值为 `undefined`。
+ * 3. `shallowRef<T>()`：显式指定泛型时，不传值返回 `Ref<T | undefined>`。
+ *
+ * @template T - 值类型
+ * @param {T} [value] - 代理的值
+ * @return {Ref<T>} Ref对象
+ */
+export function shallowRef<T>(value: T): Ref<T>
+
+/**
+ * 创建 {@link Ref} 值代理对象(浅代理)
+ *
+ * 未传值时，返回 `Ref<any>`，初始值为 `undefined`。
+ *
+ * @return {Ref<any>}
+ */
+export function shallowRef(value?: undefined): Ref<any>
+
+/**
+ * 创建 {@link Ref} 值代理对象(浅代理)
+ *
+ * 显式指定泛型时，不传值返回 `Ref<T | undefined>`。
+ *
+ * @template T - 值类型
+ * @return {Ref<T | undefined>}
+ */
+export function shallowRef<T>(value?: undefined): Ref<T | undefined>
+
+export function shallowRef<T>(value?: T): Ref<T | undefined> {
+  return new Ref(value, false)
+}
