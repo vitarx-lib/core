@@ -90,6 +90,11 @@ export default class Suspense extends Widget<SuspenseProps> {
     __updateParentVNode(this.children, this.vnode)
     // 预渲染子节点
     renderElement(this.children)
+    // 如果计数器为0，则隐藏回退内容
+    if (this.counter.value === 0) {
+      this.showFallback = false
+      this.update()
+    }
   }
 
   protected build(): Element {
