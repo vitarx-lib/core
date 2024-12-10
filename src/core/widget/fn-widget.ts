@@ -301,8 +301,13 @@ export const onUpdated = createLifeCycleHook(LifeCycleHooks.updated)
  * @example
  * onError((error, info) => {
  *   console.error(error, info)
+ *   // 返回一个备用元素展示错误提示，error通常是Error，强制转换字符串过后会显示 message
  *   return <div>{error}</div>
  * })
+ *
+ * info值说明：
+ *  - build: 构建时抛出的异常，通常是自身小部件的构建错误
+ *  - render: 渲染时抛出的异常，通常是子组件抛出的异常
  *
  * @param cb - 回调函数，遇到错误时触发
  */
