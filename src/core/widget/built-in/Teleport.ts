@@ -2,7 +2,10 @@ import { type Element, Widget } from '../widget.js'
 import type { TargetContainerElement } from '../life-cycle.js'
 import { isVNode } from '../../vnode/index.js'
 
-interface TeleportProps {
+/**
+ * Teleport小部件配置选项
+ */
+export interface TeleportProps {
   /**
    * 传送的目标选择器或DOM元素实例
    */

@@ -6,9 +6,11 @@ import type { Ref } from '../../variable/index.js'
 import type { ErrorInfo } from '../life-cycle.js'
 
 /**
- * 惰性加载器
+ * 代码分块懒加载
+ *
+ * 用箭头函数返回import()，不会构建在入口js文件中，而是单独分包，在需要时才会加载。
  */
-type LazyLoader<T extends WidgetType> = () => Promise<{ default: T }>
+export type LazyLoader<T extends WidgetType> = () => Promise<{ default: T }>
 
 /**
  * onError生命周期钩子
@@ -17,12 +19,16 @@ type LazyLoader<T extends WidgetType> = () => Promise<{ default: T }>
  * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
  * @returns {void|Element} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
  */
-type OnErrorCallback<T extends WidgetType> = (this: LazyWidget<T>, error: unknown, info: ErrorInfo) => void | Element
+export type LazyWidgetErrorCallback<T extends WidgetType> = (
+  this: LazyWidget<T>,
+  error: unknown,
+  info: ErrorInfo
+) => void | Element
 
 /**
- * 惰性加载组件Props
+ * 惰性加载小部件配置选项
  */
-interface LazyWidgetProps<T extends WidgetType> {
+export interface LazyWidgetProps<T extends WidgetType> {
   /**
    * 接收一个惰性加载器
    *
@@ -47,7 +53,7 @@ interface LazyWidgetProps<T extends WidgetType> {
    * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
    * @param info - 捕获异常的阶段，可以是`build`或`render`
    */
-  onError?: OnErrorCallback<T>
+  onError?: LazyWidgetErrorCallback<T>
 }
 
 /**

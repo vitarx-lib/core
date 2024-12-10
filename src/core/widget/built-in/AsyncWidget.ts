@@ -7,7 +7,7 @@ import { type Element, Widget } from '../widget.js'
 import { __updateParentVNode, createVNode, Fragment, isVNode } from '../../vnode/index.js'
 import type { ErrorInfo } from '../life-cycle.js'
 
-/** 异步函数组件类型 */
+/** 异步函数小部件类型 */
 export type AsyncFnWidget = () => Promise<Element>
 
 /**
@@ -17,9 +17,16 @@ export type AsyncFnWidget = () => Promise<Element>
  * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
  * @returns {void|Element} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
  */
-type OnErrorCallback = (this: AsyncWidget, error: unknown, info: ErrorInfo) => void | Element
+type AsyncWidgetErrorCallback = (
+  this: AsyncWidget,
+  error: unknown,
+  info: ErrorInfo
+) => void | Element
 
-interface AsyncWidgetProps {
+/**
+ * 异步小部件的配置选项
+ */
+export interface AsyncWidgetProps {
   /**
    * 异步函数小部件
    *
@@ -44,9 +51,14 @@ interface AsyncWidgetProps {
   /**
    * 加载失败时要显示的组件
    */
-  onError?: OnErrorCallback
+  onError?: AsyncWidgetErrorCallback
 }
 
+/**
+ * ## 异步小部件
+ *
+ * 异步小部件是一个特殊的小部件，它支持异步的函数式组件渲染。
+ */
 export default class AsyncWidget extends Widget<AsyncWidgetProps> {
   protected _childVNode: Element | undefined = undefined
   // 暂停计数器

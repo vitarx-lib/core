@@ -5,7 +5,10 @@ import type { WidgetType } from '../constant.js'
 import { watchProp } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
 
-interface KeepAliveProps {
+/**
+ * KeepAlive配置选项
+ */
+export interface KeepAliveProps {
   /**
    * 当前展示的小部件
    */
@@ -142,7 +145,7 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
 
   override get renderer() {
     if (!this._renderer) {
-      this._renderer = new KeepAliveRenderer(this)
+      this._renderer = new _KeepAliveRenderer(this)
     }
     return this._renderer
   }
@@ -224,7 +227,7 @@ export default class KeepAlive extends Widget<KeepAliveProps> {
  *
  * @internal
  */
-class KeepAliveRenderer<T extends KeepAlive> extends WidgetRenderer<T> {
+export class _KeepAliveRenderer<T extends KeepAlive> extends WidgetRenderer<T> {
   protected override patchUpdate(oldVNode: VNode<WidgetType>, newVNode: VNode<WidgetType>): VNode {
     const oldRenderer = oldVNode.instance!.renderer
     let parentEl: ParentNode | null = null

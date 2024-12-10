@@ -21,6 +21,13 @@ import type { ErrorInfo } from '../life-cycle.js'
  */
 type OnErrorCallback = (this: Suspense, error: unknown, info: ErrorInfo) => void | Element
 
+/**
+ * Suspense小部件的配置选项
+ *
+ * @property {Element} fallback - 回退内容
+ * @property {Element} children - 子节点
+ * @property {OnErrorCallback} onError - 异常处理钩子
+ */
 interface SuspenseProps {
   /**
    * 回退内容
