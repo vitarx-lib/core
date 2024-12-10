@@ -27,16 +27,25 @@ interface LazyWidgetProps<T extends WidgetType> {
    * 接收一个惰性加载器
    *
    * @example
-   * // 模块必须存在`export default`导出，否则会报错。
-   * ()=>import('./YourWidget.js')
+   * // 小部件必须使用`export default`导出，否则会报错。
+   * () => import('./YourWidget.js')
    */
   children: LazyLoader<T>
   /**
-   * 加载成功之前要显示的组件
+   * 加载成功之前要显示的元素
+   *
+   * 如果传入则会显示，直到加载成功。
+   *
+   * 如果不传入，则默认向上寻找`Suspense`小部件，使其呈现`fallback`。
+   *
+   * @defaultValue undefined
    */
   loading?: Element
   /**
    * 异常处理钩子
+   *
+   * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
+   * @param info - 捕获异常的阶段，可以是`build`或`render`
    */
   onError?: OnErrorCallback<T>
 }
@@ -46,18 +55,18 @@ interface LazyWidgetProps<T extends WidgetType> {
  *
  * `children`传入的小部件会被异步加载，加载完成过后自动渲染到视图中。
  *
- * @example
+ * 示例：
  * ```jsx
+ * const YourWidget = () => import('./YourWidget.js')
  * // 通过属性传入
- * <LazyWidget children={() => import('./YourWidget.ts')} />
+ * <LazyWidget children={YourWidget} />
  * // 通过插槽传入
- * <LazyWidget>{() => import('./YourWidget.js')}</LazyWidget>
+ * <LazyWidget>{YourWidget}</LazyWidget>
  * // 自定义loading态备用小部件
  * <LazyWidget loading={<div>加载中...</div>}/>
- * // 自定义error态备用小部件
- * <LazyWidget error={<div>加载失败...</div>}/>
+ * // onError钩子接管异常
+ * <LazyWidget onError={()=><div>加载失败...</div>}/>
  * ```
- *
  */
 export default class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>> {
   /**
