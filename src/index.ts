@@ -3,6 +3,7 @@ import type {
   RefEl,
   TextVNode,
   VNode as _VNODE,
+  VNodeType,
   Widget
 } from './core/index.js'
 import { HtmlIntrinsicElements } from './core/renderer/web-runtime-dom/type.js'
@@ -31,10 +32,10 @@ declare global {
     /**
      * 虚拟节点
      */
-    type VNode = _VNODE
+    type VNode<T extends VNodeType = VNodeType> = _VNODE<T>
 
     /** 兼容JSX元素类型 */
-    interface Element extends _VNODE {}
+    interface Element<T extends VNodeType = VNodeType> extends _VNODE<T> {}
     /** 类组件实例 */
     type ElementClass = Widget
   }
