@@ -50,6 +50,6 @@ declare global {
       : T
   /** 让接口的部分属性 为必填项 */
   type MakeRequired<T extends object, K extends keyof T> = T & {
-    [P in K]-?: T[P] // 强制指定的属性 K 为必填
+    [P in K]-?: Exclude<T[P], void> // 强制指定的属性 K 为必填
   }
 }
