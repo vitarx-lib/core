@@ -35,7 +35,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   private readonly _props: P
 
   /**
-   * ## 实例化
+   * ## 构造函数
+   *
+   * 子类应该使用onCreate方法代替constructor。
    *
    * @param props
    */
