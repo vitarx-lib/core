@@ -1,6 +1,6 @@
-import { getCurrentVNode, Widget } from '../widget/index.js'
+import { Widget } from '../widget/index.js'
 import type { VNode } from './type.js'
-import { getParentVNode } from './query.js'
+import { findParentVNode, getCurrentVNode } from './relational.js'
 
 /**
  * 提供数据
@@ -47,7 +47,7 @@ export function inject<T = any>(
       return parentVNode.provide[name] // 找到数据则返回
     }
     // 获取父级 VNode
-    parentVNode = getParentVNode(parentVNode)
+    parentVNode = findParentVNode(parentVNode)
   }
   // 如果没有找到数据，返回默认值
   return defaultValue
