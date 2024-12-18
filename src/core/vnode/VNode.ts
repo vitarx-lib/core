@@ -1,12 +1,12 @@
 import {
-  __updateParentVNode,
   type CommentVNode,
   CommentVNodeSymbol,
   isFunction,
   isRecordObject,
   isRefEl,
   isVNode,
-  popProperty
+  popProperty,
+  updateParentVNodeMapping
 } from '../../index.js'
 import type { RefEl, TextVNode, VNode, VNodeChildren, VNodeProps, VNodeType } from './type.js'
 import { RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
@@ -124,7 +124,7 @@ function formatChildren(children: Child[], parent: VNode): VNodeChildren {
         vnode = createTextVNode(child)
       }
       childList.push(vnode)
-      __updateParentVNode(vnode, parent)
+      updateParentVNodeMapping(vnode, parent)
     }
   }
 
