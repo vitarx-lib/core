@@ -1,6 +1,6 @@
 import { isRefEl, type VNode, type VNodeChild } from './type.js'
 import {
-  createFnWidgetInstance,
+  createFnWidget,
   type FnWidgetConstructor,
   isClassWidgetConstructor,
   Widget,
@@ -42,7 +42,7 @@ class RelationalManager {
   get currentVNode(): VNode<WidgetType> | undefined {
     return this.#currentVNode
   }
-  
+
   /**
    * 创建widget节点实例
    *
@@ -58,7 +58,7 @@ class RelationalManager {
         vnode.props = reactive(vnode.props, false)
         vnode.instance = isClassWidgetConstructor(vnode.type)
           ? new vnode.type(vnode.props)
-          : createFnWidgetInstance(vnode as VNode<FnWidgetConstructor>)
+          : createFnWidget(vnode as VNode<FnWidgetConstructor>)
         if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
       } finally {
         this.#currentVNode = oldVNode
