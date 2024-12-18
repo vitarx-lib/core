@@ -1,6 +1,6 @@
 // noinspection JSUnusedGlobalSymbols
 
-import { type Element, Widget } from './widget.js'
+import { Widget } from './widget.js'
 import { isRecordObject } from '../../utils/index.js'
 import {
   type HookParameter,
@@ -32,11 +32,6 @@ export type FnWidgetConstructor<P extends Record<string, any> = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => BuildVNode
-
-/** 异步函数式小部件虚拟节点 */
-export interface AsyncVNode extends Omit<VNode, 'type'> {
-  type: () => Promise<Element>
-}
 
 interface CollectData {
   exposed: Record<string, any> | undefined
