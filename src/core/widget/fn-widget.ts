@@ -1,7 +1,7 @@
 // noinspection JSUnusedGlobalSymbols
 
 import { type Element, Widget } from './widget.js'
-import { isFunction, isRecordObject } from '../../utils/index.js'
+import { isRecordObject } from '../../utils/index.js'
 import {
   type HookParameter,
   type HookReturnType,
@@ -29,6 +29,7 @@ export type BuildVNode = (() => VNode) | VNode
  * 函数小部件类型
  */
 export type FnWidgetConstructor<P extends Record<string, any> = any> = (
+  this: FnWidget,
   props: P & IntrinsicAttributes
 ) => BuildVNode
 
@@ -44,6 +45,7 @@ interface CollectData {
 
 interface CollectResult extends CollectData {
   build: any
+  instance: FnWidget
 }
 
 type BeforeRemoveCallback<T extends ContainerElement> = (
@@ -56,45 +58,16 @@ type BeforeRemoveCallback<T extends ContainerElement> = (
  * 函数小部件代理
  */
 class FnWidget extends Widget {
-  readonly #buildVnode: () => VNode
-
-  constructor(
-    props: {},
-    build: BuildVNode,
-    exposed: Record<string, any> | undefined,
-    lifeCycleHooks: Record<LifeCycleHookMethods, AnyCallback> | undefined
-  ) {
+  constructor(props: Record<string, any>) {
     super(props)
-    if (isVNode(build)) {
-      this.#buildVnode = () => build
-    } else {
-      this.#buildVnode = build
-    }
-    const name = this.vnode.type?.name || 'anonymous'
-    if (isRecordObject(exposed)) {
-      for (const exposedKey in exposed) {
-        if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
-          console.warn(
-            `[Vitarx.FnWidget]：${name} 函数小部件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
-          )
-        }
-        if (!(exposedKey in this)) (this as any)[exposedKey] = exposed[exposedKey]
-      }
-    }
-    if (lifeCycleHooks) {
-      for (const lifeCycleHook in lifeCycleHooks) {
-        const k = lifeCycleHook as LifeCycleHookMethods
-        this[k] = lifeCycleHooks[k]
-      }
-    }
   }
+
   /**
    * @inheritDoc
-   *
-   * @protected
    */
-  build(): VNode {
-    return this.#buildVnode()
+  protected build(): VNode {
+    // 会被重写
+    return undefined as any
   }
 }
 
@@ -105,18 +78,6 @@ class HooksCollector {
   static #collectMap: CollectData | undefined = undefined
   // 备份
   static #backup: CollectData | undefined
-
-  /**
-   * 收集异步函数中使用的HOOK
-   *
-   * @param vnode
-   */
-  static async asyncCollect(vnode: AsyncVNode): Promise<CollectResult> {
-    this.#startCollect()
-    // 等待异步函数执行完成
-    const build = await vnode.type()
-    return this.#endCollect(build)
-  }
 
   /**
    * 暴露数据
@@ -150,8 +111,14 @@ class HooksCollector {
    */
   static collect(vnode: VNode<FnWidgetConstructor>): CollectResult {
     this.#startCollect()
-    const build = vnode.type(vnode.props)
-    return this.#endCollect(build)
+    const instance = new FnWidget(vnode.props)
+    vnode.instance = instance
+    try {
+      const build = vnode.type.apply(instance, vnode.props)
+      return this.#getCollectResult(build, instance)
+    } finally {
+      this.#endCollect()
+    }
   }
 
   // 开始收集
@@ -163,19 +130,23 @@ class HooksCollector {
     }
   }
 
-  // 结束收集
-  static #endCollect(build: BuildVNode) {
+  // 获取收集结果
+  static #getCollectResult(build: BuildVNode, instance: FnWidget): CollectResult {
     const collectMap = this.#collectMap!
+    return Object.assign(collectMap, { build, instance })
+  }
+
+  // 结束收集
+  static #endCollect() {
     this.#collectMap = this.#backup
     this.#backup = undefined
-    return Object.assign(collectMap, { build: build })
   }
 }
 
 /**
  * 暴露函数小部件的内部方法或变量，供外部使用。
  *
- * 一般情况下是用于暴露一个函数，给父小部件调用，但也可以暴露一个变量
+ * 它们会被注入到`FnWidget`实例中，注意`this`指向！
  *
  * @example
  * ```ts
@@ -186,12 +157,12 @@ class HooksCollector {
  *  const add = () => count.value++;
  *  // 暴露 count 和 add，父小部件可以通过refEl.value 访问到 count 和 add。
  *  defineExpose({ count, add });
- *  // 构建小部件
  *  return <div onClick={add}>{count.value}</div>;
  * }
  * ```
  *
- * 注意：键不能和{@link Widget}类中的属性或固有方法重名，包括但不限于`生命周期`，`build`方法
+ * 注意：键不能和{@link Widget}类中固有属性或方法重名，包括但不限于`生命周期方法`，`build`...
+ * (所有固有关键词：{@link __widgetIntrinsicPropKeywords__})
  *
  * @param {Record<string, any>} exposed 键值对形式的对象，其中键为暴露的名称，值为要暴露的值。
  */
@@ -321,7 +292,7 @@ export function onBeforeRemove<T extends ContainerElement>(cb: BeforeRemoveCallb
  *
  * 代码块中的顶级return语句如果是jsx语法，则会被自动添加箭头函数，使其成为一个UI构造器。
  *
- * 如果你的代码不是位于函数的一级块中，或你返回的是一个三元运算等不被支持自动优化的情况，请使用`build`函数包裹。
+ * 如果你的代码不是位于函数的顶级作用域中，或返回的是一个三元运算等不被支持自动优化的情况，请使用`build`函数包裹。
  *
  * 如果你没有使用tsx，则可以直接使用 `return () => <div>...</div>` 这样的语法。
  *
@@ -338,35 +309,55 @@ export function build(vnode: VNode | (() => VNode)): VNode {
   if (typeof vnode === 'function') return vnode as unknown as VNode
   return (() => vnode) as unknown as VNode
 }
+/**
+ * 注入生命周期钩子到实例中
+ *
+ * @param instance
+ * @param lifeCycleHooks
+ */
+function injectLifeCycleHooks(instance: FnWidget, lifeCycleHooks: CollectData['lifeCycleHooks']) {
+  if (!isRecordObject(lifeCycleHooks)) return
+  for (const lifeCycleHook in lifeCycleHooks) {
+    const k = lifeCycleHook as LifeCycleHookMethods
+    instance[k] = lifeCycleHooks[k]
+  }
+}
+/**
+ * 将暴露的属性和方法注入到实例中
+ *
+ * @param instance
+ * @param exposed
+ */
+function injectExposed(instance: FnWidget, exposed: CollectData['exposed']) {
+  if (!isRecordObject(exposed)) return
+  const name = instance.vnode.type?.name || 'anonymous'
+  for (const exposedKey in exposed) {
+    if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
+      console.warn(
+        `[Vitarx.FnWidget]：${name} 函数小部件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
+      )
+    }
+    if (!(exposedKey in instance)) (instance as any)[exposedKey] = exposed[exposedKey]
+  }
+}
 
 /**
  * ## 创建函数小部件
  *
  * @param vnode
  */
-export function createFnWidgetInstance(vnode: VNode<FnWidgetConstructor>): Widget {
-  let { build, exposed, lifeCycleHooks } = HooksCollector.collect(
-    vnode as VNode<FnWidgetConstructor>
-  )
-  if (!isFunction(build) && !isVNode(build)) {
+export function createFnWidget(vnode: VNode<FnWidgetConstructor>): Widget {
+  let { build, exposed, lifeCycleHooks, instance } = HooksCollector.collect(vnode)
+  injectExposed(instance, exposed)
+  injectLifeCycleHooks(instance, lifeCycleHooks)
+  if (isVNode(build)) {
+    instance['build'] = () => build
+  } else if (typeof build !== 'function') {
+    instance['build'] = build
+  } else {
     throw new Error(
       `[Vitarx.createFnWidget]：${vnode.type.name} 函数不是一个有效的函数式声明小部件，返回值必须是虚拟节点或build构造器！`
     )
   }
-  return new FnWidget(vnode.props, build, exposed, lifeCycleHooks)
-}
-
-/**
- * 创建异步函数小部件
- *
- * @param vnode
- */
-export async function createAsyncFnWidgetInstance(vnode: AsyncVNode): Promise<FnWidget> {
-  let { build, exposed, lifeCycleHooks } = await HooksCollector.asyncCollect(vnode)
-  if (!isFunction(build) && !isVNode(build)) {
-    throw new Error(
-      `[Vitarx.createAsyncFnWidget]：${vnode.type.name} 函数不是一个有效的函数式声明小部件，返回值必须是虚拟节点或build构造器！`
-    )
-  }
-  return new FnWidget(vnode.props, build, exposed, lifeCycleHooks)
+  return instance
 }
