@@ -49,6 +49,16 @@ export function createVNode<T extends VNodeType>(
     instance: null,
     provide: null
   }
+  if (typeof type === 'function') {
+    // 动态设置带有 getter 的属性 el，确保获取的el始终正确
+    Object.defineProperty(vnode, 'el', {
+      get() {
+        return this.instance?.renderer.el || null
+      },
+      configurable: false, // 允许重新定义属性
+      enumerable: true // 允许枚举该属性
+    })
+  }
   const key = popProperty(props, 'key')
   if (key) vnode.key = key
   const ref = popProperty(props, 'ref')
