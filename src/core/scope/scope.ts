@@ -25,19 +25,32 @@ export class Scope extends Effect {
   /**
    * 实例化一个作用域管理器
    *
-   * @param main - 主函数
    * @param toParent - 是否添加到父级作用域中，如果有。
    */
-  constructor(main: () => void, toParent: boolean = true) {
+  constructor(toParent: boolean = true) {
     super()
-    const oldScope = Scope.#currentScope
     // 添加到父级作用域中
-    if (toParent) oldScope?.add(this)
-    Scope.#currentScope = this
-    main()
-    Scope.#currentScope = oldScope
+    if (toParent) Scope.#currentScope?.add(this)
   }
 
+  /**
+   * 运行一个函数，捕获副作用
+   *
+   * > 注意：fn不能是异步的！
+   *
+   * @template T
+   * @param {() => T} fn - 函数
+   * @return {T} - 函数的返回值
+   */
+  run<T>(fn: () => T): T {
+    const oldScope = Scope.#currentScope
+    Scope.#currentScope = this
+    try {
+      return fn()
+    } finally {
+      Scope.#currentScope = oldScope
+    }
+  }
   /**
    * 获取监听器数量
    *
@@ -122,12 +135,11 @@ export class Scope extends Effect {
 /**
  * ## 创建作用域
  *
- * @param main 入口函数
- * @param toParent - 是否添加到父级作用域中，默认为true
+ * @param {boolean} toParent - 是否添加到父级作用域中，默认为true
  * @returns {Scope} 返回作用域实例，提供了`destroy`方法来销毁作用域
  */
-export function createScope(main: () => void, toParent: boolean = true): Scope {
-  return new Scope(main, toParent)
+export function createScope(toParent: boolean = true): Scope {
+  return new Scope(toParent)
 }
 
 /**
@@ -140,10 +152,10 @@ export function getCurrentScope(): Scope | undefined {
 }
 
 /**
- * ## 往作用域中添加一个可处置对象
+ * ## 往作用域中添加一个副作用对象
  *
+ * @param {EffectInterface} effect - 实现了`EffectInterface`接口的对象
  * @returns {boolean} - 是否添加成功
- * @param effect
  */
 export function addEffect(effect: EffectInterface): boolean {
   return !!getCurrentScope()?.add(effect)
