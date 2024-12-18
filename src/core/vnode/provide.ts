@@ -29,7 +29,16 @@ export function inject<T = any>(
   instance?: Widget
 ): T {
   const currentVNode = instance?.vnode || getCurrentVNode()
-  if (!currentVNode) throw new Error('inject must be called in widget')
+  if (!currentVNode) {
+    if (instance) {
+      throw new Error(
+        `[Vitarx.inject][ERROR]：未能获取上下文，未提供instance参数时，只能在函数式小部件的顶层作用域中调用才能生效`
+      )
+    }
+    throw new Error(
+      `[Vitarx.inject][ERROR]：未能获取上下文，请检查instance参数是否正确，它必须是Widget派生类的实例`
+    )
+  }
   // 从当前 VNode 向上查找父级 VNode，直到找到或没有父级
   let parentVNode: VNode | undefined = currentVNode
   while (parentVNode) {
