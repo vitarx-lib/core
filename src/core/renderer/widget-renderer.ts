@@ -19,7 +19,6 @@ import {
 } from '../widget/index.js'
 import { getCurrentScope, Scope } from '../scope/index.js'
 import { watchDepend } from '../observer/index.js'
-import { __WidgetPropsSelfNodeSymbol__ } from '../widget/constant.js'
 
 /**
  * 渲染状态
@@ -52,7 +51,7 @@ export class WidgetRenderer<T extends Widget> {
       getResult: true
     })
     this._child = childVNode
-    // @ts-ignore 如果是开发模式，则触发onCreated生命周期
+    // @ts-ignore 兼容开发模式热更新
     if (import.meta.env?.MODE === 'development') {
       if (!this.vnode.el) {
         this.triggerLifeCycle(LifeCycleHooks.created)
@@ -144,7 +143,7 @@ export class WidgetRenderer<T extends Widget> {
    * @returns {VNode}
    */
   get vnode(): VNode<WidgetType> {
-    return (this.widget['props'] as any)[__WidgetPropsSelfNodeSymbol__]
+    return this.widget.vnode
   }
 
   /**
