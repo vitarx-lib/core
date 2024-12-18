@@ -1,17 +1,11 @@
-import { isRefEl, type VNode, type VNodeChild } from './type.js'
+import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './type.js'
 import {
   createFnWidget,
   type FnWidgetConstructor,
-  isClassWidgetConstructor,
-  Widget,
-  type WidgetType
+  isClassWidgetConstructor
 } from '../widget/index.js'
 import { reactive } from '../variable/index.js'
 import { createScope } from '../scope/index.js'
-
-interface InstantiatedWidgetVNode extends VNode {
-  instance: Widget
-}
 
 /**
  * vnode节点关系管理器
@@ -22,9 +16,9 @@ class RelationalManager {
   // 单例
   static #instance: RelationalManager
   // 正在渲染的vnode
-  #currentVNode: VNode<WidgetType> | undefined
+  #currentVNode: WidgetVNode | undefined
   // 父vnode映射
-  #parentVNodeMapping = new WeakMap<VNodeChild, VNode>()
+  #parentVNodeMapping = new WeakMap<ChildVNode, VNode>()
 
   /**
    * 获取单例
@@ -39,18 +33,21 @@ class RelationalManager {
   /**
    * 当前正在实例的Widget节点
    */
-  get currentVNode(): VNode<WidgetType> | undefined {
+  get currentVNode(): WidgetVNode | undefined {
     return this.#currentVNode
   }
 
   /**
    * 创建widget节点实例
    *
-   * @param {VNode<WidgetType>} vnode - widget节点
-   * @return {InstantiatedWidgetVNode} - 已创建instance的节点
+   * @param {WidgetVNode} vnode - widget节点
+   * @return {Required<WidgetVNode>} - 已创建instance的节点
    */
-  createWidgetVNodeInstance<T extends VNode<WidgetType>>(vnode: T): InstantiatedWidgetVNode {
-    createScope().run(() => {
+  createWidgetVNodeInstance<T extends WidgetVNode>(
+    vnode: T
+  ): MakeRequired<WidgetVNode, 'instance' | 'el'> {
+    vnode.scope = createScope()
+    vnode.scope.run(() => {
       const oldVNode = this.#currentVNode
       this.#currentVNode = vnode
       try {
@@ -58,13 +55,13 @@ class RelationalManager {
         vnode.props = reactive(vnode.props, false)
         vnode.instance = isClassWidgetConstructor(vnode.type)
           ? new vnode.type(vnode.props)
-          : createFnWidget(vnode as VNode<FnWidgetConstructor>)
+          : createFnWidget(vnode as MakeRequired<WidgetVNode<FnWidgetConstructor>, 'scope'>)
         if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
       } finally {
         this.#currentVNode = oldVNode
       }
     })
-    return vnode as InstantiatedWidgetVNode
+    return vnode as MakeRequired<WidgetVNode, 'instance' | 'el'>
   }
 
   /**
@@ -73,7 +70,7 @@ class RelationalManager {
    * @param vnode
    * @param parent
    */
-  updateParentVNodeMapping(vnode: VNodeChild, parent: VNode): void {
+  updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void {
     this.#parentVNodeMapping.set(vnode, parent)
   }
 
@@ -83,7 +80,7 @@ class RelationalManager {
    * @param {vnode} vnode - 自身虚拟节点对象
    * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
    */
-  findParentVNode(vnode: VNodeChild): VNode | undefined {
+  findParentVNode(vnode: ChildVNode): VNode | undefined {
     return this.#parentVNodeMapping.get(vnode)
   }
 }
@@ -119,10 +116,10 @@ class RelationalManager {
  *    }
  * }
  * ```
- * @returns {VNode<WidgetType>|undefined} 当前小部件的虚拟节点，返回`undefined`代表着你未按规范使用！
+ * @returns {WidgetVNode|undefined} 当前小部件的虚拟节点，返回`undefined`代表着你未按规范使用！
  * @see {@link RelationalManager.currentVNode}
  */
-export function getCurrentVNode(): VNode<WidgetType> | undefined {
+export function getCurrentVNode(): WidgetVNode | undefined {
   return RelationalManager.instance.currentVNode
 }
 
@@ -132,7 +129,7 @@ export function getCurrentVNode(): VNode<WidgetType> | undefined {
  * @param {vnode} vnode - 自身虚拟节点对象
  * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
  */
-export function findParentVNode(vnode: VNodeChild): VNode | undefined {
+export function findParentVNode(vnode: ChildVNode): VNode | undefined {
   return RelationalManager.instance.findParentVNode(vnode)
 }
 
@@ -142,7 +139,7 @@ export function findParentVNode(vnode: VNodeChild): VNode | undefined {
  * @param vnode
  * @param parent
  */
-export function updateParentVNodeMapping(vnode: VNodeChild, parent: VNode): void {
+export function updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void {
   RelationalManager.instance.updateParentVNodeMapping(vnode, parent)
 }
 
@@ -150,10 +147,10 @@ export function updateParentVNodeMapping(vnode: VNodeChild, parent: VNode): void
  * 创建widget节点实例
  *
  * @param vnode
- * @returns {InstantiatedWidgetVNode} - 已创建instance的节点
+ * @returns {MakeRequired<WidgetVNode,'instance'|'el'>} - 已创建instance的节点
  */
-export function createWidgetVNodeInstance<T extends VNode<WidgetType>>(
+export function createWidgetVNodeInstance<T extends WidgetVNode>(
   vnode: T
-): InstantiatedWidgetVNode {
+): MakeRequired<WidgetVNode, 'instance' | 'el'> {
   return RelationalManager.instance.createWidgetVNodeInstance(vnode)
 }

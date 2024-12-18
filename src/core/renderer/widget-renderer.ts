@@ -1,4 +1,4 @@
-import { isVNode, updateParentVNodeMapping, type VNode } from '../vnode/index.js'
+import { isVNode, updateParentVNodeMapping, type VNode, type WidgetType } from '../vnode/index.js'
 import {
   type ContainerElement,
   getElParentNode,
@@ -10,13 +10,7 @@ import {
   unmountVNode,
   updateActivateState
 } from './web-runtime-dom/index.js'
-import {
-  type HookParameter,
-  type HookReturnType,
-  LifeCycleHooks,
-  Widget,
-  type WidgetType
-} from '../widget/index.js'
+import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from '../widget/index.js'
 import { getCurrentScope, Scope } from '../scope/index.js'
 import { watchDepend } from '../observer/index.js'
 
@@ -122,8 +116,8 @@ export class WidgetRenderer<T extends Widget> {
    *
    * @returns {ContainerElement | null}
    */
-  get el(): ContainerElement | null {
-    return this._child?.el || null
+  get el(): ContainerElement | undefined {
+    return this._child?.el
   }
 
   /**

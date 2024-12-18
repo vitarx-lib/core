@@ -1,4 +1,3 @@
-import { type WidgetType } from './constant.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
@@ -7,7 +6,8 @@ import {
   inject,
   type IntrinsicAttributes,
   provide,
-  type VNode
+  type VNode,
+  type WidgetVNode
 } from '../vnode/index.js'
 
 /**
@@ -39,7 +39,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @private
    */
   private readonly _props: P
-  private readonly _vnode: VNode<WidgetType>
+  private readonly _vnode: WidgetVNode
 
   /**
    * ## 构造函数
@@ -82,9 +82,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @internal 该获取器被内部逻辑依赖，请勿重写！
    * @protected
-   * @returns {VNode<WidgetType>}
+   * @returns {WidgetVNode}
    */
-  get vnode(): VNode<WidgetType> {
+  get vnode(): WidgetVNode {
     return this._vnode
   }
 
@@ -140,9 +140,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * > 注意：如果是片段元素，`DocumentFragment` 则需要使用this.el.__backup数组访问元素。
    *
-   * @returns {ContainerElement | null}
+   * @returns {ContainerElement | undefined}
    */
-  get el(): ContainerElement | null {
+  get el(): ContainerElement | undefined {
     return this.renderer.el
   }
 

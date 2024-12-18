@@ -1,15 +1,20 @@
+// noinspection JSUnusedGlobalSymbols
+
 import {
+  type ChildVNode,
   type CommentVNode,
-  CommentVNodeSymbol,
-  isFunction,
-  isRecordObject,
+  type IntrinsicAttributes,
   isRefEl,
   isVNode,
-  popProperty,
-  updateParentVNodeMapping
-} from '../../index.js'
-import type { RefEl, TextVNode, VNode, VNodeChildren, VNodeProps, VNodeType } from './type.js'
-import { RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
+  type RefEl,
+  type TextVNode,
+  type VNode,
+  type VNodeChildren,
+  type VNodeType
+} from './type.js'
+import { CommentVNodeSymbol, RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
+import { isFunction, popProperty } from '../../utils/index.js'
+import { updateParentVNodeMapping } from './relational.js'
 
 // 子元素类型
 type Child = VNode | TextVNode | CommentVNode | AnyPrimitive | Array<Child>
@@ -18,57 +23,59 @@ type Child = VNode | TextVNode | CommentVNode | AnyPrimitive | Array<Child>
 type Children = Child[]
 
 /**
- * 创建元素`VNode`
+ * 创建一个虚拟节点（VNode）
+ *
+ * 此函数用于创建并返回一个虚拟节点对象它接受节点类型、属性和子节点作为参数
+ * 虚拟节点是对DOM节点的轻量级表示，用于描述应该渲染到UI中的元素
+ * 通过合并属性、处理key和ref属性、以及格式化子节点，此函数准备了一个可以用于后续渲染流程的虚拟节点对象
  *
  * @alias createElement
- * @template T - 节点类型
- * @param type - 节点类型
- * @param props - 节点属性
- * @param children - 子节点，如果是组件类型则会覆盖到 `props.children`
- * @returns {VNode} - 虚拟节点
+ * @template T - 期望创建的节点类型
+ * @param {T} type - 虚拟节点的类型，可以是字符串（HTML标签）、函数组件或类组件、片段类型
+ * @param {IntrinsicAttributes | null} props - 虚拟节点的属性，可以是任意对象，允许为null
+ * @param {...Children} children - 虚拟节点的子节点，可以是任意数量的子节点
+ * @returns {VNode} 返回一个虚拟节点对象
  */
 export function createVNode<T extends VNodeType>(
   type: T,
-  props: VNodeProps<T> | null = null,
+  props: IntrinsicAttributes | null = null,
   ...children: Children
 ): VNode<T> {
-  if (!props) props = {} as any
-  if (!isRecordObject(props)) {
-    throw new TypeError(
-      `[Vitarx]：createVNode.props参数类型必须是Record(string,any)类型，给定${typeof props}`
-    )
-  }
-  const vnode: VNode<T> = {
+  // 将props合并为一个对象
+  props = Object.assign({}, props || {}) as IntrinsicAttributes
+  // 创建虚拟节点
+  const vnode: VNode = {
     [VNodeSymbol]: true,
     type,
     props,
-    key: popProperty(props, 'key') || null,
-    ref: null,
-    children: [],
-    el: null,
-    instance: null,
-    provide: null
+    key: popProperty(props, 'key'),
+    ref: undefined,
+    children: []
   }
   if (typeof type === 'function') {
     // 动态设置带有 getter 的属性 el，确保获取的el始终正确
     Object.defineProperty(vnode, 'el', {
       get() {
-        return this.instance?.renderer.el || null
+        return this.instance?.renderer.el
       },
       configurable: false, // 允许重新定义属性
       enumerable: true // 允许枚举该属性
     })
   }
+  // 获取key属性
   const key = popProperty(props, 'key')
   if (key) vnode.key = key
+  // 获取ref属性
   const ref = popProperty(props, 'ref')
   if (isRefEl(ref)) vnode.ref = ref
+  // 如果type是一个函数，则将children属性添加到props中，并将children置为空
   if (isFunction(type)) {
     if (children.length > 0) {
       ;(props as Record<string, any>).children = children.length === 1 ? children[0] : children
       children = []
     }
   } else if ('children' in props) {
+    // 如果props中有children属性，则将其添加到children中
     const attrChildren = popProperty(props, 'children' as any)
     if (Array.isArray(attrChildren)) {
       children = [...attrChildren, ...children]
@@ -76,9 +83,11 @@ export function createVNode<T extends VNodeType>(
       children.push(attrChildren as any)
     }
   }
+  // 格式化children
   vnode.children = formatChildren(children, vnode)
-  return vnode
+  return vnode as VNode<T>
 }
+
 
 export { createVNode as createElement }
 
@@ -92,7 +101,7 @@ export { createVNode as createElement }
 export function createTextVNode(value: any): TextVNode {
   return {
     value: String(value),
-    el: null,
+    el: undefined,
     [TextVNodeSymbol]: true
   }
 }
@@ -108,7 +117,7 @@ export function createTextVNode(value: any): TextVNode {
 export function createCommentVNode(value: any): CommentVNode {
   return {
     value: String(value),
-    el: null,
+    el: undefined,
     [CommentVNodeSymbol]: true
   }
 }
@@ -125,7 +134,7 @@ function formatChildren(children: Child[], parent: VNode): VNodeChildren {
     if (Array.isArray(child)) {
       child.forEach(item => flatten(item))
     } else {
-      let vnode: VNode | TextVNode | CommentVNode
+      let vnode: ChildVNode
       if (isVNode(child)) {
         vnode = child
       } else if ([false, undefined, null].includes(child as any)) {

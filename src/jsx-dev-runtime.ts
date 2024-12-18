@@ -1,5 +1,5 @@
 import { Fragment, jsx } from './jsx-runtime.js'
-import type { VNode, VNodeProps, VNodeType } from './core/index.js'
+import type { VNode, VNodePropsType, VNodeType } from './core/index.js'
 
 type Source = { fileName: string; lineNumber: number; columnNumber: number }
 
@@ -22,7 +22,7 @@ interface DevVNode<T extends VNodeType> extends VNode<T> {
  */
 function jsxDEV<T extends VNodeType>(
   type: T,
-  props: VNodeProps<T> | null,
+  props: VNodePropsType<T> | null,
   key: Vitarx.GlobalIntrinsicAttributes['key'] | undefined,
   isStatic: boolean,
   source: Source,

@@ -1,7 +1,7 @@
 import { isFunction } from '../../utils/index.js'
 import { type ClassWidgetConstructor, isClassWidgetConstructor, Widget } from '../widget/widget.js'
-import type { FnWidgetConstructor, WidgetType } from '../widget/index.js'
-import { createVNode, isVNode, type VNode } from '../vnode/index.js'
+import type { FnWidgetConstructor } from '../widget/index.js'
+import { createVNode, isVNode, type VNode, type WidgetType } from '../vnode/index.js'
 import { mountVNode, renderWidgetElement } from './web-runtime-dom/index.js'
 
 // 错误提示

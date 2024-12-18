@@ -1,12 +1,18 @@
+// noinspection JSUnusedGlobalSymbols
+
 import type {
-  ContainerElement,
   HtmlElementTagMap,
   HtmlIntrinsicElements,
-  HtmlTags,
+  HTMLIntrinsicTags,
   VDocumentFragment
 } from '../renderer/web-runtime-dom/index.js'
-import type { ExcludeWidgetIntrinsicKeywords, WidgetType } from '../widget/constant.js'
-import { type ClassWidgetConstructor, type FnWidgetConstructor, Widget } from '../widget/index.js'
+import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
+import {
+  type ClassWidgetConstructor,
+  type FnWidgetConstructor,
+  isClassWidgetConstructor,
+  Widget
+} from '../widget/index.js'
 import {
   CommentVNodeSymbol,
   Fragment,
@@ -14,12 +20,13 @@ import {
   TextVNodeSymbol,
   VNodeSymbol
 } from './constant.js'
+import { Scope } from '../scope/index.js'
 
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint | symbol
 
 // 辅助计算出元素类型
-type ComputedRefElType<T> = T extends HtmlTags
+type ComputedRefElType<T> = T extends HTMLIntrinsicTags
   ? HtmlElementTagMap[T]
   : T extends Fragment
     ? DocumentFragment
@@ -51,44 +58,104 @@ export interface IntrinsicAttributes {
   ref?: RefEl<any>
 }
 
-// 节点类型
-export type VNodeType = FnWidgetConstructor | ClassWidgetConstructor | Fragment | HtmlTags
+/**
+ * 组件类型
+ */
+export type WidgetType<P extends Record<string, any> = {}> =
+  | ClassWidgetConstructor<P>
+  | FnWidgetConstructor<P>
 
-// 节点属性结构
-export type VNodeProps<T> = (T extends HtmlTags
-  ? HtmlIntrinsicElements[T]
-  : T extends ClassWidgetConstructor<infer P>
-    ? P
-    : T extends FnWidgetConstructor<infer P>
-      ? P
-      : {}) &
-  IntrinsicAttributes
+/**
+ * 主节点类型
+ */
+export type VNodeType = WidgetType | Fragment | HTMLIntrinsicTags
+/**
+ * Widget节点Props类型重载
+ */
+export type WidgetPropsType<T extends WidgetType> =
+  (T extends ClassWidgetConstructor<infer P> ? P : T extends FnWidgetConstructor<infer P> ? P : {})
+  & IntrinsicAttributes
+/**
+ * HTML节点Props类型重载
+ */
+export type HTMLPropsType<T extends HTMLIntrinsicTags> =
+  HtmlIntrinsicElements[T]
+  & IntrinsicAttributes
+
+/**
+ * 节点Props类型重载
+ */
+export type VNodePropsType<T extends VNodeType> = T extends WidgetType ? WidgetPropsType<T> : T extends HTMLIntrinsicTags ? HTMLPropsType<T> : never
 
 /** 子节点类型 */
-export type VNodeChild = VNode | TextVNode | CommentVNode
+export type ChildVNode = VNode | TextVNode | CommentVNode
 
 /** 子节点列表 */
-export type VNodeChildren = Array<VNodeChild>
+export type VNodeChildren = Array<ChildVNode>
 
 
 /** HtmlVNode元素实例类型 */
-type HtmlVNodeInstanceType<T> = T extends Fragment
+type HtmlElementType<T> = T extends Fragment
   ? VDocumentFragment
-  : T extends HtmlTags
+  : T extends HTMLIntrinsicTags
     ? HtmlElementTagMap[T]
-    : T
+    : HTMLElement | VDocumentFragment
 
 /**
- * 实例类型
+ * VNode节点对象基本类型
  *
- * - 函数小部件实例
- * - 类小部件实例
- * - HTML元素实例
- * - Fragment实例为`DocumentFragment`
+ * 基本属性：
+ * - type: 节点类型
+ * - props: 节点属性
+ * - ref: 引用
+ * - key: 唯一键
  */
-type HtmlElementType<T> = T extends WidgetType
-  ? ContainerElement
-  : HtmlVNodeInstanceType<T>
+export interface VNode<T extends VNodeType = VNodeType> {
+  /**
+   * VNode对象标识符
+   */
+  [VNodeSymbol]: true
+  /**
+   * 节点类型
+   */
+  type: T
+  /**
+   * 节点属性
+   */
+  props: VNodePropsType<T>
+  /**
+   * 引用
+   */
+  ref: RefEl<T> | undefined
+  /**
+   * 唯一标识符
+   */
+  key: OnlyKey | undefined
+  /**
+   * 子节点列表
+   *
+   * 如果是`Widget`类型的节点，则写入到`vnode.props.children`，`vnode.children`始终为空数组
+   */
+  children: VNodeChildren
+  /**
+   * 小部件实例
+   */
+  instance?: Widget
+  /**
+   * 向下提供的数据
+   */
+  provide?: Record<string | symbol, any>
+  /**
+   * 作用域
+   *
+   * 非Widget节点此属性为null
+   */
+  scope?: Scope
+  /**
+   * 元素实例
+   */
+  el?: HtmlElementType<T>
+}
 /** 文本节点，内部自动转换 */
 export interface TextVNode {
   /**
@@ -98,12 +165,12 @@ export interface TextVNode {
   /**
    * 元素实例
    */
-  el: Text | null
+  el?: Text
   [TextVNodeSymbol]: true
 }
 
 /**
- * 注释节点，暂未对外提供使用
+ * 注释节点，内部使用
  */
 export interface CommentVNode {
   /**
@@ -113,55 +180,29 @@ export interface CommentVNode {
   /**
    * 元素实例
    */
-  el: Comment | null
+  el?: Comment
   [CommentVNodeSymbol]: true
 }
 
 /**
- * 虚拟Node
+ * 小部件节点对象类型
  *
- * - `type`: 节点类型
- * - `props`: 节点属性
- * - `children`: 子节点列表，如果是函数小部件或类小部件则写入到`props.children`
- * - `key`: 节点唯一标识
- * - `ref`: 节点引用
- * - `instance`: 仅用于函数或类小部件，表示小部件实例
- * - `provide`: 节点向下提供的数据
+ * 独有属性：
+ * - instance: 小部件实例
+ * - provide: 向下提供的数据
+ * - scope: 作用域
  */
-export interface VNode<T extends VNodeType = VNodeType> {
-  type: T
-  /**
-   * 节点属性
-   */
-  props: VNodeProps<T>
-  /**
-   * 子节点列表
-   *
-   * 如果是`Widget`类型的节点，则写入到`vnode.props.children`，`vnode.children`始终为空数组
-   */
-  children: VNodeChildren
-  /**
-   * 唯一标识符
-   */
-  key: OnlyKey | null
-  /**
-   * 引用
-   */
-  ref: RefEl<T> | null
-  /**
-   * 节点实例
-   */
-  el: HtmlElementType<T> | null
-  instance: Widget | null
-  /**
-   * 向下提供的数据
-   */
-  provide: Record<string | symbol, any> | null
-  /**
-   * VNode对象标识符
-   */
-  [VNodeSymbol]: true
-}
+export type WidgetVNode<T extends WidgetType = WidgetType> = VNode<T>
+
+/**
+ * HTML元素节点对象类型
+ */
+export type HTMLElementVNode<T extends HTMLIntrinsicTags = HTMLIntrinsicTags> = VNode<T>
+
+/**
+ * 片段节点
+ */
+export type FragmentVNode = VNode<Fragment>
 
 /**
  * 判断是否为虚拟节点对象
@@ -179,7 +220,7 @@ export function isVNode(obj: any): obj is VNode {
  *
  * @param obj
  */
-export function isHtmlVNode(obj: any): obj is VNode<HtmlTags> {
+export function isHtmlVNode(obj: any): obj is HTMLElementVNode {
   return typeof obj?.type === 'string'
 }
 
@@ -188,10 +229,17 @@ export function isHtmlVNode(obj: any): obj is VNode<HtmlTags> {
  *
  * @param obj
  */
-export function isWidgetVNode(
-  obj: any
-): obj is VNode<FnWidgetConstructor | ClassWidgetConstructor> {
+export function isWidgetVNode(obj: any): obj is WidgetVNode {
   return typeof obj?.type === 'function'
+}
+
+/**
+ * 判断是否为函数式小部件节点
+ *
+ * @param obj
+ */
+export function isFnWidgetVNode(obj: any): obj is WidgetVNode<FnWidgetConstructor> {
+  return typeof obj?.type === 'function' && !isClassWidgetConstructor(obj.type)
 }
 
 /**
@@ -199,7 +247,7 @@ export function isWidgetVNode(
  *
  * @param obj
  */
-export function isFragmentVNode(obj: any): obj is VNode<Fragment> {
+export function isFragmentVNode(obj: any): obj is FragmentVNode {
   return obj?.type === Fragment
 }
 
@@ -229,3 +277,4 @@ export function isCommentVNode(obj: any): obj is CommentVNode {
 export function isRefEl(obj: any): obj is RefEl<any> {
   return obj?.[RefElSymbol] === true
 }
+

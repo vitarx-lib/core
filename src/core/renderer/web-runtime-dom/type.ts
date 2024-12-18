@@ -1,12 +1,12 @@
 import type { Properties as CssProperties } from 'csstype'
-import { findParentVNode, type VNode } from '../../vnode/index.js'
+import { findParentVNode, type HTMLElementVNode } from '../../vnode/index.js'
 
 /** HTML元素标签映射 */
 export type HtmlElementTagMap = HTMLElementTagNameMap &
   Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
 
-/** HTML元素标签 */
-export type HtmlTags = keyof HtmlElementTagMap
+/** HTML固有的元素标签 */
+export type HTMLIntrinsicTags = keyof HtmlElementTagMap
 
 /**
  * ## HTML固有元素
@@ -503,14 +503,14 @@ export type ContainerElement = Element | VDocumentFragment
 export function isVDocumentFragment(el: any): el is VDocumentFragment {
   return el instanceof DocumentFragment && '__backup' in el
 }
-
 /**
  * 判断是否为svg元素，或是svg内部的子元素
  *
- * @param vnode - vnode
+ * @param vnode - HTMLElementVNode
  */
-export function isSvgElement(vnode: VNode) {
-  if (vnode.props.xmlns === 'http://www.w3.org/2000/svg') return true
+export function isSvgElement(vnode: HTMLElementVNode) {
+  const svgNamespace = 'http://www.w3.org/2000/svg'
+  if (vnode.props.xmlns === svgNamespace) return true
   if (vnode.type === 'svg') return true
   let parent = findParentVNode(vnode)
   while (parent) {

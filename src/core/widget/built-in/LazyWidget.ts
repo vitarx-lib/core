@@ -1,6 +1,5 @@
-import type { WidgetType } from '../constant.js'
 import { type Element, Widget } from '../widget.js'
-import { createVNode, Fragment, isVNode } from '../../vnode/index.js'
+import { createVNode, Fragment, isVNode, type WidgetType } from '../../vnode/index.js'
 import { getSuspenseCounter } from './Suspense.js'
 import type { Ref } from '../../variable/index.js'
 import type { ErrorInfo } from '../life-cycle.js'

@@ -1,7 +1,6 @@
 import { type Element, Widget } from '../widget.js'
 import { WidgetRenderer } from '../../renderer/index.js'
-import { createVNode, type OnlyKey, type VNode } from '../../vnode/index.js'
-import type { WidgetType } from '../constant.js'
+import { createVNode, type OnlyKey, type VNode, type WidgetType } from '../../vnode/index.js'
 import { watchProp } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
 

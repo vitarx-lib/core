@@ -1,6 +1,6 @@
 import { setAttributes } from './attributes.js'
-import type { WidgetType } from '../../widget/index.js'
 import {
+  type ChildVNode,
   type CommentVNode,
   createWidgetVNodeInstance,
   type Fragment,
@@ -9,14 +9,14 @@ import {
   isTextVNode,
   type TextVNode,
   type VNode,
-  type VNodeChild,
-  type VNodeChildren
+  type VNodeChildren,
+  type WidgetType
 } from '../../vnode/index.js'
 import {
   backupFragment,
   type ContainerElement,
   type HtmlElement,
-  type HtmlTags,
+  type HTMLIntrinsicTags,
   isSvgElement,
   mountVNode,
   recoveryFragment,
@@ -33,10 +33,10 @@ export function renderElement(vnode: VNode<WidgetType>, parent?: ContainerElemen
 /**
  * 渲染html元素节点
  *
- * @param {VNode<HtmlTags>} vnode - 小部件虚拟节点
+ * @param {VNode<HTMLIntrinsicTags>} vnode - 小部件虚拟节点
  * @param {ContainerElement} parent - 父元素
  */
-export function renderElement(vnode: VNode<HtmlTags>, parent?: ContainerElement): Element
+export function renderElement(vnode: VNode<HTMLIntrinsicTags>, parent?: ContainerElement): Element
 /**
  * 渲染片段节点
  *
@@ -64,8 +64,8 @@ export function renderElement(vnode: TextVNode, parent?: ContainerElement): Text
  * @param vnode - 虚拟节点
  * @param parent - 父元素
  */
-export function renderElement(vnode: VNodeChild, parent?: ContainerElement): HtmlElement
-export function renderElement(vnode: VNodeChild, parent?: ContainerElement): HtmlElement {
+export function renderElement(vnode: ChildVNode, parent?: ContainerElement): HtmlElement
+export function renderElement(vnode: ChildVNode, parent?: ContainerElement): HtmlElement {
   // 如果节点已渲染，则直接返回，避免重复渲染
   if (vnode.el) {
     parent?.appendChild(recoveryFragment(vnode.el))
@@ -77,7 +77,7 @@ export function renderElement(vnode: VNodeChild, parent?: ContainerElement): Htm
   switch (typeof vnode.type) {
     case 'string':
       // HTML 元素节点
-      el = renderHtmlElement(vnode as VNode<HtmlTags>, parent)
+      el = renderHtmlElement(vnode as VNode<HTMLIntrinsicTags>, parent)
       break
     case 'symbol':
       // Fragment 节点
@@ -139,7 +139,7 @@ export function renderWidgetElement(
  * @param parent - 父元素
  */
 export function renderHtmlElement(
-  vnode: VNode<HtmlTags>,
+  vnode: VNode<HTMLIntrinsicTags>,
   parent?: ContainerElement
 ): HTMLElement | SVGElement {
   const el = isSvgElement(vnode)
@@ -187,7 +187,7 @@ export function renderFragmentElement(
  */
 export function renderChildren(
   parent: ContainerElement,
-  children: VNodeChildren | VNodeChild,
+  children: VNodeChildren | ChildVNode,
   triggerMountHook: boolean = false
 ): void {
   if (Array.isArray(children)) {

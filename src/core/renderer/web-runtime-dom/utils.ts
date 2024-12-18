@@ -64,7 +64,7 @@ export function getVDocumentFragmentLastEl(
  *
  * @param el
  */
-export function getElParentNode(el: HtmlElement | null): ParentNode | null {
+export function getElParentNode(el: HtmlElement | undefined): ParentNode | null {
   if (!el) return null
   if (isVDocumentFragment(el)) {
     let first = el.__backup[0]

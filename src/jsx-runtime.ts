@@ -2,7 +2,7 @@ import {
   createElement,
   Fragment,
   type VNode,
-  type VNodeProps,
+  type VNodePropsType,
   type VNodeType
 } from './core/index.js'
 
@@ -14,7 +14,7 @@ import {
  */
 function jsx<T extends VNodeType>(
   type: T,
-  props: VNodeProps<T> | null = null,
+  props: VNodePropsType<T> | null = null,
   key?: Vitarx.GlobalIntrinsicAttributes['key']
 ): VNode<T> {
   if (key) {

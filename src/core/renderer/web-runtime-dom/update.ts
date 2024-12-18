@@ -2,13 +2,13 @@ import { isFunction } from '../../../utils/index.js'
 import { renderChildren, renderElement } from './render.js'
 import { removeAttribute, setAttribute } from './attributes.js'
 import {
+  type ChildVNode,
   Fragment,
   isCommentVNode,
   isTextVNode,
   isVNode,
   isWidgetVNode,
-  type VNode,
-  type VNodeChild
+  type VNode
 } from '../../vnode/index.js'
 import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './type.js'
 import {
@@ -142,10 +142,10 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
  */
 function patchChild(
   oldVNode: VNode,
-  oldChild: VNodeChild,
-  newChild: VNodeChild,
+  oldChild: ChildVNode,
+  newChild: ChildVNode,
   isFragment: boolean
-): VNodeChild {
+): ChildVNode {
   // 删除节点
   if (oldChild && !newChild) {
     unmountVNode(oldChild)
@@ -238,11 +238,11 @@ export function insertBeforeExactly(newEl: HtmlElement, targetElement: HtmlEleme
 /**
  * 卸载节点
  *
- * @param {VNodeChild} vnode - 要卸载的虚拟节点
+ * @param {ChildVNode} vnode - 要卸载的虚拟节点
  * @param {boolean} removeEl - 是否要从DOM树中移除元素，内部递归时使用，无需外部指定！
  * @protected
  */
-export function unmountVNode(vnode: VNodeChild, removeEl: boolean = true): void {
+export function unmountVNode(vnode: ChildVNode, removeEl: boolean = true): void {
   if (isVNode(vnode)) {
     if (vnode.instance) {
       vnode.instance!.renderer.unmount(removeEl)
@@ -263,13 +263,13 @@ export function unmountVNode(vnode: VNodeChild, removeEl: boolean = true): void 
  * @internal
  * @param vnode - 要卸载的虚拟节点
  */
-export function mountVNode(vnode: VNodeChild): void {
+export function mountVNode(vnode: ChildVNode): void {
   if (isVNode(vnode)) {
-    if (vnode.instance) {
+    if ('instance' in vnode) {
       // 递归挂载子节点
-      mountVNode(vnode.instance.renderer.child)
+      mountVNode(vnode.instance!.renderer.child)
       // 挂载当前节点
-      vnode.instance.renderer.mount()
+      vnode.instance!.renderer.mount()
     } else {
       // 递归挂载子级
       vnode.children?.forEach(child => mountVNode(child))
@@ -284,7 +284,7 @@ export function mountVNode(vnode: VNodeChild): void {
  * @param {newVNode} newVNode - 新虚拟节点
  * @param {oldVNode} oldVNode - 旧虚拟节点
  */
-export function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild): void {
+export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
   const newEl = renderElement(newVNode)
   // 如果新节点是传送节点则特殊处理
   if (isWidgetVNode(newVNode) && newVNode.instance!.renderer.teleport) {
@@ -333,10 +333,10 @@ export function replaceVNode(newVNode: VNodeChild, oldVNode: VNodeChild): void {
  * 更新激活状态
  *
  * @internal
- * @param {VNodeChild} vnode - 子节点
+ * @param {ChildVNode} vnode - 子节点
  * @param {boolean} activate - 激活为true，停用为false
  */
-export function updateActivateState(vnode: VNodeChild, activate: boolean): void {
+export function updateActivateState(vnode: ChildVNode, activate: boolean): void {
   if (isVNode(vnode)) {
     if (vnode.instance) {
       if (activate) {

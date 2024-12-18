@@ -9,7 +9,7 @@ import {
   LifeCycleHooks
 } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
-import { type IntrinsicAttributes, isVNode, type VNode } from '../vnode/index.js'
+import { type IntrinsicAttributes, isVNode, type VNode, type WidgetVNode } from '../vnode/index.js'
 import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
 
 /**
@@ -104,7 +104,7 @@ class HooksCollector {
    *
    * @param vnode
    */
-  static collect(vnode: VNode<FnWidgetConstructor>): CollectResult {
+  static collect(vnode: WidgetVNode<FnWidgetConstructor>): CollectResult {
     this.#startCollect()
     const instance = new FnWidget(vnode.props)
     vnode.instance = instance
@@ -335,13 +335,14 @@ function injectExposed(instance: FnWidget, exposed: CollectData['exposed']) {
     if (!(exposedKey in instance)) (instance as any)[exposedKey] = exposed[exposedKey]
   }
 }
-
 /**
  * ## 创建函数小部件
  *
  * @param vnode
  */
-export function createFnWidget(vnode: VNode<FnWidgetConstructor>): Widget {
+export function createFnWidget(
+  vnode: MakeRequired<WidgetVNode<FnWidgetConstructor>, 'scope'>
+): Widget {
   let { build, exposed, lifeCycleHooks, instance } = HooksCollector.collect(vnode)
   injectExposed(instance, exposed)
   injectLifeCycleHooks(instance, lifeCycleHooks)
