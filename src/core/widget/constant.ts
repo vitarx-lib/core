@@ -35,7 +35,10 @@ export const __WidgetIntrinsicProps__ = [
   'renderer',
   'el',
   '_renderer',
-  '_props'
+  '_props',
+  '_vnode',
+  'inject',
+  'provide'
 ] as const
 
 /**
