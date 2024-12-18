@@ -1,4 +1,4 @@
-import { __updateParentVNode, isVNode, type VNode } from '../vnode/index.js'
+import { isVNode, updateParentVNodeMapping, type VNode } from '../vnode/index.js'
 import {
   type ContainerElement,
   getElParentNode,
@@ -410,7 +410,7 @@ export class WidgetRenderer<T extends Widget> {
       vnode = errVNode
     }
     if (isVNode(vnode)) {
-      __updateParentVNode(vnode, this.vnode)
+      updateParentVNodeMapping(vnode, this.vnode)
       return vnode
     }
     throw new Error(`[Vitarx.WidgetRenderer]：${this.name}.build返回值必须是VNode对象`)
