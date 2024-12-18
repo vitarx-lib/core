@@ -17,8 +17,6 @@ export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
   Exclude<(typeof __widgetIntrinsicPropKeywords__)[number], 'el'>
 >
 
-export const __WidgetPropsSelfNodeSymbol__ = Symbol('WidgetSelfNodeSymbol')
-
 // 内置方法列表
 export const __WidgetIntrinsicMethods__ = [
   'build',
