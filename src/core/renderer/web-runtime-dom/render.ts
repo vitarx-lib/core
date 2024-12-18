@@ -1,11 +1,8 @@
-import { createScope } from '../../scope/index.js'
-import { reactive } from '../../variable/index.js'
 import { setAttributes } from './attributes.js'
-import type { FnWidgetConstructor, WidgetType } from '../../widget/index.js'
-import { createFnWidget, isClassWidgetConstructor } from '../../widget/index.js'
-import { __WidgetPropsSelfNodeSymbol__ } from '../../widget/constant.js'
+import type { WidgetType } from '../../widget/index.js'
 import {
   type CommentVNode,
+  createWidgetVNodeInstance,
   type Fragment,
   isCommentVNode,
   isRefEl,
@@ -25,7 +22,6 @@ import {
   recoveryFragment,
   type VDocumentFragment
 } from './index.js'
-
 
 /**
  * 渲染小部件节点
@@ -133,28 +129,7 @@ export function renderWidgetElement(
   vnode: VNode<WidgetType>,
   parent?: ContainerElement
 ): HtmlElement {
-  createScope(() => {
-    Object.defineProperty(vnode.props, __WidgetPropsSelfNodeSymbol__, {
-      value: vnode
-    })
-    // 包装props为响应式对象
-    vnode.props = reactive(vnode.props, false)
-    // 实例化函数组件或类组件
-    vnode.instance = isClassWidgetConstructor(vnode.type)
-      ? new vnode.type(vnode.props)
-      : createFnWidget(vnode as VNode<FnWidgetConstructor>)
-    if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
-    vnode.instance.renderer.render(parent)
-    // 动态设置带有 getter 的属性 el，确保获取的el始终正确
-    Object.defineProperty(vnode, 'el', {
-      get() {
-        return this.instance!.renderer.el
-      },
-      configurable: false, // 允许重新定义属性
-      enumerable: true // 允许枚举该属性
-    })
-  }, false)
-  return vnode.el!
+  return createWidgetVNodeInstance(vnode).instance.renderer.render(parent)
 }
 
 /**
