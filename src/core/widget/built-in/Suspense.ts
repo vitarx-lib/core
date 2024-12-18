@@ -1,12 +1,12 @@
 import { type Element, Widget } from '../widget'
 import { Ref, ref } from '../../variable/index.js'
 import {
-  __updateParentVNode,
   createVNode,
   Fragment,
   inject,
   isVNode,
-  provide
+  provide,
+  updateParentVNodeMapping
 } from '../../vnode/index.js'
 import { watch } from '../../observer/index.js'
 import { renderElement } from '../../renderer/web-runtime-dom/index.js'
@@ -94,7 +94,7 @@ export default class Suspense extends Widget<SuspenseProps> {
    */
   protected override onMounted() {
     // 更新子节点的父节点
-    __updateParentVNode(this.children, this.vnode)
+    updateParentVNodeMapping(this.children, this.vnode)
     // 预渲染子节点
     renderElement(this.children)
     // 如果计数器为0，则隐藏回退内容
