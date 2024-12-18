@@ -1,6 +1,6 @@
 import { isRefEl, type VNode, type VNodeChild } from './type.js'
 import {
-  createFnWidget,
+  createFnWidgetInstance,
   type FnWidgetConstructor,
   isClassWidgetConstructor,
   Widget,
@@ -42,34 +42,28 @@ class RelationalManager {
   get currentVNode(): VNode<WidgetType> | undefined {
     return this.#currentVNode
   }
-
+  
   /**
    * 创建widget节点实例
    *
-   * @param vnode
+   * @param {VNode<WidgetType>} vnode - widget节点
    * @return {InstantiatedWidgetVNode} - 已创建instance的节点
    */
   createWidgetVNodeInstance<T extends VNode<WidgetType>>(vnode: T): InstantiatedWidgetVNode {
-    createScope(() => {
+    createScope().run(() => {
       const oldVNode = this.#currentVNode
       this.#currentVNode = vnode
-      // 包装props为响应式对象
-      vnode.props = reactive(vnode.props, false)
-      // 实例化函数组件或类组件
-      vnode.instance = isClassWidgetConstructor(vnode.type)
-        ? new vnode.type(vnode.props)
-        : createFnWidget(vnode as VNode<FnWidgetConstructor>)
-      if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
-      this.#currentVNode = oldVNode
-      // 动态设置带有 getter 的属性 el，确保获取的el始终正确
-      Object.defineProperty(vnode, 'el', {
-        get() {
-          return this.instance!.renderer.el
-        },
-        configurable: false, // 允许重新定义属性
-        enumerable: true // 允许枚举该属性
-      })
-    }, false)
+      try {
+        // 包装props为响应式对象
+        vnode.props = reactive(vnode.props, false)
+        vnode.instance = isClassWidgetConstructor(vnode.type)
+          ? new vnode.type(vnode.props)
+          : createFnWidgetInstance(vnode as VNode<FnWidgetConstructor>)
+        if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
+      } finally {
+        this.#currentVNode = oldVNode
+      }
+    })
     return vnode as InstantiatedWidgetVNode
   }
 
