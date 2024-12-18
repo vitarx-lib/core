@@ -1,9 +1,14 @@
-import { __WidgetPropsSelfNodeSymbol__ } from './constant.js'
+import { type WidgetType } from './constant.js'
 import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from '../renderer/index.js'
-import type { FnWidgetConstructor } from './fn-widget.js'
 import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
-import type { IntrinsicAttributes, VNode } from '../vnode/index.js'
+import {
+  getCurrentVNode,
+  inject,
+  type IntrinsicAttributes,
+  provide,
+  type VNode
+} from '../vnode/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -23,6 +28,7 @@ export type WidgetChildren<P> = P extends { children: infer U }
     ? U | undefined
     : undefined
 
+// noinspection TypeScriptAbstractClassConstructorCanBeMadeProtected,JSUnusedGlobalSymbols
 /**
  * 组件基类
  */
@@ -33,6 +39,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @private
    */
   private readonly _props: P
+  private readonly _vnode: VNode<WidgetType>
 
   /**
    * ## 构造函数
@@ -44,6 +51,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   constructor(props: P) {
     super()
     this._props = props
+    this._vnode = getCurrentVNode()!
   }
 
   /**
@@ -72,13 +80,12 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   /**
    * 获取小部件自身的虚拟节点
    *
-   * 该获取器被内部依赖，请勿重写！
-   *
-   * @returns {VNode<ClassWidgetConstructor | FnWidgetConstructor>}
+   * @internal 该获取器被内部逻辑依赖，请勿重写！
    * @protected
+   * @returns {VNode<WidgetType>}
    */
-  get vnode(): VNode<ClassWidgetConstructor | FnWidgetConstructor> {
-    return this._props[__WidgetPropsSelfNodeSymbol__ as any]
+  get vnode(): VNode<WidgetType> {
+    return this._vnode
   }
 
   /**
@@ -99,6 +106,33 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
     return this.props.children as WidgetChildren<P>
   }
 
+  /**
+   * 注入依赖
+   *
+   * 等同于调用`inject(name, defaultValue, this)`
+   *
+   * @template T
+   * @param {string | symbol} name 依赖名称
+   * @param {T} defaultValue 默认值
+   * @returns {T}
+   * @protected
+   */
+  protected inject<T>(name: string | symbol, defaultValue?: T): T {
+    return inject(name, defaultValue, this)
+  }
+
+  /**
+   * 提供依赖
+   *
+   * 等同于调用`provide(name, value, this)`
+   *
+   * @param {string | symbol} name - 依赖名称
+   * @param {any} value - 依赖值
+   * @protected
+   */
+  protected provide(name: string | symbol, value: any): void {
+    provide(name, value, this)
+  }
   /**
    * 获取小部件渲染的节点元素
    *
