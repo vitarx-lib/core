@@ -1,5 +1,5 @@
 import type { Properties as CssProperties } from 'csstype'
-import { getParentVNode, type VNode } from '../../vnode/index.js'
+import { findParentVNode, type VNode } from '../../vnode/index.js'
 
 /** HTML元素标签映射 */
 export type HtmlElementTagMap = HTMLElementTagNameMap &
@@ -512,10 +512,10 @@ export function isVDocumentFragment(el: any): el is VDocumentFragment {
 export function isSvgElement(vnode: VNode) {
   if (vnode.props.xmlns === 'http://www.w3.org/2000/svg') return true
   if (vnode.type === 'svg') return true
-  let parent = getParentVNode(vnode)
+  let parent = findParentVNode(vnode)
   while (parent) {
     if (parent.type === 'svg') return true
-    parent = getParentVNode(parent)
+    parent = findParentVNode(parent)
   }
   return false
 }
