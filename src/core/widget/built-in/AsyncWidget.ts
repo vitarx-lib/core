@@ -23,8 +23,8 @@ export type AsyncWidgetErrorCallback = (
  * import {withAsyncContext} from 'vitarx'
  *
  * async function YourAsyncFnWidget(props: { name: string }) {
- *   // 需使用withAsyncContext包裹异步加载数据的异步函数，withAsyncContext函数内部维护了异步上下文的切换
- *   // 如果你使用的是vite-plugin-vitarx编译插件，那么它会自动添加withAsyncContext
+ *   // 必需使用withAsyncContext包裹异步加载数据的异步函数，withAsyncContext函数内部维护了异步上下文的切换
+ *   // 后期可能会在vite-plugin-vitarx编译插件中自动处理withAsyncContext
  *   const userInfo = await withAsyncContext(()=>fetchUserInfo)
  *   return <div>Hello, {userInfo.name}!</div>
  * }
