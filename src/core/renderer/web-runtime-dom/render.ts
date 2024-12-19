@@ -129,7 +129,16 @@ export function renderWidgetElement(
   vnode: VNode<WidgetType>,
   parent?: ContainerElement
 ): HtmlElement {
-  return createWidgetVNodeInstance(vnode).instance.renderer.render(parent)
+  const el = createWidgetVNodeInstance(vnode).renderer.render(parent)
+  // 动态设置带有 getter 的属性 el，确保获取的el始终正确
+  Object.defineProperty(vnode, 'el', {
+    get() {
+      return this.instance?.renderer.el
+    },
+    configurable: false, // 允许重新定义属性
+    enumerable: true // 允许枚举该属性
+  })
+  return el
 }
 
 /**
