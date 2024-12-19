@@ -114,11 +114,11 @@ export default class Suspense extends Widget<SuspenseProps> {
 }
 
 /**
- * 获取上级 Suspense 组件的计数器
+ * 获取上级 `Suspense` 计数器
  *
- * @param instance - 当前小部件实例
+ * @param {Widget} [instance] - 当前小部件实例
  * @returns {Ref<number> | undefined} 如果存在则返回计数器Ref，不存在则返回undefined
  */
-export function getSuspenseCounter(instance: Widget): Ref<number> | undefined {
+export function getSuspenseCounter(instance?: Widget): Ref<number> | undefined {
   return inject<Ref<number> | undefined>(provideSymbol, undefined, instance)
 }
