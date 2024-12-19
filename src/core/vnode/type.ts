@@ -20,6 +20,7 @@ import {
   TextVNodeSymbol,
   VNodeSymbol
 } from './constant.js'
+import { Scope } from '../scope/index.js'
 
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint | symbol
@@ -147,6 +148,10 @@ export interface VNode<T extends VNodeType = VNodeType> {
    * 元素实例
    */
   el?: HtmlElementType<T>
+  /**
+   * 作用域实例
+   */
+  scope?: Scope
 }
 /** 文本节点，内部自动转换 */
 export interface TextVNode {
