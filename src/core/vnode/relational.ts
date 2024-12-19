@@ -9,6 +9,8 @@ import { reactive } from '../responsive/index.js'
 import { createScope } from '../scope/index.js'
 import { getContext, setContext } from '../context/index.js'
 
+type InstanceCreatedCallback = (instance: Widget) => void
+
 /**
  * vnode节点关系管理器
  *
@@ -42,10 +44,14 @@ class RelationalManager {
    * 创建widget节点实例
    *
    * @param {WidgetVNode} vnode - widget节点
+   * @param {InstanceCreatedCallback} [callback] - 需要在实例创建完成后执行的回调(可选)
    * @return {Required<WidgetVNode>} - 已创建instance的节点
    * @returns {Widget} - 实例
    */
-  createWidgetVNodeInstance<T extends WidgetVNode>(vnode: T): Widget {
+  createWidgetVNodeInstance<T extends WidgetVNode>(
+    vnode: T,
+    callback?: InstanceCreatedCallback
+  ): Widget {
     vnode.scope = createScope()
     vnode.scope.run(() => {
       const restoreContext = setContext(RelationalManager.#contextSymbol, vnode)
@@ -56,6 +62,8 @@ class RelationalManager {
           ? new vnode.type(vnode.props)
           : _createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
         if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
+        // 如果存在回调则调用
+        callback?.call(null, vnode.instance)
       } finally {
         restoreContext()
       }
@@ -125,6 +133,7 @@ export function getCurrentVNode(): WidgetVNode | undefined {
 /**
  * 查找父节点
  *
+ * @internal 内部核心函数
  * @param {vnode} vnode - 自身虚拟节点对象
  * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
  */
@@ -135,8 +144,9 @@ export function findParentVNode(vnode: ChildVNode): VNode | undefined {
 /**
  * 更新父节点映射
  *
- * @param vnode
- * @param parent
+ * @internal 内部核心函数
+ * @param {ChildVNode} vnode - 虚拟节点对象
+ * @param {VNode} parent - 父节点对象
  */
 export function updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void {
   RelationalManager.instance.updateParentVNodeMapping(vnode, parent)
@@ -145,9 +155,15 @@ export function updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void
 /**
  * 创建widget节点实例
  *
- * @param vnode
- * @returns {MakeRequired<WidgetVNode,'instance'|'el'>} - 已创建instance的节点
+ * @internal 内部核心函数
+ * @param {WidgetVNode} vnode - widget节点
+ * @param {InstanceCreatedCallback} [callback] - 需要在实例创建完成后执行的回调(可选)
+ * @return {Required<WidgetVNode>} - 已创建instance的节点
+ * @returns {Widget} - 实例
  */
-export function createWidgetVNodeInstance<T extends WidgetVNode>(vnode: T): Widget {
-  return RelationalManager.instance.createWidgetVNodeInstance(vnode)
+export function createWidgetVNodeInstance<T extends WidgetVNode>(
+  vnode: T,
+  callback?: InstanceCreatedCallback
+): Widget {
+  return RelationalManager.instance.createWidgetVNodeInstance(vnode, callback)
 }
