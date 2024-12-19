@@ -143,7 +143,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @returns {ContainerElement | undefined}
    */
   get el(): ContainerElement | undefined {
-    return this.renderer.el
+    return this._renderer?.el
   }
 
   /**
