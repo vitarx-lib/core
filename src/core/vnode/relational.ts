@@ -1,6 +1,6 @@
 import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './type.js'
 import {
-  createFnWidget,
+  _createFnWidget,
   type FnWidgetConstructor,
   isClassWidgetConstructor
 } from '../widget/index.js'
@@ -46,14 +46,15 @@ class RelationalManager {
   createWidgetVNodeInstance<T extends WidgetVNode>(
     vnode: T
   ): MakeRequired<WidgetVNode, 'instance' | 'el'> {
-    createScope().run(() => {
+    vnode.scope = createScope()
+    vnode.scope.run(() => {
       const restoreContext = setContext(RelationalManager.#contextSymbol, vnode)
       try {
         // 包装props为响应式对象
         vnode.props = reactive(vnode.props, false)
         vnode.instance = isClassWidgetConstructor(vnode.type)
           ? new vnode.type(vnode.props)
-          : createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
+          : _createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
         if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
       } finally {
         restoreContext()
