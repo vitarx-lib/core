@@ -1,4 +1,5 @@
 import { Effect, type EffectInterface, isEffect } from './effect.js'
+import { getContext, runContext } from '../context/index.js'
 
 /**
  * # 自动处置
@@ -12,13 +13,12 @@ export class AutoDisposed extends Effect {
     addEffect(this)
   }
 }
-
 /**
  * # 作用域管理器
  */
 export class Scope extends Effect {
-  /** 临时记录当前作用域 */
-  static #currentScope?: Scope
+  // 上下文标识
+  static #context_tag = Symbol('ScopeContextSymbol')
   /** 副作用 */
   #effects?: Set<EffectInterface> = new Set()
 
@@ -30,7 +30,25 @@ export class Scope extends Effect {
   constructor(toParent: boolean = true) {
     super()
     // 添加到父级作用域中
-    if (toParent) Scope.#currentScope?.add(this)
+    if (toParent) Scope.getCurrentScope()?.add(this)
+  }
+
+  /**
+   * 副作用数量
+   *
+   * @readonly
+   */
+  get count(): number {
+    return this.#effects?.size ?? 0
+  }
+
+  /**
+   * 获取当前作用域
+   *
+   * @returns {Scope|undefined} 返回当前作用域实例，如果没有则返回undefined
+   */
+  static getCurrentScope(): Scope | undefined {
+    return getContext(Scope.#context_tag)
   }
 
   /**
@@ -43,30 +61,7 @@ export class Scope extends Effect {
    * @return {T} - 函数的返回值
    */
   run<T>(fn: () => T): T {
-    const oldScope = Scope.#currentScope
-    Scope.#currentScope = this
-    try {
-      return fn()
-    } finally {
-      Scope.#currentScope = oldScope
-    }
-  }
-  /**
-   * 获取监听器数量
-   *
-   * @readonly
-   */
-  get count() {
-    return this.#effects?.size ?? 0
-  }
-
-  /**
-   * 获取当前作用域
-   *
-   * @returns {Scope|undefined} 返回当前作用域实例，如果没有则返回undefined
-   */
-  static getCurrentScope(): Scope | undefined {
-    return Scope.#currentScope
+    return runContext(Scope.#context_tag, this, fn)
   }
 
   /**
