@@ -2,7 +2,6 @@ export * from './clone.js'
 export * from './detect.js'
 export * from './diff.js'
 export * from './conversion.js'
-export * from './uuid.js'
 export * from './quick.js'
 
 declare global {
