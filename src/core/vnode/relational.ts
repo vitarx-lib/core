@@ -87,7 +87,7 @@ class RelationalManager {
  * 获取当前小部件的虚拟节点
  *
  * > 注意：如果是类小部件内部获取当前虚拟节点，则使用`this.vnode`即可访问，
- * 只有在Widget类构造函数中调用getCurrentVNode()才能获取当前小部件自身的vnode，Widget基类已在构造函数将vnode进行保存，所以你可以在类中通过this.vnode得到当前实例所关联的节点。
+ * Widget基类已在构造函数中将vnode进行保存，所以你可以在类中通过this.vnode得到当前实例所关联的节点。
  *
  * @example
  * ```tsx
