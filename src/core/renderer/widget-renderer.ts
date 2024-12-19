@@ -415,6 +415,6 @@ export class WidgetRenderer<T extends Widget> {
     hook: K,
     ...args: HookParameter<K>
   ): HookReturnType<K> {
-    return this.widget['callLifeCycleHook'](hook, args)
+    return this.widget['callLifeCycleHook'](hook, ...args)
   }
 }
