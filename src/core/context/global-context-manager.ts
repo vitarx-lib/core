@@ -23,9 +23,9 @@ export default class GlobalContextManager {
    *
    * @param {Tag} tag - 上下文标签
    * @param {object} ctx - 上下文
-   * @param {boolean} backup - 是否需要备份上下文，如果备份上下文，在还原时会自动恢复该上下文，否则为删除当前上下文
+   * @param {boolean} [backup = true] - 是否需要备份上下文，如果备份上下文，在还原时会自动恢复该上下文，否则为删除当前上下文
    */
-  static set<T extends object>(tag: Tag, ctx: T, backup?: boolean): RestoreContext {
+  static set<T extends object>(tag: Tag, ctx: T, backup: boolean = true): RestoreContext {
     const prev = backup ? this.#store.get(tag) : undefined
     this.#store.set(tag, ctx)
     return () => {

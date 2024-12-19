@@ -47,13 +47,13 @@ export function getContext<T extends object>(tag: Tag): T | undefined {
  *
  * @param {Tag} tag - 上下文标签
  * @param {object} context - 上下文对象
- * @param {boolean} [backup] - 是否需要备份上下文
+ * @param {boolean} [backup = true] - 是否需要备份上下文
  * @returns {RestoreContext} - 恢复上下文的函数
  */
 export function setContext<T extends object>(
   tag: Tag,
   context: T,
-  backup?: boolean
+  backup: boolean = true
 ): RestoreContext {
   return GlobalContextManager.set(tag, context, backup)
 }
