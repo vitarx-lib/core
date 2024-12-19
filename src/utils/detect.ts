@@ -204,3 +204,12 @@ export function deepEqual(var1: any, var2: any): boolean {
 
   return true // 所有键和值一致
 }
+
+/**
+ * 判断是否为Promise
+ *
+ * @param val
+ */
+export function isPromise(val: any): val is Promise<any> {
+  return val instanceof Promise
+}
