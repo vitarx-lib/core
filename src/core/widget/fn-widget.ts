@@ -71,6 +71,8 @@ export class FnWidget extends Widget {
           this.#initialize(data as InitData)
         })
         .finally(() => {
+          // 强制更新视图
+          this.update()
           // 如果有上级暂停计数器则让计数器-1
           if (suspenseCounter) suspenseCounter.value--
         })
@@ -126,8 +128,6 @@ export class FnWidget extends Widget {
     }
     // @ts-ignore 清除已触发的钩子
     this.#triggered = undefined
-    // 强制更新视图
-    this.update()
   }
 
   /**
