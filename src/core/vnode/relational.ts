@@ -4,7 +4,7 @@ import {
   type FnWidgetConstructor,
   isClassWidgetConstructor
 } from '../widget/index.js'
-import { reactive } from '../variable/index.js'
+import { reactive } from '../responsive/index.js'
 import { createScope } from '../scope/index.js'
 
 /**

@@ -1,4 +1,4 @@
-export * from './variable/index.js'
+export * from './responsive/index.js'
 export * from './observer/index.js'
 export * from './scope/index.js'
 export * from './vnode/index.js'

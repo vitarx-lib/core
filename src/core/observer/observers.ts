@@ -1,5 +1,5 @@
 import { Listener } from './listener.js'
-import { ExtractProp, PropName } from '../variable/index.js'
+import { ExtractProp, PropName } from '../responsive/index.js'
 import { isArray, isFunction } from '../../utils/index.js'
 
 /** 所有改变事件监听标识类型 */

@@ -5,7 +5,7 @@ import {
   isValueProxy,
   type PropName,
   type UnProxy
-} from '../variable/index.js'
+} from '../responsive/index.js'
 import { Listener } from './listener.js'
 import { Observers, type Options } from './observers.js'
 import { deepClone, isArray, isSimpleGetterFunction, popProperty } from '../../utils/index.js'

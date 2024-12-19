@@ -1,5 +1,5 @@
 import { type Element, Widget } from '../widget'
-import { Ref, ref } from '../../variable/index.js'
+import { Ref, ref } from '../../responsive/index.js'
 import {
   createVNode,
   Fragment,
