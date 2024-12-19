@@ -89,7 +89,9 @@ export default class GlobalContextManager {
    *
    * @async
    * @param {() => Promise} fn - 要执行的异步函数
-   * @param {Tag[]} [tags=[]] - 要使用的上下文标签，可选参数，默认为空数组，会挂起所有上下文
+   * @param {Tag[]} [tags=[]] - 要使用的上下文标签，可选参数，默认为空数组，会挂起所有上下文，开发者一般无需使用该参数。
+   * @returns {Promise} - fn函数的返回值
+   * @throws {Error} - 如果fn函数执行失败，则抛出错误
    */
   static async withAsyncContext<T>(fn: () => Promise<T> | T, tags: Tag[] = []): Promise<T> {
     const result = fn()
