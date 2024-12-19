@@ -3,13 +3,12 @@
 import {
   type ChildVNode,
   type CommentVNode,
-  type IntrinsicAttributes,
-  isRefEl,
   isVNode,
   type RefEl,
   type TextVNode,
   type VNode,
   type VNodeChildren,
+  type VNodePropsType,
   type VNodeType
 } from './type.js'
 import { CommentVNodeSymbol, RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
@@ -32,49 +31,33 @@ type Children = Child[]
  * @alias createElement
  * @template T - 期望创建的节点类型
  * @param {T} type - 虚拟节点的类型，可以是字符串（HTML标签）、函数组件或类组件、片段类型
- * @param {IntrinsicAttributes | null} props - 虚拟节点的属性，可以是任意对象，允许为null
+ * @param {VNodePropsType<T> | null} props - 虚拟节点的属性，可以是任意对象，允许为null
  * @param {...Children} children - 虚拟节点的子节点，可以是任意数量的子节点
  * @returns {VNode} 返回一个虚拟节点对象
  */
 export function createVNode<T extends VNodeType>(
   type: T,
-  props: IntrinsicAttributes | null = null,
+  props: VNodePropsType<T> | null = null,
   ...children: Children
 ): VNode<T> {
   // 将props合并为一个对象
-  props = Object.assign({}, props || {}) as IntrinsicAttributes
+  props = Object.assign({}, props || {}) as any
   // 创建虚拟节点
   const vnode: VNode = {
     [VNodeSymbol]: true,
     type,
     props,
-    key: popProperty(props, 'key'),
-    ref: undefined,
+    key: popProperty(props as any, 'key'),
+    ref: popProperty(props as any, 'ref'),
     children: []
   }
-  if (typeof type === 'function') {
-    // 动态设置带有 getter 的属性 el，确保获取的el始终正确
-    Object.defineProperty(vnode, 'el', {
-      get() {
-        return this.instance?.renderer.el
-      },
-      configurable: false, // 允许重新定义属性
-      enumerable: true // 允许枚举该属性
-    })
-  }
-  // 获取key属性
-  const key = popProperty(props, 'key')
-  if (key) vnode.key = key
-  // 获取ref属性
-  const ref = popProperty(props, 'ref')
-  if (isRefEl(ref)) vnode.ref = ref
   // 如果type是一个函数，则将children属性添加到props中，并将children置为空
   if (isFunction(type)) {
     if (children.length > 0) {
       ;(props as Record<string, any>).children = children.length === 1 ? children[0] : children
       children = []
     }
-  } else if ('children' in props) {
+  } else if ('children' in props!) {
     // 如果props中有children属性，则将其添加到children中
     const attrChildren = popProperty(props, 'children' as any)
     if (Array.isArray(attrChildren)) {
