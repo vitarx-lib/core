@@ -15,8 +15,8 @@ type LifeCycleHookCallback<T extends LifeCycleHooks> = (
 ) => HookReturnType<T>
 
 interface CollectContext {
-  exposed: Record<string, any> | undefined
-  lifeCycleHooks: Record<LifeCycleHooks, AnyCallback> | undefined
+  exposed: Record<string, any>
+  lifeCycleHooks: Record<LifeCycleHooks, AnyCallback>
 }
 
 /**
@@ -81,8 +81,8 @@ class HooksCollector {
     vnode.instance = instance
     // 创建新的上下文
     const context: CollectResult = {
-      exposed: undefined,
-      lifeCycleHooks: undefined
+      exposed: {},
+      lifeCycleHooks: {}
     } as CollectResult
     // 为组件注入`instance`
     const callFnWidget = () => vnode.type.apply(instance, vnode.props)
