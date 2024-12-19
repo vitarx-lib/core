@@ -4,9 +4,6 @@ export type * from './LazyWidget.js'
 export { default as Suspense, getSuspenseCounter } from './Suspense.js'
 export type * from './Suspense.js'
 
-export { default as AsyncWidget } from './AsyncWidget.js'
-export type * from './AsyncWidget.js'
-
 export { default as Teleport } from './Teleport.js'
 export type * from './Teleport.js'
 
