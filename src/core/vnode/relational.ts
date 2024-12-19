@@ -6,6 +6,7 @@ import {
 } from '../widget/index.js'
 import { reactive } from '../responsive/index.js'
 import { createScope } from '../scope/index.js'
+import { getContext, setContext } from '../context/index.js'
 
 /**
  * vnode节点关系管理器
@@ -13,10 +14,9 @@ import { createScope } from '../scope/index.js'
  * @internal
  */
 class RelationalManager {
+  static #contextSymbol = Symbol('RelationalManagerContextSymbol')
   // 单例
   static #instance: RelationalManager
-  // 正在渲染的vnode
-  #currentVNode: WidgetVNode | undefined
   // 父vnode映射
   #parentVNodeMapping = new WeakMap<ChildVNode, VNode>()
 
@@ -34,7 +34,7 @@ class RelationalManager {
    * 当前正在实例的Widget节点
    */
   get currentVNode(): WidgetVNode | undefined {
-    return this.#currentVNode
+    return getContext<WidgetVNode>(RelationalManager.#contextSymbol)
   }
 
   /**
@@ -46,19 +46,17 @@ class RelationalManager {
   createWidgetVNodeInstance<T extends WidgetVNode>(
     vnode: T
   ): MakeRequired<WidgetVNode, 'instance' | 'el'> {
-    vnode.scope = createScope()
-    vnode.scope.run(() => {
-      const oldVNode = this.#currentVNode
-      this.#currentVNode = vnode
+    createScope().run(() => {
+      const restoreContext = setContext(RelationalManager.#contextSymbol, vnode)
       try {
         // 包装props为响应式对象
         vnode.props = reactive(vnode.props, false)
         vnode.instance = isClassWidgetConstructor(vnode.type)
           ? new vnode.type(vnode.props)
-          : createFnWidget(vnode as MakeRequired<WidgetVNode<FnWidgetConstructor>, 'scope'>)
+          : createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
         if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
       } finally {
-        this.#currentVNode = oldVNode
+        restoreContext()
       }
     })
     return vnode as MakeRequired<WidgetVNode, 'instance' | 'el'>
