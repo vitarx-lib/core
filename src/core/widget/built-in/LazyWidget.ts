@@ -73,7 +73,7 @@ export interface LazyWidgetProps<T extends WidgetType> {
  * <LazyWidget onError={()=><div>加载失败...</div>}/>
  * ```
  */
-export default class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>> {
+export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>> {
   /**
    * 懒加载组件节点
    *

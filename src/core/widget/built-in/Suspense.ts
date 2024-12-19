@@ -55,7 +55,7 @@ const provideSymbol = Symbol('SuspenseSymbol')
  *
  * 通常它与`AsyncWidget`、`LazyWidget`搭配使用。
  */
-export default class Suspense extends Widget<SuspenseProps> {
+export class Suspense extends Widget<SuspenseProps> {
   protected counter = ref(0)
   protected showFallback = true
 

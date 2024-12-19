@@ -38,7 +38,7 @@ export interface TeleportProps {
  *
  * `Teleport`是一个内置组件，它可以将一个小部件内部的一部分内容`传送`到该小部件的`DOM`结构外层的位置去。
  */
-export default class Teleport extends Widget<TeleportProps> {
+export class Teleport extends Widget<TeleportProps> {
   protected target?: TargetContainerElement
 
   constructor(props: TeleportProps) {
