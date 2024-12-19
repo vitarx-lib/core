@@ -8,6 +8,7 @@ import type {
 } from '../renderer/web-runtime-dom/index.js'
 import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
 import {
+  type AsyncFnWidgetConstructor,
   type ClassWidgetConstructor,
   type FnWidgetConstructor,
   isClassWidgetConstructor,
@@ -63,6 +64,7 @@ export interface IntrinsicAttributes {
 export type WidgetType<P extends Record<string, any> = {}> =
   | ClassWidgetConstructor<P>
   | FnWidgetConstructor<P>
+  | AsyncFnWidgetConstructor<P>
 
 /**
  * 主节点类型
@@ -71,9 +73,8 @@ export type VNodeType = WidgetType | Fragment | HTMLIntrinsicTags
 /**
  * Widget节点Props类型重载
  */
-export type WidgetPropsType<T extends WidgetType> =
-  (T extends ClassWidgetConstructor<infer P> ? P : T extends FnWidgetConstructor<infer P> ? P : {})
-  & IntrinsicAttributes
+export type WidgetPropsType<T extends WidgetType> = (T extends WidgetType<infer P> ? P : {}) &
+  IntrinsicAttributes
 /**
  * HTML节点Props类型重载
  */
