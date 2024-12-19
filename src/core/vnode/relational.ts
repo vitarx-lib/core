@@ -2,7 +2,8 @@ import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './type.j
 import {
   _createFnWidget,
   type FnWidgetConstructor,
-  isClassWidgetConstructor
+  isClassWidgetConstructor,
+  Widget
 } from '../widget/index.js'
 import { reactive } from '../responsive/index.js'
 import { createScope } from '../scope/index.js'
@@ -42,10 +43,9 @@ class RelationalManager {
    *
    * @param {WidgetVNode} vnode - widget节点
    * @return {Required<WidgetVNode>} - 已创建instance的节点
+   * @returns {Widget} - 实例
    */
-  createWidgetVNodeInstance<T extends WidgetVNode>(
-    vnode: T
-  ): MakeRequired<WidgetVNode, 'instance' | 'el'> {
+  createWidgetVNodeInstance<T extends WidgetVNode>(vnode: T): Widget {
     vnode.scope = createScope()
     vnode.scope.run(() => {
       const restoreContext = setContext(RelationalManager.#contextSymbol, vnode)
@@ -60,7 +60,7 @@ class RelationalManager {
         restoreContext()
       }
     })
-    return vnode as MakeRequired<WidgetVNode, 'instance' | 'el'>
+    return vnode.instance!
   }
 
   /**
@@ -148,8 +148,6 @@ export function updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void
  * @param vnode
  * @returns {MakeRequired<WidgetVNode,'instance'|'el'>} - 已创建instance的节点
  */
-export function createWidgetVNodeInstance<T extends WidgetVNode>(
-  vnode: T
-): MakeRequired<WidgetVNode, 'instance' | 'el'> {
+export function createWidgetVNodeInstance<T extends WidgetVNode>(vnode: T): Widget {
   return RelationalManager.instance.createWidgetVNodeInstance(vnode)
 }
