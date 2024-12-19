@@ -80,18 +80,13 @@ export class FnWidget extends Widget {
   }
 
   /**
-   * 调用生命周期钩子
-   *
-   * 内部方法，开发者勿调用。
-   *
-   * @internal
-   * @protected
+   * @inheritDoc
    */
   protected override callLifeCycleHook<K extends LifeCycleHooks>(
     hook: K,
     ...args: HookParameter<K>
   ): HookReturnType<K> {
-    if (this.#init) {
+    if (!this.#init) {
       this.#triggered[hook] = args
       return undefined as any
     }
