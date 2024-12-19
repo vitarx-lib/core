@@ -11,8 +11,8 @@ import {
   updateActivateState
 } from './web-runtime-dom/index.js'
 import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from '../widget/index.js'
-import { Scope } from '../scope/index.js'
 import { watchDepend } from '../observer/index.js'
+import { getCurrentScope, type Scope } from '../scope/index.js'
 
 /**
  * 渲染状态
@@ -40,9 +40,15 @@ export type RenderState =
 export class WidgetRenderer<T extends Widget> {
   constructor(widget: T) {
     this._widget = widget
-    const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
-      getResult: true
-    })
+    const { result: childVNode, listener } = watchDepend(
+      this.build.bind(this),
+      this.update.bind(this),
+      {
+        getResult: true
+      }
+    )
+    // 如果不在作用域上下文中，则添加到VNode的上下文记录中
+    if (listener && !getCurrentScope()) this.scope.add(listener)
     this._child = childVNode
     // @ts-ignore 兼容开发模式热更新
     if (import.meta.env?.MODE === 'development') {
@@ -104,7 +110,7 @@ export class WidgetRenderer<T extends Widget> {
    *
    * @protected
    */
-  get scope(): Scope | undefined {
+  get scope(): Scope {
     return this.widget.vnode.scope!
   }
 
