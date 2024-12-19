@@ -20,7 +20,6 @@ import {
   TextVNodeSymbol,
   VNodeSymbol
 } from './constant.js'
-import { Scope } from '../scope/index.js'
 
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint | symbol
@@ -145,12 +144,6 @@ export interface VNode<T extends VNodeType = VNodeType> {
    * 向下提供的数据
    */
   provide?: Record<string | symbol, any>
-  /**
-   * 作用域
-   *
-   * 非Widget节点此属性为null
-   */
-  scope?: Scope
   /**
    * 元素实例
    */
