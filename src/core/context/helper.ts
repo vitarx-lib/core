@@ -10,13 +10,11 @@ import type { RestoreContext, Tag } from './global-context-manager.js'
  *
  * 强制要求异步函数小部件内必须使用该API来完成初始化的异步请求，否则会导致上下文丢失，内存溢出等风险！！！。
  *
- * ```ts
+ * ```tsx
+ * import {withAsyncContext} from 'vitarx'
  * async function UserInfoCard() {
- *  const loadData = () => {
- *    return fetch('/api/user-info')
- *  }
  *  // 使用withAsyncContext来保持上下文，如果不使用withAsyncContext会导致上下文丢失！！！
- *  const data = await withAsyncContext(loadData)
+ *  const data = await withAsyncContext(() => fetch('/api/user-info'))
  *  return <div>{data.name}</div>
  * }
  * ```
