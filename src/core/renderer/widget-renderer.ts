@@ -11,7 +11,7 @@ import {
   updateActivateState
 } from './web-runtime-dom/index.js'
 import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from '../widget/index.js'
-import { getCurrentScope, Scope } from '../scope/index.js'
+import { Scope } from '../scope/index.js'
 import { watchDepend } from '../observer/index.js'
 
 /**
@@ -40,7 +40,6 @@ export type RenderState =
 export class WidgetRenderer<T extends Widget> {
   constructor(widget: T) {
     this._widget = widget
-    this._scope = getCurrentScope()!
     const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
       getResult: true
     })
@@ -63,8 +62,6 @@ export class WidgetRenderer<T extends Widget> {
   protected _shadowElement: Comment | null = null
   // 当前组件的Child虚拟节点
   protected _child: VNode
-  // 当前作用域
-  protected _scope: Scope
 
   /**
    * 获取影子元素
@@ -108,7 +105,7 @@ export class WidgetRenderer<T extends Widget> {
    * @protected
    */
   get scope(): Scope | undefined {
-    return this._scope
+    return this.widget.vnode.scope!
   }
 
   /**
@@ -310,8 +307,6 @@ export class WidgetRenderer<T extends Widget> {
         // @ts-ignore
         this._child = null
         // @ts-ignore
-        this._scope = null
-        // @ts-ignore
         this._widget = null
         this._shadowElement = null
         this._teleport = null
@@ -339,7 +334,7 @@ export class WidgetRenderer<T extends Widget> {
         replaceElement(this.el!, this.shadowElement)
       }
       // 恢复作用域
-      this._scope?.unpause()
+      this.scope?.unpause()
       // 触发onActivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.activated)
     }
@@ -380,7 +375,7 @@ export class WidgetRenderer<T extends Widget> {
     }
     // 使用宏任务执行暂停作用域，和触发生命周期
     setTimeout(() => {
-      this._scope?.pause()
+      this.scope?.pause()
       // 触发onDeactivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.deactivate)
     }, 0)
