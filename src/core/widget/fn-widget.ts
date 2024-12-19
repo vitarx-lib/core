@@ -192,6 +192,7 @@ export function build(vnode: VNode | (() => VNode)): VNode {
   if (typeof vnode === 'function') return vnode as unknown as VNode
   return (() => vnode) as unknown as VNode
 }
+
 /**
  * ## 创建函数小部件实例
  *
