@@ -61,7 +61,7 @@ export interface IntrinsicAttributes {
 /**
  * 组件类型
  */
-export type WidgetType<P extends Record<string, any> = {}> =
+export type WidgetType<P extends Record<string, any> = any> =
   | ClassWidgetConstructor<P>
   | FnWidgetConstructor<P>
 
@@ -84,7 +84,11 @@ export type HTMLPropsType<T extends HTMLIntrinsicTags> =
 /**
  * 节点Props类型重载
  */
-export type VNodePropsType<T extends VNodeType> = T extends WidgetType ? WidgetPropsType<T> : T extends HTMLIntrinsicTags ? HTMLPropsType<T> : never
+export type VNodePropsType<T extends VNodeType> = T extends HTMLIntrinsicTags
+  ? HTMLPropsType<T>
+  : T extends WidgetType
+    ? WidgetPropsType<T>
+    : IntrinsicAttributes
 
 /** 子节点类型 */
 export type ChildVNode = VNode | TextVNode | CommentVNode
