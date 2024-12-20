@@ -155,7 +155,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 缓存专用渲染器
    */
-  override get renderer() {
+  protected override get renderer() {
     if (!this._renderer) {
       this._renderer = new _KeepAliveRenderer(this)
     }
