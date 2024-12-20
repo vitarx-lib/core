@@ -13,7 +13,7 @@ export function provide(name: string | symbol, value: any, instance?: Widget): v
   const currentVNode = instance?.['vnode'] || getCurrentVNode()
   if (!currentVNode) throw new Error('provide must be called in widget')
   if (!currentVNode.provide) {
-    ;(currentVNode as VNode).provide = {}
+    ;(currentVNode as VNode).provide = { [name]: value }
   } else {
     currentVNode.provide[name] = value
   }
