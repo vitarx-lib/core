@@ -124,4 +124,13 @@ export default class GlobalContextManager {
       restoreContext()
     }
   }
+
+  /**
+   * 清除所有上下文
+   *
+   * 谨慎使用！！！
+   */
+  static clear(): void {
+    this.#store.clear()
+  }
 }
