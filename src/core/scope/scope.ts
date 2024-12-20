@@ -20,14 +20,18 @@ export class Scope extends Effect {
   // 上下文标识
   static #context_tag = Symbol('ScopeContextSymbol')
   /** 副作用 */
-  #effects?: Set<EffectInterface> = new Set()
+  private _effects?: Set<EffectInterface> = new Set()
 
   /**
    * 实例化一个作用域管理器
    *
-   * @param toParent - 是否添加到父级作用域中，如果有。
+   * @param {boolean} [toParent = true] - 是否添加到父级作用域中，如果有。
+   * @param {string|symbol} [name = unnamed] - 作用域名称，方便调试时更直观的分辨作用域
    */
-  constructor(toParent: boolean = true) {
+  constructor(
+    toParent: boolean = true,
+    public readonly name: string | symbol = 'unnamed'
+  ) {
     super()
     // 添加到父级作用域中
     if (toParent) Scope.getCurrentScope()?.add(this)
@@ -39,7 +43,7 @@ export class Scope extends Effect {
    * @readonly
    */
   get count(): number {
-    return this.#effects?.size ?? 0
+    return this._effects?.size ?? 0
   }
 
   /**
@@ -80,8 +84,8 @@ export class Scope extends Effect {
           '添加到作用域中管理的对象必须是 Effect 或 AutoDisposed 的实例，或实现 EffectInterface 接口'
         )
       }
-      this.#effects?.add(effect)
-      effect.onDestroyed(() => this.#effects?.delete(effect))
+      this._effects?.add(effect)
+      effect.onDestroyed(() => this._effects?.delete(effect))
       return true
     } else {
       console.trace('当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象')
@@ -95,9 +99,9 @@ export class Scope extends Effect {
    * @override
    */
   override destroy() {
-    if (!this.isDeprecated && this.#effects) {
-      this.#effects.forEach(dispose => dispose.destroy())
-      this.#effects = undefined
+    if (!this.isDeprecated && this._effects) {
+      this._effects.forEach(dispose => dispose.destroy())
+      this._effects = undefined
       super.destroy()
     }
   }
@@ -109,7 +113,7 @@ export class Scope extends Effect {
    */
   override pause() {
     if (!this.isPaused) {
-      this.#effects?.forEach(dispose => dispose?.pause?.())
+      this._effects?.forEach(dispose => dispose?.pause?.())
       super.pause()
     }
   }
@@ -121,7 +125,7 @@ export class Scope extends Effect {
    */
   override unpause() {
     if (this.isPaused) {
-      this.#effects?.forEach(dispose => dispose?.unpause?.())
+      this._effects?.forEach(dispose => dispose?.unpause?.())
       super.unpause()
     }
   }
@@ -131,10 +135,11 @@ export class Scope extends Effect {
  * ## 创建作用域
  *
  * @param {boolean} toParent - 是否添加到父级作用域中，默认为true
+ * @param {string|symbol} [name = unnamed] - 作用域名称，方便调试时更直观的分辨作用域
  * @returns {Scope} 返回作用域实例，提供了`destroy`方法来销毁作用域
  */
-export function createScope(toParent: boolean = true): Scope {
-  return new Scope(toParent)
+export function createScope(toParent: boolean = true, name: string | symbol = 'unnamed'): Scope {
+  return new Scope(toParent, name)
 }
 
 /**
