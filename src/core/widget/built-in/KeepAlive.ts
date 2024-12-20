@@ -128,20 +128,33 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       }
     }
   }
+
+  /**
+   * 需要缓存的小部件
+   */
   get include() {
     if (!this.props.include) return []
     return this.props.include
   }
 
+  /**
+   * 排除缓存的小部件
+   */
   get exclude() {
     if (!this.props.exclude) return []
     return this.props.exclude
   }
 
+  /**
+   * 缓存的最大数量
+   */
   get max() {
     return this.props.max ?? 10
   }
 
+  /**
+   * 缓存专用渲染器
+   */
   override get renderer() {
     if (!this._renderer) {
       this._renderer = new _KeepAliveRenderer(this)
@@ -195,6 +208,11 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     }
   }
 
+  /**
+   * 卸载前卸载所有已缓存的实例
+   *
+   * @protected
+   */
   protected override onBeforeUnmount(): void {
     // 遍历缓存中的所有 VNode 并卸载其实例
     this.cache.forEach(typeCache => {
@@ -208,16 +226,6 @@ export class KeepAlive extends Widget<KeepAliveProps> {
 
   protected build(): Element {
     return this.currentChild
-  }
-
-  /**
-   * 生成缓存的唯一标识
-   *
-   * @param type 小部件类型
-   * @param key 唯一键
-   */
-  private getCacheKey(type: WidgetType, key?: OnlyKey): [WidgetType, OnlyKey | undefined] {
-    return [type, key]
   }
 }
 
