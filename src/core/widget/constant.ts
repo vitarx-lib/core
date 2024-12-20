@@ -25,7 +25,6 @@ export const __WidgetIntrinsicProps__ = [
   'renderer',
   'el',
   '_renderer',
-  '__isAsyncFnWidget',
   'inject',
   'provide'
 ] as const
