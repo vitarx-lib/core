@@ -37,12 +37,10 @@ export default class GlobalContextManager {
   static unset(tag: Tag, ctx?: object): boolean {
     if (ctx) {
       if (!this.#store.has(tag)) return true
-      if (this.#store.get(tag) === ctx) {
+      const current = this.#store.get(tag)
+      if (current === ctx) {
         return this.#store.delete(tag)
       }
-      console.warn(
-        `[Vitarx.GlobalContextManager.unset][WARN]：切换上下文失败，当前${tag.toString()}的上下文与要卸载的上下文不匹配，这或许是内部逻辑BUG！`
-      )
       return false
     }
     this.#store.delete(tag)
