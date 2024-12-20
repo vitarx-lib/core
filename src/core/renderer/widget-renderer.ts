@@ -227,18 +227,19 @@ export class WidgetRenderer<T extends Widget> {
     try {
       // 触发更新前生命周期
       this.triggerLifeCycle(LifeCycleHooks.beforeUpdate)
-      // 延迟更新
-      setTimeout(() => {
-        this._pendingUpdate = false
-      })
       const oldVNode = this._child
       const newVNode = newChildVNode || this.build()
       this._child = this.patchUpdate(oldVNode, newVNode)
+      // 延迟取消待更新状态，避免重复更新
+      setTimeout(() => {
+        this._pendingUpdate = false
+      }, 0)
       // 触发更新后生命周期
       this.triggerLifeCycle(LifeCycleHooks.updated)
     } catch (e) {
       this._pendingUpdate = false
-      console.error('[Vitarx.WidgetRenderer.update]：更新视图时捕获到了异常', e)
+      // 继续向上抛出错误
+      throw e
     }
   }
 
