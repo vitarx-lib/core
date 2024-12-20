@@ -38,17 +38,22 @@ export type RenderState =
  * 用于渲染小部件，和管理小部件的生命周期。
  */
 export class WidgetRenderer<T extends Widget> {
+  private readonly _scope: Scope
+  // 渲染器状态
+  protected _state: RenderState = 'notRendered'
+  // 等到更新
+  protected _pendingUpdate = false
+  // 影子占位元素
+  protected _shadowElement: Comment | null = null
+  // 当前组件的Child虚拟节点
+  protected _child: VNode
+
   constructor(widget: T) {
     this._widget = widget
-    const { result: childVNode, listener } = watchDepend(
-      this.build.bind(this),
-      this.update.bind(this),
-      {
-        getResult: true
-      }
-    )
-    // 如果不在作用域上下文中，则添加到VNode的上下文记录中
-    if (listener && !getCurrentScope()) this.scope.add(listener)
+    this._scope = getCurrentScope()!
+    const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
+      getResult: true
+    })
     this._child = childVNode
     // @ts-ignore 兼容开发模式热更新
     if (import.meta.env?.MODE === 'development') {
@@ -60,15 +65,6 @@ export class WidgetRenderer<T extends Widget> {
     // 触发onCreated生命周期
     this.triggerLifeCycle(LifeCycleHooks.created)
   }
-  // 渲染器状态
-  protected _state: RenderState = 'notRendered'
-  // 等到更新
-  protected _pendingUpdate = false
-  // 影子占位元素
-  protected _shadowElement: Comment | null = null
-  // 当前组件的Child虚拟节点
-  protected _child: VNode
-
   /**
    * 获取影子元素
    *
@@ -111,7 +107,7 @@ export class WidgetRenderer<T extends Widget> {
    * @protected
    */
   get scope(): Scope {
-    return this.widget.vnode.scope!
+    return this._scope
   }
 
   /**
