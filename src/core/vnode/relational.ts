@@ -1,13 +1,14 @@
 import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './type.js'
 import {
   _createFnWidget,
+  FnWidget,
   type FnWidgetConstructor,
   isClassWidgetConstructor,
   Widget
 } from '../widget/index.js'
 import { reactive } from '../responsive/index.js'
 import { createScope } from '../scope/index.js'
-import { getContext, setContext } from '../context/index.js'
+import { getContext, runContext } from '../context/index.js'
 
 type InstanceCreatedCallback = (instance: Widget) => void
 
@@ -16,19 +17,19 @@ type InstanceCreatedCallback = (instance: Widget) => void
  *
  * @internal
  */
-class RelationalManager {
-  static #contextSymbol = Symbol('RelationalManagerContextSymbol')
+class VNodeRelationalManager {
+  static #contextSymbol = Symbol('VNodeRelationalManagerContextSymbol')
   // 单例
-  static #instance: RelationalManager
+  static #instance: VNodeRelationalManager
   // 父vnode映射
   #parentVNodeMapping = new WeakMap<ChildVNode, VNode>()
 
   /**
    * 获取单例
    */
-  static get instance(): RelationalManager {
+  static get instance(): VNodeRelationalManager {
     if (!this.#instance) {
-      this.#instance = new RelationalManager()
+      this.#instance = new VNodeRelationalManager()
     }
     return this.#instance
   }
@@ -37,7 +38,7 @@ class RelationalManager {
    * 当前正在实例的Widget节点
    */
   get currentVNode(): WidgetVNode | undefined {
-    return getContext<WidgetVNode>(RelationalManager.#contextSymbol)
+    return getContext<WidgetVNode>(VNodeRelationalManager.#contextSymbol)
   }
 
   /**
@@ -52,22 +53,25 @@ class RelationalManager {
     vnode: T,
     callback?: InstanceCreatedCallback
   ): Widget {
-    vnode.scope = createScope()
-    vnode.scope.run(() => {
-      const restoreContext = setContext(RelationalManager.#contextSymbol, vnode)
-      try {
-        // 包装props为响应式对象
-        vnode.props = reactive(vnode.props, false)
-        vnode.instance = isClassWidgetConstructor(vnode.type)
-          ? new vnode.type(vnode.props)
-          : _createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
-        if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance
-        // 如果存在回调则调用
-        callback?.call(null, vnode.instance)
-      } finally {
-        restoreContext()
-      }
-    })
+    createScope(false, vnode.type.name)
+      .run(async () => {
+        await runContext(VNodeRelationalManager.#contextSymbol, vnode, async () => {
+          // 包装props为响应式对象
+          vnode.props = reactive(vnode.props, false)
+          // 异步实例
+          let asyncInstance: Promise<FnWidget> | null = null
+          if (isClassWidgetConstructor(vnode.type)) {
+            vnode.instance = new vnode.type(vnode.props)
+          } else {
+            asyncInstance = _createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
+          }
+          if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance!
+          // 如果存在回调则调用
+          callback?.call(null, vnode.instance!)
+          asyncInstance && (await asyncInstance)
+        })
+      })
+      .then()
     return vnode.instance!
   }
 
@@ -124,10 +128,10 @@ class RelationalManager {
  * }
  * ```
  * @returns {WidgetVNode|undefined} 当前小部件的虚拟节点，返回`undefined`代表着你未按规范使用！
- * @see {@link RelationalManager.currentVNode}
+ * @see {@link VNodeRelationalManager.currentVNode}
  */
 export function getCurrentVNode(): WidgetVNode | undefined {
-  return RelationalManager.instance.currentVNode
+  return VNodeRelationalManager.instance.currentVNode
 }
 
 /**
@@ -138,7 +142,7 @@ export function getCurrentVNode(): WidgetVNode | undefined {
  * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
  */
 export function findParentVNode(vnode: ChildVNode): VNode | undefined {
-  return RelationalManager.instance.findParentVNode(vnode)
+  return VNodeRelationalManager.instance.findParentVNode(vnode)
 }
 
 /**
@@ -149,7 +153,7 @@ export function findParentVNode(vnode: ChildVNode): VNode | undefined {
  * @param {VNode} parent - 父节点对象
  */
 export function updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void {
-  RelationalManager.instance.updateParentVNodeMapping(vnode, parent)
+  VNodeRelationalManager.instance.updateParentVNodeMapping(vnode, parent)
 }
 
 /**
@@ -165,5 +169,5 @@ export function createWidgetVNodeInstance<T extends WidgetVNode>(
   vnode: T,
   callback?: InstanceCreatedCallback
 ): Widget {
-  return RelationalManager.instance.createWidgetVNodeInstance(vnode, callback)
+  return VNodeRelationalManager.instance.createWidgetVNodeInstance(vnode, callback)
 }

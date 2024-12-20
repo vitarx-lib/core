@@ -132,7 +132,7 @@ export function renderWidgetElement(
   let el: HtmlElement
   createWidgetVNodeInstance(vnode, instance => {
     // 渲染
-    el = instance.renderer.render(parent)
+    el = instance['renderer'].render(parent)
     // 动态设置带有 getter 的属性 el，确保获取的el始终正确
     Object.defineProperty(vnode, 'el', {
       get() {

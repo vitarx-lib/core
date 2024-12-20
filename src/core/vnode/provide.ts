@@ -10,10 +10,13 @@ import { findParentVNode, getCurrentVNode } from './relational.js'
  * @param instance - 组件实例，函数式组件无需提供，类组件必须传入当前组件实例`this`
  */
 export function provide(name: string | symbol, value: any, instance?: Widget): void {
-  const currentVNode = instance?.vnode || getCurrentVNode()
+  const currentVNode = instance?.['vnode'] || getCurrentVNode()
   if (!currentVNode) throw new Error('provide must be called in widget')
-  if (!currentVNode.provide) currentVNode.provide = {}
-  currentVNode.provide[name] = value
+  if (!currentVNode.provide) {
+    ;(currentVNode as VNode).provide = {}
+  } else {
+    currentVNode.provide[name] = value
+  }
 }
 
 /**
@@ -28,7 +31,7 @@ export function inject<T = any>(
   defaultValue: T = undefined as T,
   instance?: Widget
 ): T {
-  const currentVNode = instance?.vnode || getCurrentVNode()
+  const currentVNode = instance?.['vnode'] || getCurrentVNode()
   if (!currentVNode) {
     if (instance) {
       throw new Error(

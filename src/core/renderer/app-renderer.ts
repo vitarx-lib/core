@@ -80,7 +80,7 @@ export class AppRenderer {
     if (!this.widget) {
       console.warn(`[Vitarx.AppRenderer.update]：${ERROR_MESSAGE}，不能执行更新操作。`)
     } else {
-      this.widget.renderer.update()
+      this.widget['renderer'].update()
     }
   }
 
@@ -95,7 +95,7 @@ export class AppRenderer {
     if (!this.widget) {
       console.warn(`[Vitarx.AppRenderer.unmount]：${ERROR_MESSAGE}，不能执行卸载操作。`)
     } else {
-      this.widget.renderer.unmount()
+      this.widget['renderer'].unmount()
       this.widget = null
     }
   }
@@ -109,7 +109,7 @@ export class AppRenderer {
     if (!this.widget) {
       console.warn(`[Vitarx.AppRenderer.activate]：${ERROR_MESSAGE}，不能执行激活操作。`)
     } else {
-      this.widget?.renderer.activate()
+      this.widget?.['renderer'].activate()
     }
   }
 
@@ -122,7 +122,7 @@ export class AppRenderer {
     if (!this.widget) {
       console.warn(`[Vitarx.AppRenderer.deactivate]：${ERROR_MESSAGE}，不能执行停用操作。`)
     } else {
-      this.widget?.renderer.deactivate()
+      this.widget?.['renderer'].deactivate()
     }
   }
 }

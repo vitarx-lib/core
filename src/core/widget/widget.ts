@@ -9,6 +9,7 @@ import {
   type VNode,
   type WidgetVNode
 } from '../vnode/index.js'
+import { getCurrentScope, Scope } from '../scope/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -38,8 +39,11 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * @private
    */
-  private readonly _props: P
-  private readonly _vnode: WidgetVNode
+  readonly #props: P
+  // 自身VNODE
+  readonly #vnode: WidgetVNode
+  // 自身作用域
+  readonly #scope: Scope
 
   /**
    * ## 构造函数
@@ -50,8 +54,9 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    */
   constructor(props: P) {
     super()
-    this._props = props
-    this._vnode = getCurrentVNode()!
+    this.#props = props
+    this.#vnode = getCurrentVNode()!
+    this.#scope = getCurrentScope()!
   }
 
   /**
@@ -68,13 +73,24 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    *
    * 请勿在外部调用，以及使用`WidgetRenderer`实例方法，避免内存泄露。
    *
+   * @internal
    * @protected
    */
-  get renderer(): WidgetRenderer<this> {
+  protected get renderer(): WidgetRenderer<this> {
     if (!this._renderer) {
       this._renderer = new WidgetRenderer(this)
     }
     return this._renderer
+  }
+
+  /**
+   * 作用域
+   *
+   * @internal 该获取器被内部逻辑依赖，请勿重写！
+   * @protected
+   */
+  protected get scope(): Scope {
+    return this.#scope
   }
 
   /**
@@ -84,8 +100,8 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * @protected
    * @returns {WidgetVNode}
    */
-  get vnode(): WidgetVNode {
-    return this._vnode
+  protected get vnode(): Readonly<WidgetVNode> {
+    return this.#vnode
   }
 
   /**
@@ -94,7 +110,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
    * 建议保持单向数据流，不要尝试修改`props`中数据。
    */
   protected get props(): Readonly<P> {
-    return this._props as Readonly<P>
+    return this.#props as Readonly<P>
   }
 
   /**

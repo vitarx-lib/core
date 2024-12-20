@@ -245,7 +245,7 @@ export function insertBeforeExactly(newEl: HtmlElement, targetElement: HtmlEleme
 export function unmountVNode(vnode: ChildVNode, removeEl: boolean = true): void {
   if (isVNode(vnode)) {
     if (vnode.instance) {
-      vnode.instance!.renderer.unmount(removeEl)
+      vnode.instance['renderer'].unmount(removeEl)
     } else {
       // 递归卸载子级
       vnode.children?.forEach(child => unmountVNode(child, false))
@@ -267,9 +267,9 @@ export function mountVNode(vnode: ChildVNode): void {
   if (isVNode(vnode)) {
     if ('instance' in vnode) {
       // 递归挂载子节点
-      mountVNode(vnode.instance!.renderer.child)
+      mountVNode(vnode.instance!['renderer'].child)
       // 挂载当前节点
-      vnode.instance!.renderer.mount()
+      vnode.instance!['renderer'].mount()
     } else {
       // 递归挂载子级
       vnode.children?.forEach(child => mountVNode(child))
@@ -287,11 +287,11 @@ export function mountVNode(vnode: ChildVNode): void {
 export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
   const newEl = renderElement(newVNode)
   // 如果新节点是传送节点则特殊处理
-  if (isWidgetVNode(newVNode) && newVNode.instance!.renderer.teleport) {
+  if (isWidgetVNode(newVNode) && newVNode.instance!['renderer'].teleport) {
     // 新占位节点
-    const newShadowElementEl = newVNode.instance!.renderer.shadowElement
-    if (isWidgetVNode(oldVNode) && oldVNode.instance!.renderer.teleport) {
-      replaceElement(newShadowElementEl, oldVNode.instance!.renderer.shadowElement)
+    const newShadowElementEl = newVNode.instance!['renderer'].shadowElement
+    if (isWidgetVNode(oldVNode) && oldVNode.instance!['renderer'].teleport) {
+      replaceElement(newShadowElementEl, oldVNode.instance!['renderer'].shadowElement)
     } else {
       // 将新传送节点占位元素插入到旧节点之前，兼容卸载动画
       insertBeforeExactly(newShadowElementEl, oldVNode.el!)
@@ -313,9 +313,9 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
     return
   }
   if (oldVNode.instance) {
-    if (oldVNode.instance.renderer.teleport) {
+    if (oldVNode.instance['renderer'].teleport) {
       // 将新元素替换掉旧节点的传送占位元素
-      replaceElement(newEl, oldVNode.instance.renderer.shadowElement)
+      replaceElement(newEl, oldVNode.instance['renderer'].shadowElement)
     } else {
       // 将新元素插入到旧元素之前，兼容卸载动画
       insertBeforeExactly(newEl, oldVNode.el!)
@@ -340,9 +340,9 @@ export function updateActivateState(vnode: ChildVNode, activate: boolean): void 
   if (isVNode(vnode)) {
     if (vnode.instance) {
       if (activate) {
-        vnode.instance.renderer.activate(false)
+        vnode.instance['renderer'].activate(false)
       } else {
-        vnode.instance.renderer.deactivate(false)
+        vnode.instance['renderer'].deactivate(false)
       }
     } else {
       // 递归激活/停用子节点

@@ -20,11 +20,11 @@ export const __WidgetIntrinsicProps__ = [
   'vnode',
   'children',
   'props',
+  'vnode',
+  'scope',
   'renderer',
   'el',
   '_renderer',
-  '_props',
-  '_vnode',
   'inject',
   'provide'
 ] as const

@@ -38,7 +38,6 @@ export type RenderState =
  * 用于渲染小部件，和管理小部件的生命周期。
  */
 export class WidgetRenderer<T extends Widget> {
-  private readonly _scope: Scope
   // 渲染器状态
   protected _state: RenderState = 'notRendered'
   // 等到更新
@@ -50,10 +49,15 @@ export class WidgetRenderer<T extends Widget> {
 
   constructor(widget: T) {
     this._widget = widget
-    this._scope = getCurrentScope()!
-    const { result: childVNode } = watchDepend(this.build.bind(this), this.update.bind(this), {
-      getResult: true
-    })
+    const { result: childVNode, listener } = watchDepend(
+      this.build.bind(this),
+      this.update.bind(this),
+      {
+        getResult: true
+      }
+    )
+    // 兼容异步
+    if (listener && !getCurrentScope()) widget['scope'].add(listener)
     this._child = childVNode
     // @ts-ignore 兼容开发模式热更新
     if (import.meta.env?.MODE === 'development') {
@@ -107,7 +111,7 @@ export class WidgetRenderer<T extends Widget> {
    * @protected
    */
   get scope(): Scope {
-    return this._scope
+    return this.widget['scope']
   }
 
   /**
@@ -136,7 +140,7 @@ export class WidgetRenderer<T extends Widget> {
    * @returns {VNode}
    */
   get vnode(): VNode<WidgetType> {
-    return this.widget.vnode
+    return this.widget['vnode']
   }
 
   /**

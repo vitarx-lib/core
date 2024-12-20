@@ -117,7 +117,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
           const firstType = this.cache.keys().next().value!
           const firstTypeMap = this.cache.get(firstType)!
           const firstKey = firstTypeMap.keys().next().value!
-          firstTypeMap.get(firstKey)?.instance?.renderer.unmount()
+          firstTypeMap.get(firstKey)?.instance?.['renderer'].unmount()
           firstTypeMap.delete(firstKey)
 
           // 如果该类型的缓存已空，移除类型
@@ -199,7 +199,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     // 遍历缓存中的所有 VNode 并卸载其实例
     this.cache.forEach(typeCache => {
       typeCache.forEach(vnode => {
-        vnode.instance?.renderer.unmount()
+        vnode.instance!['renderer'].unmount()
       })
     })
     // 清空缓存
@@ -228,7 +228,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
  */
 export class _KeepAliveRenderer<T extends KeepAlive> extends WidgetRenderer<T> {
   protected override patchUpdate(oldVNode: VNode<WidgetType>, newVNode: VNode<WidgetType>): VNode {
-    const oldRenderer = oldVNode.instance!.renderer
+    const oldRenderer = oldVNode.instance!['renderer']
     let parentEl: ParentNode | null = null
     let placeholderEl: Text | null = null
 
@@ -249,11 +249,11 @@ export class _KeepAliveRenderer<T extends KeepAlive> extends WidgetRenderer<T> {
 
     if (newVNode.instance) {
       // 如果新节点已实例化，激活它
-      newVNode.instance.renderer.activate()
+      newVNode.instance['renderer'].activate()
     } else {
       // 如果新节点未实例化，渲染并挂载它
       const el = renderElement(newVNode)
-      const newRenderer = newVNode.instance!.renderer
+      const newRenderer = newVNode.instance!['renderer']
 
       // 根据是否为传送节点，执行替换逻辑
       if (newRenderer.teleport) {
