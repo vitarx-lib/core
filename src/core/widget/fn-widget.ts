@@ -49,36 +49,16 @@ const __initialization = Symbol('InitializationFnWidgetBuild')
 export class FnWidget extends Widget {
   #init: boolean = false
   #triggered: Record<string, any[]> = {}
+  #isAsyncFnWidget: boolean = false
   constructor(props: Record<string, any>) {
     super(props)
   }
 
-  // 初始化实例
-  async [__initialization](data: CollectResult): Promise<FnWidget> {
-    if (isPromise(data.build)) {
-      const suspenseCounter = getSuspenseCounter(this)
-      // 如果有上级暂停计数器则让计数器+1
-      if (suspenseCounter) suspenseCounter.value++
-      try {
-        data.build = await data.build
-      } catch (err) {
-        // 让build方法抛出异常
-        data.build = () => {
-          throw err
-        }
-      } finally {
-        this.#initialize(data as InitData)
-        // 如果组件未卸载，则强制更新视图
-        if (this._renderer && this._renderer.state !== 'unloaded') this.update()
-        // 如果有上级暂停计数器则让计数器-1
-        if (suspenseCounter) suspenseCounter.value--
-      }
-    } else {
-      this.#initialize(data as InitData)
-      // 如果组件已渲染，则强制更新视图
-      if (this._renderer && this._renderer.state !== 'notRendered') this.update()
-    }
-    return this
+  /**
+   * 异步函数小部件标识
+   */
+  get __isAsyncFnWidget(): boolean {
+    return this.#isAsyncFnWidget
   }
 
   /**
@@ -157,6 +137,35 @@ export class FnWidget extends Widget {
       }
       if (!(exposedKey in this)) (this as any)[exposedKey] = exposed[exposedKey]
     }
+  }
+
+  // 初始化实例
+  async [__initialization](data: CollectResult): Promise<FnWidget> {
+    if (isPromise(data.build)) {
+      this.#isAsyncFnWidget = true
+      const suspenseCounter = getSuspenseCounter(this)
+      // 如果有上级暂停计数器则让计数器+1
+      if (suspenseCounter) suspenseCounter.value++
+      try {
+        data.build = await data.build
+      } catch (err) {
+        // 让build方法抛出异常
+        data.build = () => {
+          throw err
+        }
+      } finally {
+        this.#initialize(data as InitData)
+        // 如果组件未卸载，则强制更新视图
+        if (this._renderer && this._renderer.state !== 'unloaded') this.update()
+        // 如果有上级暂停计数器则让计数器-1
+        if (suspenseCounter) suspenseCounter.value--
+      }
+    } else {
+      this.#initialize(data as InitData)
+      // 如果组件已渲染，则强制更新视图
+      if (this._renderer && this._renderer.state !== 'notRendered') this.update()
+    }
+    return this
   }
 }
 
