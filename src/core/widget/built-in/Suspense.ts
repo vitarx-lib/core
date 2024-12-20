@@ -8,7 +8,7 @@ import {
   provide,
   updateParentVNodeMapping
 } from '../../vnode/index.js'
-import { watch } from '../../observer/index.js'
+import { Listener, watch } from '../../observer/index.js'
 import { renderElement } from '../../renderer/web-runtime-dom/index.js'
 import type { ErrorInfo } from '../life-cycle.js'
 
@@ -58,7 +58,7 @@ const provideSymbol = Symbol('SuspenseSymbol')
 export class Suspense extends Widget<SuspenseProps> {
   protected counter = ref(0)
   protected showFallback = true
-
+  private listener?: Listener
   constructor(props: SuspenseProps) {
     super(props)
     if (props.fallback && !isVNode(props.fallback)) {
@@ -77,16 +77,15 @@ export class Suspense extends Widget<SuspenseProps> {
     }
     provide(provideSymbol, this.counter, this)
     // 监听计数器变化，手动管理视图更新，优化性能
-    watch(this.counter, () => {
+    this.listener = watch(this.counter, () => {
       const newValue = this.counter.value
       const shouldShowFallback = newValue >= 1
-      if (shouldShowFallback !== this.showFallback) {
-        this.showFallback = shouldShowFallback
-        // 强制更新视图
-        this.update()
+      if (!shouldShowFallback && this.showFallback) {
+        this.stopSuspense()
       }
     })
   }
+
   /**
    * 挂载完成后开始预渲染子节点
    *
@@ -99,7 +98,20 @@ export class Suspense extends Widget<SuspenseProps> {
     renderElement(this.children)
     // 如果计数器为0，则隐藏回退内容
     if (this.counter.value === 0) {
+      this.stopSuspense()
+    }
+  }
+
+  /**
+   * 停止挂起状态
+   *
+   * @private
+   */
+  private stopSuspense() {
+    if (this.showFallback) {
+      this.listener?.destroy()
       this.showFallback = false
+      this.listener = undefined
       this.update()
     }
   }
