@@ -43,7 +43,7 @@ export function inject<T = any>(
     )
   }
   // 从当前 VNode 向上查找父级 VNode，直到找到或没有父级
-  let parentVNode: VNode | undefined = currentVNode
+  let parentVNode: VNode | undefined = findParentVNode(currentVNode)
   while (parentVNode) {
     // 判断当前 VNode 是否包含提供的数据
     if (parentVNode.provide && name in parentVNode.provide) {
