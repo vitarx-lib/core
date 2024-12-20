@@ -133,4 +133,18 @@ export default class GlobalContextManager {
   static clear(): void {
     this.#store.clear()
   }
+
+  /**
+   * 当前存储的上下文数量
+   */
+  static get size(): number {
+    return this.#store.size
+  }
+
+  /**
+   * 当前活跃的上下文标签
+   */
+  static get tags(): MapIterator<Tag> {
+    return this.#store.keys()
+  }
 }
