@@ -77,7 +77,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   get shadowElement(): Comment {
     if (!this._shadowElement) {
-      this._shadowElement = document.createComment('')
+      this._shadowElement = document.createComment('shadow')
     }
     return this._shadowElement
   }
@@ -208,11 +208,6 @@ export class WidgetRenderer<T extends Widget> {
     }
     // 如果是挂起的更新，则直接返回
     if (this._pendingUpdate) return
-    // 如果还未渲染，则直接更新子节点为新子节点
-    if (this.state === 'notRendered') {
-      this._child = newChildVNode || this.build()
-      return
-    }
     this._pendingUpdate = true
     try {
       // 触发更新前生命周期
