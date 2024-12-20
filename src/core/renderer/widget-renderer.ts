@@ -1,8 +1,8 @@
 import { isVNode, updateParentVNodeMapping, type VNode, type WidgetType } from '../vnode/index.js'
 import {
   type ContainerElement,
-  getElParentNode,
   insertBeforeExactly,
+  mountVNode,
   patchUpdate,
   removeElement,
   renderElement,
@@ -61,7 +61,8 @@ export class WidgetRenderer<T extends Widget> {
     this._child = childVNode
     // @ts-ignore 兼容开发模式热更新
     if (import.meta.env?.MODE === 'development') {
-      if (!this.vnode.el) {
+      // @ts-ignore
+      if (!this.vnode['__$hmr_state$__']) {
         this.triggerLifeCycle(LifeCycleHooks.created)
       }
       return
@@ -121,17 +122,6 @@ export class WidgetRenderer<T extends Widget> {
    */
   get el(): ContainerElement | undefined {
     return this._child?.el
-  }
-
-  /**
-   * 获取挂载的父节点
-   *
-   * 如果已卸载销毁或还未挂载过，则回返回null
-   *
-   * @returns {ParentNode | null} DOM元素实例
-   */
-  get parentEl(): ParentNode | null {
-    return getElParentNode(this.el)
   }
 
   /**
@@ -264,6 +254,8 @@ export class WidgetRenderer<T extends Widget> {
     if (this.state !== 'notMounted') {
       return console.warn('[Vitarx.WidgetRenderer.mount]：非待挂载状态，不能进行挂载！')
     }
+    // 递归挂载子节点
+    mountVNode(this.child)
     // 挂载到传送节点上
     if (this.teleport) {
       this.teleport.appendChild(this.el!)
@@ -299,25 +291,23 @@ export class WidgetRenderer<T extends Widget> {
       this.triggerLifeCycle(LifeCycleHooks.beforeUnmount)
       // 递归卸载子节点
       unmountVNode(this.child, isRemoveEl)
-      setTimeout(() => {
-        // 销毁当前作用域
-        this.scope?.destroy()
-        // 移除占位元素
-        this._shadowElement?.remove()
-        // 修改状态为已卸载
-        this._state = 'unloaded'
-        // 触发onDeactivated生命周期
-        this.triggerLifeCycle(LifeCycleHooks.deactivate)
-        // 触发onUnmounted生命周期
-        this.triggerLifeCycle(LifeCycleHooks.unmounted)
-        // 释放内存
-        // @ts-ignore
-        this._child = null
-        // @ts-ignore
-        this._widget = null
-        this._shadowElement = null
-        this._teleport = null
-      }, 0)
+      // 销毁当前作用域
+      this.scope?.destroy()
+      // 移除占位元素
+      this._shadowElement?.remove()
+      // 修改状态为已卸载
+      this._state = 'unloaded'
+      // 触发onDeactivated生命周期
+      this.triggerLifeCycle(LifeCycleHooks.deactivate)
+      // 触发onUnmounted生命周期
+      this.triggerLifeCycle(LifeCycleHooks.unmounted)
+      // 释放内存
+      // @ts-ignore
+      this._child = null
+      // @ts-ignore
+      this._widget = null
+      this._shadowElement = null
+      this._teleport = null
     }
   }
 

@@ -266,8 +266,6 @@ export function unmountVNode(vnode: ChildVNode, removeEl: boolean = true): void 
 export function mountVNode(vnode: ChildVNode): void {
   if (isVNode(vnode)) {
     if ('instance' in vnode) {
-      // 递归挂载子节点
-      mountVNode(vnode.instance!['renderer'].child)
       // 挂载当前节点
       vnode.instance!['renderer'].mount()
     } else {
