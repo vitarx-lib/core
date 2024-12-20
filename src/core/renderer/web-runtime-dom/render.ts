@@ -180,7 +180,7 @@ export function renderFragmentElement(
   const el = document.createDocumentFragment() as VDocumentFragment
   if (!vnode.children || vnode.children.length === 0) {
     // 创建一个空节点 document.createComment('') 或 document.createTextNode('')
-    el.appendChild(document.createComment(''))
+    el.appendChild(document.createComment('empty fragment'))
   } else {
     renderChildren(el, vnode.children)
   }
