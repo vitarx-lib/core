@@ -260,9 +260,16 @@ export function watchProps<
   let mainListener: Listener
   let subCallback: AnyCallback
   if (options?.batch === undefined || options?.batch) {
-    mainListener = Observers.register(props, callback, Observers.ALL_CHANGE_SYMBOL, options)
+    // 批处理
+    mainListener = Observers.register(
+      props,
+      prop => callback(prop, origin),
+      Observers.ALL_CHANGE_SYMBOL,
+      options
+    )
     subCallback = p => Observers.trigger(props, p)
   } else {
+    // 非批处理
     mainListener = Listener.create(callback, options?.limit ?? 0)
     subCallback = p => mainListener.trigger([p, origin])
   }
