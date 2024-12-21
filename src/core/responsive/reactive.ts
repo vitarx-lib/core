@@ -1,4 +1,4 @@
-import { isArray, isCollection, isFunction, isObject } from '../../utils/index.js'
+import { isCollection, isFunction, isObject } from '../../utils/index.js'
 import { Observers } from '../observer/index.js'
 import { PROXY_SYMBOL } from './constants.js'
 import { type ExtractProp, isProxy, type ProxySymbol } from './helper.js'
@@ -29,7 +29,7 @@ export interface ReactiveSymbol<T extends AnyObject> extends ProxySymbol {
 /** 触发监听器 */
 type Trigger<T> = (prop: ExtractProp<T>) => void
 /** 跟踪依赖 */
-type Track<T> = (prop: ExtractProp<T>) => void
+type Track<T> = (prop: ExtractProp<T> | '*') => void
 /** reactive 接口 */
 export type Reactive<T extends AnyObject = AnyObject> = T & ReactiveSymbol<T>
 
@@ -114,14 +114,14 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     return result
   }
 
-  get(target: T, prop: ExtractProp<T>, receiver: any) {
+  get(target: T, prop: ExtractProp<T>) {
     // 检测是否为响应式对象
     if (prop === REACTIVE_SYMBOL) return true
     // 检测是否为代理对象
     if (prop === PROXY_SYMBOL) return true
     // 获取原始对象
     if (prop === GET_RAW_TARGET_SYMBOL) return target
-    const value = Reflect.get(target, prop, receiver)
+    const value = Reflect.get(target, prop, target)
     if (isFunction(value)) {
       // 集合目标函数需特殊处理
       return isCollection(target)
@@ -149,7 +149,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
     // 处理数组长度修改
-    if (prop === 'length' && isArray(target)) {
+    if (prop === 'length' && Array.isArray(target)) {
       const result = Reflect.set(target, prop, newValue, receiver)
       if (result) this.#trigger(prop)
       return result
@@ -167,6 +167,15 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
       return result
     }
     return true
+  }
+
+  ownKeys(target: T) {
+    if (Array.isArray(target)) {
+      this.#track('length' as ExtractProp<T>)
+    } else {
+      this.#track('*')
+    }
+    return Reflect.ownKeys(target)
   }
 }
 
@@ -191,14 +200,14 @@ export function createReactive<T extends AnyObject>(
     new ReactiveHandler<T>(
       deep,
       trigger
-        ? function (prop: ExtractProp<T>) {
+        ? function (prop) {
             Observers.trigger(proxy, prop)
             trigger()
           }
-        : function (prop: ExtractProp<T>) {
+        : function (prop) {
             Observers.trigger(proxy, prop)
           },
-      function (prop: ExtractProp<T>) {
+      function (prop) {
         Depend.track(proxy, prop)
       }
     )
@@ -224,7 +233,10 @@ export function isReactive<T extends object>(val: T | Reactive<T>): val is React
  * @alias toRaw
  */
 export function unReactive<T extends object>(obj: T | Reactive<T>): UnReactive<T> {
-  return isReactive(obj) ? (obj[GET_RAW_TARGET_SYMBOL] as UnReactive<T>) : (obj as UnReactive<T>)
+  if (isReactive(obj)) {
+    return obj[GET_RAW_TARGET_SYMBOL] as UnReactive<T>
+  }
+  return obj as UnReactive<T>
 }
 
 /**
