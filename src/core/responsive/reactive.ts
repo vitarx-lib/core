@@ -29,7 +29,7 @@ export interface ReactiveSymbol<T extends AnyObject> extends ProxySymbol {
 /** 触发监听器 */
 type Trigger<T> = (prop: ExtractProp<T>) => void
 /** 跟踪依赖 */
-type Track<T> = (prop: ExtractProp<T> | '*') => void
+type Track<T> = (prop: ExtractProp<T>) => void
 /** reactive 接口 */
 export type Reactive<T extends AnyObject = AnyObject> = T & ReactiveSymbol<T>
 
@@ -167,15 +167,6 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
       return result
     }
     return true
-  }
-
-  ownKeys(target: T) {
-    if (Array.isArray(target)) {
-      this.#track('length' as ExtractProp<T>)
-    } else {
-      this.#track('*')
-    }
-    return Reflect.ownKeys(target)
   }
 }
 
