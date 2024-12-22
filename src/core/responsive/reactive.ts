@@ -1,7 +1,7 @@
-import { isCollection, isFunction, isObject } from '../../utils/index.js'
+import { isCollection, isFunction } from '../../utils/index.js'
 import { Observers } from '../observer/index.js'
 import { PROXY_SYMBOL } from './constants.js'
-import { type ExtractProp, isProxy, type ProxySymbol } from './helper.js'
+import { type ExtractProp, isMakeProxy, isProxy, type ProxySymbol } from './helper.js'
 import { isRef } from './ref.js'
 import { Depend } from './depend.js'
 
@@ -34,7 +34,7 @@ type Track<T> = (prop: ExtractProp<T>) => void
 export type Reactive<T extends AnyObject = AnyObject> = T & ReactiveSymbol<T>
 
 /** 解除响应式对象 */
-export type UnReactive<T> = T extends Reactive<infer U> ? U : T
+export type UnReactive<T> = T extends Reactive<infer U> ? UnReactive<U> : T
 
 /**
  * 处理集合对象方法
@@ -94,7 +94,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   readonly #deep: boolean
   readonly #trigger: Trigger<T>
   readonly #track: Track<T>
-
+  #deepProxy?: Map<string | symbol, Reactive>
   /**
    * 构造函数
    *
@@ -110,6 +110,8 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   deleteProperty(target: T, prop: ExtractProp<T>): boolean {
     const result = Reflect.deleteProperty(target, prop)
+    // 移除深度代理
+    if (this.#deepProxy?.has(prop)) this.#deepProxy.delete(prop)
     if (result) this.#trigger(prop)
     return result
   }
@@ -121,6 +123,8 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (prop === PROXY_SYMBOL) return true
     // 获取原始对象
     if (prop === GET_RAW_TARGET_SYMBOL) return target
+    // 如果存在于深度代理中，则直接返回代理对象
+    if (this.#deepProxy?.has(prop)) return this.#deepProxy.get(prop)
     const value = Reflect.get(target, prop, target)
     if (isFunction(value)) {
       // 集合目标函数需特殊处理
@@ -129,10 +133,13 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
         : value
     }
     // 如果是对象，则判断是否需要进行深度代理
-    if (this.#deep && isObject(value) && !isProxy(value)) {
+    if (this.#deep && isMakeProxy(value)) {
       const proxy = createReactive(value, this.#deep, () => this.#trigger(prop))
-      // 替换原始对象为代理对象
-      Reflect.set(target, prop, proxy)
+      if (this.#deepProxy) {
+        this.#deepProxy.set(prop, proxy)
+      } else {
+        this.#deepProxy = new Map([[prop, proxy]])
+      }
       // 返回代理对象
       return proxy
     }
@@ -173,11 +180,10 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 /**
  * 创建响应式代理对象
  *
- * @note 此方法由系统内部使用，开发者不应该使用此方法！。
- *
  * @param target - 目标对象
  * @param deep - 是否深度监听
  * @param trigger - 当前对象属性变更时需要触发的钩子，一般是父对象的触发器，用于将子对象的变化传递到父对象。
+ * @internal 此函数由系统内部使用，开发者不应该使用此函数！。
  */
 export function createReactive<T extends AnyObject>(
   target: T,
@@ -191,14 +197,14 @@ export function createReactive<T extends AnyObject>(
     new ReactiveHandler<T>(
       deep,
       trigger
-        ? function (prop) {
+        ? prop => {
             Observers.trigger(proxy, prop)
             trigger()
           }
-        : function (prop) {
+        : prop => {
             Observers.trigger(proxy, prop)
           },
-      function (prop) {
+      prop => {
         Depend.track(proxy, prop)
       }
     )
