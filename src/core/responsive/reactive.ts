@@ -27,7 +27,7 @@ export interface ReactiveSymbol<T extends AnyObject> extends ProxySymbol {
 }
 
 /** 触发监听器 */
-type Trigger<T> = (prop: ExtractProp<T>) => void
+type Trigger<T> = (prop: ExtractProp<T> | ExtractProp<T>[]) => void
 /** 跟踪依赖 */
 type Track<T> = (prop: ExtractProp<T>) => void
 /** reactive 接口 */
@@ -124,7 +124,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     // 获取原始对象
     if (prop === GET_RAW_TARGET_SYMBOL) return target
     // 如果存在于深度代理中，则直接返回代理对象
-    if (this.#deepProxy?.has(prop)) return this.#deepProxy.get(prop)
+    if (Reflect.has(target, prop) && this.#deepProxy?.has(prop)) return this.#deepProxy.get(prop)
     const value = Reflect.get(target, prop, target)
     if (isFunction(value)) {
       // 集合目标函数需特殊处理
@@ -157,8 +157,20 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
     // 处理数组长度修改
     if (prop === 'length' && Array.isArray(target)) {
+      const oldLength = target.length  // 旧长度
       const result = Reflect.set(target, prop, newValue, receiver)
-      if (result) this.#trigger(prop)
+      if (result) {
+        const newLength = target.length // 新长度
+        if (newLength < oldLength) {
+          // 计算被删除的下标
+          for (let i = newLength; i < oldLength; i++) {
+            const strIndex = i.toString()
+            // 移除深度代理
+            if (this.#deepProxy?.has(strIndex)) this.#deepProxy.delete(strIndex)
+          }
+        }
+        this.#trigger(prop)
+      }
       return result
     }
     const oldValue = Reflect.get(target, prop)
@@ -169,6 +181,8 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
         this.#trigger(prop)
       }
     } else if (oldValue !== newValue || !target.hasOwnProperty(prop)) {
+      // 移除深度代理
+      if (this.#deepProxy?.has(prop)) this.#deepProxy.delete(prop)
       const result = Reflect.set(target, prop, newValue, receiver)
       if (result) this.#trigger(prop)
       return result
