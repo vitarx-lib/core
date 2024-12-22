@@ -76,9 +76,9 @@ function createValueListener<T extends AnyObject>(
   options?: Options
 ): Listener<() => void> {
   let oldValue = deepClone(prop !== undefined ? origin[prop] : origin)
-  return Listener.create(function () {
+  return Listener.create(() => {
     const newValue = deepClone(prop !== undefined ? origin[prop] : origin)
-    callback(oldValue as any, newValue as any)
+    callback(newValue as any, oldValue as any)
     oldValue = newValue
   }, options?.limit ?? 0)
 }
