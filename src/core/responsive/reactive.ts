@@ -168,7 +168,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
         oldValue.value = newValue
         this.#trigger(prop)
       }
-    } else if (oldValue !== newValue) {
+    } else if (oldValue !== newValue || !target.hasOwnProperty(prop)) {
       const result = Reflect.set(target, prop, newValue, receiver)
       if (result) this.#trigger(prop)
       return result
