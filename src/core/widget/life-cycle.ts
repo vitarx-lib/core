@@ -61,7 +61,7 @@ export abstract class LifeCycle {
   protected onBeforeMount?(): void | TargetContainerElement
 
   /**
-   * 生命周期构造
+   * 生命周期构子
    *
    * `onMounted`钩子会在组件挂载到dom树后触发，此时el已经渲染，可以安全使用`this.el`，操作真实dom。
    *
@@ -105,7 +105,7 @@ export abstract class LifeCycle {
   protected onUnmounted?(): void
 
   /**
-   * ## 生命周期构造
+   * 生命周期构子
    *
    * `onBeforeUnmount`钩子会在组件被销毁前触发。
    *
