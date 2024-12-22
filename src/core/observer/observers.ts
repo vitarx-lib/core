@@ -72,7 +72,7 @@ export class Observers {
    * ## 触发监听器的回调函数
    *
    * @param {AnyObject} origin - 要触发的源对象，一般是 `ref` | `reactive` 创建的对象
-   * @param {PropName} prop - 变更的属性名
+   * @param {PropName|PropName[]} prop - 变更的属性名
    */
   static trigger<T extends AnyObject, P extends ExtractProp<T>>(origin: T, prop: P | P[]): void {
     // 如果不在微任务中，则开始处理队列
