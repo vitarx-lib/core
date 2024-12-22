@@ -34,7 +34,7 @@ type Track<T> = (prop: ExtractProp<T>) => void
 export type Reactive<T extends AnyObject = AnyObject> = T & ReactiveSymbol<T>
 
 /** 解除响应式对象 */
-export type UnReactive<T> = T extends Reactive<infer U> ? UnReactive<U> : T
+export type UnReactive<T> = T extends Reactive<infer U> ? U : T
 
 /**
  * 处理集合对象方法
