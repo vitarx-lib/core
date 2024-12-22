@@ -1,12 +1,8 @@
-import { isObject } from '../../utils/index.js'
-import { isProxy, ValueProxy } from './helper.js'
+import { isMakeProxy, isProxy, ValueProxy } from './helper.js'
 import { createReactive } from './reactive.js'
 import { Observers } from '../observer/index.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
 import { Depend } from './depend.js'
-
-/** 解除响应式对象 */
-export type UnRef<T> = T extends Ref<infer U> ? U : T
 
 /**
  * # `Ref`值代理对象，用于代理一个值，使其成为响应式变量。
@@ -48,7 +44,7 @@ export class Ref<T = any> implements ValueProxy<T> {
   /** 获取目标变量 */
   get value(): T {
     // 惰性代理子对象
-    if (this.#deep && isObject(this.#value) && !isProxy(this.#value)) {
+    if (this.#deep && isMakeProxy(this.#value)) {
       this.#value = createReactive(this.#value, this.#deep, this.trigger.bind(this))
     } else if (!isProxy(this.#value)) {
       Depend.track(this, 'value')
@@ -130,8 +126,10 @@ export function isRef(val: any): val is Ref {
 /**
  * 解除Ref对象，返回其value属性值
  *
- * @template T - 任意类型
- * @param {T | Ref<T>} ref - 任意值或`Ref`对象
+ * `isRef(ref) ? ref.value : ref`的语法糖，它不具备任何其他效果。
+ *
+ * @template T - ref值类型
+ * @param {any} ref - 任意值
  * @return {T} 如果传入的是`Ref`对象则返回其value属性值，否则原样返回
  */
 export function unRef<T>(ref: T | Ref<T>): T {
@@ -171,7 +169,14 @@ export function ref(value?: undefined, deep?: boolean): Ref<any>
  * @return {Ref<T | undefined>}
  */
 export function ref<T>(value?: undefined, deep?: boolean): Ref<T | undefined>
-
+/**
+ * 创建 {@link Ref} 值代理对象
+ *
+ * @template T - 值类型
+ * @param {T} [value] - 代理的值
+ * @param {boolean} [deep=true] - 是否深度代理，仅值为对象时有效。
+ * @return {Ref<T>} Ref对象
+ */
 export function ref<T>(value?: T, deep: boolean = true): Ref<T | undefined> {
   return new Ref(value, deep)
 }
@@ -189,7 +194,6 @@ export function ref<T>(value?: T, deep: boolean = true): Ref<T | undefined> {
  * @return {Ref<T>} Ref对象
  */
 export function shallowRef<T>(value: T): Ref<T>
-
 /**
  * 创建 {@link Ref} 值代理对象(浅代理)
  *
@@ -198,7 +202,6 @@ export function shallowRef<T>(value: T): Ref<T>
  * @return {Ref<any>}
  */
 export function shallowRef(value?: undefined): Ref<any>
-
 /**
  * 创建 {@link Ref} 值代理对象(浅代理)
  *
@@ -208,7 +211,13 @@ export function shallowRef(value?: undefined): Ref<any>
  * @return {Ref<T | undefined>}
  */
 export function shallowRef<T>(value?: undefined): Ref<T | undefined>
-
+/**
+ * 创建 {@link Ref} 值代理对象(浅代理)
+ *
+ * @template T - 值类型
+ * @param {T} [value] - 代理的值
+ * @return {Ref<T | undefined>}
+ */
 export function shallowRef<T>(value?: T): Ref<T | undefined> {
   return new Ref(value, false)
 }
