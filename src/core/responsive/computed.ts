@@ -83,12 +83,16 @@ export class Computed<T> implements ValueProxy<T> {
    * 停止监听依赖变化
    *
    * 调用此方法会停止对依赖的监听，并释放相关监听器。
+   *
+   * @template T - 计算结果类型
+   * @returns {T} - 计算结果
    */
-  stop() {
+  stop(): T {
     if (this.#listener) {
       this.#listener.destroy()
       this.#listener = undefined
     }
+    return this.#result
   }
 
   /**
@@ -154,11 +158,13 @@ export function isComputed(val: any): val is Computed<any> {
 }
 
 /**
- * 解除`Computed`对象，返回其value属性值
+ * 解除`Computed`计算属性
+ *
+ * 它会停止对依赖的监听，并返回其value属性值。
  *
  * @template T - 任意类型
  * @param computed - 如果传入的是`Computed`对象则返回其value属性值，否则返回原值
  */
 export function unComputed<T>(computed: T | Computed<T>): T {
-  return isComputed(computed) ? computed.value : computed
+  return isComputed(computed) ? computed.stop() : computed
 }
