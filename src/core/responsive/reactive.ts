@@ -94,6 +94,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   readonly #deep: boolean
   readonly #trigger: Trigger<T>
   readonly #track: Track<T>
+  readonly #readonly: boolean
   #deepProxy?: Map<string | symbol, Reactive>
   /**
    * 构造函数
@@ -101,14 +102,20 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param deep - 是否深度监听
    * @param trigger - 触发器
    * @param track - 跟踪器
+   * @param readonly - 是否只读
    */
-  constructor(deep: boolean, trigger: Trigger<T>, track: Track<T>) {
+  constructor(deep: boolean, trigger: Trigger<T>, track: Track<T>, readonly: boolean = false) {
     this.#deep = deep
     this.#trigger = trigger
     this.#track = track
+    this.#readonly = readonly
   }
 
   deleteProperty(target: T, prop: ExtractProp<T>): boolean {
+    if (this.#readonly) {
+      console.error(`[Vitarx.Reactive.set][ERROR]：响应式对象是只读的，不能删除属性！`)
+      return false
+    }
     const result = Reflect.deleteProperty(target, prop)
     // 移除深度代理
     if (this.#deepProxy?.has(prop)) this.#deepProxy.delete(prop)
@@ -134,7 +141,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     }
     // 如果是对象，则判断是否需要进行深度代理
     if (this.#deep && isMakeProxy(value)) {
-      const proxy = createReactive(value, this.#deep, () => this.#trigger(prop))
+      const proxy = createReactive(value, this.#deep, () => this.#trigger(prop), this.#readonly)
       if (this.#deepProxy) {
         this.#deepProxy.set(prop, proxy)
       } else {
@@ -155,9 +162,13 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   }
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
+    if (this.#readonly) {
+      console.error(`[Vitarx.Reactive.set][ERROR]：此响应式对象是只读的，不可修改！`)
+      return false
+    }
     // 处理数组长度修改
     if (prop === 'length' && Array.isArray(target)) {
-      const oldLength = target.length  // 旧长度
+      const oldLength = target.length // 旧长度
       const result = Reflect.set(target, prop, newValue, receiver)
       if (result) {
         const newLength = target.length // 新长度
@@ -197,12 +208,14 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
  * @param target - 目标对象
  * @param deep - 是否深度监听
  * @param trigger - 当前对象属性变更时需要触发的钩子，一般是父对象的触发器，用于将子对象的变化传递到父对象。
+ * @param readonly - 是否只读
  * @internal 此函数由系统内部使用，开发者不应该使用此函数！。
  */
 export function createReactive<T extends AnyObject>(
   target: T,
   deep: boolean = true,
-  trigger?: () => void
+  trigger?: () => void,
+  readonly?: boolean
 ): Reactive<T> {
   // 避免嵌套代理
   if (isReactive(target)) return target
@@ -220,7 +233,8 @@ export function createReactive<T extends AnyObject>(
           },
       prop => {
         Depend.track(proxy, prop)
-      }
+      },
+      readonly
     )
   ) as Reactive<T>
   return proxy
