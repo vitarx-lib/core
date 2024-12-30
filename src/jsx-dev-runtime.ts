@@ -1,5 +1,5 @@
 import { Fragment, jsx } from './jsx-runtime.js'
-import type { VNode, VNodePropsType, VNodeType } from './core/index.js'
+import { type VNode, type VNodePropsType, type VNodeType } from './core/index.js'
 
 type Source = { fileName: string; lineNumber: number; columnNumber: number }
 
@@ -10,6 +10,7 @@ interface DevVNode<T extends VNodeType> extends VNode<T> {
     self: any
   }
 }
+
 /**
  * JSX构建VNode(开发模式)
  *
@@ -28,7 +29,7 @@ function jsxDEV<T extends VNodeType>(
   source: Source,
   self: any
 ): DevVNode<T> {
-  if (typeof type === 'function') {
+  if (typeof type === 'function' && typeof window !== 'undefined') {
     // 获取最新模块
     let newModule = (window as any)?.__$vitarx_widget_hmr_map$__?.get?.(type)
     while (newModule) {
@@ -45,4 +46,4 @@ function jsxDEV<T extends VNodeType>(
   return vnode
 }
 
-export { Fragment, jsxDEV }
+export { jsxDEV, Fragment }
