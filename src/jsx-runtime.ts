@@ -6,7 +6,6 @@ import {
   type VNodeType
 } from './core/index.js'
 
-
 /**
  * JSX构建VNode
  *
@@ -28,5 +27,4 @@ function jsx<T extends VNodeType>(
   return createElement(type, props)
 }
 
-
-export { Fragment, jsx, jsx as jsxs }
+export { jsx, Fragment, jsx as jsxs }
