@@ -46,7 +46,7 @@ export class AppRenderer {
    * @returns {string} - 版本号
    */
   static get version(): string {
-    return '__VERSION__'
+    return __VERSION__
   }
 
   /**
