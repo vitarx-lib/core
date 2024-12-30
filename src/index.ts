@@ -67,3 +67,4 @@ declare global {
 
 export * from './core/index.js'
 export * from './utils/index.js'
+export * from './jsx-runtime.js'
