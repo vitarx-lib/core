@@ -25,7 +25,7 @@
     "jsxFactory": "createVNode",
     // 片段常量标识
     "jsxFragmentFactory": "Fragment",
-    // 不生成 .d.ts
+    // 是否编译文件
     "noEmit": false,
     // 删除注释
     "removeComments": false,
