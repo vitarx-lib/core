@@ -9,7 +9,7 @@ export default defineConfig({
     lib: {
       entry: 'src/index.ts',
       name: 'Vitarx',
-      fileName: 'vitarx',
+      fileName: format => `vitarx.${format}.js`,
       formats: ['umd']
     }
   }
