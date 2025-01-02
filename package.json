@@ -7,7 +7,7 @@
     "vitarx"
   ],
   "type": "module",
-  "main": "./dist/vitarx.umd.cjs",
+  "main": "./dist/vitarx.umd.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "author": "ZhuChongLin <8210856@qq.com>",
