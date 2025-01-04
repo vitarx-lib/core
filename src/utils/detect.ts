@@ -40,6 +40,16 @@ export function isString(val: any): val is string {
 }
 
 /**
+ * 判断是否为布尔值
+ *
+ * @param {any} val - 要判断的变量
+ * @returns {boolean}
+ */
+export function isBool(val: any): val is boolean {
+  return typeof val === 'boolean'
+}
+
+/**
  * 判断变量是否为空
  *
  * @param val
@@ -56,7 +66,6 @@ export function isEmpty(val: any): boolean {
   return false
 }
 
-const __asyncFunction = Object.getPrototypeOf(async function () {})
 /**
  * 判断函数是否使用了async关键字声明
  *
@@ -65,7 +74,7 @@ const __asyncFunction = Object.getPrototypeOf(async function () {})
  * @param func
  */
 export function isAsyncFunction(func: Function): func is (...args: any[]) => Promise<any> {
-  return Object.getPrototypeOf(func) === __asyncFunction
+  return Object.getPrototypeOf(func) === Object.getPrototypeOf(async function () {})
 }
 
 /**
@@ -175,7 +184,7 @@ export function isCollection(obj: any): obj is AnyCollection {
  * @param {any} var2 - 要比较的第二个变量
  * @returns {boolean} - 如果两个变量完全相等，则返回 true；否则返回 false
  */
-export function deepEqual(var1: any, var2: any): boolean {
+export function isDeepEqual(var1: any, var2: any): boolean {
   // 精确比较两个值是否相同
   if (Object.is(var1, var2)) return true
 
@@ -196,7 +205,7 @@ export function deepEqual(var1: any, var2: any): boolean {
 
     if (
       !Object.prototype.hasOwnProperty.call(var2, key) ||
-      !deepEqual(value1, value2) // 对比基本类型
+      !isDeepEqual(value1, value2) // 对比基本类型
     ) {
       return false // 键值不一致，立即返回 false
     }
