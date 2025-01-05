@@ -111,7 +111,7 @@ export type OutreachEventName<T extends Record<string, any>> = {
 export type HTMLClassProperties = string | string[] | Record<string, boolean>
 
 /**
- * 自定义数据属性
+ * 自定义全局属性
  */
 export interface CustomProperties {
   /**
@@ -190,15 +190,23 @@ type BoolType = 'true' | 'false' | boolean
 export interface OverwriteHtmlProperties extends PartProperties {
   /**
    * 全局属性 `style` 包含应用到元素的 CSS 样式声明。
+   *
    * 要注意样式最好定义在单独的文件中。
+   *
    * 这个属性以及 `<style>` 元素的主要目的是快速装饰。例如用于测试目的。
    *
    * > **备注**：这个属性不能用于传递语义信息。即使所有样式都移除了，页面也应该保留正确语义。
    * 通常它不应用于隐藏不相关的信息；这应该使用 `hidden` 属性来实现。
    *
-   * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/style 完整的使用文档
+   * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/style 完整文档
    */
   style?: string | HTMLStyleProperties
+  /**
+   * 全局属性`className`接受字符串、数组和`Record<string, boolean>`类型的对象。
+   *
+   * 和`class`作用相同
+   */
+  className?: HTMLClassProperties
   accesskey?: string
   anchor?: string
   autocapitalize?: 'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters'
