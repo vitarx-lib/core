@@ -1,5 +1,5 @@
 import { isArray, isFunction, isRecordObject, isString } from '../../../utils/index.js'
-import type { HTMLClassProperties, HTMLStyleProperties } from './type.js'
+import { type HTMLClassProperties, type HTMLStyleProperties } from './type.js'
 
 /**
  * 设置元素的多个属性
@@ -39,6 +39,7 @@ export function setAttribute(
       el.innerHTML = value
       break
     default:
+      // 处理事件属性
       if (isFunction(value)) {
         if (oldCallback === value) return
         const event = key.slice(2).toLowerCase()
@@ -47,27 +48,42 @@ export function setAttribute(
           el.removeEventListener(event, oldCallback)
         }
         el.addEventListener(event, value)
-      } else if (key.startsWith('data-')) {
+        return
+      }
+      // 如果属性以 data- 开头，则使用 dataset
+      if (key.startsWith('data-')) {
         el.dataset[key.slice(5)] = value
-      } else {
-        try {
-          // 检查属性是否可写
-          if (key in el) {
-            const descriptor = Object.getOwnPropertyDescriptor(el, key)
-            // 如果该属性是可写的，直接赋值
-            if (descriptor && descriptor.set) {
-              ;(el as any)[key] = value
-            } else {
-              // 否则使用 setAttribute
-              el.setAttribute(key, String(value))
-            }
-          } else {
-            // 如果属性不存在，使用 setAttribute
-            el.setAttribute(key, String(value))
+        return
+      }
+      try {
+        const isSvg = el instanceof SVGElement
+        // 检查是否是需要使用 setAttributeNS 的属性
+        if (isSvg) {
+          if (key.startsWith('xlink:')) {
+            // 对于 xlink:href 等需要使用 setAttributeNS
+            el.setAttributeNS('http://www.w3.org/1999/xlink', key, String(value))
+            return
           }
-        } catch (error) {
-          console.error(`[Vitarx.WebRuntimeDom]：设置属性 ${key} 时发生错误`, error)
+          if (key === 'href') {
+            // SVG 中的 href 也需要使用命名空间
+            el.setAttributeNS('http://www.w3.org/2000/svg', 'href', String(value))
+            return
+          }
         }
+        const isWritable = key in el
+        // 尝试使用 setAttribute
+        if (isWritable) {
+          const descriptor = Object.getOwnPropertyDescriptor(el, key)
+          // 如果该属性是可写的，直接赋值
+          if (descriptor && descriptor.set) {
+            ;(el as any)[key] = value
+            return
+          }
+        }
+        // 如果属性不存在，使用 setAttribute
+        el.setAttribute(key, String(value))
+      } catch (error) {
+        console.error(`[Vitarx.WebRuntimeDom]：设置属性 ${key} 时发生错误`, error, el)
       }
   }
 }
