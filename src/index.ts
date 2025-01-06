@@ -1,4 +1,6 @@
 import type {
+  ClassWidgetConstructor,
+  FnWidgetConstructor,
   IntrinsicAttributes,
   RefEl,
   TextVNode,
@@ -6,7 +8,17 @@ import type {
   VNodeType,
   Widget
 } from './core/index.js'
-import { HtmlIntrinsicElements } from './core/renderer/web-runtime-dom/type.js'
+import type {
+  CssPropertiesMap,
+  HTMLClassProperties,
+  HtmlIntrinsicElements,
+  HTMLIntrinsicTags,
+  HTMLStyleProperties
+} from './core/renderer/web-runtime-dom/type.js'
+
+export * from './core/index.js'
+export * from './utils/index.js'
+export * from './jsx-runtime.js'
 
 declare global {
   namespace Vitarx {
@@ -29,12 +41,39 @@ declare global {
      * - `key`: 用于绑定元素节点的key，支持`key.value`获取key值。
      */
     type GlobalIntrinsicAttributes = IntrinsicAttributes
+
     /**
      * 虚拟节点
      */
     type VNode<T extends VNodeType = VNodeType> = _VNODE<T>
 
-    /** 兼容JSX元素类型 */
+    /**
+     * CSS样式层叠表类型映射
+     */
+    type CssStyle = CssPropertiesMap
+    /**
+     * HTML style 属性类型
+     */
+    type HtmlStyleProperties = HTMLStyleProperties
+    /**
+     * HTML class 属性类型
+     */
+    type HtmlClassProperties = HTMLClassProperties
+
+    /**
+     * HTML标签类型
+     */
+    type HtmlTags = HTMLIntrinsicTags
+    /**
+     * 函数式小部件函数类型
+     */
+    type FnWidget = FnWidgetConstructor
+    /**
+     * 类定义小部件构造函数类型
+     */
+    type ClassWidget = ClassWidgetConstructor
+
+    /** 兼容JSX，同VNode类型一致 */
     interface Element<T extends VNodeType = VNodeType> extends _VNODE<T> {}
     /** 类组件实例 */
     type ElementClass = Widget
@@ -64,7 +103,3 @@ declare global {
     type Children = Element | _VNODE | TextVNode | AnyPrimitive | Array<Children>
   }
 }
-
-export * from './core/index.js'
-export * from './utils/index.js'
-export * from './jsx-runtime.js'
