@@ -40,6 +40,15 @@ export function isString(val: any): val is string {
 }
 
 /**
+ * 判断是否为数字
+ *
+ * @param val
+ */
+export function isNumber(val: any): val is number {
+  return typeof val === 'number'
+}
+
+/**
  * 判断是否为布尔值
  *
  * @param {any} val - 要判断的变量
