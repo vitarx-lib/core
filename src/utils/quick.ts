@@ -29,3 +29,26 @@ export function popProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
 export function sleep(time: number): Promise<unknown> {
   return new Promise(resolve => setTimeout(resolve, time))
 }
+
+/**
+ * 合并对象
+ *
+ * @param {object} target - 目标对象
+ * @param {object} source - 源对象
+ */
+export function deepMergeObject(
+  target: AnyRecord,
+  source: AnyRecord
+): AnyRecord {
+  for (const key in source) {
+    if (source.hasOwnProperty(key)) {
+      if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} })
+        deepMergeObject(target[key], source[key])
+      } else {
+        Object.assign(target, { [key]: source[key] })
+      }
+    }
+  }
+  return target
+}
