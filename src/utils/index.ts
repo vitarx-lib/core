@@ -31,25 +31,23 @@ declare global {
   /** 任意原始值类型 */
   type AnyPrimitive = null | undefined | boolean | number | string | bigint | symbol
   /** 深度只读 */
-  type DeepReadonly<T> =
-    T extends Promise<any>
-      ? T
-      : T extends AnyFunction
-        ? T
-        : T extends object
-          ? {
-              readonly [P in keyof T]: DeepReadonly<T[P]>
-            }
-          : Readonly<T>
-  /** 深度可写 */
-  type unDeepReadonly<T> =
-    T extends Readonly<object>
-      ? {
-          [P in keyof T]: unDeepReadonly<T[P]>
-        }
-      : T
+  type DeepReadonly<T> = {
+    readonly [P in keyof T]: T[P] extends Record<string | symbol, any> ? DeepReadonly<T[P]> : T
+  }
+  /** 取消只读 */
+  type UnReadonly<T> = {
+    [P in keyof T]: T[P] extends Record<string | symbol, any> ? UnReadonly<T[P]> : T
+  }
   /** 让接口的部分属性 为必填项 */
   type MakeRequired<T extends object, K extends keyof T> = T & {
     [P in K]-?: Exclude<T[P], void> // 强制指定的属性 K 为必填
+  }
+  /** 深度必填 */
+  type DeepRequired<T> = {
+    [K in keyof T]-?: T extends Record<string | symbol, any> ? DeepRequired<T[K]> : T[K]
+  }
+  /** 深度可选 */
+  type DeepPartial<T> = {
+    [P in keyof T]?: T[P] extends Record<string | symbol, any> ? DeepPartial<T[P]> : T[P]
   }
 }
