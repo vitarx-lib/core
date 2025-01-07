@@ -63,15 +63,15 @@ declare global {
     /**
      * HTML标签类型
      */
-    type HtmlTags = HTMLIntrinsicTags
+    type HT = HTMLIntrinsicTags
     /**
      * 函数式小部件函数类型
      */
-    type FnWidget = FnWidgetConstructor
+    type FW = FnWidgetConstructor
     /**
      * 类定义小部件构造函数类型
      */
-    type ClassWidget = ClassWidgetConstructor
+    type CW = ClassWidgetConstructor
 
     /** 兼容JSX，同VNode类型一致 */
     interface Element<T extends VNodeType = VNodeType> extends _VNODE<T> {}
