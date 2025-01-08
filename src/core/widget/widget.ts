@@ -1,4 +1,4 @@
-import { LifeCycle, LifeCycleHooks } from './life-cycle.js'
+import { LifeCycle } from './life-cycle.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
 import {
@@ -63,7 +63,7 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
       if (this.#vnode['__$hmr_state$__']) return
     }
     // 触发onBeforeCreated生命周期
-    this.callLifeCycleHook(LifeCycleHooks.beforeCreated)
+    this.onBeforeCreated?.call(this)
   }
 
   /**
