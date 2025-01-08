@@ -37,9 +37,7 @@ export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount
     ? Vitarx.Element | void
     : T extends LifeCycleHooks.beforeRemove
       ? Promise<void> | void
-      : T extends LifeCycleHooks.beforeCreated
-        ? Record<string, any> | void
-        : void
+      : void
 
 // noinspection JSUnusedGlobalSymbols
 /**
@@ -49,13 +47,13 @@ export abstract class LifeCycle {
   /**
    * 生命周期钩子
    *
-   * `onBeforeCreated`钩子会在组件初始化阶段执行，可以通过此钩子返回一个对象，做为`props`的默认值。
+   * `onBeforeCreated`钩子会在组件初始化阶段执行，在此钩子中调用`defineDefaultProps(Record<string,any>)`定义默认属性。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
    * @protected
    */
-  protected onBeforeCreated?(): void | Record<string, any>
+  protected onBeforeCreated?(): void
 
   /**
    * 生命周期钩子
