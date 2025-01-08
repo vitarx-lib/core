@@ -75,6 +75,7 @@ export function createVNode<T extends VNodeType>(
   }
   // 格式化children
   vnode.children = formatChildren(children, vnode)
+  handlerBindAttrs(newProps)
   return vnode as VNode<T>
 }
 
