@@ -95,7 +95,6 @@ export type ChildVNode = VNode | TextVNode | CommentVNode
 /** 子节点列表 */
 export type VNodeChildren = Array<ChildVNode>
 
-
 /** HtmlVNode元素实例类型 */
 type HtmlElementType<T> = T extends Fragment
   ? VDocumentFragment
@@ -152,6 +151,7 @@ export interface VNode<T extends VNodeType = VNodeType> {
    */
   el?: HtmlElementType<T>
 }
+
 /** 文本节点，内部自动转换 */
 export interface TextVNode {
   /**
