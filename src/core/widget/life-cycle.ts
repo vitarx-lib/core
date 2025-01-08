@@ -10,6 +10,7 @@ export type ErrorInfo = 'build' | 'render'
 
 /** 生命周期钩子枚举 */
 export enum LifeCycleHooks {
+  beforeCreated = 'onBeforeCreated',
   created = 'onCreated',
   beforeMount = 'onBeforeMount',
   mounted = 'onMounted',
@@ -30,13 +31,32 @@ export type LifeCycleHookMethods = `${LifeCycleHooks}`;
 export type HookParameter<T> = T extends LifeCycleHooks.error ? [error: unknown, info: ErrorInfo] : T extends LifeCycleHooks.beforeRemove ? [el: ContainerElement, type: 'unmount' | 'deactivate'] : []
 
 /** 生命周期钩子返回值类型 */
-export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount ? void | TargetContainerElement : T extends LifeCycleHooks.error ? Vitarx.Element | void : T extends LifeCycleHooks.beforeRemove ? Promise<void> | void : void
+export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount
+  ? void | TargetContainerElement
+  : T extends LifeCycleHooks.error
+    ? Vitarx.Element | void
+    : T extends LifeCycleHooks.beforeRemove
+      ? Promise<void> | void
+      : T extends LifeCycleHooks.beforeCreated
+        ? Record<string, any> | void
+        : void
 
 // noinspection JSUnusedGlobalSymbols
 /**
  * 生命周期基类
  */
 export abstract class LifeCycle {
+  /**
+   * 生命周期钩子
+   *
+   * `onBeforeCreated`钩子会在组件初始化阶段执行，可以通过此钩子返回一个对象，做为`props`的默认值。
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   *
+   * @protected
+   */
+  protected onBeforeCreated?(): void | Record<string, any>
+
   /**
    * 生命周期钩子
    *
