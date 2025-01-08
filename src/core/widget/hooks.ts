@@ -1,10 +1,11 @@
 import { Widget } from './widget.js'
 import { type HookParameter, type HookReturnType, LifeCycleHooks } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
-import { type WidgetVNode } from '../vnode/index.js'
+import { getCurrentVNode, type WidgetVNode } from '../vnode/index.js'
 import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
 import { getContext, runContext } from '../context/index.js'
 import { type BuildVNode, FnWidget, type FnWidgetConstructor } from './fn-widget.js'
+import { isRecordObject } from '../../utils/index.js'
 
 /**
  * 生命周期钩子回调函数
@@ -132,6 +133,64 @@ function createLifeCycleHook<T extends LifeCycleHooks>(
     HooksCollector.addLifeCycle(hook, cb)
   }
 }
+
+/**
+ * 定义默认属性
+ *
+ * 把给组件props参数做为第二个参数传入，能够获得更好的类型提示与校验。
+ *
+ * ```tsx
+ * interface Props {
+ *  name: string
+ *  age?: number
+ * }
+ * function Foo(_props: Props) {
+ *   const props = defineProps<Props>({
+ *     age: 'vitarx'
+ *   },_props)
+ *   // props 推导类型如下
+ *   interface Props {
+ *     name: string
+ *     age: number
+ *   }
+ * }
+ * ```
+ *
+ * @param {object} defaultProps - 默认属性
+ * @param {object} inputProps - 外部传入给组件的props
+ * @returns {Readonly<object>} - 合并过后的只读对象
+ */
+export function defineDefaultProps<D extends Record<string, any>, T extends Record<string, any>>(
+  defaultProps: D,
+  inputProps: T
+): Readonly<T & D>
+/**
+ * 定义默认属性
+ *
+ * @param {object} defaultProps - 默认属性
+ * @param {object} [inputProps] - 外部传入给组件的props，建议传入，能够获得更好的类型推导。
+ * @returns {Readonly<object>} - 合并过后的只读对象
+ */
+export function defineDefaultProps<D extends Record<string, any>, T extends Record<string, any> = {}>(
+  defaultProps: D,
+  inputProps?: T
+): Readonly<T & D> {
+  if (!isRecordObject(defaultProps)) {
+    throw new TypeError('[Vitarx.defineProps][ERROR]：defaultProps必须是对象')
+  }
+  if (!inputProps) {
+    const instance = getCurrentVNode()!.instance as FnWidget
+    if (!instance) throw new Error('[Vitarx.defineProps][ERROR]：defineProps 必须在小部件作用域下调用（初始化阶段）。')
+    inputProps = instance['props'] as T
+  }
+  for (const key in defaultProps) {
+    if (!(key in inputProps) || inputProps[key] === undefined) {
+      inputProps[key] = defaultProps[key] as any
+    }
+  }
+  return defaultProps as T & D
+}
+
 
 /**
  * 小部件创建完成时触发的钩子
