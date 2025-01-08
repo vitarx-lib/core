@@ -86,7 +86,7 @@ class HooksCollector {
       lifeCycleHooks: {}
     } as CollectResult
     // 为组件注入`instance`
-    const callFnWidget = () => vnode.type.apply(instance, vnode.props)
+    const callFnWidget = () => vnode.type.call(instance, vnode.props)
     // 运行函数式组件
     context.build = runContext(this.#hookCollectorContext, context, callFnWidget)
     return context
