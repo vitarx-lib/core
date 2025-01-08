@@ -134,14 +134,23 @@ function createLifeCycleHook<T extends LifeCycleHooks>(
 }
 
 /**
- * 创建完成时触发的钩子
+ * 小部件创建完成前触发的钩子
+ *
+ * 支持在回调中返回一个键值对对象用做`props`的默认值
+ *
+ * @param cb - 回调函数，小部件实例创建完成之前触发
+ */
+export const onCreatedCreated = createLifeCycleHook(LifeCycleHooks.beforeCreated)
+
+/**
+ * 小部件创建完成时触发的钩子
  *
  * @param cb - 回调函数，小部件实例创建后触发
  */
 export const onCreated = createLifeCycleHook(LifeCycleHooks.created)
 
 /**
- * 挂载前要触发的钩子
+ * 小部件挂载前要触发的钩子
  *
  * 可以返回一个 DOM 元素作为挂载目标容器
  *
@@ -150,7 +159,7 @@ export const onCreated = createLifeCycleHook(LifeCycleHooks.created)
 export const onBeforeMount = createLifeCycleHook(LifeCycleHooks.beforeMount)
 
 /**
- * 挂载完成时触发的钩子
+ * 小部件挂载完成时触发的钩子
  *
  * @param cb - 回调函数，小部件挂载完成后触发
  */
