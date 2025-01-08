@@ -1,4 +1,4 @@
-import { LifeCycle } from './life-cycle.js'
+import { LifeCycle, LifeCycleHooks } from './life-cycle.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
 import {
@@ -10,6 +10,7 @@ import {
   type WidgetVNode
 } from '../vnode/index.js'
 import { getCurrentScope, Scope } from '../scope/index.js'
+import { isRecordObject } from '../../utils/index.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -57,6 +58,21 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
     this.#props = props
     this.#vnode = getCurrentVNode()!
     this.#scope = getCurrentScope()!
+    // @ts-ignore 兼容开发模式热更新
+    if (import.meta.env?.MODE === 'development') {
+      // @ts-ignore
+      if (this.#vnode['__$hmr_state$__']) return
+    }
+    // 触发onBeforeCreated生命周期
+    if (typeof this.onBeforeCreated === 'function') {
+      const defaultProps = this.callLifeCycleHook(LifeCycleHooks.beforeCreated) as P
+      if (!isRecordObject(defaultProps)) return
+      for (const key in defaultProps) {
+        if (!(key in this.#props) || this.#props[key] === undefined) {
+          this.#props[key] = defaultProps[key]
+        }
+      }
+    }
   }
 
   /**
