@@ -36,7 +36,10 @@ export type RefEl<T> = {
   value: ComputedRefElType<T> | null
   readonly [RefElSymbol]: true
 }
-
+/**
+ * 绑定属性
+ */
+export type VBind = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
 /**
  * 全局属性
  */
@@ -55,6 +58,16 @@ export interface IntrinsicAttributes {
    * 引用组件
    */
   ref?: RefEl<any>
+  /**
+   * 绑定属性
+   *
+   * 可选值：
+   *  - 对象Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
+   *  - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给元素的属性，第二个元素为要排除的属性。
+   */
+  'v-bind'?: VBind
+
+  [key: string]: any
 }
 
 /**

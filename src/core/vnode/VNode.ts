@@ -3,6 +3,7 @@
 import {
   type ChildVNode,
   type CommentVNode,
+  type IntrinsicAttributes,
   isVNode,
   type RefEl,
   type TextVNode,
@@ -12,7 +13,13 @@ import {
   type VNodeType
 } from './type.js'
 import { CommentVNodeSymbol, RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
-import { isFunction, popProperty } from '../../utils/index.js'
+import {
+  isFunction,
+  isRecordObject,
+  mergeCssClass,
+  mergeCssStyle,
+  popProperty
+} from '../../utils/index.js'
 import { updateParentVNodeMapping } from './relational.js'
 
 // 子元素类型
@@ -40,30 +47,30 @@ export function createVNode<T extends VNodeType>(
   props: VNodePropsType<T> | null = null,
   ...children: Children
 ): VNode<T> {
-  // 将props合并为一个对象
-  props = Object.assign({}, props || {}) as any
+  // 将props合并为一个新对象
+  const newProps = Object.assign({}, props || {}) as Record<string, any> & IntrinsicAttributes
   // 创建虚拟节点
   const vnode: VNode = {
     [VNodeSymbol]: true,
     type,
-    props,
-    key: popProperty(props as any, 'key'),
-    ref: popProperty(props as any, 'ref'),
+    props: newProps,
+    key: popProperty(newProps, 'key'),
+    ref: popProperty(newProps, 'ref'),
     children: []
   }
   // 如果type是一个函数，则将children属性添加到props中，并将children置为空
   if (isFunction(type)) {
     if (children.length > 0) {
-      ;(props as Record<string, any>).children = children.length === 1 ? children[0] : children
+      newProps.children = children.length === 1 ? children[0] : children
       children = []
     }
-  } else if ('children' in props!) {
+  } else if ('children' in newProps) {
     // 如果props中有children属性，则将其添加到children中
-    const attrChildren = popProperty(props, 'children' as any)
+    const attrChildren = popProperty(newProps, 'children')
     if (Array.isArray(attrChildren)) {
       children = [...attrChildren, ...children]
     } else {
-      children.push(attrChildren as any)
+      children.push(attrChildren)
     }
   }
   // 格式化children
@@ -71,7 +78,36 @@ export function createVNode<T extends VNodeType>(
   return vnode as VNode<T>
 }
 
-
+/**
+ * 处理绑定属性
+ *
+ * @param props
+ */
+function handlerBindAttrs(props: Record<string, any>): void {
+  const vBind = popProperty(props, 'v-bind')
+  if (!vBind) return
+  let attrs: Record<string, any> = vBind
+  let exclude: string[] = []
+  if (Array.isArray(vBind)) {
+    attrs = vBind[0]
+    exclude = vBind[1] || []
+  }
+  if (!isRecordObject(attrs)) return
+  for (const key in attrs) {
+    if (exclude.includes(key)) continue
+    if (key in props) {
+      if (key === 'style') {
+        props[key] = mergeCssStyle(props[key], attrs[key])
+        continue
+      }
+      if (key === 'class' || key === 'className') {
+        props[key] = mergeCssClass(props[key], attrs[key])
+      }
+    } else {
+      props[key] = attrs[key]
+    }
+  }
+}
 export { createVNode as createElement }
 
 /**
