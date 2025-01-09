@@ -112,7 +112,7 @@ class HooksCollector {
  * ```
  *
  * 注意：键不能和{@link Widget}类中固有属性或方法重名，包括但不限于`生命周期方法`，`build`...
- * (所有固有关键词：{@link __widgetIntrinsicPropKeywords__})
+ * (所有固有关键词：{@linkcode __widgetIntrinsicPropKeywords__})
  *
  * @param {Record<string, any>} exposed 键值对形式的对象，其中键为暴露的名称，值为要暴露的值。
  */
@@ -135,10 +135,13 @@ function createLifeCycleHook<T extends LifeCycleHooks>(
 }
 
 /**
- * 定义默认属性
+ * ## 定义默认属性
  *
  * 把给组件props参数做为第二个参数传入，能够获得更好的类型提示与校验。
  *
+ * 此函数在类定义小部件中也可以使用，通常位于构造函数或`onCreated`钩子中。
+ *
+ * @example
  * ```tsx
  * interface Props {
  *  name: string
@@ -156,9 +159,9 @@ function createLifeCycleHook<T extends LifeCycleHooks>(
  * }
  * ```
  *
- * @param {object} defaultProps - 默认属性
- * @param {object} inputProps - 外部传入给组件的props
- * @returns {Readonly<object>} - 合并过后的只读对象
+ * @param {Record<string, any>} defaultProps - 默认属性
+ * @param {Record<string, any>} inputProps - 外部传入给组件的props
+ * @returns {Readonly<Record<string, any>} - 合并过后的只读对象
  */
 export function defineDefaultProps<D extends Record<string, any>, T extends Record<string, any>>(
   defaultProps: D,
@@ -167,9 +170,11 @@ export function defineDefaultProps<D extends Record<string, any>, T extends Reco
 /**
  * 定义默认属性
  *
- * @param {object} defaultProps - 默认属性
- * @param {object} [inputProps] - 外部传入给组件的props，建议传入，能够获得更好的类型推导。
- * @returns {Readonly<object>} - 合并过后的只读对象
+ * 此函数在类定义小部件中也可以使用，通常位于构造函数或`onCreated`钩子中。
+ *
+ * @param {Record<string, any>} defaultProps - 默认属性
+ * @param {Record<string, any>} [inputProps] - 外部传入给组件的props，建议传入，能够获得更好的类型推导。
+ * @returns {Readonly<Record<string, any>} - 合并过后的只读对象
  */
 export function defineDefaultProps<D extends Record<string, any>, T extends Record<string, any> = {}>(
   defaultProps: D,
