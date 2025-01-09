@@ -1,4 +1,4 @@
-import type { ContainerElement, VDocumentFragment } from '../renderer/web-runtime-dom/index.js'
+import type { ContainerElement, VDocumentFragment } from '../renderer/index.js'
 
 /**
  * 目标容器元素
@@ -10,7 +10,6 @@ export type ErrorInfo = 'build' | 'render'
 
 /** 生命周期钩子枚举 */
 export enum LifeCycleHooks {
-  beforeCreated = 'onBeforeCreated',
   created = 'onCreated',
   beforeMount = 'onBeforeMount',
   mounted = 'onMounted',
@@ -44,17 +43,6 @@ export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount
  * 生命周期基类
  */
 export abstract class LifeCycle {
-  /**
-   * 生命周期钩子
-   *
-   * `onBeforeCreated`钩子会在组件初始化阶段执行，在此钩子中调用`defineDefaultProps(Record<string,any>)`定义默认属性。
-   *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
-   * @protected
-   */
-  protected onBeforeCreated?(): void
-
   /**
    * 生命周期钩子
    *
