@@ -5,7 +5,7 @@ import type {
   HtmlIntrinsicElements,
   HTMLIntrinsicTags,
   VDocumentFragment
-} from '../renderer/web-runtime-dom/index.js'
+} from '../renderer/index.js'
 import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
 import {
   type ClassWidgetConstructor,
