@@ -1,6 +1,6 @@
-import { LifeCycle } from './life-cycle.js'
+import { LifeCycle, LifeCycleHooks } from './life-cycle.js'
+import type { ContainerElement } from '../renderer/index.js'
 import { WidgetRenderer } from '../renderer/index.js'
-import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
 import {
   getCurrentVNode,
   inject,
@@ -29,65 +29,75 @@ export type WidgetChildren<P> = P extends { children: infer U }
     ? U | undefined
     : undefined
 
-// noinspection TypeScriptAbstractClassConstructorCanBeMadeProtected,JSUnusedGlobalSymbols
 /**
- * 组件基类
+ * 所有小部件的基类
+ *
+ * @template InputProps - 输入的属性类型
+ * @template Props - `this.props`的类型，默认=InputProps，如果你使用了`defineDefaultProps`方法来定义默认属性，而InputProps中又是定义的可选属性，则可以传入该泛型来重载`this.props`的类型。
  */
-export abstract class Widget<P extends Record<string, any> = {}> extends LifeCycle {
+export abstract class Widget<
+  InputProps extends Record<string, any> = {},
+  Props extends InputProps = InputProps
+> extends LifeCycle {
   /**
    * 内部私有属性，用于存放接收的`prop`
    *
    * @private
    */
-  readonly #props: P
+  readonly #props: Props
   // 自身VNODE
   readonly #vnode: WidgetVNode
   // 自身作用域
   readonly #scope: Scope
 
-  /**
-   * ## 构造函数
-   *
-   * 子类应该使用onCreate方法代替constructor。
-   *
-   * @param props
-   */
-  constructor(props: P) {
+  constructor(props: InputProps) {
     super()
-    this.#props = props
+    this.#props = props as Props
     this.#vnode = getCurrentVNode()!
     this.#scope = getCurrentScope()!
-    // @ts-ignore 兼容开发模式热更新
-    if (import.meta.env?.MODE === 'development') {
-      // @ts-ignore
-      if (this.#vnode['__$hmr_state$__']) return
-    }
-    // 触发onBeforeCreated生命周期
-    this.onBeforeCreated?.call(this)
   }
 
   /**
    * 内部私有属性，用于存放渲染器实例。
    *
-   * 如需自定义渲染器，可重写`renderer`属性获取器。
+   * 不要重写该属性！！！
    *
    * @private
+   * @internal
    */
   protected _renderer?: WidgetRenderer<this>
 
   /**
-   * 该方法由`Vitarx`内部调用，用于渲染
+   * 获取渲染器实例。
    *
-   * 请勿在外部调用，以及使用`WidgetRenderer`实例方法，避免内存泄露。
+   * > 注意：切勿重写该`getter`，如果需要自定义渲染器，可重写`initializeRenderer`方法，并返回渲染器实例。
    *
    * @internal
    * @protected
    */
   protected get renderer(): WidgetRenderer<this> {
     if (!this._renderer) {
-      this._renderer = new WidgetRenderer(this)
+      this._renderer = this.initializeRenderer()
+      if (import.meta.env?.MODE === 'development') {
+        // @ts-ignore
+        if (!this.vnode['__$hmr_state$__']) {
+          this.callLifeCycleHook(LifeCycleHooks.created)
+        }
+      } else {
+        // 触发onCreated生命周期
+        this.callLifeCycleHook(LifeCycleHooks.created)
+      }
     }
     return this._renderer
+  }
+
+  /**
+   * 外部传入的属性
+   *
+   * 建议保持单向数据流，不要尝试修改`props`中数据。
+   */
+  protected get props(): Readonly<Props> {
+    return this.#props as Readonly<Props>
   }
 
   /**
@@ -112,21 +122,24 @@ export abstract class Widget<P extends Record<string, any> = {}> extends LifeCyc
   }
 
   /**
-   * 外部传入的属性
-   *
-   * 建议保持单向数据流，不要尝试修改`props`中数据。
-   */
-  protected get props(): Readonly<P> {
-    return this.#props as Readonly<P>
-  }
-
-  /**
    * 获取外部传入的子节点
    *
    * `children` 不会自动渲染，你可以将它视为一个参数，你可以在`build`方法中使用该参数，来实现插槽的效果。
    */
-  protected get children(): WidgetChildren<P> {
-    return this.props.children as WidgetChildren<P>
+  protected get children(): WidgetChildren<InputProps> {
+    return this.props.children as WidgetChildren<InputProps>
+  }
+
+  /**
+   * 初始化渲染器实例
+   *
+   * 子类可以重写此方法返回一个自定义的渲染器实例，此方法在组件生命周期内只会被调用一次，是内部核心方法。
+   *
+   * @protected
+   * @internal
+   */
+  protected initializeRenderer(): WidgetRenderer<this> {
+    return new WidgetRenderer(this)
   }
 
   /**
