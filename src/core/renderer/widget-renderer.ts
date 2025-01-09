@@ -59,17 +59,8 @@ export class WidgetRenderer<T extends Widget> {
     // 兼容异步
     if (listener && !getCurrentScope()) widget['scope'].add(listener)
     this._child = childVNode
-    // @ts-ignore 兼容开发模式热更新
-    if (import.meta.env?.MODE === 'development') {
-      // @ts-ignore
-      if (!this.vnode['__$hmr_state$__']) {
-        this.triggerLifeCycle(LifeCycleHooks.created)
-      }
-      return
-    }
-    // 触发onCreated生命周期
-    this.triggerLifeCycle(LifeCycleHooks.created)
   }
+
   /**
    * 获取影子元素
    *
