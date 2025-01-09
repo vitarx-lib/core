@@ -64,29 +64,11 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   }
 
   /**
-   * 验证 children
-   *
-   * @protected
-   */
-  protected validation(children: any, tip: 'throw' | 'console' = 'throw'): boolean {
-    if (typeof children !== 'function') {
-      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof children}`
-      if (tip === 'throw') {
-        throw new Error(message)
-      } else {
-        console.warn(message)
-      }
-      return false
-    }
-    return true
-  }
-
-  /**
    * 添加缓存
    *
    * @param vnode
    */
-  addCache(vnode: VNode<WidgetType>) {
+  protected addCache(vnode: VNode<WidgetType>) {
     const type = vnode.type
     const key = vnode.key ?? undefined
     if (this.isKeep(type)) {
@@ -130,6 +112,13 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   }
 
   /**
+   * 缓存专用渲染器
+   */
+  protected override initializeRenderer(): WidgetRenderer<this> {
+    return new _KeepAliveRenderer(this)
+  }
+
+  /**
    * 需要缓存的小部件
    */
   get include() {
@@ -153,13 +142,21 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   }
 
   /**
-   * 缓存专用渲染器
+   * 验证 children
+   *
+   * @protected
    */
-  protected override get renderer() {
-    if (!this._renderer) {
-      this._renderer = new _KeepAliveRenderer(this)
+  private validation(children: any, tip: 'throw' | 'console' = 'throw'): boolean {
+    if (typeof children !== 'function') {
+      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof children}`
+      if (tip === 'throw') {
+        throw new Error(message)
+      } else {
+        console.warn(message)
+      }
+      return false
     }
-    return this._renderer
+    return true
   }
 
   /**
@@ -256,7 +253,7 @@ export class _KeepAliveRenderer<T extends KeepAlive> extends WidgetRenderer<T> {
     }
 
     if (newVNode.instance) {
-      // 如果新节点已实例化，激活它
+      // 如果新节点已实例化，则激活它
       newVNode.instance['renderer'].activate()
     } else {
       // 如果新节点未实例化，渲染并挂载它
