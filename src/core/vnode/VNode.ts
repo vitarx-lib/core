@@ -79,6 +79,8 @@ export function createVNode<T extends VNodeType>(
   return vnode as VNode<T>
 }
 
+export { createVNode as createElement }
+
 /**
  * 处理绑定属性
  *
@@ -95,7 +97,8 @@ function handlerBindAttrs(props: Record<string, any>): void {
   }
   if (!isRecordObject(attrs)) return
   for (const key in attrs) {
-    if (exclude.includes(key)) continue
+    // 如果排除列表中包含当前属性或属性是`children`，则跳过
+    if (exclude.includes(key) || key === 'children') continue
     if (key in props) {
       if (key === 'style') {
         props[key] = mergeCssStyle(props[key], attrs[key])
@@ -109,7 +112,6 @@ function handlerBindAttrs(props: Record<string, any>): void {
     }
   }
 }
-export { createVNode as createElement }
 
 /**
  * 创建文本节点`TextVNode`
