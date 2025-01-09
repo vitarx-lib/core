@@ -11,6 +11,7 @@ export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
 export const __WidgetIntrinsicMethods__ = [
   'build',
   'update',
+  'initializeRenderer',
   ...Object.values(LifeCycleHooks)
 ] as const
 
