@@ -469,11 +469,17 @@ export type ToPartialProperties<
   E extends string = never
 > = Partial<ExtractW3CHtmlProperties<T, M, E>>
 
-/** 生成HTML标签可选属性，包括事件和自定义数据属性 */
+/**
+ * 生成HTML标签可选属性，包括事件和自定义数据属性
+ *
+ * @template T - 元素类型
+ * @template E - 排除的属性名
+ * @template M - 要覆写合并的属性，默认为{@linkcode OverwriteHtmlProperties}
+ */
 export type HtmlProperties<
   T extends Element,
+  E extends string = never,
   M extends object = OverwriteHtmlProperties,
-  E extends string = never
 > = ToPartialProperties<T, M, E> &
   OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
   CustomProperties &

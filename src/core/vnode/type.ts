@@ -42,6 +42,10 @@ export type RefEl<T> = {
 export type VBind = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
 /**
  * 全局属性
+ *
+ * - `ref`: 用于绑定元素实例。
+ * - `key`: 用于绑定元素节点的key，支持`key.value`获取key值。
+ * - `v-bind`: 给节点绑定样式。
  */
 export interface IntrinsicAttributes {
   /**

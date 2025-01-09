@@ -36,9 +36,6 @@ declare global {
 
     /**
      * 全局属性
-     *
-     * - `ref`: 用于绑定元素实例。
-     * - `key`: 用于绑定元素节点的key，支持`key.value`获取key值。
      */
     type GlobalIntrinsicAttributes = IntrinsicAttributes
 
@@ -48,7 +45,7 @@ declare global {
     type VNode<T extends VNodeType = VNodeType> = _VNODE<T>
 
     /**
-     * CSS样式层叠表类型映射
+     * CSS样式类型映射
      */
     type CssStyle = CssPropertiesMap
     /**
@@ -61,9 +58,13 @@ declare global {
     type HtmlClassProperties = HTMLClassProperties
 
     /**
-     * HTML标签类型
+     * HTML元素标签类型
      */
     type HT = HTMLIntrinsicTags
+    /**
+     * HTML元素标签类型
+     */
+    type HtmlTags = HTMLIntrinsicTags
     /**
      * 函数式小部件函数类型
      */
