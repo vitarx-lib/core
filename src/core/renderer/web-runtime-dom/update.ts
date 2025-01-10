@@ -8,7 +8,8 @@ import {
   isTextVNode,
   isVNode,
   isWidgetVNode,
-  type VNode
+  type VNode,
+  VNodeManager
 } from '../../vnode/index.js'
 import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './type.js'
 import {
@@ -255,6 +256,7 @@ export function unmountVNode(vnode: ChildVNode, removeEl: boolean = true): void 
   } else if (isTextVNode(vnode) && removeEl) {
     vnode.el?.remove()
   }
+  VNodeManager.destroyVNode(vnode)
 }
 
 /**
@@ -397,4 +399,3 @@ export function replaceElement(newEl: HtmlElement, oldEl: HtmlElement): ParentNo
     return oldEl.parentNode
   }
 }
-
