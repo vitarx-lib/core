@@ -1,7 +1,7 @@
 import { Widget } from './widget.js'
 import { type HookParameter, type HookReturnType, LifeCycleHooks } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
-import { getCurrentVNode, type WidgetVNode } from '../vnode/index.js'
+import { getCurrentVNode, type VNode, type WidgetVNode } from '../vnode/index.js'
 import type { ContainerElement } from '../renderer/index.js'
 import { getContext, runContext } from '../context/index.js'
 import { type BuildVNode, FnWidget, type FnWidgetConstructor } from './fn-widget.js'
@@ -307,4 +307,20 @@ export function onBeforeRemove<T extends ContainerElement>(cb: BeforeRemoveCallb
  */
 export function hooksCollector(vnode: WidgetVNode<FnWidgetConstructor>): CollectResult {
   return HooksCollector.collect(vnode)
+}
+
+type FnViewForceUpdating = (newChildVNode?: VNode) => void
+
+/**
+ * 获取视图强制更新器
+ *
+ * 此函数返回的是一个用于更新视图的函数，通常你不需要强制更新视图，响应式数据改变会自动更新视图。
+ *
+ * 如果函数式组件返回的虚拟元素节点是预构建的，系统无法在初次构建视图时捕获其依赖的响应式数据，
+ * 从而导致视图不会随着数据改变而更新。在这种特殊情况下你就可以使用该函数返回的视图更新器来更新视图。
+ *
+ * @returns {FnViewForceUpdating} - 视图更新器
+ */
+export function useViewForceUpdating(): FnViewForceUpdating {
+  return getCurrentVNode()!.instance?.['update'] || (() => {})
 }
