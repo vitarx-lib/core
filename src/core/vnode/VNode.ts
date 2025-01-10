@@ -12,7 +12,13 @@ import {
   type VNodePropsType,
   type VNodeType
 } from './type.js'
-import { CommentVNodeSymbol, RefElSymbol, TextVNodeSymbol, VNodeSymbol } from './constant.js'
+import {
+  CommentVNodeSymbol,
+  Fragment,
+  RefElSymbol,
+  TextVNodeSymbol,
+  VNodeSymbol
+} from './constant.js'
 import {
   isFunction,
   isRecordObject,
@@ -28,7 +34,9 @@ type Child = VNode | TextVNode | CommentVNode | AnyPrimitive | Array<Child>
 
 // 虚拟节点数组
 type Children = Child[]
-
+// 检测虚拟节点类型
+const validVNodeType = (type: any): type is VNodeType =>
+  typeof type === 'string' || isFunction(type) || type === Fragment
 /**
  * 创建一个虚拟节点（VNode）
  *
@@ -48,6 +56,9 @@ export function createVNode<T extends VNodeType>(
   props: VNodePropsType<T> | null = null,
   ...children: Children
 ): VNode<T> {
+  if (!validVNodeType(type)) {
+    throw new Error(`[Vitarx.createVNode][ERROR]：Invalid VNode type ${typeof type}`)
+  }
   // 将props合并为一个新对象
   const newProps = Object.assign({}, props || {}) as Record<string, any> & IntrinsicAttributes
   // 如果type是一个函数，则将children属性添加到props中，并将children置为空
