@@ -27,6 +27,14 @@ import { getSuspenseCounter } from './built-in/index.js'
 export type BuildVNode = (() => VNode) | VNode
 
 /**
+ * 简单小部件类型
+ */
+export interface SimpleWidget<T extends Record<string, any> = {}, R extends VNode = VNode> {
+  [SIMPLE_WIDGET_SYMBOL]: true
+
+  (props: T & IntrinsicAttributes): R
+}
+/**
  * 函数小部件类型
  */
 export type FnWidgetConstructor<P extends Record<string, any> = any> = (
@@ -203,4 +211,52 @@ export function _createFnWidget(vnode: WidgetVNode<FnWidgetConstructor>): Promis
   const result = hooksCollector(vnode)
   const instance = vnode.instance as FnWidget
   return instance[__initialization](result)
+}
+
+const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
+
+/**
+ * 定义一个简单的小部件
+ *
+ * 通常在实际的项目开发中你可能会很少用到它，简单函数通常存在于组件库中，
+ * 因为大部分组件可能只是提供了一些ui样式，并不需要生命周期，以及状态管理。
+ *
+ * 它会在父组件首次构建视图时被调用，在父组件更新时会被重新调用。
+ *
+ * 它只能做简单的视图构建工作，没有生命周期，不要在其内部存在任何副作用，包括但不限于：生命周期钩子，定时器，监听器，计算属性。
+ *
+ * ```tsx
+ * interface Props {
+ *   title: string,
+ *   color?: string
+ * }
+ * // 构建一个简单的小部件，它内部不包含任何副作用代码，也没有生命周期钩子
+ * const Title = simple(({title,color}:Props) => {
+ *   // 对属性参数做一些处理
+ *   color = color || 'black'
+ *   // 返回需要渲染的元素
+ *   return <h1 style={{color}}>{title}</div>
+ * })
+ * export default function App() {
+ *   return <Title title="Hello Vitarx" color="red" />
+ * }
+ * ```
+ *
+ * @param build - 构建函数
+ */
+export function simple<T extends Record<string, any>, R extends VNode>(
+  build: (props: T) => R
+): SimpleWidget<T, R> {
+  Object.defineProperty(build, SIMPLE_WIDGET_SYMBOL, { value: true })
+  return build as SimpleWidget<T, R>
+}
+
+/**
+ * 判断是否为简单小部件
+ *
+ * @param {any} fn - 小部件
+ * @returns {boolean} - true 表示为简单小部件
+ */
+export function isSimpleWidget(fn: any): fn is SimpleWidget {
+  return !!(typeof fn === 'function' && fn[SIMPLE_WIDGET_SYMBOL])
 }
