@@ -17,28 +17,18 @@ type InstanceCreatedCallback = (instance: Widget) => void
  *
  * @internal
  */
-class VNodeRelationalManager {
+export class VNodeManager {
   static #contextSymbol = Symbol('VNodeRelationalManagerContextSymbol')
-  // 单例
-  static #instance: VNodeRelationalManager
   // 父vnode映射
-  #parentVNodeMapping = new WeakMap<ChildVNode, VNode>()
-
-  /**
-   * 获取单例
-   */
-  static get instance(): VNodeRelationalManager {
-    if (!this.#instance) {
-      this.#instance = new VNodeRelationalManager()
-    }
-    return this.#instance
-  }
+  static #parentVNodeMapping = new WeakMap<ChildVNode, VNode>()
+  // 卸载回调集合
+  static #unmountListens = new WeakMap<ChildVNode, Set<AnyCallback>>()
 
   /**
    * 当前正在实例的Widget节点
    */
-  get currentVNode(): WidgetVNode | undefined {
-    return getContext<WidgetVNode>(VNodeRelationalManager.#contextSymbol)
+  static get currentVNode(): WidgetVNode | undefined {
+    return getContext<WidgetVNode>(VNodeManager.#contextSymbol)
   }
 
   /**
@@ -49,13 +39,13 @@ class VNodeRelationalManager {
    * @return {Required<WidgetVNode>} - 已创建instance的节点
    * @returns {Widget} - 实例
    */
-  createWidgetVNodeInstance<T extends WidgetVNode>(
+  static createWidgetVNodeInstance<T extends WidgetVNode>(
     vnode: T,
     callback?: InstanceCreatedCallback
   ): Widget {
     createScope(false, vnode.type.name)
       .run(async () => {
-        await runContext(VNodeRelationalManager.#contextSymbol, vnode, async () => {
+        await runContext(VNodeManager.#contextSymbol, vnode, async () => {
           // 包装props为响应式对象
           vnode.props = reactive(vnode.props, false)
           // 异步实例
@@ -81,7 +71,7 @@ class VNodeRelationalManager {
    * @param vnode
    * @param parent
    */
-  updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void {
+  static updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void {
     this.#parentVNodeMapping.set(vnode, parent)
   }
 
@@ -91,8 +81,38 @@ class VNodeRelationalManager {
    * @param {vnode} vnode - 自身虚拟节点对象
    * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
    */
-  findParentVNode(vnode: ChildVNode): VNode | undefined {
+  static findParentVNode(vnode: ChildVNode): VNode | undefined {
     return this.#parentVNodeMapping.get(vnode)
+  }
+
+  /**
+   * 监听任意节点销毁
+   *
+   * @param vnode - vnode
+   * @param cb - 回调
+   */
+  static onDestroyed(vnode: ChildVNode, cb: VoidCallback) {
+    if (!this.#unmountListens.has(vnode)) {
+      this.#unmountListens.set(vnode, new Set())
+    }
+    this.#unmountListens.get(vnode)!.add(cb)
+  }
+
+  /**
+   * 销毁节点
+   *
+   * 框架内部核心方法，请勿外部调用！
+   *
+   * @param vnode - vnode
+   * @internal
+   */
+  static destroyVNode(vnode: ChildVNode) {
+    const listens = this.#unmountListens.get(vnode)
+    if (listens) {
+      listens.forEach(cb => cb())
+      listens.clear()
+      this.#unmountListens.delete(vnode)
+    }
   }
 }
 
@@ -125,10 +145,10 @@ class VNodeRelationalManager {
  * }
  * ```
  * @returns {WidgetVNode|undefined} 当前小部件的虚拟节点，返回`undefined`代表着你未按规范使用！
- * @see {@linkcode VNodeRelationalManager.currentVNode}
+ * @see {@linkcode VNodeManager.currentVNode}
  */
 export function getCurrentVNode(): WidgetVNode | undefined {
-  return VNodeRelationalManager.instance.currentVNode
+  return VNodeManager.currentVNode
 }
 
 /**
@@ -139,7 +159,7 @@ export function getCurrentVNode(): WidgetVNode | undefined {
  * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
  */
 export function findParentVNode(vnode: ChildVNode): VNode | undefined {
-  return VNodeRelationalManager.instance.findParentVNode(vnode)
+  return VNodeManager.findParentVNode(vnode)
 }
 
 /**
@@ -150,7 +170,7 @@ export function findParentVNode(vnode: ChildVNode): VNode | undefined {
  * @param {VNode} parent - 父节点对象
  */
 export function updateParentVNodeMapping(vnode: ChildVNode, parent: VNode): void {
-  VNodeRelationalManager.instance.updateParentVNodeMapping(vnode, parent)
+  VNodeManager.updateParentVNodeMapping(vnode, parent)
 }
 
 /**
@@ -166,5 +186,15 @@ export function createWidgetVNodeInstance<T extends WidgetVNode>(
   vnode: T,
   callback?: InstanceCreatedCallback
 ): Widget {
-  return VNodeRelationalManager.instance.createWidgetVNodeInstance(vnode, callback)
+  return VNodeManager.createWidgetVNodeInstance(vnode, callback)
+}
+
+/**
+ * 监听任意节点销毁
+ *
+ * @param {ChildVNode} vnode - vnode
+ * @param {VoidCallback} cb - 回调
+ */
+export function onVNodeDestroyed(vnode: ChildVNode, cb: VoidCallback) {
+  VNodeManager.onDestroyed(vnode, cb)
 }

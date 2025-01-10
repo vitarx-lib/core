@@ -26,7 +26,7 @@ import {
   mergeCssStyle,
   popProperty
 } from '../../utils/index.js'
-import { updateParentVNodeMapping } from './relational.js'
+import { updateParentVNodeMapping } from './manager.js'
 import { isSimpleWidget } from '../widget/index.js'
 
 // 子元素类型

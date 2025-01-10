@@ -1,6 +1,6 @@
 import { Widget } from '../widget/index.js'
 import type { VNode } from './type.js'
-import { findParentVNode, getCurrentVNode } from './relational.js'
+import { findParentVNode, getCurrentVNode } from './manager.js'
 
 /**
  * 提供数据
