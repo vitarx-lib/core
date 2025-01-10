@@ -97,38 +97,35 @@ class VNodeRelationalManager {
 }
 
 /**
- * 获取当前小部件的虚拟节点
+ * 获取当前小部件实例所关联的虚拟节点
  *
- * > 注意：如果是类小部件内部获取当前虚拟节点，则使用`this.vnode`即可访问，
+ * > 注意：如果是类小部件内部获取当前虚拟节点，使用`this.vnode`即可访问，
  * Widget基类已在构造函数中将vnode进行保存，所以你可以在类中通过this.vnode得到当前实例所关联的节点。
  *
  * @example
  * ```tsx
  * import { getCurrentVNode } from 'vitarx'
  *
+ * // 函数式小部件中获取节点
  * export function Foo() {
- *  const vnode = getCurrentVNode();
- *  console.log(vnode.instance); // 输出 undefined，因为此时正在解析函数小部件，还未映射为FnWidget实例。
- *  onCreated(() => {
- *    // 不要在非顶层作用域中调用 getCurrentVNode() ，它会返回`undefined`，就算返回的是VNode对象，它也不属于当前小部件
- *    console.log(getCurrentVNode()); // 输出 undefined
- *    // 此时可以获取到函数小部件的实例
- *    console.log(vnode.instance); // 输出 FnWidget
- *  });
+ *  const vnode = getCurrentVNode()!;
+ *  console.log(vnode.type === Foo); // true
  *  return <div>foo</div>;
  * }
  *
  * // 类小部件中获取当前节点示例
  * export class Bar extends Widget {
  *    build(){
- *      const vnode = getCurrentVNode();// 这是错误的
+ *      // 在build方法中不能使用getCurrentVNode获取，因为只有在构建实例阶段才能获取到vnode，此时已进入构建视图阶段
+ *      const vnode = getCurrentVNode();
+ *      // 可以直接通过this.vnode拿到节点
  *      const vnode = this.vnode; // 这是正确的
  *      return <div>bar</div>
  *    }
  * }
  * ```
  * @returns {WidgetVNode|undefined} 当前小部件的虚拟节点，返回`undefined`代表着你未按规范使用！
- * @see {@link VNodeRelationalManager.currentVNode}
+ * @see {@linkcode VNodeRelationalManager.currentVNode}
  */
 export function getCurrentVNode(): WidgetVNode | undefined {
   return VNodeRelationalManager.instance.currentVNode
