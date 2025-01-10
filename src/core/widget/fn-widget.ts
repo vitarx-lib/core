@@ -162,11 +162,11 @@ export class FnWidget extends Widget {
 
 
 /**
- * ## 构建器。
+ * ## 视图构建器。
  *
  * > 注意：在类小部件中不要使用`build`函数，类中的build方法就是构建器。
  *
- * 主要作用是优化TSX类型校验。
+ * 主要作用是优化TSX类型校验，TSX不支持返回()=>Element，所以通过此函数来辅助类型转换。
  *
  * 代码块中的顶级return语句如果是jsx语法，则会被自动添加箭头函数，使其成为一个UI构造器。
  *
@@ -181,17 +181,20 @@ export class FnWidget extends Widget {
  * return () => state ? <div>真</div> : <div>假</div>
  * ```
  *
- * @param vnode - 虚拟节点对象或闭包函数返回虚拟节点对象
+ * @param element - 虚拟节点对象或闭包函数返回虚拟节点对象
  */
-export function build(vnode: VNode | (() => VNode)): VNode {
-  if (typeof vnode === 'function') return vnode as unknown as VNode
-  return (() => vnode) as unknown as VNode
+export function build(element: VNode | (() => VNode)): VNode {
+  if (typeof element === 'function') return element as unknown as VNode
+  if (isVNode(element)) {
+    return (() => element) as unknown as VNode
+  }
+  throw new TypeError('[Vitarx.build]：参数1(element)必须是VNode对象或返回VNode对象的函数')
 }
 
 /**
  * ## 创建函数小部件实例
  *
- * 内部函数，仅供框架逻辑使用
+ * 内部函数，仅供框架内部逻辑使用。
  *
  * @internal
  * @param vnode
