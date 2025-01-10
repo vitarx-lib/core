@@ -21,6 +21,7 @@ import {
   popProperty
 } from '../../utils/index.js'
 import { updateParentVNodeMapping } from './relational.js'
+import { isSimpleWidget } from '../widget/index.js'
 
 // 子元素类型
 type Child = VNode | TextVNode | CommentVNode | AnyPrimitive | Array<Child>
@@ -49,15 +50,6 @@ export function createVNode<T extends VNodeType>(
 ): VNode<T> {
   // 将props合并为一个新对象
   const newProps = Object.assign({}, props || {}) as Record<string, any> & IntrinsicAttributes
-  // 创建虚拟节点
-  const vnode: VNode = {
-    [VNodeSymbol]: true,
-    type,
-    props: newProps,
-    key: popProperty(newProps, 'key'),
-    ref: popProperty(newProps, 'ref'),
-    children: []
-  }
   // 如果type是一个函数，则将children属性添加到props中，并将children置为空
   if (isFunction(type)) {
     if (children.length > 0) {
@@ -73,9 +65,20 @@ export function createVNode<T extends VNodeType>(
       children.push(attrChildren)
     }
   }
+  // 创建虚拟节点
+  const vnode: VNode = {
+    [VNodeSymbol]: true,
+    type,
+    props: newProps,
+    key: popProperty(newProps, 'key'),
+    ref: popProperty(newProps, 'ref'),
+    children: []
+  }
   // 格式化children
   vnode.children = formatChildren(children, vnode)
   handlerBindAttrs(newProps)
+  // 如果是简单组件，则调用组件的构造函数并返回结果
+  if (isSimpleWidget(type)) return type(newProps) as VNode<T>
   return vnode as VNode<T>
 }
 
