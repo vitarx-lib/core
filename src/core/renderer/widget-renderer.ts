@@ -162,7 +162,10 @@ export class WidgetRenderer<T extends Widget> {
    * @protected
    */
   render(container?: ContainerElement): ContainerElement {
-    if (this.el) throw new Error('[Vitarx.WidgetRenderer.render]：组件已渲染，请勿重复渲染！')
+    if (this.state !== 'notRendered') {
+      throw new Error('[Vitarx.WidgetRenderer.render]：组件已渲染，请勿重复渲染！')
+    }
+
     let el: ContainerElement | null = null
     try {
       // 触发onBeforeMount生命周期
