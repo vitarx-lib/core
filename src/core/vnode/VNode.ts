@@ -4,6 +4,7 @@ import {
   type ChildVNode,
   type CommentVNode,
   type IntrinsicAttributes,
+  isRefEl,
   isVNode,
   type RefEl,
   type TextVNode,
@@ -76,20 +77,36 @@ export function createVNode<T extends VNodeType>(
       children.push(attrChildren)
     }
   }
+  const key = popProperty(newProps, 'key')
+  const ref_el = popProperty(newProps, 'ref')
+  // 处理绑定属性
+  handlerBindAttrs(newProps)
+  // 如果是简单组件，则调用组件的构造函数并返回结果
+  if (isSimpleWidget(type)) {
+    const simpleVnode = type(newProps) as VNode<T>
+    if (key && simpleVnode.key === undefined) {
+      simpleVnode.key = key
+    }
+    if (isRefEl(ref_el)) {
+      if (isRefEl(simpleVnode.ref)) {
+        ref_el.value = () => simpleVnode.ref!.value
+      } else {
+        simpleVnode.ref = ref_el
+      }
+    }
+    return simpleVnode
+  }
   // 创建虚拟节点
   const vnode: VNode = {
     [VNodeSymbol]: true,
     type,
     props: newProps,
-    key: popProperty(newProps, 'key'),
-    ref: popProperty(newProps, 'ref'),
+    key: key,
+    ref: ref_el,
     children: []
   }
   // 格式化children
   vnode.children = formatChildren(children, vnode)
-  handlerBindAttrs(newProps)
-  // 如果是简单组件，则调用组件的构造函数并返回结果
-  if (isSimpleWidget(type)) return type(newProps) as VNode<T>
   return vnode as VNode<T>
 }
 
