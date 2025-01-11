@@ -1,3 +1,5 @@
+import type { VNode } from './type.js'
+
 /** 虚拟节点标识符 */
 export const VNodeSymbol = Symbol('VNode')
 export type VNodeSymbol = typeof VNodeSymbol
@@ -7,8 +9,8 @@ export const TextVNodeSymbol = Symbol('TextNode')
 export type TextVNodeSymbol = typeof TextVNodeSymbol
 
 /** 片段组件标识符 */
-export const Fragment: unique symbol = Symbol('Fragment')
-export type Fragment = typeof Fragment
+export const Fragment = Symbol('Fragment') as unknown as () => VNode
+export type Fragment = () => VNode
 
 /** 响应式元素引用标记 */
 export const RefElSymbol = Symbol('RefEl')

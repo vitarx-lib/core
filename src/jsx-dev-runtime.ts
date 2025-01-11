@@ -1,9 +1,10 @@
-import { Fragment, jsx } from './jsx-runtime.js'
+import { jsx } from './jsx-runtime.js'
 import { type VNode, type VNodePropsType, type VNodeType } from './core/index.js'
 
+export { Fragment } from './jsx-runtime.js'
 type Source = { fileName: string; lineNumber: number; columnNumber: number }
 
-interface DevVNode<T extends VNodeType> extends VNode<T> {
+export interface DevVNode<T extends VNodeType> extends VNode<T> {
   devInfo: {
     source: Source
     isStatic: boolean
@@ -21,7 +22,7 @@ interface DevVNode<T extends VNodeType> extends VNode<T> {
  * @param source - 源码位置信息
  * @param self - 绑定的this
  */
-function jsxDEV<T extends VNodeType>(
+export function jsxDEV<T extends VNodeType>(
   type: T,
   props: VNodePropsType<T> | null,
   key: Vitarx.GlobalIntrinsicAttributes['key'] | undefined,
@@ -45,5 +46,3 @@ function jsxDEV<T extends VNodeType>(
   }
   return vnode
 }
-
-export { jsxDEV, Fragment }
