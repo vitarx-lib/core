@@ -23,6 +23,7 @@ import {
 import {
   isFunction,
   isRecordObject,
+  isString,
   mergeCssClass,
   mergeCssStyle,
   popProperty
@@ -81,6 +82,11 @@ export function createVNode<T extends VNodeType>(
   const ref_el = popProperty(newProps, 'ref')
   // 处理绑定属性
   handlerBindAttrs(newProps)
+  // 兼容class和className重复定义
+  if (isString(type) && 'class' in newProps && 'className' in newProps) {
+    newProps.class = mergeCssClass(newProps.className, newProps.class)
+    delete newProps.className
+  }
   // 如果是简单组件，则调用组件的构造函数并返回结果
   if (isSimpleWidget(type)) {
     const simpleVnode = type(newProps) as VNode<T>
