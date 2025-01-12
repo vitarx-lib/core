@@ -18,6 +18,8 @@ import {
   getVDocumentFragmentLastEl,
   recoveryFragment
 } from './utils.js'
+import { toRaw } from '../../responsive/index.js'
+import { Observers } from '../../observer/index.js'
 
 /**
  * 差异更新
@@ -53,29 +55,36 @@ export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
 function patchAttrs(oldVNode: VNode, newVNode: VNode): void {
   const isWidget = isFunction(oldVNode.type),
     el = oldVNode.el as HTMLElement
-  const oldAttrs = oldVNode.props as Record<string, any>
+  const oldAttrs = toRaw(oldVNode.props) as Record<string, any>
   const newAttrs = newVNode.props as Record<string, any>
   // 使用 Set 记录 oldAttrs 中的键，以便在循环中检查需要删除的属性
-  const oldKeysSet = new Set(Object.keys(oldAttrs))
+  const removeKeysSet = new Set(Object.keys(oldAttrs))
+  const changeKey: string[] = []
   // 遍历 newAttrs，检查是否有新的属性或属性值需要更新
-  Object.keys(newAttrs).forEach(key => {
+  for (const key in newAttrs) {
     // 更新或新增属性
     if (oldAttrs[key] !== newAttrs[key]) {
-      if (!isWidget) {
+      if (isWidget) {
+        changeKey.push(key)
+      } else {
         setAttribute(el, key, newAttrs[key], oldAttrs[key])
       }
       oldAttrs[key] = newAttrs[key]
     }
-    // 将已经处理过的 key 从 oldKeysSet 中删除
-    oldKeysSet.delete(key)
-  })
-  // 删除 newAttrs 中不存在的旧属性
-  oldKeysSet.forEach(key => {
-    if (!isWidget) {
+    // 将存在于新Attrs的键从 removeKeysSet 中删除
+    removeKeysSet.delete(key)
+  }
+  // 遍历要删除的键集合，并删除对应的属性
+  for (const key of removeKeysSet) {
+    if (isWidget) {
+      changeKey.push(key)
+    } else {
       removeAttribute(el, key, oldAttrs[key])
     }
     delete oldAttrs[key]
-  })
+  }
+  // 如果有属性值改变，触发属性监听器
+  if (changeKey.length > 0) Observers.trigger(oldVNode.props, changeKey)
 }
 
 /**
