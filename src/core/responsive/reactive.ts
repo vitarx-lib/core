@@ -90,7 +90,7 @@ function handlerCollection<T extends AnyCollection>(
 /**
  * # 响应式对象处理
  */
-class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
+export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   readonly #deep: boolean
   readonly #trigger: Trigger<T>
   readonly #track: Track<T>
@@ -123,7 +123,7 @@ class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     return result
   }
 
-  get(target: T, prop: ExtractProp<T>) {
+  get(target: T, prop: ExtractProp<T>, _receiver: any) {
     // 检测是否为响应式对象
     if (prop === REACTIVE_SYMBOL) return true
     // 检测是否为代理对象
@@ -292,7 +292,7 @@ export function shallowReactive<T extends AnyObject>(target: T): Reactive<T> {
  *
  * @template T
  * @param obj
- * @returns {UnReactive<T>}
+ * @returns {UnReactive<T>} 如果传入的是 'reactive' 创建的对象，则会返回其真实的原始对象，否则原样返回。
  * @alias unReactive
  */
 export function toRaw<T extends object>(obj: T | Reactive<T>): UnReactive<T> {
