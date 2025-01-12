@@ -20,7 +20,7 @@ export type Element = Vitarx.Element
  */
 export type ClassWidgetConstructor<P extends Record<string, any> = any> = new (
   props: P & IntrinsicAttributes
-) => Widget<P>
+) => Widget<P, any>
 
 // 获取组件子节点类型
 export type WidgetChildren<P> = P extends { children: infer U }
@@ -33,7 +33,31 @@ export type WidgetChildren<P> = P extends { children: infer U }
  * 所有小部件的基类
  *
  * @template InputProps - 输入的属性类型
- * @template Props - `this.props`的类型，默认=InputProps，如果你使用了`defineDefaultProps`方法来定义默认属性，而InputProps中又是定义的可选属性，则可以传入该泛型来重载`this.props`的类型。
+ * @template Props - `this.props`的类型，默认=InputProps
+ *
+ * `Props`泛型详细说明：假设`InputProps`中有一个name是可选的字符串属性，
+ * 在构造函数或`onCreated`钩子中通过`defineProps({name:'小明'})`给name赋予一个默认值，
+ * 当你调用`this.props.name`获取数据时，`this.props.name`的类型任会是string|undefined，
+ * 这是TS类型推导的问题，满屏的错误提示需使用`!`强制断言不为空，
+ * 为了解决这个问题我们可以传入`Props`泛型来重载`this.props`的类型，就像下面那样。
+ * ```tsx
+ * import {defineProps} from 'vitarx'
+ * interface MyProps {
+ *   name?:string,
+ *   age?:number
+ * }
+ * // 注意第二个泛型，我们使用Ts类型工具Required来将所有属性标记为必填的，然后在构造函数中给所有属性都定义一个默认值
+ * // 当然你也可以只为某些属性定义默认值，可以传入`MakeRequired<MyProps,'name'>`，
+ * // MakeRequired是框架内置的全局类型工具，支持挑选部分接口属性，使其成为不能为空的必填属性，
+ * class MyWidget extends Widget<MyProps,Required<MyProps> {
+ *   constructor(props:MyProps){
+ *    super(props)
+ *    // 使用助手函数给props属性赋予默认值
+ *    defineProps({name:'小明',age:18})
+ *    const name:string = this.props.name // 如果你没有给Widget传入第二个泛型 这里就会提示类型错误
+ *   }
+ * }
+ * ```
  */
 export abstract class Widget<
   InputProps extends Record<string, any> = {},
@@ -44,7 +68,7 @@ export abstract class Widget<
    *
    * @private
    */
-  readonly #props: Props
+  readonly #props: InputProps
   // 自身VNODE
   readonly #vnode: WidgetVNode
   // 自身作用域
@@ -52,7 +76,7 @@ export abstract class Widget<
 
   constructor(props: InputProps) {
     super()
-    this.#props = props as Props
+    this.#props = props
     this.#vnode = getCurrentVNode()!
     this.#scope = getCurrentScope()!
   }
@@ -95,9 +119,11 @@ export abstract class Widget<
    * 外部传入的属性
    *
    * 建议保持单向数据流，不要尝试修改`props`中数据。
+   *
+   * 你可以在构造函数中使用`defineProps`来定义默认的props数据。
    */
-  protected get props(): Readonly<Props> {
-    return this.#props as Readonly<Props>
+  protected get props(): Readonly<InputProps & Props> {
+    return this.#props as InputProps & Props
   }
 
   /**
@@ -127,7 +153,7 @@ export abstract class Widget<
    * `children` 不会自动渲染，你可以将它视为一个参数，你可以在`build`方法中使用该参数，来实现插槽的效果。
    */
   protected get children(): WidgetChildren<InputProps> {
-    return this.props.children as WidgetChildren<InputProps>
+    return this.#props.children
   }
 
   /**
