@@ -123,7 +123,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     return result
   }
 
-  get(target: T, prop: ExtractProp<T>, _receiver: any) {
+  get(target: T, prop: ExtractProp<T>, receiver: any) {
     // 检测是否为响应式对象
     if (prop === REACTIVE_SYMBOL) return true
     // 检测是否为代理对象
@@ -132,12 +132,12 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (prop === GET_RAW_TARGET_SYMBOL) return target
     // 如果存在于深度代理中，则直接返回代理对象
     if (Reflect.has(target, prop) && this.#deepProxy?.has(prop)) return this.#deepProxy.get(prop)
-    const value = Reflect.get(target, prop, target)
+    const value = Reflect.get(target, prop)
     if (isFunction(value)) {
       // 集合目标函数需特殊处理
       return isCollection(target)
         ? handlerCollection(target, prop, this.#trigger as any, this.#track).bind(target)
-        : value
+        : value.bind(receiver)
     }
     // 如果是对象，则判断是否需要进行深度代理
     if (this.#deep && isMakeProxy(value)) {
