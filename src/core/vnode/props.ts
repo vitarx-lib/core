@@ -105,8 +105,9 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
       return true
     }
     if (propsModifyWarning) {
-      console.trace(
-        '[Vitarx.PropsProxyHandler][WARN]：组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)'
+      const stack = new Error().stack // 获取当前堆栈
+      console.warn(
+        `[Vitarx.PropsProxyHandler][WARN]：组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)\nStack trace:\n${stack}`
       )
     }
     return super.set(target, prop, value, receiver)
