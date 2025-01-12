@@ -5,7 +5,6 @@ import { getCurrentVNode, type VNode, type WidgetVNode } from '../vnode/index.js
 import type { ContainerElement } from '../renderer/index.js'
 import { getContext, runContext } from '../context/index.js'
 import { type BuildVNode, FnWidget, type FnWidgetConstructor } from './fn-widget.js'
-import { isRecordObject } from '../../utils/index.js'
 
 /**
  * 生命周期钩子回调函数
@@ -133,72 +132,6 @@ function createLifeCycleHook<T extends LifeCycleHooks>(
     HooksCollector.addLifeCycle(hook, cb)
   }
 }
-
-/**
- * 定义属性
- *
- * 此函数在类定义小部件中也可以使用，通常位于构造函数或`onCreated`钩子中。
- *
- * 可以把props做为第二个参数传入，这在函数式组件中能够获得更好的类型提示与校验。
- * @example
- * ```tsx
- * interface Props {
- *  name: string
- *  age?: number
- * }
- * function Foo(_props: Props) {
- *   const props = defineProps<Props>({
- *     age: 'vitarx'
- *   },_props)
- *   // props 推导类型如下
- *   interface Props {
- *     name: string
- *     age: number
- *   }
- * }
- * ```
- *
- * @param {Record<string, any>} defaultProps - 默认属性
- * @returns {Readonly<Record<string, any>} - 合并过后的只读对象
- */
-export function defineProps<D extends Record<string, any>>(defaultProps: D): Readonly<D>
-/**
- * 定义属性
- *
- * 此函数在类定义小部件中也可以使用，通常位于构造函数或`onCreated`钩子中。
- *
- * @param {Record<string, any>} defaultProps - 默认属性
- * @param {Record<string, any>} inputProps - 外部传入给组件的props
- * @returns {Readonly<Record<string, any>} - 合并过后的只读对象
- */
-export function defineProps<D extends Record<string, any>, T extends Record<string, any>>(
-  defaultProps: D,
-  inputProps: T
-): Readonly<T & D>
-export function defineProps<D extends Record<string, any>, T extends Record<string, any> = {}>(
-  defaultProps: D,
-  inputProps?: T
-): Readonly<T & D> {
-  if (!isRecordObject(defaultProps)) {
-    throw new TypeError('[Vitarx.defineProps][ERROR]：参数1(defaultProps)必须是对象')
-  }
-  if (!inputProps) {
-    const props = getCurrentVNode()!.props as T
-    if (!props) {
-      throw new Error(
-        '[Vitarx.defineProps][ERROR]：defineProps 必须在小部件作用域下调用（初始化阶段）。'
-      )
-    }
-    inputProps = props
-  }
-  for (const key in defaultProps) {
-    if (!(key in inputProps) || inputProps[key] === undefined) {
-      inputProps[key] = defaultProps[key] as any
-    }
-  }
-  return defaultProps as T & D
-}
-
 
 /**
  * 小部件创建完成时触发的钩子
