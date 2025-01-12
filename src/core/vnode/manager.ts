@@ -6,9 +6,9 @@ import {
   isClassWidgetConstructor,
   Widget
 } from '../widget/index.js'
-import { reactive } from '../responsive/index.js'
 import { createScope } from '../scope/index.js'
 import { getContext, runContext } from '../context/index.js'
+import { _proxyWidgetInstanceProps } from './props.js'
 
 type InstanceCreatedCallback = (instance: Widget) => void
 
@@ -47,7 +47,7 @@ export class VNodeManager {
       .run(async () => {
         await runContext(VNodeManager.#contextSymbol, vnode, async () => {
           // 包装props为响应式对象
-          vnode.props = reactive(vnode.props, false)
+          vnode.props = _proxyWidgetInstanceProps(vnode.props)
           // 异步实例
           let asyncInstance: Promise<FnWidget> | null = null
           if (isClassWidgetConstructor(vnode.type)) {
