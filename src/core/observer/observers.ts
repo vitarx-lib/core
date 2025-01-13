@@ -103,10 +103,15 @@ export class Observers {
   /**
    * ## 注册监听器
    *
-   * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
-   * @param callback - 回调函数或监听器实例
-   * @param prop - 属性名，默认为ALL_CHANGE_SYMBOL标记，监听全部变化
-   * @param options - 监听器选项
+   * 一般你无需使用此方法，通常使用助手函数`watch`。
+   *
+   * 如果你需要监听器不被作用域所管理，则可以直接使用此方法，传入一个{@linkcode Listener}实例做为回调，但你要清楚这样做的后果。
+   *
+   * @param {AnyObject} origin - 监听源，一般是`ref`|`reactive`创建的对象
+   * @param {Function|Listener} callback - 回调函数或监听器实例
+   * @param {PropName} prop - 属性名，默认为{@linkcode Observers.ALL_CHANGE_SYMBOL}标记，监听全部变化
+   * @param {Options} options - 监听器选项
+   * @returns {Listener} - 监听器实例
    */
   static register<C extends Callback<any, any>>(
     origin: AnyObject,
@@ -126,10 +131,11 @@ export class Observers {
   /**
    * ## 注册监听器
    *
-   * @param origin - 监听源，一般是`ref`|`reactive`创建的对象
-   * @param props - 属性名数组
-   * @param callback - 回调函数或监听器实例
-   * @param options - 监听器选项
+   * @param {AnyObject} origin - 监听源，一般是`ref`|`reactive`创建的对象
+   * @param {PropName[]} props - 属性名数组
+   * @param {Function|Listener} callback - 回调函数或监听器实例
+   * @param {Options} options - 监听器选项
+   * @returns {Listener} - 监听器实例
    */
   static registerProps<C extends Callback<any, any>>(
     origin: AnyObject,
@@ -149,9 +155,10 @@ export class Observers {
   /**
    * ## 同时注册给多个对象注册同一个监听器
    *
-   * @param origins - 监听源列表
-   * @param callback - 回调函数或监听器实例
-   * @param options - 监听器选项
+   * @param {AnyObject[]|Set<AnyObject>} origins - 监听源列表
+   * @param {Function|Listener} callback - 回调函数或监听器实例
+   * @param {Options} options - 监听器选项
+   * @returns {Listener} - 监听器实例
    */
   static registers<C extends Callback<any, any>>(
     origins: Set<AnyObject> | AnyObject[],
