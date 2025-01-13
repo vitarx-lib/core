@@ -327,12 +327,13 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
     options
   )
 }
-
 /**
  * ## 监听函数的依赖变化
  *
+ *
  * @note 该方法会监听函数的依赖，当依赖发生变化时，会触发回调函数，没有传入回调函数则触发传入的fn函数本身。
  *
+ * @alias watchEffect
  * @template R - 返回值类型
  * @template GET - 是否收集依赖的返回值
  * @param {() => R} fn - 要监听的函数
@@ -343,9 +344,7 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
 export function watchDepend<GET, R>(
   fn: () => R,
   callback?: () => void,
-  options?: Options & {
-    getResult?: GET
-  }
+  options?: Options & { getResult?: GET }
 ): WatchDependResult<R, GET> {
   const getResult = options ? popProperty(options, 'getResult') : false
   const { deps, result } = Depend.collect(fn)
@@ -373,9 +372,13 @@ export function watchDepend<GET, R>(
       Observers.registerProps(proxy, props, subListener)
     })
   }
-  // @ts-ignore
-  return getResult ? { listener: mainListener, result } : mainListener
+  return (getResult ? { listener: mainListener, result } : mainListener) as WatchDependResult<
+    R,
+    GET
+  >
 }
+
+export { watchDepend as watchEffect }
 
 /**
  * 在下一次微任务开始之前执行回调函数
