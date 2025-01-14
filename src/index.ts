@@ -81,7 +81,7 @@ declare global {
     /**
      * 任意子节点
      */
-    type AnyChildren = Element | Element[] | Exclude<AnyPrimitive, symbol>
+    type Children = Element | _VNODE | TextVNode | Exclude<AnyPrimitive, symbol> | Array<Children>
   }
   namespace JSX {
     /** 元素类型 */
@@ -105,6 +105,6 @@ declare global {
       ref?: RefEl<T>
     }
 
-    type Children = Element | _VNODE | TextVNode | AnyPrimitive | Array<Children>
+    type Children = Vitarx.Children
   }
 }
