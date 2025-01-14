@@ -78,6 +78,10 @@ declare global {
     interface Element<T extends VNodeType = VNodeType> extends _VNODE<T> {}
     /** 类组件实例 */
     type ElementClass = Widget
+    /**
+     * 任意子节点
+     */
+    type AnyChildren = Element | Element[] | Exclude<AnyPrimitive, symbol>
   }
   namespace JSX {
     /** 元素类型 */
