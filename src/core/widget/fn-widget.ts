@@ -20,7 +20,6 @@ import {
 import { type CollectResult, hooksCollector } from './hooks.js'
 import { getSuspenseCounter } from './built-in/index.js'
 
-
 /**
  * 构建虚拟节点函数类型
  */
@@ -41,11 +40,26 @@ export type FnWidgetConstructor<P extends Record<string, any> = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => BuildVNode | Promise<BuildVNode>
+/**
+ * 函数小部件类型
+ */
+export type FnWidgetType<P extends Record<string, any>> = (
+  this: FnWidget,
+  props: P & IntrinsicAttributes
+) => BuildVNode
+
+/**
+ * 异步小部件类型
+ */
+export type AsyncFnWidget<P extends Record<string, any> = any> = (
+  this: FnWidget,
+  props: P & IntrinsicAttributes
+) => Promise<BuildVNode>
 
 type InitData = CollectResult & { build: BuildVNode }
 
-// 设置build方法
-const __initialization = Symbol('InitializationFnWidgetBuild')
+// 初始化方法
+const __initializeMethod = Symbol('InitializeFnWidgetBuild')
 
 /**
  * 函数小部件实例
@@ -62,7 +76,7 @@ export class FnWidget extends Widget {
   }
 
   // 初始化实例
-  async [__initialization](data: CollectResult): Promise<FnWidget> {
+  async [__initializeMethod](data: CollectResult): Promise<FnWidget> {
     if (isPromise(data.build)) {
       const suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
@@ -119,11 +133,7 @@ export class FnWidget extends Widget {
    * @private
    */
   #initialize({ build, exposed, lifeCycleHooks }: InitData) {
-    if (isVNode(build)) {
-      this.build = () => build
-    } else {
-      this.build = build
-    }
+    this.build = isVNode(build) ? () => build : build
     this.#injectExposed(exposed)
     this.#injectLifeCycleHooks(lifeCycleHooks)
     this.#init = true
@@ -168,7 +178,6 @@ export class FnWidget extends Widget {
   }
 }
 
-
 /**
  * ## 视图构建器。
  *
@@ -210,7 +219,7 @@ export function build(element: VNode | (() => VNode)): VNode {
 export function _createFnWidget(vnode: WidgetVNode<FnWidgetConstructor>): Promise<FnWidget> {
   const result = hooksCollector(vnode)
   const instance = vnode.instance as FnWidget
-  return instance[__initialization](result)
+  return instance[__initializeMethod](result)
 }
 
 const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
@@ -259,4 +268,40 @@ export function simple<T extends Record<string, any>, R extends VNode>(
  */
 export function isSimpleWidget(fn: any): fn is SimpleWidget {
   return !!(typeof fn === 'function' && fn[SIMPLE_WIDGET_SYMBOL])
+}
+
+/**
+ * 辅助定义一个符合`tsx`类型推断的异步函数小部件
+ *
+ * 没有附加任何代码逻辑，只是使用断言重载了函数类型，使异步函数组件兼容`tsx`类型推断。
+ *
+ * 你完全可以不使用此函数，直接用 `async function MyAsyncWidget(){...} as unknown as TsxAsyncWidget<PropsType>`
+ * 语法使得异步函数组件兼容`tsx`类型推断，但这并不美观。
+ *
+ * @example 使用`defineAsyncWidget`定义一个符合TSX类型推断要求的组件。
+ * ```tsx
+ * import { defineAsyncWidget,withAsyncContext } from 'vitarx'
+ *
+ * const AsyncWidget = defineAsyncWidget(async function(props:{id:string}){
+ *    // 使用withAsyncContext来保持上下文，如果不使用withAsyncContext会导致上下文丢失！！！
+ *    const data = await withAsyncContext(() => fetch('/api/user-info'))
+ *    return <div>用户id: {props.id}，用户名:{data.name}</div>
+ * })
+ * export default function App() {
+ *   // 渲染一个异步组件，TSX能够正常识别组件
+ *   return (
+ *      <div>
+ *        <AsyncWidget id="123"/>
+ *      </div>
+ *   )
+ * }
+ * ```
+ *
+ * @param {AsyncFnWidget} fn - 异步函数小部件。
+ * @returns {FnWidgetType} - 重载类型过后的异步函数组件。
+ */
+export function defineAsyncWidget<P extends Record<string, any>>(
+  fn: AsyncFnWidget<P>
+): FnWidgetType<P> {
+  return fn as unknown as FnWidgetType<P>
 }
