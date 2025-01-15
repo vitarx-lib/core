@@ -40,13 +40,14 @@ export type FnWidgetConstructor<P extends Record<string, any> = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => BuildVNode | Promise<BuildVNode>
+
 /**
- * 函数小部件类型
+ * 函数小部件类型，兼容TSX语法
  */
 export type FnWidgetType<P extends Record<string, any>> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => BuildVNode
+) => VNode
 
 /**
  * 异步小部件类型
@@ -54,7 +55,7 @@ export type FnWidgetType<P extends Record<string, any>> = (
 export type AsyncFnWidget<P extends Record<string, any> = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => Promise<BuildVNode>
+) => Promise<VNode>
 
 type InitData = CollectResult & { build: BuildVNode }
 
