@@ -130,9 +130,11 @@ export function isSimpleGetterFunction(fn: any): fn is () => any {
  * 判断是否为纯数字字符串
  *
  * @param str - 待检测的字符串
- * @param allowSpace - 是否包含允许空格
+ * @param allowSpace - 是否包含允许空格字符
+ * @returns {boolean} - 是否为纯数字字符串
  */
-export function isNumString(str: string, allowSpace: boolean = false): boolean {
+export function isNumString(str: any, allowSpace: boolean = false): str is `${number}` {
+  if (typeof str !== 'string') return false
   const integerRegex = /\d+$/
   str = Object(str)
   if (allowSpace) str = str.replace(/\s+/g, '')
