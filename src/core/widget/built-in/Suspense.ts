@@ -53,7 +53,7 @@ const provideSymbol = Symbol('SuspenseSymbol')
  *
  * 该组件可以等待子节点的异步加载完成
  *
- * 通常它与`AsyncWidget`、`LazyWidget`搭配使用。
+ * 通常它与`AsyncFnWidget`、`LazyWidget`搭配使用。
  */
 export class Suspense extends Widget<SuspenseProps> {
   protected counter = ref(0)
