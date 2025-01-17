@@ -161,7 +161,7 @@ function handlerBindAttrs(props: Record<string, any>): void {
         props[key] = mergeCssStyle(props[key], attrs[key])
         continue
       }
-      if (key === 'class' || key === 'className') {
+      if (key === 'class' || key === 'className' || key === 'classname') {
         props[key] = mergeCssClass(props[key], attrs[key])
       }
     } else {
