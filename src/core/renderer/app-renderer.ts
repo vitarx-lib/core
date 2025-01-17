@@ -64,10 +64,17 @@ export class AppRenderer {
       vnode = widget as VNode<FnWidgetConstructor | ClassWidgetConstructor>
     }
     if (!isVNode(vnode) || !isFunction(vnode.type)) {
-      throw new Error(`[Vitarx.AppRenderer.render]：入口小部件必须是函数声明小部件或类声明小部件。`)
+      throw new Error(
+        `[Vitarx.AppRenderer.render][ERROR]：入口小部件必须是函数声明小部件或类声明小部件。`
+      )
     }
     renderWidgetElement(vnode, this.container)
     this.widget = vnode.instance!
+    if (this.widget['renderer'].state !== 'notMounted') {
+      throw new Error(
+        `[Vitarx.AppRenderer.render][ERROR]：Vitarx应用主入口渲染失败，请修复控制台输出的异常。`
+      )
+    }
     mountVNode(vnode)
   }
 
