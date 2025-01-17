@@ -45,6 +45,6 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*"
+    "src"
   ]
 }
