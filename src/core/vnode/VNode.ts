@@ -30,6 +30,7 @@ import {
 } from '../../utils/index.js'
 import { updateParentVNodeMapping } from './manager.js'
 import { isSimpleWidget } from '../widget/index.js'
+import type { HTMLClassProperties } from '../renderer/index.js'
 
 // 子元素类型
 type Child = VNode | TextVNode | CommentVNode | AnyPrimitive | Array<Child>
@@ -39,6 +40,7 @@ type Children = Child[]
 // 检测虚拟节点类型
 const validVNodeType = (type: any): type is VNodeType =>
   typeof type === 'string' || isFunction(type) || type === Fragment
+
 /**
  * 创建一个虚拟节点（VNode）
  *
@@ -58,36 +60,53 @@ export function createVNode<T extends VNodeType>(
   props: VNodePropsType<T> | null = null,
   ...children: Children
 ): VNode<T> {
+  // 验证虚拟节点类型
   if (!validVNodeType(type)) {
     throw new Error(`[Vitarx.createVNode][ERROR]：Invalid VNode type ${typeof type}`)
   }
+
   // 将props合并为一个新对象
-  const newProps = Object.assign({}, props || {}) as Record<string, any> & IntrinsicAttributes
-  // 如果type是一个函数，则将children属性添加到props中，并将children置为空
+  const newProps = { ...props } as Record<string, any> & IntrinsicAttributes
+
+  // 处理函数组件，合并 children 到 props 中
   if (isFunction(type)) {
     if (children.length > 0) {
       newProps.children = children.length === 1 ? children[0] : children
       children = []
     }
   } else if ('children' in newProps) {
-    // 如果props中有children属性，则将其添加到children中
+    // 如果props中有children属性，合并到children
     const attrChildren = popProperty(newProps, 'children')
-    if (Array.isArray(attrChildren)) {
-      children = [...attrChildren, ...children]
-    } else {
-      children.push(attrChildren)
-    }
+    children = Array.isArray(attrChildren)
+      ? [...attrChildren, ...children]
+      : [attrChildren, ...children]
   }
+
+  // 提取并处理 key 和 ref
   const key = popProperty(newProps, 'key')
   const ref_el = popProperty(newProps, 'ref')
+
   // 处理绑定属性
   handlerBindAttrs(newProps)
-  // 兼容class和className重复定义
-  if (isString(type) && 'class' in newProps && 'className' in newProps) {
-    newProps.class = mergeCssClass(newProps.className, newProps.class)
-    delete newProps.className
+
+  // 处理 class 相关属性，兼容 className, class 和 classname
+  if (isString(type)) {
+    const cssProps = ['className', 'class', 'classname']
+    let cssClass: HTMLClassProperties = []
+
+    // 合并所有相关的 class 属性
+    cssProps.forEach(prop => {
+      if (prop in newProps) {
+        cssClass = mergeCssClass(cssClass, newProps[prop])
+        delete newProps[prop]
+      }
+    })
+
+    // 如果合并后的 class 存在，赋值给 newProps.class
+    if (cssClass.length > 0) newProps.class = cssClass
   }
-  // 如果是简单组件，则调用组件的构造函数并返回结果
+
+  // 如果是简单组件，调用构造函数并返回结果
   if (isSimpleWidget(type)) {
     const simpleVnode = type(newProps) as VNode<T>
     if (key && simpleVnode.key === undefined) {
@@ -102,12 +121,13 @@ export function createVNode<T extends VNodeType>(
     }
     return simpleVnode
   }
+
   // 创建虚拟节点
   const vnode: VNode = {
     [VNodeSymbol]: true,
     type,
     props: newProps,
-    key: key,
+    key,
     ref: ref_el,
     children: []
   }
