@@ -113,13 +113,17 @@ export function removeAttribute(el: HTMLElement | SVGElement, key: string, callb
  */
 export function setStyle(el: HTMLElement | SVGElement, style: HTMLStyleProperties): void {
   if (!el) return
+  el.style.cssText = ''
   if (typeof style === 'string') {
     // 如果 style 是字符串，直接设置 cssText
     el.style.cssText = style
   } else if (style && isRecordObject(style)) {
     // 如果 style 是对象，逐一设置样式属性
     Object.keys(style).forEach(key => {
-      el.style[key as any] = String(style[key as any])
+      const value = style[key as any]
+      if (typeof value === 'number' || typeof value === 'string') {
+        el.style[key as any] = String(value)
+      }
     })
   } else {
     // 如果没有样式，移除 style 属性
