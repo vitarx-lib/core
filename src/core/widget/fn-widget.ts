@@ -1,5 +1,3 @@
-// noinspection JSUnusedGlobalSymbols
-
 import { Widget } from './widget.js'
 import { isPromise } from '../../utils/index.js'
 import {
@@ -20,6 +18,7 @@ import {
 import { type CollectResult, hooksCollector } from './hooks.js'
 import { getSuspenseCounter } from './built-in/index.js'
 
+type AnyProps = Record<string, any>
 /**
  * 构建虚拟节点函数类型
  */
@@ -28,7 +27,7 @@ export type BuildVNode = (() => VNode) | VNode
 /**
  * 简单小部件类型
  */
-export interface SimpleWidget<T extends Record<string, any> = {}, R extends VNode = VNode> {
+export interface SimpleWidget<T extends AnyProps = any, R extends VNode = VNode> {
   [SIMPLE_WIDGET_SYMBOL]: true
 
   (props: T & IntrinsicAttributes): R
@@ -36,7 +35,7 @@ export interface SimpleWidget<T extends Record<string, any> = {}, R extends VNod
 /**
  * 函数小部件类型
  */
-export type FnWidgetConstructor<P extends Record<string, any> = any> = (
+export type FnWidgetConstructor<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => BuildVNode | Promise<BuildVNode>
@@ -44,7 +43,7 @@ export type FnWidgetConstructor<P extends Record<string, any> = any> = (
 /**
  * 函数小部件类型，兼容TSX语法
  */
-export type FnWidgetType<P extends Record<string, any> = any> = (
+export type FnWidgetType<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => VNode
@@ -52,7 +51,7 @@ export type FnWidgetType<P extends Record<string, any> = any> = (
 /**
  * 异步小部件类型
  */
-export type AsyncFnWidget<P extends Record<string, any> = any> = (
+export type AsyncFnWidget<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => Promise<VNode>
@@ -72,7 +71,8 @@ const __initializeMethod = Symbol('InitializeFnWidgetBuild')
 export class FnWidget extends Widget {
   #init: boolean = false
   #triggered: Record<string, any[]> = {}
-  constructor(props: Record<string, any>) {
+
+  constructor(props: AnyProps) {
     super(props)
   }
 
@@ -254,7 +254,7 @@ const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
  *
  * @param build - 构建函数
  */
-export function simple<T extends Record<string, any>, R extends VNode>(
+export function simple<T extends AnyProps, R extends VNode>(
   build: (props: T) => R
 ): SimpleWidget<T, R> {
   Object.defineProperty(build, SIMPLE_WIDGET_SYMBOL, { value: true })
@@ -285,7 +285,7 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  *
  * const AsyncWidget = defineAsyncWidget(async function(props:{id:string}){
  *    // 使用withAsyncContext来保持上下文，如果不使用withAsyncContext会导致上下文丢失！！！
- *    const data = await withAsyncContext(() => fetch('/api/user-info'))
+ *    const data = await withAsyncContext(() => fetch("/api/user-info"))
  *    return <div>用户id: {props.id}，用户名:{data.name}</div>
  * })
  * export default function App() {
@@ -301,8 +301,6 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  * @param {AsyncFnWidget} fn - 异步函数小部件。
  * @returns {FnWidgetType} - 重载类型过后的异步函数组件。
  */
-export function defineAsyncWidget<P extends Record<string, any>>(
-  fn: AsyncFnWidget<P>
-): FnWidgetType<P> {
+export function defineAsyncWidget<P extends AnyProps>(fn: AsyncFnWidget<P>): FnWidgetType<P> {
   return fn as unknown as FnWidgetType<P>
 }
