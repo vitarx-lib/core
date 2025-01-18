@@ -113,25 +113,35 @@ export function removeAttribute(el: HTMLElement | SVGElement, key: string, callb
  */
 export function setStyle(el: HTMLElement | SVGElement, style: HTMLStyleProperties): void {
   if (!el) return
-  el.style.cssText = ''
-  if (!style) return el.removeAttribute('style')
+
+  // 如果 style 是字符串，直接设置 cssText
   if (typeof style === 'string') {
-    // 如果 style 是字符串，直接设置 cssText
     el.style.cssText = style
-  } else if (style && isRecordObject(style)) {
-    // 如果 style 是对象，逐一设置样式属性
-    Object.keys(style).forEach(key => {
-      const value = style[key as any]
-      if (typeof value === 'number' || typeof value === 'string') {
-        el.style[key as any] = String(value)
-      }
+    return
+  }
+
+  if (isRecordObject(style)) {
+    // 如果 style 是对象，过滤掉无效的样式
+    const keys = Object.keys(style).filter(key => {
+      const type = typeof style[key as any]
+      return type === 'number' || type === 'string'
     })
-  } else {
-    // 如果没有样式，移除 style 属性
+
+    // 只有在确实有有效的样式值时，才清空现有样式并设置新样式
+    if (keys.length > 0) {
+      el.style.cssText = '' // 清空现有样式
+      for (const key of keys) {
+        el.style[key as any] = String(style[key as any])
+      }
+      return
+    }
+  }
+
+  // 如果没有有效样式，移除 style 属性
+  if (el.style.length > 0) {
     el.removeAttribute('style')
   }
 }
-
 /**
  * 设置样式类
  *
