@@ -44,7 +44,7 @@ export type FnWidgetConstructor<P extends Record<string, any> = any> = (
 /**
  * 函数小部件类型，兼容TSX语法
  */
-export type FnWidgetType<P extends Record<string, any>> = (
+export type FnWidgetType<P extends Record<string, any> = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => VNode

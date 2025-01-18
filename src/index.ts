@@ -1,6 +1,5 @@
 import type {
-  ClassWidgetConstructor,
-  FnWidgetConstructor,
+  FnWidgetType,
   IntrinsicAttributes,
   RefEl,
   TextVNode,
@@ -68,11 +67,7 @@ declare global {
     /**
      * 函数式小部件函数类型
      */
-    type FW = FnWidgetConstructor
-    /**
-     * 类定义小部件构造函数类型
-     */
-    type CW = ClassWidgetConstructor
+    type FW = FnWidgetType
 
     /** 兼容JSX，同VNode类型一致 */
     interface Element<T extends VNodeType = VNodeType> extends _VNODE<T> {}
