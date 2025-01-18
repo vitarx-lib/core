@@ -96,7 +96,7 @@ export function setAttribute(
  * @param callback - 事件回调函数，仅对事件属性生效
  */
 export function removeAttribute(el: HTMLElement | SVGElement, key: string, callback?: AnyCallback) {
-  if (key === 'className') {
+  if (key === 'className' || key === 'classname') {
     el.removeAttribute('class')
   } else if (isFunction(callback)) {
     el.removeEventListener(key.slice(2).toLowerCase(), callback)
@@ -114,6 +114,7 @@ export function removeAttribute(el: HTMLElement | SVGElement, key: string, callb
 export function setStyle(el: HTMLElement | SVGElement, style: HTMLStyleProperties): void {
   if (!el) return
   el.style.cssText = ''
+  if (!style) return el.removeAttribute('style')
   if (typeof style === 'string') {
     // 如果 style 是字符串，直接设置 cssText
     el.style.cssText = style
@@ -138,20 +139,16 @@ export function setStyle(el: HTMLElement | SVGElement, style: HTMLStylePropertie
  * @param classData
  */
 export function setClass(el: HTMLElement | SVGElement, classData: HTMLClassProperties): void {
-  if (classData) {
-    if (isString(classData)) {
-      el.setAttribute('class', classData)
-    } else if (isArray(classData)) {
-      // 替换类名：清空后添加新的类名
-      el.setAttribute('class', classData.join(' '))
-    } else if (isRecordObject(Object)) {
-      for (const key in classData) {
-        if (classData[key]) {
-          el.classList.add(key)
-        } else {
-          el.classList.remove(key)
-        }
-      }
+  el.removeAttribute('class')
+  if (!classData) return
+  if (isString(classData)) {
+    el.setAttribute('class', classData)
+  } else if (isArray(classData)) {
+    // 替换类名：清空后添加新的类名
+    el.setAttribute('class', classData.join(' '))
+  } else if (isRecordObject(classData)) {
+    for (const key in classData) {
+      classData[key] ? el.classList.add(key) : el.classList.remove(key)
     }
   }
 }
