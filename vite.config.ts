@@ -12,5 +12,9 @@ export default defineConfig({
       fileName: format => `vitarx.${format}.js`,
       formats: ['umd']
     }
+  },
+  esbuild: {
+    // 不压缩标识符（如函数名）
+    minifyIdentifiers: false
   }
 })
