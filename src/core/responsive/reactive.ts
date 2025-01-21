@@ -218,7 +218,7 @@ export function createReactive<T extends AnyObject>(
   readonly?: boolean
 ): Reactive<T> {
   // 避免嵌套代理
-  if (isReactive(target)) return target
+  if (!isMakeProxy(target)) return target
   const proxy = new Proxy(
     target,
     new ReactiveHandler<T>(

@@ -108,5 +108,5 @@ export function isMarkRaw(obj: AnyObject): boolean {
  * @internal 内部使用的助手函数！
  */
 export function isMakeProxy(value: any): value is object {
-  return isObject(value) && !isProxy(value) && !isMarkRaw(value)
+  return isObject(value) && !isProxy(value) && !isMarkRaw(value) && !Object.isFrozen(value)
 }
