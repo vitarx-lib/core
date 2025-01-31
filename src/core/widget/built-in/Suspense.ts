@@ -1,4 +1,4 @@
-import { type Element, Widget } from '../widget'
+import { type Element, Widget } from '../widget.js'
 import { Ref, ref } from '../../responsive/index.js'
 import {
   createVNode,
