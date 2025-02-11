@@ -11,12 +11,12 @@ import {
   type VNode,
   VNodeManager
 } from '../../vnode/index.js'
-import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './type.js'
+import { type HtmlElement, isVDocumentFragment } from './type.js'
 import {
   getElParentNode,
   getVDocumentFragmentFirstEl,
   getVDocumentFragmentLastEl,
-  recoveryFragment
+  recoveryDocumentFragmentChildNodes
 } from './utils.js'
 import { toRaw } from '../../responsive/index.js'
 import { Observers } from '../../observer/index.js'
@@ -124,17 +124,9 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
     const newChild = patchChild(oldVNode, oldChild, newChildren[i], isFragment)
     if (newChild) {
       oldVNode.children[adjustedIndex] = newChild
-      if (isFragment) {
-        const oldEl = oldVNode.el as VDocumentFragment
-        oldEl.__backup[adjustedIndex] = newChild.el as HTMLElement
-      }
     } else {
       // 删除当前节点并调整偏移量
       oldChildren.splice(adjustedIndex, 1)
-      if (isFragment) {
-        const oldEl = oldVNode.el as VDocumentFragment
-        oldEl.__backup.splice(adjustedIndex, 1)
-      }
       offset++ // 偏移量增加，下一次遍历时索引需要校正
     }
   }
@@ -199,7 +191,7 @@ function patchChild(
 /**
  * 往指定元素之后插入一个元素
  *
- * @param {HtmlElement} newElement - 新元素
+ * @param {HtmlElement} newElement - 新元素，如果是已挂载过的片段节点，需要执行恢复操作后，再传入其元素实例
  * @param {HtmlElement} targetElement - 目标元素
  * @returns {ParentNode} - 父容器节点
  */
@@ -214,9 +206,9 @@ export function insertAfterExactly(
   if (parent) {
     const next = targetElement.nextSibling // 获取目标元素的下一个兄弟节点
     if (next) {
-      parent.insertBefore(recoveryFragment(newElement), next) // 插入到目标元素下一个兄弟节点的后面
+      parent.insertBefore(newElement, next) // 插入到目标元素下一个兄弟节点的后面
     } else {
-      parent.appendChild(recoveryFragment(newElement))
+      parent.appendChild(newElement)
     }
   } else {
     throw new Error('无法插入：目标元素没有父节点')
@@ -239,9 +231,9 @@ export function insertBeforeExactly(newEl: HtmlElement, targetElement: HtmlEleme
     throw new Error('无法插入：目标元素没有父节点')
   }
   if (isVDocumentFragment(targetElement)) {
-    parent.insertBefore(recoveryFragment(newEl), getVDocumentFragmentFirstEl(targetElement))
+    parent.insertBefore(newEl, getVDocumentFragmentFirstEl(targetElement))
   } else {
-    parent.insertBefore(recoveryFragment(newEl), targetElement)
+    parent.insertBefore(newEl, targetElement)
   }
   return parent
 }
@@ -294,7 +286,6 @@ export function mountVNode(vnode: ChildVNode): void {
  * @param {oldVNode} oldVNode - 旧虚拟节点
  */
 export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
-  const newEl = renderElement(newVNode)
   // 如果新节点是传送节点则特殊处理
   if (isWidgetVNode(newVNode) && newVNode.instance!['renderer'].teleport) {
     // 新占位节点
@@ -317,10 +308,11 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
     if (!parent) {
       throw new Error('被替换的旧节点未挂载，无法获取其所在的容器元素实例，无法完成替换操作。')
     }
-    parent.replaceChild(recoveryFragment(newEl), oldVNode.el!)
+    parent.replaceChild(recoveryDocumentFragmentChildNodes(newVNode), oldVNode.el!)
     mountVNode(newVNode)
     return
   }
+  const newEl = renderElement(newVNode)
   if (oldVNode.instance) {
     if (oldVNode.instance['renderer'].teleport) {
       // 将新元素替换掉旧节点的传送占位元素
@@ -372,7 +364,7 @@ export function updateActivateState(vnode: ChildVNode, activate: boolean): void 
 export function removeElement(el: HtmlElement): void {
   if (isVDocumentFragment(el)) {
     // 删除旧节点
-    el.__backup.forEach(item => removeElement(item))
+    el.__remove()
   } else {
     el?.remove()
   }
@@ -388,23 +380,20 @@ export function removeElement(el: HtmlElement): void {
 export function replaceElement(newEl: HtmlElement, oldEl: HtmlElement): ParentNode {
   if (isVDocumentFragment(oldEl)) {
     // 片段节点弹出第一个元素，用于替换
-    let oldFirstEl = oldEl.__backup.shift()!
-    while (isVDocumentFragment(oldFirstEl)) {
-      oldFirstEl = oldFirstEl.__backup.shift()!
-    }
+    const oldFirstEl = getVDocumentFragmentFirstEl(oldEl)
     const parent = oldFirstEl.parentNode
     if (!parent) {
       throw new Error('无法替换：目标元素没有父节点')
     }
+    parent.replaceChild(newEl, oldFirstEl)
     // 删除其余元素
     removeElement(oldEl)
-    parent.replaceChild(recoveryFragment(newEl), oldFirstEl)
     return parent
   } else {
     if (!oldEl.parentNode) {
       throw new Error('无法替换：目标元素没有父节点')
     }
-    oldEl.parentNode.replaceChild(recoveryFragment(newEl), oldEl)
+    oldEl.parentNode.replaceChild(newEl, oldEl)
     return oldEl.parentNode
   }
 }

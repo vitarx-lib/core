@@ -13,13 +13,13 @@ import {
   type WidgetType
 } from '../../vnode/index.js'
 import {
-  backupFragment,
   type ContainerElement,
+  expandDocumentFragment,
   type HtmlElement,
   type HTMLIntrinsicTags,
   isSvgElement,
   mountVNode,
-  recoveryFragment,
+  recoveryDocumentFragmentChildNodes,
   type VDocumentFragment
 } from './index.js'
 
@@ -68,7 +68,7 @@ export function renderElement(vnode: ChildVNode, parent?: ContainerElement): Htm
 export function renderElement(vnode: ChildVNode, parent?: ContainerElement): HtmlElement {
   // 如果节点已渲染，则直接返回，避免重复渲染
   if (vnode.el) {
-    parent?.appendChild(recoveryFragment(vnode.el))
+    parent?.appendChild(recoveryDocumentFragmentChildNodes(vnode))
     return vnode.el as HtmlElement
   }
   if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
@@ -104,7 +104,6 @@ export function renderTextElement(vnode: TextVNode, parent?: ContainerElement): 
   parent?.appendChild(textEl)
   return textEl
 }
-
 
 /**
  * 渲染注释元素
@@ -180,13 +179,15 @@ export function renderFragmentElement(
   const el = document.createDocumentFragment() as VDocumentFragment
   if (!vnode.children || vnode.children.length === 0) {
     // 创建一个空节点 document.createComment('') 或 document.createTextNode('')
-    el.appendChild(document.createComment('empty fragment'))
+    const emptyEl = document.createComment('empty fragment')
+    el.appendChild(emptyEl)
+    el['__emptyElement'] = emptyEl
   } else {
     renderChildren(el, vnode.children)
   }
-  // 备份 节点
-  backupFragment(el)
   vnode.el = el
+  // 拓展片段元素
+  expandDocumentFragment(vnode)
   parent?.appendChild(el)
   return el
 }

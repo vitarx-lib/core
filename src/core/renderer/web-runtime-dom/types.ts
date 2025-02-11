@@ -479,7 +479,7 @@ export type ToPartialProperties<
 export type HtmlProperties<
   T extends Element,
   E extends string = never,
-  M extends object = OverwriteHtmlProperties,
+  M extends object = OverwriteHtmlProperties
 > = ToPartialProperties<T, M, E> &
   OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
   CustomProperties &
@@ -492,11 +492,25 @@ export type HtmlProperties<
  */
 export interface VDocumentFragment extends DocumentFragment {
   /**
-   * 备份的节点列表
-   *
-   * 用于恢复片段节点
+   * 空节点占位元素
    */
-  __backup: HtmlElement[]
+  __emptyElement?: Text | Comment
+  /**
+   * 获取第一个子节点
+   */
+  __firstChild: () => HtmlElement
+  /**
+   * 获取最后一个子元素
+   */
+  __lastChild: () => HtmlElement
+  /**
+   * 删除整个片段节点
+   */
+  __remove: () => void
+  /**
+   * 恢复片段节点
+   */
+  __recovery: () => VDocumentFragment
 }
 
 /**
@@ -515,7 +529,7 @@ export type ContainerElement = Element | VDocumentFragment
  * @param el
  */
 export function isVDocumentFragment(el: any): el is VDocumentFragment {
-  return el instanceof DocumentFragment && '__backup' in el
+  return el instanceof DocumentFragment
 }
 /**
  * 判断是否为svg元素，或是svg内部的子元素
