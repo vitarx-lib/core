@@ -68,17 +68,25 @@ export abstract class Widget<
    *
    * @private
    */
-  readonly #props: InputProps
-  // 自身VNODE
-  readonly #vnode: WidgetVNode
-  // 自身作用域
-  readonly #scope: Scope
+  private readonly _$props: InputProps
+  /**
+   * 内部私有属性，存放组件自身vnode节点
+   *
+   * @private
+   */
+  private readonly _$vnode: WidgetVNode
+  /**
+   * 内部私有属性，存放作用域实例
+   *
+   * @private
+   */
+  private readonly _$scope: Scope
 
   constructor(props: InputProps) {
     super()
-    this.#props = props
-    this.#vnode = getCurrentVNode()!
-    this.#scope = getCurrentScope()!
+    this._$props = props
+    this._$vnode = getCurrentVNode()!
+    this._$scope = getCurrentScope()!
   }
 
   /**
@@ -123,7 +131,7 @@ export abstract class Widget<
    * 你可以在构造函数中使用`defineProps`来定义默认的props数据。
    */
   protected get props(): Readonly<InputProps & Props> {
-    return this.#props as InputProps & Props
+    return this._$props as InputProps & Props
   }
 
   /**
@@ -133,7 +141,7 @@ export abstract class Widget<
    * @protected
    */
   protected get scope(): Scope {
-    return this.#scope
+    return this._$scope
   }
 
   /**
@@ -144,7 +152,7 @@ export abstract class Widget<
    * @returns {WidgetVNode}
    */
   protected get vnode(): Readonly<WidgetVNode> {
-    return this.#vnode
+    return this._$vnode
   }
 
   /**
@@ -153,7 +161,7 @@ export abstract class Widget<
    * `children` 不会自动渲染，你可以将它视为一个参数，你可以在`build`方法中使用该参数，来实现插槽的效果。
    */
   protected get children(): WidgetChildren<InputProps> {
-    return this.#props.children
+    return this._$props.children
   }
 
   /**
