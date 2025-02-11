@@ -286,6 +286,8 @@ export function mountVNode(vnode: ChildVNode): void {
  * @param {oldVNode} oldVNode - 旧虚拟节点
  */
 export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
+  // 渲染新节点
+  const newEl = renderElement(newVNode)
   // 如果新节点是传送节点则特殊处理
   if (isWidgetVNode(newVNode) && newVNode.instance!['renderer'].teleport) {
     // 新占位节点
@@ -312,7 +314,6 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
     mountVNode(newVNode)
     return
   }
-  const newEl = renderElement(newVNode)
   if (oldVNode.instance) {
     if (oldVNode.instance['renderer'].teleport) {
       // 将新元素替换掉旧节点的传送占位元素
