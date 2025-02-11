@@ -15,8 +15,9 @@ export const __WidgetIntrinsicMethods__ = [
   ...Object.values(LifeCycleHooks)
 ] as const
 
-
-// 内置属性列表
+/**
+ * 内置属性列表
+ */
 export const __WidgetIntrinsicProps__ = [
   'vnode',
   'children',
@@ -26,17 +27,18 @@ export const __WidgetIntrinsicProps__ = [
   'renderer',
   'el',
   '_renderer',
+  '_$props',
+  '_$vnode',
+  '_$scope',
   'inject',
   'provide'
 ] as const
 
 /**
- * 组件内部保留的属性关键字
+ * 组件内部保留关键字
  */
 export const __widgetIntrinsicPropKeywords__ = [
   ...__WidgetIntrinsicProps__,
   ...__WidgetIntrinsicMethods__,
   ...Object.values(LifeCycleHooks)
 ] as const
-
-
