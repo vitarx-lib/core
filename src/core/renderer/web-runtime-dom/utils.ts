@@ -1,5 +1,6 @@
 import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './types.js'
 import { type ChildVNode, type Fragment, isFragmentVNode, type VNode } from '../../vnode/index.js'
+import { isValueProxy, type ValueProxy } from '../../responsive/index.js'
 
 /**
  * 恢复 Fragment 元素
@@ -119,4 +120,16 @@ export function getElParentNode(el: HtmlElement | undefined): ParentNode | null 
     return getVDocumentFragmentFirstEl(el).parentNode
   }
   return el.parentNode
+}
+
+/**
+ * 格式化属性值，使其兼容值代理。
+ *
+ * @param value
+ */
+export function formatPropValue<T>(value: T | ValueProxy<T>): T {
+  if (isValueProxy(value)) {
+    value = value.value
+  }
+  return value
 }

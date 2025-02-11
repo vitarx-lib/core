@@ -1,5 +1,6 @@
 import { isArray, isFunction, isRecordObject, isString } from '../../../utils/index.js'
 import { type HTMLClassProperties, type HTMLStyleProperties } from './types.js'
+import { formatPropValue } from './utils.js'
 
 /**
  * 设置元素的多个属性
@@ -27,6 +28,7 @@ export function setAttribute(
   value: any,
   oldCallback?: AnyCallback
 ): void {
+  value = formatPropValue(value)
   switch (key) {
     case 'style':
       setStyle(el, value)
