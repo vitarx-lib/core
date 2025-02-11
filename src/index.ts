@@ -13,7 +13,7 @@ import type {
   HtmlIntrinsicElements,
   HTMLIntrinsicTags,
   HTMLStyleProperties
-} from './core/renderer/web-runtime-dom/type.js'
+} from './core/renderer/web-runtime-dom/types.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'

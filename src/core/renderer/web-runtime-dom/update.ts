@@ -11,7 +11,7 @@ import {
   type VNode,
   VNodeManager
 } from '../../vnode/index.js'
-import { type HtmlElement, isVDocumentFragment } from './type.js'
+import { type HtmlElement, isVDocumentFragment } from './types.js'
 import {
   getElParentNode,
   getVDocumentFragmentFirstEl,

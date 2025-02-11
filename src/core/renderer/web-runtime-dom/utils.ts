@@ -1,4 +1,4 @@
-import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './type.js'
+import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './types.js'
 import { type ChildVNode, type Fragment, isFragmentVNode, type VNode } from '../../vnode/index.js'
 
 /**
