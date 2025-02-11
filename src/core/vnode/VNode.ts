@@ -12,7 +12,7 @@ import {
   type VNodeChildren,
   type VNodePropsType,
   type VNodeType
-} from './type.js'
+} from './types.js'
 import {
   CommentVNodeSymbol,
   Fragment,
@@ -31,9 +31,16 @@ import {
 import { updateParentVNodeMapping } from './manager.js'
 import { isSimpleWidget } from '../widget/index.js'
 import type { HTMLClassProperties } from '../renderer/index.js'
+import { isValueProxy, type ValueProxy } from '../responsive/index.js'
 
 // 子元素类型
-type Child = VNode | TextVNode | CommentVNode | AnyPrimitive | Array<Child>
+type Child =
+  | VNode
+  | TextVNode
+  | CommentVNode
+  | AnyPrimitive
+  | ValueProxy<VNode | TextVNode | CommentVNode | AnyPrimitive>
+  | Array<Child>
 
 // 虚拟节点数组
 type Children = Child[]
@@ -131,8 +138,10 @@ export function createVNode<T extends VNodeType>(
     ref: ref_el,
     children: []
   }
+  const childList: VNodeChildren = []
+  formatChildren(children, childList, vnode)
   // 格式化children
-  vnode.children = formatChildren(children, vnode)
+  vnode.children = childList
   return vnode as VNode<T>
 }
 
@@ -171,6 +180,30 @@ function handlerBindAttrs(props: Record<string, any>): void {
 }
 
 /**
+ * 将循环嵌套的节点列表平铺展开
+ *
+ * @param child
+ * @param childList
+ * @param parent
+ */
+function formatChildren(child: Child, childList: VNodeChildren, parent: VNode) {
+  if (isValueProxy(child)) child = child.value
+  if (Array.isArray(child)) {
+    child.forEach(item => formatChildren(item, childList, parent))
+  } else {
+    let vnode: ChildVNode
+    if (isVNode(child)) {
+      vnode = child
+    } else if ([false, undefined, null].includes(child as any)) {
+      vnode = createCommentVNode(child)
+    } else {
+      vnode = createTextVNode(child)
+    }
+    childList.push(vnode)
+    updateParentVNodeMapping(vnode, parent)
+  }
+}
+/**
  * 创建文本节点`TextVNode`
  *
  * 开发者无需使用显示的声明文本节点，内部将非VNode节点内容转换为文本节点，`null,undefined,false`会被转换为`CommentVNode`。
@@ -199,36 +232,6 @@ export function createCommentVNode(value: any): CommentVNode {
     el: undefined,
     [CommentVNodeSymbol]: true
   }
-}
-
-/**
- * 转换子节点列表
- *
- * @param children
- * @param parent
- */
-function formatChildren(children: Child[], parent: VNode): VNodeChildren {
-  let childList: VNodeChildren = []
-  function flatten(child: Child) {
-    if (Array.isArray(child)) {
-      child.forEach(item => flatten(item))
-    } else {
-      let vnode: ChildVNode
-      if (isVNode(child)) {
-        vnode = child
-      } else if ([false, undefined, null].includes(child as any)) {
-        vnode = createCommentVNode(child)
-      } else {
-        vnode = createTextVNode(child)
-      }
-      childList.push(vnode)
-      updateParentVNodeMapping(vnode, parent)
-    }
-  }
-
-  flatten(children)
-
-  return childList
 }
 
 /**

@@ -1,5 +1,5 @@
 export * from './constant.js'
-export * from './type.js'
+export * from './types.js'
 export * from './provide.js'
 export * from './VNode.js'
 export * from './manager.js'

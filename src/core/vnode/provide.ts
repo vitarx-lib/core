@@ -1,5 +1,5 @@
 import { Widget } from '../widget/index.js'
-import type { VNode } from './type.js'
+import type { VNode } from './types.js'
 import { findParentVNode, getCurrentVNode } from './manager.js'
 
 /**

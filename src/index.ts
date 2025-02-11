@@ -1,8 +1,10 @@
 import type {
+  CommentVNode,
   FnWidgetType,
   IntrinsicAttributes,
   RefEl,
   TextVNode,
+  ValueProxy,
   VNode as _VNODE,
   VNodeType,
   Widget
@@ -76,7 +78,13 @@ declare global {
     /**
      * 任意子节点
      */
-    type Children = Element | _VNODE | TextVNode | Exclude<AnyPrimitive, symbol> | Array<Children>
+    type Children =
+      | Element
+      | TextVNode
+      | CommentVNode
+      | Exclude<AnyPrimitive, symbol>
+      | ValueProxy<Element | TextVNode | CommentVNode | Exclude<AnyPrimitive, symbol>>
+      | Array<Children>
   }
   namespace JSX {
     /** 元素类型 */

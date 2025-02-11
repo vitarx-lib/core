@@ -1,4 +1,4 @@
-import type { VNode } from './type.js'
+import type { VNode } from './types.js'
 
 /** 虚拟节点标识符 */
 export const VNodeSymbol = Symbol('VNode')

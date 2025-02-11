@@ -1,4 +1,4 @@
-import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './type.js'
+import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './types.js'
 import {
   _createFnWidget,
   FnWidget,

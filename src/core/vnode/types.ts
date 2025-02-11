@@ -93,9 +93,8 @@ export type WidgetPropsType<T extends WidgetType> = (T extends WidgetType<infer 
 /**
  * HTML节点Props类型重载
  */
-export type HTMLPropsType<T extends HTMLIntrinsicTags> =
-  HtmlIntrinsicElements[T]
-  & IntrinsicAttributes
+export type HTMLPropsType<T extends HTMLIntrinsicTags> = HtmlIntrinsicElements[T] &
+  IntrinsicAttributes
 
 /**
  * 节点Props类型重载
@@ -290,4 +289,3 @@ export function isCommentVNode(obj: any): obj is CommentVNode {
 export function isRefEl(obj: any): obj is RefEl<any> {
   return obj?.[RefElSymbol] === true
 }
-
