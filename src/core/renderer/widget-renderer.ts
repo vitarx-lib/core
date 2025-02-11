@@ -290,13 +290,6 @@ export class WidgetRenderer<T extends Widget> {
       this.triggerLifeCycle(LifeCycleHooks.deactivate)
       // 触发onUnmounted生命周期
       this.triggerLifeCycle(LifeCycleHooks.unmounted)
-      // 释放内存
-      // @ts-ignore
-      this._child = null
-      // @ts-ignore
-      this._widget = null
-      this._shadowElement = null
-      this._teleport = null
     }
   }
 
