@@ -1,5 +1,6 @@
 import type { Properties as CssProperties } from 'csstype'
 import { findParentVNode, type HTMLElementVNode } from '../../vnode/index.js'
+import type { ValueProxy } from '../../responsive/index.js'
 
 /** HTML元素标签映射 */
 export type HtmlElementTagMap = HTMLElementTagNameMap &
@@ -470,6 +471,12 @@ export type ToPartialProperties<
 > = Partial<ExtractW3CHtmlProperties<T, M, E>>
 
 /**
+ * 使属性兼容值代理变量赋值
+ */
+export type PropertiesValueToValueProxy<T extends {}> = {
+  [key in keyof T]: T[key] | ValueProxy<T[key]>
+}
+/**
  * 生成HTML标签可选属性，包括事件和自定义数据属性
  *
  * @template T - 元素类型
@@ -480,15 +487,15 @@ export type HtmlProperties<
   T extends Element,
   E extends string = never,
   M extends object = OverwriteHtmlProperties
-> = ToPartialProperties<T, M, E> &
-  OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
-  CustomProperties &
-  Vitarx.GlobalIntrinsicAttributes
+> = PropertiesValueToValueProxy<
+  ToPartialProperties<T, M, E> &
+    OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
+    CustomProperties &
+    Vitarx.GlobalIntrinsicAttributes
+>
 
 /**
  * 片段节点
- *
- * 额外属性：__backup - 片段节点的备份，用于恢复片段节点
  */
 export interface VDocumentFragment extends DocumentFragment {
   /**
