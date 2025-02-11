@@ -57,7 +57,6 @@ declare global {
      * HTML class 属性类型
      */
     type HtmlClassProperties = HTMLClassProperties
-
     /**
      * HTML元素标签类型
      */
@@ -76,7 +75,7 @@ declare global {
     /** 类组件实例 */
     type ElementClass = Widget
     /**
-     * 任意子节点
+     * 子节点类型
      */
     type Children =
       | Element
