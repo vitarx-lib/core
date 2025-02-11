@@ -1,7 +1,7 @@
 {
   "name": "vitarx",
   "private": false,
-  "version": "1.0.0-beta.36",
+  "version": "1.0.0-beta.37",
   "description": "Vitarx具有活力的响应式前端框架",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
