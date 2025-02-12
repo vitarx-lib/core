@@ -32,13 +32,13 @@ declare global {
   type AnyPrimitive = null | undefined | boolean | number | string | bigint | symbol
   /** 深度只读 */
   type DeepReadonly<T> = {
-    readonly [P in keyof T]: T[P] extends Record<string | symbol, any> ? DeepReadonly<T[P]> : T
+    readonly [P in keyof T]: T[P] extends Record<string | symbol, any> ? DeepReadonly<T[P]> : T[P]
   }
   /** 取消只读 */
   type UnReadonly<T> = {
-    [P in keyof T]: T[P] extends Record<string | symbol, any> ? UnReadonly<T[P]> : T
+    [P in keyof T]: T[P] extends Record<string | symbol, any> ? UnReadonly<T[P]> : T[P]
   }
-  /** 让接口的部分属性 为必填项 */
+  /** 将接口的部分属性 为必填项 */
   type MakeRequired<T extends object, K extends keyof T> = T & {
     [P in K]-?: Exclude<T[P], void> // 强制指定的属性 K 为必填
   }
@@ -50,4 +50,6 @@ declare global {
   type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends Record<string | symbol, any> ? DeepPartial<T[P]> : T[P]
   }
+  /** 将接口的部分属性设为可选 */
+  type MakePartial<T extends object, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 }
