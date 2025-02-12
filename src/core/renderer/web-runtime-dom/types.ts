@@ -490,9 +490,9 @@ export type HtmlProperties<
 > = PropertiesValueToValueProxy<
   ToPartialProperties<T, M, E> &
     OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
-    CustomProperties &
-    Vitarx.GlobalIntrinsicAttributes
->
+    CustomProperties
+> &
+  Vitarx.GlobalIntrinsicAttributes
 
 /**
  * 片段节点

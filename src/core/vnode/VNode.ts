@@ -187,7 +187,9 @@ function handlerBindAttrs(props: Record<string, any>): void {
  * @param parent
  */
 function formatChildren(child: Child, childList: VNodeChildren, parent: VNode) {
-  if (isValueProxy(child)) child = child.value
+  while (isValueProxy(child)) {
+    child = child.value
+  }
   if (Array.isArray(child)) {
     child.forEach(item => formatChildren(item, childList, parent))
   } else {
