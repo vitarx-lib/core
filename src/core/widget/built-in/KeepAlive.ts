@@ -1,6 +1,12 @@
 import { type Element, Widget } from '../widget.js'
 import { WidgetRenderer } from '../../renderer/index.js'
-import { createVNode, type OnlyKey, type VNode, type WidgetType } from '../../vnode/index.js'
+import {
+  createVNode,
+  isVNode,
+  type OnlyKey,
+  type VNode,
+  type WidgetType
+} from '../../vnode/index.js'
 import { watchProp } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
 
@@ -10,8 +16,12 @@ import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-d
 export interface KeepAliveProps {
   /**
    * 当前展示的小部件
+   *
+   * 可以是`VNode`对象、类小部件构造函数、函数式小部件
+   *
+   * 如果需要给小部件传入一些参数，则应该传入`VNode`对象
    */
-  children: WidgetType
+  children: WidgetType | VNode<WidgetType>
   /**
    * 需要保留状态的小部件列表
    *
@@ -35,9 +45,9 @@ export interface KeepAliveProps {
   /**
    * 唯一键
    *
-   * 同类型小部件可以根据onlyKey的不同创建出多个实例。
+   * 同类型小部件可以指定不同的onlyKey来维持不同的实例
    *
-   * 该唯一键会被传递给children，你可以在小部件中通过`getCurrentVNode().key`|`this.vnode.key`获得
+   * 如果`children`传入的是一个`VNode`对象，`key`未定义时会被自动设置为onlyKey
    */
   onlyKey?: OnlyKey
 }
@@ -55,14 +65,31 @@ export class KeepAlive extends Widget<KeepAliveProps> {
 
   constructor(props: KeepAliveProps) {
     super(props)
-    // 验证 props.children
-    this.validation(this.children)
     // 缓存当前展示的小部件
-    this.currentChild = createVNode(this.children, { key: this.props.onlyKey })
+    this.currentChild = this.makeChildVNode()
     // 开始监听 props.children
     watchProp(this.props, 'children', this.handleChildChange.bind(this))
   }
 
+  /**
+   * 生成子节点
+   */
+  protected makeChildVNode() {
+    const isValidVNode = isVNode(this.children)
+    const type = isValidVNode ? this.children.type : this.children
+    if (typeof type !== 'function') {
+      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof type}`
+      throw new Error(message)
+    }
+    if (isValidVNode) {
+      if (!this.children.key && this.props.onlyKey) {
+        this.children.key = this.props.onlyKey
+      }
+      return this.children
+    } else {
+      return createVNode(this.children, { key: this.props.onlyKey })
+    }
+  }
   /**
    * 添加缓存
    *
@@ -142,47 +169,16 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   }
 
   /**
-   * 验证 children
-   *
-   * @protected
-   */
-  private validation(children: any, tip: 'throw' | 'console' = 'throw'): boolean {
-    if (typeof children !== 'function') {
-      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof children}`
-      if (tip === 'throw') {
-        throw new Error(message)
-      } else {
-        console.warn(message)
-      }
-      return false
-    }
-    return true
-  }
-
-  /**
-   * 判断是否需要缓存
-   *
-   * @param type
-   */
-  isKeep(type: WidgetType): boolean {
-    if (this.exclude.includes(type)) return false
-    return this.include.length === 0 || this.include.includes(type)
-  }
-
-  /**
    * 处理子部件类型变化
    *
    * @protected
    */
   protected handleChildChange() {
-    const newType = this.children // 新的组件类型
-    const newKey = this.props.onlyKey // 新的组件唯一键
+    const newVNode = this.makeChildVNode()
+    const newType = newVNode.type // 新的组件类型
+    const newKey = newVNode.key // 新的组件唯一键
     const currentType = this.currentChild.type // 当前组件类型
     const currentKey = this.currentChild.key // 当前组件的唯一键
-
-    // 验证新组件的类型是否合法
-    if (!this.validation(newType, 'console')) return
-
     // 如果类型或 key 不同，表示需要切换组件
     if (newType !== currentType || newKey !== currentKey) {
       // 缓存当前组件
@@ -197,12 +193,40 @@ export class KeepAlive extends Widget<KeepAliveProps> {
         this.currentChild = cacheVNode
       } else {
         // 如果没有缓存，创建新的组件实例
-        this.currentChild = createVNode(newType, { key: newKey })
+        this.currentChild = newVNode
       }
 
       // 更新组件
       this.update()
     }
+  }
+  /**
+   * 判断是否需要缓存
+   *
+   * @param type
+   */
+  isKeep(type: WidgetType): boolean {
+    if (this.exclude.includes(type)) return false
+    return this.include.length === 0 || this.include.includes(type)
+  }
+
+  /**
+   * 验证 children
+   *
+   * @protected
+   */
+  private validation(children: any, tip: 'throw' | 'console' = 'throw'): boolean {
+    if (isVNode(children)) children = children.type
+    if (typeof children !== 'function') {
+      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof children}`
+      if (tip === 'throw') {
+        throw new Error(message)
+      } else {
+        console.warn(message)
+      }
+      return false
+    }
+    return true
   }
 
   /**
