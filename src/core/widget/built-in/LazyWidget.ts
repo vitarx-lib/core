@@ -86,6 +86,11 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   private toBeUpdated: boolean = false
 
   constructor(props: LazyWidgetProps<T>) {
+    if (typeof props.children !== 'function') {
+      throw new TypeError(
+        `[Vitarx.LazyWidget]：children期望得到一个异步函数，给定${typeof props.children}`
+      )
+    }
     super(props)
     if (props.loading && isVNode(props.loading)) {
       this._childVNode = props.loading
@@ -103,8 +108,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
         this.onError = props.onError
       }
     }
-    // noinspection JSIgnoredPromiseFromCall
-    this.load()
+    this.load().then()
   }
 
   /**
