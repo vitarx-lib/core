@@ -1,5 +1,5 @@
 import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './types.js'
-import { type ChildVNode, type Fragment, isFragmentVNode, type VNode } from '../../vnode/index.js'
+import { type Fragment, isFragmentVNode, type VNode } from '../../vnode/index.js'
 import { isValueProxy, type ValueProxy } from '../../responsive/index.js'
 
 /**
@@ -7,9 +7,9 @@ import { isValueProxy, type ValueProxy } from '../../responsive/index.js'
  *
  * @param {Object} vnode - 片段节点
  */
-export function recoveryDocumentFragmentChildNodes(vnode: ChildVNode): HtmlElement {
-  const el = vnode.el!
-  if (isFragmentVNode(vnode) && el.childNodes.length === 0) {
+const recoveryDocumentFragmentChildNodes = (vnode: VNode<Fragment>): VDocumentFragment => {
+  const el = vnode.el as VDocumentFragment
+  if (el.childNodes.length === 0) {
     if (vnode.children?.length) {
       // 递归恢复片段节点
       for (let i = 0; i < vnode.children.length; i++) {
@@ -33,7 +33,7 @@ export function recoveryDocumentFragmentChildNodes(vnode: ChildVNode): HtmlEleme
  *
  * @param {Object} vnode - 片段节点
  */
-export function removeDocumentFragmentChildNodes(vnode: VNode<Fragment>) {
+const removeDocumentFragmentChildNodes = (vnode: VNode<Fragment>) => {
   const el = vnode.el
   if (!el) return
   if (vnode.children?.length) {
@@ -43,6 +43,8 @@ export function removeDocumentFragmentChildNodes(vnode: VNode<Fragment>) {
       const childEl = childVNode.el! as Element
       if (isFragmentVNode(childVNode)) {
         removeDocumentFragmentChildNodes(childVNode)
+      } else if (isVDocumentFragment(childEl)) {
+        childEl.__remove()
       } else {
         childEl.remove()
       }
@@ -51,6 +53,7 @@ export function removeDocumentFragmentChildNodes(vnode: VNode<Fragment>) {
     el.__emptyElement?.remove()
   }
 }
+
 /**
  * 备份 Fragment 元素
  *
@@ -73,12 +76,28 @@ export function expandDocumentFragment(vnode: VNode<Fragment>): VDocumentFragmen
     }
   }
   el['__remove'] = () => removeDocumentFragmentChildNodes(vnode)
-  el['__recovery'] = () => recoveryDocumentFragmentChildNodes(vnode) as VDocumentFragment
+  el['__recovery'] = () => recoveryDocumentFragmentChildNodes(vnode)
   return el
 }
 
 /**
+ * 给片段节点创建一个空占位节点
+ *
+ * @param el
+ * @internal
+ */
+export function createEmptyFragmentPlaceholderNode(el: VDocumentFragment) {
+  if (!el['__emptyElement']) {
+    // 创建一个空节点 document.createComment('') 或 document.createTextNode('')
+    el['__emptyElement'] = document.createComment('Empty Fragment Node')
+  }
+  return el['__emptyElement']!
+}
+
+/**
  * 获取片段的第一个元素
+ *
+ * 如果第一个元素是片段元素，则会继续递归获取
  *
  * @param el
  */
@@ -105,6 +124,18 @@ export function getVDocumentFragmentLastEl(
     last = el.__lastChild()
   }
   return last
+}
+
+/**
+ * 恢复片段子节点
+ *
+ * @param el
+ */
+export function recoveryFragmentChildNodes<T extends HtmlElement>(el: T): T {
+  if (isVDocumentFragment(el)) {
+    el.__recovery()
+  }
+  return el
 }
 
 /**
