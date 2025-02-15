@@ -37,6 +37,10 @@
     "./jsx-dev-runtime": {
       "types": "./dist/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx-dev-runtime.js"
+    },
+    "./web-runtime-dom": {
+      "types": "./dist/core/renderer/web-runtime-dom/index.d.ts",
+      "default": "./dist/core/renderer/web-runtime-dom/index.js"
     }
   },
   "scripts": {
