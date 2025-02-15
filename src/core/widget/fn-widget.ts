@@ -206,7 +206,7 @@ export function build(element: VNode | (() => VNode)): VNode {
   if (isVNode(element)) {
     return (() => element) as unknown as VNode
   }
-  throw new TypeError('[Vitarx.build]：参数1(element)必须是VNode对象或返回VNode对象的函数')
+  throw new TypeError('[Vitarx.build]：参数1(element)必须是VNode对象或返回值是VNode对象的函数')
 }
 
 /**
