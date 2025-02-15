@@ -14,12 +14,13 @@ import {
 } from '../../vnode/index.js'
 import {
   type ContainerElement,
+  createEmptyFragmentPlaceholderNode,
   expandDocumentFragment,
   type HtmlElement,
   type HTMLIntrinsicTags,
   isSvgElement,
   mountVNode,
-  recoveryDocumentFragmentChildNodes,
+  recoveryFragmentChildNodes,
   type VDocumentFragment
 } from './index.js'
 
@@ -65,10 +66,17 @@ export function renderElement(vnode: TextVNode, parent?: ContainerElement): Text
  * @param parent - 父元素
  */
 export function renderElement(vnode: ChildVNode, parent?: ContainerElement): HtmlElement
+/**
+ * 渲染元素
+ *
+ * @param {Object} vnode - 虚拟节点
+ * @param {Object} parent - 父节点
+ * @return {Object} - HTML元素实例
+ */
 export function renderElement(vnode: ChildVNode, parent?: ContainerElement): HtmlElement {
   // 如果节点已渲染，则直接返回，避免重复渲染
   if (vnode.el) {
-    parent?.appendChild(recoveryDocumentFragmentChildNodes(vnode))
+    parent?.appendChild(recoveryFragmentChildNodes(vnode.el))
     return vnode.el as HtmlElement
   }
   if (isTextVNode(vnode)) return renderTextElement(vnode, parent)
@@ -178,10 +186,8 @@ export function renderFragmentElement(
 ): VDocumentFragment {
   const el = document.createDocumentFragment() as VDocumentFragment
   if (!vnode.children || vnode.children.length === 0) {
-    // 创建一个空节点 document.createComment('') 或 document.createTextNode('')
-    const emptyEl = document.createComment('empty fragment')
-    el.appendChild(emptyEl)
-    el['__emptyElement'] = emptyEl
+    // 空片段节点
+    el.appendChild(createEmptyFragmentPlaceholderNode(el))
   } else {
     renderChildren(el, vnode.children)
   }
