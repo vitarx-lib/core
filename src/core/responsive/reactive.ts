@@ -4,6 +4,7 @@ import { PROXY_SYMBOL } from './constants.js'
 import { type ExtractProp, isMakeProxy, isProxy, type ProxySymbol } from './helper.js'
 import { isRef } from './ref.js'
 import { Depend } from './depend.js'
+import logger from '../logger.js'
 
 /** 响应式对象的标识 */
 export const REACTIVE_SYMBOL = Symbol('reactive')
@@ -36,6 +37,12 @@ export type Reactive<T extends AnyObject = AnyObject> = T & ReactiveSymbol<T>
 /** 解除响应式对象 */
 export type UnReactive<T> = T extends Reactive<infer U> ? U : T
 
+export type ReactiveHandlerOptions<T extends AnyObject> = {
+  deep: boolean
+  trigger: Trigger<T>
+  track: Track<T>
+  readonly?: boolean
+}
 /**
  * 处理集合对象方法
  *
@@ -104,7 +111,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param track - 跟踪器
    * @param readonly - 是否只读
    */
-  constructor(deep: boolean, trigger: Trigger<T>, track: Track<T>, readonly: boolean = false) {
+  constructor({ deep, trigger, track, readonly = false }: ReactiveHandlerOptions<T>) {
     this.#deep = deep
     this.#trigger = trigger
     this.#track = track
@@ -113,7 +120,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   deleteProperty(target: T, prop: ExtractProp<T>): boolean {
     if (this.#readonly) {
-      console.error(`[Vitarx.Reactive.set][ERROR]：响应式对象是只读的，不能删除属性！`)
+      logger.warn('响应式对象是只读的，不能删除属性！')
       return false
     }
     const result = Reflect.deleteProperty(target, prop)
@@ -141,7 +148,11 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     }
     // 如果是对象，则判断是否需要进行深度代理
     if (this.#deep && isMakeProxy(value)) {
-      const proxy = createReactive(value, this.#deep, () => this.#trigger(prop), this.#readonly)
+      const proxy = createReactive(value, {
+        deep: this.#deep,
+        trigger: () => this.#trigger(prop),
+        readonly: this.#deep ? this.#readonly : false
+      })
       if (this.#deepProxy) {
         this.#deepProxy.set(prop, proxy)
       } else {
@@ -163,7 +174,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
     if (this.#readonly) {
-      console.error(`[Vitarx.Reactive.set][ERROR]：此响应式对象是只读的，不可修改！`)
+      logger.warn('响应式对象是只读的，不可修改属性！')
       return false
     }
     // 处理数组长度修改
@@ -206,24 +217,21 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
  * 创建响应式代理对象
  *
  * @param target - 目标对象
- * @param deep - 是否深度监听
- * @param trigger - 当前对象属性变更时需要触发的钩子，一般是父对象的触发器，用于将子对象的变化传递到父对象。
- * @param readonly - 是否只读
+ * @param options - 可选配置
  * @internal 此函数由系统内部使用，开发者不应该使用此函数！。
  */
 export function createReactive<T extends AnyObject>(
   target: T,
-  deep: boolean = true,
-  trigger?: () => void,
-  readonly?: boolean
+  options?: { trigger?: VoidFunction; readonly?: boolean; deep?: boolean }
 ): Reactive<T> {
+  const { trigger, readonly, deep = false } = options || {}
   // 避免嵌套代理
   if (!isMakeProxy(target)) return target
   const proxy = new Proxy(
     target,
-    new ReactiveHandler<T>(
+    new ReactiveHandler<T>({
       deep,
-      trigger
+      trigger: trigger
         ? prop => {
             Observers.trigger(proxy, prop)
             trigger()
@@ -231,11 +239,11 @@ export function createReactive<T extends AnyObject>(
         : prop => {
             Observers.trigger(proxy, prop)
           },
-      prop => {
+      track: prop => {
         Depend.track(proxy, prop)
       },
       readonly
-    )
+    })
   ) as Reactive<T>
   return proxy
 }
@@ -272,9 +280,8 @@ export function unReactive<T extends object>(obj: T | Reactive<T>): UnReactive<T
  * @param {boolean} deep - 是否深度代理子对象，默认为true
  */
 export function reactive<T extends AnyObject>(target: T, deep: boolean = true): Reactive<T> {
-  return createReactive(target, deep)
+  return createReactive(target, { deep })
 }
-
 /**
  * ## 创建浅层响应式对象
  *
@@ -284,7 +291,7 @@ export function reactive<T extends AnyObject>(target: T, deep: boolean = true): 
  * @param {T} target - 目标对象
  */
 export function shallowReactive<T extends AnyObject>(target: T): Reactive<T> {
-  return createReactive(target, false)
+  return createReactive(target)
 }
 
 /**
@@ -297,4 +304,24 @@ export function shallowReactive<T extends AnyObject>(target: T): Reactive<T> {
  */
 export function toRaw<T extends object>(obj: T | Reactive<T>): UnReactive<T> {
   return unReactive(obj) as UnReactive<T>
+}
+
+/**
+ * 深度只读响应式对象
+ *
+ * @param {Object} target - 任意对象
+ * @returns {Object}
+ */
+export function readonly<T extends AnyObject>(target: T): DeepReadonly<T> {
+  return createReactive(target, { readonly: true })
+}
+
+/**
+ * 浅层只读响应式对象
+ *
+ * @param {Object} target - 任意对象
+ * @returns {Object}
+ */
+export function shallowReadonly<T extends AnyObject>(target: T): Readonly<T> {
+  return createReactive(target, { readonly: true })
 }
