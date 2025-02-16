@@ -3,6 +3,7 @@ import { createReactive } from './reactive.js'
 import { Observers } from '../observer/index.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
 import { Depend } from './depend.js'
+import Logger from '../logger.js'
 
 /**
  * # `Ref`值代理对象，用于代理一个值，使其成为响应式变量。
@@ -109,9 +110,7 @@ export class Ref<T = any> implements ValueProxy<T> {
   /** 检测代理 */
   #detectProxy(value: any) {
     if (this.#deep && isProxy(value)) {
-      console.warn(
-        `[Vitarx.Ref][WARN]：当deep属性为true时，Ref对象的引用值不应该是代理对象（Ref|Reactive）。`
-      )
+      Logger.warn(`当deep属性为true时，Ref对象的引用值不应该是代理对象（Ref|Reactive）。`)
     }
   }
 }

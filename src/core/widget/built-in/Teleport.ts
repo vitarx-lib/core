@@ -1,6 +1,7 @@
 import { type Element, Widget } from '../widget.js'
 import type { TargetContainerElement } from '../life-cycle.js'
 import { isVNode } from '../../vnode/index.js'
+import Logger from '../../logger.js'
 
 /**
  * Teleport小部件配置选项
@@ -51,7 +52,7 @@ export class Teleport extends Widget<TeleportProps> {
     if (typeof props.to === 'string') {
       const target = document.querySelector(props.to)
       if (!target) {
-        console.warn(`[Vitarx.Teleport]: document.querySelector(${props.to}) 未找到元素`)
+        Logger.warn(`document.querySelector(${props.to}) 未找到元素`)
       } else {
         this.target = target
       }
@@ -59,9 +60,7 @@ export class Teleport extends Widget<TeleportProps> {
       if (props.to instanceof Element) {
         this.target = props.to
       } else {
-        console.warn(
-          `[Vitarx.Teleport]: to属性期望得到一个选择器字符串或DOM元素实例，给定${typeof props.to}`
-        )
+        Logger.warn(`to属性期望得到一个选择器字符串或DOM元素实例，给定${typeof props.to}`)
       }
     }
   }

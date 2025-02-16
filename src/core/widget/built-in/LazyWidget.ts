@@ -3,6 +3,7 @@ import { createVNode, Fragment, isVNode, type WidgetType } from '../../vnode/ind
 import { getSuspenseCounter } from './Suspense.js'
 import type { Ref } from '../../responsive/index.js'
 import type { ErrorInfo } from '../life-cycle.js'
+import Logger from '../../logger.js'
 
 /**
  * 代码分块懒加载
@@ -101,9 +102,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     }
     if (props.onError) {
       if (typeof props.onError !== 'function') {
-        console.warn(
-          `[Vitarx.LazyWidget]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
-        )
+        Logger.warn(`onError属性期望得到一个回调函数，给定${typeof props.onError}`)
       } else {
         this.onError = props.onError
       }

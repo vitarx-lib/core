@@ -13,6 +13,7 @@ import {
 import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from '../widget/index.js'
 import { watchDepend } from '../observer/index.js'
 import { getCurrentScope, type Scope } from '../scope/index.js'
+import Logger from '../logger.js'
 
 /**
  * 渲染状态
@@ -198,7 +199,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   update(newChildVNode?: VNode): void {
     if (this.state === 'unloaded') {
-      return console.warn('[Vitarx.WidgetRenderer.update]：渲染器已销毁，不能再更新视图！')
+      return Logger.warn('渲染器已销毁，不能再更新视图！')
     }
     // 如果是挂起的更新，则直接返回
     if (this._pendingUpdate) return
@@ -241,7 +242,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   mount(): void {
     if (this.state !== 'notMounted') {
-      return console.warn('[Vitarx.WidgetRenderer.mount]：非待挂载状态，不能进行挂载！')
+      return Logger.warn('非待挂载状态，不能进行挂载！')
     }
     // 递归挂载子节点
     mountVNode(this.child)

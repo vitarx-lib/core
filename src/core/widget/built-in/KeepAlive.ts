@@ -9,6 +9,7 @@ import {
 } from '../../vnode/index.js'
 import { watchProp } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
+import Logger from '../../logger.js'
 
 /**
  * KeepAlive配置选项
@@ -222,7 +223,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       if (tip === 'throw') {
         throw new Error(message)
       } else {
-        console.warn(message)
+        Logger.warn(message)
       }
       return false
     }

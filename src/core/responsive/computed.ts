@@ -2,6 +2,7 @@ import type { ValueProxy } from './helper.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
 import { Depend } from './depend.js'
 import { Listener, Observers } from '../observer/index.js'
+import Logger from '../logger.js'
 
 /**
  * # 计算属性
@@ -62,7 +63,7 @@ export class Computed<T> implements ValueProxy<T> {
     if (this.#setter) {
       this.#setter(newValue)
     } else {
-      console.warn('不应该对计算属性进行写入，除非定义了setter。')
+      Logger.warn('不应该对计算属性进行写入，除非定义了setter。')
     }
   }
 

@@ -1,4 +1,5 @@
 import { addEffect, Effect } from '../scope/index.js'
+import Logger from '../logger.js'
 
 /**
  * # 监听器类
@@ -106,7 +107,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
       try {
         this.#callback.apply(null, params)
       } catch (e) {
-        console.error('[Vitarx.Listener.Callback][ERROR]：', e)
+        Logger.error(e)
       }
       this.#count++
       // 判断是否已达到预期的监听次数

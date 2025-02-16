@@ -11,6 +11,7 @@ import {
 import { Listener, watch } from '../../observer/index.js'
 import { renderElement } from '../../renderer/web-runtime-dom/index.js'
 import type { ErrorInfo } from '../life-cycle.js'
+import Logger from '../../logger.js'
 
 /**
  * onError生命周期钩子
@@ -62,15 +63,11 @@ export class Suspense extends Widget<SuspenseProps> {
   constructor(props: SuspenseProps) {
     super(props)
     if (props.fallback && !isVNode(props.fallback)) {
-      console.warn(
-        `[Vitarx.Suspense]：fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`
-      )
+      Logger.warn(`fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`)
     }
     if (props.onError) {
       if (typeof props.onError !== 'function') {
-        console.warn(
-          `[Vitarx.Suspense]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
-        )
+        Logger.warn(`onError属性期望得到一个回调函数，给定${typeof props.onError}`)
       } else {
         this.onError = props.onError
       }

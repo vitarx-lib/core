@@ -3,6 +3,7 @@ import { type ClassWidgetConstructor, isClassWidgetConstructor, Widget } from '.
 import type { FnWidgetConstructor } from '../widget/index.js'
 import { createVNode, isVNode, type VNode, type WidgetType } from '../vnode/index.js'
 import { mountVNode, renderWidgetElement } from './web-runtime-dom/index.js'
+import Logger from '../logger.js'
 
 // 错误提示
 const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
@@ -85,7 +86,7 @@ export class AppRenderer {
    */
   update(): void {
     if (!this.widget) {
-      console.warn(`[Vitarx.AppRenderer.update]：${ERROR_MESSAGE}，不能执行更新操作。`)
+      Logger.warn(`${ERROR_MESSAGE}，不能执行更新操作。`)
     } else {
       this.widget['renderer'].update()
     }
@@ -100,7 +101,7 @@ export class AppRenderer {
    */
   unmount(): void {
     if (!this.widget) {
-      console.warn(`[Vitarx.AppRenderer.unmount]：${ERROR_MESSAGE}，不能执行卸载操作。`)
+      Logger.warn(`${ERROR_MESSAGE}，不能执行卸载操作。`)
     } else {
       this.widget['renderer'].unmount()
       this.widget = null
@@ -114,7 +115,7 @@ export class AppRenderer {
    */
   activate(): void {
     if (!this.widget) {
-      console.warn(`[Vitarx.AppRenderer.activate]：${ERROR_MESSAGE}，不能执行激活操作。`)
+      Logger.warn(`${ERROR_MESSAGE}，不能执行激活操作。`)
     } else {
       this.widget?.['renderer'].activate()
     }
@@ -127,7 +128,7 @@ export class AppRenderer {
    */
   deactivate(): void {
     if (!this.widget) {
-      console.warn(`[Vitarx.AppRenderer.deactivate]：${ERROR_MESSAGE}，不能执行停用操作。`)
+      Logger.warn(`${ERROR_MESSAGE}，不能执行停用操作。`)
     } else {
       this.widget?.['renderer'].deactivate()
     }
