@@ -45,7 +45,10 @@ export class Ref<T = any> implements ValueProxy<T> {
   get value(): T {
     // 惰性代理子对象
     if (this.#deep && isMakeProxy(this.#value)) {
-      this.#value = createReactive(this.#value, this.#deep, this.trigger.bind(this))
+      this.#value = createReactive(this.#value, {
+        deep: this.#deep,
+        trigger: this.trigger.bind(this)
+      })
     } else if (!isProxy(this.#value)) {
       Depend.track(this, 'value')
     }
@@ -158,7 +161,7 @@ export function ref<T>(value: T, deep?: boolean): Ref<T>
  *
  * @return {Ref<any>}
  */
-export function ref(value?: undefined, deep?: boolean): Ref<any>
+export function ref(value?: undefined, deep?: boolean): Ref
 
 /**
  * 创建 {@link Ref} 值代理对象
@@ -201,7 +204,7 @@ export function shallowRef<T>(value: T): Ref<T>
  *
  * @return {Ref<any>}
  */
-export function shallowRef(value?: undefined): Ref<any>
+export function shallowRef(value?: undefined): Ref
 /**
  * 创建 {@link Ref} 值代理对象(浅代理)
  *
