@@ -8,6 +8,7 @@ import {
 import { isRecordObject } from '../../utils/index.js'
 import { getCurrentVNode } from './manager.js'
 import { Observers } from '../observer/index.js'
+import Logger from '../logger.js'
 
 // 默认属性标记
 const defaultPropsSymbol = Symbol('VNODE_PROPS_DEFAULT_DATA')
@@ -105,9 +106,8 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
       return true
     }
     if (propsModifyWarning) {
-      const stack = new Error().stack // 获取当前堆栈
-      console.warn(
-        `[Vitarx.PropsProxyHandler][WARN]：组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)\nStack trace:\n${stack}`
+      Logger.warn(
+        `组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)`
       )
     }
     return super.set(target, prop, value, receiver)
@@ -133,15 +133,15 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
 export function _proxyWidgetInstanceProps<T extends Record<string, any>>(props: T): Reactive<T> {
   const proxy = new Proxy(
     props,
-    new PropsProxyHandler<T>(
-      false,
-      prop => {
+    new PropsProxyHandler<T>({
+      deep: false,
+      trigger: prop => {
         Observers.trigger(proxy, prop)
       },
-      prop => {
+      track: prop => {
         Depend.track(proxy, prop)
       }
-    )
+    })
   ) as Reactive<T>
   return proxy
 }
