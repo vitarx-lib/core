@@ -142,6 +142,6 @@ export function _proxyWidgetInstanceProps<T extends Record<string, any>>(props: 
         Depend.track(proxy, prop)
       }
     })
-  ) as Reactive<T>
-  return proxy
+  )
+  return proxy as Reactive<T>
 }
