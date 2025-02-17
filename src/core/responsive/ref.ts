@@ -49,7 +49,7 @@ export class Ref<T = any> implements ValueProxy<T> {
       this.#value = createReactive(this.#value, {
         deep: this.#deep,
         trigger: this.trigger.bind(this)
-      })
+      }) as T
     } else if (!isProxy(this.#value)) {
       Depend.track(this, 'value')
     }
