@@ -30,10 +30,10 @@ export class Depend {
    * 如果你使用的是代理对象本身，而不是使用的其属性，请使用{@link track}方法手动跟踪依赖。
    *
    *
-   * @param proxy 代理对象
-   * @param prop 属性
+   * @param {Object} proxy - 代理对象
+   * @param {PropName} prop - 属性
    */
-  static track(proxy: AnyProxy, prop: PropName): void {
+  static track(proxy: AnyObject, prop: PropName): void {
     if (!isProxy(proxy)) return
     if (this.#collector) {
       if (this.#collector.has(proxy)) {
@@ -121,7 +121,7 @@ export class Depend {
  * @param prop 属性
  * @see Depend.track
  */
-export function track(proxy: AnyProxy, prop: PropName): void {
+export function track(proxy: AnyObject, prop: PropName): void {
   Depend.track(proxy, prop)
 }
 
