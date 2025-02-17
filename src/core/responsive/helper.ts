@@ -1,6 +1,6 @@
 // 代理标识符
 import { type Ref } from './ref.js'
-import type { Reactive, ReactiveSymbol, UnReactive } from './reactive.js'
+import { type Reactive, type ReactiveSymbol, type UnReactive } from './reactive.js'
 import {
   PROXY_DEEP_SYMBOL,
   PROXY_SYMBOL,
@@ -41,7 +41,7 @@ export type ExcludeProxyProp<T> = Exclude<T, keyof ProxySymbol | keyof ReactiveS
 /** 从代理对象中提取出属性的联合类型 */
 export type ExtractProp<T> = T extends AnyCollection
   ? 'size'
-  : T extends Ref
+  : T extends ValueProxy<any>
     ? 'value'
     : T extends any[]
       ? `${number}` | 'length'
