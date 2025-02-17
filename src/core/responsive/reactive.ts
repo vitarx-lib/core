@@ -1,14 +1,21 @@
-import { isCollection, isFunction } from '../../utils/index.js'
+import { isCollection, isFunction, isObject } from '../../utils/index.js'
 import { Observers } from '../observer/index.js'
 import { PROXY_SYMBOL } from './constants.js'
-import { type ExtractProp, isMakeProxy, isProxy, type ProxySymbol } from './helper.js'
+import {
+  type ExtractProp,
+  isMakeProxy,
+  isProxy,
+  type ProxySymbol,
+  type ValueProxy
+} from './helper.js'
 import { isRef } from './ref.js'
 import { Depend } from './depend.js'
-import logger from '../logger.js'
+import Logger from '../logger.js'
 
 /** 响应式对象的标识 */
-export const REACTIVE_SYMBOL = Symbol('reactive')
-
+export const REACTIVE_SYMBOL = Symbol('REACTIVE_SYMBOL')
+/** 响应式只读对象的标识 */
+export const READONLY_REACTIVE_SYMBOL = Symbol('READONLY_REACTIVE_SYMBOL')
 /** 代理原始对象标识符 */
 export const GET_RAW_TARGET_SYMBOL = Symbol('VITARX_PROXY_RAW_TARGET_SYMBOL')
 
@@ -25,24 +32,75 @@ export const GET_RAW_TARGET_SYMBOL = Symbol('VITARX_PROXY_RAW_TARGET_SYMBOL')
 export interface ReactiveSymbol<T extends AnyObject> extends ProxySymbol {
   readonly [REACTIVE_SYMBOL]: true
   readonly [GET_RAW_TARGET_SYMBOL]: T
+  readonly [READONLY_REACTIVE_SYMBOL]: boolean
 }
 
 /** 触发监听器 */
-type Trigger<T> = (prop: ExtractProp<T> | ExtractProp<T>[]) => void
+export type Trigger<T> = (prop: ExtractProp<T> | ExtractProp<T>[]) => void
 /** 跟踪依赖 */
-type Track<T> = (prop: ExtractProp<T>) => void
+export type Track<T> = (prop: ExtractProp<T>) => void
+/** 解包嵌套的ref */
+export type UnwrapNestedRefs<T extends object> = {
+  [K in keyof T]: T[K] extends ValueProxy<infer U>
+    ? U extends object
+      ? UnwrapNestedRefs<U>
+      : U
+    : T[K] extends object
+      ? UnwrapNestedRefs<T[K]>
+      : T[K]
+}
 /** reactive 接口 */
-export type Reactive<T extends AnyObject = AnyObject> = T & ReactiveSymbol<T>
-
+export type Reactive<T extends AnyObject = AnyObject> = UnwrapNestedRefs<T> & ReactiveSymbol<T>
 /** 解除响应式对象 */
 export type UnReactive<T> = T extends Reactive<infer U> ? U : T
 
+/** 响应式对象处理器配置 */
 export type ReactiveHandlerOptions<T extends AnyObject> = {
   deep: boolean
   trigger: Trigger<T>
   track: Track<T>
   readonly?: boolean
 }
+/**
+ * 只读代理
+ */
+class ReadonlyProxy {
+  static #cache = new WeakMap()
+
+  /**
+   * 创建只读代理
+   *
+   * @param target
+   * @param deep
+   */
+  static create<T extends Object>(target: T, deep: boolean): T {
+    if (!this.#cache.has(target)) {
+      this.#cache.set(
+        target,
+        new Proxy(target, {
+          set(): boolean {
+            Logger.warn('响应式对象是只读的，不可修改属性！')
+            return true
+          },
+          deleteProperty(): boolean {
+            Logger.warn('响应式对象是只读的，不可删除属性！')
+            return true
+          },
+          get(target: T, prop: ExtractProp<T>, receiver: any): any {
+            if (prop === READONLY_REACTIVE_SYMBOL) return true
+            const data = Reflect.get(target, prop, receiver)
+            if (deep && isObject(data) && !isReadonly(data)) {
+              return ReadonlyProxy.create(data, true)
+            }
+            return data
+          }
+        })
+      )
+    }
+    return this.#cache.get(target)!
+  }
+}
+
 /**
  * 处理集合对象方法
  *
@@ -51,14 +109,14 @@ export type ReactiveHandlerOptions<T extends AnyObject> = {
  * @param trigger - 触发器
  * @param track - 跟踪器
  */
-function handlerCollection<T extends AnyCollection>(
+const handlerCollection = <T extends AnyCollection>(
   target: T,
   fn: string,
   trigger: Trigger<{
     size: number
   }>,
   track: Track<any>
-): Function {
+): Function => {
   switch (fn) {
     case 'set':
       return function (key: any, value: any): T {
@@ -120,8 +178,8 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   deleteProperty(target: T, prop: ExtractProp<T>): boolean {
     if (this.#readonly) {
-      logger.warn('响应式对象是只读的，不能删除属性！')
-      return false
+      Logger.warn('响应式对象是只读的，不能删除属性！')
+      return true
     }
     const result = Reflect.deleteProperty(target, prop)
     // 移除深度代理
@@ -131,10 +189,12 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   }
 
   get(target: T, prop: ExtractProp<T>, receiver: any) {
-    // 检测是否为响应式对象
-    if (prop === REACTIVE_SYMBOL) return true
     // 检测是否为代理对象
     if (prop === PROXY_SYMBOL) return true
+    // 检测是否为响应式对象
+    if (prop === REACTIVE_SYMBOL) return true
+    // 检测是否为只读响应式对象
+    if (prop === READONLY_REACTIVE_SYMBOL) return this.#readonly
     // 获取原始对象
     if (prop === GET_RAW_TARGET_SYMBOL) return target
     // 如果存在于深度代理中，则直接返回代理对象
@@ -174,8 +234,8 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
     if (this.#readonly) {
-      logger.warn('响应式对象是只读的，不可修改属性！')
-      return false
+      Logger.warn('响应式对象是只读的，不可修改属性！')
+      return true
     }
     // 处理数组长度修改
     if (prop === 'length' && Array.isArray(target)) {
@@ -224,9 +284,20 @@ export function createReactive<T extends AnyObject>(
   target: T,
   options?: { trigger?: VoidFunction; readonly?: boolean; deep?: boolean }
 ): Reactive<T> {
+  if (!isObject(target)) {
+    throw new TypeError('参数1(target)必须是一个对象！')
+  }
+  if (Object.isFrozen(target)) {
+    throw new TypeError('参数1(target)不能是一个冻结对象！')
+  }
   const { trigger, readonly, deep = false } = options || {}
   // 避免嵌套代理
-  if (!isMakeProxy(target)) return target
+  if (isReactive(target)) {
+    if (readonly && !isReadonly(target)) {
+      return ReadonlyProxy.create(target, deep) as Reactive<T>
+    }
+    return target
+  }
   const proxy = new Proxy(
     target,
     new ReactiveHandler<T>({
@@ -244,8 +315,8 @@ export function createReactive<T extends AnyObject>(
       },
       readonly
     })
-  ) as Reactive<T>
-  return proxy
+  )
+  return proxy as Reactive<T>
 }
 
 /**
@@ -312,8 +383,8 @@ export function toRaw<T extends object>(obj: T | Reactive<T>): UnReactive<T> {
  * @param {Object} target - 任意对象
  * @returns {Object}
  */
-export function readonly<T extends AnyObject>(target: T): DeepReadonly<T> {
-  return createReactive(target, { readonly: true })
+export function readonly<T extends AnyObject>(target: T): DeepReadonly<UnwrapNestedRefs<T>> {
+  return createReactive(target, { readonly: true, deep: true })
 }
 
 /**
@@ -322,6 +393,15 @@ export function readonly<T extends AnyObject>(target: T): DeepReadonly<T> {
  * @param {Object} target - 任意对象
  * @returns {Object}
  */
-export function shallowReadonly<T extends AnyObject>(target: T): Readonly<T> {
+export function shallowReadonly<T extends AnyObject>(target: T): Readonly<UnwrapNestedRefs<T>> {
   return createReactive(target, { readonly: true })
+}
+
+/**
+ * 判断对象是否为只读响应式对象
+ *
+ * @param obj
+ */
+export function isReadonly<T extends object>(obj: T): boolean {
+  return isReactive(obj) && Reflect.get(obj, READONLY_REACTIVE_SYMBOL)
 }
