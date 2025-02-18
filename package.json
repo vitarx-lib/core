@@ -41,6 +41,10 @@
     "./web-runtime-dom": {
       "types": "./dist/core/renderer/web-runtime-dom/index.d.ts",
       "default": "./dist/core/renderer/web-runtime-dom/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "default": "./dist/utils/index.js"
     }
   },
   "scripts": {
