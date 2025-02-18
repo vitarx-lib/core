@@ -56,6 +56,13 @@ export function defineProps<D extends Record<string, any>, T extends Record<stri
   defaultProps: D,
   inputProps: T
 ): Readonly<T & D>
+/**
+ * 定义属性
+ *
+ * @param {Record<string, any>} defaultProps - 默认属性
+ * @param {Record<string, any>} inputProps - 外部传入给组件的props
+ * @returns {Readonly<Record<string, any>} - 合并过后的只读对象
+ */
 export function defineProps<D extends Record<string, any>, T extends Record<string, any> = {}>(
   defaultProps: D,
   inputProps?: T
