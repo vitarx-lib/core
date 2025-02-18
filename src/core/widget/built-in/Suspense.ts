@@ -2,6 +2,7 @@ import { type Element, Widget } from '../widget.js'
 import { Ref, ref } from '../../responsive/index.js'
 import {
   createVNode,
+  defineProps,
   Fragment,
   inject,
   isVNode,
@@ -52,11 +53,13 @@ const provideSymbol = Symbol('SuspenseSymbol')
 /**
  * 同步等待加载子节点
  *
- * 该组件可以等待子节点的异步加载完成
+ * 该组件可以等待子节点的异步加载完成后一同显示
  *
- * 通常它与`AsyncFnWidget`、`LazyWidget`搭配使用。
+ * 通常它与`异步函数组件`、`LazyWidget`搭配使用。
+ *
+ * > 注意：在初次渲染完成后，子节点重新循环发生的异步加载不会使`Suspense`节点重新回到挂起状态。
  */
-export class Suspense extends Widget<SuspenseProps> {
+export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
   protected counter = ref(0)
   protected showFallback = true
   private listener?: Listener
@@ -65,6 +68,7 @@ export class Suspense extends Widget<SuspenseProps> {
     if (props.fallback && !isVNode(props.fallback)) {
       Logger.warn(`fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`)
     }
+    defineProps({ fallback: createVNode(Fragment) }, props)
     if (props.onError) {
       if (typeof props.onError !== 'function') {
         Logger.warn(`onError属性期望得到一个回调函数，给定${typeof props.onError}`)
@@ -113,12 +117,10 @@ export class Suspense extends Widget<SuspenseProps> {
     }
   }
 
-  get fallback() {
-    return this.props.fallback || createVNode(Fragment)
-  }
-
   protected build(): Element {
-    return this.showFallback ? this.fallback : this.children
+    const children = this.children
+    const fallback = this.props.fallback
+    return this.showFallback ? fallback : children
   }
 }
 
