@@ -32,7 +32,7 @@ function getAllKeys(obj: any, symbol: boolean = false): (string | symbol)[] {
  * @param symbol
  * @returns {IndexPath[]} - 返回一个二维数组，数组中的每个元素都是一个路径，表示对象或数组中发生变化的属性或索引。
  */
-export function diffIndex(
+export function diffVal(
   oldVal: any,
   newVal: any,
   path: IndexPath = [],
@@ -55,14 +55,14 @@ export function diffIndex(
       if (newKeys.includes(key)) {
         // 递归检查子对象或数组
         changes = changes.concat(
-          diffIndex((oldVal as any)[key], (newVal as any)[key], [...path, key])
+          diffVal((oldVal as any)[key], (newVal as any)[key], [...path, key])
         )
       } else {
         // @ts-ignore
         if (isObject(oldVal[key])) {
           const curr = [...path, key]
           // @ts-ignore
-          diffIndex(oldVal[key], {}).forEach(item => {
+          diffVal(oldVal[key], {}).forEach(item => {
             changes.push([...curr, ...item])
           })
         } else {
@@ -84,7 +84,7 @@ export function diffIndex(
     const maxLength = Math.max(oldVal.length, newVal.length)
     for (let i = 0; i < maxLength; i++) {
       if (i < oldVal.length && i < newVal.length) {
-        changes = changes.concat(diffIndex(oldVal[i], newVal[i], [...path, i]))
+        changes = changes.concat(diffVal(oldVal[i], newVal[i], [...path, i]))
       } else {
         // 如果数组长度不同，超出的部分认为是新增或删除
         changes.push([...path, i])
