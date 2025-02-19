@@ -260,7 +260,12 @@ export abstract class Widget<
  */
 export function isClassWidgetConstructor(val: any): val is ClassWidgetConstructor {
   if (typeof val !== 'function') return false
-  const prototype = val.prototype
-  if (!prototype) return false
-  return prototype instanceof Widget || prototype instanceof LifeCycle
+  let prototype = val.prototype
+  while (prototype) {
+    if (prototype instanceof Widget || prototype instanceof LifeCycle) {
+      return true
+    }
+    prototype = prototype.prototype
+  }
+  return false
 }
