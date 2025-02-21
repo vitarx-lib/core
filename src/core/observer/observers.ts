@@ -53,8 +53,14 @@ type WaitTriggerList = Array<{
  * 全局观察者管理器
  */
 export class Observers {
-  // 全部变更事件监听标识
+  /**
+   * 全部变更事件监听标识
+   */
   static ALL_CHANGE_SYMBOL = Symbol('ALL_CHANGE_SYMBOL')
+  /**
+   * 对象使用该标记做为属性返回一个真实源对象做为监听对象。
+   */
+  static OBSERVERS_TARGET_SYMBOL = Symbol('OBSERVERS_TARGET_SYMBOL')
   // 监听源锁
   static #weakMapLock = new WeakSet<object>()
   // 批量处理的监听器
@@ -81,6 +87,7 @@ export class Observers {
       // 处理队列
       Promise.resolve().then(this.#handleTriggerQueue.bind(this))
     }
+    origin = this.getObserveTarget(origin)
     const props = isArray(prop) ? prop : [prop]
     const notBatchListeners = this.#notBatchHandleListeners.get(origin)
     const batchListeners = this.#listeners.get(origin)
@@ -187,6 +194,15 @@ export class Observers {
   }
 
   /**
+   * 获取观察的目标
+   *
+   * @param obj
+   */
+  static getObserveTarget<T extends AnyObject>(obj: T): T {
+    return (Reflect.get(obj, this.OBSERVERS_TARGET_SYMBOL) as T) ?? obj
+  }
+
+  /**
    * ## 添加监听器
    *
    * @param list - 监听器列表
@@ -200,6 +216,7 @@ export class Observers {
     prop: PropName,
     listener: Listener<C>
   ): void {
+    proxy = this.getObserveTarget(proxy)
     const unLock = this.#lockWeakMap(proxy)
     if (!list.has(proxy)) {
       list.set(proxy, new Map())
@@ -209,30 +226,6 @@ export class Observers {
       propMap.set(prop, new Set())
     }
     propMap.get(prop)!.add(listener)
-    unLock()
-  }
-
-  /**
-   * ## 删除监听器
-   *
-   * @param list - 监听器列表
-   * @param proxy - 代理对象
-   * @param prop - 属性名
-   * @param listener - 监听器实例
-   */
-  static #removeListener<T extends AnyObject, C extends AnyCallback>(
-    list: WeakMap<T, ListenersMap>,
-    proxy: T,
-    prop: PropName,
-    listener: Listener<C>
-  ): void {
-    const unLock = this.#lockWeakMap(proxy)
-    const set = list.get(proxy)?.get(prop)
-    if (set) {
-      set.delete(listener)
-      if (set.size === 0) list.get(proxy)?.delete(prop)
-      if (list.get(proxy)?.size === 0) list.delete(proxy)
-    }
     unLock()
   }
 
@@ -327,5 +320,30 @@ export class Observers {
     return () => {
       this.#weakMapLock.delete(origin)
     }
+  }
+
+  /**
+   * ## 删除监听器
+   *
+   * @param list - 监听器列表
+   * @param proxy - 代理对象
+   * @param prop - 属性名
+   * @param listener - 监听器实例
+   */
+  static #removeListener<T extends AnyObject, C extends AnyCallback>(
+    list: WeakMap<T, ListenersMap>,
+    proxy: T,
+    prop: PropName,
+    listener: Listener<C>
+  ): void {
+    proxy = this.getObserveTarget(proxy)
+    const unLock = this.#lockWeakMap(proxy)
+    const set = list.get(proxy)?.get(prop)
+    if (set) {
+      set.delete(listener)
+      if (set.size === 0) list.get(proxy)?.delete(prop)
+      if (list.get(proxy)?.size === 0) list.delete(proxy)
+    }
+    unLock()
   }
 }
