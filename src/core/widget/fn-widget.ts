@@ -93,14 +93,14 @@ export class FnWidget extends Widget {
       } finally {
         this.#initialize(data as InitData)
         // 如果组件未卸载，则强制更新视图
-        if (this._renderer && this._renderer.state !== 'unloaded') this.update()
+        if (this['_$renderer'] && this['_$renderer'].state !== 'unloaded') this.update()
         // 如果有上级暂停计数器则让计数器-1
         if (suspenseCounter) suspenseCounter.value--
       }
     } else {
       this.#initialize(data as InitData)
       // 如果组件已渲染，则强制更新视图
-      if (this._renderer && this._renderer.state !== 'notRendered') this.update()
+      if (this['_$renderer'] && this['_$renderer'].state !== 'notRendered') this.update()
     }
     return this
   }

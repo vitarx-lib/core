@@ -26,7 +26,7 @@ export const __WidgetIntrinsicProps__ = [
   'scope',
   'renderer',
   'el',
-  '_renderer',
+  '_$renderer',
   '_$props',
   '_$vnode',
   '_$scope',

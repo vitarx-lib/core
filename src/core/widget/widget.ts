@@ -81,6 +81,13 @@ export abstract class Widget<
    * @private
    */
   private readonly _$scope: Scope
+  /**
+   * 内部私有属性，用于存放渲染器实例。
+   *
+   * @internal
+   * @private
+   */
+  private _$renderer?: WidgetRenderer<this>
 
   constructor(props: InputProps) {
     super()
@@ -90,39 +97,17 @@ export abstract class Widget<
   }
 
   /**
-   * 内部私有属性，用于存放渲染器实例。
+   * 获取小部件渲染的节点元素
    *
-   * 不要重写该属性！！！
+   * 如果小部件已经渲染，则返回小部件的`DOM`元素，否则返回`null`。
    *
-   * @private
-   * @internal
+   * > 注意：如果是片段元素，`DocumentFragment` 则需要使用this.el.__backup数组访问元素。
+   *
+   * @returns {ContainerElement | undefined}
    */
-  protected _renderer?: WidgetRenderer<this>
-
-  /**
-   * 获取渲染器实例。
-   *
-   * > 注意：切勿重写该`getter`，如果需要自定义渲染器，可重写`initializeRenderer`方法，并返回渲染器实例。
-   *
-   * @internal
-   * @protected
-   */
-  protected get renderer(): WidgetRenderer<this> {
-    if (!this._renderer) {
-      this._renderer = this.initializeRenderer()
-      if (import.meta.env?.MODE === 'development') {
-        // @ts-ignore
-        if (!this.vnode['__$hmr_state$__']) {
-          this.callLifeCycleHook(LifeCycleHooks.created)
-        }
-      } else {
-        // 触发onCreated生命周期
-        this.callLifeCycleHook(LifeCycleHooks.created)
-      }
-    }
-    return this._renderer
+  get el(): ContainerElement | undefined {
+    return this._$renderer?.el
   }
-
   /**
    * 外部传入的属性
    *
@@ -203,17 +188,29 @@ export abstract class Widget<
   protected provide(name: string | symbol, value: any): void {
     provide(name, value, this)
   }
+
   /**
-   * 获取小部件渲染的节点元素
+   * 获取渲染器实例。
    *
-   * 如果小部件已经渲染，则返回小部件的`DOM`元素，否则返回`null`。
+   * > 注意：切勿重写该`getter`，如果需要自定义渲染器，可重写`initializeRenderer`方法，并返回渲染器实例。
    *
-   * > 注意：如果是片段元素，`DocumentFragment` 则需要使用this.el.__backup数组访问元素。
-   *
-   * @returns {ContainerElement | undefined}
+   * @internal
+   * @protected
    */
-  get el(): ContainerElement | undefined {
-    return this._renderer?.el
+  protected get renderer(): WidgetRenderer<this> {
+    if (!this._$renderer) {
+      this._$renderer = this.initializeRenderer()
+      if (import.meta.env?.MODE === 'development') {
+        // @ts-ignore
+        if (!this.vnode['__$hmr_state$__']) {
+          this.callLifeCycleHook(LifeCycleHooks.created)
+        }
+      } else {
+        // 触发onCreated生命周期
+        this.callLifeCycleHook(LifeCycleHooks.created)
+      }
+    }
+    return this._$renderer
   }
 
   /**
