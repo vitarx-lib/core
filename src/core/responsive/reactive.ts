@@ -41,13 +41,7 @@ export type Trigger<T> = (prop: ExtractProp<T> | ExtractProp<T>[]) => void
 export type Track<T> = (prop: ExtractProp<T>) => void
 /** 解包嵌套的ref */
 export type UnwrapNestedRefs<T extends object> = {
-  [K in keyof T]: T[K] extends ValueProxy<infer U>
-    ? U extends object
-      ? UnwrapNestedRefs<U>
-      : U
-    : T[K] extends object
-      ? UnwrapNestedRefs<T[K]>
-      : T[K]
+  [K in keyof T]: T[K] extends ValueProxy<infer U> ? U : T[K]
 }
 /** reactive 接口 */
 export type Reactive<T extends AnyObject = AnyObject> = UnwrapNestedRefs<T> & ReactiveSymbol<T>
