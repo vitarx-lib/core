@@ -135,7 +135,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     // 如果还未挂载状态则标记待更新
     if (this.renderer.state === 'notMounted') {
       this.toBeUpdated = true
-    } else {
+    } else if (this.renderer.state === 'activated') {
       this.update()
     }
   }
