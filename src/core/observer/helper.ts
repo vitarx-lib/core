@@ -129,6 +129,9 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
   callback: C,
   options?: Options
 ): Listener<C> {
+  if (isProxy(origin)) {
+    return Observers.register(origin, callback, Observers.ALL_CHANGE_SYMBOL, options)
+  }
   if (isSimpleGetterFunction(origin)) {
     const result = origin()
     // 处理监听普通类型
@@ -146,9 +149,6 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
     } else {
       origin = result
     }
-  }
-  if (isProxy(origin)) {
-    return Observers.register(origin, callback, Observers.ALL_CHANGE_SYMBOL, options)
   }
   if (isArray(origin)) {
     if (origin.length === 0) {
