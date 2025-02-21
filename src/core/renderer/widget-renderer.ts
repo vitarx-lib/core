@@ -201,6 +201,8 @@ export class WidgetRenderer<T extends Widget> {
     if (this.state === 'unloaded') {
       return Logger.warn('渲染器已销毁，不能再更新视图！')
     }
+    // 如果状态不是活跃，则直接返回
+    if (this.state === 'deactivate') return
     // 如果是挂起的更新，则直接返回
     if (this._pendingUpdate) return
     this._pendingUpdate = true
@@ -315,6 +317,8 @@ export class WidgetRenderer<T extends Widget> {
       }
       // 恢复作用域
       this.scope?.unpause()
+      // 更新视图
+      this.update()
       // 触发onActivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.activated)
     }
