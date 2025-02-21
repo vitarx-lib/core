@@ -81,7 +81,10 @@ class ReadonlyProxy {
             return true
           },
           get(target: T, prop: ExtractProp<T>, receiver: any): any {
+            // 只读标识
             if (prop === READONLY_REACTIVE_SYMBOL) return true
+            // 返回监听目标
+            if (prop === Observers.OBSERVERS_TARGET_SYMBOL) return target
             const data = Reflect.get(target, prop, receiver)
             if (deep && isObject(data) && !isReadonly(data)) {
               return ReadonlyProxy.create(data, true)
