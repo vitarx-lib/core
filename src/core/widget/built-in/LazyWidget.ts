@@ -1,9 +1,16 @@
 import { type Element, Widget } from '../widget.js'
-import { createVNode, Fragment, isVNode, type WidgetType } from '../../vnode/index.js'
+import {
+  createVNode,
+  Fragment,
+  isVNode,
+  type WidgetPropsType,
+  type WidgetType
+} from '../../vnode/index.js'
 import { getSuspenseCounter } from './Suspense.js'
 import type { Ref } from '../../responsive/index.js'
 import type { ErrorInfo } from '../life-cycle.js'
 import Logger from '../../logger.js'
+import { isRecordObject } from '../../../utils/index.js'
 
 /**
  * 代码分块懒加载
@@ -37,6 +44,10 @@ export interface LazyWidgetProps<T extends WidgetType> {
    * () => import('./YourWidget.js')
    */
   children: LazyLoader<T>
+  /**
+   * 需要透传给小部件的属性
+   */
+  injectProps?: WidgetPropsType<T>
   /**
    * 加载成功之前要显示的元素
    *
@@ -137,7 +148,11 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   protected async load(): Promise<void> {
     try {
       const { default: widget } = await this.children()
-      this.updateChildVNode(createVNode(widget))
+      this.updateChildVNode(
+        isRecordObject(this.props.injectProps)
+          ? createVNode(widget, this.props.injectProps)
+          : createVNode(widget)
+      )
     } catch (e) {
       if ('onError' in this) {
         const el = this.onError!(e, 'build')
