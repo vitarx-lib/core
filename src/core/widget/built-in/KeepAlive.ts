@@ -79,7 +79,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     const isValidVNode = isVNode(this.children)
     const type = isValidVNode ? this.children.type : this.children
     if (typeof type !== 'function') {
-      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof type}`
+      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${String(type)}`
       throw new Error(message)
     }
     if (isValidVNode) {
