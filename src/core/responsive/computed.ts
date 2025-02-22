@@ -4,6 +4,49 @@ import { Depend } from './depend.js'
 import { Listener, Observers } from '../observer/index.js'
 import Logger from '../logger.js'
 
+export type ComputedOptions<T> = {
+  /**
+   * 计算属性的setter处理函数
+   *
+   * 计算属性一般是不允许修改的，如果你需要处理修改计算属性值，可以传入setter参数，
+   *
+   * setter参数是一个函数，接受一个参数，就是新的值，你可以在这里进行一些操作，比如修改依赖的值，但是不能修改计算属性的值。
+   *
+   * @example
+   *
+   * ```ts
+   * const count = ref(0)
+   * const double = computed(() => count.value * 2, {
+   *   setter: (newValue) => {
+   *     count.value = newValue / 2
+   *   }
+   * })
+   * double.value = 10
+   * console.log(double.value) // 5
+   * ```
+   *
+   * @param newValue - 新的值
+   */
+  setter?: (newValue: T) => void
+  /**
+   * 惰性计算
+   *
+   * 如果设置为false，计算属性创建就会立即计算结果。
+   *
+   * @default true
+   */
+  lazy?: boolean
+  /**
+   * 是否允许自动销毁
+   *
+   * 如果设置为false时，它不会随作用域销毁。
+   *
+   * 使用场景：初始化时机在局部作用域中，需要局部作用域销毁时，不销毁计算属性。
+   *
+   * @default true
+   */
+  autoDestroy?: boolean
+}
 /**
  * # 计算属性
  *
@@ -24,21 +67,26 @@ export class Computed<T> implements ValueProxy<T> {
   #result: T
   // 初始化标识
   #initialize: boolean = false
-  readonly #getter
-  readonly #setter
+  // getter函数
+  readonly #getter: () => T
+  #options: ComputedOptions<T>
   // 监听器
   #listener?: Listener
 
   /**
    * 构造一个计算属性对象
    *
-   * @param getter - 计算属性的getter函数
-   * @param setter - 计算属性的setter函数
+   * @param {function} getter - 计算属性的getter函数
+   * @param {object} options - 计算属性的选项
+   * @param {function} options.setter - 计算属性的setter函数
+   * @param {boolean} [options.lazy=true] - 惰性计算
+   * @param {boolean} [options.autoDestroy=true] - 自动销毁标识
    */
-  constructor(getter: () => T, setter?: (newValue: T) => void) {
+  constructor(getter: () => T, options: ComputedOptions<T> = {}) {
     this.#getter = getter
-    this.#setter = setter
     this.#result = undefined as T
+    this.#options = { lazy: true, autoDestroy: true, ...options }
+    if (!this.#options.lazy) this.init()
   }
 
   /**
@@ -47,7 +95,7 @@ export class Computed<T> implements ValueProxy<T> {
    * @returns - 计算结果
    */
   get value(): T {
-    if (!this.#initialize) this.#init()
+    if (!this.#initialize) this.init()
     Depend.track(this, 'value')
     return this.#result
   }
@@ -60,13 +108,23 @@ export class Computed<T> implements ValueProxy<T> {
    * @param newValue
    */
   set value(newValue: T) {
-    if (this.#setter) {
-      this.#setter(newValue)
+    if (typeof this.#options.setter === 'function') {
+      this.#options.setter(newValue)
     } else {
       Logger.warn('不应该对计算属性进行写入，除非定义了setter。')
     }
   }
 
+  /**
+   * 设置自动销毁标识
+   *
+   * @param allow - 是否允许自动销毁，如果已初始化计算结果则无效。
+   * @returns {this}
+   */
+  autoDestroy(allow: boolean): this {
+    this.#options.autoDestroy = allow
+    return this
+  }
   /**
    * 转字符串方法
    *
@@ -97,24 +155,26 @@ export class Computed<T> implements ValueProxy<T> {
   }
 
   /**
-   * 初始化计算属性
-   *
-   * @private
+   * 手动初始化计算属性
    */
-  #init() {
+  init() {
     if (!this.#initialize) {
       this.#initialize = true
       const { result, deps } = Depend.collect(this.#getter, 'self')
       this.#result = result
       if (deps.size > 0) {
-        // 主监听器，用于依赖更新
-        this.#listener = Observers.register(deps, () => {
+        const callback = () => {
           const newResult = this.#getter()
           if (newResult !== this.#result) {
             this.#result = newResult
             Observers.trigger(this, 'value' as any)
           }
-        })
+        }
+        // 主监听器，用于依赖更新
+        this.#listener = Observers.register(
+          deps,
+          this.#options.autoDestroy ? callback : new Listener(callback)
+        )
         // 依赖变更标记
         const change = Symbol('computed depend change')
         // 监听依赖的变化
@@ -122,11 +182,7 @@ export class Computed<T> implements ValueProxy<T> {
           Observers.trigger(deps, change as any)
         })
         deps.forEach((props, proxy) => {
-          if (Array.isArray(proxy) && props.has('length')) {
-            Observers.register(proxy, subListener, 'length')
-          } else {
-            Observers.registerProps(proxy, props, subListener)
-          }
+          Observers.registerProps(proxy, props, subListener)
         })
         // 销毁时，取消对依赖的监听
         this.#listener.onDestroyed(() => {
@@ -135,6 +191,7 @@ export class Computed<T> implements ValueProxy<T> {
         })
       }
     }
+    return this
   }
 }
 
@@ -147,10 +204,14 @@ export class Computed<T> implements ValueProxy<T> {
  *
  * @template T - 结果值类型
  * @param {() => T} getter - 计算属性的getter函数
- * @param {(newValue: T) => void} setter - 计算属性的setter函数，只能修改计算属性的依赖值
+ * @param {object} options - 计算属性的选项
+ * @param {function} options.setter - 计算属性的setter函数
+ * @param {boolean} [options.lazy=true] - 惰性计算标识
+ * @param {boolean} [options.autoDestroy=true] - 自动销毁标识
+ * @returns {Computed<T>} - 计算属性对象
  */
-export function computed<T>(getter: () => T, setter?: (newValue: T) => void): Computed<T> {
-  return new Computed(getter, setter)
+export function computed<T>(getter: () => T, options?: ComputedOptions<T>): Computed<T> {
+  return new Computed(getter, options)
 }
 
 /**
