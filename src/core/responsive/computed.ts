@@ -122,7 +122,11 @@ export class Computed<T> implements ValueProxy<T> {
           Observers.trigger(deps, change as any)
         })
         deps.forEach((props, proxy) => {
-          Observers.registerProps(proxy, props, subListener)
+          if (Array.isArray(proxy) && props.has('length')) {
+            Observers.register(proxy, subListener, 'length')
+          } else {
+            Observers.registerProps(proxy, props, subListener)
+          }
         })
         // 销毁时，取消对依赖的监听
         this.#listener.onDestroyed(() => {
