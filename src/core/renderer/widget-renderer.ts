@@ -1,6 +1,7 @@
 import { isVNode, updateParentVNodeMapping, type VNode, type WidgetType } from '../vnode/index.js'
 import {
   type ContainerElement,
+  getElParentNode,
   insertBeforeExactly,
   mountVNode,
   patchUpdate,
@@ -21,7 +22,8 @@ import Logger from '../logger.js'
  * - notRendered：未渲染
  * - notMounted：未挂载
  * - activated：活跃
- * - deactivate：不活跃
+ * - deactivating：停用中
+ * - deactivated：不活跃
  * - uninstalling：卸载中
  * - unloaded：已卸载
  */
@@ -29,7 +31,8 @@ export type RenderState =
   | 'notRendered'
   | 'notMounted'
   | 'activated'
-  | 'deactivate'
+  | 'deactivating'
+  | 'deactivated'
   | 'uninstalling'
   | 'unloaded'
 
@@ -86,7 +89,11 @@ export class WidgetRenderer<T extends Widget> {
     return this._child
   }
 
-  // 传送功能相关数据
+  /**
+   * 传送的目标元素
+   *
+   * @protected
+   */
   protected _teleport: Element | null = null
 
   /**
@@ -131,7 +138,7 @@ export class WidgetRenderer<T extends Widget> {
    * @returns {string}
    */
   get name(): string {
-    return this.vnode.type.name
+    return this.vnode.type.name || 'anonymous'
   }
 
   /**
@@ -198,11 +205,14 @@ export class WidgetRenderer<T extends Widget> {
    * @param {VNode} newChildVNode - 新子节点，没有则使用`build`方法构建。
    */
   update(newChildVNode?: VNode): void {
+    if (newChildVNode && !isVNode(newChildVNode)) {
+      throw new TypeError(`新的子节点必须是有效的VNode对象，给定：${typeof newChildVNode}`)
+    }
     if (this.state === 'unloaded') {
       return Logger.warn('渲染器已销毁，不能再更新视图！')
     }
-    // 如果状态不是活跃，则直接返回
-    if (this.state === 'deactivate') return
+    // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
+    if (this.state === 'deactivated') return
     // 如果是挂起的更新，则直接返回
     if (this._pendingUpdate) return
     this._pendingUpdate = true
@@ -212,8 +222,8 @@ export class WidgetRenderer<T extends Widget> {
       // 使用 requestAnimationFrame 来延迟更新，合并多个微任务
       requestAnimationFrame(() => {
         this._pendingUpdate = false
-        // 如果状态不是活跃，则直接返回
-        if (this.state === 'deactivate') return
+        // 如果组件已卸载，则不进行更新
+        if (this.state === 'unloaded' || !getElParentNode(this.el)) return
         const oldVNode = this._child
         const newVNode = newChildVNode || this.build()
         this._child = this.patchUpdate(oldVNode, newVNode)
@@ -270,30 +280,37 @@ export class WidgetRenderer<T extends Widget> {
   unmount(root: boolean = true): void {
     if (this.state !== 'uninstalling' && this.state !== 'unloaded') {
       this._state = 'uninstalling'
-      // 是否需要移除元素，默认root为true时需要移除元素
-      let isRemoveEl = root
-      if (root) {
-        // 如果是根节点，则需要判断是否需要异步卸载，异步卸载则返回Promise对象，否则直接移除元素
-        const result = this.triggerLifeCycle(LifeCycleHooks.beforeRemove, this.el!, 'unmount')
-        if (result instanceof Promise) {
-          isRemoveEl = false
-          result.finally(() => removeElement(this.el!))
-        }
+      const postUnmount = () => {
+        // 销毁当前作用域
+        this.scope?.destroy()
+        // 移除占位元素
+        this._shadowElement?.remove()
+        // 修改状态为已卸载
+        this._state = 'unloaded'
+        // 触发onUnmounted生命周期
+        this.triggerLifeCycle(LifeCycleHooks.unmounted)
       }
       // 触发onDeactivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.beforeUnmount)
+      // 异步卸载标志
+      let isAsyncUnmount = false
+      // 如果是根节点且是激活状态，则需要触发删除元素前的回调
+      if (root && this.state === 'activated') {
+        const result = this.triggerLifeCycle(LifeCycleHooks.beforeRemove, this.el!, 'unmount')
+        // 兼容异步卸载
+        if (result instanceof Promise) {
+          isAsyncUnmount = true
+          // 异步卸载
+          result.finally(() => {
+            removeElement(this.el!)
+            postUnmount()
+          })
+        }
+      }
       // 递归卸载子节点
-      unmountVNode(this.child, isRemoveEl)
-      // 销毁当前作用域
-      this.scope?.destroy()
-      // 移除占位元素
-      this._shadowElement?.remove()
-      // 修改状态为已卸载
-      this._state = 'unloaded'
-      // 触发onDeactivated生命周期
-      this.triggerLifeCycle(LifeCycleHooks.deactivate)
-      // 触发onUnmounted生命周期
-      this.triggerLifeCycle(LifeCycleHooks.unmounted)
+      unmountVNode(this.child, root && !isAsyncUnmount)
+      // 如果不是异步卸载直接执行卸载逻辑
+      if (!isAsyncUnmount) postUnmount()
     }
   }
 
@@ -305,7 +322,7 @@ export class WidgetRenderer<T extends Widget> {
    * @protected
    */
   activate(root: boolean = true): void {
-    if (this._state === 'deactivate') {
+    if (this._state === 'deactivated') {
       this._state = 'activated'
       // 激活子节点
       updateActivateState(this.child, true)
@@ -334,36 +351,30 @@ export class WidgetRenderer<T extends Widget> {
    */
   deactivate(root: boolean = true): void {
     if (this._state !== 'activated') return
-
-    this._state = 'deactivate'
-
+    this._state = 'deactivating'
     // 递归停用子节点
     updateActivateState(this.child, false)
 
     // 触发beforeRemove生命周期钩子，获取返回值
     const result = this.triggerLifeCycle(LifeCycleHooks.beforeRemove, this.el!, 'deactivate')
-
     // 异步删除元素
-    const removeElementAsync = (element: ContainerElement): void | Promise<void> => {
-      if (result instanceof Promise) {
-        return result.finally(() => removeElement(element))
-      } else {
+    const removeElementAsync = (element: ContainerElement): void => {
+      const post = () => {
         removeElement(element)
+        // 使用宏任务执行暂停作用域，和触发生命周期
+        this.scope?.pause()
+        this._state = 'deactivated'
+        // 触发onDeactivated生命周期
+        this.triggerLifeCycle(LifeCycleHooks.deactivated)
       }
+      result instanceof Promise ? result.finally(post) : post()
     }
-
-    if (this.teleport) {
-      removeElementAsync(this.el!)
-    } else if (root) {
+    // 如果不是传送节点，且是根节点，则插入占位元素
+    // 传送节点存在占位影子元素所以不用插入影子元素
+    if (!this.teleport && root) {
       insertBeforeExactly(this.shadowElement, this.el!)
-      removeElementAsync(this.el!)
     }
-    // 使用宏任务执行暂停作用域，和触发生命周期
-    setTimeout(() => {
-      this.scope?.pause()
-      // 触发onDeactivated生命周期
-      this.triggerLifeCycle(LifeCycleHooks.deactivate)
-    }, 0)
+    removeElementAsync(this.el!)
   }
 
   /**
