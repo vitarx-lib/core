@@ -313,9 +313,12 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
   if (isWidgetVNode(newVNode) && newVNode.instance!['renderer'].teleport) {
     // 新占位节点
     const newShadowElementEl = newVNode.instance!['renderer'].shadowElement
+    // 如果旧节点是传送节点
     if (isWidgetVNode(oldVNode) && oldVNode.instance!['renderer'].teleport) {
+      // 新节点的占位元素替换旧节点占位元素
       replaceElement(newShadowElementEl, oldVNode.instance!['renderer'].shadowElement)
     } else {
+      // 旧节点不是传送节点
       // 将新传送节点占位元素插入到旧节点之前，兼容卸载动画
       insertBeforeExactly(newShadowElementEl, oldVNode.el!)
     }
@@ -336,10 +339,12 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
     return
   }
   if (oldVNode.instance) {
+    // 如果旧节点是传送节点
     if (oldVNode.instance['renderer'].teleport) {
       // 将新元素替换掉旧节点的传送占位元素
       replaceElement(newEl, oldVNode.instance['renderer'].shadowElement)
     } else {
+      // 不是占位节点
       // 将新元素插入到旧元素之前，兼容卸载动画
       insertBeforeExactly(newEl, oldVNode.el!)
     }
