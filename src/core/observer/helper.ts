@@ -322,34 +322,23 @@ export function watchDepend<GET, R>(
 ): WatchDependResult<R, GET> {
   const getResult = options ? popProperty(options, 'getResult') : false
   const { deps, result } = Depend.collect(fn)
-  let mainListener: Listener<VoidCallback> | undefined = undefined
+  let mainListener: Listener | undefined
   if (deps.size > 0) {
-    let subCallback: AnyCallback
-    if (options?.batch === undefined || options?.batch) {
-      mainListener = Observers.register(
-        deps,
-        callback ? () => callback() : () => fn(),
-        Observers.ALL_CHANGE_SYMBOL,
-        options
-      )
-      const change = Symbol('depend change')
-      subCallback = () => Observers.trigger(deps, change as any)
+    mainListener = new Listener(callback ?? fn, options)
+    if (options?.batch === false) {
+      deps.forEach((props, proxy) => {
+        Observers.registerProps(proxy, props, mainListener!)
+      })
     } else {
-      mainListener = new Listener(callback || fn, options)
-      subCallback = () => mainListener!.trigger([])
+      const subListener = new Listener(() => mainListener!.trigger([]), { scope: false })
+      for (const [proxy, props] of deps) {
+        Observers.registerProps(proxy, props, subListener)
+      }
+      // 主监听器被销毁时，同时销毁辅助监听器
+      mainListener.onDestroyed(() => subListener.destroy())
     }
-    // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
-    const subListener = new Listener(subCallback, { scope: false })
-    // 主监听器被销毁时，同时销毁辅助监听器
-    mainListener.onDestroyed(() => subListener.destroy())
-    deps.forEach((props, proxy) => {
-      Observers.registerProps(proxy, props, subListener)
-    })
   }
-  return (getResult ? { listener: mainListener, result } : mainListener) as WatchDependResult<
-    R,
-    GET
-  >
+  return (getResult ? { listener: mainListener, result } : mainListener) as any
 }
 
 /**
