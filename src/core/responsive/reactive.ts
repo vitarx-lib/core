@@ -194,6 +194,8 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (prop === READONLY_REACTIVE_SYMBOL) return this.#readonly
     // 获取原始对象
     if (prop === GET_RAW_TARGET_SYMBOL) return target
+    // 返回监听目标undefined，表示监听代理对象
+    if (prop === Observers.OBSERVERS_TARGET_SYMBOL) return undefined
     // 如果存在于深度代理中，则直接返回代理对象
     if (Reflect.has(target, prop) && this.#deepProxy?.has(prop)) return this.#deepProxy.get(prop)
     const value = Reflect.get(target, prop)
