@@ -76,11 +76,11 @@ function createValueListener<T extends AnyObject>(
   options?: Options
 ): Listener<() => void> {
   let oldValue = deepClone(prop !== undefined ? origin[prop] : origin)
-  return Listener.create(() => {
+  return new Listener(() => {
     const newValue = deepClone(prop !== undefined ? origin[prop] : origin)
     callback(newValue as any, oldValue as any)
     oldValue = newValue
-  }, options?.limit ?? 0)
+  }, options)
 }
 
 /**
@@ -166,11 +166,11 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
         subCallback = (_p, o) => Observers.trigger(deps, [`${origin.indexOf(o)}`])
       } else {
         // 不进行批处理直接实例一个监听器，减少开销
-        mainListener = Listener.create(callback, options?.limit ?? 0)
+        mainListener = new Listener(callback, options)
         subCallback = (_p, o) => mainListener.trigger([[`${origin.indexOf(o)}`], deps])
       }
       // 辅助监听器
-      const subListener = new Listener(subCallback, options?.limit)
+      const subListener = new Listener(subCallback, { scope: false })
       // 监听多个源的变化，把变化反应到listener
       Observers.registers(deps, subListener, options)
       // 主监听器被销毁时，同时销毁辅助监听器
@@ -181,7 +181,7 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
     }
   }
   throw new TypeError(
-    'watch.origin参数无效，正确值示例(obj为实现了ProxySymbol接口的对象)：()=>obj.key | ()=>obj | ()=>[obj,...] | obj | [obj,...]'
+    'watch.origin参数无效，正确值示例：()=>AnyProxy.key，Function<AnyProxy>，AnyProxy，Function<[AnyProxy,...]>，[AnyProxy,...]'
   )
 }
 
@@ -250,36 +250,10 @@ export function watchValue<T extends AnyObject>(
  */
 export function watchProps<
   T extends AnyObject,
-  P extends ExtractProp<T>[],
-  C extends AnyCallback = Callback<P, T>
->(origin: T, props: P, callback: C, options?: Options): Listener<C> {
-  // 检测源是否为Proxy
-  verifyProxy(origin)
-  if (props.length === 0) throw TypeError('props参数不能为空数组')
-  // 判断是否需要批处理
-  let mainListener: Listener
-  let subCallback: AnyCallback
-  if (options?.batch === undefined || options?.batch) {
-    // 批处理
-    mainListener = Observers.register(
-      props,
-      prop => callback(prop, origin),
-      Observers.ALL_CHANGE_SYMBOL,
-      options
-    )
-    subCallback = p => Observers.trigger(props, p)
-  } else {
-    // 非批处理
-    mainListener = Listener.create(callback, options?.limit ?? 0)
-    subCallback = p => mainListener.trigger([p, origin])
-  }
-  // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
-  const subListener = new Listener(subCallback)
-  // 监听多个属性变化
-  Observers.registerProps(origin, props, subListener, options)
-  // 主监听器被销毁时，同时销毁辅助监听器
-  mainListener.onDestroyed(() => subListener.destroy())
-  return mainListener as unknown as Listener<C>
+  P extends ExtractProp<T>[] | Set<ExtractProp<T>>,
+  C extends AnyCallback = Callback<ExtractProp<T>[], T>
+>(origin: T, props: P, callback: C | Listener<C>, options?: Options): Listener<C> {
+  return Observers.registerProps(origin, props, callback, options)
 }
 
 /**
@@ -361,11 +335,11 @@ export function watchDepend<GET, R>(
       const change = Symbol('depend change')
       subCallback = () => Observers.trigger(deps, change as any)
     } else {
-      mainListener = Listener.create(callback || fn, options?.limit ?? 0)
+      mainListener = new Listener(callback || fn, options)
       subCallback = () => mainListener!.trigger([])
     }
     // 辅助监听器，同时监听多个属性变化，并将变化反应到主监听器上
-    const subListener = new Listener(subCallback, options?.limit)
+    const subListener = new Listener(subCallback, { scope: false })
     // 主监听器被销毁时，同时销毁辅助监听器
     mainListener.onDestroyed(() => subListener.destroy())
     deps.forEach((props, proxy) => {
