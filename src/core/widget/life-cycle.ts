@@ -13,7 +13,7 @@ export enum LifeCycleHooks {
   created = 'onCreated',
   beforeMount = 'onBeforeMount',
   mounted = 'onMounted',
-  deactivate = 'onDeactivate',
+  deactivated = 'onDeactivated',
   activated = 'onActivated',
   beforeUpdate = 'onBeforeUpdate',
   updated = 'onUpdated',
@@ -24,10 +24,14 @@ export enum LifeCycleHooks {
 }
 
 /** 生命周期钩子类型 */
-export type LifeCycleHookMethods = `${LifeCycleHooks}`;
+export type LifeCycleHookMethods = `${LifeCycleHooks}`
 
 /** 生命周期钩子需要接收的参数 */
-export type HookParameter<T> = T extends LifeCycleHooks.error ? [error: unknown, info: ErrorInfo] : T extends LifeCycleHooks.beforeRemove ? [el: ContainerElement, type: 'unmount' | 'deactivate'] : []
+export type HookParameter<T> = T extends LifeCycleHooks.error
+  ? [error: unknown, info: ErrorInfo]
+  : T extends LifeCycleHooks.beforeRemove
+    ? [el: ContainerElement, type: 'unmount' | 'deactivate']
+    : []
 
 /** 生命周期钩子返回值类型 */
 export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount
@@ -38,7 +42,6 @@ export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount
       ? Promise<void> | void
       : void
 
-// noinspection JSUnusedGlobalSymbols
 /**
  * 生命周期基类
  */
@@ -86,12 +89,12 @@ export abstract class LifeCycle {
    *
    * @protected
    */
-  protected onDeactivate?(): void
+  protected onDeactivated?(): void
 
   /**
    * 生命周期钩子
    *
-   * `onActivated`钩子会在组件被临时移除后，又恢复时触发。
+   * `onActivated`钩子会在组件激活后触发。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
@@ -102,7 +105,7 @@ export abstract class LifeCycle {
   /**
    * 生命周期钩子
    *
-   * `onUnmounted`钩子会在组件被销毁时触发。
+   * `onUnmounted`钩子会在组件被销毁后触发。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    *
@@ -113,7 +116,7 @@ export abstract class LifeCycle {
   /**
    * 生命周期构子
    *
-   * `onBeforeUnmount`钩子会在组件被销毁前触发。
+   * `onBeforeUnmount`钩子会在组件被销毁前触发，此时视图还保持响应式。
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    * @protected
@@ -164,8 +167,8 @@ export abstract class LifeCycle {
    * 淡出动画示例：
    * ```ts
    * return new Promise((resolve) => {
-   *   el.style.opacity = 0
-   *   setTimeout(resolve, 300)
+   *   this.el.style.opacity = 0 // 设置元素透明度
+   *   setTimeout(resolve, 300) // 假设css动画时间是300ms，延迟300ms后移除元素
    * })
    * ```
    *
@@ -199,4 +202,3 @@ export abstract class LifeCycle {
     return undefined as any
   }
 }
-

@@ -159,12 +159,14 @@ export const onMounted = createLifeCycleHook(LifeCycleHooks.mounted)
 /**
  * 小部件被临时停用触发的钩子
  *
+ * 此钩子由`KeepAlive`内置小部件触发。
+ *
  * @param cb - 回调函数，当小部件被临时停用时触发
  */
-export const onDeactivate = createLifeCycleHook(LifeCycleHooks.deactivate)
+export const onDeactivated = createLifeCycleHook(LifeCycleHooks.deactivated)
 
 /**
- * 小部件从停用后又恢复时触发的钩子
+ * 小部件被激活时触发的钩子
  *
  * @param cb - 回调函数，当小部件从停用状态恢复时触发
  */
