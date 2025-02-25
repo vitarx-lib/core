@@ -239,7 +239,7 @@ export function watchValue<T extends AnyObject>(
 /**
  * ## 监听多个属性变化
  *
- * 该方法和watchProp不同的是，可以监听多个属性的变化，当监听多个属性时，回调函数的参数为变化的属性名数组。
+ * 该方法与{@linkcode watchProp}不同的之处是可以监听多个属性的变化，回调函数的第一个参数为是变化的属性名数组。
  *
  * @template T - 监听源类型
  * @template P - 属性名类型
@@ -285,6 +285,7 @@ export function watchProps<
 /**
  * ## 监听单个属性变化
  *
+ * @alias watchPropChange
  * @template T - 监听源类型
  * @template P - 属性名类型
  * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
@@ -300,7 +301,6 @@ export function watchProp<
   verifyProxy(origin)
   return Observers.register(origin, callback, prop, options)
 }
-
 /**
  * ## 监听单个属性变化
  *
@@ -378,8 +378,6 @@ export function watchDepend<GET, R>(
   >
 }
 
-export { watchDepend as watchEffect }
-
 /**
  * 在下一次微任务开始之前执行回调函数
  *
@@ -406,3 +404,5 @@ export function nextTick(cb?: () => void): Promise<void> | void {
     return Promise.resolve()
   }
 }
+
+export { watchDepend as watchEffect, watchProp as watchPropChange }
