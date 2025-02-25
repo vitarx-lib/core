@@ -209,15 +209,15 @@ export class WidgetRenderer<T extends Widget> {
     try {
       // 触发更新前生命周期
       this.triggerLifeCycle(LifeCycleHooks.beforeUpdate)
-      const oldVNode = this._child
-      const newVNode = newChildVNode || this.build()
-      this._child = this.patchUpdate(oldVNode, newVNode)
-      // 延迟取消待更新状态，避免重复更新
-      setTimeout(() => {
+      // 使用 requestAnimationFrame 来延迟更新，合并多个微任务
+      requestAnimationFrame(() => {
         this._pendingUpdate = false
-      }, 0)
-      // 触发更新后生命周期
-      this.triggerLifeCycle(LifeCycleHooks.updated)
+        const oldVNode = this._child
+        const newVNode = newChildVNode || this.build()
+        this._child = this.patchUpdate(oldVNode, newVNode)
+        // 触发更新后生命周期
+        this.triggerLifeCycle(LifeCycleHooks.updated)
+      })
     } catch (e) {
       this._pendingUpdate = false
       // 继续向上抛出错误
