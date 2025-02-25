@@ -212,6 +212,8 @@ export class WidgetRenderer<T extends Widget> {
       // 使用 requestAnimationFrame 来延迟更新，合并多个微任务
       requestAnimationFrame(() => {
         this._pendingUpdate = false
+        // 如果状态不是活跃，则直接返回
+        if (this.state === 'deactivate') return
         const oldVNode = this._child
         const newVNode = newChildVNode || this.build()
         this._child = this.patchUpdate(oldVNode, newVNode)
@@ -220,7 +222,6 @@ export class WidgetRenderer<T extends Widget> {
       })
     } catch (e) {
       this._pendingUpdate = false
-      // 继续向上抛出错误
       throw e
     }
   }
