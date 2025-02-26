@@ -7,7 +7,7 @@ export * from './css_utils.js'
 
 declare global {
   /** 任意函数 */
-  type AnyFunction = (...args: any[]) => any
+  type AnyFunction<P extends any[] = any[], R = void> = (...args: P) => R
   /** 任意回调函数 */
   type AnyCallback = AnyFunction
   /** void 回调函数 */
