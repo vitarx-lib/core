@@ -5,7 +5,7 @@ import { AnyProxy, isProxy, type PropName } from './helper.js'
  *
  * 键为代理对象，值为引用的键set集合
  */
-type Deps = Map<AnyProxy, Set<PropName>>
+export type Deps = Map<AnyProxy, Set<PropName>>
 /** 收集结果 */
 type Result<T> = {
   result: T
