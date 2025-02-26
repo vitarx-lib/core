@@ -91,8 +91,8 @@ export class Observers {
   static trigger<T extends AnyObject, P extends ExtractProp<T>>(origin: T, prop: P | P[]): void {
     // 如果不在微任务中，则开始处理队列
     if (!this.#isHanding) {
-      this.#isHanding = true
       this.#triggerQueue = new Map()
+      this.#isHanding = true
       // 处理队列
       Promise.resolve().then(this.#handleTriggerQueue.bind(this))
     }
@@ -101,16 +101,16 @@ export class Observers {
     const notBatchListeners = this.#notBatchHandleListeners.get(origin)
     const batchListeners = this.#listeners.get(origin)
     if (batchListeners || notBatchListeners) {
-      props.forEach(p => {
+      for (const prop of props) {
         // 触发非批量处理的监听器
-        this.#triggerListeners(notBatchListeners?.get(p), origin, p)
+        this.#triggerListeners(notBatchListeners?.get(prop), origin, prop)
         // 推送到队列
         if (this.#triggerQueue.has(origin)) {
-          this.#triggerQueue.get(origin)!.add(p)
+          this.#triggerQueue.get(origin)!.add(prop)
         } else {
-          this.#triggerQueue.set(origin, new Set([p]))
+          this.#triggerQueue.set(origin, new Set([prop]))
         }
-      })
+      }
       // 触发默认监听器
       this.#triggerListeners(notBatchListeners?.get(this.ALL_CHANGE_SYMBOL), origin, props)
     }
