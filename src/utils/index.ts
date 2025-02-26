@@ -7,7 +7,14 @@ export * from './css_utils.js'
 
 declare global {
   /** 任意函数 */
-  type AnyFunction<P extends any[] = any[], R = void> = (...args: P) => R
+  type AnyFunction = (...args: any[]) => any
+  /**
+   * 此类型用于定义一个函数类型
+   *
+   * @template {Array} P 函数参数类型数组
+   * @template {any} R 函数返回值类型
+   */
+  type FnCallback<P extends any[], R = void> = (...args: P) => R
   /** 任意回调函数 */
   type AnyCallback = AnyFunction
   /** void 回调函数 */

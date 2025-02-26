@@ -130,10 +130,7 @@ export function deepMergeObject<T extends Record<string, any>, U extends Record<
  * @param {number} delay - 延迟时间（毫秒）
  * @returns {function} - 防抖后的函数
  */
-export function debounce<T extends AnyCallback>(
-  func: T,
-  delay: number
-): AnyFunction<Parameters<T>> {
+export function debounce<T extends AnyCallback>(func: T, delay: number): FnCallback<Parameters<T>> {
   let timeout: ReturnType<typeof setTimeout>
 
   return function (...args: Parameters<T>) {
@@ -154,10 +151,7 @@ export function debounce<T extends AnyCallback>(
  * @param {number} delay - 延迟时间（毫秒）
  * @returns {function} - 节流后的函数
  */
-export function throttle<T extends AnyCallback>(
-  func: T,
-  delay: number
-): AnyFunction<Parameters<T>> {
+export function throttle<T extends AnyCallback>(func: T, delay: number): FnCallback<Parameters<T>> {
   let lastExecTime = 0 // 上次执行的时间戳
   let timeoutId: ReturnType<typeof setTimeout> | null = null // 定时器 ID
 
@@ -194,7 +188,7 @@ export function throttle<T extends AnyCallback>(
  * @param {Function} callback 回调函数，将在微任务中执行
  * @returns {callback} 返回一个防抖后的函数，它将在微任务中执行原始回调函数
  */
-export function debounceMicroTask<T extends AnyCallback>(callback: T): AnyFunction<Parameters<T>> {
+export function debounceMicroTask<T extends AnyCallback>(callback: T): FnCallback<Parameters<T>> {
   // 存储防抖函数的参数
   let taskParams: Parameters<T> | null = null
 
