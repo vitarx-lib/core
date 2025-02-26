@@ -7,7 +7,7 @@ import {
   type VNode,
   type WidgetType
 } from '../../vnode/index.js'
-import { watchProp } from '../../observer/index.js'
+import { watchPropChange } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
 import Logger from '../../logger.js'
 
@@ -69,7 +69,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     // 缓存当前展示的小部件
     this.currentChild = this.makeChildVNode()
     // 开始监听 props.children
-    watchProp(this.props, 'children', this.handleChildChange.bind(this))
+    watchPropChange(this.props, 'children', this.handleChildChange.bind(this))
   }
 
   /**
