@@ -1,6 +1,20 @@
 import { addEffect, Effect } from '../scope/index.js'
 import Logger from '../logger.js'
 
+type ListenerOptions = {
+  /**
+   * 限制触发次数
+   *
+   * @default 0
+   */
+  limit?: number
+  /**
+   * 自动添加到作用域
+   *
+   * @default true
+   */
+  scope?: boolean
+}
 /**
  * # 监听器类
  *
@@ -13,20 +27,19 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
   readonly #limit: number
   // 已触发次数
   #count = 0
-
   /**
    * 创建监听器
    *
    * @template C - 回调函数的类型
    * @param {C} callback - 回调函数
-   * @param {number} limit - 限制触发次数，0为不限制
+   * @param options
    */
-  constructor(callback: C, limit: number = 0) {
+  constructor(callback: C, { limit = 0, scope = true }: ListenerOptions = {}) {
     super()
     this.#callback = callback
     this.#limit = limit ?? 0
+    if (scope) addEffect(this)
   }
-
   /**
    * 已触发次数
    *
@@ -46,24 +59,6 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
   }
 
   /**
-   * 创建监听器
-   *
-   * 静态方法，用于创建监听器，并自动把监听器提交到依赖监听器中。
-   *
-   * 如果你不希望在依赖监听器中跟踪监听器，则可以直接使用`new Listener`。
-   *
-   * @param callback
-   * @param limit
-   */
-  static create<C extends AnyCallback>(callback: C, limit: number = 0): Listener<C> {
-    // 创建监听器
-    const instance = new Listener(callback, limit)
-    // 添加到当前作用域进行自动管理
-    addEffect(instance)
-    return instance
-  }
-
-  /**
    * 销毁/弃用监听器
    *
    * 调用此方法会将监听器标记为弃用状态，并触发销毁回调。
@@ -73,24 +68,6 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
       super.destroy()
       this.#callback = undefined
     }
-  }
-
-  /**
-   * 暂停回调
-   *
-   * 调用此方法过后，trigger将会被忽略，直到unpause方法被调用
-   */
-  override pause() {
-    super.pause()
-  }
-
-  /**
-   * 取消暂停回调
-   *
-   * 调用此方法后，如果之前处于暂停状态，则会继续触发回调。
-   */
-  override unpause() {
-    super.unpause()
   }
 
   /**
