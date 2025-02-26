@@ -55,10 +55,7 @@ export class WidgetRenderer<T extends Widget> {
     this._widget = widget
     const { result: childVNode, listener } = watchDepend(
       this.build.bind(this),
-      this.update.bind(this),
-      {
-        getResult: true
-      }
+      this.update.bind(this)
     )
     // 兼容异步
     if (listener && !getCurrentScope()) widget['scope'].add(listener)
