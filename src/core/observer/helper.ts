@@ -77,25 +77,15 @@ const createValueListener = <T extends AnyObject>(
  * const reactiveObj = reactive({a:1,b:2,c:{a:1}})
  * const refObj = ref({a:1})
  *
- * // ## 监听对象所有属性变化，下面的写法等效于 watch(()=>reactiveObj,...)
- * watch(reactiveObj,(props:Array<keyof obj>,origin:Reactive<typeof obj>)=>{
- *  // origin 参数为obj本身
- *  // props 为变化的属性名数组，当options.batch为false时，props一次只会存在一个属性，为true时会存在多个属性名
- *  console.log(`捕获到obj属性变化：${props.join(',')}`)
+ * // 监听对象所有属性变化，下面的写法等效于
+ * watch(reactiveObj,(props:keyof reactiveObj,origin: typeof reactiveObj)=>{
+ *  // props 为变化的属性名数组，当options.batch为false时，props数组中永远只会存在一个元素
+ *  console.log(`捕获到reactiveObj属性变化：${props.join(',')}`)
  * })
  *
- * // ## 监听嵌套对象的变化
- * watch(reactiveObj.c,...) // 等效于 watch(()=>reactiveObj.c,...)
- *
- * // ## 监听普通值属性，下面的写法等效于 watchPropValue(reactiveObj,'a',...)
+ * // 监听值变化
  * watch(()=>reactiveObj.a,(newValue,oldValue)=>{
  *    // 第一个参数为新值，第二个参数为旧值
- * })
- *
- * // ## 同时监听多个对象 等效于 watch(()=>[reactiveObj,refObj])
- * watch([reactiveObj,refObj],function(index:`${number}`[],origin){
- *    // 注意： index参数值是变化的对象所在下标，例如：['0','1'] 则代表reactiveObj和refObj都发生了改变
- *    // origin 是[reactiveObj,refObj]
  * })
  * ```
  * **origin**合法类型如下：
@@ -144,6 +134,27 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
 
 /**
  * ## 监听多个源变化
+ *
+ * @example
+ * ```ts
+ * import { watchChanges,reactive,ref,microTaskDebouncedCallback } from 'vitarx'
+ * const reactiveObj = reactive({a:1})
+ * const refObj = ref({a:1})
+ * watchChanges([reactiveObj,refObj],(props,origin)=>{
+ *    // 其中任意一个对象变化都会触发此回调
+ *    // origin是变化的对象，props是变化的属性名数组
+ * })
+ * refObj.value.a+++
+ * refObj.value.a+++
+ * reactiveObj.a+++
+ *
+ * // 上面这样修改数据，回调会触发两次，因为修改了不同的对象
+ *
+ * // 如果需要只触发一次，且不需要知道哪个对象变化了，可以使用微任务防抖函数实现
+ * watchChanges([reactiveObj,refObj],microTaskDebouncedCallback(()=>{
+ *     console.log('这样可以确保在同一个微任务中只执行一次回调')
+ * }))
+ * ```
  *
  * @param {array} origins - 监听源列表
  * @param {function} callback - 回调函数
