@@ -3,6 +3,7 @@ import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants
 import { Depend } from './depend.js'
 import { Listener, Observers } from '../observer/index.js'
 import Logger from '../logger.js'
+import { microTaskDebouncedCallback } from '../../utils/index.js'
 
 export type ComputedOptions<T> = {
   /**
@@ -163,32 +164,22 @@ export class Computed<T> implements ValueProxy<T> {
       const { result, deps } = Depend.collect(this.#getter, 'self')
       this.#result = result
       if (deps.size > 0) {
-        const callback = () => {
-          const newResult = this.#getter()
-          if (newResult !== this.#result) {
-            this.#result = newResult
-            Observers.trigger(this, 'value' as any)
-          }
-        }
         // 主监听器，用于依赖更新
-        this.#listener = Observers.register(
-          deps,
-          this.#options.autoDestroy ? callback : new Listener(callback)
+        this.#listener = new Listener(
+          microTaskDebouncedCallback(() => {
+            const newResult = this.#getter()
+            if (newResult !== this.#result) {
+              this.#result = newResult
+              Observers.trigger(this, 'value' as any)
+            }
+          }),
+          { scope: false }
         )
-        // 依赖变更标记
-        const change = Symbol('computed depend change')
-        // 监听依赖的变化
-        const subListener = new Listener(function () {
-          Observers.trigger(deps, change as any)
-        })
         deps.forEach((props, proxy) => {
-          Observers.registerProps(proxy, props, subListener)
+          Observers.registerProps(proxy, props, this.#listener!, { batch: false })
         })
         // 销毁时，取消对依赖的监听
-        this.#listener.onDestroyed(() => {
-          subListener.destroy()
-          this.#listener = undefined
-        })
+        this.#listener.onDestroyed(() => (this.#listener = undefined))
       }
     }
     return this
