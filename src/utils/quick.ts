@@ -182,9 +182,8 @@ export function throttle<T extends AnyCallback>(
  */
 export function microTaskDebouncedCallback<T extends AnyCallback>(
   callback: T,
-  handleParams?: (prev: Parameters<T> | null, last: Parameters<T>) => Parameters<T>
+  handleParams?: (last: Parameters<T>, prev: Parameters<T> | null) => Parameters<T>
 ): FnCallback<Parameters<T>> {
-  handleParams ??= (_prev, last) => last
   let taskParams: Parameters<T> | null = null
 
   return (...args: Parameters<T>) => {
@@ -195,6 +194,6 @@ export function microTaskDebouncedCallback<T extends AnyCallback>(
         callback.apply(null, requestParams)
       })
     }
-    taskParams = handleParams(taskParams, args)
+    taskParams = typeof handleParams === 'function' ? handleParams(args, taskParams) : args
   }
 }
