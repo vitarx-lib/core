@@ -124,7 +124,7 @@ export function deepMergeObject<T extends Record<string, any>, U extends Record<
 }
 
 /**
- * 防抖函数
+ * 防抖函数，使用setTimeout实现，在指定延迟后执行回调函数
  *
  * @param {function} func - 要执行的函数
  * @param {number} delay - 延迟时间（毫秒）
@@ -147,63 +147,54 @@ export function debounce<T extends AnyCallback>(func: T, delay: number): FnCallb
 /**
  * 节流函数
  *
- * @param {function} func - 要执行的函数
- * @param {number} delay - 延迟时间（毫秒）
+ * 和防抖函数不同，节流函数会根据时间间隔来执行回调函数，确保两次调用必须间隔一定时间。
+ *
+ * @param {function} callback - 要执行的函数
+ * @param {number} delay - 间隔时间（毫秒）
  * @returns {function} - 节流后的函数
  */
-export function throttle<T extends AnyCallback>(func: T, delay: number): FnCallback<Parameters<T>> {
-  let lastExecTime = 0 // 上次执行的时间戳
-  let timeoutId: ReturnType<typeof setTimeout> | null = null // 定时器 ID
-
+export function throttle<T extends AnyCallback>(
+  callback: T,
+  delay: number
+): FnCallback<Parameters<T>> {
+  let timeout: ReturnType<typeof setTimeout> | null = null
   return (...args: Parameters<T>) => {
-    const currentTime = Date.now() // 当前时间戳
-
-    // 如果距离上次执行的时间小于 delay，则设置定时器
-    if (currentTime - lastExecTime < delay) {
-      if (timeoutId) {
-        clearTimeout(timeoutId) // 清除之前的定时器
-      }
-
-      // 设置一个新的定时器，确保在 delay 时间后执行
-      timeoutId = setTimeout(
-        () => {
-          lastExecTime = currentTime // 更新上次执行时间
-          func(...args) // 执行函数
-        },
-        delay - (currentTime - lastExecTime)
-      )
-    } else {
-      // 如果距离上次执行的时间大于等于 delay，则立即执行
-      lastExecTime = currentTime // 更新上次执行时间
-      func(...args) // 执行函数
-    }
+    if (timeout) return
+    setTimeout(() => {
+      timeout = null
+      callback(...args)
+    }, delay)
   }
 }
 
 /**
- * 创建一个防抖函数，用于在微任务中执行回调函数
+ * 创建一个防抖函数，在一系列连续调用结束后仅执行一次回调函数。
  *
- * 防抖函数确保在一系列连续地调用结束后只执行一次回调函数，避免在每次调用时都执行回调
+ * 回调函数将在微任务中执行，确保在所有调用完成后立即处理。
  *
- * @param {Function} callback 回调函数，将在微任务中执行
- * @returns {callback} 返回一个防抖后的函数，它将在微任务中执行原始回调函数
+ * @param callback - 回调函数，将在微任务中执行。
+ * @param handleParams - 可选参数处理函数，用于自定义合并多次调用的参数。默认情况下，使用最后一次调用的参数。
+ * @returns {function} 返回一个防抖后的函数，该函数将在微任务中执行原始回调函数。
+ *
+ * 使用场景：
+ * - 当需要确保一系列连续调用只触发一次回调时，例如批量处理多个请求或事件。
+ * - 合并多次调用的参数，以减少不必要地重复操作。
  */
-export function debounceMicroTask<T extends AnyCallback>(callback: T): FnCallback<Parameters<T>> {
-  // 存储防抖函数的参数
+export function microTaskDebouncedCallback<T extends AnyCallback>(
+  callback: T,
+  handleParams?: (prev: Parameters<T> | null, last: Parameters<T>) => Parameters<T>
+): FnCallback<Parameters<T>> {
+  handleParams ??= (_prev, last) => last
   let taskParams: Parameters<T> | null = null
 
-  // 返回一个匿名函数，它将根据情况调度或更新回调函数的执行
   return (...args: Parameters<T>) => {
-    // 如果当前没有待处理的任务参数，则调度一个新的微任务来执行回调函数
     if (taskParams === null) {
       Promise.resolve().then(() => {
-        // 在微任务中执行回调函数，并使用之前存储的参数
         const requestParams = taskParams!
         taskParams = null
         callback.apply(null, requestParams)
       })
     }
-    // 更新当前的任务参数，确保在微任务中执行最新的参数
-    taskParams = args
+    taskParams = handleParams(taskParams, args)
   }
 }
