@@ -9,7 +9,6 @@ import {
 } from '../../vnode/index.js'
 import { watchPropChange } from '../../observer/index.js'
 import { insertBeforeExactly, renderElement } from '../../renderer/web-runtime-dom/index.js'
-import Logger from '../../logger.js'
 
 /**
  * KeepAlive配置选项
@@ -209,25 +208,6 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   isKeep(type: WidgetType): boolean {
     if (this.exclude.includes(type)) return false
     return this.include.length === 0 || this.include.includes(type)
-  }
-
-  /**
-   * 验证 children
-   *
-   * @protected
-   */
-  private validation(children: any, tip: 'throw' | 'console' = 'throw'): boolean {
-    if (isVNode(children)) children = children.type
-    if (typeof children !== 'function') {
-      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${typeof children}`
-      if (tip === 'throw') {
-        throw new Error(message)
-      } else {
-        Logger.warn(message)
-      }
-      return false
-    }
-    return true
   }
 
   /**
