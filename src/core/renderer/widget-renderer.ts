@@ -69,7 +69,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   get shadowElement(): Comment {
     if (!this._shadowElement) {
-      this._shadowElement = document.createComment('shadow')
+      this._shadowElement = document.createComment(`${this.name} Shadow Element`)
     }
     return this._shadowElement
   }
