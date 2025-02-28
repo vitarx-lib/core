@@ -1,6 +1,12 @@
-import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './types.js'
-import { type Fragment, isFragmentVNode, type VNode } from '../../vnode/index.js'
+import {
+  findParentVNode,
+  type Fragment,
+  type HTMLElementVNode,
+  isFragmentVNode,
+  type VNode
+} from '../../vnode/index.js'
 import { isValueProxy, type ValueProxy } from '../../responsive/index.js'
+import type { HtmlElement, VDocumentFragment } from './types/index.js'
 
 /**
  * 恢复 Fragment 元素
@@ -159,8 +165,31 @@ export function getElParentNode(el: HtmlElement | undefined): ParentNode | null 
  * @param value
  */
 export function formatPropValue<T>(value: T | ValueProxy<T>): T {
-  if (isValueProxy(value)) {
-    value = value.value
+  return isValueProxy(value) ? value.value : value
+}
+
+/**
+ * 判断是否为片段元素
+ *
+ * @param el
+ */
+export function isVDocumentFragment(el: any): el is VDocumentFragment {
+  return el instanceof DocumentFragment
+}
+
+/**
+ * 判断是否为svg元素，或是svg内部的子元素
+ *
+ * @param vnode - HTMLElementVNode
+ */
+export function isSvgElement(vnode: HTMLElementVNode) {
+  const svgNamespace = 'http://www.w3.org/2000/svg'
+  if (vnode.props.xmlns === svgNamespace) return true
+  if (vnode.type === 'svg') return true
+  let parent = findParentVNode(vnode)
+  while (parent) {
+    if (parent.type === 'svg') return true
+    parent = findParentVNode(parent)
   }
-  return value
+  return false
 }

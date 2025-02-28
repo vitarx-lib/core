@@ -1,5 +1,9 @@
-import type { CssPropertiesMap, HTMLClassProperties, HTMLStyleProperties } from '../core/index.js'
 import { isRecordObject, isString } from './detect.js'
+import type {
+  CssPropertiesMap,
+  HTMLClassProperties,
+  HTMLStyleProperties
+} from '../core/renderer/web-runtime-dom/index.js'
 
 // 辅助函数：将中划线命名转换为驼峰命名
 function toCamelCase(str: string): string {

@@ -1,6 +1,6 @@
 import { isArray, isFunction, isRecordObject, isString } from '../../../utils/index.js'
-import { type HTMLClassProperties, type HTMLStyleProperties } from './types.js'
 import { formatPropValue } from './utils.js'
+import type { HTMLClassProperties, HTMLStyleProperties } from './types/index.js'
 
 /**
  * 设置元素的多个属性

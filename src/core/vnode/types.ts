@@ -1,11 +1,3 @@
-// noinspection JSUnusedGlobalSymbols
-
-import type {
-  HtmlElementTagMap,
-  HtmlIntrinsicElements,
-  HTMLIntrinsicTags,
-  VDocumentFragment
-} from '../renderer/index.js'
 import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
 import {
   type ClassWidgetConstructor,
@@ -20,13 +12,19 @@ import {
   TextVNodeSymbol,
   VNodeSymbol
 } from './constant.js'
+import type {
+  HTMLElementTagMap,
+  HTMLIntrinsicElements,
+  HTMLIntrinsicTags,
+  VDocumentFragment
+} from '../renderer/web-runtime-dom/index.js'
 
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint | symbol
 
 // 辅助计算出元素类型
 type ComputedRefElType<T> = T extends HTMLIntrinsicTags
-  ? HtmlElementTagMap[T]
+  ? HTMLElementTagMap[T]
   : T extends Fragment
     ? DocumentFragment
     : ExcludeWidgetIntrinsicKeywords<T>
@@ -93,7 +91,7 @@ export type WidgetPropsType<T extends WidgetType> = (T extends WidgetType<infer 
 /**
  * HTML节点Props类型重载
  */
-export type HTMLPropsType<T extends HTMLIntrinsicTags> = HtmlIntrinsicElements[T] &
+export type HTMLPropsType<T extends HTMLIntrinsicTags> = HTMLIntrinsicElements[T] &
   IntrinsicAttributes
 
 /**
@@ -115,7 +113,7 @@ export type VNodeChildren = Array<ChildVNode>
 type HtmlElementType<T> = T extends Fragment
   ? VDocumentFragment
   : T extends HTMLIntrinsicTags
-    ? HtmlElementTagMap[T]
+    ? HTMLElementTagMap[T]
     : HTMLElement | VDocumentFragment
 
 /**

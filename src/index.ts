@@ -12,10 +12,10 @@ import type {
 import type {
   CssPropertiesMap,
   HTMLClassProperties,
-  HtmlIntrinsicElements,
+  HTMLIntrinsicElements,
   HTMLIntrinsicTags,
   HTMLStyleProperties
-} from './core/renderer/web-runtime-dom/types.js'
+} from './core/renderer/web-runtime-dom/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'
@@ -92,7 +92,7 @@ declare global {
     type ElementClass = Vitarx.ElementClass
 
     /** 固有元素 */
-    interface IntrinsicElements extends HtmlIntrinsicElements {}
+    interface IntrinsicElements extends HTMLIntrinsicElements {}
 
     /** 固有属性 */
     interface IntrinsicAttributes extends Vitarx.GlobalIntrinsicAttributes {}

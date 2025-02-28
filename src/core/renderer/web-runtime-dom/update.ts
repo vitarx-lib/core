@@ -11,16 +11,17 @@ import {
   type VNode,
   VNodeManager
 } from '../../vnode/index.js'
-import { type HtmlElement, isVDocumentFragment, type VDocumentFragment } from './types.js'
 import {
   createEmptyFragmentPlaceholderNode,
   getElParentNode,
   getVDocumentFragmentFirstEl,
   getVDocumentFragmentLastEl,
+  isVDocumentFragment,
   recoveryFragmentChildNodes
 } from './utils.js'
 import { toRaw } from '../../responsive/index.js'
 import { Observers } from '../../observer/index.js'
+import type { HtmlElement, VDocumentFragment } from './types/index.js'
 
 /**
  * 差异更新

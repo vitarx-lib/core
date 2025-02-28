@@ -1,4 +1,4 @@
-import type { ContainerElement, VDocumentFragment } from '../renderer/index.js'
+import type { ContainerElement, VDocumentFragment } from '../renderer/web-runtime-dom/index.js'
 
 /**
  * 目标容器元素
