@@ -1,7 +1,7 @@
 import type { Properties as CssProperties } from 'csstype'
-import type { ValueProxy } from '../../../responsive/index.js'
 import type { IsW3CHtmlProperties } from './w3c_properties.js'
 import type { HTMLEventHumpMap, HTMLEventLowerMap, HTMLEventLowerNames } from './event.js'
+import type { ValueProxy } from '../../responsive/index.js'
 
 /**
  * 使属性兼容值代理变量赋值

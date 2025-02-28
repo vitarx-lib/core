@@ -13,16 +13,18 @@ import {
   type WidgetType
 } from '../../vnode/index.js'
 import {
-  type ContainerElement,
   createEmptyFragmentPlaceholderNode,
   expandDocumentFragment,
-  type HtmlElement,
-  type HTMLIntrinsicTags,
   isSvgElement,
   mountVNode,
-  recoveryFragmentChildNodes,
-  type VDocumentFragment
+  recoveryFragmentChildNodes
 } from './index.js'
+import type {
+  ContainerElement,
+  HtmlElement,
+  HTMLIntrinsicTags,
+  VDocumentFragment
+} from '../types/index.js'
 
 /**
  * 渲染小部件节点

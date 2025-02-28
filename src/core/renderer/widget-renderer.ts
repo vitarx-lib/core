@@ -1,6 +1,5 @@
 import { isVNode, updateParentVNodeMapping, type VNode, type WidgetType } from '../vnode/index.js'
 import {
-  type ContainerElement,
   getElParentNode,
   insertBeforeExactly,
   mountVNode,
@@ -15,6 +14,7 @@ import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from 
 import { watchDepend } from '../observer/index.js'
 import { getCurrentScope, type Scope } from '../scope/index.js'
 import Logger from '../logger.js'
+import type { ContainerElement } from './types/index.js'
 
 /**
  * 渲染状态

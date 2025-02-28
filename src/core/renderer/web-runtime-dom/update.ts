@@ -21,7 +21,7 @@ import {
 } from './utils.js'
 import { toRaw } from '../../responsive/index.js'
 import { Observers } from '../../observer/index.js'
-import type { HtmlElement, VDocumentFragment } from './types/index.js'
+import type { HtmlElement, VDocumentFragment } from '../types/index.js'
 
 /**
  * 差异更新

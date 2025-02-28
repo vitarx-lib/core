@@ -6,7 +6,7 @@ import {
   type VNode
 } from '../../vnode/index.js'
 import { isValueProxy, type ValueProxy } from '../../responsive/index.js'
-import type { HtmlElement, VDocumentFragment } from './types/index.js'
+import type { HtmlElement, VDocumentFragment } from '../types/index.js'
 
 /**
  * 恢复 Fragment 元素
