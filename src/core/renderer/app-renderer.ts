@@ -24,7 +24,7 @@ export class AppRenderer {
   /**
    * 小部件实例
    */
-  widget: Widget | null = null
+  #widget: Widget | null = null
 
   /**
    * 构建应用实例
@@ -51,13 +51,22 @@ export class AppRenderer {
   }
 
   /**
+   * 小部件实例
+   *
+   * 未渲染之前返回null
+   */
+  get widget(): Widget | null {
+    return this.#widget
+  }
+
+  /**
    * ## 渲染小部件
    *
    * @template P - 小部件的props参数
    * @param {WidgetType<P> | VNode<WidgetType<P>>} widget - 入口小部件
    * @param {object} props - 小部件的props参数，仅在widget为函数或类时可选。
    */
-  render<P extends Record<string, any>>(widget: WidgetType<P> | VNode, props?: P): void {
+  render<P extends Record<string, any>>(widget: WidgetType<P> | VNode, props?: P): this {
     let vnode: VNode<FnWidgetConstructor | ClassWidgetConstructor>
     if (isFunction(widget) || isClassWidgetConstructor(widget)) {
       vnode = createVNode(widget as FnWidgetConstructor, props)
@@ -70,13 +79,14 @@ export class AppRenderer {
       )
     }
     renderWidgetElement(vnode, this.container)
-    this.widget = vnode.instance!
-    if (this.widget['renderer'].state !== 'notMounted') {
+    this.#widget = vnode.instance!
+    if (this.#widget['renderer'].state !== 'notMounted') {
       throw new Error(
         `[Vitarx.AppRenderer.render][ERROR]：Vitarx应用主入口渲染失败，请修复控制台输出的异常。`
       )
     }
     mountVNode(vnode)
+    return this
   }
 
   /**
@@ -85,10 +95,10 @@ export class AppRenderer {
    * 等于`widget.update()`强制更新视图
    */
   update(): void {
-    if (!this.widget) {
+    if (!this.#widget) {
       Logger.warn(`${ERROR_MESSAGE}，不能执行更新操作。`)
     } else {
-      this.widget['renderer'].update()
+      this.#widget['renderer'].update()
     }
   }
 
@@ -100,11 +110,11 @@ export class AppRenderer {
    * 该操作是不可逆的，如果你只是暂时性的移除`App`，请使用`deactivate`方法。
    */
   unmount(): void {
-    if (!this.widget) {
+    if (!this.#widget) {
       Logger.warn(`${ERROR_MESSAGE}，不能执行卸载操作。`)
     } else {
-      this.widget['renderer'].unmount()
-      this.widget = null
+      this.#widget['renderer'].unmount()
+      this.#widget = null
     }
   }
 
@@ -114,10 +124,10 @@ export class AppRenderer {
    * 恢复已经停用的小部件，重新挂载到目标容器中。
    */
   activate(): void {
-    if (!this.widget) {
+    if (!this.#widget) {
       Logger.warn(`${ERROR_MESSAGE}，不能执行激活操作。`)
     } else {
-      this.widget?.['renderer'].activate()
+      this.#widget?.['renderer'].activate()
     }
   }
 
@@ -127,10 +137,10 @@ export class AppRenderer {
    * 可以让渲染的小部件临时处于挂起状态，直到调用`activate`方法激活才会重新挂载到目标容器中。
    */
   deactivate(): void {
-    if (!this.widget) {
+    if (!this.#widget) {
       Logger.warn(`${ERROR_MESSAGE}，不能执行停用操作。`)
     } else {
-      this.widget?.['renderer'].deactivate()
+      this.#widget?.['renderer'].deactivate()
     }
   }
 }
