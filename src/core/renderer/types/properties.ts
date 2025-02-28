@@ -289,7 +289,7 @@ interface GlobalHtmlProperties {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/hidden 详细文档
    */
-  hidden?: '' | 'hidden' | 'until-found'
+  hidden?: boolean | 'hidden' | 'until-found' | ''
   /**
    * 全局属性 `id` 定义元素的唯一标识符。
    *
@@ -454,6 +454,17 @@ interface CustomProperties {
    */
   children?: JSX.Children
 
+  /**
+   * data-* 自定义数据属性
+   */
+  [key: `data-${string}`]: AnyPrimitive | ValueProxy<AnyPrimitive>
+
+  /**
+   * aria-* 无障碍相关属性
+   *
+   * @see https://developer.mozilla.org/zh-CN/docs/Web/Accessibility/ARIA/Attributes 详细文档
+   */
+  [key: `aria-${string}`]: AnyPrimitive | ValueProxy<AnyPrimitive>
   [key: string]: any
 }
 
