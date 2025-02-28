@@ -17,7 +17,7 @@ import type {
   HTMLIntrinsicElements,
   HTMLIntrinsicTags,
   VDocumentFragment
-} from '../renderer/web-runtime-dom/index.js'
+} from '../renderer/index.js'
 
 /** 唯一标识符 */
 export type OnlyKey = string | number | bigint | symbol

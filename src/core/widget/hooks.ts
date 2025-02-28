@@ -4,7 +4,7 @@ import { __widgetIntrinsicPropKeywords__ } from './constant.js'
 import { getCurrentVNode, type VNode, type WidgetVNode } from '../vnode/index.js'
 import { getContext, runContext } from '../context/index.js'
 import { type BuildVNode, FnWidget, type FnWidgetConstructor } from './fn-widget.js'
-import type { ContainerElement } from '../renderer/web-runtime-dom/index.js'
+import type { ContainerElement } from '../renderer/index.js'
 
 /**
  * 生命周期钩子回调函数

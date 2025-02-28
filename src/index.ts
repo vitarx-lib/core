@@ -15,7 +15,7 @@ import type {
   HTMLIntrinsicElements,
   HTMLIntrinsicTags,
   HTMLStyleProperties
-} from './core/renderer/web-runtime-dom/index.js'
+} from './core/renderer/index.js'
 
 export * from './core/index.js'
 export * from './utils/index.js'

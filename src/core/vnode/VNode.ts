@@ -31,7 +31,7 @@ import {
 import { updateParentVNodeMapping } from './manager.js'
 import { isSimpleWidget } from '../widget/index.js'
 import { isValueProxy, type ValueProxy } from '../responsive/index.js'
-import type { HTMLClassProperties } from '../renderer/web-runtime-dom/index.js'
+import type { HTMLClassProperties } from '../renderer/index.js'
 
 // 子元素类型
 type Child =
