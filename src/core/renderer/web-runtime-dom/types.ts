@@ -2,6 +2,19 @@ import type { Properties as CssProperties } from 'csstype'
 import { findParentVNode, type HTMLElementVNode } from '../../vnode/index.js'
 import type { ValueProxy } from '../../responsive/index.js'
 
+/**
+ * css样式映射
+ */
+export type CssPropertiesMap = CssProperties &
+  Partial<Pick<CSSStyleDeclaration, Exclude<keyof CSSStyleDeclaration, keyof CssProperties>>>
+/**
+ * HTML元素style属性值类型
+ */
+export type HTMLStyleProperties = string | CssPropertiesMap
+
+/** HTML元素class属性值类型 */
+export type HTMLClassProperties = string | string[] | Record<string, boolean>
+
 /** HTML元素标签映射 */
 export type HtmlElementTagMap = HTMLElementTagNameMap &
   Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
@@ -29,7 +42,7 @@ export type HtmlIntrinsicElements = {
  *
  * @extends {@link GlobalEventHandlersEventMap}
  */
-export interface GlobalEventHandlersEventMap_HUMP {
+interface GlobalEventHandlersEventMap_HUMP {
   animationcancel: 'animationCancel'
   animationend: 'animationEnd'
   animationiteration: 'animationIteration'
@@ -98,23 +111,29 @@ export interface GlobalEventHandlersEventMap_HUMP {
 }
 
 // 匹配小驼峰命名 不存在时返回原始字符串
-export type ToHump<S extends string> = S extends keyof GlobalEventHandlersEventMap_HUMP
+type ToHump<S extends string> = S extends keyof GlobalEventHandlersEventMap_HUMP
   ? GlobalEventHandlersEventMap_HUMP[S]
   : S
-export type EventName<K extends string> = `on${K}` | `on${Capitalize<ToHump<K>>}`
-
+/**
+ * 处理元素事件
+ */
+type HandleEvent<T extends Record<string, any>, C> = C extends (
+  this: GlobalEventHandlers,
+  event: infer E
+) => any
+  ? (this: T, event: E) => any
+  : C
 // 拓展事件名
-export type OutreachEventName<T extends Record<string, any>> = {
-  [K in keyof T as K extends `on${infer Rest}` ? EventName<Rest> : K]?: T[K]
+type OutreachEventName<T extends Record<string, any>, E extends Element> = {
+  [K in keyof T as K extends `on${infer Rest}`
+    ? `on${Rest}` | `on${Capitalize<ToHump<Rest>>}`
+    : K]?: HandleEvent<E, T[K]>
 }
-
-// HTML元素class属性类型
-export type HTMLClassProperties = string | string[] | Record<string, boolean>
 
 /**
  * 自定义全局属性
  */
-export interface CustomProperties {
+interface CustomProperties {
   /**
    * 全局属性`class`接受字符串、数组和`Record<string, boolean>`类型的对象。
    *
@@ -153,7 +172,7 @@ export interface CustomProperties {
 /**
  * 局部属性
  */
-export interface PartProperties {
+interface PartProperties {
   accept?: string
   autocomplete?: string
   capture?: 'user' | 'environment'
@@ -177,18 +196,12 @@ export interface PartProperties {
   height: string | number
 }
 
-// 合并CSS属性
-export type CssPropertiesMap = CssProperties &
-  Partial<Pick<CSSStyleDeclaration, Exclude<keyof CSSStyleDeclaration, keyof CssProperties>>>
-// 样式属性
-export type HTMLStyleProperties = string | CssPropertiesMap
-
 type BoolType = 'true' | 'false' | boolean
 
 /**
  * 全局属性
  */
-export interface OverwriteHtmlProperties extends PartProperties {
+interface OverwriteHtmlProperties extends PartProperties {
   /**
    * 全局属性 `style` 包含应用到元素的 CSS 样式声明。
    *
@@ -238,8 +251,8 @@ export interface OverwriteHtmlProperties extends PartProperties {
   virtualkeyboardpolicy?: 'auto' | 'manual'
   writingsuggestions?: BoolType
   exportparts?: string
+  oninput?: (this: GlobalEventHandlers, event: InputEvent) => any
 }
-
 /**
  * 从W3C文档中提取到的合法标签属性，用于生成类型
  *
@@ -249,7 +262,7 @@ export interface OverwriteHtmlProperties extends PartProperties {
  *
  * @see https://www.w3schools.com/tags/ref_standardattributes.asp
  */
-export type PropertyNames =
+type PropertyNames =
   | 'className'
   | 'accept'
   | 'accept-charset'
@@ -428,7 +441,7 @@ export type PropertyNames =
 /**
  * 判断一个属性P是否存在于W3C标准属性中
  */
-export type IsW3CHtmlProperties<P> = P extends string
+type IsW3CHtmlProperties<P> = P extends string
   ? Lowercase<P> extends Lowercase<PropertyNames>
     ? P
     : never
@@ -446,9 +459,9 @@ export type IsW3CHtmlProperties<P> = P extends string
  *
  * @returns {ExtractW3CHtmlProperties<T, E>} 一个新对象接口，其中只包含符合W3C标准的属性。
  */
-export type ExtractW3CHtmlProperties<
+type ExtractW3CHtmlProperties<
   T extends Element,
-  M extends object = OverwriteHtmlProperties,
+  M extends Record<string, any>,
   E extends string = never
 > = {
   [K in keyof T as K extends E
@@ -459,37 +472,38 @@ export type ExtractW3CHtmlProperties<
 }
 
 /** 将接口的所有键转换为小写 */
-export type ToLowerCaseKeys<T extends Record<string, any>> = {
+type ToLowerCaseKeys<T extends Record<string, any>> = {
   [K in keyof T as K extends string ? Lowercase<K> : K]: T[K]
 }
 
 /** 将接口转换为可选属性 */
-export type ToPartialProperties<
+type ToPartialProperties<
   T extends Element,
-  M extends object = OverwriteHtmlProperties,
+  M extends Record<string, any>,
   E extends string = never
 > = Partial<ExtractW3CHtmlProperties<T, M, E>>
 
 /**
  * 使属性兼容值代理变量赋值
  */
-export type PropertiesValueToValueProxy<T extends {}> = {
+type PropertiesValueToValueProxy<T extends {}> = {
   [key in keyof T]: T[key] | ValueProxy<T[key]>
 }
 /**
  * 生成HTML标签可选属性，包括事件和自定义数据属性
  *
  * @template T - 元素类型
- * @template E - 排除的属性名
+ * @template Exclude - 排除的属性名
  * @template M - 要覆写合并的属性，默认为{@linkcode OverwriteHtmlProperties}
  */
 export type HtmlProperties<
   T extends Element,
-  E extends string = never,
-  M extends object = OverwriteHtmlProperties
+  Exclude extends string = never,
+  Merge extends Record<string, any> = OverwriteHtmlProperties,
+  PartialPropertiesElement extends Record<string, any> = ToPartialProperties<T, Merge, Exclude>
 > = PropertiesValueToValueProxy<
-  ToPartialProperties<T, M, E> &
-    OutreachEventName<ToLowerCaseKeys<ToPartialProperties<T, M, E>>> &
+  PartialPropertiesElement &
+    OutreachEventName<ToLowerCaseKeys<PartialPropertiesElement>, T> &
     CustomProperties
 > &
   Vitarx.GlobalIntrinsicAttributes
