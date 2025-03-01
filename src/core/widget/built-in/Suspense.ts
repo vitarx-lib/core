@@ -46,6 +46,12 @@ interface SuspenseProps {
    * 异常处理钩子
    */
   onError?: OnErrorCallback
+  /**
+   * 监听子节点渲染完成
+   *
+   * 该钩子会在子节点全部渲染完成后执行
+   */
+  onShow?: () => void
 }
 
 const provideSymbol = Symbol('SuspenseSymbol')
@@ -57,12 +63,13 @@ const provideSymbol = Symbol('SuspenseSymbol')
  *
  * 通常它与`异步函数组件`、`LazyWidget`搭配使用。
  *
- * > 注意：在初次渲染完成后，子节点重新循环发生的异步加载不会使`Suspense`节点重新回到挂起状态。
+ * > 注意：在初次渲染完成后，子节点重新渲染发生的异步加载不会使`Suspense`节点重新回到挂起状态。
  */
 export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
   protected counter = ref(0)
   protected showFallback = true
   private listener?: Listener
+  private onShow?: () => void
   constructor(props: SuspenseProps) {
     super(props)
     if (props.fallback && !isVNode(props.fallback)) {
@@ -103,6 +110,17 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
     }
   }
 
+  protected override onUpdated() {
+    if (this.onShow) {
+      this.onShow()
+      this.onShow = undefined
+    }
+  }
+
+  protected build(): Element {
+    return this.showFallback ? this.props.fallback : this.children
+  }
+
   /**
    * 停止挂起状态
    *
@@ -114,13 +132,10 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
       this.showFallback = false
       this.listener = undefined
       this.update()
+      if (typeof this.props.onShow === 'function') {
+        this.onShow = this.props.onShow
+      }
     }
-  }
-
-  protected build(): Element {
-    const children = this.children
-    const fallback = this.props.fallback
-    return this.showFallback ? fallback : children
   }
 }
 
