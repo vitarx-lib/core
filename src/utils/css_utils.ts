@@ -1,7 +1,10 @@
-// 辅助函数：将中划线命名转换为驼峰命名
-import type { CssPropertiesMap, HTMLClassProperties, HTMLStyleProperties } from '../types/index.js'
-import { isRecordObject, isString } from '../../../utils/index.js'
-import { formatPropValue } from '../../vnode/index.js'
+import {
+  type CssPropertiesMap,
+  formatPropValue,
+  type HTMLClassProperties,
+  type HTMLStyleProperties
+} from '../core/index.js'
+import { isRecordObject, isString } from './detect.js'
 
 function toCamelCase(str: string): string {
   return str.replace(/-([a-z])/g, (_match, group1) => group1.toUpperCase())
