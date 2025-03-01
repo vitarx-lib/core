@@ -98,7 +98,7 @@ export function setAttribute(
  * @param callback - 事件回调函数，仅对事件属性生效
  */
 export function removeAttribute(el: HTMLElement | SVGElement, key: string, callback?: AnyCallback) {
-  if (key === 'className' || key === 'classname') {
+  if (key === 'className' || key === 'classname' || key === 'class') {
     el.removeAttribute('class')
   } else if (isFunction(callback)) {
     el.removeEventListener(key.slice(2).toLowerCase(), callback)
