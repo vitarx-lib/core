@@ -26,6 +26,7 @@ import { isSimpleWidget } from '../widget/index.js'
 import { isValueProxy, type ValueProxy } from '../responsive/index.js'
 import type { HTMLClassProperties } from '../renderer/index.js'
 import { mergeCssClass, mergeCssStyle } from '../renderer/web-runtime-dom/css_utils.js'
+import { formatPropValue } from '../renderer/web-runtime-dom/index.js'
 
 // 子元素类型
 type Child =
@@ -90,23 +91,19 @@ export function createVNode<T extends VNodeType>(
   // 处理绑定属性
   handlerBindAttrs(newProps)
 
-  // 处理 class 相关属性，兼容同时存在 className, class 和 classname
+  // 如果是html标签，则处理css样式，以及格式化一次value，使值代理对象能够被依赖跟踪
   if (isString(type)) {
     let cssClass: HTMLClassProperties = []
-
-    for (const prop of cssProps) {
-      if (prop in newProps) {
-        cssClass = mergeCssClass(cssClass, newProps[prop])
-        delete newProps[prop]
+    for (const prop in newProps) {
+      const value = formatPropValue(newProps[prop])
+      if (cssProps.includes(prop)) {
+        cssClass = mergeCssClass(cssClass, value)
       }
     }
-
     // 如果合并后的 class 存在，赋值给 newProps.class
     if (cssClass.length > 0) newProps.class = cssClass
-  }
-
-  // 如果是简单组件，调用构造函数并返回结果
-  if (isSimpleWidget(type)) {
+  } else if (isSimpleWidget(type)) {
+    // 如果是简单组件，调用构造函数并返回结果
     const simpleVnode = type(newProps) as VNode<T>
     if (key && simpleVnode.key === undefined) {
       simpleVnode.key = key
@@ -197,6 +194,7 @@ function formatChildren(child: Child, childList: VNodeChildren, parent: VNode) {
     updateParentVNodeMapping(vnode, parent)
   }
 }
+
 /**
  * 创建文本节点`TextVNode`
  *
