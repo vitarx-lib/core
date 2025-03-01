@@ -264,7 +264,10 @@ export class WidgetRenderer<T extends Widget> {
   /**
    * 更新视图
    *
+   * 更新视图不是同步的，会延迟更新，合并多个微任务。
+   *
    * @param {VNode} newChildVNode - 新子节点，没有则使用`build`方法构建。
+   * @return {void}
    */
   update(newChildVNode?: VNode): void {
     if (newChildVNode && !isVNode(newChildVNode)) {
