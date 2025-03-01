@@ -1,6 +1,6 @@
-import { cssClassValueToString, cssStyleValueToString, isFunction } from '../../../utils/index.js'
 import { formatPropValue } from './utils.js'
 import type { HTMLClassProperties, HTMLStyleProperties } from '../types/index.js'
+import { cssClassValueToString, cssStyleValueToString } from './css_utils.js'
 
 /**
  * 设置元素的多个属性
@@ -42,11 +42,11 @@ export function setAttribute(
       break
     default:
       // 处理事件属性
-      if (isFunction(value)) {
+      if (typeof value === 'function') {
         if (oldCallback === value) return
         const event = key.slice(2).toLowerCase()
         // 删除旧的事件
-        if (oldCallback && isFunction(oldCallback)) {
+        if (oldCallback && typeof oldCallback === 'function') {
           el.removeEventListener(event, oldCallback)
         }
         el.addEventListener(event, value)
@@ -100,7 +100,7 @@ export function setAttribute(
 export function removeAttribute(el: HTMLElement | SVGElement, key: string, callback?: AnyCallback) {
   if (key === 'className' || key === 'classname' || key === 'class') {
     el.removeAttribute('class')
-  } else if (isFunction(callback)) {
+  } else if (typeof callback === 'function') {
     el.removeEventListener(key.slice(2).toLowerCase(), callback)
   } else {
     el.removeAttribute(key)

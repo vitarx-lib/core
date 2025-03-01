@@ -1,7 +1,8 @@
-import { isRecordObject, isString } from './detect.js'
-import type { CssPropertiesMap, HTMLClassProperties, HTMLStyleProperties } from '../core/index.js'
-
 // 辅助函数：将中划线命名转换为驼峰命名
+import type { CssPropertiesMap, HTMLClassProperties, HTMLStyleProperties } from '../types/index.js'
+import { isRecordObject, isString } from '../../../utils/index.js'
+import { formatPropValue } from './utils.js'
+
 function toCamelCase(str: string): string {
   return str.replace(/-([a-z])/g, (_match, group1) => group1.toUpperCase())
 }
@@ -47,7 +48,7 @@ export function cssStyleValueToString(styleObj: HTMLStyleProperties): string {
   if (!isRecordObject(styleObj)) return ''
   const styles: Array<string> = []
   Object.keys(styleObj).forEach(key => {
-    const value = styleObj[key as any]!
+    const value = formatPropValue(styleObj[key as any]!)
     const type = typeof value
     const isValid = type === 'number' || type === 'string'
     if (isValid) {
@@ -142,5 +143,3 @@ export function mergeCssClass(c1: HTMLClassProperties, c2: HTMLClassProperties):
   // 合并并去重
   return Array.from(new Set([...arr1, ...arr2]))
 }
-
-console.log('1', cssStyleValueToString({ marginLeft: '6px' }))
