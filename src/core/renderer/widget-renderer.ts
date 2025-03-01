@@ -1,4 +1,11 @@
-import { isVNode, updateParentVNodeMapping, type VNode, type WidgetType } from '../vnode/index.js'
+import {
+  createVNode,
+  Fragment,
+  isVNode,
+  updateParentVNodeMapping,
+  type VNode,
+  type WidgetType
+} from '../vnode/index.js'
 import {
   getElParentNode,
   insertBeforeExactly,
@@ -393,8 +400,10 @@ export class WidgetRenderer<T extends Widget> {
     if (isVNode(vnode)) {
       updateParentVNodeMapping(vnode, this.vnode)
       return vnode
+    } else {
+      Logger.error(`${this.name}.build返回值必须是VNode对象，请修复此错误提示！`)
+      return createVNode(Fragment)
     }
-    throw new Error(`[Vitarx.WidgetRenderer]：${this.name}.build返回值必须是VNode对象`)
   }
 
   /**
