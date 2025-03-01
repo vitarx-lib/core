@@ -1,11 +1,11 @@
 export default class Logger {
   static warn(...args: string[]) {
     const stack = new Error().stack // 获取当前堆栈
-    console.warn(`[Vitarx.Logger][WARN]：${args.join('\n')}\nStack trace:\n${stack}`)
+    console.warn(`[Vitarx][WARN]：${args.join('\n')}\nStack trace:\n${stack}`)
   }
 
   static info(...args: string[]) {
-    console.info(`[Vitarx.Logger][INFO]：${args.join('\n')}`)
+    console.info(`[Vitarx][INFO]：${args.join('\n')}`)
   }
 
   static error(...args: any[]) {
@@ -13,11 +13,11 @@ export default class Logger {
       return console.error(args[0])
     }
     const stack = new Error().stack // 获取当前堆栈
-    console.error(`[Vitarx.Logger][ERROR]：${args.join('\n')}\nStack trace:\n${stack}`)
+    console.error(`[Vitarx][ERROR]：${args.join('\n')}\nStack trace:\n${stack}`)
   }
 
   static debug(...args: string[]) {
     const stack = new Error().stack // 获取当前堆栈
-    console.debug(`[Vitarx.Logger][DEBUG]：${args.join('\n')}\nStack trace:\n${stack}`)
+    console.debug(`[Vitarx][DEBUG]：${args.join('\n')}\nStack trace:\n${stack}`)
   }
 }
