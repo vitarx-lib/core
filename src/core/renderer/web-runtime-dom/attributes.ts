@@ -1,6 +1,6 @@
-import { formatPropValue } from './utils.js'
 import type { HTMLClassProperties, HTMLStyleProperties } from '../types/index.js'
 import { cssClassValueToString, cssStyleValueToString } from './css_utils.js'
+import { formatPropValue } from '../../vnode/index.js'
 
 /**
  * 设置元素的多个属性

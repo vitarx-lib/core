@@ -26,7 +26,6 @@ import { isSimpleWidget } from '../widget/index.js'
 import { isValueProxy, type ValueProxy } from '../responsive/index.js'
 import type { HTMLClassProperties } from '../renderer/index.js'
 import { mergeCssClass, mergeCssStyle } from '../renderer/web-runtime-dom/css_utils.js'
-import { formatPropValue } from '../renderer/web-runtime-dom/index.js'
 
 // 子元素类型
 type Child =
@@ -43,6 +42,16 @@ type Children = Child[]
 const validVNodeType = (type: any): type is VNodeType =>
   typeof type === 'string' || isFunction(type) || type === Fragment
 const cssProps = ['className', 'class', 'classname']
+
+/**
+ * 格式化属性值，使其兼容值代理。
+ *
+ * @param value
+ */
+export function formatPropValue<T>(value: T | ValueProxy<T>): T {
+  return isValueProxy(value) ? value.value : value
+}
+
 /**
  * 创建一个虚拟节点（VNode）
  *
@@ -96,6 +105,8 @@ export function createVNode<T extends VNodeType>(
     let cssClass: HTMLClassProperties = []
     for (const prop in newProps) {
       const value = formatPropValue(newProps[prop])
+      // 将格式化过后的值赋值回去
+      newProps[prop] = value
       if (cssProps.includes(prop)) {
         cssClass = mergeCssClass(cssClass, value)
       }
