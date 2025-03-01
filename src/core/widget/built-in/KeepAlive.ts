@@ -55,7 +55,7 @@ export interface KeepAliveProps {
 /**
  * ## KeepAlive
  *
- * 缓存小部件实例，以减少小部件的创建和销毁开销。
+ * 缓存小部件实例，以减少小部件的创建和销毁性能开销。
  *
  * 这在某些场景下非常有用，例如：数据列表，频繁从树中移除又创建的小部件。
  */
@@ -90,6 +90,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       return createVNode(this.children, { key: this.props.onlyKey })
     }
   }
+
   /**
    * 添加缓存
    *
@@ -200,6 +201,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       this.update()
     }
   }
+
   /**
    * 判断是否需要缓存
    *
