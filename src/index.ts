@@ -60,7 +60,7 @@ declare global {
     /**
      * HTML元素标签类型
      */
-    type HT = HTMLIntrinsicTags
+    type HTML = HTMLIntrinsicTags
     /**
      * HTML元素标签类型
      */
