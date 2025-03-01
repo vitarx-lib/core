@@ -17,11 +17,10 @@ export interface KeepAliveProps {
   /**
    * 当前展示的小部件
    *
-   * 可以是`VNode`对象、类小部件构造函数、函数式小部件
-   *
-   * 如果需要给小部件传入一些参数，则应该传入`VNode`对象
+   * 可以直接传入小部件，也可以传入一个`VNode`对象，
+   * 如果传入VNode对象需确保其是组件节点，而不是普通的元素节点或片段节点！
    */
-  children: WidgetType | VNode<WidgetType>
+  children: WidgetType | VNode
   /**
    * 需要保留状态的小部件列表
    *
@@ -51,7 +50,6 @@ export interface KeepAliveProps {
    */
   onlyKey?: OnlyKey
 }
-
 /**
  * ## KeepAlive
  *
@@ -74,7 +72,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 生成子节点
    */
-  protected makeChildVNode() {
+  protected makeChildVNode(): VNode<WidgetType> {
     const isValidVNode = isVNode(this.children)
     const type = isValidVNode ? this.children.type : this.children
     if (typeof type !== 'function') {
@@ -85,7 +83,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       if (!this.children.key && this.props.onlyKey) {
         this.children.key = this.props.onlyKey
       }
-      return this.children
+      return this.children as VNode<WidgetType>
     } else {
       return createVNode(this.children, { key: this.props.onlyKey })
     }
