@@ -181,8 +181,9 @@ export function isVDocumentFragment(el: any): el is VDocumentFragment {
  * 判断是否为svg元素，或是svg内部的子元素
  *
  * @param vnode - HTMLElementVNode
+ * @returns {boolean}
  */
-export function isSvgElement(vnode: HTMLElementVNode) {
+export function isSvgElement(vnode: HTMLElementVNode): boolean {
   const svgNamespace = 'http://www.w3.org/2000/svg'
   if (vnode.props.xmlns === svgNamespace) return true
   if (vnode.type === 'svg') return true
