@@ -19,7 +19,7 @@ function toKebabCase(str: string): string {
  * @param {HTMLStyleProperties} style - style字符串
  * @returns {CssPropertiesMap}  转换后的style对象
  */
-export function cssStyleToObject(style: HTMLStyleProperties): CssPropertiesMap {
+export function cssStyleValueToObject(style: HTMLStyleProperties): CssPropertiesMap {
   if (isString(style)) {
     const styleObj: Record<string, any> = {}
     style.split(';').forEach(styleRule => {
@@ -39,12 +39,16 @@ export function cssStyleToObject(style: HTMLStyleProperties): CssPropertiesMap {
  * 将style对象转换为字符串
  *
  * @param {CssPropertiesMap} styleObj - style对象
+ * @returns {string} 转换后的style字符串
  */
-export function cssStyleObjectToString(styleObj: CssPropertiesMap): string {
+export function cssStyleValueToString(styleObj: HTMLStyleProperties): string {
+  if (!styleObj) return ''
+  if (isString(styleObj)) return styleObj
+  if (!isRecordObject(styleObj)) return ''
   const styles: Array<string> = []
   Object.keys(styleObj).forEach(key => {
     const value = styleObj[key as any]!
-    const type = value
+    const type = typeof value
     const isValid = type === 'number' || type === 'string'
     if (isValid) {
       styles.push(`${toKebabCase(key)}: ${value}`)
@@ -65,9 +69,9 @@ export function mergeCssStyle(
   style2: HTMLStyleProperties
 ): CssPropertiesMap {
   // 如果style1是字符串，先转换为对象
-  const obj1 = cssStyleToObject(style1)
+  const obj1 = cssStyleValueToObject(style1)
   // 如果style2是字符串，先转换为对象
-  const obj2 = cssStyleToObject(style2)
+  const obj2 = cssStyleValueToObject(style2)
 
   // 合并对象，后者覆盖前者
   return { ...obj1, ...obj2 }
@@ -79,7 +83,7 @@ export function mergeCssStyle(
  * @param {HTMLClassProperties} classInput - 可以是 string, string[] 或对象类型
  * @returns {string[]} 返回一个数组，数组元素为类名
  */
-function cssClassPropToArray(classInput: HTMLClassProperties): string[] {
+export function cssClassValueToArray(classInput: HTMLClassProperties): string[] {
   if (typeof classInput === 'string') {
     return classInput.split(' ').filter(Boolean)
   }
@@ -97,6 +101,31 @@ function cssClassPropToArray(classInput: HTMLClassProperties): string[] {
 }
 
 /**
+ * 将 class 属性转换为字符串
+ *
+ * @param {HTMLClassProperties} classInput - 可以是 string, string[] 或对象类型
+ * @returns {string} 返回一个字符串，字符串元素为类名
+ */
+export function cssClassValueToString(classInput: HTMLClassProperties): string {
+  if (typeof classInput === 'string') {
+    return classInput.trim()
+  }
+  if (Array.isArray(classInput)) {
+    return classInput
+      .map(item => item.trim())
+      .filter(Boolean)
+      .join(' ')
+  }
+  if (typeof classInput === 'object' && classInput !== null) {
+    // 如果是对象类型，返回键名数组
+    return Object.keys(classInput)
+      .filter(key => classInput[key])
+      .join(' ')
+  }
+  return ''
+}
+
+/**
  * 合并两个class
  *
  * 返回值类型和第一个参数类型一致
@@ -107,9 +136,11 @@ function cssClassPropToArray(classInput: HTMLClassProperties): string[] {
  */
 export function mergeCssClass(c1: HTMLClassProperties, c2: HTMLClassProperties): string[] {
   // 将 c1 和 c2 转换为数组
-  const arr1 = cssClassPropToArray(c1)
-  const arr2 = cssClassPropToArray(c2)
+  const arr1 = cssClassValueToArray(c1)
+  const arr2 = cssClassValueToArray(c2)
 
   // 合并并去重
   return Array.from(new Set([...arr1, ...arr2]))
 }
+
+console.log('1', cssStyleValueToString({ marginLeft: '6px' }))
