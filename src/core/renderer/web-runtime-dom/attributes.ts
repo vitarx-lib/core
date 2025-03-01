@@ -1,4 +1,4 @@
-import { isArray, isFunction, isRecordObject, isString } from '../../../utils/index.js'
+import { cssClassValueToString, cssStyleValueToString, isFunction } from '../../../utils/index.js'
 import { formatPropValue } from './utils.js'
 import type { HTMLClassProperties, HTMLStyleProperties } from '../types/index.js'
 
@@ -114,36 +114,16 @@ export function removeAttribute(el: HTMLElement | SVGElement, key: string, callb
  * @param style
  */
 export function setStyle(el: HTMLElement | SVGElement, style: HTMLStyleProperties): void {
-  if (!el) return
-
-  // 如果 style 是字符串，直接设置 cssText
-  if (typeof style === 'string') {
-    el.style.cssText = style
-    return
+  const cssText = cssStyleValueToString(style)
+  if (el.style.cssText !== cssText) {
+    el.style.cssText = cssText
   }
-
-  if (isRecordObject(style)) {
-    // 如果 style 是对象，过滤掉无效的样式
-    const keys = Object.keys(style).filter(key => {
-      const type = typeof style[key as any]
-      return type === 'number' || type === 'string'
-    })
-
-    // 只有在确实有有效的样式值时，才清空现有样式并设置新样式
-    if (keys.length > 0) {
-      el.style.cssText = '' // 清空现有样式
-      for (const key of keys) {
-        el.style[key as any] = String(style[key as any])
-      }
-      return
-    }
-  }
-
   // 如果没有有效样式，移除 style 属性
-  if (el.style.length > 0) {
+  if (el.style.length === 0) {
     el.removeAttribute('style')
   }
 }
+
 /**
  * 设置样式类
  *
@@ -151,16 +131,11 @@ export function setStyle(el: HTMLElement | SVGElement, style: HTMLStylePropertie
  * @param classData
  */
 export function setClass(el: HTMLElement | SVGElement, classData: HTMLClassProperties): void {
-  el.removeAttribute('class')
-  if (!classData) return
-  if (isString(classData)) {
-    el.setAttribute('class', classData)
-  } else if (isArray(classData)) {
-    // 替换类名：清空后添加新的类名
-    el.setAttribute('class', classData.join(' '))
-  } else if (isRecordObject(classData)) {
-    for (const key in classData) {
-      classData[key] ? el.classList.add(key) : el.classList.remove(key)
-    }
+  const className = cssClassValueToString(classData)
+  if (el.className !== className) {
+    el.setAttribute('class', className)
+  }
+  if (el.classList.length === 0) {
+    el.removeAttribute('class')
   }
 }
