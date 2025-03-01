@@ -41,9 +41,16 @@ export function cssStyleToObject(style: HTMLStyleProperties): CssPropertiesMap {
  * @param {CssPropertiesMap} styleObj - style对象
  */
 export function cssStyleObjectToString(styleObj: CssPropertiesMap): string {
-  return Object.entries(styleObj)
-    .map(([key, value]) => `${toKebabCase(key)}: ${value}`) // 驼峰转为中划线
-    .join('; ')
+  const styles: Array<string> = []
+  Object.keys(styleObj).forEach(key => {
+    const value = styleObj[key as any]!
+    const type = value
+    const isValid = type === 'number' || type === 'string'
+    if (isValid) {
+      styles.push(`${toKebabCase(key)}: ${value}`)
+    }
+  })
+  return styles.join('; ')
 }
 
 /**
