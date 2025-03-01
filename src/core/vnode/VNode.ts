@@ -47,7 +47,7 @@ type Children = Child[]
 // 检测虚拟节点类型
 const validVNodeType = (type: any): type is VNodeType =>
   typeof type === 'string' || isFunction(type) || type === Fragment
-
+const cssProps = ['className', 'class', 'classname']
 /**
  * 创建一个虚拟节点（VNode）
  *
@@ -96,18 +96,16 @@ export function createVNode<T extends VNodeType>(
   // 处理绑定属性
   handlerBindAttrs(newProps)
 
-  // 处理 class 相关属性，兼容 className, class 和 classname
+  // 处理 class 相关属性，兼容同时存在 className, class 和 classname
   if (isString(type)) {
-    const cssProps = ['className', 'class', 'classname']
     let cssClass: HTMLClassProperties = []
 
-    // 合并所有相关的 class 属性
-    cssProps.forEach(prop => {
+    for (const prop of cssProps) {
       if (prop in newProps) {
         cssClass = mergeCssClass(cssClass, newProps[prop])
         delete newProps[prop]
       }
-    })
+    }
 
     // 如果合并后的 class 存在，赋值给 newProps.class
     if (cssClass.length > 0) newProps.class = cssClass
