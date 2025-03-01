@@ -450,6 +450,11 @@ export class WidgetRenderer<T extends Widget> {
     hook: K,
     ...args: HookParameter<K>
   ): HookReturnType<K> {
-    return this.widget['callLifeCycleHook'](hook, ...args)
+    try {
+      return this.widget['callLifeCycleHook'](hook, ...args)
+    } catch (e) {
+      console.error(` 执行 ${this.name} 生命周期钩子 ${hook} 时捕获到异常！`, e)
+      return undefined as any
+    }
   }
 }
