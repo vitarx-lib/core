@@ -389,8 +389,6 @@ export class WidgetRenderer<T extends Widget> {
   activate(root: boolean = true): void {
     if (this._state === 'deactivated') {
       this._state = 'activated'
-      // 激活子节点
-      updateActivateState(this.child, true)
       if (this.teleport) {
         // 复原传送节点元素
         this.teleport.appendChild(this.el!)
@@ -404,6 +402,8 @@ export class WidgetRenderer<T extends Widget> {
       this.update()
       // 触发onActivated生命周期
       this.triggerLifeCycle(LifeCycleHooks.activated)
+      // 激活子节点
+      updateActivateState(this.child, true)
     }
   }
 
@@ -417,29 +417,28 @@ export class WidgetRenderer<T extends Widget> {
   deactivate(root: boolean = true): void {
     if (this._state !== 'activated') return
     this._state = 'deactivating'
-    // 递归停用子节点
-    updateActivateState(this.child, false)
-
-    // 触发beforeRemove生命周期钩子，获取返回值
-    const result = this.triggerLifeCycle(LifeCycleHooks.beforeRemove, this.el!, 'deactivate')
-    // 异步删除元素
-    const removeElementAsync = (element: ContainerElement): void => {
-      const post = () => {
-        removeElement(element)
-        // 使用宏任务执行暂停作用域，和触发生命周期
-        this.scope?.pause()
-        this._state = 'deactivated'
-        // 触发onDeactivated生命周期
-        this.triggerLifeCycle(LifeCycleHooks.deactivated)
-      }
-      result instanceof Promise ? result.finally(post) : post()
-    }
-    // 如果不是传送节点，且是根节点，则插入占位元素
-    // 传送节点存在占位影子元素所以不用插入影子元素
+    // 为非传送节点插入占位元素
     if (!this.teleport && root) {
+      // 插入占位元素
       insertBeforeExactly(this.shadowElement, this.el!)
     }
-    removeElementAsync(this.el!)
+    // 递归停用子节点
+    updateActivateState(this.child, false)
+    const post = () => {
+      // 如果是根节点，则移除元素
+      if (root) removeElement(this.el!)
+      this.scope?.pause()
+      this._state = 'deactivated'
+      // 触发onDeactivated生命周期
+      this.triggerLifeCycle(LifeCycleHooks.deactivated)
+    }
+    // 触发beforeRemove生命周期钩子，获取返回值
+    const result = this.triggerLifeCycle(LifeCycleHooks.beforeRemove, this.el!, 'deactivate')
+    if (result instanceof Promise) {
+      result.finally(post)
+    } else {
+      post()
+    }
   }
 
   /**
