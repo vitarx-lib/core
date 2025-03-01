@@ -18,8 +18,8 @@ import {
   updateActivateState
 } from './web-runtime-dom/index.js'
 import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from '../widget/index.js'
-import { watchDepend } from '../observer/index.js'
-import { getCurrentScope, type Scope } from '../scope/index.js'
+import { Listener, watchDepend } from '../observer/index.js'
+import { type Scope } from '../scope/index.js'
 import Logger from '../logger.js'
 import type { ContainerElement } from './types/index.js'
 
@@ -49,24 +49,39 @@ export type RenderState =
  * 用于渲染小部件，和管理小部件的生命周期。
  */
 export class WidgetRenderer<T extends Widget> {
-  // 渲染器状态
+  /**
+   * 渲染器状态
+   *
+   * @protected
+   */
   protected _state: RenderState = 'notRendered'
-  // 等到更新
+  /**
+   * 等待更新
+   *
+   * @protected
+   */
   protected _pendingUpdate = false
-  // 影子占位元素
+  /**
+   * 影子占位元素
+   *
+   * @protected
+   */
   protected _shadowElement: Comment | null = null
-  // 当前组件的Child虚拟节点
+  /**
+   * 当前组件的Child虚拟节点
+   *
+   * @protected
+   */
   protected _child: VNode
-
+  /**
+   * 监听器
+   *
+   * @protected
+   */
+  protected _listener: Listener | null = null
   constructor(widget: T) {
     this._widget = widget
-    const { result: childVNode, listener } = watchDepend(
-      this.build.bind(this),
-      this.update.bind(this)
-    )
-    // 兼容异步
-    if (listener && !getCurrentScope()) widget['scope'].add(listener)
-    this._child = childVNode
+    this._child = this.build()
   }
 
   /**
@@ -161,6 +176,49 @@ export class WidgetRenderer<T extends Widget> {
    */
   get teleport(): null | Element {
     return this._teleport
+  }
+
+  /**
+   * 构建虚拟DOM节点+依赖收集
+   *
+   * 每一次构建都会重新收集依赖，
+   * 这样可以避免遗漏依赖造成视图不更新问题。
+   *
+   * @protected
+   */
+  protected build(): VNode {
+    const { result, listener } = watchDepend(this.buildChild.bind(this), this.update.bind(this))
+    if (listener) {
+      this._listener?.destroy()
+      this._listener = listener
+      this.widget['scope'].add(listener)
+    }
+    return result
+  }
+
+  /**
+   * 构建`child`虚拟节点
+   *
+   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @protected
+   * @returns {VNode}
+   */
+  protected buildChild(): VNode {
+    let vnode: VNode
+    try {
+      vnode = this.widget['build']()
+    } catch (e) {
+      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, 'build')
+      if (!isVNode(errVNode)) throw e
+      vnode = errVNode
+    }
+    if (isVNode(vnode)) {
+      updateParentVNodeMapping(vnode, this.vnode)
+      return vnode
+    } else {
+      Logger.error(`${this.name}.build返回值必须是VNode对象，请修复此错误提示！`)
+      return createVNode(Fragment)
+    }
   }
 
   /**
@@ -379,31 +437,6 @@ export class WidgetRenderer<T extends Widget> {
       insertBeforeExactly(this.shadowElement, this.el!)
     }
     removeElementAsync(this.el!)
-  }
-
-  /**
-   * 构建`child`虚拟节点
-   *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   * @protected
-   * @returns {VNode}
-   */
-  protected build(): VNode {
-    let vnode: VNode
-    try {
-      vnode = this.widget['build']()
-    } catch (e) {
-      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, 'build')
-      if (!isVNode(errVNode)) throw e
-      vnode = errVNode
-    }
-    if (isVNode(vnode)) {
-      updateParentVNodeMapping(vnode, this.vnode)
-      return vnode
-    } else {
-      Logger.error(`${this.name}.build返回值必须是VNode对象，请修复此错误提示！`)
-      return createVNode(Fragment)
-    }
   }
 
   /**
