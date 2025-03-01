@@ -499,6 +499,35 @@ export interface HTMLEventHumpMap<T extends Element> {
    * @applies details
    */
   onToggle?: HTMLEventHandler<T, Event>
+
+  // 触摸事件
+  /**
+   * 当触摸事件开始时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchstart_event
+   * @applies 所有元素
+   */
+  onTouchStart?: HTMLEventHandler<T, TouchEvent>
+
+  /**
+   * 当触摸事件结束时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchend_event
+   * @applies 所有元素
+   */
+  onTouchEnd?: HTMLEventHandler<T, TouchEvent>
+
+  /**
+   * 当触摸事件被取消时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchcancel_event
+   * @applies 所有元素
+   */
+  onTouchCancel?: HTMLEventHandler<T, TouchEvent>
+
+  /**
+   * 当触摸事件移动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchmove_event
+   * @applies 所有元素
+   */
+  onTouchMove?: HTMLEventHandler<T, TouchEvent>
 }
 
 /**
