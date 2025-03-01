@@ -275,10 +275,10 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  *
  * 没有附加任何代码逻辑，只是使用断言重载了函数类型，使异步函数组件兼容`tsx`类型推断。
  *
- * 你完全可以不使用此函数，直接用 `async function MyAsyncWidget(){...} as unknown as TsxAsyncWidget<PropsType>`
+ * 你完全可以不使用此函数，直接用 `async function MyAsyncWidget(){...} as unknown as FnWidgetType<PropsType>`
  * 语法使得异步函数组件兼容`tsx`类型推断，但这并不美观。
  *
- * @example 使用`defineAsyncWidget`定义一个符合TSX类型推断要求的组件。
+ * @example
  * ```tsx
  * import { defineAsyncWidget,withAsyncContext } from 'vitarx'
  *
