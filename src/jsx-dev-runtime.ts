@@ -11,7 +11,6 @@ export interface DevVNode<T extends VNodeType> extends VNode<T> {
     self: any
   }
 }
-
 /**
  * JSX构建VNode(开发模式)
  *
