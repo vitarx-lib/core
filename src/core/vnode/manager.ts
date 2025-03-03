@@ -43,8 +43,8 @@ export class VNodeManager {
     vnode: T,
     callback?: InstanceCreatedCallback
   ): Widget {
-    if (import.meta.env?.MODE === 'development') {
-      // 获取最新模块
+    if (import.meta.env?.MODE === 'development' && typeof window !== 'undefined') {
+      // 获取最新模块，避免未渲染的节点引用到旧模块，已渲染的节点会由 hmr 替换为最新模块
       const newModule = (window as any).__$VITARX_HMR$__?.replaceNewModule?.(vnode.type)
       if (newModule) vnode.type = newModule
     }
