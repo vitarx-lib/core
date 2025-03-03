@@ -43,6 +43,11 @@ export class VNodeManager {
     vnode: T,
     callback?: InstanceCreatedCallback
   ): Widget {
+    if (import.meta.env?.MODE === 'development') {
+      // 获取最新模块
+      const newModule = (window as any).__$VITARX_HMR$__?.replaceNewModule?.(vnode.type)
+      if (newModule) vnode.type = newModule
+    }
     createScope(false, vnode.type.name)
       .run(async () => {
         await runContext(VNodeManager.#contextSymbol, vnode, async () => {
