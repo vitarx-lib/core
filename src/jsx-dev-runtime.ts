@@ -32,11 +32,8 @@ export function jsxDEV<T extends VNodeType>(
 ): DevVNode<T> {
   if (typeof type === 'function' && typeof window !== 'undefined') {
     // 获取最新模块
-    let newModule = (window as any)?.__$vitarx_widget_hmr_map$__?.get?.(type)
-    while (newModule) {
-      type = newModule
-      newModule = (window as any)?.__$vitarx_widget_hmr_map$__?.get?.(newModule)
-    }
+    const newModule = (window as any).__$VITARX_HMR$__?.replaceNewModule?.(type)
+    if (newModule) type = newModule
   }
   const vnode = jsx(type, props, key) as DevVNode<T>
   vnode.devInfo = {
