@@ -1,7 +1,7 @@
 import { addEffect, Effect } from '../scope/index.js'
 import Logger from '../logger.js'
 
-type ListenerOptions = {
+export type ListenerOptions = {
   /**
    * 限制触发次数
    *
@@ -105,7 +105,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
    *
    * @returns {boolean} 重置成功返回true，否则返回false。
    */
-  reset(): boolean {
+  resetCount(): boolean {
     if (this.isDeprecated) return false
     this.#count = 0
     return true
