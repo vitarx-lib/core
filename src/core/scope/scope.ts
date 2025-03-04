@@ -4,7 +4,8 @@ import { getContext, runContext } from '../context/index.js'
 /**
  * # 自动处置
  *
- * 当类实例化时会自动将实例对象添加到父级 {@link Scope} 作用域中进行管理，当父级作用域销毁时，会自动触发该实例的销毁方法，从而实现自动清理。
+ * 自动将实例对象添加到父级 {@link Scope} 作用域中进行管理，当父级作用域销毁时，
+ * 会自动触发该实例的销毁方法，从而实现自动清理。
  */
 export class AutoDisposed extends Effect {
   constructor() {
@@ -13,13 +14,18 @@ export class AutoDisposed extends Effect {
     addEffect(this)
   }
 }
+
 /**
  * # 作用域管理器
  */
 export class Scope extends Effect {
   // 上下文标识
   static #context_tag = Symbol('ScopeContextSymbol')
-  /** 副作用 */
+  /**
+   * 副作用
+   *
+   * @private
+   */
   private _effects?: Set<EffectInterface> = new Set()
 
   /**
@@ -58,7 +64,7 @@ export class Scope extends Effect {
   /**
    * 运行一个函数，捕获副作用
    *
-   * > 注意：fn不能是异步的！
+   * > 注意：如果函数内部存在await，需要使用`withAsyncContext`维护上下文，否则在await之后的副作用将无法捕获。
    *
    * @template T
    * @param {() => T} fn - 函数
@@ -116,6 +122,7 @@ export class Scope extends Effect {
       this._effects?.forEach(dispose => dispose?.pause?.())
       super.pause()
     }
+    return this
   }
 
   /**
@@ -128,6 +135,7 @@ export class Scope extends Effect {
       this._effects?.forEach(dispose => dispose?.unpause?.())
       super.unpause()
     }
+    return this
   }
 }
 
@@ -145,11 +153,16 @@ export function createScope(toParent: boolean = true, name: string | symbol = 'u
 /**
  * ## 获取当前作用域
  *
+ * 如果是在组件中获取作用域，请勿私自销毁它。
+ *
  * @returns {Scope|undefined} 返回当前作用域实例，如果没有则返回undefined
+ * @alias useCurrentScope
  */
 export function getCurrentScope(): Scope | undefined {
   return Scope.getCurrentScope()
 }
+
+export { getCurrentScope as useCurrentScope }
 
 /**
  * ## 往作用域中添加一个副作用对象
