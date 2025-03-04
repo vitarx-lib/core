@@ -1,5 +1,3 @@
-import { isFunction } from '../../utils/index.js'
-
 /**
  * 处置功能接口
  *
@@ -20,19 +18,50 @@ export interface EffectInterface {
 }
 
 /**
+ * 副作用效果状态：
+ * - `active`: 活跃状态
+ * - `paused`: 暂停状态
+ * - `deprecated`: 弃用状态
+ */
+export type EffectState = 'active' | 'paused' | 'deprecated'
+
+/**
  * # 可处置的副作用
  *
  * 提供了销毁、暂停、取消暂停等能力，并且可以监听销毁、暂停、取消暂停等事件。
  */
 export class Effect implements EffectInterface {
-  // 销毁回调
-  #onDestroyedCallback?: VoidCallback[]
-  #onPause?: VoidCallback[]
-  #onUnPause?: VoidCallback[]
-  // 弃用状态
-  #isDeprecated = false
-  // 暂停状态
-  #pause = false
+  /**
+   * 销毁回调
+   *
+   * @protected
+   */
+  protected _onDestroyedCallback?: VoidCallback[]
+  /**
+   * 暂停回调
+   *
+   * @protected
+   */
+  protected onPauseCallback?: VoidCallback[]
+  /**
+   * 取消暂停回调
+   *
+   * @protected
+   */
+  protected onUnPauseCallback?: VoidCallback[]
+  /**
+   * 状态
+   *
+   * @protected
+   */
+  protected _state: EffectState = 'active'
+
+  /**
+   * 状态
+   */
+  get state(): EffectState {
+    return this._state
+  }
 
   /**
    * 是否已弃用/销毁
@@ -40,14 +69,21 @@ export class Effect implements EffectInterface {
    * @readonly
    */
   get isDeprecated() {
-    return this.#isDeprecated
+    return this.state === 'deprecated'
   }
 
   /**
    * 判断是否为暂停状态
    */
   get isPaused(): boolean {
-    return this.#pause
+    return this.state === 'paused'
+  }
+
+  /**
+   * 判断是否处于活跃状态
+   */
+  get isActive(): boolean {
+    return this.state === 'active'
   }
 
   /**
@@ -56,14 +92,14 @@ export class Effect implements EffectInterface {
    * 调用此方法会将标记为弃用状态，并触发销毁回调，清理所有回调函数释放内存。
    */
   destroy(): void {
-    if (!this.#isDeprecated) {
-      this.#isDeprecated = true
-      if (this.#onDestroyedCallback) {
-        this.#onDestroyedCallback.forEach(callback => callback())
-        this.#onDestroyedCallback = undefined
+    if (!this.isDeprecated) {
+      this._state = 'deprecated'
+      if (this._onDestroyedCallback) {
+        this._onDestroyedCallback.forEach(callback => callback())
+        this._onDestroyedCallback = undefined
       }
-      this.#onPause = undefined
-      this.#onUnPause = undefined
+      this.onPauseCallback = undefined
+      this.onUnPauseCallback = undefined
     }
   }
 
@@ -73,8 +109,12 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   pause(): this {
-    this.#pause = true
-    this.#onPause?.forEach(callback => callback())
+    if (this.state !== 'active') {
+      throw new Error('Effect not active.')
+    }
+    if (this.isPaused) return this
+    this._state = 'paused'
+    this.onPauseCallback?.forEach(callback => callback())
     return this
   }
 
@@ -84,8 +124,8 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   unpause(): this {
-    this.#pause = false
-    this.#onUnPause?.forEach(callback => callback())
+    this._state = 'active'
+    this.onUnPauseCallback?.forEach(callback => callback())
     return this
   }
 
@@ -96,13 +136,13 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   onDestroyed(callback: VoidCallback): this {
-    if (this.#isDeprecated) {
-      callback()
+    if (this.isDeprecated) {
+      throw new Error('Effect already deprecated.')
     } else {
-      if (this.#onDestroyedCallback) {
-        this.#onDestroyedCallback.push(callback)
+      if (this._onDestroyedCallback) {
+        this._onDestroyedCallback.push(callback)
       } else {
-        this.#onDestroyedCallback = [callback]
+        this._onDestroyedCallback = [callback]
       }
     }
     return this
@@ -115,12 +155,13 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   onPause(callback: VoidCallback): this {
-    if (!this.#isDeprecated) {
-      if (this.#onPause) {
-        this.#onPause.push(callback)
-      } else {
-        this.#onPause = [callback]
-      }
+    if (this.isDeprecated) {
+      throw new Error('Effect already deprecated.')
+    }
+    if (this.onPauseCallback) {
+      this.onPauseCallback.push(callback)
+    } else {
+      this.onPauseCallback = [callback]
     }
     return this
   }
@@ -132,12 +173,13 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   onUnPause(callback: VoidCallback): this {
-    if (!this.#isDeprecated) {
-      if (this.#onUnPause) {
-        this.#onUnPause.push(callback)
-      } else {
-        this.#onUnPause = [callback]
-      }
+    if (this.isDeprecated) {
+      throw new Error('Effect already deprecated.')
+    }
+    if (this.onUnPauseCallback) {
+      this.onUnPauseCallback.push(callback)
+    } else {
+      this.onUnPauseCallback = [callback]
     }
     return this
   }
@@ -149,6 +191,7 @@ export class Effect implements EffectInterface {
  * @param obj
  */
 export function isEffect(obj: any): obj is EffectInterface {
+  if (!obj || typeof obj !== 'object') return false
   if (obj instanceof Effect) return true
-  return !(!isFunction(obj?.destroy) || !isFunction(obj?.onDestroyed))
+  return typeof obj.destroy === 'function' && typeof obj.onDestroyed === 'function'
 }
