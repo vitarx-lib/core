@@ -1,7 +1,6 @@
 import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './types.js'
 import {
   _createFnWidget,
-  FnWidget,
   type FnWidgetConstructor,
   isClassWidgetConstructor,
   Widget
@@ -38,6 +37,7 @@ export class VNodeManager {
    * @param {InstanceCreatedCallback} [callback] - 需要在实例创建完成后执行的回调(可选)
    * @return {Required<WidgetVNode>} - 已创建instance的节点
    * @returns {Widget} - 实例
+   * @internal 框架核心方法，请勿外部调用！
    */
   static createWidgetVNodeInstance<T extends WidgetVNode>(
     vnode: T,
@@ -48,25 +48,23 @@ export class VNodeManager {
       const newModule = (window as any).__$VITARX_HMR$__?.replaceNewModule?.(vnode.type)
       if (newModule) vnode.type = newModule
     }
-    createScope(false, vnode.type.name)
-      .run(async () => {
-        await runContext(VNodeManager.#contextSymbol, vnode, async () => {
-          // 包装props为响应式对象
-          vnode.props = _proxyWidgetInstanceProps(vnode.props)
-          // 异步实例
-          let asyncInstance: Promise<FnWidget> | null = null
-          if (isClassWidgetConstructor(vnode.type)) {
-            vnode.instance = new vnode.type(vnode.props)
-          } else {
-            asyncInstance = _createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
-          }
-          if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance!
-          // 如果存在回调则调用
-          callback?.call(null, vnode.instance!)
-          asyncInstance && (await asyncInstance)
-        })
+    // 创建作用域
+    createScope(false, vnode.type.name || 'anonymous').run(() => {
+      // 将当前节点提供到上下文
+      runContext(VNodeManager.#contextSymbol, vnode, () => {
+        // 包装props为响应式对象
+        vnode.props = _proxyWidgetInstanceProps(vnode.props)
+        // 异步实例
+        if (isClassWidgetConstructor(vnode.type)) {
+          vnode.instance = new vnode.type(vnode.props)
+        } else {
+          vnode.instance = _createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
+        }
+        if (isRefEl(vnode.ref)) vnode.ref.value = vnode.instance!
+        // 如果存在回调则调用
+        callback?.call(null, vnode.instance!)
       })
-      .then()
+    })
     return vnode.instance!
   }
 
@@ -124,6 +122,8 @@ export class VNodeManager {
 /**
  * 获取当前小部件实例所关联的虚拟节点
  *
+ * 此函数存在的意义是提供给框架核心使用，不建议开发者对虚拟节点进行任何操作。
+ *
  * > 注意：如果是类小部件内部获取当前虚拟节点，使用`this.vnode`即可访问，
  * Widget基类已在构造函数中将vnode进行保存，所以你可以在类中通过this.vnode得到当前实例所关联的节点。
  *
@@ -142,19 +142,22 @@ export class VNodeManager {
  * export class Bar extends Widget {
  *    build(){
  *      // 在build方法中不能使用getCurrentVNode获取，因为只有在构建实例阶段才能获取到vnode，此时已进入构建视图阶段
- *      const vnode = getCurrentVNode();
+ *      const vnode = getCurrentVNode();  // ❌
  *      // 可以直接通过this.vnode拿到节点
- *      const vnode = this.vnode; // 这是正确的
+ *      const vnode = this.vnode; // ✅
  *      return <div>bar</div>
  *    }
  * }
  * ```
  * @returns {WidgetVNode|undefined} 当前小部件的虚拟节点，返回`undefined`代表着你未按规范使用！
+ * @alias useCurrentVNode
  * @see {@linkcode VNodeManager.currentVNode}
  */
 export function getCurrentVNode(): WidgetVNode | undefined {
   return VNodeManager.currentVNode
 }
+
+export { getCurrentVNode as useCurrentVNode }
 
 /**
  * 查找父节点
