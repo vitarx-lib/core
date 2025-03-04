@@ -36,7 +36,7 @@ export class Effect implements EffectInterface {
    *
    * @protected
    */
-  protected _onDestroyedCallback?: VoidCallback[]
+  protected onDestroyedCallback?: VoidCallback[]
   /**
    * 暂停回调
    *
@@ -94,9 +94,9 @@ export class Effect implements EffectInterface {
   destroy(): void {
     if (!this.isDeprecated) {
       this._state = 'deprecated'
-      if (this._onDestroyedCallback) {
-        this._onDestroyedCallback.forEach(callback => callback())
-        this._onDestroyedCallback = undefined
+      if (this.onDestroyedCallback) {
+        this.onDestroyedCallback.forEach(callback => callback())
+        this.onDestroyedCallback = undefined
       }
       this.onPauseCallback = undefined
       this.onUnPauseCallback = undefined
@@ -139,10 +139,10 @@ export class Effect implements EffectInterface {
     if (this.isDeprecated) {
       throw new Error('Effect already deprecated.')
     } else {
-      if (this._onDestroyedCallback) {
-        this._onDestroyedCallback.push(callback)
+      if (this.onDestroyedCallback) {
+        this.onDestroyedCallback.push(callback)
       } else {
-        this._onDestroyedCallback = [callback]
+        this.onDestroyedCallback = [callback]
       }
     }
     return this
