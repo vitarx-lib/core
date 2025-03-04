@@ -10,11 +10,12 @@ import type { RestoreContext, Tag } from './global-context-manager.js'
  *
  * 强制要求异步函数小部件内必须使用该API来完成初始化的异步请求，否则会导致上下文丢失，内存溢出等风险！！！。
  *
- * ```tsx
- * import {withAsyncContext} from 'vitarx'
+ * ```jsx
+ * import {withAsyncContext,getCurrentScope} from 'vitarx'
  * async function UserInfoCard() {
  *  // 使用withAsyncContext来保持上下文，如果不使用withAsyncContext会导致上下文丢失！！！
  *  const data = await withAsyncContext(() => fetch('/api/user-info'))
+ *  console.log(getCurrentScope()) // 可以拿到作用域实例
  *  return <div>{data.name}</div>
  * }
  * ```
@@ -62,7 +63,7 @@ export function setContext<T extends object>(
  * {@link GlobalContextManager.unset} 方法的助手函数
  *
  * @param {Tag} tag - 上下文标签
- * @param {object} [ctx] - 要卸载的上下文对象
+ * @param {object} [ctx] - 要卸载的上下文对象，严格对比上下文是否一致
  * @returns {boolean} - 是否成功卸载上下文
  */
 export function unsetContext(tag: Tag, ctx?: object): boolean {
@@ -70,11 +71,9 @@ export function unsetContext(tag: Tag, ctx?: object): boolean {
 }
 
 /**
- * 运行上下文
+ * 为函数运行时提供上下文
  *
  * {@link GlobalContextManager.run} 方法的助手函数
- *
- * 通常用于为函数执行时提供一个上下文，使其能够获取到正确的上下文。
  *
  * @template R - 运行结果类型
  * @param {Tag} tag - 上下文标签
