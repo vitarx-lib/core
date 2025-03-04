@@ -90,7 +90,7 @@ export class WidgetRenderer<T extends Widget> {
 
   constructor(widget: T) {
     this._widget = widget
-    this._viewDependListener = new _WidgetViewDependListener(this.update)
+    this._viewDependListener = new _WidgetViewDependListener(() => this.update())
     this.scope.add(this._viewDependListener)
     this._child = this.build()
   }
