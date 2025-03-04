@@ -69,26 +69,33 @@ export class Effect implements EffectInterface {
 
   /**
    * 暂停
+   *
+   * @returns {this}
    */
-  pause() {
+  pause(): this {
     this.#pause = true
     this.#onPause?.forEach(callback => callback())
+    return this
   }
 
   /**
    * 取消暂停
+   *
+   * @returns {this}
    */
-  unpause() {
+  unpause(): this {
     this.#pause = false
     this.#onUnPause?.forEach(callback => callback())
+    return this
   }
 
   /**
    * 监听销毁
    *
-   * @param callback
+   * @param {VoidCallback} callback - 回调函数
+   * @returns {this}
    */
-  onDestroyed(callback: VoidCallback): void {
+  onDestroyed(callback: VoidCallback): this {
     if (this.#isDeprecated) {
       callback()
     } else {
@@ -98,14 +105,16 @@ export class Effect implements EffectInterface {
         this.#onDestroyedCallback = [callback]
       }
     }
+    return this
   }
 
   /**
    * 监听暂停
    *
-   * @param callback
+   * @param {VoidCallback} callback - 回调函数
+   * @returns {this}
    */
-  onPause(callback: VoidCallback): void {
+  onPause(callback: VoidCallback): this {
     if (!this.#isDeprecated) {
       if (this.#onPause) {
         this.#onPause.push(callback)
@@ -113,14 +122,16 @@ export class Effect implements EffectInterface {
         this.#onPause = [callback]
       }
     }
+    return this
   }
 
   /**
    * 监听取消暂停
    *
-   * @param callback
+   * @param {VoidCallback} callback - 回调函数
+   * @returns {this}
    */
-  onUnPause(callback: VoidCallback): void {
+  onUnPause(callback: VoidCallback): this {
     if (!this.#isDeprecated) {
       if (this.#onUnPause) {
         this.#onUnPause.push(callback)
@@ -128,6 +139,7 @@ export class Effect implements EffectInterface {
         this.#onUnPause = [callback]
       }
     }
+    return this
   }
 }
 
