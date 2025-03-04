@@ -8,7 +8,7 @@ import {
   type UnProxy
 } from '../responsive/index.js'
 import { Listener } from './listener.js'
-import { Observers, type Options } from './observers.js'
+import { type ObserverOptions, Observers } from './observers.js'
 import { deepClone, isFunction, microTaskDebouncedCallback } from '../../utils/index.js'
 
 // 提取监听源
@@ -57,7 +57,7 @@ const createValueListener = <T extends AnyObject>(
   origin: T,
   prop: ExtractProp<T> | undefined,
   callback: WatchValueCallback<T>,
-  options?: Options
+  options?: ObserverOptions
 ): Listener<() => void> => {
   let oldValue = deepClone(prop !== undefined ? origin[prop] : origin)
   return new Listener(() => {
@@ -96,12 +96,12 @@ const createValueListener = <T extends AnyObject>(
  * @template T - 监听源类型
  * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
  * @param {WatchCallback<T>} callback - 回调函数
- * @param {Options} options - 监听器配置选项
+ * @param {ObserverOptions} options - 监听器配置选项
  */
 export function watch<T extends AnyObject, C extends WatchCallback<T>>(
   origin: T,
   callback: C,
-  options?: Options
+  options?: ObserverOptions
 ): Listener<T extends AnyFunction ? VoidCallback : WatchChangeCallback<T>> {
   if (isFunction(origin)) {
     let { listener, result } = watchDepend(
@@ -164,7 +164,7 @@ export function watch<T extends AnyObject, C extends WatchCallback<T>>(
 export function watchChanges<T extends AnyObject, C extends WatchChangesCallback<T>>(
   origins: Array<T>,
   callback: C | Listener<C>,
-  options?: Options
+  options?: ObserverOptions
 ): Listener<C> {
   if (origins.length === 0) {
     throw new TypeError('origins参数不能是空数组，正确值示例：[Ref,Reactive,Computed,...]')
@@ -193,7 +193,7 @@ export function watchChanges<T extends AnyObject, C extends WatchChangesCallback
 export function watchValue<T extends AnyObject>(
   origin: T,
   callback: WatchValueCallback<T>,
-  options?: Options
+  options?: ObserverOptions
 ): Listener<() => void> {
   if (isProxy(origin)) {
     // 处理值类型代理，让其返回value
@@ -223,7 +223,7 @@ export function watchPropsChange<
   T extends AnyObject,
   P extends ExtractProp<T>[] | Set<ExtractProp<T>>,
   C extends AnyCallback = Callback<ExtractProp<T>[], T>
->(origin: T, props: P, callback: C | Listener<C>, options?: Options): Listener<C> {
+>(origin: T, props: P, callback: C | Listener<C>, options?: ObserverOptions): Listener<C> {
   return Observers.registerProps(origin, props, callback, options)
 }
 
@@ -240,7 +240,7 @@ export function watchPropChange<
   T extends AnyObject,
   P extends ExtractProp<T>,
   C extends AnyCallback = Callback<[P], T>
->(origin: T, prop: P, callback: C | Listener<C>, options?: Options): Listener<C> {
+>(origin: T, prop: P, callback: C | Listener<C>, options?: ObserverOptions): Listener<C> {
   return Observers.register(origin, callback, prop, options)
 }
 
@@ -257,7 +257,7 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
   origin: T,
   prop: P,
   callback: WatchValueCallback<T[P]>,
-  options?: Options
+  options?: ObserverOptions
 ): Listener<() => void> {
   return Observers.register(
     origin,
@@ -282,7 +282,7 @@ export function watchPropValue<T extends AnyObject, P extends ExtractProp<T>>(
 export function watchDepend<R>(
   fn: () => R,
   callback?: () => void,
-  options?: Options
+  options?: ObserverOptions
 ): WatchDependResult<R> {
   const { deps, result } = Depend.collect(fn)
   let listener: Listener | undefined
