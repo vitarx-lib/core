@@ -132,9 +132,9 @@ export function track(proxy: AnyObject, prop: PropName): void {
  * 该方法是`Depend.collect`方法的助手函数
  *
  * @param fn - 可执行函数
- * @param scope - 模式，默认为`all`共享模式,`self`为独占模式，会临时通用其他所有收集器。
+ * @param scope - 模式，默认为`all`共享模式,`self`为独占模式，会临时停用其他所有收集器。
  * @see Depend.collect
  */
-export function collect<T>(fn: () => T, scope: 'self' | 'all' = 'self'): Result<T> {
+export function collect<T>(fn: () => T, scope: 'self' | 'all' = 'all'): Result<T> {
   return Depend.collect(fn, scope)
 }
