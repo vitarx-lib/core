@@ -48,7 +48,7 @@ export default class GlobalContextManager {
   }
 
   /**
-   * 运行上下文
+   * 运行一个函数，为其提供上下文
    *
    * @template R - 运行结果类型
    * @param {Tag} tag - 上下文标签
@@ -60,6 +60,7 @@ export default class GlobalContextManager {
     const restore = GlobalContextManager.set(tag, ctx, true)
     try {
       const result = fn()
+      // 如果是异步函数，则等待其执行完成后删除上下文
       if (isPromise(result)) {
         result.finally(() => {
           GlobalContextManager.unset(tag, ctx)
