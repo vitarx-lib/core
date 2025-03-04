@@ -260,21 +260,42 @@ export class Observers {
     listener: Listener<C> | C,
     batch: boolean = true
   ): void {
+    // 获取存储容器
     const store = this.store(batch)
-    proxy = this.getObserveTarget(proxy)
-    const unLock = this.#lockWeakMap(proxy)
-    if (!store.has(proxy)) {
-      store.set(proxy, new Map())
+
+    // 获取观察目标对象
+    const observeTarget = this.getObserveTarget(proxy)
+
+    // 加锁操作
+    const unLock = this.#lockWeakMap(observeTarget)
+
+    try {
+      // 检查观察目标对象是否已经存在于存储容器中
+      if (!store.has(observeTarget)) {
+        // 如果不存在，则为该对象创建一个新的 Map 用于存储属性和监听器集合
+        store.set(observeTarget, new Map())
+      }
+
+      // 获取该对象对应的属性映射
+      const propMap = store.get(observeTarget)!
+
+      // 检查属性是否已经存在于属性映射中
+      if (!propMap.has(prop)) {
+        // 如果不存在，则为该属性创建一个新的 Set 用于存储监听器
+        propMap.set(prop, new Set())
+      }
+
+      // 将监听器添加到对应的属性监听器集合中
+      propMap.get(prop)!.add(listener)
+
+      // 如果监听器是 Listener 实例，添加销毁回调
+      if (listener instanceof Listener) {
+        listener.onDestroyed(() => this.removeListener(observeTarget, prop, listener, batch))
+      }
+    } finally {
+      // 无论是否发生错误，都要解锁
+      unLock()
     }
-    const propMap = store.get(proxy)!
-    if (!propMap.has(prop)) {
-      propMap.set(prop, new Set())
-    }
-    propMap.get(prop)!.add(listener)
-    if (listener instanceof Listener) {
-      listener.onDestroyed(() => this.removeListener(proxy, prop, listener, batch))
-    }
-    unLock()
   }
 
   /**
@@ -295,12 +316,14 @@ export class Observers {
     proxy = this.getObserveTarget(proxy)
     const unLock = this.#lockWeakMap(proxy)
     const set = store.get(proxy)?.get(prop)
-    if (set) {
+    if (!set) return
+    try {
       set.delete(listener)
       if (set.size === 0) store.get(proxy)?.delete(prop)
       if (store.get(proxy)?.size === 0) store.delete(proxy)
+    } finally {
+      unLock()
     }
-    unLock()
   }
 
   /**
