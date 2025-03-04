@@ -1,4 +1,4 @@
-import { Listener } from './listener.js'
+import { Listener, type ListenerOptions } from './listener.js'
 import { ExtractProp, PropName } from '../responsive/index.js'
 import { isArray, isFunction, microTaskDebouncedCallback } from '../../utils/index.js'
 
@@ -7,18 +7,8 @@ export type AllChangeSymbol = typeof Observers.ALL_CHANGE_SYMBOL
 
 /**
  * 配置选项
- *
- * - limit: 限制回调函数调用次数，默认为0，不限制，当为1时，表示只调用一次，当为2时，表示调用两次，以此类推。
- * - batch: 是否采用批处理，默认为true，谨慎设置为false，假设监听的是一个数组，设置为false时，当执行array.slice等方法会触发多次回调。
- * - scope: 作用域，默认为true，自动添加到作用域中，如果设置为false，则不添加到作用域中。
  */
-export interface Options {
-  /**
-   * 限制回调函数调用次数，默认为0，不限制，当为1时，表示只调用一次，当为2时，表示调用两次，以此类推。
-   *
-   * @default 0
-   */
-  limit?: number
+export interface ObserverOptions extends ListenerOptions {
   /**
    * 是否采用批处理，默认为true，需谨慎使用false，假设监听的是一个数组，
    * 设置为false时，当执行array.slice等方法会触发多次回调。
@@ -26,14 +16,6 @@ export interface Options {
    * @default true
    */
   batch?: boolean
-  /**
-   * 作用域
-   *
-   * 默认为true，自动添加到作用域中，如果设置为false，则不添加到作用域中。
-   *
-   * @default true
-   */
-  scope?: boolean
 }
 
 // 监听器集合
@@ -42,12 +24,9 @@ type Listeners = Set<Listener | AnyCallback>
 type PropListenerMap = Map<PropName | AllChangeSymbol, Listeners>
 // 队列
 type Queue = Map<AnyObject, Set<PropName | AllChangeSymbol>>
-/** 默认配置 */
-const DEFAULT_OPTIONS: Required<Options> = {
-  batch: true,
-  limit: 0,
-  scope: true
-}
+// 储存商店
+type Store = WeakMap<object, PropListenerMap>
+
 /**
  * 全局观察者管理器
  */
@@ -63,13 +42,23 @@ export class Observers {
   // 监听源锁
   static #weakMapLock = new WeakSet<object>()
   // 批量处理的监听器
-  static #listeners: WeakMap<object, PropListenerMap> = new WeakMap()
+  static #batchHandleListeners: Store = new WeakMap()
   // 不批量处理的监听器
-  static #notBatchHandleListeners: WeakMap<object, PropListenerMap> = new WeakMap()
+  static #notBatchHandleListeners: Store = new WeakMap()
   // 微任务队列
   static #triggerQueue: Queue = new Map()
   // 是否正在处理队列
   static #isHanding = false
+
+  /**
+   * 获取储存商店
+   *
+   * @param {boolean} [batch=true] - 传入false可以获取未采用批处理的监听器集合
+   * @returns {WeakMap} - 只读的储存商店
+   */
+  static store(batch: boolean = true): Readonly<Store> {
+    return batch ? this.#batchHandleListeners : this.#notBatchHandleListeners
+  }
 
   /**
    * ## 触发监听器的回调函数
@@ -88,7 +77,7 @@ export class Observers {
     origin = this.getObserveTarget(origin)
     const props = isArray(prop) ? prop : [prop]
     const notBatchListeners = this.#notBatchHandleListeners.get(origin)
-    const batchListeners = this.#listeners.get(origin)
+    const batchListeners = this.#batchHandleListeners.get(origin)
     if (batchListeners || notBatchListeners) {
       for (const prop of props) {
         // 触发非批量处理的监听器
@@ -113,17 +102,17 @@ export class Observers {
    * @param {AnyObject} origin - 监听源，一般是`ref`|`reactive`创建的对象
    * @param {Function|Listener} callback - 回调函数或监听器实例
    * @param {PropName} prop - 属性名，默认为{@linkcode Observers.ALL_CHANGE_SYMBOL}标记，监听全部变化
-   * @param {Options} options - 监听器选项
+   * @param {ObserverOptions} options - 监听器选项
    * @returns {Listener} - 监听器实例
    */
   static register<T extends AnyObject, C extends AnyCallback>(
     origin: T,
     callback: C | Listener<C>,
     prop: PropName = this.ALL_CHANGE_SYMBOL,
-    options?: Options
+    options?: ObserverOptions
   ): Listener<C> {
-    const { listener, list } = this.#createListener(callback, options)
-    this.#addListener(list, origin, prop, listener)
+    const listener = this.createListener(callback, options)
+    this.addListener(origin, prop, listener, options?.batch)
     return listener
   }
 
@@ -133,14 +122,14 @@ export class Observers {
    * @param {AnyObject} origin - 监听源，一般是`ref`|`reactive`创建的对象
    * @param {PropName[]} props - 属性名数组
    * @param {Function|Listener} callback - 回调函数或监听器实例
-   * @param {Options} options - 监听器选项
+   * @param {ObserverOptions} options - 监听器选项
    * @returns {Listener} - 监听器实例
    */
   static registerProps<C extends AnyCallback>(
     origin: AnyObject,
     props: PropName[] | Set<PropName>,
     callback: C | Listener<C>,
-    options?: Options
+    options?: ObserverOptions
   ): Listener<C> {
     if (!origin || typeof origin !== 'object') {
       throw new TypeError('origin must be a object')
@@ -148,10 +137,10 @@ export class Observers {
     if (Array.isArray(props)) props = new Set(props)
     if (props.size === 0) throw new TypeError('props must be a non-empty array or set')
     // 创建监听器
-    const { listener, list } = this.#createListener(callback, options)
+    const listener = this.createListener(callback, options)
     if (options?.batch === false || props.size === 1) {
       for (const prop of props) {
-        this.#addListener(list, origin, prop, listener)
+        this.addListener(origin, prop, listener, options?.batch)
       }
     } else {
       // 监听的属性名集合
@@ -185,33 +174,33 @@ export class Observers {
   /**
    * 注册不批量处理的回调函数
    *
-   * 注册一个不进行批处理的回调函数用于处理数据变化。
+   * 注册一个不进行批处理的回调函数用于处理数据变化，此方法为实现一些进阶的监听功能而存在。
    *
    * @param {AnyObject} origin - 监听源，一般是`ref`|`reactive`创建的对象
    * @param {AnyFunction} callback - 回调函数
    * @param prop - 属性名，默认为{@linkcode Observers.ALL_CHANGE_SYMBOL}标记，监听全部变化
-   * @returns {Function} - 调用此函数可以删除回调函数
+   * @returns {Function} - 调用此函数可以删除注册的回调函数
    */
   static addNotBatchCallback<C extends AnyCallback>(
     origin: AnyObject,
     callback: C,
     prop: PropName = this.ALL_CHANGE_SYMBOL
   ): () => void {
-    this.#addListener(this.#notBatchHandleListeners, origin, prop, callback)
-    return () => this.#removeListener(this.#notBatchHandleListeners, origin, prop, callback)
+    this.addListener(origin, prop, callback)
+    return () => this.removeListener(origin, prop, callback, false)
   }
   /**
    * ## 同时注册给多个对象注册同一个监听器
    *
    * @param {AnyObject[]|Set<AnyObject>} origins - 监听源列表
    * @param {Function|Listener} callback - 回调函数或监听器实例
-   * @param {Options} options - 监听器选项
+   * @param {ObserverOptions} options - 监听器选项
    * @returns {Listener} - 监听器实例
    */
   static registers<T extends AnyObject, C extends AnyCallback>(
     origins: Set<T> | T[],
     callback: C | Listener<C>,
-    options?: Options
+    options?: ObserverOptions
   ): Listener<C> {
     if (Array.isArray(origins)) {
       origins = new Set(origins)
@@ -219,29 +208,33 @@ export class Observers {
     if (!(origins instanceof Set) || origins.size === 0) {
       throw new TypeError('origins must be a non-empty array or set')
     }
-    const { listener, list } = this.#createListener(callback, options)
+    const listener = this.createListener(callback, options)
     // 监听器列表
     for (const origin of origins) {
-      this.#addListener(list, origin, this.ALL_CHANGE_SYMBOL, listener)
+      this.addListener(origin, this.ALL_CHANGE_SYMBOL, listener, options?.batch)
     }
     // 如果监听器销毁了，则删除监听器
     listener.onDestroyed(() => {
       for (const origin of origins) {
-        this.#removeListener(list, origin, this.ALL_CHANGE_SYMBOL, listener)
+        this.removeListener(origin, this.ALL_CHANGE_SYMBOL, listener, options?.batch)
       }
     })
     return listener
   }
 
-  /** 创建监听器，并返回监听器列表 */
-  static #createListener<C extends AnyCallback>(callback: C | Listener<C>, options?: Options) {
-    // 合并默认选项
-    options = Object.assign({}, DEFAULT_OPTIONS, options)
+  /**
+   * 创建监听器，将callback转换为监听器实例
+   *
+   * @param callback - 回调函数或监听器实例
+   * @param options - 监听器选项
+   * @returns {{listener: Listener, store: WeakMap<object, PropListenerMap>}} - 监听器实例和储存商店
+   */
+  static createListener<C extends AnyCallback>(
+    callback: C | Listener<C>,
+    options?: ListenerOptions
+  ): Listener<C> {
     // 创建监听器
-    const listener = isFunction(callback) ? new Listener(callback, options) : callback
-    // 监听器列表
-    const list = options.batch ? this.#listeners : this.#notBatchHandleListeners
-    return { listener, list }
+    return isFunction(callback) ? new Listener(callback, options) : callback
   }
 
   /**
@@ -256,29 +249,56 @@ export class Observers {
   /**
    * ## 添加监听器
    *
-   * @param list - 监听器列表
-   * @param proxy - 代理对象
-   * @param prop - 属性名
-   * @param listener - 监听器实例或回调函数，如果是监听器则会在销毁时自动删除
+   * @param {AnyObject} proxy - 监听源对象
+   * @param {PropName} prop - 属性名
+   * @param {Listener|AnyCallback} listener - 监听器实例
+   * @param {boolean} [batch=true] - 是否为批量处理的监听器，默认为true
    */
-  static #addListener<T extends AnyObject, C extends AnyCallback>(
-    list: WeakMap<T, PropListenerMap>,
-    proxy: T,
+  static addListener<C extends AnyCallback>(
+    proxy: AnyObject,
     prop: PropName,
-    listener: Listener<C> | C
+    listener: Listener<C> | C,
+    batch: boolean = true
   ): void {
+    const store = this.store(batch)
     proxy = this.getObserveTarget(proxy)
     const unLock = this.#lockWeakMap(proxy)
-    if (!list.has(proxy)) {
-      list.set(proxy, new Map())
+    if (!store.has(proxy)) {
+      store.set(proxy, new Map())
     }
-    const propMap = list.get(proxy)!
+    const propMap = store.get(proxy)!
     if (!propMap.has(prop)) {
       propMap.set(prop, new Set())
     }
     propMap.get(prop)!.add(listener)
     if (listener instanceof Listener) {
-      listener.onDestroyed(() => this.#removeListener(list, proxy, prop, listener))
+      listener.onDestroyed(() => this.removeListener(proxy, prop, listener, batch))
+    }
+    unLock()
+  }
+
+  /**
+   * ## 删除监听器
+   *
+   * @param {AnyObject} proxy - 监听源对象
+   * @param {PropName} prop - 属性名
+   * @param {Listener|AnyCallback} listener - 监听器实例
+   * @param {boolean} [batch=true] - 是否为批量处理的监听器，默认为true
+   */
+  static removeListener<C extends AnyCallback>(
+    proxy: AnyObject,
+    prop: PropName,
+    listener: Listener<C> | AnyCallback,
+    batch: boolean = true
+  ): void {
+    const store = this.store(batch)
+    proxy = this.getObserveTarget(proxy)
+    const unLock = this.#lockWeakMap(proxy)
+    const set = store.get(proxy)?.get(prop)
+    if (set) {
+      set.delete(listener)
+      if (set.size === 0) store.get(proxy)?.delete(prop)
+      if (store.get(proxy)?.size === 0) store.delete(proxy)
     }
     unLock()
   }
@@ -306,13 +326,13 @@ export class Observers {
    */
   static #triggerProps(origin: AnyObject, props: Set<PropName>) {
     for (const prop of props) {
-      this.#triggerListeners(this.#listeners.get(origin)?.get(prop), origin, [prop])
+      this.#triggerListeners(this.#batchHandleListeners.get(origin)?.get(prop), origin, [prop])
     }
     // 兼容prop传入ALL_CHANGE_SYMBOL
     if (!props.has(this.ALL_CHANGE_SYMBOL)) {
       // 如果不存在ALL_CHANGE_SYMBOL的监听器，则触发它
       this.#triggerListeners(
-        this.#listeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL),
+        this.#batchHandleListeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL),
         origin,
         Array.from(props)
       )
@@ -355,30 +375,5 @@ export class Observers {
     return () => {
       this.#weakMapLock.delete(origin)
     }
-  }
-
-  /**
-   * ## 删除监听器
-   *
-   * @param list - 监听器列表
-   * @param proxy - 代理对象
-   * @param prop - 属性名
-   * @param listener - 监听器实例
-   */
-  static #removeListener<T extends AnyObject, C extends AnyCallback>(
-    list: WeakMap<T, PropListenerMap>,
-    proxy: T,
-    prop: PropName,
-    listener: Listener<C> | C
-  ): void {
-    proxy = this.getObserveTarget(proxy)
-    const unLock = this.#lockWeakMap(proxy)
-    const set = list.get(proxy)?.get(prop)
-    if (set) {
-      set.delete(listener)
-      if (set.size === 0) list.get(proxy)?.delete(prop)
-      if (list.get(proxy)?.size === 0) list.delete(proxy)
-    }
-    unLock()
   }
 }
