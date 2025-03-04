@@ -216,10 +216,11 @@ export function build(element: VNode | (() => VNode)): VNode {
  * @internal
  * @param vnode
  */
-export function _createFnWidget(vnode: WidgetVNode<FnWidgetConstructor>): Promise<FnWidget> {
+export function _createFnWidget(vnode: WidgetVNode<FnWidgetConstructor>): FnWidget {
   const result = hooksCollector(vnode)
   const instance = vnode.instance as FnWidget
-  return instance[__initializeMethod](result)
+  instance[__initializeMethod](result)
+  return instance
 }
 
 const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
