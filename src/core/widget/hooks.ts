@@ -207,12 +207,12 @@ export const onUpdated = createLifeCycleHook(LifeCycleHooks.updated)
  * onError((error, info) => {
  *   console.error(error, info)
  *   // 返回一个备用元素展示错误提示，error通常是Error，强制转换字符串过后会显示 message
- *   return <div>{error}</div>
+ *   return <div>{String(error)}</div>
  * })
  *
  * info值说明：
- *  - build: 构建时抛出的异常，通常是自身小部件的构建错误
- *  - render: 渲染时抛出的异常，通常是子组件抛出的异常
+ *  - build: 构建视图时捕获的异常
+ *  - render: 渲染时视图时捕获的异常
  *
  * @param cb - 回调函数，遇到错误时触发
  */
@@ -225,14 +225,7 @@ export const onError = createLifeCycleHook(LifeCycleHooks.error)
  *
  * @param cb - 回调函数，元素从DOM中被移除前触发
  */
-export function onBeforeRemove<T extends ContainerElement>(cb: BeforeRemoveCallback<T>) {
-  if (typeof cb !== 'function') {
-    throw new TypeError(
-      `[Vitarx.LifeCycle]：${LifeCycleHooks.beforeRemove}钩子必须是回调函数，给定${typeof cb}`
-    )
-  }
-  HooksCollector.addLifeCycle(LifeCycleHooks.beforeRemove, cb)
-}
+export const onBeforeRemove = createLifeCycleHook(LifeCycleHooks.beforeRemove)
 
 /**
  * 收集函数中使用的HOOK
