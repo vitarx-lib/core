@@ -27,7 +27,7 @@ export class Scope extends Effect {
    *
    * @private
    */
-  private _effects?: Set<EffectInterface> = new Set()
+  private _effects?: Set<EffectInterface>
 
   /**
    * 实例化一个作用域管理器
