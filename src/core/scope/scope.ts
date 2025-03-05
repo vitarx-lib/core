@@ -84,18 +84,22 @@ export class Scope extends Effect {
    * @returns {boolean} - 是否添加成功
    */
   add(effect: EffectInterface): boolean {
-    if (!this.isDeprecated) {
+    if (this.isDeprecated) {
+      console.trace('当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象')
+      return false
+    } else {
       if (!isEffect(effect)) {
         throw new TypeError(
           '添加到作用域中管理的对象必须是 Effect 或 AutoDisposed 的实例，或实现 EffectInterface 接口'
         )
       }
-      this._effects?.add(effect)
+      if (!this._effects) {
+        this._effects = new Set([effect])
+      } else {
+        this._effects?.add(effect)
+      }
       effect.onDestroyed(() => this._effects?.delete(effect))
       return true
-    } else {
-      console.trace('当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象')
-      return false
     }
   }
 
