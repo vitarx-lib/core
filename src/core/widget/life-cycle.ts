@@ -5,7 +5,12 @@ import type { ContainerElement, VDocumentFragment } from '../renderer/index.js'
  */
 export type TargetContainerElement = Exclude<ContainerElement, VDocumentFragment>
 
-/** 错误信息类型 */
+/**
+ * 错误信息类型
+ *
+ * - build: 构建视图时捕获的异常
+ * - render: 渲染时视图时捕获的异常
+ */
 export type ErrorInfo = 'build' | 'render'
 
 /** 生命周期钩子枚举 */
@@ -185,10 +190,7 @@ export abstract class LifeCycle {
   /**
    * 调用生命周期钩子
    *
-   * 内部方法，开发者勿调用。
-   *
-   * @internal
-   * @protected
+   * @internal 内部方法，开发者勿调用!!!
    */
   protected callLifeCycleHook<K extends LifeCycleHooks>(
     hook: K,
