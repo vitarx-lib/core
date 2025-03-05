@@ -201,8 +201,7 @@ export abstract class Widget<
     if (!this._$renderer) {
       this._$renderer = this.initializeRenderer()
       if (import.meta.env?.MODE === 'development') {
-        // @ts-ignore
-        if (!this.vnode['__$hmr_state$__']) {
+        if (!this.vnode.__$HMR_STATE$__) {
           this.callLifeCycleHook(LifeCycleHooks.created)
         }
       } else {

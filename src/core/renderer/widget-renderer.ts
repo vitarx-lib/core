@@ -423,7 +423,7 @@ export class WidgetRenderer<T extends Widget> {
       updateParentVNodeMapping(vnode, this.vnode)
       return vnode
     } else {
-      Logger.error(`${this.name}.build返回值必须是VNode对象，请修复此错误提示！`)
+      Logger.error(`${this.name}.build返回值必须是VNode对象，请检查返回值类型！`)
       return createVNode(Fragment)
     }
   }
@@ -463,7 +463,7 @@ export class WidgetRenderer<T extends Widget> {
     try {
       return this.widget['callLifeCycleHook'](hook, ...args)
     } catch (e) {
-      console.error(` 执行 ${this.name} 生命周期钩子 ${hook} 时捕获到异常！`, e)
+      Logger.error(` 执行 ${this.name} 生命周期钩子 ${hook} 时捕获到异常！`, e)
       return undefined as any
     }
   }
