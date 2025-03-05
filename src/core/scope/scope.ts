@@ -110,8 +110,8 @@ export class Scope extends Effect {
    * @override
    */
   override destroy() {
-    if (!this.isDeprecated && this._effects) {
-      this._effects.forEach(dispose => {
+    if (!this.isDeprecated) {
+      this._effects?.forEach(dispose => {
         try {
           dispose.destroy()
         } catch (e) {
