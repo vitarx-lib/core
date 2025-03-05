@@ -8,7 +8,7 @@ import {
 import { isRecordObject } from '../../utils/index.js'
 import { getCurrentVNode } from './manager.js'
 import { Observers } from '../observer/index.js'
-import Logger from '../logger.js'
+import CoreLogger from '../CoreLogger.js'
 
 // 默认属性标记
 const defaultPropsSymbol = Symbol('VNODE_PROPS_DEFAULT_DATA')
@@ -113,7 +113,8 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
       return true
     }
     if (propsModifyWarning) {
-      Logger.warn(
+      CoreLogger.warn(
+        'PropsProxyHandler',
         `组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)`
       )
     }
@@ -122,8 +123,9 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
 
   override deleteProperty(target: T, prop: ExtractProp<T>): boolean {
     if (propsModifyWarning) {
-      console.trace(
-        '[Vitarx.PropsProxyHandler][WARN]：组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)'
+      CoreLogger.warn(
+        'PropsProxyHandler',
+        `组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)`
       )
     }
     return super.deleteProperty(target, prop)

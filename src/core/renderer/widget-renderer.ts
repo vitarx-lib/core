@@ -20,7 +20,7 @@ import {
 import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from '../widget/index.js'
 import { Observers } from '../observer/index.js'
 import { type Scope } from '../scope/index.js'
-import Logger from '../logger.js'
+import CoreLogger from '../CoreLogger.js'
 import type { ContainerElement } from './types/index.js'
 import { Depend } from '../responsive/index.js'
 import { _WidgetViewDependListener } from './view_depend_listener.js'
@@ -231,7 +231,10 @@ export class WidgetRenderer<T extends Widget> {
    */
   mount(): void {
     if (this.state !== 'notMounted') {
-      return Logger.warn('非待挂载状态，不能进行挂载！')
+      return CoreLogger.debug(
+        'WidgetRenderer.mount',
+        `${this.name} 组件非待挂载状态，不能进行挂载！`
+      )
     }
     // 递归挂载子节点
     mountVNode(this.child)
@@ -303,7 +306,10 @@ export class WidgetRenderer<T extends Widget> {
       throw new TypeError(`新的子节点必须是有效的VNode对象，给定：${typeof newChildVNode}`)
     }
     if (this.state === 'unloaded') {
-      return Logger.warn('渲染器已销毁，不能再更新视图！')
+      return CoreLogger.debug(
+        'WidgetRenderer.update',
+        `${this.name} 组件，渲染器已销毁，不能再更新视图！`
+      )
     }
     // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
     if (this.state === 'deactivated') return
@@ -423,7 +429,10 @@ export class WidgetRenderer<T extends Widget> {
       updateParentVNodeMapping(vnode, this.vnode)
       return vnode
     } else {
-      Logger.error(`${this.name}.build返回值必须是VNode对象，请检查返回值类型！`)
+      CoreLogger.warn(
+        'WidgetRenderer.buildChild',
+        `${this.name}.build 返回值必须是有效的VNode类型，否则无法渲染！`
+      )
       return createVNode(Fragment)
     }
   }
@@ -464,7 +473,7 @@ export class WidgetRenderer<T extends Widget> {
     try {
       return this.widget['callLifeCycleHook'](hook, ...args)
     } catch (e) {
-      Logger.error(` 执行 ${this.name} 生命周期钩子 ${hook} 时捕获到异常！`, e)
+      CoreLogger.error(`LifeCycle.${hook}`, `生命周期钩子 ${hook} 执行时捕获到异常`, e)
       return undefined as any
     }
   }

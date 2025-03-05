@@ -1,5 +1,5 @@
 import { addEffect, Effect } from '../scope/index.js'
-import Logger from '../logger.js'
+import CoreLogger from '../CoreLogger.js'
 
 export type ListenerOptions = {
   /**
@@ -84,7 +84,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
       try {
         this.#callback.apply(null, params)
       } catch (e) {
-        Logger.error(e)
+        CoreLogger.error('Listener.trigger', e)
       }
       this.#count++
       // 判断是否已达到预期的监听次数

@@ -17,7 +17,7 @@ import {
 } from '../vnode/index.js'
 import { type CollectResult, hooksCollector } from './hooks.js'
 import { getSuspenseCounter } from './built-in/index.js'
-import Logger from '../logger.js'
+import CoreLogger from '../CoreLogger.js'
 
 type AnyProps = Record<string, any>
 /**
@@ -171,7 +171,10 @@ export class FnWidget extends Widget {
     const name = this.vnode.type?.name || 'anonymous'
     for (const exposedKey in exposed || {}) {
       if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
-        Logger.warn(`${name} 函数小部件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`)
+        CoreLogger.warn(
+          'FnWidget.Exposed',
+          `${name} 函数小部件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
+        )
       }
       if (!(exposedKey in this)) (this as any)[exposedKey] = exposed[exposedKey]
     }

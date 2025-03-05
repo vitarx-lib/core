@@ -1,6 +1,6 @@
 import { Effect, type EffectInterface, isEffect } from './effect.js'
 import { getContext, runContext } from '../context/index.js'
-import Logger from '../logger.js'
+import CoreLogger from '../CoreLogger.js'
 
 /**
  * # 自动处置
@@ -115,7 +115,7 @@ export class Scope extends Effect {
         try {
           dispose.destroy()
         } catch (e) {
-          Logger.error('销毁作用域中Effect时捕获到了异常：', e)
+          CoreLogger.error('Scope.destroy', '销毁作用域中Effect时捕获到了异常：', e)
         }
       })
       this._effects = undefined

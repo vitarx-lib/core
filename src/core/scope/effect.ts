@@ -1,4 +1,4 @@
-import Logger from '../logger.js'
+import CoreLogger from '../CoreLogger.js'
 
 /**
  * 处置功能接口
@@ -101,7 +101,7 @@ export class Effect implements EffectInterface {
           try {
             callback()
           } catch (e) {
-            Logger.error('销毁Effect时捕获到回调函数异常：', e)
+            CoreLogger.error('Effect.destroy', '销毁Effect时捕获到回调函数异常', e)
           }
         })
         this.onDestroyedCallback = undefined

@@ -4,7 +4,7 @@ export * from './diff.js'
 export * from './conversion.js'
 export * from './quick.js'
 export * from './css_utils.js'
-
+export * from './logger.js'
 declare global {
   /** 任意函数 */
   type AnyFunction = (...args: any[]) => any

@@ -9,7 +9,7 @@ import {
 import { getSuspenseCounter } from './Suspense.js'
 import type { Ref } from '../../responsive/index.js'
 import type { ErrorInfo } from '../life-cycle.js'
-import Logger from '../../logger.js'
+import CoreLogger from '../../CoreLogger.js'
 import { isRecordObject } from '../../../utils/index.js'
 import { withAsyncContext } from '../../context/index.js'
 
@@ -114,7 +114,10 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     }
     if (props.onError) {
       if (typeof props.onError !== 'function') {
-        Logger.warn(`onError属性期望得到一个回调函数，给定${typeof props.onError}`)
+        CoreLogger.warn(
+          'LazyWidget',
+          `onError属性期望得到一个回调函数，给定${typeof props.onError}`
+        )
       } else {
         this.onError = props.onError
       }

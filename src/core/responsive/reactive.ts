@@ -10,7 +10,7 @@ import {
 } from './helper.js'
 import { isRef } from './ref.js'
 import { Depend } from './depend.js'
-import Logger from '../logger.js'
+import CoreLogger from '../CoreLogger.js'
 
 /** 响应式对象的标识 */
 export const REACTIVE_SYMBOL = Symbol('REACTIVE_SYMBOL')
@@ -72,12 +72,12 @@ class ReadonlyProxy {
       this.#cache.set(
         target,
         new Proxy(target, {
-          set(): boolean {
-            Logger.warn('响应式对象是只读的，不可修改属性！')
+          set(_t, prop): boolean {
+            CoreLogger.warn('Readonly', `响应式对象是只读的，不可修改${String(prop)}属性！`)
             return true
           },
-          deleteProperty(): boolean {
-            Logger.warn('响应式对象是只读的，不可删除属性！')
+          deleteProperty(_t, prop): boolean {
+            CoreLogger.warn('Readonly', `响应式对象是只读的，不可删除${String(prop)}属性！`)
             return true
           },
           get(target: T, prop: ExtractProp<T>, receiver: any): any {
@@ -175,7 +175,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   deleteProperty(target: T, prop: ExtractProp<T>): boolean {
     if (this.#readonly) {
-      Logger.warn('响应式对象是只读的，不能删除属性！')
+      CoreLogger.warn('Reactive', `响应式对象是只读的，不能删除${String(prop)}属性！`)
       return true
     }
     const result = Reflect.deleteProperty(target, prop)
@@ -233,7 +233,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
     if (this.#readonly) {
-      Logger.warn('响应式对象是只读的，不可修改属性！')
+      CoreLogger.warn('Reactive', `响应式对象是只读的，不可修改${String(prop)}属性！`)
       return true
     }
     // 处理数组长度修改
