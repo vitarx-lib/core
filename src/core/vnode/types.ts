@@ -164,6 +164,10 @@ export interface VNode<T extends VNodeType = VNodeType> {
    * 元素实例
    */
   el?: HtmlElementType<T>
+  /**
+   * HMR状态，开发时由`@vitarx/vite-bundler`注入
+   */
+  __$HMR_STATE$__?: Record<string, any>
 }
 
 /** 文本节点，内部自动转换 */
