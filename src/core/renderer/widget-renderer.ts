@@ -438,6 +438,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   protected build(): VNode {
     this._viewDependListener.clear()
+    this.scope.add(this._viewDependListener)
     const { deps, result } = Depend.collect(this.buildChild.bind(this))
     if (deps.size > 0) {
       for (const [proxy, props] of deps) {
