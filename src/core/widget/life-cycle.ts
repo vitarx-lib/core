@@ -146,10 +146,10 @@ export abstract class LifeCycle {
   /**
    * 生命周期钩子
    *
-   * `onError`钩子会在组件渲染或构建时抛出异常，可以返回一个`Vitarx.Element`做为备用展示。
+   * `onError`钩子会在组件渲染或构建时抛出异常，可以返回一个`Vitarx.Element`虚拟节点做为备用展示。
    *
    * info值说明：
-   *  - build: 构建时抛出的异常，通常是自身小部件的构建错误
+   *  - build: 构建时抛出的异常，通常是小部件自身的构建错误
    *  - render: 渲染时抛出的异常，通常是子组件抛出的异常
    *
    * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
