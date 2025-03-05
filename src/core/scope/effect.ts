@@ -1,3 +1,5 @@
+import Logger from '../logger.js'
+
 /**
  * 处置功能接口
  *
@@ -95,7 +97,13 @@ export class Effect implements EffectInterface {
     if (!this.isDeprecated) {
       this._state = 'deprecated'
       if (this.onDestroyedCallback) {
-        this.onDestroyedCallback.forEach(callback => callback())
+        this.onDestroyedCallback.forEach(callback => {
+          try {
+            callback()
+          } catch (e) {
+            Logger.error('销毁Effect时捕获到回调函数异常：', e)
+          }
+        })
         this.onDestroyedCallback = undefined
       }
       this.onPauseCallback = undefined
