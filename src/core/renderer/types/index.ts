@@ -1,6 +1,7 @@
 import type { HTMLProperties } from './properties.js'
 
 export type * from './properties.js'
+export type * from './event.js'
 
 /** HTML元素标签映射 */
 export type HTMLElementTagMap = HTMLElementTagNameMap &
