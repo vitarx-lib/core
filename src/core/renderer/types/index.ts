@@ -1,6 +1,6 @@
-import type { HtmlProperties } from './properties.js'
+import type { HTMLProperties } from './properties.js'
 
-export type { CssPropertiesMap, HTMLClassProperties, HTMLStyleProperties } from './properties.js'
+export type * from './properties.js'
 
 /** HTML元素标签映射 */
 export type HTMLElementTagMap = HTMLElementTagNameMap &
@@ -21,7 +21,7 @@ export type HTMLIntrinsicTags = keyof HTMLElementTagMap
  *    - 小驼峰式语法，如onClick。
  */
 export type HTMLIntrinsicElements = {
-  [K in keyof HTMLElementTagMap]: HtmlProperties<HTMLElementTagMap[K]>
+  [K in keyof HTMLElementTagMap]: HTMLProperties<HTMLElementTagMap[K]>
 }
 
 /**

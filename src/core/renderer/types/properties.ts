@@ -412,11 +412,11 @@ interface GlobalHtmlProperties {
 /**
  * 要覆盖的HTML属性，并返回一个新对象接口。
  */
-export type CoverHTMLProperties = ToValueProxy<GlobalHtmlProperties & PartProperties>
+type CoverHTMLProperties = ToValueProxy<GlobalHtmlProperties & PartProperties>
 /**
  * 要覆盖HTML属性的键
  */
-export type CoverHTMLPropertiesKeys = keyof CoverHTMLProperties
+type CoverHTMLPropertiesKeys = keyof CoverHTMLProperties
 
 /**
  * 自定义全局属性
@@ -486,7 +486,7 @@ type ExtractHtmlProperties<T extends Element> = {
  * @template T - 元素类型
  * @template Exclude - 排除的属性名
  */
-export type HtmlProperties<T extends Element> = ExtractHtmlProperties<T> &
+export type HTMLProperties<T extends Element> = ExtractHtmlProperties<T> &
   HTMLEventHumpMap<T> &
   CustomProperties &
   Vitarx.GlobalIntrinsicAttributes
