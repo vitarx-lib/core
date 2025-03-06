@@ -1,28 +1,29 @@
 # Vitarx
 
-具有活力的前端开发框架，帮助开发者快速构建交互式前端应用。
+[![Gitee](https://img.shields.io/badge/Gitee-blue?style=flat-square&logo=Gitee)](https://gitee.com/vitarx/core)
+[![GitHub](https://img.shields.io/badge/Github-blue?style=flat-square&logo=Github)](https://github.com/vitarx/core)
+[![npm](https://img.shields.io/npm/v/vitarx)](https://www.npmjs.com/package/vitarx)
 ________________________________________________________________________
-
-详细文档请见[Vitarx主页](https://vitarx.cn)。
 
 ## 介绍
 
 `Vitarx` 是一款WEB前端开发框架，它融合了 `React` 的 `JSX` 语法，`Vue` 的响应式数据绑定，且大部分API命名借鉴于`Vue`
-，使得开发者可以快速上手。
+，使得开发者可以快速上手。[查看文档](https://vitarx.cn)
 
 ## 特性
 
 - **JSX**：`vitarx` 支持使用 `JSX` 语法，可以写出更简洁、更易于理解的代码。
+- **组件化**：在 `vitarx` 中万物皆为小部件 `Widget`，支持函数式小部件，亦支持类小部件。
 - **响应式数据**：`vitarx` 支持使用 `响应式数据`，且 `API` 命名和功能和 `Vue` 大部分一致，减少学习成本，例如 `ref`、
   `reactive`、
   `watch`、`computed` 等。
-- **组件化**：在 `vitarx` 中万物皆为小部件 `Widget`，支持函数式小部件，亦支持类小部件。
 - **状态管理**：`vitarx` 与 `Vue` 的组件状态管理机制大致相同，当视图中绑定的 `响应式数据` 数据发生变化时，会自动更新视图。
-- **生命周期**：`vitarx` 组件支持生命周期钩子，例如 `onMounted`、`onUnmounted`...等钩子。
-- **VNode**：`vitarx` 和大部分现代化的前端框架一样，采用了虚拟DOM节点，以及高效的Diff算法，差异化更新视图降低渲染性能开销。
+- **生命周期**：`vitarx` 组件支持生命周期钩子，如 `onMounted`、`onUnmounted` 等10余个关键的钩子。
+- **虚拟DOM节点**：`vitarx` 和大部分现代化的前端框架一样，采用了虚拟DOM节点，以及高效的Diff算法，差异化更新视图降低渲染性能开销。
 
-## 函数式组件
+## 组件示例
 
+### 函数式组件
 ```tsx
 import { ref, onMounted } from 'vitarx'
 
@@ -44,8 +45,7 @@ function App() {
 }
 ```
 
-## 类组件示例
-
+### 类组件示例
 ```tsx
 import { Widget, ref } from 'vitarx'
 
