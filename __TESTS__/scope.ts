@@ -1,5 +1,4 @@
-import { Scope, sleep } from '../src/index.js'
-import { withAsyncContext } from '../src/core/context/index.js'
+import { Scope, sleep, withAsyncContext } from '../src/index.js'
 
 // 测试代码
 async function test() {
