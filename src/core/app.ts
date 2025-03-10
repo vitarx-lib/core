@@ -1,25 +1,45 @@
-import { isFunction } from '../../utils/index.js'
-import { type ClassWidgetConstructor, isClassWidgetConstructor, Widget } from '../widget/widget.js'
-import type { FnWidgetConstructor } from '../widget/index.js'
-import { createVNode, isVNode, type VNode, type WidgetType } from '../vnode/index.js'
-import { mountVNode, renderWidgetElement } from './web-runtime-dom/index.js'
-import CoreLogger from '../CoreLogger.js'
-
 // 错误提示
-const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
+import {
+  type ClassWidgetConstructor,
+  type FnWidgetConstructor,
+  isClassWidgetConstructor,
+  Widget
+} from './widget/index.js'
+import { createVNode, isVNode, type VNode, type WidgetType } from './vnode/index.js'
+import { isFunction, Logger } from '../utils/index.js'
+import { mountVNode, renderWidgetElement } from './renderer/web-runtime-dom/index.js'
+import CoreLogger from './CoreLogger.js'
 
+const ERROR_MESSAGE = '还未渲染小部件或小部件已经卸载'
+
+/** 应用配置 */
+export interface AppOptions {
+  /**
+   * 是否为服务端渲染
+   *
+   * 此配置功能暂未支持，可能会在之后的版本中支持。
+   *
+   * @default false
+   */
+  ssr?: boolean
+}
 /**
  * ## Vitarx App
  *
- * Vitarx 应用渲染器
+ * 用于创建和运行 Vitarx 应用。
  */
-export class AppRenderer {
-  /** 元素容器 */
-  protected readonly container: Element
+export class App {
+  /**
+   * 日志实例
+   * @private
+   */
+  static #logger: Logger | undefined
   /** 配置选项 */
-  protected readonly options: Required<Vitarx.AppOptions> = {
+  protected readonly options: Required<AppOptions> = {
     ssr: false
   }
+  /** 元素容器 */
+  protected readonly container: Element
   /**
    * 小部件实例
    */
@@ -36,12 +56,35 @@ export class AppRenderer {
    * @param container
    * @param options
    */
-  constructor(container: Element, options?: Vitarx.AppOptions) {
+  constructor(container: Element, options?: AppOptions) {
     if (!(container instanceof Element)) {
       throw new Error('[Vitarx]：根容器必须是Element实例。')
     }
     this.container = container
-    this.options = Object.assign(this.options, options)
+    Object.assign(this.options, options)
+  }
+
+  /**
+   * 日志实例
+   *
+   * > 注意：该静态属性是为了开发者能便捷地使用框架内置的一个日志输出工具，
+   * 它不是框架中核心日志管理器，如果需处理框架核心日志，请使用`CoreLogger.setCustomHandler`。
+   *
+   * ```ts
+   * App.log.setCustomHandler((level: string, message: string, tag: string) => {
+   *   // 上传日志到服务器
+   * })
+   * App.log.error('错误信息')
+   * App.log.warn('警告信息')
+   * App.log.info('信息提示')
+   * App.log.debug('调试信息')
+   * ```
+   */
+  static get log() {
+    if (!this.#logger) {
+      this.#logger = new Logger('App')
+    }
+    return this.#logger
   }
 
   /**
@@ -183,9 +226,9 @@ export class AppRenderer {
  * @param options - 应用配置
  * @returns {Vitarx} - 应用实例
  */
-export function createApp(container: Element | string, options?: Vitarx.AppOptions): AppRenderer {
+export function createApp(container: Element | string, options?: Vitarx.AppOptions): App {
   if (typeof container === 'string') {
     container = document.querySelector(container)!
   }
-  return new AppRenderer(container, options)
+  return new App(container, options)
 }

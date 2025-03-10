@@ -1,4 +1,5 @@
 import type {
+  AppOptions as _AppOptions,
   CommentVNode,
   FnWidgetType,
   IntrinsicAttributes,
@@ -24,16 +25,7 @@ export * from './jsx-runtime.js'
 declare global {
   namespace Vitarx {
     /** 应用配置 */
-    interface AppOptions {
-      /**
-       * 是否为服务端渲染
-       *
-       * 此配置功能暂未支持，可能会在之后的版本中支持。
-       *
-       * @default false
-       */
-      ssr?: boolean
-    }
+    type AppOptions = _AppOptions
 
     /**
      * 全局属性
