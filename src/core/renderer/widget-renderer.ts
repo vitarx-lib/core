@@ -1,5 +1,6 @@
 import {
   createVNode,
+  createWidgetVNodeInstance,
   Fragment,
   isVNode,
   updateParentVNodeMapping,
@@ -477,4 +478,39 @@ export class WidgetRenderer<T extends Widget> {
       return undefined as any
     }
   }
+}
+
+/**
+ * 创建小部件渲染器
+ *
+ * 如果组件存在必填参数，则需传入`props`参数。
+ *
+ * @param widget - 小部件构造函数
+ * @returns {WidgetRenderer} - 小部件渲染器
+ */
+export function createWidgetRenderer(widget: WidgetType<{}>): WidgetRenderer<Widget<{}>>
+/**
+ * 创建小部件渲染器
+ *
+ * @param widget - 小部件构造函数
+ * @param props - 小部件接收属性
+ * @returns {WidgetRenderer} - 小部件渲染器
+ */
+export function createWidgetRenderer<P extends Record<string, any>>(
+  widget: WidgetType<P>,
+  props: P
+): WidgetRenderer<Widget<P>>
+
+/**
+ * 创建小部件渲染器
+ *
+ * @param widget - 小部件构造函数
+ * @param props - 小部件接收属性
+ * @returns {WidgetRenderer} - 小部件渲染器
+ */
+export function createWidgetRenderer(
+  widget: WidgetType,
+  props: Record<string, any> | null = null
+): WidgetRenderer<Widget> {
+  return createWidgetVNodeInstance(createVNode(widget, props))['renderer']
 }
