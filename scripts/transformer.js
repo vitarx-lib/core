@@ -10,7 +10,7 @@ export function replaceVersion() {
   const packageJsonContent = readFileSync(packageJsonPath, 'utf-8')
   const packageJson = JSON.parse(packageJsonContent)
   const version = packageJson.version
-  const distPath = join(projectRoot, 'dist', 'core', 'renderer', 'app-renderer.js')
+  const distPath = join(projectRoot, 'dist', 'core', 'app.js')
   const content = readFileSync(distPath, 'utf-8')
   const updatedContent = content.replace(/__VERSION__/g, `"${version}"`)
   writeFileSync(distPath, updatedContent, 'utf-8')
