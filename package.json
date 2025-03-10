@@ -1,6 +1,6 @@
 {
   "name": "vitarx",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Vitarx具有活力的响应式前端框架",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/vitarx-lib/framework"
+    "url": "https://github.com/vitarx-lib/core"
   },
   "homepage": "https://vitarx.cn",
   "type": "module",
