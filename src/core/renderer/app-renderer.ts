@@ -14,7 +14,6 @@ const ERROR_MESSAGE = '还未渲染小部件，或小部件已经卸载'
  * Vitarx 应用渲染器
  */
 export class AppRenderer {
-  static ssr: boolean = false
   /** 元素容器 */
   protected readonly container: Element
   /** 配置选项 */
@@ -25,6 +24,11 @@ export class AppRenderer {
    * 小部件实例
    */
   #widget: Widget | null = null
+  /**
+   * 实例容器
+   * @private
+   */
+  #instances: Map<string, any> = new Map()
 
   /**
    * 构建应用实例
@@ -38,7 +42,6 @@ export class AppRenderer {
     }
     this.container = container
     this.options = Object.assign(this.options, options)
-    AppRenderer.ssr = this.options.ssr
   }
 
   /**
@@ -142,6 +145,34 @@ export class AppRenderer {
     } else {
       this.#widget?.['renderer'].deactivate()
     }
+  }
+
+  /**
+   * ## 注册实例
+   *
+   * 将实例注册到应用容器中，可以通过别名获取
+   *
+   * @template T - 实例类型
+   * @param {string} name - 实例别名
+   * @param {T} instance - 实例对象
+   * @returns {this} - 返回应用实例本身，支持链式调用
+   */
+  register(name: string, instance: Object): this {
+    this.#instances.set(name, instance)
+    return this
+  }
+
+  /**
+   * ## 获取实例
+   *
+   * 通过别名获取已注册的实例
+   *
+   * @template T - 实例类型
+   * @param {string} name - 实例别名
+   * @returns {T | undefined} - 返回实例，如果不存在则返回undefined
+   */
+  get<T = any>(name: string): T | undefined {
+    return (this.#instances.get(name) as T) || undefined
   }
 }
 
