@@ -15,7 +15,7 @@ import {
   type VNode,
   type WidgetVNode
 } from '../vnode/index.js'
-import { type CollectResult, hooksCollector } from './hooks.js'
+import { _hooksCollector, type CollectResult } from './hooks.js'
 import { getSuspenseCounter } from './built-in/index.js'
 import CoreLogger from '../CoreLogger.js'
 
@@ -220,7 +220,7 @@ export function build(element: VNode | (() => VNode)): VNode {
  * @param vnode
  */
 export function _createFnWidget(vnode: WidgetVNode<FnWidgetConstructor>): FnWidget {
-  const result = hooksCollector(vnode)
+  const result = _hooksCollector(vnode)
   const instance = vnode.instance as FnWidget
   instance[__initializeMethod](result)
   return instance
