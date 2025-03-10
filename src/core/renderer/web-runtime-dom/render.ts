@@ -107,6 +107,7 @@ export function renderElement(vnode: ChildVNode, parent?: ContainerElement): Htm
  *
  * @param vnode - 文本节点
  * @param parent - 父元素
+ * @return {Text} - 文本元素实例
  */
 export function renderTextElement(vnode: TextVNode, parent?: ContainerElement): Text {
   const textEl = document.createTextNode(vnode.value)
@@ -120,8 +121,9 @@ export function renderTextElement(vnode: TextVNode, parent?: ContainerElement): 
  *
  * @param vnode
  * @param parent
+ * @return {Comment} - 注释元素实例
  */
-export function renderCommentElement(vnode: CommentVNode, parent?: ContainerElement) {
+export function renderCommentElement(vnode: CommentVNode, parent?: ContainerElement): Comment {
   const commentEl = document.createComment(vnode.value)
   vnode.el = commentEl
   parent?.appendChild(commentEl)
@@ -133,6 +135,7 @@ export function renderCommentElement(vnode: CommentVNode, parent?: ContainerElem
  *
  * @param vnode - 组件虚拟节点对象
  * @param parent - 父元素
+ * @return {HTMLElement} - HTML元素实例
  */
 export function renderWidgetElement(
   vnode: VNode<WidgetType>,
@@ -159,6 +162,7 @@ export function renderWidgetElement(
  *
  * @param vnode - html元素虚拟节点对象
  * @param parent - 父元素
+ * @return {HTMLElement | SVGElement} - HTML元素实例
  */
 export function renderHtmlElement(
   vnode: VNode<HTMLIntrinsicTags>,
@@ -181,6 +185,7 @@ export function renderHtmlElement(
  *
  * @param vnode - Fragment虚拟节点对象
  * @param parent - 父元素
+ * @return {DocumentFragment} - 片段元素实例
  */
 export function renderFragmentElement(
   vnode: VNode<Fragment>,
