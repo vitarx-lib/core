@@ -233,8 +233,9 @@ export const onBeforeRemove = createLifeCycleHook(LifeCycleHooks.beforeRemove)
  *
  * @param vnode
  * @returns {CollectResult} - 同步收集结果
+ * @internal
  */
-export function hooksCollector(vnode: WidgetVNode<FnWidgetConstructor>): CollectResult {
+export function _hooksCollector(vnode: WidgetVNode<FnWidgetConstructor>): CollectResult {
   return HooksCollector.collect(vnode)
 }
 
