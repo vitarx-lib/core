@@ -260,3 +260,12 @@ export function useViewForceUpdating(): FnViewForceUpdating {
   }
   return instance?.['update'] || (() => {})
 }
+
+/**
+ * 获取当前组件实例
+ *
+ * @returns {Widget|undefined} - 如果存在则返回当前组件实例，否则返回`undefined`
+ */
+export function useCurrentInstance(): Widget | undefined {
+  return getCurrentVNode()?.instance
+}
