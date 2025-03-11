@@ -10,6 +10,9 @@ import { findParentVNode, getCurrentVNode } from './manager.js'
  * @param instance - 组件实例，函数式组件无需提供，类组件必须传入当前组件实例`this`
  */
 export function provide(name: string | symbol, value: any, instance?: Widget): void {
+  if (name === 'App') {
+    throw new Error('App 是内部保留关键词，请勿使用！')
+  }
   const currentVNode = instance?.['vnode'] || getCurrentVNode()
   if (!currentVNode) throw new Error('provide must be called in widget')
   if (!currentVNode.provide) {
