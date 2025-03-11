@@ -5,10 +5,9 @@ import {
   isClassWidgetConstructor,
   Widget
 } from './widget/index.js'
-import { createVNode, isVNode, type VNode, type WidgetType } from './vnode/index.js'
+import { createVNode, isVNode, provide, type VNode, type WidgetType } from './vnode/index.js'
 import { isFunction, Logger } from '../utils/index.js'
 import { mountVNode, renderWidgetElement } from './renderer/web-runtime-dom/index.js'
-import CoreLogger from './CoreLogger.js'
 
 const ERROR_MESSAGE = '还未渲染小部件或小部件已经卸载'
 
@@ -48,7 +47,9 @@ export class App {
    * 实例容器
    * @private
    */
-  #instances: Map<string, any> = new Map()
+  #data: Map<string, any> = new Map()
+  // 向下提供的数据
+  #provides: Record<string | symbol, any> | undefined = undefined
 
   /**
    * 构建应用实例
@@ -120,18 +121,23 @@ export class App {
       vnode = widget as VNode<FnWidgetConstructor | ClassWidgetConstructor>
     }
     if (!isVNode(vnode) || !isFunction(vnode.type)) {
-      throw new Error(
-        `[Vitarx.AppRenderer.render][ERROR]：入口小部件必须是函数声明小部件或类声明小部件。`
-      )
+      throw new Error(`[Vitarx.App.render][ERROR]：入口小部件必须是函数声明小部件或类声明小部件。`)
     }
-    vnode.provide = {
-      App: this
+    // 向下提供数据
+    if (this.#provides) {
+      vnode.provide = this.#provides
+      vnode.provide.App = this
+      this.#provides = undefined
+    } else {
+      vnode.provide = { App: this }
     }
+
     renderWidgetElement(vnode, this.container)
     this.#widget = vnode.instance!
+
     if (this.#widget['renderer'].state !== 'notMounted') {
       throw new Error(
-        `[Vitarx.AppRenderer.render][ERROR]：Vitarx应用主入口渲染失败，请修复控制台输出的异常。`
+        `[Vitarx.App.render][ERROR]：Vitarx应用主入口渲染失败，请修复控制台输出的异常。`
       )
     }
     mountVNode(vnode)
@@ -145,7 +151,7 @@ export class App {
    */
   update(): void {
     if (!this.#widget) {
-      CoreLogger.warn('AppRenderer.update', `${ERROR_MESSAGE}，不能执行更新操作。`)
+      throw new Error(`[Vitarx.App.update][ERROR]：${ERROR_MESSAGE}，不能执行更新操作。`)
     } else {
       this.#widget['renderer'].update()
     }
@@ -160,7 +166,7 @@ export class App {
    */
   unmount(): void {
     if (!this.#widget) {
-      CoreLogger.warn('AppRenderer.unmount', `${ERROR_MESSAGE}，不能执行卸载操作。`)
+      throw new Error(`[Vitarx.App.unmount][ERROR]：${ERROR_MESSAGE}，不能执行卸载操作。`)
     } else {
       this.#widget['renderer'].unmount()
       this.#widget = null
@@ -174,7 +180,7 @@ export class App {
    */
   activate(): void {
     if (!this.#widget) {
-      CoreLogger.warn('AppRenderer.activate', `${ERROR_MESSAGE}，不能执行激活操作。`)
+      throw new Error(`[Vitarx.App.activate][ERROR]：${ERROR_MESSAGE}，不能执行激活操作。`)
     } else {
       this.#widget?.['renderer'].activate()
     }
@@ -187,24 +193,43 @@ export class App {
    */
   deactivate(): void {
     if (!this.#widget) {
-      CoreLogger.warn('AppRenderer.deactivate', `${ERROR_MESSAGE}，不能执行停用操作。`)
+      throw new Error(`[Vitarx.App.deactivate][ERROR]：${ERROR_MESSAGE}，不能执行停用操作。`)
     } else {
       this.#widget?.['renderer'].deactivate()
     }
   }
 
   /**
-   * ## 注册实例
+   * ## 注册任意数据到容器中
    *
-   * 将实例注册到应用容器中，可以通过别名获取
+   * 将数据注册到应用容器中，可以通过别名获取
    *
    * @template T - 实例类型
-   * @param {string} name - 实例别名
-   * @param {T} instance - 实例对象
+   * @param {string} name - 数据索引
+   * @param {any} data - 数据，可以是类型的值
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
-  register(name: string, instance: Object): this {
-    this.#instances.set(name, instance)
+  register(name: string, data: any): this {
+    this.#data.set(name, data)
+    return this
+  }
+
+  /**
+   * 应用级数据提供
+   *
+   * @param {string | symbol} name - 注入名称
+   * @param {any} value - 注入值
+   */
+  provide(name: string | symbol, value: any): this {
+    if (this.widget) {
+      provide(name, value, this.widget)
+    } else {
+      if (!this.#provides) {
+        this.#provides = { [name]: value }
+      } else {
+        this.#provides[name] = value
+      }
+    }
     return this
   }
 
@@ -218,7 +243,7 @@ export class App {
    * @returns {T | undefined} - 返回实例，如果不存在则返回undefined
    */
   get<T = any>(name: string): T | undefined {
-    return (this.#instances.get(name) as T) || undefined
+    return (this.#data.get(name) as T) || undefined
   }
 }
 
