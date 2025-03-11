@@ -124,6 +124,9 @@ export class App {
         `[Vitarx.AppRenderer.render][ERROR]：入口小部件必须是函数声明小部件或类声明小部件。`
       )
     }
+    vnode.provide = {
+      App: this
+    }
     renderWidgetElement(vnode, this.container)
     this.#widget = vnode.instance!
     if (this.#widget['renderer'].state !== 'notMounted') {
