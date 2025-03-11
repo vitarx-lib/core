@@ -158,6 +158,8 @@ export interface VNode<T extends VNodeType = VNodeType> {
   instance?: Widget
   /**
    * 向下提供的数据
+   *
+   * @internal 此属性由内部进行管理，开发者请勿修改此属性
    */
   provide?: Record<string | symbol, any>
   /**
