@@ -288,6 +288,9 @@ export function watchDepend<R>(
   let listener: Listener | undefined
   if (deps.size > 0) {
     callback = callback ?? fn
+    if (typeof callback !== 'function') {
+      throw new TypeError('callback参数必须为可调用的函数')
+    }
     listener = new Listener(
       options?.batch === false ? () => callback!() : microTaskDebouncedCallback(() => callback!()),
       options
