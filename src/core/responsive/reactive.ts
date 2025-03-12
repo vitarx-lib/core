@@ -153,10 +153,10 @@ const handlerCollection = <T extends AnyCollection>(
  * # 响应式对象处理
  */
 export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
-  readonly #deep: boolean
-  readonly #trigger: Trigger<T>
-  readonly #track: Track<T>
-  readonly #readonly: boolean
+  private readonly _deep: boolean
+  private readonly _trigger: Trigger<T>
+  private readonly _track: Track<T>
+  private readonly _readonly: boolean
   #deepProxy?: Map<string | symbol, Reactive>
   /**
    * 构造函数
@@ -167,21 +167,21 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param readonly - 是否只读
    */
   constructor({ deep, trigger, track, readonly = false }: ReactiveHandlerOptions<T>) {
-    this.#deep = deep
-    this.#trigger = trigger
-    this.#track = track
-    this.#readonly = readonly
+    this._deep = deep
+    this._trigger = trigger
+    this._track = track
+    this._readonly = readonly
   }
 
   deleteProperty(target: T, prop: ExtractProp<T>): boolean {
-    if (this.#readonly) {
+    if (this._readonly) {
       CoreLogger.warn('Reactive', `响应式对象是只读的，不能删除${String(prop)}属性！`)
       return true
     }
     const result = Reflect.deleteProperty(target, prop)
     // 移除深度代理
     if (this.#deepProxy?.has(prop)) this.#deepProxy.delete(prop)
-    if (result) this.#trigger(prop)
+    if (result) this._trigger(prop)
     return result
   }
 
@@ -191,7 +191,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     // 检测是否为响应式对象
     if (prop === REACTIVE_SYMBOL) return true
     // 检测是否为只读响应式对象
-    if (prop === READONLY_REACTIVE_SYMBOL) return this.#readonly
+    if (prop === READONLY_REACTIVE_SYMBOL) return this._readonly
     // 获取原始对象
     if (prop === GET_RAW_TARGET_SYMBOL) return target
     // 返回监听目标undefined，表示监听代理对象
@@ -202,15 +202,15 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (isFunction(value)) {
       // 集合目标函数需特殊处理
       return isCollection(target)
-        ? handlerCollection(target, prop, this.#trigger as any, this.#track).bind(target)
+        ? handlerCollection(target, prop, this._trigger as any, this._track).bind(target)
         : value.bind(receiver)
     }
     // 如果是对象，则判断是否需要进行深度代理
-    if (this.#deep && isMakeProxy(value)) {
+    if (this._deep && isMakeProxy(value)) {
       const proxy = createReactive(value, {
-        deep: this.#deep,
-        trigger: () => this.#trigger(prop),
-        readonly: this.#deep ? this.#readonly : false
+        deep: this._deep,
+        trigger: () => this._trigger(prop),
+        readonly: this._deep ? this._readonly : false
       })
       if (this.#deepProxy) {
         this.#deepProxy.set(prop, proxy)
@@ -221,18 +221,18 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
       return proxy
     }
     // 非代理对象，则跟踪依赖
-    if (!isProxy(value)) this.#track(prop)
+    if (!isProxy(value)) this._track(prop)
     // 如果是引用类型，则返回引用
     return isRef(value) ? value.value : value
   }
 
   has(target: T, prop: ExtractProp<T>): boolean {
-    this.#track(prop)
+    this._track(prop)
     return Reflect.has(target, prop)
   }
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
-    if (this.#readonly) {
+    if (this._readonly) {
       CoreLogger.warn('Reactive', `响应式对象是只读的，不可修改${String(prop)}属性！`)
       return true
     }
@@ -250,7 +250,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
             if (this.#deepProxy?.has(strIndex)) this.#deepProxy.delete(strIndex)
           }
         }
-        this.#trigger(prop)
+        this._trigger(prop)
       }
       return result
     }
@@ -259,13 +259,13 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (isRef(oldValue)) {
       if (oldValue.value !== newValue) {
         oldValue.value = newValue
-        this.#trigger(prop)
+        this._trigger(prop)
       }
     } else if (oldValue !== newValue || !target.hasOwnProperty(prop)) {
       // 移除深度代理
       if (this.#deepProxy?.has(prop)) this.#deepProxy.delete(prop)
       const result = Reflect.set(target, prop, newValue, receiver)
-      if (result) this.#trigger(prop)
+      if (result) this._trigger(prop)
       return result
     }
     return true
