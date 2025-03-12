@@ -47,7 +47,7 @@ export class App {
    * 实例容器
    * @private
    */
-  #data: Map<string, any> = new Map()
+  #data: Map<string | symbol, any> = new Map()
   // 向下提供的数据
   #provides: Record<string | symbol, any> | undefined = undefined
 
@@ -209,7 +209,7 @@ export class App {
    * @param {any} data - 数据，可以是类型的值
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
-  register(name: string, data: any): this {
+  register(name: string | symbol, data: any): this {
     this.#data.set(name, data)
     return this
   }
