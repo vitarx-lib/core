@@ -215,6 +215,15 @@ export class App {
   }
 
   /**
+   * 取消注册的数据
+   *
+   * @param name
+   */
+  unregister(name: string | symbol) {
+    this.#data.delete(name)
+  }
+
+  /**
    * 应用级数据提供
    *
    * @param {string | symbol} name - 注入名称
