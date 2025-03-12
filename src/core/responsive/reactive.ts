@@ -277,6 +277,9 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
  *
  * @param target - 目标对象
  * @param options - 可选配置
+ * @param [options.trigger] - 额外的触发器，
+ * @param [options.readonly=false] - 是否只读
+ * @param [options.deep=false] - 是否深度代理
  * @internal 此函数由系统内部使用，开发者不应该使用此函数！。
  */
 export function createReactive<T extends AnyObject>(
@@ -289,7 +292,7 @@ export function createReactive<T extends AnyObject>(
   if (Object.isFrozen(target)) {
     throw new TypeError('参数1(target)不能是一个冻结对象！')
   }
-  const { trigger, readonly, deep = false } = options || {}
+  const { trigger, readonly = false, deep = false } = options || {}
   // 避免嵌套代理
   if (isReactive(target)) {
     if (readonly && !isReadonly(target)) {
@@ -361,7 +364,7 @@ export function reactive<T extends AnyObject>(target: T, deep: boolean = true): 
  * @param {T} target - 目标对象
  */
 export function shallowReactive<T extends AnyObject>(target: T): Reactive<T> {
-  return createReactive(target)
+  return createReactive(target, { deep: false })
 }
 
 /**
@@ -393,7 +396,7 @@ export function readonly<T extends AnyObject>(target: T): DeepReadonly<UnwrapNes
  * @returns {Object}
  */
 export function shallowReadonly<T extends AnyObject>(target: T): Readonly<UnwrapNestedRefs<T>> {
-  return createReactive(target, { readonly: true })
+  return createReactive(target, { readonly: true, deep: false })
 }
 
 /**
