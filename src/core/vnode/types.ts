@@ -65,7 +65,8 @@ export interface IntrinsicAttributes {
    *
    * 可选值：
    *  - 对象Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
-   *  - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给元素的属性，第二个元素为要排除的属性。
+   *  - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
+   *  第二个元素可以指定哪些属性不需要绑定。
    */
   'v-bind'?: VBind
 
