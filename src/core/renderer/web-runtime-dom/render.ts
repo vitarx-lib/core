@@ -210,7 +210,7 @@ export function renderFragmentElement(
  *
  * @param {ContainerElement} parent - 父元素
  * @param {VNodeChildren} children - 子节点列表
- * @param {boolean} triggerMountHook - 自动触发挂载钩子
+ * @param {boolean} [triggerMountHook=false] - 自动触发挂载钩子
  */
 export function renderChildren(
   parent: ContainerElement,
