@@ -274,6 +274,8 @@ function tryReuseNodeWithSameKey(
     if (oldSameKeyChild.vnode.type === newChild.type) {
       // 避免复用节点被删除
       removedNodes.delete(oldSameKeyChild.vnode)
+      // 删除映射，一个key只对应一个节点，避免重复的key造成遗漏节点
+      oldKeyToVNode.delete(newChild.key)
       // 替换到新节点列表中
       newChildren[index] = oldSameKeyChild.vnode
       // 只更新属性
