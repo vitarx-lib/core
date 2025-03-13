@@ -6,6 +6,7 @@ import {
   type IntrinsicAttributes,
   isRefEl,
   isVNode,
+  type OnlyKey,
   type RefEl,
   type TextVNode,
   type VNode,
@@ -32,6 +33,7 @@ import { updateParentVNodeMapping } from './manager.js'
 import { isSimpleWidget } from '../widget/index.js'
 import { isValueProxy, type ValueProxy } from '../responsive/index.js'
 import type { HTMLClassProperties } from '../renderer/index.js'
+import CoreLogger from '../CoreLogger.js'
 
 // 子元素类型
 type Child =
@@ -121,18 +123,18 @@ export function createVNode<T extends VNodeType>(
     if (cssClass.length > 0) newProps.class = cssClass
   } else if (isSimpleWidget(type)) {
     // 如果是简单组件，调用构造函数并返回结果
-    const simpleVnode = type(newProps) as VNode<T>
-    if (key && simpleVnode.key === undefined) {
-      simpleVnode.key = key
+    const simpleVNode = type(newProps) as VNode<T>
+    if (key && simpleVNode.key === undefined) {
+      simpleVNode.key = key
     }
     if (isRefEl(ref_el)) {
-      if (isRefEl(simpleVnode.ref)) {
-        ref_el.value = () => simpleVnode.ref!.value
+      if (isRefEl(simpleVNode.ref)) {
+        ref_el.value = () => simpleVNode.ref!.value
       } else {
-        simpleVnode.ref = ref_el
+        simpleVNode.ref = ref_el
       }
     }
-    return simpleVnode
+    return simpleVNode
   }
 
   // 创建虚拟节点
@@ -144,10 +146,8 @@ export function createVNode<T extends VNodeType>(
     ref: ref_el,
     children: []
   }
-  const childList: VNodeChildren = []
-  formatChildren(children, childList, vnode)
   // 格式化children
-  vnode.children = childList
+  vnode.children = formatChildren(children, vnode)
   return vnode as VNode<T>
 }
 
@@ -188,20 +188,38 @@ function handlerBindAttrs(props: Record<string, any>): void {
 /**
  * 将循环嵌套的节点列表平铺展开
  *
- * @param child
- * @param childList
- * @param parent
+ * @param child - 子节点
+ * @param parent - 父节点
+ * @returns 格式化后的子节点列表
  */
-function formatChildren(child: Child, childList: VNodeChildren, parent: VNode) {
+function formatChildren(child: Child, parent: VNode): VNodeChildren {
+  const childList: VNodeChildren = []
+  // 用于检测重复key的集合
+  const keySet = new Set<OnlyKey>()
+
   while (isValueProxy(child)) {
     child = child.value
   }
   if (Array.isArray(child)) {
-    child.forEach(item => formatChildren(item, childList, parent))
+    child.forEach(item => {
+      const itemChildren = formatChildren(item, parent)
+      childList.push(...itemChildren)
+    })
   } else {
     let vnode: ChildVNode
     if (isVNode(child)) {
       vnode = child
+      // 检查key是否重复
+      if (vnode.key !== undefined) {
+        if (keySet.has(vnode.key)) {
+          CoreLogger.warn(
+            'VNode.DuplicateKey',
+            `检测到重复的key: ${String(vnode.key)}，这可能会导致渲染错误或性能问题。`
+          )
+        } else {
+          keySet.add(vnode.key)
+        }
+      }
     } else if ([false, undefined, null].includes(child as any)) {
       vnode = createCommentVNode(child)
     } else {
@@ -210,6 +228,8 @@ function formatChildren(child: Child, childList: VNodeChildren, parent: VNode) {
     childList.push(vnode)
     updateParentVNodeMapping(vnode, parent)
   }
+
+  return childList
 }
 
 /**
