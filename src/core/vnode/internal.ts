@@ -1,3 +1,9 @@
+import { Depend, type ExtractProp, type Reactive, ReactiveHandler } from '../responsive/index.js'
+import { Observers } from '../observer/index.js'
+import CoreLogger from '../CoreLogger.js'
+// 默认属性标记
+export const defaultPropsSymbol = Symbol('VNODE_PROPS_DEFAULT_DATA')
+
 /**
  * props代理处理器
  */
@@ -46,7 +52,7 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
  * @param {Record<string, any>} props
  * @returns {Reactive<Record<string, any>>}
  */
-export function _proxyWidgetInstanceProps<T extends Record<string, any>>(props: T): Reactive<T> {
+export function _proxyWidgetInstanceProps<T extends Record<string, any>>(props: T): Readonly<T> {
   const proxy = new Proxy(
     props,
     new PropsProxyHandler<T>({
@@ -59,5 +65,5 @@ export function _proxyWidgetInstanceProps<T extends Record<string, any>>(props: 
       }
     })
   )
-  return proxy as Reactive<T>
+  return proxy as Readonly<T>
 }
