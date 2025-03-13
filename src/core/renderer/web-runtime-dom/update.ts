@@ -9,6 +9,7 @@ import {
   isVNode,
   isWidgetVNode,
   type VNode,
+  type VNodeChildren,
   VNodeManager
 } from '../../vnode/index.js'
 import {
@@ -28,12 +29,14 @@ import type { HtmlElement, VDocumentFragment } from '../types/index.js'
  *
  * @param oldVNode - 旧虚拟节点
  * @param newVNode - 新虚拟节点
+ * @param [autoMount=true] - 是否自动挂载新节点和卸载旧节点
+ * @returns - 新虚拟节点
  */
-export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
+export function patchUpdate(oldVNode: VNode, newVNode: VNode, autoMount = true): VNode {
   // 类型不一致，替换原有节点
   if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
     // 替换旧节点为新节点
-    replaceVNode(newVNode, oldVNode)
+    replaceVNode(newVNode, oldVNode, autoMount)
     return newVNode
   } else {
     // 非片段节点，则进行更新属性
@@ -42,7 +45,7 @@ export function patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
     }
     // 非组件节点，更新子节点
     if (!isFunction(oldVNode.type)) {
-      patchChildren(oldVNode, newVNode)
+      oldVNode.children = patchChildren(oldVNode, newVNode)
     }
     return oldVNode
   }
@@ -94,11 +97,11 @@ function patchAttrs(oldVNode: VNode, newVNode: VNode): void {
  *
  * @param oldVNode - 旧虚拟节点
  * @param newVNode - 新虚拟节点
+ * @returns - 新虚拟节点的子节点列表
  */
-function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
+function patchChildren(oldVNode: VNode, newVNode: VNode): VNodeChildren {
   const oldChildren = oldVNode.children!
   const newChildren = newVNode.children!
-  if (oldChildren === newChildren) return false
   /** 是否为片段节点 */
   const isFragment = oldVNode.type === Fragment
   // 渲染新子节点列表
@@ -108,8 +111,7 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
     if (isFragment) {
       replaceElement(oldVNode.el as Element, (oldVNode.el as VDocumentFragment).__emptyElement!)
     }
-    oldVNode.children = newChildren
-    return true
+    return newChildren
   }
   // 删除旧子节点列表
   if (!newChildren.length && oldChildren.length) {
@@ -123,91 +125,109 @@ function patchChildren(oldVNode: VNode, newVNode: VNode): boolean {
     for (const oldChild of oldChildren) {
       unmountVNode(oldChild)
     }
-    oldVNode.children = newChildren
-    return true
+    return newChildren
   }
-  // 最大长度
-  const maxLength = Math.max(oldChildren.length, newChildren.length)
-  // 正序遍历，使用偏移量管理索引
-  let offset = 0
-  for (let i = 0; i < maxLength; i++) {
-    const adjustedIndex = i - offset // 调整后的索引，考虑删除带来的偏移
-    const oldChild = oldChildren[adjustedIndex]
-    const newChild = patchChild(oldVNode, oldChild, newChildren[i], isFragment, adjustedIndex)
-    if (newChild) {
-      oldVNode.children[adjustedIndex] = newChild
-    } else {
-      // 删除当前节点并调整偏移量
-      oldChildren.splice(adjustedIndex, 1)
-      offset++ // 偏移量增加，下一次遍历时索引需要校正
+  // 1. 创建旧节点的key映射表
+  const oldKeyToVNode = new Map<any, { index: number; vnode: VNode }>()
+  for (let i = 0; i < oldChildren.length; i++) {
+    const child = oldChildren[i]
+    if (isVNode(child) && (child.key || child.key === 0)) {
+      oldKeyToVNode.set(child.key, { index: i, vnode: child })
     }
   }
-  return true
-}
-
-/**
- * 差异化更新子节点
- *
- * @param oldVNode - 旧虚拟节点
- * @param oldChild - 旧子节点
- * @param newChild - 新子节点
- * @param isFragment - 旧节点是否为片段节点
- * @param index - 当前索引
- * @protected
- */
-function patchChild(
-  oldVNode: VNode,
-  oldChild: ChildVNode | undefined,
-  newChild: ChildVNode | undefined,
-  isFragment: boolean,
-  index: number
-): ChildVNode | undefined {
-  if (!oldChild && !newChild) return
-  // 删除节点
-  if (oldChild && !newChild) {
-    unmountVNode(oldChild)
-    return
-  }
-  // 新增节点
-  if (!oldChild && newChild) {
-    // 如果旧父节点是片段节点
-    if (isFragment) {
-      const el = renderElement(newChild)
-      // 前一个元素
-      const preEl = oldVNode.children[index - 1]?.el
-      if (!preEl) {
-        // 不存在前一个元素则代表着是空片段节点，直接用新元素替换掉占位元素
-        replaceElement(el, (oldVNode.el as VDocumentFragment).__emptyElement!)
-      } else {
-        // 往片段节点的最后一个元素之后插入新元素
-        insertAfterExactly(el, preEl)
+  // 被删除的节点
+  const removedNodes = new Set(oldVNode.children)
+  // 新子节点列表，未挂载！
+  const newChildrenNotMounted: ChildVNode[] = []
+  // 根据新列表长度开始遍历
+  for (let index = 0; index < newChildren.length; index++) {
+    // 旧子节点，可能没有旧子节点
+    const oldChild = oldVNode.children[index] as ChildVNode | undefined
+    // 新子节点
+    const newChild = newVNode.children[index]
+    // 判断是否能复用旧节点
+    if (isVNode(newChild) && oldKeyToVNode.has(newChild.key)) {
+      const oldSameKeyChild = oldKeyToVNode.get(newChild.key)!
+      if (oldSameKeyChild.vnode.type === newChild.type) {
+        // 避免复用节点被删除
+        removedNodes.delete(oldSameKeyChild.vnode)
+        // 替换到新节点列表中
+        newChildren[index] = oldSameKeyChild.vnode
+        // 只更新属性
+        patchAttrs(oldSameKeyChild.vnode, newChild)
+        const el = oldSameKeyChild.vnode.el!
+        // 如果旧父节点是片段节点
+        if (isFragment) {
+          const preEl = oldVNode.children[index - 1]?.el
+          if (preEl) {
+            // 往片段节点的最后一个元素之后插入新元素
+            insertAfterExactly(el, preEl)
+          } else {
+            // 不存在前一个元素则代表着是空片段节点，直接用新元素替换掉占位元素
+            replaceElement(el, (oldVNode.el as VDocumentFragment).__emptyElement!)
+          }
+        } else {
+          oldVNode.el!.appendChild(el)
+        }
+        continue
       }
-      /// 触发挂载钩子
-      mountVNode(newChild)
-    } else {
-      // 其他容器父节点直接渲染新的子节点并挂载到父节点
-      renderChildren(oldVNode.el!, newChild, true)
     }
-    return newChild
-  }
-  // 更新文本节点或注释节点
-  if (
-    (isTextVNode(oldChild) && isTextVNode(newChild)) ||
-    (isCommentVNode(oldChild) && isCommentVNode(newChild))
-  ) {
-    if (oldChild.value !== newChild.value) {
-      oldChild.value = newChild.value
-      oldChild.el!.nodeValue = newChild.value
+    // 新增节点
+    if (!oldChild) {
+      // 如果旧父节点是片段节点
+      if (isFragment) {
+        const el = renderElement(newChild)
+        const preEl = oldVNode.children[index - 1]?.el
+        if (preEl) {
+          // 往片段节点的最后一个元素之后插入新元素
+          insertAfterExactly(el, preEl)
+        } else {
+          // 不存在前一个元素则代表着是空片段节点，直接用新元素替换掉占位元素
+          replaceElement(el, (oldVNode.el as VDocumentFragment).__emptyElement!)
+        }
+      } else {
+        // 其他容器父节点直接渲染新的子节点并挂载到父节点
+        renderChildren(oldVNode.el!, newChild)
+      }
+      newChildrenNotMounted.push(newChild)
+      continue
     }
-    return oldChild
+
+    // 更新特殊节点：文本节点和注释节点
+    if (
+      (isTextVNode(oldChild) && isTextVNode(newChild)) ||
+      (isCommentVNode(oldChild) && isCommentVNode(newChild))
+    ) {
+      if (oldChild.value !== newChild.value) {
+        oldChild.value = newChild.value
+        oldChild.el!.nodeValue = newChild.value
+      }
+      // 取消标记旧节点为删除
+      removedNodes.delete(oldChild)
+      newChildren[index] = oldChild
+      continue
+    }
+
+    // 更新常规虚拟节点
+    if (isVNode(oldChild) && isVNode(newChild)) {
+      const updatedNewChild = patchUpdate(oldChild, newChild, false)
+      // 如果更新后的虚拟节点和旧虚拟节点相同，则取消将旧节点标记为删除
+      if (updatedNewChild === oldChild) {
+        newChildren[index] = oldChild
+        removedNodes.delete(oldChild)
+      } else {
+        newChildrenNotMounted.push(updatedNewChild)
+      }
+      continue
+    }
+
+    // 替换不同 常规 节点 和特殊节点
+    replaceVNode(newChild!, oldChild!, false)
+    newChildrenNotMounted.push(newChild)
   }
-  // 更新虚拟节点，不包含 注释和文本节点
-  if (isVNode(oldChild) && isVNode(newChild)) {
-    return patchUpdate(oldChild, newChild)
-  }
-  // 替换虚拟节点 包含 注释和文本节点
-  replaceVNode(newChild!, oldChild!)
-  return newChild
+  removedNodes.forEach(vnode => unmountVNode(vnode))
+  newChildrenNotMounted.forEach(mountVNode)
+  return newChildren
 }
 
 /**
@@ -259,12 +279,13 @@ export function insertBeforeExactly(newEl: HtmlElement, targetElement: HtmlEleme
   }
   return parent
 }
+
 /**
  * 卸载节点
  *
  * @param {ChildVNode} vnode - 要卸载的虚拟节点
  * @param {boolean} removeEl - 是否要从DOM树中移除元素，内部递归时使用，无需外部指定！
- * @protected
+ * @internal 内部核心函数，切勿随意调用！
  */
 export function unmountVNode(vnode: ChildVNode, removeEl: boolean = true): void {
   if (isVNode(vnode)) {
@@ -285,8 +306,8 @@ export function unmountVNode(vnode: ChildVNode, removeEl: boolean = true): void 
 /**
  * 卸载节点
  *
- * @internal
  * @param vnode - 要卸载的虚拟节点
+ * @internal 内部核心函数，切勿随意调用！
  */
 export function mountVNode(vnode: ChildVNode): void {
   if (isVNode(vnode)) {
@@ -306,8 +327,14 @@ export function mountVNode(vnode: ChildVNode): void {
  * @internal
  * @param {newVNode} newVNode - 新虚拟节点
  * @param {oldVNode} oldVNode - 旧虚拟节点
+ * @param {boolean} autoMount - 是否自动挂载新节点和卸载旧节点
+ * @internal 内部核心函数，切勿随意调用！
  */
-export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
+export function replaceVNode(
+  newVNode: ChildVNode,
+  oldVNode: ChildVNode,
+  autoMount: boolean = true
+): void {
   // 渲染新节点
   const newEl = renderElement(newVNode)
   // 如果新节点是传送节点则特殊处理
@@ -323,10 +350,12 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
       // 将新传送节点占位元素插入到旧节点之前，兼容卸载动画
       insertBeforeExactly(newShadowElementEl, oldVNode.el!)
     }
-    // 卸载旧节点
-    unmountVNode(oldVNode)
-    // 挂载新节点
-    mountVNode(newVNode)
+    if (autoMount) {
+      // 卸载旧节点
+      unmountVNode(oldVNode)
+      // 挂载新节点
+      mountVNode(newVNode)
+    }
     return
   }
   // 替换文本节点
@@ -336,7 +365,7 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
       throw new Error('被替换的旧节点未挂载，无法获取其所在的容器元素实例，无法完成替换操作。')
     }
     parent.replaceChild(recoveryFragmentChildNodes(newVNode.el!), oldVNode.el!)
-    mountVNode(newVNode)
+    if (autoMount) mountVNode(newVNode)
     return
   }
   if (oldVNode.instance) {
@@ -352,10 +381,12 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
   } else {
     replaceElement(newEl, oldVNode.el!)
   }
-  // 卸载旧节点
-  unmountVNode(oldVNode)
-  // 挂载新节点
-  mountVNode(newVNode)
+  if (autoMount) {
+    // 卸载旧节点
+    unmountVNode(oldVNode)
+    // 挂载新节点
+    mountVNode(newVNode)
+  }
 }
 
 /**
@@ -364,6 +395,7 @@ export function replaceVNode(newVNode: ChildVNode, oldVNode: ChildVNode): void {
  * @internal
  * @param {ChildVNode} vnode - 子节点
  * @param {boolean} activate - 激活为true，停用为false
+ * @internal 内部核心函数，切勿随意调用！
  */
 export function updateActivateState(vnode: ChildVNode, activate: boolean): void {
   if (isVNode(vnode)) {
