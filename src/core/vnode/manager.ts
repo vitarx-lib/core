@@ -7,7 +7,7 @@ import {
 } from '../widget/index.js'
 import { createScope } from '../scope/index.js'
 import { getContext, runContext } from '../context/index.js'
-import { _proxyWidgetInstanceProps } from './props.js'
+import { _proxyWidgetInstanceProps } from './internal.js'
 
 type InstanceCreatedCallback = (instance: Widget) => void
 
