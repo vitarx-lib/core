@@ -37,6 +37,7 @@ export type ErrorSource =
   | 'build'
   | 'render'
   | 'update'
+  | 'listener'
   | `hook:${Exclude<LifeCycleHookNames, 'error'>}`
 
 /**
