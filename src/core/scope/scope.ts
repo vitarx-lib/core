@@ -109,7 +109,9 @@ export class Scope extends Effect {
    */
   add(effect: EffectInterface): boolean {
     if (this.isDeprecated) {
-      console.warn('当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象')
+      console.warn(
+        '[Vitarx.Scope][WARN]：当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象'
+      )
       return false
     } else {
       if (!isEffect(effect)) {
