@@ -1,17 +1,10 @@
 import type { ContainerElement, VDocumentFragment } from '../renderer/index.js'
+import type { Widget } from './widget.js'
 
 /**
  * 目标容器元素
  */
 export type TargetContainerElement = Exclude<ContainerElement, VDocumentFragment>
-
-/**
- * 错误信息类型
- *
- * - build: 构建视图时捕获的异常
- * - render: 渲染时视图时捕获的异常
- */
-export type ErrorInfo = 'build' | 'render'
 
 /** 生命周期钩子枚举 */
 export enum LifeCycleHooks {
@@ -28,21 +21,54 @@ export enum LifeCycleHooks {
   beforeRemove = 'onBeforeRemove'
 }
 
-/** 生命周期钩子类型 */
+/**
+ * 生命周期钩子名联合类型
+ */
+export type LifeCycleHookNames = keyof typeof LifeCycleHooks
+/**
+ * 生命周期钩子方法名联合类型
+ */
 export type LifeCycleHookMethods = `${LifeCycleHooks}`
 
-/** 生命周期钩子需要接收的参数 */
+/**
+ * 错误来源联合类型
+ */
+export type ErrorSource =
+  | 'build'
+  | 'render'
+  | 'update'
+  | `hook:${Exclude<LifeCycleHookNames, 'error'>}`
+
+/**
+ * 错误信息对象接口
+ */
+export interface ErrorInfo {
+  /**
+   * 错误来源
+   */
+  source: ErrorSource
+  /**
+   * 抛出异常的实例
+   */
+  instance: Widget
+}
+
+/**
+ * 生命周期钩子需要接收的参数
+ */
 export type HookParameter<T> = T extends LifeCycleHooks.error
   ? [error: unknown, info: ErrorInfo]
   : T extends LifeCycleHooks.beforeRemove
     ? [el: ContainerElement, type: 'unmount' | 'deactivate']
     : []
 
-/** 生命周期钩子返回值类型 */
+/**
+ * 生命周期钩子返回值类型
+ */
 export type HookReturnType<T> = T extends LifeCycleHooks.beforeMount
   ? void | TargetContainerElement
   : T extends LifeCycleHooks.error
-    ? Vitarx.Element | void
+    ? any
     : T extends LifeCycleHooks.beforeRemove
       ? Promise<void> | void
       : void
@@ -154,15 +180,16 @@ export abstract class LifeCycle {
    * `onError`钩子会在组件渲染或构建时抛出异常，可以返回一个`Vitarx.Element`虚拟节点做为备用展示。
    *
    * info值说明：
-   *  - build: 构建时抛出的异常，通常是小部件自身的构建错误
-   *  - render: 渲染时抛出的异常，通常是子组件抛出的异常
+   *  - source: 错误来源，可以是`build`、`render`、`hook:xxx`...
+   *  - instance: 发生错误的组件实例
    *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    * @param {unknown} error - 捕获到的异常对象
-   * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
+   * @param {ErrorInfo} info - 错误信息对象
+   * @returns {any} build/render错误时支持返回备用元素，返回其他非`undefined`值，表示异常已被处理，不再向上抛出。
+   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    * @protected
    */
-  protected onError?(error: unknown, info: ErrorInfo): Vitarx.Element | void
+  protected onError?(error: unknown, info: ErrorInfo): any
 
   /**
    * 元素从`DOM`树移除之前触发的钩子
@@ -178,7 +205,7 @@ export abstract class LifeCycle {
    * ```
    *
    * @param {ContainerElement} el - 当前小部件的根元素。
-   * @param type - 触发类型，可以是`unmount`或`deactivate`。
+   * @param {string | 'unmount' | 'deactivate'} type - 触发类型`unmount`|`deactivate`。
    * @returns {Promise<void>} 返回一个Promise，渲染器会等待其运行完成后再移除根元素。
    * @protected
    */
@@ -186,21 +213,4 @@ export abstract class LifeCycle {
     el: T,
     type: 'unmount' | 'deactivate'
   ): Promise<void>
-
-  /**
-   * 调用生命周期钩子
-   *
-   * @internal 内部方法，开发者勿调用!!!
-   */
-  protected callLifeCycleHook<K extends LifeCycleHooks>(
-    hook: K,
-    ...args: HookParameter<K>
-  ): HookReturnType<K> {
-    // 使用断言来安全调用受保护方法
-    const method = this[hook] as unknown as (...args: HookParameter<K>) => any
-    if (typeof method === 'function') {
-      return method.apply(this, args)
-    }
-    return undefined as any
-  }
 }
