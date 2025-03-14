@@ -25,6 +25,7 @@ import CoreLogger from '../CoreLogger.js'
 import type { ContainerElement } from './types/index.js'
 import { Depend } from '../responsive/index.js'
 import { _WidgetViewDependListener } from './view_depend_listener.js'
+import { _callLifeCycleHook } from '../widget/internal.js'
 
 /**
  * 渲染状态
@@ -94,8 +95,8 @@ export class WidgetRenderer<T extends Widget> {
     this._viewDependListener = new _WidgetViewDependListener(() => this.update())
     this.scope.add(this._viewDependListener)
     this._child = this.build()
-    this.buildChild = this.buildChild.bind(this)
   }
+
   /**
    * 获取影子元素
    *
@@ -133,10 +134,6 @@ export class WidgetRenderer<T extends Widget> {
 
   /**
    * 当前作用域
-   *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   *
-   * @protected
    */
   get scope(): Scope {
     return this.widget['scope']
@@ -201,7 +198,7 @@ export class WidgetRenderer<T extends Widget> {
       throw new Error('[Vitarx.WidgetRenderer.render]：组件已渲染，请勿重复渲染！')
     }
 
-    let el: ContainerElement | null = null
+    let el: ContainerElement | null
     try {
       // 触发onBeforeMount生命周期
       const target = this.triggerLifeCycle(LifeCycleHooks.beforeMount)
@@ -216,10 +213,12 @@ export class WidgetRenderer<T extends Widget> {
       }
     } catch (e) {
       // 触发onError生命周期
-      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, 'render')
-      // 如果返回的内容不是一个VNode虚拟节点，则继续抛出错误
-      if (!isVNode(errVNode)) throw e
-      this._child = errVNode
+      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, {
+        source: 'render',
+        instance: this.widget
+      })
+      // 如果渲染失败，则使用错误视图替换原视图
+      this._child = isVNode(errVNode) ? errVNode : createVNode(Fragment)
       el = renderElement(this.child) as ContainerElement
     }
     this._state = 'notMounted'
@@ -254,7 +253,6 @@ export class WidgetRenderer<T extends Widget> {
   /**
    * 卸载小部件
    *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    * @param {boolean} root - 用于递归时判断是否需要移除当前元素，内部逻辑使用，请勿外部传入。
    * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    */
@@ -308,9 +306,13 @@ export class WidgetRenderer<T extends Widget> {
       throw new TypeError(`新的子节点必须是有效的VNode对象，给定：${typeof newChildVNode}`)
     }
     if (this.state === 'unloaded') {
-      return CoreLogger.debug(
-        'WidgetRenderer.update',
-        `${this.name} 组件，渲染器已销毁，不能再更新视图！`
+      this.triggerLifeCycle(
+        LifeCycleHooks.error,
+        new Error('[Vitarx.WidgetRenderer.update]：组件已销毁，不能再更新视图！'),
+        {
+          source: 'update',
+          instance: this.widget
+        }
       )
     }
     // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
@@ -352,7 +354,6 @@ export class WidgetRenderer<T extends Widget> {
   /**
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    * @param {boolean} root - 该参数用于递归时内部判断是否需要重新挂载，请勿外部传入。
    * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    */
@@ -380,7 +381,6 @@ export class WidgetRenderer<T extends Widget> {
   /**
    * 停用小部件
    *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    * @param root - 该参数用于递归时内部判断是否需要移除当前元素，请勿外部传入。
    * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    */
@@ -414,29 +414,27 @@ export class WidgetRenderer<T extends Widget> {
   /**
    * 构建`child`虚拟节点
    *
-   * @note 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
    * @protected
    * @returns {VNode}
    */
-  protected buildChild(): VNode {
+  protected buildChild = (): VNode => {
     let vnode: VNode
     try {
       vnode = this.widget['build']()
+      if (!isVNode(vnode)) {
+        throw new Error(`${this.name}.build 返回值必须是有效的VNode类型，否则无法渲染！`)
+      }
     } catch (e) {
-      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, 'build')
-      if (!isVNode(errVNode)) throw e
-      vnode = errVNode
+      const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, {
+        source: 'build',
+        instance: this.widget
+      })
+      // 如果构建出错，则使用错误虚拟节点
+      vnode = isVNode(errVNode) ? errVNode : createVNode(Fragment)
     }
-    if (isVNode(vnode)) {
-      updateParentVNodeMapping(vnode, this.vnode)
-      return vnode
-    } else {
-      CoreLogger.warn(
-        'WidgetRenderer.buildChild',
-        `${this.name}.build 返回值必须是有效的VNode类型，否则无法渲染！`
-      )
-      return createVNode(Fragment)
-    }
+    updateParentVNodeMapping(vnode, this.vnode)
+    return vnode
   }
 
   /**
@@ -472,24 +470,20 @@ export class WidgetRenderer<T extends Widget> {
     hook: K,
     ...args: HookParameter<K>
   ): HookReturnType<K> {
-    try {
-      return this.widget['callLifeCycleHook'](hook, ...args)
-    } catch (e) {
-      CoreLogger.error(`LifeCycle.${hook}`, `生命周期钩子 ${hook} 执行时捕获到异常`, e)
-      return undefined as any
-    }
+    return _callLifeCycleHook(this.widget, hook, ...args)
   }
 }
 
 /**
  * 创建小部件渲染器
  *
- * 如果组件存在必填参数，则需传入`props`参数。
+ * 如果小部件存在必填参数，则需传入`props`参数。
  *
  * @param widget - 小部件构造函数
  * @returns {WidgetRenderer} - 小部件渲染器
  */
 export function createWidgetRenderer(widget: WidgetType<{}>): WidgetRenderer<Widget<{}>>
+
 /**
  * 创建小部件渲染器
  *
