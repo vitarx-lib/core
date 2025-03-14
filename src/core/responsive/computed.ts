@@ -111,7 +111,7 @@ export class Computed<T> implements ValueProxy<T> {
     if (typeof this.#options.setter === 'function') {
       this.#options.setter(newValue)
     } else {
-      console.warn('[Vitarx.Computed][WARN]:不应该对计算属性进行写入，除非定义了setter。')
+      console.warn('[Vitarx.Computed][WARN]：不应该对计算属性进行写入，除非定义了setter。')
     }
   }
 
