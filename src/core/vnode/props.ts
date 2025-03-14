@@ -39,8 +39,7 @@ import { defaultPropsSymbol } from './internal.js'
  * // 在类组件中也可以使用此API
  *
  * class UserInfo extends Widget<Props,Required<T>>{
- *   constructor(props: Props){
- *     super(props)
+ *   onBeforeCreate(){
  *     defineProps({ gender: 1 })
  *   }
  *   build(){
