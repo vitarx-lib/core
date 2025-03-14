@@ -94,6 +94,7 @@ export class WidgetRenderer<T extends Widget> {
     this._viewDependListener = new _WidgetViewDependListener(() => this.update())
     this.scope.add(this._viewDependListener)
     this._child = this.build()
+    this.buildChild = this.buildChild.bind(this)
   }
   /**
    * 获取影子元素
@@ -449,7 +450,7 @@ export class WidgetRenderer<T extends Widget> {
   protected build(): VNode {
     this._viewDependListener.clear()
     this.scope.add(this._viewDependListener)
-    const { deps, result } = Depend.collect(this.buildChild.bind(this))
+    const { deps, result } = Depend.collect(this.buildChild)
     if (deps.size > 0) {
       for (const [proxy, props] of deps) {
         for (const prop of props) {
