@@ -70,8 +70,10 @@ export class FnWidget extends Widget {
   async [__initializeMethod](data: CollectResult): Promise<FnWidget> {
     // 注入暴露的属性和方法
     this.#injectExposed(data.exposed)
+    const exposedCount = Object.keys(data.exposed).length
     // 注入生命周期钩子到实例中
     this.#injectLifeCycleHooks(data.lifeCycleHooks)
+    const hookCount = Object.keys(data.lifeCycleHooks).length
     if (isPromise(data.build)) {
       const suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
@@ -84,6 +86,14 @@ export class FnWidget extends Widget {
           throw err
         }
       } finally {
+        // 如果有新增钩子则重新注入生命周期钩子
+        if (hookCount !== Object.keys(data.lifeCycleHooks).length) {
+          this.#injectLifeCycleHooks(data.lifeCycleHooks)
+        }
+        // 如果组件有新增暴露的属性和方法，则重新注入到实例中
+        if (exposedCount !== Object.keys(data.exposed).length) {
+          this.#injectExposed(data.exposed)
+        }
         this.#setBuild(data.build as BuildVNode)
         // 如果组件未卸载，则强制更新视图
         if (this['_$renderer'] && this['_$renderer'].state !== 'unloaded') this.update()
@@ -121,7 +131,7 @@ export class FnWidget extends Widget {
    * @param lifeCycleHooks
    */
   #injectLifeCycleHooks(lifeCycleHooks: CollectResult['lifeCycleHooks']) {
-    for (const lifeCycleHook in lifeCycleHooks || {}) {
+    for (const lifeCycleHook in lifeCycleHooks) {
       const k = lifeCycleHook as LifeCycleHookMethods
       this[k] = lifeCycleHooks[k]
     }
