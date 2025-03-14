@@ -33,6 +33,7 @@ export interface AppConfig {
    */
   errorHandler?: (error: unknown, info: ErrorInfo) => any
 }
+
 /**
  * ## Vitarx App
  *
@@ -63,7 +64,7 @@ export class App {
    */
   constructor(container: Element, config?: AppConfig) {
     if (!(container instanceof Element)) {
-      throw new Error('[Vitarx]：根容器必须是Element实例。')
+      throw new Error('[Vitarx.App]：根容器必须是Element实例。')
     }
     this.container = container
     this.config = Object.assign({ ssr: false }, config) as Required<AppConfig>
@@ -239,6 +240,38 @@ export class App {
    */
   get<T = any>(name: string): T | undefined {
     return (this.#data.get(name) as T) || undefined
+  }
+
+  /**
+   * ## 安装插件
+   *
+   * @param {(app: App) => void} plugin - 不需要选项的插件函数
+   * @returns {this} - 返回应用实例本身，支持链式调用
+   */
+  use(plugin: (app: App) => void): this
+  /**
+   * ## 安装插件
+   *
+   * @template T - 插件选项类型
+   * @param {(app: App, options: T) => void} plugin - 需要选项的插件函数
+   * @param {T} options - 插件选项
+   * @returns {this} - 返回应用实例本身，支持链式调用
+   */
+  use<T extends {}>(plugin: (app: App, options: T) => void, options: T): this
+  /**
+   * ## 安装插件
+   *
+   * @template T - 插件选项类型
+   * @param {(app: App, options?: T) => void} plugin - 可选选项的插件函数
+   * @param {T} options - 插件选项
+   * @returns {this} - 返回应用实例本身，支持链式调用
+   */
+  use<T extends {}>(plugin: (app: App, options?: T) => void, options?: T): this {
+    if (typeof plugin !== 'function') {
+      throw new Error(`[Vitarx.App.use][ERROR]：插件必须为一个函数。`)
+    }
+    plugin(this, options)
+    return this
   }
 }
 
