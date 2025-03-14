@@ -1,11 +1,6 @@
 import { Widget } from './widget.js'
 import { isPromise } from '../../utils/index.js'
-import {
-  type HookParameter,
-  type HookReturnType,
-  type LifeCycleHookMethods,
-  LifeCycleHooks
-} from './life-cycle.js'
+import { type LifeCycleHookMethods } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
 import {
   createVNode,
@@ -17,7 +12,6 @@ import {
 } from '../vnode/index.js'
 import { _hooksCollector, type CollectResult } from './hooks.js'
 import { getSuspenseCounter } from './built-in/index.js'
-import CoreLogger from '../CoreLogger.js'
 
 type AnyProps = Record<string, any>
 /**
@@ -57,8 +51,6 @@ export type AsyncFnWidget<P extends AnyProps = any> = (
   props: P & IntrinsicAttributes
 ) => Promise<VNode>
 
-type InitData = CollectResult & { build: BuildVNode }
-
 // 初始化方法
 const __initializeMethod = Symbol('InitializeFnWidgetBuild')
 
@@ -70,15 +62,16 @@ const __initializeMethod = Symbol('InitializeFnWidgetBuild')
  * @internal
  */
 export class FnWidget extends Widget {
-  #init: boolean = false
-  #triggered: Record<string, any[]> = {}
-
   constructor(props: AnyProps) {
     super(props)
   }
 
   // 初始化实例
   async [__initializeMethod](data: CollectResult): Promise<FnWidget> {
+    // 注入暴露的属性和方法
+    this.#injectExposed(data.exposed)
+    // 注入生命周期钩子到实例中
+    this.#injectLifeCycleHooks(data.lifeCycleHooks)
     if (isPromise(data.build)) {
       const suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
@@ -87,36 +80,22 @@ export class FnWidget extends Widget {
         data.build = await data.build
       } catch (err) {
         // 让build方法抛出异常
-        data.build = () => {
+        this.build = () => {
           throw err
         }
       } finally {
-        this.#initialize(data as InitData)
+        this.#setBuild(data.build as BuildVNode)
         // 如果组件未卸载，则强制更新视图
         if (this['_$renderer'] && this['_$renderer'].state !== 'unloaded') this.update()
         // 如果有上级暂停计数器则让计数器-1
         if (suspenseCounter) suspenseCounter.value--
       }
     } else {
-      this.#initialize(data as InitData)
+      this.#setBuild(data.build as BuildVNode)
       // 如果组件已渲染，则强制更新视图
       if (this['_$renderer'] && this['_$renderer'].state !== 'notRendered') this.update()
     }
     return this
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected override callLifeCycleHook<K extends LifeCycleHooks>(
-    hook: K,
-    ...args: HookParameter<K>
-  ): HookReturnType<K> {
-    if (!this.#init) {
-      this.#triggered[hook] = args
-      return undefined as any
-    }
-    return super.callLifeCycleHook(hook, ...args)
   }
 
   /**
@@ -129,25 +108,11 @@ export class FnWidget extends Widget {
   /**
    * 初始化函数小部件
    *
-   * @param build
-   * @param exposed
-   * @param lifeCycleHooks
+   * @param {BuildVNode} build - 构建函数
    * @private
    */
-  #initialize({ build, exposed, lifeCycleHooks }: InitData) {
+  #setBuild(build: BuildVNode) {
     this.build = isVNode(build) ? () => build : build
-    this.#injectExposed(exposed)
-    this.#injectLifeCycleHooks(lifeCycleHooks)
-    this.#init = true
-    // 触发生命周期钩子
-    for (const triggeredKey in this.#triggered) {
-      this.callLifeCycleHook(
-        triggeredKey as LifeCycleHooks,
-        ...(this.#triggered[triggeredKey as LifeCycleHooks] as any)
-      )
-    }
-    // @ts-ignore 清除已触发的钩子
-    this.#triggered = undefined
   }
 
   /**
@@ -168,14 +133,8 @@ export class FnWidget extends Widget {
    * @param exposed
    */
   #injectExposed(exposed: CollectResult['exposed']) {
-    const name = this.vnode.type?.name || 'anonymous'
     for (const exposedKey in exposed || {}) {
-      if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
-        CoreLogger.warn(
-          'FnWidget.Exposed',
-          `${name} 函数小部件暴露的属性名${exposedKey}是Widget类内部保留关键字，请修改。`
-        )
-      }
+      if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) continue
       if (!(exposedKey in this)) (this as any)[exposedKey] = exposed[exposedKey]
     }
   }
@@ -220,8 +179,9 @@ export function build(element: VNode | (() => VNode)): VNode {
  * @param vnode
  */
 export function _createFnWidget(vnode: WidgetVNode<FnWidgetConstructor>): FnWidget {
-  const result = _hooksCollector(vnode)
-  const instance = vnode.instance as FnWidget
+  const instance = new FnWidget(vnode.props)
+  vnode.instance = instance
+  const result = _hooksCollector(vnode, instance)
   instance[__initializeMethod](result)
   return instance
 }
