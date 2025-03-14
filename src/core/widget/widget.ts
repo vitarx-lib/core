@@ -36,10 +36,10 @@ export type WidgetChildren<P> = P extends { children: infer U }
  * @template Props - `this.props`的类型，默认=InputProps
  *
  * `Props`泛型详细说明：假设`InputProps`中有一个name是可选的字符串属性，
- * 在构造函数或`onCreated`钩子中通过`defineProps({name:'小明'})`给name赋予一个默认值，
+ * 在构造函数或`onBeforeCreate`钩子中通过`defineProps({name:'小明'})`给name赋予一个默认值，
  * 当你调用`this.props.name`获取数据时，`this.props.name`的类型任会是string|undefined，
  * 这是TS类型推导的问题，满屏的错误提示需使用`!`强制断言不为空，
- * 为了解决这个问题我们可以传入`Props`泛型来重载`this.props`的类型，就像下面那样。
+ * 为了解决这个问题我们可以传入`Props`泛型来重载`this.props`的类型，就像下面那样：
  * ```tsx
  * import {defineProps} from 'vitarx'
  * interface MyProps {
