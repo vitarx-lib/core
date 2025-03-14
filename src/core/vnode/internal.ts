@@ -1,6 +1,5 @@
 import { Depend, type ExtractProp, type Reactive, ReactiveHandler } from '../responsive/index.js'
 import { Observers } from '../observer/index.js'
-import CoreLogger from '../CoreLogger.js'
 // 默认属性标记
 export const defaultPropsSymbol = Symbol('VNODE_PROPS_DEFAULT_DATA')
 
@@ -26,9 +25,8 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
       return true
     }
     if (import.meta.env?.MODE === 'development') {
-      CoreLogger.warn(
-        'PropsProxyHandler',
-        `组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)`
+      console.warn(
+        `[Vitarx.PropsProxyHandler][WARN]：组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)`
       )
     }
     return super.set(target, prop, value, receiver)
@@ -36,9 +34,8 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveHandler<T
 
   override deleteProperty(target: T, prop: ExtractProp<T>): boolean {
     if (import.meta.env?.MODE === 'development') {
-      CoreLogger.warn(
-        'PropsProxyHandler',
-        `组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)`
+      console.warn(
+        `[Vitarx.PropsProxyHandler][WARN]：组件的 props 应保持单向数据流，你不应该直接修改它。(此警告信息仅在开发调试阶段存在)`
       )
     }
     return super.deleteProperty(target, prop)
