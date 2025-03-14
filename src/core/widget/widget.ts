@@ -94,7 +94,26 @@ export abstract class Widget<
     this._$props = props
     this._$vnode = getCurrentVNode()!
     this._$scope = getCurrentScope()!
+    this.onBeforeCreate?.call(this)
   }
+
+  /**
+   * 在组件实例创建之前调用的生命周期钩子
+   *
+   * 此钩子在构造函数内部执行，在组件的属性、虚拟节点和作用域初始化之后，但在完整实例创建完成之前被调用。
+   * 可以在此钩子中执行一些初始化逻辑，但此时组件的渲染器尚未创建，不能访问DOM元素。
+   *
+   * @example
+   * ```ts
+   * class MyWidget extends Widget<MyProps> {
+   *   protected onBeforeCreate() {
+   *     // 定义默认props
+   *     defineProps({name:'小明',age:18})
+   *   }
+   * }
+   * ```
+   */
+  protected onBeforeCreate?(): void
 
   /**
    * 获取小部件渲染的节点元素

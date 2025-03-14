@@ -13,6 +13,7 @@ export const __WidgetIntrinsicMethods__ = [
   'update',
   'initializeRenderer',
   'callLifeCycleHook',
+  'onBeforeCreate',
   ...Object.values(LifeCycleHooks)
 ] as const
 
