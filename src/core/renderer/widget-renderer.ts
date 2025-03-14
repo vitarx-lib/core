@@ -21,7 +21,6 @@ import {
 import { type HookParameter, type HookReturnType, LifeCycleHooks, Widget } from '../widget/index.js'
 import { Observers } from '../observer/index.js'
 import { type Scope } from '../scope/index.js'
-import CoreLogger from '../CoreLogger.js'
 import type { ContainerElement } from './types/index.js'
 import { Depend } from '../responsive/index.js'
 import { _WidgetViewDependListener } from './view_depend_listener.js'
@@ -232,10 +231,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   mount(): void {
     if (this.state !== 'notMounted') {
-      return CoreLogger.debug(
-        'WidgetRenderer.mount',
-        `${this.name} 组件非待挂载状态，不能进行挂载！`
-      )
+      throw new Error('[Vitarx.WidgetRenderer.mount]：组件非待挂载状态，不能进行挂载！')
     }
     // 递归挂载子节点
     mountVNode(this.child)
