@@ -183,7 +183,11 @@ export class Effect implements EffectInterface {
    * @protected
    */
   protected reportError(e: unknown) {
-    this.onErrorCallback?.forEach(callback => callback(e))
+    if (this.onErrorCallback) {
+      this.onErrorCallback.forEach(callback => callback(e))
+    } else {
+      console.error(e)
+    }
   }
 
   /**
