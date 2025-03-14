@@ -5,7 +5,6 @@ import { getCurrentVNode, type VNode, type WidgetVNode } from '../vnode/index.js
 import { getContext, runContext } from '../context/index.js'
 import { type BuildVNode, FnWidget, type FnWidgetConstructor } from './fn-widget.js'
 import type { ContainerElement } from '../renderer/index.js'
-import CoreLogger from '../CoreLogger.js'
 
 /**
  * 生命周期钩子回调函数
@@ -261,10 +260,7 @@ type FnViewForceUpdating = (newChildVNode?: VNode) => void
 export function useViewForceUpdating(): FnViewForceUpdating {
   const instance = getCurrentVNode()?.instance
   if (!instance) {
-    CoreLogger.error(
-      'useViewForceUpdating',
-      'useViewForceUpdating API函数只能在函数组件的顶层作用域中使用！'
-    )
+    throw new Error('Vitarx.useViewForceUpdating API函数只能在函数组件的顶层作用域中使用！')
   }
   return instance?.['update'] || (() => {})
 }
