@@ -11,14 +11,14 @@ import {
 } from '../../vnode/index.js'
 import { Listener, watch } from '../../observer/index.js'
 import { renderElement } from '../../renderer/web-runtime-dom/index.js'
-import type { ErrorInfo } from '../life-cycle.js'
+import type { ErrorInfo, ErrorSource } from '../life-cycle.js'
 import CoreLogger from '../../CoreLogger.js'
 
 /**
  * onError生命周期钩子
  *
  * @param {unknown} error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
- * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
+ * @param {ErrorSource} info - 捕获异常的阶段，可以是`build`或`render`
  * @returns {void|Element} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
  */
 type OnErrorCallback = (this: Suspense, error: unknown, info: ErrorInfo) => void | Element
