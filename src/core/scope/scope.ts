@@ -1,6 +1,5 @@
 import { Effect, type EffectInterface, isEffect } from './effect.js'
 import { getContext, runContext } from '../context/index.js'
-import CoreLogger from '../CoreLogger.js'
 
 export interface ScopeOptions {
   /**
@@ -16,11 +15,9 @@ export interface ScopeOptions {
    */
   name?: string | symbol
   /**
-   * 错误处理函数
-   *
-   * @default null
+   * 处理副作用抛出的异常
    */
-  errorHandler?: () => void | null
+  errorHandler?: ((e: unknown) => void) | null
 }
 
 /**
@@ -145,10 +142,11 @@ export class Scope extends Effect {
         try {
           dispose.destroy()
         } catch (e) {
-          CoreLogger.error('Scope.destroy', '销毁作用域中Effect时捕获到了异常：', e)
+          this.reportError(e)
         }
       })
       this._effects = undefined
+      this.config.errorHandler = null
       super.destroy()
     }
   }
