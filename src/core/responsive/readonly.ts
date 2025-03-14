@@ -1,7 +1,6 @@
 import { type ExtractProp } from './helper.js'
 import { Observers } from '../observer/index.js'
 import { isObject } from '../../utils/index.js'
-import { CoreLogger } from '../index.js'
 
 /** 只读对象标识 */
 export const READONLY_OBJECT_SYMBOL = Symbol('READONLY_OBJECT_SYMBOL')
@@ -36,12 +35,12 @@ class ReadonlyHandler<T extends Object> implements ProxyHandler<T> {
   }
 
   set(_t: any, prop: any): boolean {
-    CoreLogger.warn('Readonly', `对象是只读的，不可修改${String(prop)}属性！`)
+    console.warn(`[Vitarx.ReadonlyHandler][WARN]：对象是只读的，不可修改${String(prop)}属性！`)
     return true
   }
 
   deleteProperty(_t: any, prop: any): boolean {
-    CoreLogger.warn('Readonly', `对象是只读的，不可删除${String(prop)}属性！`)
+    console.warn(`[Vitarx.ReadonlyHandler][WARN]：对象是只读的，不可删除${String(prop)}属性！`)
     return true
   }
 
