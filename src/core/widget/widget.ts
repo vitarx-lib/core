@@ -1,4 +1,4 @@
-import { LifeCycle, LifeCycleHooks } from './life-cycle.js'
+import { type ErrorInfo, LifeCycle, LifeCycleHooks } from './life-cycle.js'
 import type { ContainerElement } from '../renderer/index.js'
 import { WidgetRenderer } from '../renderer/index.js'
 import {
@@ -10,6 +10,7 @@ import {
   type WidgetVNode
 } from '../vnode/index.js'
 import { getCurrentScope, Scope } from '../scope/index.js'
+import { _callLifeCycleHook } from './internal.js'
 
 /**
  * `Element`等同于`VNode`，兼容TSX类型检测。
@@ -221,11 +222,11 @@ export abstract class Widget<
       this._$renderer = this.initializeRenderer()
       if (import.meta.env?.MODE === 'development') {
         if (!this.vnode.__$HMR_STATE$__) {
-          this.callLifeCycleHook(LifeCycleHooks.created)
+          _callLifeCycleHook(this, LifeCycleHooks.created)
         }
       } else {
         // 触发onCreated生命周期
-        this.callLifeCycleHook(LifeCycleHooks.created)
+        _callLifeCycleHook(this, LifeCycleHooks.created)
       }
     }
     return this._$renderer
@@ -241,6 +242,21 @@ export abstract class Widget<
    */
   protected update(newChildVNode?: VNode) {
     this.renderer.update(newChildVNode)
+  }
+
+  /**
+   * 报告异常
+   *
+   * 一般无需调用此方法，除非有特殊的情况。
+   *
+   * @param {unknown} error - 捕获到的异常
+   * @param {ErrorInfo} info - 错误信息
+   * @returns {any} - 异常处理器返回值
+   * @internal 此方法是核心方法，请勿肆意重写，它维护了异常处理的核心逻辑！！！
+   * @protected
+   */
+  protected reportError(error: unknown, info: ErrorInfo): any {
+    return _callLifeCycleHook(this, LifeCycleHooks.error, error, info)
   }
 
   /**
