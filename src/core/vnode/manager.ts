@@ -49,7 +49,16 @@ export class VNodeManager {
       if (newModule) vnode.type = newModule
     }
     // 创建作用域
-    createScope(false, vnode.type.name || 'anonymous').run(() => {
+    const scope = createScope({
+      name: vnode.type.name,
+      errorHandler: (e: unknown) => {
+        vnode.instance?.['reportError'](e, {
+          source: 'listener',
+          instance: vnode.instance
+        })
+      }
+    })
+    scope.run(() => {
       // 将当前节点提供到上下文
       runContext(VNodeManager.#contextSymbol, vnode, () => {
         // 包装props为响应式对象
