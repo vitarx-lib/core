@@ -1,5 +1,3 @@
-import CoreLogger from '../CoreLogger.js'
-
 /**
  * 处置功能接口
  *
@@ -26,7 +24,7 @@ export interface EffectInterface {
  * - `deprecated`: 弃用状态
  */
 export type EffectState = 'active' | 'paused' | 'deprecated'
-
+type ErrorCallback = (e: unknown) => void
 /**
  * # 可处置的副作用
  *
@@ -52,12 +50,17 @@ export class Effect implements EffectInterface {
    */
   protected onUnPauseCallback?: VoidCallback[]
   /**
+   * 错误处理器
+   *
+   * @protected
+   */
+  protected onErrorCallback?: ErrorCallback[]
+  /**
    * 状态
    *
    * @protected
    */
   protected _state: EffectState = 'active'
-
   /**
    * 状态
    */
@@ -96,45 +99,12 @@ export class Effect implements EffectInterface {
   destroy(): void {
     if (!this.isDeprecated) {
       this._state = 'deprecated'
-      if (this.onDestroyedCallback) {
-        this.onDestroyedCallback.forEach(callback => {
-          try {
-            callback()
-          } catch (e) {
-            CoreLogger.error('Effect.destroy', '销毁Effect时捕获到回调函数异常', e)
-          }
-        })
-        this.onDestroyedCallback = undefined
-      }
+      this.triggerCallback('onDestroyed')
+      this.onDestroyedCallback = undefined
       this.onPauseCallback = undefined
       this.onUnPauseCallback = undefined
+      this.onErrorCallback = undefined
     }
-  }
-
-  /**
-   * 暂停
-   *
-   * @returns {this}
-   */
-  pause(): this {
-    if (this.state !== 'active') {
-      throw new Error('Effect not active.')
-    }
-    if (this.isPaused) return this
-    this._state = 'paused'
-    this.onPauseCallback?.forEach(callback => callback())
-    return this
-  }
-
-  /**
-   * 取消暂停
-   *
-   * @returns {this}
-   */
-  unpause(): this {
-    this._state = 'active'
-    this.onUnPauseCallback?.forEach(callback => callback())
-    return this
   }
 
   /**
@@ -144,16 +114,33 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   onDestroyed(callback: VoidCallback): this {
-    if (this.isDeprecated) {
-      throw new Error('Effect already deprecated.')
-    } else {
-      if (this.onDestroyedCallback) {
-        this.onDestroyedCallback.push(callback)
-      } else {
-        this.onDestroyedCallback = [callback]
-      }
+    return this.addCallback(callback, 'onDestroyed')
+  }
+
+  /**
+   * 暂停
+   *
+   * @returns {this}
+   */
+  pause(): void {
+    if (this.state !== 'active') {
+      throw new Error('Effect not active.')
     }
-    return this
+    this._state = 'paused'
+    this.triggerCallback('onPause')
+  }
+
+  /**
+   * 取消暂停
+   *
+   * @returns {this}
+   */
+  unpause(): void {
+    if (this.state !== 'paused') {
+      throw new Error('Effect not paused.')
+    }
+    this._state = 'active'
+    this.triggerCallback('onUnPause')
   }
 
   /**
@@ -163,15 +150,7 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   onPause(callback: VoidCallback): this {
-    if (this.isDeprecated) {
-      throw new Error('Effect already deprecated.')
-    }
-    if (this.onPauseCallback) {
-      this.onPauseCallback.push(callback)
-    } else {
-      this.onPauseCallback = [callback]
-    }
-    return this
+    return this.addCallback(callback, 'onPause')
   }
 
   /**
@@ -181,15 +160,70 @@ export class Effect implements EffectInterface {
    * @returns {this}
    */
   onUnPause(callback: VoidCallback): this {
+    return this.addCallback(callback, 'onError')
+  }
+
+  /**
+   * 监听回调异常
+   *
+   * @param {ErrorCallback} callback - 回调函数
+   * @returns {this}
+   */
+  onError(callback: ErrorCallback): this {
+    return this.addCallback(callback, 'onUnPause')
+  }
+
+  /**
+   * 报告回调异常
+   *
+   * @param e
+   * @protected
+   */
+  protected reportError(e: unknown) {
+    this.onErrorCallback?.forEach(callback => callback(e))
+  }
+
+  /**
+   * 添加回调函数
+   *
+   * @param callback
+   * @param type
+   * @private
+   */
+  private addCallback(
+    callback: AnyCallback,
+    type: 'onError' | 'onUnPause' | 'onPause' | 'onDestroyed'
+  ) {
     if (this.isDeprecated) {
       throw new Error('Effect already deprecated.')
     }
-    if (this.onUnPauseCallback) {
-      this.onUnPauseCallback.push(callback)
+    if (typeof callback !== 'function') {
+      throw new TypeError('callback参数必须是一个函数')
+    }
+    const store = `${type}Callback` as 'onErrorCallback'
+    if (this[store]) {
+      this[store].push(callback)
     } else {
-      this.onUnPauseCallback = [callback]
+      this[store] = [callback]
     }
     return this
+  }
+
+  /**
+   * 触发回调
+   *
+   * @param type
+   * @private
+   */
+  private triggerCallback(type: 'onUnPause' | 'onPause' | 'onDestroyed') {
+    const store = `${type}Callback` as 'onDestroyedCallback'
+    this[store]?.forEach(callback => {
+      try {
+        callback()
+      } catch (e) {
+        this.reportError(e)
+      }
+    })
   }
 }
 
