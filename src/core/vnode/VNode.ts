@@ -212,8 +212,7 @@ function formatChildren(child: Child, parent: VNode): VNodeChildren {
       if (vnode.key !== undefined) {
         if (keySet.has(vnode.key)) {
           console.warn(
-            'VNode.DuplicateKey',
-            `检测到重复的key: ${String(vnode.key)}，这可能会导致渲染错误或性能问题。`
+            `[Vitarx.VNode][WARN]：检测到重复的key: ${String(vnode.key)}，这可能会导致渲染错误或性能问题。`
           )
         } else {
           keySet.add(vnode.key)
