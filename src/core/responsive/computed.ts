@@ -2,7 +2,6 @@ import type { ValueProxy } from './helper.js'
 import { PROXY_DEEP_SYMBOL, PROXY_SYMBOL, VALUE_PROXY_SYMBOL } from './constants.js'
 import { Depend } from './depend.js'
 import { Listener, Observers } from '../observer/index.js'
-import CoreLogger from '../CoreLogger.js'
 import { microTaskDebouncedCallback } from '../../utils/index.js'
 
 export type ComputedOptions<T> = {
@@ -112,7 +111,7 @@ export class Computed<T> implements ValueProxy<T> {
     if (typeof this.#options.setter === 'function') {
       this.#options.setter(newValue)
     } else {
-      CoreLogger.warn('Computed.setValue', '不应该对计算属性进行写入，除非定义了setter。')
+      console.warn('[Vitarx.Computed][WARN]:不应该对计算属性进行写入，除非定义了setter。')
     }
   }
 
