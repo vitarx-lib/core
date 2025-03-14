@@ -33,7 +33,6 @@ import { updateParentVNodeMapping } from './manager.js'
 import { isSimpleWidget } from '../widget/index.js'
 import { isValueProxy, type ValueProxy } from '../responsive/index.js'
 import type { HTMLClassProperties } from '../renderer/index.js'
-import CoreLogger from '../CoreLogger.js'
 
 // 子元素类型
 type Child =
@@ -212,7 +211,7 @@ function formatChildren(child: Child, parent: VNode): VNodeChildren {
       // 检查key是否重复
       if (vnode.key !== undefined) {
         if (keySet.has(vnode.key)) {
-          CoreLogger.warn(
+          console.warn(
             'VNode.DuplicateKey',
             `检测到重复的key: ${String(vnode.key)}，这可能会导致渲染错误或性能问题。`
           )
