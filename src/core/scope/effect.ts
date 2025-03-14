@@ -15,6 +15,9 @@ export interface EffectInterface {
 
   /** 取消暂停：可选 */
   unpause?(): void
+
+  /** 监听错误 */
+  onError?(callback: ErrorCallback): void
 }
 
 /**
@@ -36,25 +39,25 @@ export class Effect implements EffectInterface {
    *
    * @protected
    */
-  protected onDestroyedCallback?: VoidCallback[]
+  protected onDestroyedCallback?: Set<VoidCallback>
   /**
    * 暂停回调
    *
    * @protected
    */
-  protected onPauseCallback?: VoidCallback[]
+  protected onPauseCallback?: Set<VoidCallback>
   /**
    * 取消暂停回调
    *
    * @protected
    */
-  protected onUnPauseCallback?: VoidCallback[]
+  protected onUnPauseCallback?: Set<VoidCallback>
   /**
    * 错误处理器
    *
    * @protected
    */
-  protected onErrorCallback?: ErrorCallback[]
+  protected onErrorCallback?: Set<ErrorCallback>
   /**
    * 状态
    *
@@ -202,9 +205,9 @@ export class Effect implements EffectInterface {
     }
     const store = `${type}Callback` as 'onErrorCallback'
     if (this[store]) {
-      this[store].push(callback)
+      this[store].add(callback)
     } else {
-      this[store] = [callback]
+      this[store] = new Set([callback])
     }
     return this
   }
