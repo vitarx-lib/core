@@ -8,8 +8,7 @@ import {
 } from '../../vnode/index.js'
 import { getSuspenseCounter } from './Suspense.js'
 import type { Ref } from '../../responsive/index.js'
-import type { ErrorInfo } from '../life-cycle.js'
-import CoreLogger from '../../CoreLogger.js'
+import { type ErrorInfo } from '../life-cycle.js'
 import { isRecordObject } from '../../../utils/index.js'
 import { withAsyncContext } from '../../context/index.js'
 
@@ -24,14 +23,14 @@ export type LazyLoader<T extends WidgetType> = () => Promise<{ default: T }>
  * onError生命周期钩子
  *
  * @param {unknown} error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
- * @param {ErrorInfo} info - 捕获异常的阶段，可以是`build`或`render`
- * @returns {void|Element} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
+ * @param {ErrorInfo} info - 具体的错误信息
+ * @returns {void} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
  */
 export type LazyWidgetErrorCallback<T extends WidgetType> = (
   this: LazyWidget<T>,
   error: unknown,
   info: ErrorInfo
-) => void | Element
+) => void
 
 /**
  * 惰性加载小部件配置选项
@@ -114,9 +113,8 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     }
     if (props.onError) {
       if (typeof props.onError !== 'function') {
-        CoreLogger.warn(
-          'LazyWidget',
-          `onError属性期望得到一个回调函数，给定${typeof props.onError}`
+        throw new TypeError(
+          `[Vitarx.LazyWidget]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
         )
       } else {
         this.onError = props.onError
@@ -158,13 +156,11 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
           : createVNode(widget)
       )
     } catch (e) {
-      if ('onError' in this) {
-        const el = this.onError!(e, 'build')
-        if (isVNode(el)) {
-          return this.updateChildVNode(el)
-        }
-      }
-      throw e
+      const result = this.reportError(e, {
+        source: 'build',
+        instance: this
+      })
+      if (isVNode(result)) this.updateChildVNode(result)
     }
   }
 
