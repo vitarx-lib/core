@@ -2,6 +2,21 @@ import { Effect, type EffectInterface, isEffect } from './effect.js'
 import { getContext, runContext } from '../context/index.js'
 import CoreLogger from '../CoreLogger.js'
 
+export interface ScopeOptions {
+  /**
+   * 是否添加到父级作用域中，如果有。
+   *
+   * @default false
+   */
+  toParent?: boolean
+  /**
+   * 作用域名称，方便调试时更直观的分辨作用域
+   *
+   * @default unnamed
+   */
+  name?: string | symbol
+}
+
 /**
  * # 自动处置
  *
@@ -28,22 +43,22 @@ export class Scope extends Effect {
    * @private
    */
   private _effects?: Set<EffectInterface>
-
+  public readonly config: Required<ScopeOptions>
   /**
    * 实例化一个作用域管理器
    *
-   * @param {boolean} [toParent = true] - 是否添加到父级作用域中，如果有。
-   * @param {string|symbol} [name = unnamed] - 作用域名称，方便调试时更直观的分辨作用域
+   * @param options
    */
-  constructor(
-    toParent: boolean = true,
-    public readonly name: string | symbol = 'unnamed'
-  ) {
+  constructor(options?: ScopeOptions) {
     super()
+    this.config = Object.assign({ toParent: false, name: 'anonymous' }, options)
     // 添加到父级作用域中
-    if (toParent) Scope.getCurrentScope()?.add(this)
+    if (this.config.toParent) Scope.getCurrentScope()?.add(this)
   }
 
+  get name(): string | symbol {
+    return this.config.name
+  }
   /**
    * 副作用数量
    *
@@ -153,12 +168,13 @@ export class Scope extends Effect {
 /**
  * ## 创建作用域
  *
- * @param {boolean} toParent - 是否添加到父级作用域中，默认为true
- * @param {string|symbol} [name = unnamed] - 作用域名称，方便调试时更直观的分辨作用域
  * @returns {Scope} 返回作用域实例，提供了`destroy`方法来销毁作用域
+ * @param {ScopeOptions} options - 作用域配置项
+ * @param {string} [options.name = 'anonymity'] - 作用域名称，方便调试时更直观的分辨作用域
+ * @param {boolean} [options.toParent = false] - 是否添加到父级作用域中，如果有。
  */
-export function createScope(toParent: boolean = true, name: string | symbol = 'unnamed'): Scope {
-  return new Scope(toParent, name)
+export function createScope(options?: ScopeOptions): Scope {
+  return new Scope(options)
 }
 
 /**
