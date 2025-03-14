@@ -15,6 +15,12 @@ export interface ScopeOptions {
    * @default unnamed
    */
   name?: string | symbol
+  /**
+   * 错误处理函数
+   *
+   * @default null
+   */
+  errorHandler?: () => void | null
 }
 
 /**
@@ -47,11 +53,16 @@ export class Scope extends Effect {
   /**
    * 实例化一个作用域管理器
    *
-   * @param options
+   * @param {ScopeOptions} options - 作用域配置项
+   * @param {boolean} [options.toParent = false] - 是否添加到父级作用域中，如果有。
+   * @param {string|symbol} [options.name = 'anonymous'] - 作用域名称，方便调试时更直观的分辨作用域
    */
   constructor(options?: ScopeOptions) {
     super()
-    this.config = Object.assign({ toParent: false, name: 'anonymous' }, options)
+    this.config = Object.assign({ toParent: false, name: 'anonymous', errorHandler: null }, options)
+    if (this.config.errorHandler && typeof this.config.errorHandler !== 'function') {
+      throw new TypeError('[Vitarx.Scope]：errorHandler必须是一个函数')
+    }
     // 添加到父级作用域中
     if (this.config.toParent) Scope.getCurrentScope()?.add(this)
   }
@@ -101,13 +112,17 @@ export class Scope extends Effect {
    */
   add(effect: EffectInterface): boolean {
     if (this.isDeprecated) {
-      console.trace('当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象')
+      console.warn('当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象')
       return false
     } else {
       if (!isEffect(effect)) {
         throw new TypeError(
           '添加到作用域中管理的对象必须是 Effect 或 AutoDisposed 的实例，或实现 EffectInterface 接口'
         )
+      }
+      // 添加错误处理
+      if (this.config.errorHandler && effect.onError) {
+        effect.onError(this.config.errorHandler)
       }
       if (!this._effects) {
         this._effects = new Set([effect])
@@ -161,7 +176,6 @@ export class Scope extends Effect {
       this._effects?.forEach(dispose => dispose?.unpause?.())
       super.unpause()
     }
-    return this
   }
 }
 
