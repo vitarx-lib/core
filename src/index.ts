@@ -1,5 +1,5 @@
 import type {
-  AppOptions as _AppOptions,
+  AppConfig as _AppOptions,
   CommentVNode,
   FnWidgetType,
   IntrinsicAttributes,
@@ -25,7 +25,7 @@ export * from './jsx-runtime.js'
 declare global {
   namespace Vitarx {
     /** 应用配置 */
-    type AppOptions = _AppOptions
+    type AppConfig = _AppOptions
 
     /**
      * 全局属性
