@@ -73,13 +73,11 @@ class HooksCollector {
   /**
    * 收集函数中使用的HOOK
    *
-   * @param vnode
+   * @param vnode - 节点
+   * @param instance - 实例
    * @returns {CollectResult} - 同步收集结果
    */
-  static collect(vnode: WidgetVNode<FnWidgetConstructor>): CollectResult {
-    const instance = new FnWidget(vnode.props)
-    // 新的实例
-    vnode.instance = instance
+  static collect(vnode: WidgetVNode<FnWidgetConstructor>, instance: FnWidget): CollectResult {
     // 创建新的上下文
     const context: CollectResult = {
       exposed: {},
@@ -117,6 +115,11 @@ class HooksCollector {
  * @param {Record<string, any>} exposed 键值对形式的对象，其中键为暴露的名称，值为要暴露的值。
  */
 export function defineExpose(exposed: Record<string, any>): void {
+  for (const exposedKey in exposed) {
+    if (__widgetIntrinsicPropKeywords__.includes(exposedKey as any)) {
+      console.warn(`[Vitarx.defineExpose]：${exposedKey}是Widget类内部保留关键字，请修改。`)
+    }
+  }
   HooksCollector.addExposed(exposed)
 }
 
@@ -232,11 +235,15 @@ export const onBeforeRemove = createLifeCycleHook(LifeCycleHooks.beforeRemove)
  * 收集函数中使用的HOOK
  *
  * @param vnode
+ * @param instance
  * @returns {CollectResult} - 同步收集结果
  * @internal
  */
-export function _hooksCollector(vnode: WidgetVNode<FnWidgetConstructor>): CollectResult {
-  return HooksCollector.collect(vnode)
+export function _hooksCollector(
+  vnode: WidgetVNode<FnWidgetConstructor>,
+  instance: FnWidget
+): CollectResult {
+  return HooksCollector.collect(vnode, instance)
 }
 
 type FnViewForceUpdating = (newChildVNode?: VNode) => void
