@@ -1,18 +1,19 @@
 // 错误提示
 import {
   type ClassWidgetConstructor,
+  type ErrorInfo,
   type FnWidgetConstructor,
   isClassWidgetConstructor,
   Widget
 } from './widget/index.js'
 import { createVNode, isVNode, provide, type VNode, type WidgetType } from './vnode/index.js'
-import { isFunction, Logger } from '../utils/index.js'
+import { isFunction } from '../utils/index.js'
 import { mountVNode, renderWidgetElement } from './renderer/web-runtime-dom/index.js'
 
 const ERROR_MESSAGE = '还未渲染小部件或小部件已经卸载'
 
 /** 应用配置 */
-export interface AppOptions {
+export interface AppConfig {
   /**
    * 是否为服务端渲染
    *
@@ -21,6 +22,16 @@ export interface AppOptions {
    * @default false
    */
   ssr?: boolean
+  /**
+   * 错误处理函数
+   *
+   * @param error - 捕获到的异常
+   * @param info - 具体的错误信息
+   * @default (error, info) => {
+   *   console.error(error,info)
+   * }
+   */
+  errorHandler?: (error: unknown, info: ErrorInfo) => any
 }
 /**
  * ## Vitarx App
@@ -28,15 +39,8 @@ export interface AppOptions {
  * 用于创建和运行 Vitarx 应用。
  */
 export class App {
-  /**
-   * 日志实例
-   * @private
-   */
-  static #logger: Logger | undefined
   /** 配置选项 */
-  protected readonly options: Required<AppOptions> = {
-    ssr: false
-  }
+  public readonly config: Required<AppConfig>
   /** 元素容器 */
   protected readonly container: Element
   /**
@@ -55,37 +59,19 @@ export class App {
    * 构建应用实例
    *
    * @param container
-   * @param options
+   * @param config
    */
-  constructor(container: Element, options?: AppOptions) {
+  constructor(container: Element, config?: AppConfig) {
     if (!(container instanceof Element)) {
       throw new Error('[Vitarx]：根容器必须是Element实例。')
     }
     this.container = container
-    Object.assign(this.options, options)
-  }
-
-  /**
-   * 日志实例
-   *
-   * > 注意：该静态属性是为了开发者能便捷地使用框架内置的一个日志输出工具，
-   * 它不是框架中核心日志管理器，如果需处理框架核心日志，请使用`CoreLogger.setCustomHandler`。
-   *
-   * ```ts
-   * App.log.setCustomHandler((level: string, message: string, tag: string) => {
-   *   // 上传日志到服务器
-   * })
-   * App.log.error('错误信息')
-   * App.log.warn('警告信息')
-   * App.log.info('信息提示')
-   * App.log.debug('调试信息')
-   * ```
-   */
-  static get log() {
-    if (!this.#logger) {
-      this.#logger = new Logger('App')
+    this.config = Object.assign({ ssr: false }, config) as Required<AppConfig>
+    if (!this.config.errorHandler) {
+      this.config.errorHandler = (error, info) => {
+        console.error(error, info)
+      }
     }
-    return this.#logger
   }
 
   /**
@@ -260,12 +246,15 @@ export class App {
  * ## 创建一个应用实例
  *
  * @param container - 根容器元素，也可以是选择器`selector`，内部自动使用 `document.querySelector` 查找元素。
- * @param options - 应用配置
+ * @param config - 应用配置
  * @returns {Vitarx} - 应用实例
  */
-export function createApp(container: Element | string, options?: Vitarx.AppOptions): App {
+export function createApp(container: Element | string, config?: Vitarx.AppConfig): App {
   if (typeof container === 'string') {
     container = document.querySelector(container)!
+    if (!container) {
+      throw new Error(`[Vitarx.createApp][ERROR]：未找到指定选择器${container}对应的元素。`)
+    }
   }
-  return new App(container, options)
+  return new App(container, config)
 }
