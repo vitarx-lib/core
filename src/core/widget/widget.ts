@@ -23,12 +23,16 @@ export type ClassWidgetConstructor<P extends Record<string, any> = any> = new (
   props: P & IntrinsicAttributes
 ) => Widget<P, any>
 
-// 获取组件子节点类型
+/**
+ * 此类型用于推导出组件的子节点类型。
+ */
 export type WidgetChildren<P> = P extends { children: infer U }
   ? U
   : P extends { children?: infer U }
     ? U | undefined
     : undefined
+
+const CLASS_WIDGET_BASE_SYMBOL = Symbol('WIDGET_SYMBOL')
 
 /**
  * 所有小部件的基类
@@ -83,13 +87,18 @@ export abstract class Widget<
    */
   private readonly _$scope: Scope
   /**
+   * 内部私有属性，可以通过此属性判断类是否继承了Widget基类。
+   *
+   * @internal
+   */
+  static [CLASS_WIDGET_BASE_SYMBOL] = true
+  /**
    * 内部私有属性，用于存放渲染器实例。
    *
    * @internal
    * @private
    */
   private _$renderer?: WidgetRenderer<this>
-
   constructor(props: InputProps) {
     super()
     this._$props = props
@@ -285,18 +294,11 @@ export abstract class Widget<
 }
 
 /**
- * 判断是否为类构造器
+ * 辅助判断一个构造函数是否为类组件
  *
- * @param val
+ * @param {any} val - 待判断的值
+ * @returns {val is ClassWidgetConstructor} - 如果是类组件则返回true，否则返回false
  */
-export function isClassWidgetConstructor(val: any): val is ClassWidgetConstructor {
-  if (typeof val !== 'function') return false
-  let prototype = val.prototype
-  while (prototype) {
-    if (prototype instanceof Widget || prototype instanceof LifeCycle) {
-      return true
-    }
-    prototype = prototype.prototype
-  }
-  return false
+export function isClassWidget(val: any): val is ClassWidgetConstructor {
+  return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
 }
