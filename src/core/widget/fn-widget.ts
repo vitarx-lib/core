@@ -16,9 +16,30 @@ import { getSuspenseCounter } from './built-in/index.js'
 type AnyProps = Record<string, any>
 
 /**
- * 构建虚拟节点函数类型
+ * 有效的视图类型
  */
-export type BuildVNode = (() => VNode | null) | VNode | null
+export type ValidView = VNode | null
+
+/**
+ * 视图构建器
+ */
+export type BuildVNode = () => ValidView
+/**
+ * 函数小部件有效地返回值
+ *
+ * - `null`：不渲染任何内容
+ * - `VNode`：直接返回虚拟节点
+ * - `Promise<null>`：异步返回null
+ * - `Promise<VNode>`：异步返回虚拟节点
+ * - `Promise<()=>VNode|null>`：异步返回视图构建器
+ * - `Promise<{ default: WidgetType }>`：异步返回EsModule对象，必须有默认导出
+ *
+ */
+export type ValidFnWidgetReturnValue =
+  | ValidView
+  | BuildVNode
+  | Promise<ValidView | BuildVNode>
+  | Promise<{ default: WidgetType }>
 
 /**
  * 简单小部件类型
@@ -35,7 +56,7 @@ export interface SimpleWidget<T extends AnyProps = any, R extends VNode | null =
 export type FnWidgetConstructor<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => BuildVNode | Promise<BuildVNode> | Promise<{ default: WidgetType }>
+) => ValidFnWidgetReturnValue
 
 /**
  * 函数小部件类型，兼容TSX语法
@@ -43,7 +64,7 @@ export type FnWidgetConstructor<P extends AnyProps = any> = (
 export type FnWidgetType<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => VNode | null
+) => ValidView
 
 /**
  * 懒加载小部件类型
@@ -58,7 +79,7 @@ export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{
 export type AsyncWidget<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => Promise<BuildVNode>
+) => Promise<BuildVNode | ValidView>
 
 /**
  * TSX 类型支持工具
@@ -110,7 +131,7 @@ export class FnWidget extends Widget {
         this.update()
       }
     }
-    let build: BuildVNode | { default: WidgetType } = data.build as BuildVNode
+    let build: BuildVNode | ValidView | { default: WidgetType } = data.build as BuildVNode
     if (isPromise(data.build)) {
       const suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
@@ -156,7 +177,7 @@ export class FnWidget extends Widget {
    * @param {BuildVNode} build - 构建函数
    * @private
    */
-  #setBuild(build: BuildVNode | { default: WidgetType }) {
+  #setBuild(build: BuildVNode | ValidView | { default: WidgetType }) {
     // 如果是函数，则直接赋值给build方法
     if (typeof build === 'function') {
       this.build = build
@@ -236,7 +257,7 @@ export function build<T extends BuildVNode>(element: T): T extends null ? null :
   if (element === null) return null as any
   if (typeof element === 'function') return element as any
   if (isVNode(element)) return element as any
-  throw new TypeError('[Vitarx.build]：函数组件的视图构建器只能是null、VNode、BuildVNode')
+  throw new TypeError('[Vitarx.build]：函数组件返回值只能是null、VNode、() => VNode | null')
 }
 
 /**
@@ -329,8 +350,12 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  * @alias defineAsyncWidget
  * @param {AsyncWidget} fn - 异步函数小部件。
  * @returns {FnWidgetType} - 重载类型过后的异步函数组件。
+ * @throws {TypeError} 如果传入的参数不是一个函数，则会抛出TypeError异常。
  */
 export function defineAsyncWidget<P extends AnyProps>(fn: AsyncWidget<P>): FnWidgetType<P> {
+  if (typeof fn !== 'function') {
+    throw new TypeError('[Vitarx.defineAsyncWidget]：参数必须是一个函数！')
+  }
   return fn as unknown as FnWidgetType<P>
 }
 
@@ -359,8 +384,13 @@ export function defineAsyncWidget<P extends AnyProps>(fn: AsyncWidget<P>): FnWid
  *
  * @alias defineLazyWidget
  * @param {()=>Promise<{default:WidgetType}>} fn - 异步懒加载函数小部件。
+ * @returns {FnWidgetType} - 重载类型过后的异步懒加载函数组件。
+ * @throws {TypeError} - 如果传入的参数不是一个函数，则会抛出TypeError异常。
  */
 export function lazy<P extends AnyProps>(fn: LazyLoadWidget<P>): FnWidgetType<P> {
+  if (typeof fn !== 'function') {
+    throw new TypeError('[Vitarx.lazy]：参数必须是一个函数')
+  }
   return fn as unknown as FnWidgetType<P>
 }
 
