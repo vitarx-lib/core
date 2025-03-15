@@ -417,9 +417,13 @@ export class WidgetRenderer<T extends Widget> {
   protected buildChild = (): VNode => {
     let vnode: VNode
     try {
-      vnode = this.widget['build']()
-      if (!isVNode(vnode)) {
-        throw new Error(`${this.name}.build 返回值必须是有效的VNode类型，否则无法渲染！`)
+      const buildNode = this.widget['build']()
+      if (buildNode === null) {
+        vnode = createVNode(Fragment)
+      } else if (isVNode(buildNode)) {
+        vnode = buildNode
+      } else {
+        throw new Error(`${this.name}.build 返回值必须是有效的VNode类型|NULL，否则无法渲染！`)
       }
     } catch (e) {
       const errVNode = this.triggerLifeCycle(LifeCycleHooks.error, e, {
