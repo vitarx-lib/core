@@ -344,7 +344,8 @@ export class WidgetRenderer<T extends Widget> {
    * @protected
    */
   protected patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
-    return patchUpdate(oldVNode, newVNode)
+    // 如果不是待挂载状态才进行自动挂载！修复由未挂载时更新操作导致子组件比父组件提前被挂载！
+    return patchUpdate(oldVNode, newVNode, this.state !== 'notMounted')
   }
 
   /**
