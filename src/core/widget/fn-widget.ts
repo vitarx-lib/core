@@ -61,6 +61,29 @@ export type AsyncWidget<P extends AnyProps = any> = (
   props: P & IntrinsicAttributes
 ) => Promise<VNode>
 
+/**
+ * TSX 类型支持工具
+ *
+ * 将异步组件，懒加载组件，等受 `Vitarx` 支持，但不被TSX支持的组件类型，
+ * 重载为受支持的TSX组件类型，提供友好的参数类型校验。
+ *
+ * @example
+ * ```tsx
+ * async function AsyncWidget() {
+ *   await new Promise((resolve) => setTimeout(resolve, 1000))
+ *   return <div>Hello World</div>
+ * }
+ * export default AsyncWidget
+ * // ❌ TSX 语法校验不通过！
+ * <AsyncWidget />
+ *
+ * export default AsyncWidget as unknown as TSWidget<typeof AsyncWidget>
+ * // ✅ TSX 语法校验通过！
+ * <AsyncWidget2 />
+ * ```
+ */
+export type TSWidget<T extends WidgetType> = FnWidgetType<T extends WidgetType<infer P> ? P : {}>
+
 // 初始化方法
 const __initializeMethod = Symbol('InitializeFnWidgetBuild')
 
@@ -283,7 +306,7 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  *
  * 没有附加任何代码逻辑，只是使用断言重载了函数类型，使异步函数组件兼容`tsx`类型推断。
  *
- * 你完全可以不使用此函数，直接用 `async function MyAsyncWidget(){...} as unknown as FnWidgetType<PropsType>`
+ * 你完全可以不使用此函数，直接用 `export default MyAsyncWidget as unknown as TSWidget<typeof MyAsyncWidget>`
  * 语法使得异步函数组件兼容`tsx`类型推断，但这并不美观。
  *
  * @example
