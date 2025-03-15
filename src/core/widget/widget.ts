@@ -18,11 +18,16 @@ import { _callLifeCycleHook } from './internal.js'
 export type Element = Vitarx.Element
 /**
  * 类组件构造器类型
+ *
+ * @alias ClassWidgetType
  */
 export type ClassWidgetConstructor<P extends Record<string, any> = any> = new (
   props: P & IntrinsicAttributes
 ) => Widget<P, any>
-
+/**
+ * 类组件构造器类型
+ */
+export type ClassWidgetType<P extends Record<string, any> = any> = ClassWidgetConstructor<P>
 /**
  * 此类型用于推导出组件的子节点类型。
  */
