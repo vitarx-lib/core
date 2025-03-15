@@ -84,11 +84,11 @@ export function defineProps<D extends Record<string, any>>(defaultProps: D): Rea
  * @return {Readonly<Omit<I, keyof D> & D>} - 返回合并后的只读Props对象
  * @alias defineDefaultProps
  */
-export function defineProps<I extends Record<string, any>, D extends Partial<I>>(
+export function defineProps<D extends Record<string, any>, I extends Record<string, any>>(
   defaultProps: D,
   inputProps: I
 ): Readonly<Omit<I, keyof D> & D>
-export function defineProps<I extends Record<string, any>, D extends Partial<I>>(
+export function defineProps<D extends Record<string, any>, I extends Record<string, any> = {}>(
   defaultProps: D,
   inputProps?: I
 ): Readonly<Omit<I, keyof D> & D> {
