@@ -1,7 +1,7 @@
 import { isReactive } from '../responsive/index.js'
 import { isRecordObject } from '../../utils/index.js'
 import { getCurrentVNode } from './manager.js'
-import { defaultPropsSymbol } from './internal.js'
+import { VNODE_PROPS_DEFAULT_DATA } from './internal.js'
 
 /**
  * 定义默认`Props` 属性
@@ -111,7 +111,7 @@ export function defineProps<D extends Record<string, any>, I extends Record<stri
   // 处理响应式对象
   if (isReactive(inputProps)) {
     // 对于响应式对象，使用Symbol标记默认属性
-    Reflect.set(inputProps, defaultPropsSymbol, defaultProps)
+    Reflect.set(inputProps, VNODE_PROPS_DEFAULT_DATA, defaultProps)
   } else {
     // 对于非响应式对象，直接合并属性
     // 只有当inputProps中不存在该属性或值为undefined/null时才使用默认值
