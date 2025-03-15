@@ -49,7 +49,9 @@ export type FnWidgetType<P extends AnyProps = any> = (
 /**
  * 懒加载小部件类型
  */
-export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{ default: WidgetType<P> }>
+export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{
+  default: WidgetType<P>
+}>
 
 /**
  * 异步小部件类型
