@@ -259,6 +259,8 @@ const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
  * ```
  *
  * @param build - 构建函数
+ * @returns {SimpleWidget} - 简单小部件
+ * @alias defineSimpleWidget
  */
 export function simple<T extends AnyProps, R extends VNode>(
   build: (props: T) => R
@@ -266,6 +268,8 @@ export function simple<T extends AnyProps, R extends VNode>(
   Object.defineProperty(build, SIMPLE_WIDGET_SYMBOL, { value: true })
   return build as SimpleWidget<T, R>
 }
+
+export { simple as defineSimpleWidget }
 
 /**
  * 判断是否为简单小部件
