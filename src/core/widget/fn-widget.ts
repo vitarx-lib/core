@@ -4,7 +4,6 @@ import { type LifeCycleHookMethods } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
 import {
   createVNode,
-  Fragment,
   type IntrinsicAttributes,
   isVNode,
   type VNode,
@@ -19,12 +18,12 @@ type AnyProps = Record<string, any>
 /**
  * 构建虚拟节点函数类型
  */
-export type BuildVNode = (() => VNode) | VNode
+export type BuildVNode = (() => VNode | null) | VNode | null
 
 /**
  * 简单小部件类型
  */
-export interface SimpleWidget<T extends AnyProps = any, R extends VNode = VNode> {
+export interface SimpleWidget<T extends AnyProps = any, R extends VNode | null = VNode> {
   [SIMPLE_WIDGET_SYMBOL]: true
 
   (props: T & IntrinsicAttributes): R
@@ -44,7 +43,7 @@ export type FnWidgetConstructor<P extends AnyProps = any> = (
 export type FnWidgetType<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => VNode
+) => VNode | null
 
 /**
  * 懒加载小部件类型
@@ -59,7 +58,7 @@ export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{
 export type AsyncWidget<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => Promise<VNode>
+) => Promise<BuildVNode>
 
 /**
  * TSX 类型支持工具
@@ -147,8 +146,8 @@ export class FnWidget extends Widget {
   /**
    * @inheritDoc
    */
-  protected build(): VNode {
-    return createVNode(Fragment)
+  protected build(): VNode | null {
+    return null
   }
 
   /**
@@ -168,15 +167,16 @@ export class FnWidget extends Widget {
       this.build = () => build
       return
     }
+    if (build === null) return
     // 如果是module对象，则判断是否存在default导出
-    if (typeof build === 'object' && 'default' in build && typeof build.default === 'function') {
+    if (typeof build === 'object' && 'default' in build! && typeof build.default === 'function') {
       this.build = () => createVNode(build.default, this.props)
       return
     }
     // 如果不符合要求，则在build方法中抛出异常
     this.build = () => {
       throw new Error(
-        `[Vitarx.FnWidget]：函数组件的返回值必须是VNode、()=>VNode、Promise<{ default: 函数组件/类组件 }>，实际返回的却是${typeof build}`
+        `[Vitarx.FnWidget]：函数组件的返回值必须是VNode、()=>VNode、Promise<{ default: 函数组件/类组件 }>、null，实际返回的却是${typeof build}`
       )
     }
   }
@@ -215,25 +215,28 @@ export class FnWidget extends Widget {
  *
  * 代码块中的顶级return语句如果是jsx语法，则会被自动添加箭头函数，使其成为一个UI构造器。
  *
- * 如果你的代码不是位于函数的顶级作用域中，或返回的是一个三元运算等不被支持自动优化的情况，请使用`build`函数包裹。
+ * 如果你具有多个return语句，或使用了条件渲染，则需要使用build包裹，否则组件将会丢失响应式。
  *
  * 如果你没有使用tsx，则可以直接使用 `return () => <div>...</div>` 这样的语法。
  *
  * ```tsx
+ * // ❌ 错误的示例
+ * return state ? <div>真</div> : <div>假</div>
  * // 下面的两个return语句的效果是一致的
- * // 它们的不同之处是在tsx文件中返回箭头函数用于构建ui会导致类型错误，所以在tsx文件中需要使用build包裹
- * return build(() => state ? <div>真</div> : <div>假</div>)
- * return () => state ? <div>真</div> : <div>假</div>
+ * // 它们的不同之处是在tsx文件中返回箭头函数用于构建ui会提示类型错误，所以在tsx文件中需要使用build包裹
+ * return build(() => state ? <div>真</div> : <div>假</div>) // ✅
+ * return () => state ? <div>真</div> : <div>假</div> // ✅
  * ```
  *
- * @param element - 虚拟节点对象或闭包函数返回虚拟节点对象
+ * @param element - 虚拟节点对象|视图构建器函数|null
+ * @returns - 为了符合TSX类型校验，会将视图构建器函数重载为VNode类型
+ * @throws TypeError - 如果传入的参数不符合要求，则会抛出TypeError异常
  */
-export function build(element: VNode | (() => VNode)): VNode {
-  if (typeof element === 'function') return element as unknown as VNode
-  if (isVNode(element)) {
-    return (() => element) as unknown as VNode
-  }
-  throw new TypeError('[Vitarx.build]：参数1(element)必须是VNode对象或返回值是VNode对象的函数')
+export function build<T extends BuildVNode>(element: T): T extends null ? null : VNode {
+  if (element === null) return null as any
+  if (typeof element === 'function') return element as any
+  if (isVNode(element)) return element as any
+  throw new TypeError('[Vitarx.build]：函数组件的视图构建器只能是null、VNode、BuildVNode')
 }
 
 /**
@@ -284,7 +287,7 @@ const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
  * @param build - 构建函数
  * @returns {SimpleWidget} - 简单小部件
  */
-export function simple<T extends AnyProps, R extends VNode>(
+export function simple<T extends AnyProps, R extends VNode | null>(
   build: (props: T) => R
 ): SimpleWidget<T, R> {
   Object.defineProperty(build, SIMPLE_WIDGET_SYMBOL, { value: true })

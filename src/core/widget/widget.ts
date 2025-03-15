@@ -295,7 +295,7 @@ export abstract class Widget<
    * @protected
    * @returns {Element} - 返回的是虚拟的VNode节点
    */
-  protected abstract build(): Element
+  protected abstract build(): Element | null
 }
 
 /**
