@@ -260,7 +260,6 @@ const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
  *
  * @param build - 构建函数
  * @returns {SimpleWidget} - 简单小部件
- * @alias defineSimpleWidget
  */
 export function simple<T extends AnyProps, R extends VNode>(
   build: (props: T) => R
@@ -268,8 +267,6 @@ export function simple<T extends AnyProps, R extends VNode>(
   Object.defineProperty(build, SIMPLE_WIDGET_SYMBOL, { value: true })
   return build as SimpleWidget<T, R>
 }
-
-export { simple as defineSimpleWidget }
 
 /**
  * 判断是否为简单小部件
@@ -293,21 +290,17 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  * ```tsx
  * import { defineAsyncWidget,withAsyncContext } from 'vitarx'
  *
- * const AsyncWidget = defineAsyncWidget(async function(props:{id:string}){
+ * async function AsyncWidget(props:{id:string}){
  *    // 使用withAsyncContext来保持上下文，如果不使用withAsyncContext会导致上下文丢失！！！
  *    const data = await withAsyncContext(() => fetch("/api/user-info"))
  *    return <div>用户id: {props.id}，用户名:{data.name}</div>
- * })
- * export default function App() {
- *   // 渲染一个异步组件，TSX能够正常识别组件
- *   return (
- *      <div>
- *        <AsyncWidget id="123"/>
- *      </div>
- *   )
  * }
+ *
+ * // 这么做的意义在于类型重载，使得tsx类型推断可以正确推断出异步函数组件的类型。
+ * export default defineAsyncWidget(AsyncWidget)
  * ```
  *
+ * @alias defineAsyncWidget
  * @param {AsyncWidget} fn - 异步函数小部件。
  * @returns {FnWidgetType} - 重载类型过后的异步函数组件。
  */
@@ -337,8 +330,12 @@ export function defineAsyncWidget<P extends AnyProps>(fn: AsyncWidget<P>): FnWid
  *   </div>
  * }
  * ```
+ *
+ * @alias defineLazyWidget
  * @param {()=>Promise<{default:WidgetType}>} fn - 异步懒加载函数小部件。
  */
-export function defineLazyWidget<P extends AnyProps>(fn: LazyLoadWidget<P>): FnWidgetType<P> {
+export function lazy<P extends AnyProps>(fn: LazyLoadWidget<P>): FnWidgetType<P> {
   return fn as unknown as FnWidgetType<P>
 }
+
+export { lazy as defineLazyWidget }
