@@ -10,7 +10,6 @@ import { getSuspenseCounter } from './Suspense.js'
 import type { Ref } from '../../responsive/index.js'
 import { type ErrorInfo } from '../life-cycle.js'
 import { isRecordObject } from '../../../utils/index.js'
-import { withAsyncContext } from '../../context/index.js'
 
 /**
  * 代码分块懒加载
@@ -149,7 +148,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
    */
   protected async load(): Promise<void> {
     try {
-      const { default: widget } = await withAsyncContext(this.children)
+      const { default: widget } = await this.children()
       this.updateChildVNode(
         isRecordObject(this.props.injectProps)
           ? createVNode(widget, this.props.injectProps)
