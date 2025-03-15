@@ -290,7 +290,7 @@ declare global {
    * @template T - 要被提取的对象类型
    * @returns {string} 一个联合类型，包含T中所有必填属性的键名
    */
-  export type RequiredKeys<T extends Object> = {
+  type RequiredKeys<T extends Object> = {
     [K in keyof T]: undefined extends T[K] ? never : K
   }[keyof T]
 
@@ -312,7 +312,7 @@ declare global {
    * type RequiredPropsOnly = PickRequired<User>;
    * // 结果为: { id: number; age: number; }
    */
-  export type PickRequired<T extends Object> = {
+  type PickRequired<T extends Object> = {
     [K in RequiredKeys<T>]: T[K]
   }
 }
