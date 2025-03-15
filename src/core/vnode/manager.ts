@@ -2,7 +2,7 @@ import { type ChildVNode, isRefEl, type VNode, type WidgetVNode } from './types.
 import {
   _createFnWidget,
   type FnWidgetConstructor,
-  isClassWidgetConstructor,
+  isClassWidget,
   Widget
 } from '../widget/index.js'
 import { createScope } from '../scope/index.js'
@@ -64,7 +64,7 @@ export class VNodeManager {
         // 包装props为响应式对象
         vnode.props = _proxyWidgetInstanceProps(vnode.props)
         // 异步实例
-        if (isClassWidgetConstructor(vnode.type)) {
+        if (isClassWidget(vnode.type)) {
           vnode.instance = new vnode.type(vnode.props)
         } else {
           vnode.instance = _createFnWidget(vnode as WidgetVNode<FnWidgetConstructor>)
