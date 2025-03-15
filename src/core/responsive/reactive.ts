@@ -280,10 +280,7 @@ export function isReactive<T extends object>(val: T | Reactive<T>): val is React
  * @alias toRaw
  */
 export function unReactive<T extends object>(obj: T | Reactive<T>): UnReactive<T> {
-  if (isReactive(obj)) {
-    return obj[GET_RAW_TARGET_SYMBOL] as UnReactive<T>
-  }
-  return obj as UnReactive<T>
+  return ((obj as any)?.[GET_RAW_TARGET_SYMBOL] as UnReactive<T>) ?? obj
 }
 
 /**
