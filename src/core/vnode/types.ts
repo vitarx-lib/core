@@ -2,7 +2,7 @@ import type { ExcludeWidgetIntrinsicKeywords } from '../widget/constant.js'
 import {
   type ClassWidgetConstructor,
   type FnWidgetConstructor,
-  isClassWidgetConstructor,
+  isClassWidget,
   Widget
 } from '../widget/index.js'
 import {
@@ -256,7 +256,7 @@ export function isWidgetVNode(obj: any): obj is WidgetVNode {
  * @param obj
  */
 export function isFnWidgetVNode(obj: any): obj is WidgetVNode<FnWidgetConstructor> {
-  return typeof obj?.type === 'function' && !isClassWidgetConstructor(obj.type)
+  return typeof obj?.type === 'function' && !isClassWidget(obj.type)
 }
 
 /**
