@@ -8,6 +8,7 @@ import {
   type IntrinsicAttributes,
   isVNode,
   type VNode,
+  type WidgetType,
   type WidgetVNode
 } from '../vnode/index.js'
 import { _hooksCollector, type CollectResult } from './hooks.js'
@@ -62,10 +63,6 @@ const __initializeMethod = Symbol('InitializeFnWidgetBuild')
  * @internal
  */
 export class FnWidget extends Widget {
-  constructor(props: AnyProps) {
-    super(props)
-  }
-
   // 初始化实例
   async [__initializeMethod](data: CollectResult): Promise<FnWidget> {
     // 注入暴露的属性和方法
@@ -75,7 +72,6 @@ export class FnWidget extends Widget {
     this.#injectLifeCycleHooks(data.lifeCycleHooks)
     const hookCount = Object.keys(data.lifeCycleHooks).length
     const updateView = () => {
-      this.#setBuild(data.build as BuildVNode)
       if (
         this['_$renderer'] &&
         (this['_$renderer'].state === 'notMounted' || this['_$renderer'].state === 'activated')
@@ -83,18 +79,20 @@ export class FnWidget extends Widget {
         this.update()
       }
     }
+    let build: BuildVNode | { default: WidgetType } = data.build as BuildVNode
     if (isPromise(data.build)) {
       const suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
       if (suspenseCounter) suspenseCounter.value++
       try {
-        data.build = await data.build
+        build = await data.build
       } catch (err) {
         // 让build方法抛出异常
-        this.build = () => {
+        build = () => {
           throw err
         }
       } finally {
+        this.#setBuild(build)
         // 如果有新增钩子则重新注入生命周期钩子
         if (hookCount !== Object.keys(data.lifeCycleHooks).length) {
           this.#injectLifeCycleHooks(data.lifeCycleHooks)
@@ -108,6 +106,7 @@ export class FnWidget extends Widget {
         if (suspenseCounter) suspenseCounter.value--
       }
     } else {
+      this.#setBuild(data.build)
       updateView()
     }
     return this
@@ -126,8 +125,28 @@ export class FnWidget extends Widget {
    * @param {BuildVNode} build - 构建函数
    * @private
    */
-  #setBuild(build: BuildVNode) {
-    this.build = isVNode(build) ? () => build : build
+  #setBuild(build: BuildVNode | { default: WidgetType }) {
+    // 如果是函数，则直接赋值给build方法
+    if (typeof build === 'function') {
+      this.build = build
+      return
+    }
+    // 如果是vnode，则让build方法返回节点
+    if (isVNode(build)) {
+      this.build = () => build
+      return
+    }
+    // 如果是module对象，则判断是否存在default导出
+    if (typeof build === 'object' && 'default' in build && typeof build.default === 'function') {
+      this.build = () => createVNode(build.default, this.props)
+      return
+    }
+    // 如果不符合要求，则在build方法中抛出异常
+    this.build = () => {
+      throw new Error(
+        `[Vitarx.FnWidget]：函数组件的返回值必须是VNode、()=>VNode、Promise<{ default: 函数组件/类组件 }>，实际返回的却是${typeof build}`
+      )
+    }
   }
 
   /**
