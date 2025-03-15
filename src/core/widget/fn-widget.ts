@@ -298,7 +298,7 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  *   // 渲染一个异步组件，TSX能够正常识别组件
  *   return (
  *      <div>
- *        <AsyncWidget id="123" v-fallback={<>加载中...</>}/>
+ *        <AsyncWidget id="123"/>
  *      </div>
  *   )
  * }
@@ -328,7 +328,7 @@ export function defineAsyncWidget<P extends AnyProps>(fn: AsyncWidget<P>): FnWid
  *   const LazyLoadButton = defineLazyWidget(()=>import('./button.js'))
  *   const show = ref(false)
  *   return <div>
- *     {show.value && <LazyLoadButton text="懒加载的按钮" v-fallback={<>按钮正在加载中</>}/>}
+ *     {show.value && <LazyLoadButton text="懒加载的按钮"/>}
  *     <button onClick={()=>show.value = !show.value}>{show.value ? '隐藏' : '显示'}</button>
  *   </div>
  * }
