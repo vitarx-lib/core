@@ -10,7 +10,7 @@ import type {
   VNode as _VNODE,
   VNodeType,
   Widget,
-  WidgetType
+  WidgetType as _WidgetType
 } from './core/index.js'
 import type {
   CssPropertiesMap,
@@ -64,6 +64,10 @@ declare global {
      */
     type FW = FnWidgetType
     /**
+     * 所有受 `Vitarx` 支持的组件类型
+     */
+    type WidgetType = _WidgetType
+    /**
      * TSX 类型支持工具
      *
      * 将异步组件，懒加载组件，等受 `Vitarx` 支持，但不被TSX支持的组件类型，
@@ -85,7 +89,7 @@ declare global {
      * <AsyncWidget />
      * ```
      */
-    type TSWidget<T extends WidgetType> = _TSWidget<T>
+    type TSWidget<T extends _WidgetType> = _TSWidget<T>
     /** 兼容JSX，同VNode类型一致 */
     interface Element<T extends VNodeType = VNodeType> extends _VNODE<T> {}
     /** 类组件实例 */
