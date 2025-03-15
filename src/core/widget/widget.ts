@@ -301,9 +301,12 @@ export abstract class Widget<
 /**
  * 辅助判断一个构造函数是否为类组件
  *
+ * @alias isClassWidgetConstructor
  * @param {any} val - 待判断的值
  * @returns {val is ClassWidgetConstructor} - 如果是类组件则返回true，否则返回false
  */
 export function isClassWidget(val: any): val is ClassWidgetConstructor {
   return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
 }
+
+export { isClassWidget as isClassWidgetConstructor }
