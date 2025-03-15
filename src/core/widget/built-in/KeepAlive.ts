@@ -73,6 +73,16 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   }
 
   /**
+   * 判断是否需要缓存
+   *
+   * @param type
+   */
+  isKeep(type: WidgetType): boolean {
+    if (this.exclude.includes(type)) return false
+    return this.include.length === 0 || this.include.includes(type)
+  }
+
+  /**
    * 生成子节点
    */
   protected makeChildVNode(): VNode<WidgetType> {
@@ -89,54 +99,6 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       return this.children as VNode<WidgetType>
     } else {
       return createVNode(this.children, { key: this.props.onlyKey })
-    }
-  }
-
-  /**
-   * 添加缓存
-   *
-   * @param vnode
-   */
-  protected addCache(vnode: VNode<WidgetType>) {
-    const type = vnode.type
-    const key = vnode.key ?? undefined
-    if (this.isKeep(type)) {
-      // 确保缓存存在对应的类型映射
-      if (!this.cache.has(type)) {
-        this.cache.set(type, new Map())
-      }
-
-      const typeCache = this.cache.get(type)!
-
-      // 如果同 key 已存在，先移除旧缓存
-      if (typeCache.has(key)) {
-        typeCache.delete(key)
-      }
-
-      // 添加到缓存
-      typeCache.set(key, vnode)
-
-      // 检查缓存总大小
-      if (this.max > 0) {
-        let totalSize = 0
-        for (const typeMap of this.cache.values()) {
-          totalSize += typeMap.size
-        }
-
-        if (totalSize > this.max) {
-          // 超出限制，移除第一个缓存（按插入顺序）
-          const firstType = this.cache.keys().next().value!
-          const firstTypeMap = this.cache.get(firstType)!
-          const firstKey = firstTypeMap.keys().next().value!
-          firstTypeMap.get(firstKey)?.instance?.['renderer'].unmount()
-          firstTypeMap.delete(firstKey)
-
-          // 如果该类型的缓存已空，移除类型
-          if (firstTypeMap.size === 0) {
-            this.cache.delete(firstType)
-          }
-        }
-      }
     }
   }
 
@@ -203,13 +165,51 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   }
 
   /**
-   * 判断是否需要缓存
+   * 添加缓存
    *
-   * @param type
+   * @param vnode
    */
-  isKeep(type: WidgetType): boolean {
-    if (this.exclude.includes(type)) return false
-    return this.include.length === 0 || this.include.includes(type)
+  protected addCache(vnode: VNode<WidgetType>) {
+    const type = vnode.type
+    const key = vnode.key ?? undefined
+    if (this.isKeep(type)) {
+      // 确保缓存存在对应的类型映射
+      if (!this.cache.has(type)) {
+        this.cache.set(type, new Map())
+      }
+
+      const typeCache = this.cache.get(type)!
+
+      // 如果同 key 已存在，先移除旧缓存
+      if (typeCache.has(key)) {
+        typeCache.delete(key)
+      }
+
+      // 添加到缓存
+      typeCache.set(key, vnode)
+
+      // 检查缓存总大小
+      if (this.max > 0) {
+        let totalSize = 0
+        for (const typeMap of this.cache.values()) {
+          totalSize += typeMap.size
+        }
+
+        if (totalSize > this.max) {
+          // 超出限制，移除第一个缓存（按插入顺序）
+          const firstType = this.cache.keys().next().value!
+          const firstTypeMap = this.cache.get(firstType)!
+          const firstKey = firstTypeMap.keys().next().value!
+          firstTypeMap.get(firstKey)?.instance?.['renderer'].unmount()
+          firstTypeMap.delete(firstKey)
+
+          // 如果该类型的缓存已空，移除类型
+          if (firstTypeMap.size === 0) {
+            this.cache.delete(firstType)
+          }
+        }
+      }
+    }
   }
 
   /**
