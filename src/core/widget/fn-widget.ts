@@ -15,6 +15,7 @@ import { _hooksCollector, type CollectResult } from './hooks.js'
 import { getSuspenseCounter } from './built-in/index.js'
 
 type AnyProps = Record<string, any>
+
 /**
  * 构建虚拟节点函数类型
  */
@@ -28,13 +29,14 @@ export interface SimpleWidget<T extends AnyProps = any, R extends VNode = VNode>
 
   (props: T & IntrinsicAttributes): R
 }
+
 /**
  * 函数小部件类型
  */
 export type FnWidgetConstructor<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
-) => BuildVNode | Promise<BuildVNode>
+) => BuildVNode | Promise<BuildVNode> | Promise<{ default: WidgetType }>
 
 /**
  * 函数小部件类型，兼容TSX语法
@@ -45,9 +47,14 @@ export type FnWidgetType<P extends AnyProps = any> = (
 ) => VNode
 
 /**
+ * 懒加载小部件类型
+ */
+export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{ default: WidgetType<P> }>
+
+/**
  * 异步小部件类型
  */
-export type AsyncFnWidget<P extends AnyProps = any> = (
+export type AsyncWidget<P extends AnyProps = any> = (
   this: FnWidget,
   props: P & IntrinsicAttributes
 ) => Promise<VNode>
@@ -289,15 +296,43 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  *   // 渲染一个异步组件，TSX能够正常识别组件
  *   return (
  *      <div>
- *        <AsyncWidget id="123"/>
+ *        <AsyncWidget id="123" v-fallback={<>加载中...</>}/>
  *      </div>
  *   )
  * }
  * ```
  *
- * @param {AsyncFnWidget} fn - 异步函数小部件。
+ * @param {AsyncWidget} fn - 异步函数小部件。
  * @returns {FnWidgetType} - 重载类型过后的异步函数组件。
  */
-export function defineAsyncWidget<P extends AnyProps>(fn: AsyncFnWidget<P>): FnWidgetType<P> {
+export function defineAsyncWidget<P extends AnyProps>(fn: AsyncWidget<P>): FnWidgetType<P> {
+  return fn as unknown as FnWidgetType<P>
+}
+
+/**
+ * 辅助定义一个符合`tsx`类型推断的异步懒加载小部件
+ *
+ * 它和`defineAsyncWidget`一样，只是进行了类型推断重载，没有附加任何额外的副作用。
+ *
+ * @example
+ * ```tsx
+ * // button.tsx
+ * export default function Button(props:{text:string}){
+ *   return <button>{props.text}</button>
+ * }
+ *
+ * // App.tsx
+ * export default function App(){
+ *   const LazyLoadButton = defineLazyWidget(()=>import('./button.js'))
+ *   const show = ref(false)
+ *   return <div>
+ *     {show.value && <LazyLoadButton text="懒加载的按钮" v-fallback={<>按钮正在加载中</>}/>}
+ *     <button onClick={()=>show.value = !show.value}>{show.value ? '隐藏' : '显示'}</button>
+ *   </div>
+ * }
+ * ```
+ * @param {()=>Promise<{default:WidgetType}>} fn - 异步懒加载函数小部件。
+ */
+export function defineLazyWidget<P extends AnyProps>(fn: LazyLoadWidget<P>): FnWidgetType<P> {
   return fn as unknown as FnWidgetType<P>
 }
