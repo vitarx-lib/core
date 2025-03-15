@@ -1,6 +1,5 @@
 export * from './clone.js'
 export * from './detect.js'
-export * from './diff.js'
 export * from './conversion.js'
 export * from './quick.js'
 export * from './css_utils.js'
