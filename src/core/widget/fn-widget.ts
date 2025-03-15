@@ -1,4 +1,4 @@
-import { Widget } from './widget.js'
+import { type ClassWidgetConstructor, Widget } from './widget.js'
 import { isPromise } from '../../utils/index.js'
 import { type LifeCycleHookMethods } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
@@ -50,7 +50,7 @@ export type FnWidgetType<P extends AnyProps = any> = (
  * 懒加载小部件类型
  */
 export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{
-  default: WidgetType<P>
+  default: FnWidgetConstructor<P> | ClassWidgetConstructor<P>
 }>
 
 /**
