@@ -1,9 +1,8 @@
-// 错误提示
 import {
   type ClassWidgetConstructor,
   type ErrorInfo,
   type FnWidgetConstructor,
-  isClassWidgetConstructor,
+  isClassWidget,
   Widget
 } from './widget/index.js'
 import { createVNode, isVNode, provide, type VNode, type WidgetType } from './vnode/index.js'
@@ -102,7 +101,7 @@ export class App {
    */
   render<P extends Record<string, any>>(widget: WidgetType<P> | VNode, props?: P): this {
     let vnode: VNode<FnWidgetConstructor | ClassWidgetConstructor>
-    if (isFunction(widget) || isClassWidgetConstructor(widget)) {
+    if (isFunction(widget) || isClassWidget(widget)) {
       vnode = createVNode(widget as FnWidgetConstructor, props)
     } else {
       vnode = widget as VNode<FnWidgetConstructor | ClassWidgetConstructor>
