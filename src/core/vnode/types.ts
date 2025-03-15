@@ -3,6 +3,7 @@ import {
   type ClassWidgetConstructor,
   type FnWidgetConstructor,
   isClassWidget,
+  type LazyLoadWidget,
   Widget
 } from '../widget/index.js'
 import {
@@ -79,6 +80,7 @@ export interface IntrinsicAttributes {
 export type WidgetType<P extends Record<string, any> = any> =
   | ClassWidgetConstructor<P>
   | FnWidgetConstructor<P>
+  | LazyLoadWidget<P>
 
 /**
  * 主节点类型
