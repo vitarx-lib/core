@@ -1,9 +1,9 @@
 import { Widget } from './widget.js'
 import { type HookParameter, type HookReturnType, LifeCycleHooks } from './life-cycle.js'
 import { __widgetIntrinsicPropKeywords__ } from './constant.js'
-import { getCurrentVNode, type VNode, type WidgetType, type WidgetVNode } from '../vnode/index.js'
+import { getCurrentVNode, type VNode, type WidgetVNode } from '../vnode/index.js'
 import { getContext, runContext } from '../context/index.js'
-import { type BuildVNode, FnWidget, type FnWidgetConstructor } from './fn-widget.js'
+import { FnWidget, type FnWidgetConstructor, type ValidFnWidgetReturnValue } from './fn-widget.js'
 
 /**
  * 生命周期钩子回调函数
@@ -22,7 +22,7 @@ interface CollectContext {
  * 收集结果
  */
 export interface CollectResult extends CollectContext {
-  build: BuildVNode | Promise<BuildVNode> | Promise<{ default: WidgetType }>
+  build: ValidFnWidgetReturnValue
 }
 
 /**
