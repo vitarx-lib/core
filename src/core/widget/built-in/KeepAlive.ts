@@ -58,7 +58,10 @@ export interface KeepAliveProps {
  * 这在某些场景下非常有用，例如：数据列表，频繁从树中移除又创建的小部件。
  */
 export class KeepAlive extends Widget<KeepAliveProps> {
-  protected cache: Map<WidgetType, Map<OnlyKey | undefined, VNode<WidgetType>>> = new Map()
+  /**
+   * 缓存
+   */
+  public readonly cache: Map<WidgetType, Map<OnlyKey | undefined, VNode<WidgetType>>> = new Map()
   protected currentChild: VNode<WidgetType>
 
   constructor(props: KeepAliveProps) {
@@ -143,7 +146,6 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   protected override initializeRenderer(): WidgetRenderer<this> {
     return new _KeepAliveRenderer(this)
   }
-
   /**
    * 需要缓存的小部件
    */
