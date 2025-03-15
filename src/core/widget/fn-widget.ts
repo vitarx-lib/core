@@ -74,6 +74,15 @@ export class FnWidget extends Widget {
     // 注入生命周期钩子到实例中
     this.#injectLifeCycleHooks(data.lifeCycleHooks)
     const hookCount = Object.keys(data.lifeCycleHooks).length
+    const updateView = () => {
+      this.#setBuild(data.build as BuildVNode)
+      if (
+        this['_$renderer'] &&
+        (this['_$renderer'].state === 'notMounted' || this['_$renderer'].state === 'activated')
+      ) {
+        this.update()
+      }
+    }
     if (isPromise(data.build)) {
       const suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
@@ -94,16 +103,12 @@ export class FnWidget extends Widget {
         if (exposedCount !== Object.keys(data.exposed).length) {
           this.#injectExposed(data.exposed)
         }
-        this.#setBuild(data.build as BuildVNode)
-        // 如果组件未卸载，则强制更新视图
-        if (this['_$renderer'] && this['_$renderer'].state !== 'unloaded') this.update()
+        updateView()
         // 如果有上级暂停计数器则让计数器-1
         if (suspenseCounter) suspenseCounter.value--
       }
     } else {
-      this.#setBuild(data.build as BuildVNode)
-      // 如果组件已渲染，则强制更新视图
-      if (this['_$renderer'] && this['_$renderer'].state !== 'notRendered') this.update()
+      updateView()
     }
     return this
   }
