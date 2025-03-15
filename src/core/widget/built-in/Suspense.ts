@@ -28,6 +28,7 @@ type OnErrorCallback = (this: Suspense, error: unknown, info: ErrorInfo) => void
  * @property {Element} fallback - 回退内容
  * @property {Element} children - 子节点
  * @property {OnErrorCallback} onError - 异常处理钩子
+ * @property {() => void} onShow - 子节点渲染完成钩子
  */
 interface SuspenseProps {
   /**
