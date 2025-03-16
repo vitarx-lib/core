@@ -12,6 +12,7 @@ import {
 } from '../vnode/index.js'
 import { _hooksCollector, type CollectResult } from './hooks.js'
 import { getSuspenseCounter } from './built-in/index.js'
+import { withAsyncContext } from '../context/index.js'
 
 type AnyProps = Record<string, any>
 
@@ -137,7 +138,7 @@ export class FnWidget extends Widget {
       // 如果有上级暂停计数器则让计数器+1
       if (suspenseCounter) suspenseCounter.value++
       try {
-        build = await data.build
+        build = await withAsyncContext(data.build as Promise<BuildVNode>)
       } catch (err) {
         // 让build方法抛出异常
         build = () => {
