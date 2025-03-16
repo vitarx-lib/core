@@ -97,6 +97,7 @@ const createValueListener = <T extends AnyObject>(
  * @param {T} origin - 监听源，一般是`ref`|`reactive`创建的对象
  * @param {WatchCallback<T>} callback - 回调函数
  * @param {ObserverOptions} options - 监听器配置选项
+ * @returns {object} - 监听器实例
  */
 export function watch<T extends AnyObject, C extends WatchCallback<T>>(
   origin: T,
