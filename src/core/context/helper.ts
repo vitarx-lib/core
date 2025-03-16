@@ -1,4 +1,4 @@
-import { GlobalContextManager } from './index.js'
+import { type AsyncContextTask, GlobalContextManager } from './index.js'
 import type { RestoreContext, Tag } from './global-context-manager.js'
 
 /**
@@ -8,7 +8,7 @@ import type { RestoreContext, Tag } from './global-context-manager.js'
  *
  * 此函数主要的用途是保持异步函数内上下文跟踪正常，使用此助手函数来包裹异步函数，能够使其执行完成过后自动恢复上下文。
  *
- * 强制要求异步函数小部件内必须使用该API来完成初始化的异步请求，否则会导致上下文丢失，内存溢出等风险！！！。
+ * 强制要求异步函数小部件内必须使用该API来完成初始化的异步请求，否则会导致上下文丢失，内存泄露等风险！！！。
  *
  * ```jsx
  * import {withAsyncContext,getCurrentScope} from 'vitarx'
@@ -21,11 +21,11 @@ import type { RestoreContext, Tag } from './global-context-manager.js'
  * ```
  *
  * @async
- * @param {() => Promise} fn - 要执行的异步函数
- * @returns {Promise} - 执行结果
+ * @param asyncTask - 异步任务
+ * @returns {Promise} - 任务结果
  */
-export function withAsyncContext<T>(fn: () => Promise<T> | T): Promise<T> {
-  return GlobalContextManager.withAsyncContext(fn)
+export function withAsyncContext<T>(asyncTask: AsyncContextTask<T>): Promise<T> {
+  return GlobalContextManager.withAsyncContext(asyncTask)
 }
 
 /**
