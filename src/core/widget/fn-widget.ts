@@ -306,7 +306,7 @@ const SIMPLE_WIDGET_SYMBOL = Symbol('simple_widget_type')
  * }
  * ```
  *
- * @param build - 构建函数
+ * @param build - 视图构建器，通过函数返回要渲染的视图虚拟节点
  * @returns {SimpleWidget} - 简单小部件
  */
 export function simple<T extends AnyProps, R extends VNode | null>(
