@@ -122,7 +122,16 @@ export function createVNode<T extends VNodeType>(
     if (cssClass.length > 0) newProps.class = cssClass
   } else if (isSimpleWidget(type)) {
     // 如果是简单组件，调用构造函数并返回结果
-    const simpleVNode = type(newProps) as VNode<T>
+    let simpleVNode = type(newProps) as VNode<T>
+    // 兼容简单简单组件返回 () => VNode
+    if (isFunction(simpleVNode)) {
+      simpleVNode = simpleVNode()
+    }
+    if (simpleVNode === null) {
+      simpleVNode = createVNode(Fragment) as VNode<T>
+    } else if (!isVNode(simpleVNode)) {
+      throw new Error(`[Vitarx.createVNode][ERROR]：简单组件的返回值必须是VNode节点或()=>VNode`)
+    }
     if (key && simpleVNode.key === undefined) {
       simpleVNode.key = key
     }
