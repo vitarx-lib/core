@@ -1,7 +1,9 @@
-import { isArray, isPromise } from '../../utils/index.js'
+import { isArray, isFunction, isPromise } from '../../utils/index.js'
 
 export type RestoreContext = () => void
 export type Tag = string | symbol
+export type AsyncContextTask<T> = (() => Promise<T>) | Promise<T>
+
 /**
  * 全局上下文管理器
  */
@@ -73,42 +75,56 @@ export default class GlobalContextManager {
   }
 
   /**
-   * 使用异步上下文
+   * 在异步任务中管理上下文
+   *
+   * 该方法会在执行异步任务时临时挂起指定的上下文（或所有上下文），
+   * 并在任务完成后自动恢复上下文状态。
    *
    * @async
-   * @param {() => Promise} fn - 要执行的异步函数
-   * @param {Tag[]} [tags=[]] - 要使用的上下文标签，可选参数，默认为空数组，会挂起所有上下文，开发者一般无需使用该参数。
-   * @returns {Promise} - fn函数的返回值
-   * @throws {Error} - 如果fn函数执行失败，则抛出错误
+   * @template T - 异步任务的返回值类型。
+   * @param {() => Promise<T> | Promise<T>} asyncTask - 需要执行的异步任务，可以是一个返回 Promise 的函数或直接传入的 Promise。
+   * @param {Tag[]} [tags=[]] - 需要挂起的上下文标签数组。如果未传入或为空数组，则会挂起所有上下文。
+   * @returns {Promise<T>} - 异步任务的执行结果。
+   * @throws {Error} - 如果异步任务执行失败，则会抛出错误。
    */
-  static async withAsyncContext<T>(fn: () => Promise<T> | T, tags: Tag[] = []): Promise<T> {
-    const result = fn()
-    if (!isPromise(result)) return result
+  static async withAsyncContext<T>(asyncTask: AsyncContextTask<T>, tags: Tag[] = []): Promise<T> {
+    // 如果 asyncTask 是一个函数，则调用它以获取 Promise
+    if (isFunction(asyncTask)) {
+      asyncTask = asyncTask()
+    }
+    // 如果 asyncTask 不是 Promise，则直接返回
+    if (!isPromise(asyncTask)) return asyncTask
+
     let restoreContext: () => void
+
+    // 如果指定了需要挂起的上下文标签
     if (isArray(tags) && tags.length > 0) {
       const backup: Map<Tag, object | undefined> = new Map()
-      // 获取和删除指定 tags 的上下文，并将其备份
+      // 备份并删除指定的上下文
       tags.forEach(tag => {
         const context = GlobalContextManager.get(tag)
         if (context !== undefined) {
           backup.set(tag, context)
-          this.#store.delete(tag) // 删除对应的上下文
+          this.#store.delete(tag)
         }
       })
-      // 恢复上下文
+      // 定义恢复上下文的函数
       restoreContext = () => {
         backup.forEach((value, key) => value && this.#store.set(key, value))
         backup.clear()
       }
     } else {
+      // 如果未指定标签，则挂起所有上下文
       const prevStore = this.#store
       this.#store = new Map<Tag, object>()
       restoreContext = () => (this.#store = prevStore)
     }
 
     try {
-      return await result
+      // 执行异步任务并返回结果
+      return await asyncTask
     } finally {
+      // 无论任务成功与否，恢复上下文
       restoreContext()
     }
   }
