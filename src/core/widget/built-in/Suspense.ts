@@ -116,8 +116,9 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
 
   protected override onUpdated() {
     if (this.onShow) {
-      this.onShow()
+      const fn = this.onShow
       this.onShow = undefined
+      fn()
     }
   }
 
