@@ -2,8 +2,8 @@ import { Scope, sleep, withAsyncContext } from '../src/index.js'
 
 // 测试代码
 async function test() {
-  const scope1 = new Scope(true)
-  const scope2 = new Scope(true)
+  const scope1 = new Scope()
+  const scope2 = new Scope()
   scope1.run(async () => {
     const r = await withAsyncContext(async () => {
       await sleep(200)
