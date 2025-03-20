@@ -75,7 +75,7 @@ export class Listener<C extends AnyCallback = AnyCallback> extends Effect {
    * @param {any[]} params - 要传给回调函数的参数列表
    * @returns {boolean} 返回一个bool值表示当前监听器是否活跃，false代表已经销毁
    */
-  trigger(params: Parameters<C>): boolean {
+  trigger(...params: Parameters<C>): boolean {
     if (this.isDeprecated || !this.#callback) return false
     if (this.isPaused) return true
     // 如果没有限制触发次数或触发次数小于限制次数则触发回调

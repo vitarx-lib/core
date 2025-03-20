@@ -156,7 +156,7 @@ export class Observers {
               if (onProps.has(key)) changes.push(key)
             }
             // 如果有变化，则触发监听器
-            if (changes.length) listener.trigger([changes, origin] as Parameters<C>)
+            if (changes.length) (listener as Listener<AnyCallback>).trigger(changes, origin)
           },
           (last, prev) => {
             if (!prev) return last
@@ -380,7 +380,7 @@ export class Observers {
         if (typeof listener === 'function') {
           listener(p, origin)
         } else {
-          listener.trigger([p, origin])
+          listener.trigger(p, origin)
         }
       }
     }
