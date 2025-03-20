@@ -1,4 +1,4 @@
-import { reactive, readonly, shallowReadonly } from '../../src/index.js'
+import { reactive, readonly, ref, shallowReadonly } from '../../src/index.js'
 
 const data = reactive({
   a: 1,
@@ -18,3 +18,8 @@ const readonlyData3 = shallowReadonly({
   }
 })
 readonlyData3.b.c = 3
+
+const count = ref(0)
+const state = readonly({ count })
+
+console.log(state.count.value) // 不会解包！！
