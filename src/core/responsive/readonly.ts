@@ -49,7 +49,7 @@ class ReadonlyHandler<T extends Object> implements ProxyHandler<T> {
     if (prop === READONLY_OBJECT_SYMBOL) return true
     // 返回监听目标
     if (prop === Observers.OBSERVERS_TARGET_SYMBOL) return target
-    const data = Reflect.get(target, prop, receiver)
+    const data = Reflect.get(target, prop, target)
     if (this.deep && isObject(data) && !isReadonly(data)) {
       return ReadonlyHandler.create(data, true)
     }
