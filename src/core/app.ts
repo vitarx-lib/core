@@ -34,6 +34,39 @@ export interface AppConfig {
 }
 
 /**
+ * 插件安装
+ *
+ * @template T - 插件配置选项
+ * @param {App} app - App应用实例
+ * @param {T} options - 插件配置选项
+ * @returns {void}
+ */
+export type AppPluginInstall<T extends {}> = (app: App, options?: T) => void
+
+/**
+ * ## 插件对象
+ *
+ * 必须提供一个install方法，用于安装插件。
+ *
+ * @template T - 插件配置选项
+ */
+export interface AppObjectPlugin<T extends {}> {
+  /**
+   * 安装插件
+   */
+  install: AppPluginInstall<T>
+}
+
+/**
+ * ## 插件
+ *
+ * 插件是一个函数，或者一个对象，它具有一个install方法，用于安装插件。
+ *
+ * @template T - 插件配置选项
+ */
+export type AppPlugin<T extends {} = {}> = AppObjectPlugin<T> | AppPluginInstall<T>
+
+/**
  * ## Vitarx App
  *
  * 用于创建和运行 Vitarx 应用。
@@ -265,11 +298,19 @@ export class App {
    * @param {T} options - 插件选项
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
-  use<T extends {}>(plugin: (app: App, options?: T) => void, options?: T): this {
-    if (typeof plugin !== 'function') {
-      throw new Error(`[Vitarx.App.use][ERROR]：插件必须为一个函数。`)
+  use<T extends {}>(plugin: AppPlugin<T>, options?: T): this {
+    const pluginType = typeof plugin
+    if (!pluginType) return this
+    let install: AppPluginInstall<T>
+    if (pluginType === 'object') {
+      install = (plugin as AppObjectPlugin<T>).install
+    } else {
+      install = plugin as AppPluginInstall<T>
     }
-    plugin(this, options)
+    if (typeof install !== 'function') {
+      throw new Error(`[Vitarx.App.use][ERROR]：插件必须为一个函数或具有install方法的对象。`)
+    }
+    install(this, options)
     return this
   }
 }
