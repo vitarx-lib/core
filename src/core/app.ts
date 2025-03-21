@@ -33,6 +33,9 @@ export interface AppConfig {
   errorHandler?: (error: unknown, info: ErrorInfo) => any
 }
 
+type OptionallyConfigurablePlugIns<T extends {}> = (app: App, options?: T) => void
+type NoConfigurationPlugins = (app: App) => void
+type RequiredConfigurationPlugIn<T extends {}> = (app: App, options: T) => void
 /**
  * 插件安装
  *
@@ -41,7 +44,10 @@ export interface AppConfig {
  * @param {T} options - 插件配置选项
  * @returns {void}
  */
-export type AppPluginInstall<T extends {}> = (app: App, options?: T) => void
+export type AppPluginInstall<T extends {} = {}> =
+  | OptionallyConfigurablePlugIns<T>
+  | NoConfigurationPlugins
+  | RequiredConfigurationPlugIn<T>
 
 /**
  * ## 插件对象
@@ -50,7 +56,7 @@ export type AppPluginInstall<T extends {}> = (app: App, options?: T) => void
  *
  * @template T - 插件配置选项
  */
-export interface AppObjectPlugin<T extends {}> {
+export interface AppObjectPlugin<T extends {} = {}> {
   /**
    * 安装插件
    */
@@ -277,24 +283,39 @@ export class App {
   /**
    * ## 安装插件
    *
-   * @param {(app: App) => void} plugin - 不需要选项的插件函数
+   * @param {Function|Object} plugin - 无配置选项的插件
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
-  use(plugin: (app: App) => void): this
+  use(plugin: NoConfigurationPlugins | { install: NoConfigurationPlugins }): this
   /**
    * ## 安装插件
    *
    * @template T - 插件选项类型
-   * @param {(app: App, options: T) => void} plugin - 需要选项的插件函数
+   * @param {Function|Object} plugin - 有必填选项的插件
    * @param {T} options - 插件选项
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
-  use<T extends {}>(plugin: (app: App, options: T) => void, options: T): this
+  use<T extends {}>(
+    plugin: RequiredConfigurationPlugIn<T> | { install: RequiredConfigurationPlugIn<T> },
+    options: T
+  ): this
   /**
    * ## 安装插件
    *
    * @template T - 插件选项类型
-   * @param {(app: App, options?: T) => void} plugin - 可选选项的插件函数
+   * @param {Function|Object} plugin - 有可选选项的插件
+   * @param {Object} options - 插件选项
+   * @returns {this} - 返回应用实例本身，支持链式调用
+   */
+  use<T extends {}>(
+    plugin: OptionallyConfigurablePlugIns<T> | { install: OptionallyConfigurablePlugIns<T> },
+    options?: T
+  ): this
+  /**
+   * ## 安装插件
+   *
+   * @template T - 插件选项类型
+   * @param {AppPlugin<T>} plugin - 可选选项的插件函数
    * @param {T} options - 插件选项
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
@@ -310,7 +331,7 @@ export class App {
     if (typeof install !== 'function') {
       throw new Error(`[Vitarx.App.use][ERROR]：插件必须为一个函数或具有install方法的对象。`)
     }
-    install(this, options)
+    install(this, options!)
     return this
   }
 }
