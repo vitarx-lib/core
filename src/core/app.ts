@@ -137,6 +137,7 @@ export class App {
    * @template P - 小部件的props参数
    * @param {WidgetType<P> | VNode<WidgetType<P>>} widget - 入口小部件
    * @param {object} props - 小部件的props参数，仅在widget为函数或类时可选。
+   * @returns {this} - 返回当前App实例
    */
   render<P extends Record<string, any>>(widget: WidgetType<P> | VNode, props?: P): this {
     let vnode: VNode<FnWidgetConstructor | ClassWidgetConstructor>
