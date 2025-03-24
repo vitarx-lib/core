@@ -336,6 +336,9 @@ export class App {
   }
 }
 
+// 提供别名，方便使用，避免和App入口组件命名冲突
+export { App as Vitarx }
+
 /**
  * ## 创建一个应用实例
  *
