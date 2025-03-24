@@ -190,7 +190,7 @@ export class WidgetRenderer<T extends Widget> {
    *
    * @param {ContainerElement} container - 容器元素，如果`beforeMount`钩子返回了指定的容器元素，则此参数无效。
    * @returns {ContainerElement} - 渲染的元素实例
-   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @internal 核心方法，用于渲染小部件，并返回渲染的真实元素实例。
    */
   render(container?: ContainerElement): ContainerElement {
     if (this.state !== 'notRendered') {
@@ -225,12 +225,21 @@ export class WidgetRenderer<T extends Widget> {
   }
 
   /**
-   * 该方法用于在元素真实挂载到文档中时调用。
+   * 挂载小部件
    *
-   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * 此方法负责触发组件的 `mounted` 和 `activated` 生命周期。
+   *
+   * 此方法通常是由框架内部逻辑调用，如果你是通过 `createWidgetRenderer` 助手函数的渲染器实现自定义的管控，
+   * 那么你应该传入 `container` 参数，否则可能会组件挂载成功，但元素并未真实挂载到页面上。
+   *
+   * @param {ContainerElement} [container] - 容器HTML元素实例，如果`beforeMount`钩子返回了指定的容器元素，则此参数无效。
+   * @returns {this} - 返回当前实例，方便链式调用。
+   * @internal 核心方法，用于挂载小部件，未渲染会自动调用render方法。
    */
-  mount(): void {
-    if (this.state !== 'notMounted') {
+  mount(container?: ContainerElement): this {
+    if (this.state === 'notRendered') {
+      this.render(container)
+    } else if (this.state !== 'notMounted') {
       throw new Error('[Vitarx.WidgetRenderer.mount]：组件非待挂载状态，不能进行挂载！')
     }
     // 递归挂载子节点
@@ -244,13 +253,14 @@ export class WidgetRenderer<T extends Widget> {
     this.triggerLifeCycle(LifeCycleHooks.mounted)
     // 触发onActivated生命周期
     this.triggerLifeCycle(LifeCycleHooks.activated)
+    return this
   }
 
   /**
    * 卸载小部件
    *
    * @param {boolean} root - 用于递归时判断是否需要移除当前元素，内部逻辑使用，请勿外部传入。
-   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @internal 核心方法
    */
   unmount(root: boolean = true): void {
     if (this.state !== 'uninstalling' && this.state !== 'unloaded') {
@@ -296,6 +306,7 @@ export class WidgetRenderer<T extends Widget> {
    *
    * @param {VNode} newChildVNode - 新子节点，没有则使用`build`方法构建。
    * @return {void}
+   * @internal 核心方法
    */
   update(newChildVNode?: VNode): void {
     if (newChildVNode && !isVNode(newChildVNode)) {
@@ -352,7 +363,7 @@ export class WidgetRenderer<T extends Widget> {
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
    * @param {boolean} root - 该参数用于递归时内部判断是否需要重新挂载，请勿外部传入。
-   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @internal 核心方法
    */
   activate(root: boolean = true): void {
     if (this._state === 'deactivated') {
@@ -379,7 +390,7 @@ export class WidgetRenderer<T extends Widget> {
    * 停用小部件
    *
    * @param root - 该参数用于递归时内部判断是否需要移除当前元素，请勿外部传入。
-   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
+   * @internal 核心方法
    */
   deactivate(root: boolean = true): void {
     if (this._state !== 'activated') return
@@ -411,8 +422,7 @@ export class WidgetRenderer<T extends Widget> {
   /**
    * 构建`child`虚拟节点
    *
-   * @internal 该方法是受保护的，由`Vitarx`内部调用，请勿外部调用。
-   * @protected
+   * @internal 核心方法
    * @returns {VNode}
    */
   protected buildChild = (): VNode => {
@@ -444,6 +454,7 @@ export class WidgetRenderer<T extends Widget> {
    * 每一次构建都会重新收集依赖，
    * 这样可以避免遗漏依赖造成视图不更新问题。
    *
+   * @internal 核心方法
    * @protected
    */
   protected build(): VNode {
@@ -500,8 +511,29 @@ export function createWidgetRenderer<P extends Record<string, any>>(
 /**
  * 创建小部件渲染器
  *
- * @param widget - 小部件构造函数
- * @param props - 小部件接收属性
+ * 通常用于一些需要在非组件树中渲染的场景，例如：模态框，消息提示框等。
+ *
+ * @example
+ * ```js
+ * // 此示例是将一个Modal组件挂载到body上
+ * const renderer = createWidgetRenderer(Modal, {
+ *   title: '标题',
+ *   content: '内容',
+ *   onConfirm: () => {
+ *     console.log('确认')
+ *   },
+ *   onCancel: () => {
+ *     console.log('取消')
+ *   }
+ * })
+ * // 挂载到body
+ * renderer.mount(document.body) // 如果Modal组件中通过 beforeMount 生命周期钩子返回了HTML元素实例则无需传入参数。
+ * // 卸载组件
+ * renderer.unmount()
+ * ```
+ *
+ * @param {WidgetType} widget - 小部件构造函数
+ * @param {Record<string, any>} props - 小部件接收属性
  * @returns {WidgetRenderer} - 小部件渲染器
  */
 export function createWidgetRenderer(
