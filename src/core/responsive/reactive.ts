@@ -113,7 +113,7 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   private readonly _deep: boolean
   private readonly _trigger: Trigger<T>
   private readonly _track: Track<T>
-  #deepProxy?: Map<string | symbol, Reactive>
+  #deepProxy?: WeakMap<object, Reactive>
   /**
    * 构造函数
    *
@@ -130,8 +130,6 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
 
   deleteProperty(target: T, prop: ExtractProp<T>): boolean {
     const result = Reflect.deleteProperty(target, prop)
-    // 移除深度代理
-    if (this.#deepProxy?.has(prop)) this.#deepProxy.delete(prop)
     if (result) this._trigger(prop)
     return result
   }
@@ -145,9 +143,11 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (prop === GET_RAW_TARGET_SYMBOL) return target
     // 返回监听目标undefined，表示监听代理对象
     if (prop === Observers.OBSERVERS_TARGET_SYMBOL) return undefined
-    // 如果存在于深度代理中，则直接返回代理对象
-    if (Reflect.has(target, prop) && this.#deepProxy?.has(prop)) return this.#deepProxy.get(prop)
     const value = Reflect.get(target, prop)
+    // 判断是否已经存在深度代理
+    if (this.#deepProxy?.has(value)) {
+      return this.#deepProxy.get(value)
+    }
     if (isFunction(value)) {
       // 集合目标函数需特殊处理
       return isCollection(target)
@@ -161,9 +161,9 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
         trigger: () => this._trigger(prop)
       })
       if (this.#deepProxy) {
-        this.#deepProxy.set(prop, proxy)
+        this.#deepProxy.set(value, proxy)
       } else {
-        this.#deepProxy = new Map([[prop, proxy]])
+        this.#deepProxy = new WeakMap([[value, proxy]])
       }
       // 返回代理对象
       return proxy
@@ -180,38 +180,16 @@ export class ReactiveHandler<T extends AnyObject> implements ProxyHandler<T> {
   }
 
   set(target: T, prop: ExtractProp<T>, newValue: any, receiver: any): boolean {
-    // 处理数组长度修改
-    if (prop === 'length' && Array.isArray(target)) {
-      const oldLength = target.length // 旧长度
-      const result = Reflect.set(target, prop, newValue, receiver)
-      if (result) {
-        const newLength = target.length // 新长度
-        if (newLength < oldLength) {
-          // 计算被删除的下标
-          for (let i = newLength; i < oldLength; i++) {
-            const strIndex = i.toString()
-            // 移除深度代理
-            if (this.#deepProxy?.has(strIndex)) this.#deepProxy.delete(strIndex)
-          }
-        }
-        this._trigger(prop)
-      }
-      return result
-    }
     const oldValue = Reflect.get(target, prop)
-    // 处理ref类型
-    if (isRef(oldValue)) {
-      if (oldValue.value !== newValue) {
+    let result = true
+    if (oldValue !== newValue) {
+      if (isRef(oldValue)) {
         oldValue.value = newValue
-        this._trigger(prop)
+      } else {
+        result = Reflect.set(target, prop, newValue, receiver)
       }
-    } else if (oldValue !== newValue || !target.hasOwnProperty(prop)) {
-      // 移除深度代理
-      if (this.#deepProxy?.has(prop)) this.#deepProxy.delete(prop)
-      const result = Reflect.set(target, prop, newValue, receiver)
-      if (result) this._trigger(prop)
-      return result
     }
+    if (result) this._trigger(prop)
     return true
   }
 }
