@@ -156,7 +156,7 @@ export class Observers {
               if (onProps.has(key)) changes.push(key)
             }
             // 如果有变化，则触发监听器
-            if (changes.length) (listener as Listener<AnyCallback>).trigger(changes, origin)
+            if (changes.length) (listener as Listener).trigger(changes, origin)
           },
           (last, prev) => {
             if (!prev) return last
