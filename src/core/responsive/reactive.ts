@@ -241,7 +241,7 @@ export function createReactive<T extends AnyObject>(
   if (isValueProxy(target)) {
     throw new TypeError('参数1(target)不能是一个值代理对象！')
   }
-  if (isReactive(target)) return target
+  if (isReactive(target)) return target as Reactive<T>
   const proxy = new Proxy(
     target,
     new ReactiveHandler<T>({
@@ -267,8 +267,8 @@ export function createReactive<T extends AnyObject>(
  *
  * @param val
  */
-export function isReactive<T extends object>(val: T | Reactive<T>): val is Reactive<T> {
-  return typeof val === 'object' && !!Reflect.get(val, REACTIVE_SYMBOL)
+export function isReactive(val: unknown): boolean {
+  return typeof val === 'object' && val !== null && !!Reflect.get(val, REACTIVE_SYMBOL)
 }
 
 /**
