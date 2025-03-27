@@ -79,19 +79,33 @@ export class Observers {
     const notBatchListeners = this.#notBatchHandleListeners.get(origin)
     const batchListeners = this.#batchHandleListeners.get(origin)
     if (batchListeners || notBatchListeners) {
-      for (const prop of props) {
+      for (const p of props) {
         // 触发非批量处理的监听器
-        this.#triggerListeners(notBatchListeners?.get(prop), origin, [prop])
+        this.#triggerListeners(origin, notBatchListeners?.get(p), [p])
         // 推送到队列
         if (this.#triggerQueue.has(origin)) {
-          this.#triggerQueue.get(origin)!.add(prop)
+          this.#triggerQueue.get(origin)!.add(p)
         } else {
-          this.#triggerQueue.set(origin, new Set([prop]))
+          this.#triggerQueue.set(origin, new Set([p]))
         }
       }
       // 触发默认监听器
-      this.#triggerListeners(notBatchListeners?.get(this.ALL_CHANGE_SYMBOL), origin, props)
+      this.#triggerListeners(origin, notBatchListeners?.get(this.ALL_CHANGE_SYMBOL), props)
     }
+  }
+
+  /**
+   * 判断是否有监听器
+   *
+   * @param {AnyObject} origin - 监听源，一般是`ref`|`reactive`创建的对象
+   * @param {PropName} prop - 属性名，默认为{@linkcode Observers.ALL_CHANGE_SYMBOL}标记
+   */
+  static has(origin: AnyObject, prop: PropName = Observers.ALL_CHANGE_SYMBOL): boolean {
+    origin = this.getObserveTarget(origin)
+    return !!(
+      this.#batchHandleListeners.get(origin)?.has(prop) ||
+      this.#notBatchHandleListeners.get(origin)?.has(prop)
+    )
   }
 
   /**
@@ -349,14 +363,14 @@ export class Observers {
    */
   static #triggerProps(origin: AnyObject, props: Set<PropName>) {
     for (const prop of props) {
-      this.#triggerListeners(this.#batchHandleListeners.get(origin)?.get(prop), origin, [prop])
+      this.#triggerListeners(origin, this.#batchHandleListeners.get(origin)?.get(prop), [prop])
     }
     // 兼容prop传入ALL_CHANGE_SYMBOL
     if (!props.has(this.ALL_CHANGE_SYMBOL)) {
       // 如果不存在ALL_CHANGE_SYMBOL的监听器，则触发它
       this.#triggerListeners(
-        this.#batchHandleListeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL),
         origin,
+        this.#batchHandleListeners.get(origin)?.get(this.ALL_CHANGE_SYMBOL),
         Array.from(props)
       )
     }
@@ -366,21 +380,21 @@ export class Observers {
    * ## 触发监听器
    *
    * @private
-   * @param listeners
-   * @param origin
-   * @param p
+   * @param origin - 监听源对象
+   * @param listeners - 监听器集合
+   * @param changeProps - 变化的属性列表
    */
   static #triggerListeners<T extends AnyObject>(
-    listeners: Listeners | undefined,
     origin: T,
-    p: ExtractProp<T>[]
+    listeners: Listeners | undefined,
+    changeProps: ExtractProp<T>[]
   ): void {
     if (listeners?.size) {
       for (const listener of listeners) {
         if (typeof listener === 'function') {
-          listener(p, origin)
+          listener(changeProps, origin)
         } else {
-          listener.trigger(p, origin)
+          listener.trigger(changeProps, origin)
         }
       }
     }
