@@ -7,7 +7,7 @@
  * @param hash - 用于检测循环引用的WeakMap
  * @returns - 克隆后的对象
  */
-export function deepClone<T>(obj: T, hash = new WeakMap<object, any>()): T {
+export const deepClone = <T>(obj: T, hash = new WeakMap<object, any>()): T => {
   // 处理null和基本数据类型
   if (!obj || typeof obj !== 'object') return obj
 
