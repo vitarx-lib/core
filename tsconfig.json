@@ -7,44 +7,43 @@
       "DOM",
       "DOM.Iterable"
     ],
-    // 开启类型声明文件的生成
-    "declaration": true,
-    // JavaScript 文件输出目录
-    "outDir": "dist",
+    // 不生成 .js.map
+    "sourceMap": false,
+    // 确保换行符一致性
+    "newLine": "LF",
     // 开启严格模式（可选）
     "strict": true,
+    // 不允许使用js文件
+    "allowJs": false,
     // 模块解析策略
     "moduleResolution": "bundler",
     // 启用模块间互操作
     "esModuleInterop": true,
     // 跳过库文件检查（可选）
     "skipLibCheck": true,
-    // 使用react模式编译tsx
-    "jsx": "react",
-    // 创建VNode工厂函数
-    "jsxFactory": "createVNode",
-    // 片段常量标识
-    "jsxFragmentFactory": "Fragment",
-    // 是否编译文件
-    "noEmit": false,
     // 删除注释
     "removeComments": false,
     // 允许 import json
     "resolveJsonModule": true,
-    // 不生成 .js.map
-    "sourceMap": false,
     // 确保覆盖重写
     "noImplicitOverride": true,
     // 不允许未使用的变量
     "noUnusedLocals": false,
-    // 不允许使用js文件
-    "allowJs": false,
-    // 根目录
-    "baseUrl": "./",
     // 确保文件名大小写一致
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": [
+      "vitest/globals",
+      "vite/client",
+      "node"
+    ]
   },
   "include": [
-    "src"
+    "**/__tests__",
+    "**/src",
+    "**/global.d.ts"
+  ],
+  "exclude": [
+    "**/dist",
+    "**/node_modules"
   ]
 }
