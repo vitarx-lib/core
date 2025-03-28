@@ -47,6 +47,9 @@ const packageJson = {
         default: './dist/index.js'
       }
     }
+  },
+  dependencies: {
+    '@vitarx/utils': 'workspace:*'
   }
 }
 
