@@ -1,4 +1,6 @@
 export * from './clone.js'
+export * from './detect.js'
+export * from './quick.js'
 
 declare global {
   /** 任意函数 */
