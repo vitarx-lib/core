@@ -1,6 +1,10 @@
 import { defineConfig } from 'vitest/config'
+import { entries } from './scripts/alias'
 
 export default defineConfig({
+  resolve: {
+    alias: entries
+  },
   test: {
     // 设置测试运行的环境为Node.js
     // 这意味着测试将在Node.js环境中执行，而不是浏览器环境
