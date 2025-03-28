@@ -16,10 +16,11 @@ Vitarx 共享工具库，提供常用工具函数和类型定义。
 
 ### 3. 常用工具函数 (quick)
 - **sleep**: 异步延迟函数
+- **popProperty**: 弹出对象属性
 - **deepMergeObject**: 深度合并对象
 - **debounce**: 防抖函数
 - **throttle**: 节流函数
-- **popProperty**: 弹出对象属性
+- **microTaskDebouncedCallback**: 微队列防抖回调函数
 
 ## 安装
 
