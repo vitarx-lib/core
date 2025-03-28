@@ -3,7 +3,11 @@
   "version": "3.0.0",
   "license": "MIT",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
+    "create": "tsx scripts/create-package.ts",
     "build": "tsx scripts/build.ts --test",
     "build:utils": "tsx scripts/build.ts utils --test",
     "test": "vitest run",
