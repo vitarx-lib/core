@@ -4,8 +4,13 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "tsx scripts/build.ts",
-    "build:utils": "tsx scripts/build.ts utils"
+    "build": "tsx scripts/build.ts --test",
+    "build:utils": "tsx scripts/build.ts utils --test",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "test:utils": "vitest run --dir packages/utils",
+    "test:utils:coverage": "vitest run --dir packages/utils --coverage"
   },
   "devDependencies": {
     "@types/node": "^22.7.2",
