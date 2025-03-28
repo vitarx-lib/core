@@ -21,19 +21,31 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
  */
 const execAsync = promisify(exec)
 
+/**
+ * 构建指定包的函数
+ *
+ * @param packagePath 包的路径
+ * @param packageDirName 包的目录名
+ * @param index 包的索引，用于显示构建顺序
+ * @param runTest 是否运行测试
+ */
 const buildPackage = async (
   packagePath: string,
   packageDirName: string,
   index: number,
   runTest: boolean
 ) => {
+  // 导入包的package.json文件
   const pkg = (await import(`${packagePath}/package.json`, { assert: { type: 'json' } }))
     .default as PackageJson
+  // 用于分隔输出的等号线
   const separator = '='.repeat(50)
 
+  // 输出构建包的信息
   console.log(chalk.cyan(`\n📦 Building package(${index + 1}): ${chalk.bold(pkg.name)}`))
   console.log(chalk.cyan(separator))
 
+  // 如果需要运行测试，则执行测试命令
   if (runTest) {
     console.log(chalk.yellow('🧪 Running tests...'))
     try {
@@ -48,6 +60,7 @@ const buildPackage = async (
   // 首先使用tsc编译生成.js和.d.ts文件
   console.log(chalk.yellow('🔨 Compiling TypeScript...'))
   const dist = resolve(packagePath, 'dist')
+  // 清空或检查dist目录
   try {
     if (existsSync(dist)) {
       if (statSync(dist).isDirectory()) {
@@ -62,6 +75,7 @@ const buildPackage = async (
     console.error(chalk.red('❌ Error cleaning dist directory:'), error)
     throw error
   }
+  // 执行TypeScript编译命令
   try {
     const pakTsConfigPath = `${packagePath}/tsconfig.json`
     const commonConfigPath = resolve(__dirname, '../tsconfig.build.json')
@@ -78,6 +92,7 @@ const buildPackage = async (
   // 修改包名处理逻辑，使用更清晰的驼峰命名转换
   const parts = pkg.name.replace('@vitarx/', '').split('-')
   const name = parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+  // Vite构建配置
   const defaultConfig: InlineConfig = {
     configFile: false,
     build: {
@@ -91,6 +106,7 @@ const buildPackage = async (
       emptyOutDir: false
     }
   }
+  // 合并包配置与默认配置，并开始构建
   await build(mergeConfig(defaultConfig, pkg.vite || {}))
   console.log(chalk.green(`✓ Bundle ${packageDirName} compilation completed`))
   console.log(chalk.cyan(separator + '\n'))
