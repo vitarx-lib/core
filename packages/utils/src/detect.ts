@@ -13,10 +13,10 @@ export const isObject = (val: any): val is object => {
 /**
  * 判断变量是否为键值对记录对象
  *
- * @note 数组类型除外
+ * @note 不区分 Map、Set、WeakMap、WeakSet
  *
  * @param val - 要判断的变量
- * @returns {boolean} 如果是键值对对象则返回true
+ * @returns { boolean } - 如果是键值对对象则返回true
  */
 export const isRecordObject = (val: any): val is Record<any, any> => {
   return val !== null && typeof val === 'object' && !Array.isArray(val)
