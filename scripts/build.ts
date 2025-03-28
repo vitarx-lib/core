@@ -21,7 +21,12 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
  */
 const execAsync = promisify(exec)
 
-async function buildPackage(packagePath: string, packageDirName: string, index: number) {
+async function buildPackage(
+  packagePath: string,
+  packageDirName: string,
+  index: number,
+  runTest: boolean
+) {
   const pkg = (await import(`${packagePath}/package.json`, { assert: { type: 'json' } }))
     .default as PackageJson
   const separator = '='.repeat(50)
@@ -29,14 +34,29 @@ async function buildPackage(packagePath: string, packageDirName: string, index: 
   console.log(chalk.cyan(`\n📦 Building package(${index + 1}): ${chalk.bold(pkg.name)}`))
   console.log(chalk.cyan(separator))
 
+  if (runTest) {
+    console.log(chalk.yellow('🧪 Running tests...'))
+    try {
+      await execAsync(`vitest run --dir ${packagePath}`)
+      console.log(chalk.green('  ✓ Tests passed successfully'))
+    } catch (error) {
+      console.error(chalk.red('❌ Tests failed:'), error)
+      throw error
+    }
+  }
+
   // 首先使用tsc编译生成.js和.d.ts文件
   console.log(chalk.yellow('🔨 Compiling TypeScript...'))
   const dist = resolve(packagePath, 'dist')
   try {
-    if (statSync(dist).isDirectory()) {
-      // 清空dist目录
-      rmSync(dist, { recursive: true, force: true })
-      console.log(chalk.gray('  ✓ Cleaned dist directory'))
+    if (existsSync(dist)) {
+      if (statSync(dist).isDirectory()) {
+        // 清空dist目录
+        rmSync(dist, { recursive: true, force: true })
+        console.log(chalk.gray('  ✓ Cleaned dist directory'))
+      }
+    } else {
+      console.log(chalk.gray('  ℹ dist directory does not exist, skipping cleanup'))
     }
   } catch (error) {
     console.error(chalk.red('❌ Error cleaning dist directory:'), error)
@@ -79,22 +99,28 @@ async function buildPackage(packagePath: string, packageDirName: string, index: 
 /**
  * 解析命令行参数
  */
-function parseArgs(): { packages: string[] } {
+function parseArgs(): { packages: string[]; test: boolean } {
   const args = process.argv.slice(2)
   const packages: string[] = []
+  let test = false
   let i = 0
   while (i < args.length) {
+    if (args[i] === '--test') {
+      test = true
+      i++
+      continue
+    }
     packages.push(args[i])
     i++
   }
-  return { packages }
+  return { packages, test }
 }
 
 /**
  * 构建指定的包或所有包
  */
 async function buildAll() {
-  const { packages: targetPackages } = parseArgs()
+  const { packages: targetPackages, test } = parseArgs()
   const packagesDir = resolve(__dirname, '../packages')
   const packages =
     targetPackages.length > 0
@@ -107,7 +133,7 @@ async function buildAll() {
   for (let i = 0; i < packages.length; i++) {
     const pkg = packages[i]
     const packagePath = resolve(packagesDir, pkg)
-    await buildPackage(packagePath, pkg, i)
+    await buildPackage(packagePath, pkg, i, test)
   }
   console.log(chalk.green(`✅  All packages built successfully!`))
 }
