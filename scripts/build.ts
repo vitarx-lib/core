@@ -4,7 +4,7 @@ import { build, type InlineConfig, mergeConfig } from 'vite'
 import { existsSync, readdirSync, statSync } from 'fs'
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { rmSync } from 'node:fs'
+import { rmSync, writeFileSync } from 'node:fs'
 import chalk from 'chalk'
 
 interface PackageJson {
@@ -51,7 +51,7 @@ const buildPackage = async (
     try {
       await execAsync(`vitest run --dir ${packagePath}`)
       console.log(chalk.green('  ✓ Tests passed successfully'))
-    } catch (error) {
+    } catch (error: any) {
       console.error(chalk.red(`❌  Tests failed:\n${error?.stdout || error?.message}`))
       process.exit(0)
     }
@@ -75,17 +75,31 @@ const buildPackage = async (
     console.error(chalk.red('❌  Error cleaning dist directory:'), error)
     process.exit(0)
   }
+  const pakTsConfigPath = `${packagePath}/tsconfig.json`
+  const isTsConfigExists = existsSync(pakTsConfigPath)
   // 执行TypeScript编译命令
   try {
-    const pakTsConfigPath = `${packagePath}/tsconfig.json`
-    const commonConfigPath = resolve(__dirname, '../tsconfig.build.json')
-    let buildCommand = `tsc --outDir ${dist} -p ${existsSync(pakTsConfigPath) ? pakTsConfigPath : commonConfigPath}`
+    if (!isTsConfigExists) {
+      // 创建 tsconfig.json
+      const tsconfigJson = {
+        extends: '../../tsconfig.json',
+        compilerOptions: {
+          outDir: 'dist'
+        },
+        include: ['src', 'global.d.ts'],
+        exclude: ['dist', 'node_modules', '__tests__']
+      }
+      writeFileSync(pakTsConfigPath, JSON.stringify(tsconfigJson, null, 2))
+    }
+    const buildCommand = `tsc --outDir ${dist} -p ${pakTsConfigPath}`
     await execAsync(buildCommand)
+    if (!isTsConfigExists) rmSync(pakTsConfigPath)
     console.log(chalk.green('  ✓ TypeScript compilation completed'))
-  } catch (error) {
+  } catch (error: any) {
     console.error(
       chalk.red(`❌  TypeScript compilation failed:\n${error?.stdout || error?.message}`)
     )
+    if (!isTsConfigExists) rmSync(pakTsConfigPath)
     process.exit(0)
   }
 
