@@ -35,7 +35,7 @@ const nonSrcPackages = ['sfc-playground', 'template-explorer', 'dts-test']
  * // 处理条件导出
  * resolveExportsPath({ import: { types: './index.d.ts' } }) // 返回 './index.d.ts'
  */
-function resolveExportsPath(exports: any): string | undefined {
+const resolveExportsPath = (exports: any): string | undefined => {
   // 处理直接字符串路径
   if (typeof exports === 'string') return exports
   if (!exports) return undefined
