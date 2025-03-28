@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { Context } from '../../src/context/context'
+import { Context } from '../../src/context/index'
 
 describe('Context', () => {
   beforeEach(() => {
