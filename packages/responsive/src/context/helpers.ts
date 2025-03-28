@@ -36,7 +36,7 @@ export function createContext<T extends object>(
  * const userCtx = getContext('user')
  * console.log(userCtx?.id) // 123
  */
-export function getContext<T extends object>(tag: Tag): T | undefined {
+export function getContext<T extends Record<string | symbol, any>>(tag: Tag): T | undefined {
   return Context.get<T>(tag)
 }
 
