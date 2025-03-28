@@ -21,12 +21,12 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
  */
 const execAsync = promisify(exec)
 
-async function buildPackage(
+const buildPackage = async (
   packagePath: string,
   packageDirName: string,
   index: number,
   runTest: boolean
-) {
+) => {
   const pkg = (await import(`${packagePath}/package.json`, { assert: { type: 'json' } }))
     .default as PackageJson
   const separator = '='.repeat(50)
@@ -99,7 +99,7 @@ async function buildPackage(
 /**
  * 解析命令行参数
  */
-function parseArgs(): { packages: string[]; test: boolean } {
+const parseArgs = (): { packages: string[]; test: boolean } => {
   const args = process.argv.slice(2)
   const packages: string[] = []
   let test = false
@@ -119,7 +119,7 @@ function parseArgs(): { packages: string[]; test: boolean } {
 /**
  * 构建指定的包或所有包
  */
-async function buildAll() {
+const buildAll = async () => {
   const { packages: targetPackages, test } = parseArgs()
   const packagesDir = resolve(__dirname, '../packages')
   const packages =
