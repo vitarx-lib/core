@@ -50,15 +50,10 @@ try {
     process.exit(1)
   }
 
-  // 运行指定包的单元测试
-  // 使用vitest运行测试，确保代码质量
-  console.log(chalk.blue(`Running tests for package: ${packageName}...`))
-  execSync(`vitest run --dir packages/${packageName}`, { stdio: 'inherit' })
-
   // 构建指定的包
   // 使用build.ts脚本进行构建，生成生产环境代码
   console.log(chalk.blue(`Building package: ${packageName}...`))
-  execSync(`tsx scripts/build.ts ${packageName}`, { stdio: 'inherit' })
+  execSync(`tsx scripts/build.ts ${packageName} --test`, { stdio: 'inherit' })
 
   // 发布包到npm仓库
   // 切换到包目录并执行npm publish命令，设置为公共访问权限
