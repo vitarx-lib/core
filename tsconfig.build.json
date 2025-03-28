@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "composite": false
+  },
+  "include": [
+    "**/src",
+    "**/global.d.ts"
+  ],
+  "exclude": [
+    "**/dist",
+    "**/node_modules",
+    "**/__tests__"
+  ]
+}
