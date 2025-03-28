@@ -53,7 +53,7 @@ export class Context {
    * @param {Tag} tag - 要获取的上下文标签
    * @returns {T|undefined} 找到的上下文对象，如果不存在则返回undefined
    */
-  static get<T extends object>(tag: Tag): T | undefined {
+  static get<T = Record<string | symbol, any>>(tag: Tag): T | undefined {
     return this.#store.get(tag) as T | undefined
   }
 
@@ -119,7 +119,7 @@ export class Context {
    * @async
    * @template T - 异步任务的返回值类型
    * @param {AsyncContextTask<T>} asyncTask - 需要执行的异步任务
-   * @param {Tag[]} [tags=[]] - 需要挂起的上下文标签数组
+   * @param {Tag[]} [tags=[]] - 需要挂起的上下文标签数组，不传入则会挂起所有上下文
    * @returns {Promise<T>} 异步任务的执行结果
    * @throws {Error} 如果异步任务执行失败
    *
@@ -160,7 +160,10 @@ export class Context {
       // 如果未指定标签，则挂起所有上下文
       const prevStore = this.#store
       this.#store = new Map<Tag, object>()
-      restoreContext = () => (this.#store = prevStore)
+      restoreContext = () => {
+        this.#store = prevStore
+        console.log('恢复上下文')
+      }
     }
 
     try {
