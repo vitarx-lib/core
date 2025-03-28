@@ -11,10 +11,11 @@ node_modules
 dist
 *.local
 package-lock.json
+pnpm-lock.yaml
 
 # Test
 test.ts
-tests
+__tests__
 
 # Editor directories and files
 .vscode/*
