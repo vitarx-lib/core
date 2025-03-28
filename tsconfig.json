@@ -7,6 +7,8 @@
       "DOM",
       "DOM.Iterable"
     ],
+    // 生成声明文件
+    "declaration": true,
     // 不生成 .js.map
     "sourceMap": false,
     // 确保换行符一致性
