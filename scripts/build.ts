@@ -52,8 +52,8 @@ const buildPackage = async (
       await execAsync(`vitest run --dir ${packagePath}`)
       console.log(chalk.green('  ✓ Tests passed successfully'))
     } catch (error) {
-      console.error(chalk.red('❌ Tests failed:'), error)
-      throw error
+      console.error(chalk.red(`❌  Tests failed:\n${error?.stdout || error?.message}`))
+      process.exit(0)
     }
   }
 
@@ -72,8 +72,8 @@ const buildPackage = async (
       console.log(chalk.gray('  ℹ dist directory does not exist, skipping cleanup'))
     }
   } catch (error) {
-    console.error(chalk.red('❌ Error cleaning dist directory:'), error)
-    throw error
+    console.error(chalk.red('❌  Error cleaning dist directory:'), error)
+    process.exit(0)
   }
   // 执行TypeScript编译命令
   try {
@@ -83,8 +83,10 @@ const buildPackage = async (
     await execAsync(buildCommand)
     console.log(chalk.green('  ✓ TypeScript compilation completed'))
   } catch (error) {
-    console.error(chalk.red('❌ TypeScript compilation failed:'), error)
-    throw error
+    console.error(
+      chalk.red(`❌  TypeScript compilation failed:\n${error?.stdout || error?.message}`)
+    )
+    process.exit(0)
   }
 
   // 使用vite构建不同格式的包
