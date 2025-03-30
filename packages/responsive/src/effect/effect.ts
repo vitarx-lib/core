@@ -6,9 +6,17 @@ import type {
 } from './effect-interface'
 
 /**
- * # 可处置的副作用
+ * Effect类提供了一个通用的副作用管理实现
  *
- * 提供了销毁、暂停、取消暂停等能力，并且可以监听销毁、暂停、恢复等事件。
+ * 该类设计用于管理具有生命周期的副作用操作，提供了：
+ * - 状态管理：支持active（活跃）、paused（暂停）和deprecated（弃用）三种状态
+ * - 生命周期钩子：可监听销毁(dispose)、暂停(pause)和恢复(resume)事件
+ * - 错误处理：统一的错误捕获和处理机制
+ *
+ * 主要应用场景：
+ * - 资源管理：管理需要及时清理的资源（如定时器、事件监听器等）
+ * - 状态同步：协调多个相关联的副作用操作
+ * - 可中断任务：支持暂停和恢复的长期运行任务
  */
 export class Effect implements EffectInterface {
   /**
@@ -164,7 +172,7 @@ export class Effect implements EffectInterface {
    * @param {EffectCallbackErrorSource} source - 回调事件源
    * @protected
    */
-  private reportError(e: unknown, source: EffectCallbackErrorSource): void {
+  protected reportError(e: unknown, source: EffectCallbackErrorSource): void {
     const errorHandlers = this.callbacks?.get('error')
     if (errorHandlers) {
       errorHandlers.forEach(callback => {
