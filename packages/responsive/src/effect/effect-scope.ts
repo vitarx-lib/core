@@ -76,7 +76,7 @@ export class EffectScope extends Effect {
       options
     )
     if (this.config.errorHandler && typeof this.config.errorHandler !== 'function') {
-      throw new TypeError('[Vitarx.Scope]：errorHandler必须是一个函数')
+      throw new TypeError('[Vitarx.EffectScope]: The errorHandler must be a function type')
     }
     if (this.config.attachToCurrentScope) EffectScope.getCurrentScope()?.addEffect(this)
   }
@@ -129,21 +129,17 @@ export class EffectScope extends Effect {
    * 向作用域中添加一个可处置的副作用对象
    *
    * @param {EffectInterface} effect - 要添加的副作用对象
-   * @returns {boolean} 添加是否成功
+   * @returns {EffectScope} 当前作用域实例，用于链式调用
+   * @throws {Error} 当作用域已经被销毁时抛出
    * @throws {TypeError} 当effect不是有效的副作用对象时抛出
    */
-  addEffect(effect: EffectInterface): boolean {
+  addEffect(effect: EffectInterface): this {
     if (this.isDeprecated) {
-      console.warn(
-        '[Vitarx.Scope][WARN]：当前作用域已被销毁，不应该再往作用域中增加可处置的副作用对象'
-      )
-      return false
+      throw new Error('[Vitarx.EffectScope]: Cannot add effects to a destroyed scope')
     }
 
     if (!isEffect(effect)) {
-      throw new TypeError(
-        '添加到作用域中管理的对象必须是Effect或AutoDisposed的实例，或实现EffectInterface接口'
-      )
+      throw new TypeError('[Vitarx.EffectScope]: Effect objects must implement the EffectInterface')
     }
 
     if (this.config.errorHandler && effect.onError) {
@@ -157,7 +153,8 @@ export class EffectScope extends Effect {
     }
 
     effect.onDispose(() => this._effectSet?.delete(effect))
-    return true
+
+    return this
   }
 
   /**
