@@ -160,10 +160,7 @@ export class Context {
       // 如果未指定标签，则挂起所有上下文
       const prevStore = this.#store
       this.#store = new Map<Tag, object>()
-      restoreContext = () => {
-        this.#store = prevStore
-        console.log('恢复上下文')
-      }
+      restoreContext = () => (this.#store = prevStore)
     }
 
     try {
