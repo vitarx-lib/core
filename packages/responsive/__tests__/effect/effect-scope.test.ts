@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { Effect } from '../../src/effect'
-import { addEffect, createScope, EffectScope, getCurrentScope } from '../../src/effect/effect-scope'
+import { addEffect, createScope, Effect, EffectScope, getCurrentScope } from '../../src/effect'
 
 describe('EffectScope', () => {
   let scope: EffectScope
