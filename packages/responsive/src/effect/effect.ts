@@ -1,9 +1,15 @@
-import type {
-  EffectCallbackErrorHandler,
-  EffectCallbackErrorSource,
-  EffectInterface,
-  EffectState
-} from './effect-interface'
+import type { EffectCallbackErrorHandler, EffectInterface, EffectState } from './effect-interface'
+
+/**
+ * 副作用固有错误来源
+ *
+ * @remarks
+ * 定义了副作用对象可能触发的三种错误来源：
+ * - `dispose`: 销毁事件，表示资源释放
+ * - `pause`: 暂停事件，临时停止副作用
+ * - `resume`: 恢复事件，重新激活副作用
+ */
+export type EffectInherentErrorSource = 'dispose' | 'pause' | 'resume'
 
 /**
  * Effect类提供了一个通用的副作用管理实现
@@ -17,14 +23,18 @@ import type {
  * - 资源管理：管理需要及时清理的资源（如定时器、事件监听器等）
  * - 状态同步：协调多个相关联的副作用操作
  * - 可中断任务：支持暂停和恢复的长期运行任务
+ *
+ * @template ErrorSource - 错误源类型
  */
-export class Effect implements EffectInterface {
+export class Effect<ErrorSource extends string = string>
+  implements EffectInterface<EffectInherentErrorSource | ErrorSource>
+{
   /**
    * 回调函数集合
    *
    * @protected
    */
-  protected callbacks?: Map<EffectCallbackErrorSource | 'error', Set<AnyCallback>>
+  protected callbacks?: Map<EffectInherentErrorSource | 'error', Set<AnyCallback>>
   /**
    * 状态
    *
@@ -76,51 +86,45 @@ export class Effect implements EffectInterface {
   }
 
   /**
-   * 销毁/弃用
-   *
-   * 调用此方法会将标记为弃用状态，并触发销毁回调，清理所有回调函数释放内存。
+   * @inheritDoc
    */
-  dispose(): void {
-    if (this.isDeprecated) return
+  dispose(): boolean {
+    if (this.isDeprecated) return true
     this._state = 'deprecated'
     this.triggerCallback('dispose')
     this.clearCallbacks()
+    return true
   }
 
   /**
-   * 监听销毁
-   *
-   * @param {VoidCallback} callback - 回调函数
-   * @returns {this}
+   * @inheritDoc
    */
   onDispose(callback: VoidCallback): this {
     return this.addCallback(callback, 'dispose')
   }
 
   /**
-   * 暂停
-   *
-   * @returns {this}
+   * @inheritDoc
    */
-  pause(): void {
+  pause(): boolean {
     if (!this.isActive) {
       throw new Error('Effect must be active to pause.')
     }
     this._state = 'paused'
     this.triggerCallback('pause')
+    return true
   }
 
   /**
-   * 恢复
-   *
-   * @returns {this}
+   * @inheritDoc
    */
-  resume(): void {
+  resume(): boolean {
     if (!this.isPaused) {
       throw new Error('Effect must be paused to resume.')
     }
     this._state = 'active'
     this.triggerCallback('resume')
+    return true
   }
 
   /**
@@ -149,7 +153,7 @@ export class Effect implements EffectInterface {
    * @param {EffectCallbackErrorHandler} callback - 回调函数
    * @returns {this}
    */
-  onError(callback: EffectCallbackErrorHandler): this {
+  onError(callback: EffectCallbackErrorHandler<EffectInherentErrorSource | ErrorSource>): this {
     return this.addCallback(callback, 'error')
   }
 
@@ -169,10 +173,10 @@ export class Effect implements EffectInterface {
    * 报告回调异常
    *
    * @param {unknown} e - 捕获到的异常
-   * @param {EffectCallbackErrorSource} source - 回调事件源
+   * @param {EffectInherentErrorSource} source - 回调事件源
    * @protected
    */
-  protected reportError(e: unknown, source: EffectCallbackErrorSource): void {
+  protected reportError(e: unknown, source: EffectInherentErrorSource | ErrorSource): void {
     const errorHandlers = this.callbacks?.get('error')
     if (errorHandlers) {
       errorHandlers.forEach(callback => {
@@ -187,6 +191,18 @@ export class Effect implements EffectInterface {
     }
   }
 
+  protected triggerCallback(type: EffectInherentErrorSource): void {
+    const callbacks = this.callbacks?.get(type)
+    if (!callbacks) return
+    callbacks.forEach(callback => {
+      try {
+        callback()
+      } catch (e) {
+        this.reportError(e, type)
+      }
+    })
+  }
+
   /**
    * 添加回调函数
    *
@@ -194,7 +210,7 @@ export class Effect implements EffectInterface {
    * @param type
    * @private
    */
-  private addCallback(callback: AnyCallback, type: EffectCallbackErrorSource | 'error'): this {
+  private addCallback(callback: AnyCallback, type: EffectInherentErrorSource | 'error'): this {
     if (this.isDeprecated) {
       throw new Error('Cannot add callback to a deprecated effect.')
     }
@@ -208,18 +224,6 @@ export class Effect implements EffectInterface {
     callbackSet.add(callback)
     this.callbacks.set(type, callbackSet)
     return this
-  }
-
-  private triggerCallback(type: EffectCallbackErrorSource): void {
-    const callbacks = this.callbacks?.get(type)
-    if (!callbacks) return
-    callbacks.forEach(callback => {
-      try {
-        callback()
-      } catch (e) {
-        this.reportError(e, type)
-      }
-    })
   }
 }
 
