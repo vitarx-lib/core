@@ -1,19 +1,8 @@
 /**
- * 副作用生命周期事件的类型
- *
- * @remarks
- * 定义了副作用对象可能触发的三种生命周期事件：
- * - `dispose`: 销毁事件，表示资源释放
- * - `pause`: 暂停事件，临时停止副作用
- * - `resume`: 恢复事件，重新激活副作用
- */
-export type EffectCallbackErrorSource = 'dispose' | 'pause' | 'resume'
-
-/**
  * 错误处理回调函数类型
  *
- * @param e - 捕获到的异常对象
- * @param source - 错误来源，指示在哪个生命周期事件中发生的错误
+ * @param {unknown} e - 捕获到的异常对象
+ * @param {string} source - 错误来源，指示在哪个生命周期事件中发生的错误
  *
  * @example
  * ```typescript
@@ -22,7 +11,10 @@ export type EffectCallbackErrorSource = 'dispose' | 'pause' | 'resume'
  * }
  * ```
  */
-export type EffectCallbackErrorHandler = (e: unknown, source: EffectCallbackErrorSource) => void
+export type EffectCallbackErrorHandler<ErrorSource extends string = string> = (
+  e: unknown,
+  source: ErrorSource
+) => void
 
 /**
  * 副作用状态枚举
@@ -65,9 +57,9 @@ export type EffectState = 'active' | 'paused' | 'deprecated'
  * }
  * ```
  */
-export interface EffectInterface {
+export interface EffectInterface<ErrorSource extends string = string> {
   /**
-   * 释放实例资源
+   * 销毁/释放实例资源
    *
    * @remarks
    * 此方法用于清理实例占用的资源，执行后会：
@@ -82,9 +74,9 @@ export interface EffectInterface {
    * console.log(effect.getState()); // 输出: 'deprecated'
    * ```
    *
-   * @returns {void}
+   * @returns {boolean} 如果释放操作成功，则返回true，否则返回false
    */
-  dispose(): void
+  dispose(): boolean
 
   /**
    * 监听实例销毁事件
@@ -120,8 +112,10 @@ export interface EffectInterface {
    *   console.log(effect.getState()); // 输出: 'paused'
    * }
    * ```
+   *
+   * @returns {boolean} 如果暂停操作成功，则返回true，否则返回false
    */
-  pause(): void
+  pause(): boolean
 
   /**
    * 监听实例暂停事件
@@ -157,8 +151,10 @@ export interface EffectInterface {
    *   console.log(effect.getState()); // 输出: 'active'
    * }
    * ```
+   *
+   * @returns {boolean} 如果恢复操作成功，则返回true，否则返回false
    */
-  resume(): void
+  resume(): boolean
 
   /**
    * 监听实例恢复事件
@@ -201,7 +197,7 @@ export interface EffectInterface {
    * 注意：请勿在错误处理器中继续抛出异常，如果继续抛出异常，为避免死循环，
    * 内部会使用 `console.error(error)` 打印日志。
    */
-  onError(errorHandler: EffectCallbackErrorHandler): void
+  onError(errorHandler: EffectCallbackErrorHandler<ErrorSource>): void
 
   /**
    * 获取当前实例状态
