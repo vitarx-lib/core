@@ -161,10 +161,11 @@ export class EffectScope extends Effect {
    * 销毁作用域并清理所有副作用
    * 此操作会触发所有副作用的dispose方法，并清空内部存储
    *
+   * @returns {boolean} 操作结果，如果操作成功则返回true，否则返回false
    * @override
    */
-  override dispose(): void {
-    if (!this.isDeprecated) {
+  override dispose(): boolean {
+    if (super.dispose()) {
       this._effectSet?.forEach(effect => {
         try {
           effect.dispose()
@@ -174,36 +175,39 @@ export class EffectScope extends Effect {
       })
       this._effectSet = undefined
       this.config.errorHandler = null
-      super.dispose()
+      return true
     }
+    return false
   }
 
   /**
    * 暂停作用域中的所有副作用
    * 此操作会触发所有副作用的pause方法
    *
-   * @returns {this} 当前作用域实例
+   * @returns {boolean} 操作结果，如果操作成功则返回true，否则返回false
    * @override
    */
-  override pause(): this {
-    if (!this.isPaused) {
+  override pause(): boolean {
+    if (super.pause()) {
       this._effectSet?.forEach(effect => effect?.pause?.())
-      super.pause()
+      return true
     }
-    return this
+    return false
   }
 
   /**
    * 恢复作用域中的所有副作用
    * 此操作会触发所有副作用的resume方法
    *
+   * @returns {boolean} 操作结果，如果操作成功则返回true，否则返回false
    * @override
    */
-  override resume(): void {
-    if (this.isPaused) {
+  override resume(): boolean {
+    if (super.resume()) {
       this._effectSet?.forEach(effect => effect.resume())
-      super.resume()
+      return true
     }
+    return false
   }
 }
 
