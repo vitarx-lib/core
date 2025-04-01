@@ -2,7 +2,7 @@ import { Subscriber, type SubscriberOptions } from './subscriber.js'
 import { isArray, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
 
 /** 全局变更标识符类型 */
-export type GlobalChangeSymbol = typeof ObserverManager.GLOBAL_CHANGE_SYMBOL
+export type GlobalChangeSymbol = typeof Observer.GLOBAL_CHANGE_SYMBOL
 
 /**
  * 订阅者配置选项
@@ -31,11 +31,13 @@ export type PropertySubscriberMap = Map<AnyKey | GlobalChangeSymbol, SubscriberS
 export type SubscriberStore = WeakMap<AnyObject, PropertySubscriberMap>
 
 /**
- * # 依赖触发器
+ * # 观察者管理器
  *
  * 负责管理订阅关系并在数据变更时通知相关订阅者。
+ *
+ * @class ObserverManager
  */
-export class ObserverManager {
+export class Observer {
   /**
    * 全局变更标识符
    * 用于订阅对象的所有属性变更
@@ -488,3 +490,5 @@ export class ObserverManager {
     }
   }
 }
+
+export { Observer as ObserverManager }
