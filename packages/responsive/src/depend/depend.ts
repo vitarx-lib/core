@@ -1,5 +1,3 @@
-export type AnyKey = string | number | symbol
-
 /**
  * 依赖映射集合
  *

@@ -1,4 +1,4 @@
-import { type AnyKey, type CollectionResult, Depend } from './depend'
+import { type CollectionResult, Depend } from './depend'
 
 /**
  * ## 跟踪依赖关系
