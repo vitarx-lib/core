@@ -1,9 +1,8 @@
 import { Subscriber, type SubscriberOptions } from './subscriber.js'
 import { isArray, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
-import type { AnyKey } from './dep-collector'
 
 /** 全局变更标识符类型 */
-export type GlobalChangeSymbol = typeof DepTrigger.GLOBAL_CHANGE_SYMBOL
+export type GlobalChangeSymbol = typeof ObserverManager.GLOBAL_CHANGE_SYMBOL
 
 /**
  * 订阅者配置选项
@@ -36,7 +35,7 @@ export type SubscriberStore = WeakMap<AnyObject, PropertySubscriberMap>
  *
  * 负责管理订阅关系并在数据变更时通知相关订阅者。
  */
-export class DepTrigger {
+export class ObserverManager {
   /**
    * 全局变更标识符
    * 用于订阅对象的所有属性变更
@@ -70,7 +69,7 @@ export class DepTrigger {
    * @param {boolean} [batch=true] - 是否获取批处理模式的存储
    * @returns {Readonly<SubscriberStore>} - 只读的订阅存储
    */
-  static getStore(batch: boolean = true): Readonly<SubscriberStore> {
+  static getSubscriberStore(batch: boolean = true): Readonly<SubscriberStore> {
     return batch ? this.#batchSubscribers : this.#immediateSubscribers
   }
 
@@ -82,17 +81,17 @@ export class DepTrigger {
    * @param {AnyObject} target - 变更的目标对象
    * @param {AnyKey|AnyKey[]} property - 变更的属性名或属性名数组
    */
-  static trigger<T extends AnyObject, P extends AnyKey>(target: T, property: P | P[]): void {
+  static notify<T extends AnyObject, P extends AnyKey>(target: T, property: P | P[]): void {
     // 如果队列未在处理中，初始化处理流程
     if (!this.#isProcessingQueue) {
       this.#pendingChanges = new Map()
       this.#isProcessingQueue = true
       // 使用微任务处理队列
-      Promise.resolve().then(() => this.#processChangeQueue())
+      Promise.resolve().then(() => this.#flushChangeQueue())
     }
 
     // 获取原始目标对象
-    target = this.getTargetObject(target)
+    target = this.getOriginalTarget(target)
     const properties = isArray(property) ? property : [property]
 
     // 获取订阅存储
@@ -129,7 +128,7 @@ export class DepTrigger {
    * @returns {boolean} - 是否存在订阅者
    */
   static hasSubscribers(target: AnyObject, property: AnyKey = this.GLOBAL_CHANGE_SYMBOL): boolean {
-    target = this.getTargetObject(target)
+    target = this.getOriginalTarget(target)
     return !!(
       this.#batchSubscribers.get(target)?.has(property) ||
       this.#immediateSubscribers.get(target)?.has(property)
@@ -165,7 +164,7 @@ export class DepTrigger {
    * @param {SubscriptionOptions} options - 订阅选项
    * @returns {Subscriber} - 订阅者实例
    */
-  static subscribeToProperties<C extends AnyCallback>(
+  static subscribeMultipleProps<C extends AnyCallback>(
     target: AnyObject,
     properties: AnyKey[] | Set<AnyKey>,
     callback: C | Subscriber<C>,
@@ -196,7 +195,7 @@ export class DepTrigger {
       const propertySet = properties instanceof Set ? properties : new Set(properties)
 
       // 添加一个不进行批处理的回调，但内部使用微任务防抖
-      const unsubscribe = this.addImmediateCallback(
+      const unsubscribe = this.addSyncSubscriber(
         target,
         microTaskDebouncedCallback(
           (changedProps: AnyKey[]) => {
@@ -239,7 +238,7 @@ export class DepTrigger {
    * @param {AnyKey} property - 属性名，默认为全局变更标识符
    * @returns {Function} - 取消订阅函数
    */
-  static addImmediateCallback<C extends AnyCallback>(
+  static addSyncSubscriber<C extends AnyCallback>(
     target: AnyObject,
     callback: C,
     property: AnyKey = this.GLOBAL_CHANGE_SYMBOL
@@ -306,7 +305,7 @@ export class DepTrigger {
    * @param {AnyObject} object - 响应式对象
    * @returns {AnyObject} - 原始目标对象
    */
-  static getTargetObject<T extends AnyObject>(object: T): T {
+  static getOriginalTarget<T extends AnyObject>(object: T): T {
     return (Reflect.get(object, this.TARGET_SYMBOL) as T) ?? object
   }
 
@@ -325,12 +324,12 @@ export class DepTrigger {
     batch: boolean = true
   ): void {
     // 获取存储
-    const store = this.getStore(batch)
+    const store = this.getSubscriberStore(batch)
     // 获取原始目标对象
-    const originalTarget = this.getTargetObject(target)
+    const originalTarget = this.getOriginalTarget(target)
 
     // 加锁防止并发修改
-    const unlock = this.#lockAccess(originalTarget)
+    const unlock = this.#acquireLock(originalTarget)
 
     try {
       // 确保目标在存储中有对应的映射
@@ -375,10 +374,10 @@ export class DepTrigger {
     subscriber: Subscriber<C> | AnyCallback,
     batch: boolean = true
   ): void {
-    const store = this.getStore(batch)
-    target = this.getTargetObject(target)
+    const store = this.getSubscriberStore(batch)
+    target = this.getOriginalTarget(target)
 
-    const unlock = this.#lockAccess(target)
+    const unlock = this.#acquireLock(target)
     const subscriberSet = store.get(target)?.get(property)
 
     if (!subscriberSet) return
@@ -405,14 +404,14 @@ export class DepTrigger {
    *
    * @private
    */
-  static #processChangeQueue(): void {
+  static #flushChangeQueue(): void {
     // 重置处理状态
     this.#isProcessingQueue = false
     const queue: ChangeQueue = this.#pendingChanges
 
     // 处理每个目标的变更
     for (const [target, properties] of queue) {
-      this.#processTargetChanges(target, properties)
+      this.#notifyTargetChanges(target, properties)
     }
   }
 
@@ -423,7 +422,7 @@ export class DepTrigger {
    * @param properties - 变更的属性集合
    * @private
    */
-  static #processTargetChanges(target: AnyObject, properties: Set<AnyKey>): void {
+  static #notifyTargetChanges(target: AnyObject, properties: Set<AnyKey>): void {
     // 获取批处理订阅者
     const subscribers = this.#batchSubscribers.get(target)
     if (!subscribers) return
@@ -476,7 +475,7 @@ export class DepTrigger {
    * @returns {Function} - 解锁函数
    * @private
    */
-  static #lockAccess(target: AnyObject): () => void {
+  static #acquireLock(target: AnyObject): () => void {
     // 等待直到目标没有被锁定
     while (this.#accessLock.has(target)) {}
 
@@ -488,37 +487,4 @@ export class DepTrigger {
       this.#accessLock.delete(target)
     }
   }
-}
-
-/**
- * ## 触发变更通知
- *
- * 通知订阅者目标对象的指定属性已变更
- *
- * @param {AnyObject} target - 变更的目标对象
- * @param {AnyKey|AnyKey[]} property - 变更的属性名或属性名数组
- */
-export function triggerChange<T extends AnyObject, P extends AnyKey>(
-  target: T,
-  property: P | P[]
-): void {
-  DepTrigger.trigger(target, property)
-}
-
-/**
- * ## 订阅对象属性变更
- *
- * @param {AnyObject} target - 目标对象
- * @param {AnyCallback|Subscriber} callback - 回调函数或订阅者实例
- * @param {AnyKey} property - 属性名，默认为全局变更
- * @param {SubscriptionOptions} options - 订阅选项
- * @returns {Subscriber} - 订阅者实例
- */
-export function subscribe<T extends AnyObject, C extends AnyCallback>(
-  target: T,
-  callback: C | Subscriber<C>,
-  property?: AnyKey,
-  options?: SubscriptionOptions
-): Subscriber<C> {
-  return DepTrigger.subscribe(target, callback, property, options)
 }
