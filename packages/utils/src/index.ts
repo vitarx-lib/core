@@ -29,6 +29,8 @@ declare global {
   type AnyWeakSet = WeakSet<WeakKey>
   /** 任意 Set */
   type AnySet = Set<any>
+  /** 任意键 */
+  type AnyKey = string | number | symbol
   /** 任意集合对象 */
   type AnyCollection = AnyMap | AnyWeakMap | AnyWeakSet | AnySet
   /** 任意对象类型 函数除外 */
