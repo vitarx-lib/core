@@ -42,7 +42,7 @@ export class DepCollector {
    * @param {AnyObject} target - 响应式对象
    * @param {AnyKey} property - 被访问的属性
    */
-  static trackDependency(target: AnyObject, property: AnyKey): void {
+  static track(target: AnyObject, property: AnyKey): void {
     // 如果有活跃的收集器，优先使用活跃收集器
     if (this.#activeCollector) {
       this.#recordDependency(this.#activeCollector, target, property)
@@ -133,7 +133,7 @@ export class DepCollector {
  * @param property - 被访问的属性
  */
 export function depTrack(target: AnyObject, property: AnyKey): void {
-  DepCollector.trackDependency(target, property)
+  DepCollector.track(target, property)
 }
 
 /**
