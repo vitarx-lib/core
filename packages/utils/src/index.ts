@@ -18,7 +18,7 @@ declare global {
   /** void 回调函数 */
   type VoidCallback = VoidFunction
   /** 任意对象 */
-  type AnyRecord = Record<any, any>
+  type AnyRecord = Record<AnyKey, any>
   /** 任意数组 */
   type AnyArray = Array<any>
   /** 任意 Map */
