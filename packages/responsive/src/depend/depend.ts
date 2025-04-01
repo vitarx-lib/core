@@ -22,12 +22,12 @@ export type CollectionResult<T> = {
 }
 
 /**
- * # 依赖收集器
+ * # 依赖管理器
  *
  * 负责收集和跟踪响应式对象的依赖关系。
  * 当响应式对象的属性被访问时，会自动记录依赖关系。
  */
-export class DepCollector {
+export class Depend {
   // 全局收集器映射表
   static #collectorRegistry = new Map<symbol, DependencyMap>()
   // 当前活跃的收集器
@@ -121,33 +121,4 @@ export class DepCollector {
       collector.set(target, new Set([property]))
     }
   }
-}
-
-/**
- * ## 跟踪依赖关系
- *
- * 手动记录响应式对象的属性访问。
- * 通常在响应式系统内部自动调用，仅在特殊情况下需要手动调用。
- *
- * @param target - 响应式对象
- * @param property - 被访问的属性
- */
-export function depTrack(target: AnyObject, property: AnyKey): void {
-  DepCollector.track(target, property)
-}
-
-/**
- * ## 收集函数依赖
- *
- * 执行函数并收集其中访问的所有响应式依赖。
- *
- * @param fn - 要执行的函数
- * @param mode - 收集模式，'shared' (共享) 或 'exclusive' (独占)
- * @returns - 包含函数执行结果和依赖映射的对象
- */
-export function depCollect<T>(
-  fn: () => T,
-  mode: 'shared' | 'exclusive' = 'shared'
-): CollectionResult<T> {
-  return DepCollector.collect(fn, mode)
 }

@@ -5,10 +5,6 @@
  */
 
 // 导出依赖收集器
-export * from './dep-collector'
-
-// 导出依赖触发器
-export * from './dep-trigger'
-
-// 导出订阅者
-export * from './subscriber'
+export * from './depend'
+// 导出助手函数
+export * from './helpers'
