@@ -82,7 +82,7 @@ export class DepTrigger {
    * @param {AnyObject} target - 变更的目标对象
    * @param {AnyKey|AnyKey[]} property - 变更的属性名或属性名数组
    */
-  static triggerChange<T extends AnyObject, P extends AnyKey>(target: T, property: P | P[]): void {
+  static trigger<T extends AnyObject, P extends AnyKey>(target: T, property: P | P[]): void {
     // 如果队列未在处理中，初始化处理流程
     if (!this.#isProcessingQueue) {
       this.#pendingChanges = new Map()
@@ -326,7 +326,6 @@ export class DepTrigger {
   ): void {
     // 获取存储
     const store = this.getStore(batch)
-
     // 获取原始目标对象
     const originalTarget = this.getTargetObject(target)
 
@@ -496,24 +495,24 @@ export class DepTrigger {
  *
  * 通知订阅者目标对象的指定属性已变更
  *
- * @param target - 变更的目标对象
- * @param property - 变更的属性名或属性名数组
+ * @param {AnyObject} target - 变更的目标对象
+ * @param {AnyKey|AnyKey[]} property - 变更的属性名或属性名数组
  */
 export function triggerChange<T extends AnyObject, P extends AnyKey>(
   target: T,
   property: P | P[]
 ): void {
-  DepTrigger.triggerChange(target, property)
+  DepTrigger.trigger(target, property)
 }
 
 /**
  * ## 订阅对象属性变更
  *
- * @param target - 目标对象
- * @param callback - 回调函数或订阅者实例
- * @param property - 属性名，默认为全局变更
- * @param options - 订阅选项
- * @returns - 订阅者实例
+ * @param {AnyObject} target - 目标对象
+ * @param {AnyCallback|Subscriber} callback - 回调函数或订阅者实例
+ * @param {AnyKey} property - 属性名，默认为全局变更
+ * @param {SubscriptionOptions} options - 订阅选项
+ * @returns {Subscriber} - 订阅者实例
  */
 export function subscribe<T extends AnyObject, C extends AnyCallback>(
   target: T,
