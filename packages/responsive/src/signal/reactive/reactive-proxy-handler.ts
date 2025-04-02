@@ -1,5 +1,5 @@
 import { isCollection, isObject } from '@vitarx/utils'
-import { isSignal, isValueSignal } from '../utils'
+import { isMarkNotSignal, isSignal, isValueSignal } from '../utils'
 import { Observer } from '../../observer/index'
 import { Depend } from '../../depend/index'
 import type { ReactiveOptions, UnwrapNestedRefs } from './types'
@@ -130,12 +130,15 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
         SignalManager.addParent(value, this.proxy, prop)
         return isValueSignal(value) ? value.value : value
       }
-      // 创建子代理
-      const childProxy = new ReactiveProxyHandler(value, this.options).proxy
-      // 映射父级关系
-      SignalManager.addParent(childProxy, this.proxy, prop)
-      this.childSignalMap.set(prop, childProxy)
-      return childProxy
+      // 如果不是被标记为不代理的则创建子代理并添加映射关系
+      if (!isMarkNotSignal(value)) {
+        // 创建子代理
+        const childProxy = createReactiveProxySignal(value, this.options)
+        // 映射父级关系
+        SignalManager.addParent(childProxy, this.proxy, prop)
+        this.childSignalMap.set(prop, childProxy)
+        return childProxy
+      }
     }
     // 如果值不是一个信号则上报给依赖管理器跟踪
     if (!isSignal(value)) this.track(prop)
