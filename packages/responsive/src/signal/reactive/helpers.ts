@@ -1,5 +1,5 @@
 import type { Reactive, ReactiveOptions, ShallowReactive, UnReactive } from './types'
-import { createReactiveProxySignal } from './reactive-proxy-handler'
+import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
 import { PROXY_SIGNAL_SYMBOL } from '../constants'
 
 /**
@@ -67,21 +67,54 @@ export function shallowReactive<T extends AnyObject>(
 }
 
 /**
- * 判断是否为响应式对象
+ * ## 判断一个值是否为响应式对象
  *
- * @param val
+ * 该函数用于检查一个值是否是通过 `reactive()` 或 `shallowReactive()` 创建的响应式对象。
+ * 响应式对象是指被代理并能够在值发生变化时自动触发更新的对象。
+ *
+ * @param {unknown} val - 要检查的值，可以是任意类型
+ * @returns {boolean} 如果值是响应式对象则返回 `true`，否则返回 `false`
+ * @example
+ * ```typescript
+ * const obj = { foo: 1 }
+ * const reactiveObj = reactive(obj)
+ *
+ * isReactive(reactiveObj) // true
+ * isReactive(obj) // false
+ * isReactive(null) // false
+ * ```
  */
 export function isReactive(val: unknown): boolean {
-  return typeof val === 'object' && val !== null && !!Reflect.get(val, PROXY_SIGNAL_SYMBOL)
+  return typeof val === 'object' && val !== null && !!Reflect.get(val, REACTIVE_PROXY_SYMBOL)
 }
 
 /**
- * ## 获取响应式对象的原始值，
+ * ## 获取响应式对象的原始值
+ *
+ * 该函数用于获取一个响应式对象的原始未代理状态。这在以下场景特别有用：
+ * - 需要绕过响应式系统直接操作原始数据时
+ * - 需要将响应式对象传递给不支持Proxy的外部库时
+ * - 需要比较两个响应式对象的原始值时
  *
  * @template T - 目标对象类型
- * @param { T | Reactive<T> } proxy - 代理对象
- * @returns { UnReactive<T> } 如果传入的是 'reactive' 创建的对象，则会返回其真实的原始对象，否则原样返回。
- * @alias toRaw 兼容 `Vue` api
+ * @param {T | Reactive<T>} proxy - 要获取原始值的对象。可以是：
+ *   - 响应式对象：将返回其原始未代理的值
+ *   - 非响应式对象：将原样返回
+ * @returns {UnReactive<T>} 返回对象的原始值：
+ *   - 如果输入是响应式对象，返回其原始未代理的对象
+ *   - 如果输入不是响应式对象，则原样返回
+ * @alias toRaw - 为了兼容Vue API而提供的别名
+ * @example
+ * ```typescript
+ * const original = { count: 0 }
+ * const proxy = reactive(original)
+ *
+ * proxy.count // 访问会被跟踪
+ * unReactive(proxy).count // 访问不会被跟踪
+ * unReactive(proxy) === original // true
+ * // 别名
+ * toRaw(proxy) === original // true
+ * ```
  */
 export function unReactive<T extends object>(proxy: T | Reactive<T>): UnReactive<T> {
   return (Reflect.get(proxy, PROXY_SIGNAL_SYMBOL) ?? proxy) as UnReactive<T>
