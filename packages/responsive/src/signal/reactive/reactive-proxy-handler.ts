@@ -238,7 +238,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (!parentMap) return
     // 通知父级
     for (const [parent, keys] of parentMap) {
-      Observer.notify(parent, Array.from(keys))
+      Observer.notify(parent, Array.from(keys) as any)
     }
   }
 
