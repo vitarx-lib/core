@@ -2,7 +2,7 @@ import { isCollection, isObject } from '@vitarx/utils'
 import { isMarkNotSignal, isSignal, isValueSignal } from '../utils'
 import { Observer } from '../../observer/index'
 import { Depend } from '../../depend/index'
-import type { ReactiveOptions, UnwrapNestedRefs } from './types'
+import type { Reactive, ReactiveOptions, ShallowReactive, UnwrapNestedRefs } from './types'
 import type { BaseSignal, EqualityFn, ProxySignal } from '../types'
 import {
   DEEP_SIGNAL_SYMBOL,
@@ -36,7 +36,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    *
    * @private
    */
-  public readonly proxy: ProxySignal<T>
+  public readonly proxy: Reactive<T> | ShallowReactive<T>
   /**
    * 代理对象配置
    *
@@ -243,7 +243,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
  *
  * @template T - 目标对象类型
  * @param {T} target - 要代理的目标对象
- * @returns {ProxySignal<UnwrapNestedRefs<T>>} 深层响应式代理对象
+ * @returns {Reactive<T>} 深层响应式代理对象
  * @example
  * ```typescript
  * const obj = { foo: { bar: 1 } }
@@ -251,18 +251,15 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
  * // proxy.foo和proxy.foo.bar都是响应式的
  * ```
  */
-export function createReactiveProxySignal<T extends AnyObject>(
-  target: T
-): ProxySignal<UnwrapNestedRefs<T>>
-
+export function createReactiveProxySignal<T extends AnyObject>(target: T): Reactive<T>
 /**
- * 创建深层响应式代理对象，可自定义值比较函数
+ * 创建响应式代理对象，可自定义`equalityFn`
  *
  * @template T - 目标对象类型
  * @param {T} target - 要代理的目标对象
  * @param {object} options - 代理配置选项
- * @param {true} options.deep - 启用深度代理
- * @param {EqualityFn} [options.equalityFn] - 自定义值比较函数
+ * @param {boolean} options.deep - 启用深度代理
+ * @param {EqualityFn} [options.equalityFn=Object.is] - 自定义值比较函数
  * @returns {ProxySignal<UnwrapNestedRefs<T>>} 深层响应式代理对象
  * @example
  * ```typescript
@@ -274,33 +271,15 @@ export function createReactiveProxySignal<T extends AnyObject>(
  */
 export function createReactiveProxySignal<T extends AnyObject>(
   target: T,
-  options: { deep: true; equalityFn?: EqualityFn } | {} | undefined
-): ProxySignal<UnwrapNestedRefs<T>>
-
-/**
- * 创建浅层响应式代理对象，可自定义值比较函数
- *
- * @template T - 目标对象类型
- * @param {T} target - 要代理的目标对象
- * @param {object} options - 代理配置选项
- * @param {false} options.deep - 禁用深度代理
- * @param {EqualityFn} [options.equalityFn] - 自定义值比较函数
- * @returns {ProxySignal<T>} 浅层响应式代理对象
- * @example
- * ```typescript
- * const obj = { foo: { bar: 1 } }
- * const proxy = createReactiveProxy(obj, { deep: false })
- * // 只有proxy.foo是响应式的，proxy.foo.bar不是响应式的
- * ```
- */
+  options: ReactiveOptions<true> | {} | undefined
+): Reactive<T>
 export function createReactiveProxySignal<T extends AnyObject>(
   target: T,
-  options: { deep: false; equalityFn?: EqualityFn }
-): ProxySignal<T>
-
+  options: ReactiveOptions<false>
+): ShallowReactive<T>
 export function createReactiveProxySignal<T extends AnyObject>(
   target: T,
   options?: ReactiveOptions
-): ProxySignal<T> | ProxySignal<UnwrapNestedRefs<T>> {
+): Reactive<T> | ShallowReactive<T> {
   return new ReactiveProxyHandler(target, options).proxy
 }
