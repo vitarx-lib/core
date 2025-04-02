@@ -13,6 +13,10 @@ import {
 import { SignalManager } from '../manager'
 
 /**
+ * 响应式代理对象标识符
+ */
+export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
+/**
  * # 响应式代理对象处理器
  *
  * 实现了ES6 Proxy的处理器接口，用于创建响应式对象
@@ -32,6 +36,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * 集合写入方法
    */
   private static readonly collectionWriteMethods = ['set', 'add', 'delete', 'clear']
+  private static readonly staticSymbol = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
   /**
    * 代理对象
    *
@@ -105,9 +110,8 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
   get(target: T, prop: keyof T): any {
     // 拦截内部标识符属性
     if (typeof prop === 'symbol') {
-      if (prop === SIGNAL_SYMBOL) return true
+      if (ReactiveProxyHandler.staticSymbol.includes(SIGNAL_SYMBOL)) return true
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
-      if (prop === PROXY_SIGNAL_SYMBOL) return true
       if (prop === GET_RAW_TARGET_SYMBOL) return target
       if (prop === Observer.TARGET_SYMBOL) return this.proxy
     } else if (
