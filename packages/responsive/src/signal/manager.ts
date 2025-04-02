@@ -3,7 +3,7 @@ import type { BaseSignal } from './types'
 /**
  * 信号父级关系映射
  */
-export type Parents<T extends AnyObject = AnyObject> = Map<BaseSignal & T, Set<keyof T>>
+export type Parents = Map<BaseSignal, Set<AnyKey>>
 
 /**
  * 信号管理器 - 负责管理信号之间的父子关系
@@ -14,7 +14,7 @@ export type Parents<T extends AnyObject = AnyObject> = Map<BaseSignal & T, Set<k
  */
 export class SignalManager {
   /** 用于存储信号父子关系的WeakMap */
-  private static _parentSignalMap = new WeakMap<BaseSignal, Parents<AnyObject>>()
+  private static _parentSignalMap = new WeakMap<BaseSignal, Parents>()
 
   /**
    * 获取指定信号的所有父信号及其关联的键
