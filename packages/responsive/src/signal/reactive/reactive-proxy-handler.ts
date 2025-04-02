@@ -34,8 +34,16 @@ export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
 class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
   /**
    * 集合写入方法
+   *
+   * @private
    */
   private static readonly collectionWriteMethods = ['set', 'add', 'delete', 'clear']
+  /**
+   * 集合查询方法
+   *
+   * @private
+   */
+  private static readonly collectionQueryMethods = ['size', 'length', 'has']
   private static readonly staticSymbol = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
   /**
    * 代理对象
@@ -114,12 +122,16 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
       if (prop === GET_RAW_TARGET_SYMBOL) return target
       if (prop === Observer.TARGET_SYMBOL) return this.proxy
-    } else if (
-      this.collectionMethodProxy &&
-      ReactiveProxyHandler.collectionWriteMethods.includes(prop as string)
-    ) {
-      // 放回集合方法代理
-      return this.collectionMethodProxy
+    } else if (typeof prop === 'string' && this.collectionMethodProxy) {
+      // 处理集合写入方法
+      if (ReactiveProxyHandler.collectionWriteMethods.includes(prop)) {
+        return this.collectionMethodProxy
+      }
+      // 处理集合查询方法
+      if (ReactiveProxyHandler.collectionQueryMethods.includes(prop)) {
+        this.track('size')
+        return Reflect.get(target, prop, target)
+      }
     }
     // 获取值
     const value = Reflect.get(target, prop, target)
