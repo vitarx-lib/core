@@ -1,4 +1,4 @@
-import type { ProxySignal, ValueSignal } from '../types'
+import type { ProxySignal, VaklueSignal } from '../types'
 
 /**
  * 解包嵌套的响应式信号值
@@ -20,7 +20,7 @@ import type { ProxySignal, ValueSignal } from '../types'
  * ```
  */
 export type UnwrapNestedRefs<T extends AnyObject> = {
-  [K in keyof T]: T[K] extends ValueSignal<infer U> ? U : T[K]
+  [K in keyof T]: T[K] extends VaklueSignal<infer U> ? U : T[K]
 }
 
 /**
@@ -45,7 +45,7 @@ export type UnwrapNestedRefs<T extends AnyObject> = {
  * console.log(user.name) // 'Alice'
  * ```
  */
-export type Reactive<T extends AnyObject = {}> = ProxySignal<T, UnwrapNestedRefs<T>>
+export type Reactive<T extends AnyObject = {}> = ProxySignal<T, UnwrapNestedRefs<T>, true>
 
 /**
  * 浅层响应式代理对象类型
@@ -69,7 +69,7 @@ export type Reactive<T extends AnyObject = {}> = ProxySignal<T, UnwrapNestedRefs
  * user.profile.avatar = 'new.png' // 不会触发更新
  * ```
  */
-export type ShallowReactive<T extends AnyObject = {}> = ProxySignal<T>
+export type ShallowReactive<T extends AnyObject = {}> = ProxySignal<T, T, false>
 
 /**
  * 解除响应式对象的代理，获取原始对象
