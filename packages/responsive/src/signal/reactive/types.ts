@@ -1,24 +1,113 @@
 import type { ProxySignal, SignalOptions, ValueSignal } from '../types'
 
-/** 解包嵌套的ref */
+/**
+ * 解包嵌套的响应式信号值
+ *
+ * @template T - 目标对象类型，必须是一个对象类型
+ * @remarks
+ * 该类型用于递归解包对象中所有的响应式信号值。如果属性值是 ValueSignal 类型，
+ * 则提取其内部值类型；否则保持原类型不变。
+ *
+ * @example
+ * ```typescript
+ * type User = {
+ *   name: ValueSignal<string>
+ *   age: number
+ * }
+ *
+ * type UnwrappedUser = UnwrapNestedRefs<User>
+ * // 等价于 { name: string; age: number }
+ * ```
+ */
 export type UnwrapNestedRefs<T extends AnyObject> = {
   [K in keyof T]: T[K] extends ValueSignal<infer U> ? U : T[K]
 }
+
 /**
  * 响应式代理对象类型
+ *
+ * @template T - 目标对象类型，必须是一个对象类型
+ * @remarks
+ * 创建一个深层响应式代理对象，会自动解包对象中的所有响应式信号值。
+ * 对象的所有属性都将被转换为响应式的，包括嵌套对象。
+ *
+ * @example
+ * ```typescript
+ * const user = reactive({
+ *   name: ref('Alice'),
+ *   age: 18,
+ *   profile: {
+ *     avatar: ref('avatar.png')
+ *   }
+ * })
+ *
+ * // user.name 和 user.profile.avatar 都会被自动解包
+ * console.log(user.name) // 'Alice'
+ * ```
  */
 export type Reactive<T extends AnyObject = {}> = ProxySignal<T, UnwrapNestedRefs<T>>
+
 /**
- * 浅响应式代理对象类型
+ * 浅层响应式代理对象类型
+ *
+ * @template T - 目标对象类型，必须是一个对象类型
+ * @remarks
+ * 创建一个浅层响应式代理对象，只有根级属性是响应式的，嵌套对象不会被转换。
+ * 适用于性能敏感场景或只需要跟踪对象顶层属性变化的情况。
+ *
+ * @example
+ * ```typescript
+ * const user = shallowReactive({
+ *   name: 'Alice',
+ *   profile: {
+ *     avatar: ref('avatar.png')
+ *   }
+ * })
+ *
+ * // 只有顶层属性是响应式的
+ * user.name = 'Bob' // 触发更新
+ * user.profile.avatar = 'new.png' // 不会触发更新
+ * ```
  */
 export type ShallowReactive<T extends AnyObject = {}> = ProxySignal<T>
 
 /**
  * 响应式代理信号可选配置选项
+ *
+ * @template Deep - 是否启用深层响应式转换
+ * @property {Deep} [deep=true] - 是否对嵌套对象进行深层响应式转换
+ * @property {EqualityFn} [equalityFn] - 自定义值比较函数，用于决定是否触发更新
+ * @remarks
+ * 用于配置响应式代理对象的行为。当 deep 为 true 时，会递归地将所有嵌套对象转换为响应式；
+ * 为 false 时只转换顶层属性。equalityFn 可用于自定义值的比较逻辑。
+ *
+ * @example
+ * ```typescript
+ * const user = reactive(data, {
+ *   deep: true,
+ *   equalityFn: (a, b) => a === b
+ * })
+ * ```
  */
 export type ReactiveOptions<Deep extends boolean = boolean> = Omit<SignalOptions, 'deep'> & {
   deep?: Deep
 }
 
-/** 解除响应式对象 */
+/**
+ * 解除响应式对象的代理，获取原始对象
+ *
+ * @template T - 输入类型，可以是响应式对象或普通对象
+ * @remarks
+ * 如果传入的是响应式对象（Reactive 或 ShallowReactive），则返回其原始对象；
+ * 如果传入的是普通对象，则原样返回。这个类型在需要访问原始数据结构时很有用。
+ *
+ * @example
+ * ```typescript
+ * const raw = { name: 'Alice' }
+ * const proxy = reactive(raw)
+ *
+ * type Original = UnReactive<typeof proxy> // { name: string }
+ * const original = unReactive(proxy) // 获取原始对象
+ * ```
+ */
 export type UnReactive<T> = T extends Reactive<infer U> | ShallowReactive<infer U> ? U : T
