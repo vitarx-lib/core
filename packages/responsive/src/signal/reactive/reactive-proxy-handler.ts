@@ -88,9 +88,8 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
     options?: SignalOptions
   ) {
     this.options = {
-      deep: true,
-      equalityFn: Object.is,
-      ...options
+      equalityFn: options?.equalityFn ?? Object.is,
+      deep: options?.deep ?? true
     }
     this.childSignalMap = this.options.deep ? new Map() : undefined
     this.collectionMethodProxy = isCollection(this._target)
