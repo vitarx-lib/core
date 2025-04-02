@@ -114,7 +114,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param {keyof T} prop - 属性名
    * @returns {any} 属性值
    */
-  get(target: T, prop: keyof T): any {
+  get(target: T, prop: AnyKey): any {
     // 拦截内部标识符属性
     if (typeof prop === 'symbol') {
       if (ReactiveProxyHandler.staticSymbol.includes(SIGNAL_SYMBOL)) return true
@@ -169,7 +169,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param {keyof T} prop - 要删除的属性名
    * @returns {boolean} 删除是否成功
    */
-  deleteProperty(target: T, prop: keyof T): boolean {
+  deleteProperty(target: T, prop: AnyKey): boolean {
     if (!Reflect.deleteProperty(target, prop)) return false
     // 删除子代理
     this.removeChildSignal(prop)
@@ -184,7 +184,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param {keyof T} prop - 要检查的属性名
    * @returns {boolean} 属性是否存在
    */
-  has(target: T, prop: keyof T): boolean {
+  has(target: T, prop: AnyKey): boolean {
     this.track(prop)
     return Reflect.has(target, prop)
   }
@@ -197,7 +197,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param {any} newValue - 新的属性值
    * @returns {boolean} 设置是否成功
    */
-  set(target: T, prop: keyof T, newValue: any): boolean {
+  set(target: T, prop: AnyKey, newValue: any): boolean {
     const oldValue = Reflect.get(target, prop)
     if (this.options.equalityFn(oldValue, newValue)) return true
     // 删除子代理
@@ -232,8 +232,8 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param {keyof T} prop - 被修改的属性
    * @private
    */
-  private notify(prop: keyof T) {
-    Observer.notify(this.proxy, prop)
+  private notify(prop: AnyKey) {
+    Observer.notify(this.proxy, prop as keyof T)
     const parentMap = SignalManager.getParents(this.proxy)
     if (!parentMap) return
     // 通知父级
