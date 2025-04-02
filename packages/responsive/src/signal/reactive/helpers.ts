@@ -1,6 +1,7 @@
-import type { Reactive, ReactiveOptions, ShallowReactive, UnReactive } from './types'
-import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
 import { PROXY_SIGNAL_SYMBOL } from '../constants'
+import type { SignalOptions } from '../types'
+import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
+import type { Reactive, ShallowReactive, UnReactive } from './types'
 
 /**
  * ## 创建默认的深层响应式代理对象
@@ -35,15 +36,15 @@ export function reactive<T extends AnyObject>(target: T): Reactive<T>
  */
 export function reactive<T extends AnyObject>(
   target: T,
-  options: ReactiveOptions<true> | {} | undefined
+  options: SignalOptions<true> | {} | undefined
 ): Reactive<T>
 export function reactive<T extends AnyObject>(
   target: T,
-  options: ReactiveOptions<false>
+  options: SignalOptions<false>
 ): ShallowReactive<T>
 export function reactive<T extends AnyObject>(
   target: T,
-  options?: ReactiveOptions
+  options?: SignalOptions
 ): Reactive<T> | ShallowReactive<T> {
   return createReactiveProxySignal(target, options)
 }
@@ -61,7 +62,7 @@ export function reactive<T extends AnyObject>(
  */
 export function shallowReactive<T extends AnyObject>(
   target: T,
-  options?: Omit<ReactiveOptions, 'deep'>
+  options?: Omit<SignalOptions, 'deep'>
 ): ShallowReactive<T> {
   return createReactiveProxySignal(target, { ...options, deep: false }) as ShallowReactive<T>
 }

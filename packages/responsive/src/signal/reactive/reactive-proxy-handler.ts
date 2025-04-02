@@ -1,9 +1,6 @@
 import { isCollection, isObject } from '@vitarx/utils'
-import { isMarkNotSignal, isSignal, isValueSignal } from '../utils'
-import { Observer } from '../../observer/index'
 import { Depend } from '../../depend/index'
-import type { Reactive, ReactiveOptions, ShallowReactive } from './types'
-import type { BaseSignal, EqualityFn } from '../types'
+import { Observer } from '../../observer/index'
 import {
   DEEP_SIGNAL_SYMBOL,
   GET_RAW_TARGET_SYMBOL,
@@ -11,6 +8,9 @@ import {
   SIGNAL_SYMBOL
 } from '../constants'
 import { SignalManager } from '../manager'
+import type { BaseSignal, EqualityFn, SignalOptions } from '../types'
+import { isMarkNotSignal, isSignal, isValueSignal } from '../utils'
+import type { Reactive, ShallowReactive } from './types'
 
 /**
  * 响应式代理对象标识符
@@ -56,7 +56,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    *
    * @private
    */
-  private readonly options: Required<ReactiveOptions>
+  private readonly options: Required<SignalOptions>
   /**
    * 子代理映射
    *
@@ -79,13 +79,13 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
   /**
    * 创建响应式代理对象处理器实例
    * @param {T} _target - 需要被代理的目标对象
-   * @param {ReactiveOptions} [options] - 代理配置选项
+   * @param {SignalOptions} [options] - 代理配置选项
    * @param {boolean} [options.deep=true] - 是否深度代理
    * @param {EqualityFn} [options.equalityFn=Object.is] - 值比较函数
    */
   constructor(
     private readonly _target: T,
-    options?: ReactiveOptions
+    options?: SignalOptions
   ) {
     this.options = {
       deep: true,
@@ -274,7 +274,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
  */
 export function createReactiveProxySignal<T extends AnyObject>(
   target: T,
-  options?: ReactiveOptions
+  options?: SignalOptions
 ): Reactive<T> | ShallowReactive<T> {
   return new ReactiveProxyHandler(target, options).proxy
 }

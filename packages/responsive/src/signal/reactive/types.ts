@@ -1,4 +1,4 @@
-import type { ProxySignal, SignalOptions, ValueSignal } from '../types'
+import type { ProxySignal, ValueSignal } from '../types'
 
 /**
  * 解包嵌套的响应式信号值
@@ -70,28 +70,6 @@ export type Reactive<T extends AnyObject = {}> = ProxySignal<T, UnwrapNestedRefs
  * ```
  */
 export type ShallowReactive<T extends AnyObject = {}> = ProxySignal<T>
-
-/**
- * 响应式代理信号可选配置选项
- *
- * @template Deep - 是否启用深层响应式转换
- * @property {Deep} [deep=true] - 是否对嵌套对象进行深层响应式转换
- * @property {EqualityFn} [equalityFn] - 自定义值比较函数，用于决定是否触发更新
- * @remarks
- * 用于配置响应式代理对象的行为。当 deep 为 true 时，会递归地将所有嵌套对象转换为响应式；
- * 为 false 时只转换顶层属性。equalityFn 可用于自定义值的比较逻辑。
- *
- * @example
- * ```typescript
- * const user = reactive(data, {
- *   deep: true,
- *   equalityFn: (a, b) => a === b
- * })
- * ```
- */
-export type ReactiveOptions<Deep extends boolean = boolean> = Omit<SignalOptions, 'deep'> & {
-  deep?: Deep
-}
 
 /**
  * 解除响应式对象的代理，获取原始对象
