@@ -46,7 +46,8 @@ export class Observer {
 
   /**
    * 目标对象标识符
-   * 用于获取响应式对象的原始目标
+   *
+   * 可用词标识符做为对象的属性，属性值为实际用于订阅的目标对象！
    */
   static TARGET_SYMBOL = Symbol('TARGET_SYMBOL')
 
@@ -83,7 +84,7 @@ export class Observer {
    * @param {AnyObject} target - 变更的目标对象
    * @param {AnyKey|AnyKey[]} property - 变更的属性名或属性名数组
    */
-  static notify<T extends AnyObject, P extends AnyKey>(target: T, property: P | P[]): void {
+  static notify<T extends AnyObject, P extends keyof T>(target: T, property: P | P[]): void {
     // 如果队列未在处理中，初始化处理流程
     if (!this.#isProcessingQueue) {
       this.#pendingChanges = new Map()
@@ -95,7 +96,6 @@ export class Observer {
     // 获取原始目标对象
     target = this.getOriginalTarget(target)
     const properties = isArray(property) ? property : [property]
-
     // 获取订阅存储
     const immediateSubscribers = this.#immediateSubscribers.get(target)
     const batchSubscribers = this.#batchSubscribers.get(target)
