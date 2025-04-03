@@ -1,3 +1,4 @@
+import { Observer } from '../observer/index'
 import type { BaseSignal } from './types'
 
 /**
@@ -80,5 +81,23 @@ export class SignalManager {
     const keySet = parentMap.get(parentSignal)
     if (!keySet) return false
     return keySet.has(key)
+  }
+
+  /**
+   * 通知父级信号对象，触发其更新操作。
+   *
+   * 该函数会获取给定信号的父级信号映射，并遍历每个父级信号，通知其进行更新。
+   *
+   * @param signal - 需要通知父级的信号对象，类型为 `BaseSignal`。
+   * @returns 无返回值。
+   */
+  public static notifyParent(signal: BaseSignal) {
+    // 获取信号的父级映射
+    const parentMap = SignalManager.getParents(signal)
+    if (!parentMap) return
+    // 遍历父级映射，通知每个父级信号进行更新
+    for (const [parent, keys] of parentMap) {
+      Observer.notify(parent, Array.from(keys) as any)
+    }
   }
 }
