@@ -1,5 +1,5 @@
-import { Subscriber } from './subscriber'
 import { ObserverManager, type SubscriptionOptions } from './manager'
+import { Subscriber } from './subscriber'
 
 /**
  * ## 触发变更通知
@@ -9,7 +9,7 @@ import { ObserverManager, type SubscriptionOptions } from './manager'
  * @param {AnyObject} target - 变更的目标对象
  * @param {AnyKey|AnyKey[]} property - 变更的属性名或属性名数组
  */
-export function notify<T extends AnyObject, P extends AnyKey>(target: T, property: P | P[]): void {
+export function notify<T extends AnyObject, P extends keyof T>(target: T, property: P | P[]): void {
   ObserverManager.notify(target, property)
 }
 
