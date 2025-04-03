@@ -234,12 +234,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    */
   private notify(prop: AnyKey) {
     Observer.notify(this.proxy, prop as keyof T)
-    const parentMap = SignalManager.getParents(this.proxy)
-    if (!parentMap) return
-    // 通知父级
-    for (const [parent, keys] of parentMap) {
-      Observer.notify(parent, Array.from(keys) as any)
-    }
+    SignalManager.notifyParent(this.proxy)
   }
 
   /**
