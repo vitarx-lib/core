@@ -13,7 +13,7 @@ export const NOT_SIGNAL_SYMBOL = Symbol('VITARX_NOT_SIGNAL_SYMBOL')
 /**
  * 值信号标识符
  */
-export const VALUE_SIGNAL_SYMBOL = Symbol('VITARX_VALUE_SIGNAL_SYMBOL')
+export const REF_SIGNAL_SYMBOL = Symbol('VITARX_REF_SIGNAL_SYMBOL')
 /**
  * 对象信号标识
  */
