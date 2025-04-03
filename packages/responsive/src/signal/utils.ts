@@ -1,11 +1,11 @@
-import type { BaseSignal, NotSignal, ProxySignal, ValueSignal } from './types'
 import {
   DEEP_SIGNAL_SYMBOL,
   NOT_SIGNAL_SYMBOL,
   PROXY_SIGNAL_SYMBOL,
-  SIGNAL_SYMBOL,
-  VALUE_SIGNAL_SYMBOL
+  REF_SIGNAL_SYMBOL,
+  SIGNAL_SYMBOL
 } from './constants'
+import type { BaseSignal, NotSignal, ProxySignal, RefSignal } from './types'
 
 /**
  * 是否为信号
@@ -23,8 +23,8 @@ export function isSignal(val: any): val is BaseSignal {
  * @param { any } val - 待检测的变量
  * @returns { boolean } - 如果具有值信号标识符，则返回true，否则返回false
  */
-export function isValueSignal(val: any): val is ValueSignal {
-  return val?.[SIGNAL_SYMBOL] === true && val?.[VALUE_SIGNAL_SYMBOL] === true
+export function isRefSignal(val: any): val is RefSignal {
+  return val?.[SIGNAL_SYMBOL] === true && val?.[REF_SIGNAL_SYMBOL] === true
 }
 
 /**
