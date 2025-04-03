@@ -1,4 +1,4 @@
-import { type AllPropertiesSymbol, ObserverManager, type SubscriptionOptions } from './manager'
+import { type ALL_PROPERTIES_SYMBOL, ObserverManager, type SubscriptionOptions } from './manager'
 import { Subscriber } from './subscriber'
 
 /**
@@ -32,7 +32,7 @@ export function notify<T extends AnyObject, P extends keyof T>(target: T, proper
  * @template C - 回调函数的类型
  * @param {T} target - 目标对象，要监听其属性变更的对象
  * @param {C|Subscriber<C>} callback - 回调函数或已存在的订阅者实例
- * @param {keyof T|AllPropertiesSymbol} [property=ObserverManager.ALL_PROPERTIES_SYMBOL] - 要监听的属性名，默认为监听所有属性变更
+ * @param {keyof T|ALL_PROPERTIES_SYMBOL} [property=ObserverManager.ALL_PROPERTIES_SYMBOL] - 要监听的属性名，默认为监听所有属性变更
  * @param {SubscriptionOptions} [options] - 订阅选项
  * @param {boolean} [options.batch=true] - 是否使用批处理模式，为true时会合并短时间内的多次通知
  * @param {number} [options.limit=0] - 触发次数限制，0表示无限制，大于0时会在触发指定次数后自动取消订阅
@@ -49,7 +49,7 @@ export function notify<T extends AnyObject, P extends keyof T>(target: T, proper
 export function subscribe<T extends AnyObject, C extends AnyCallback>(
   target: T,
   callback: C | Subscriber<C>,
-  property?: keyof T | AllPropertiesSymbol,
+  property?: keyof T | ALL_PROPERTIES_SYMBOL,
   options?: SubscriptionOptions
 ): Subscriber<C> {
   return ObserverManager.subscribe(target, callback, property, options)
