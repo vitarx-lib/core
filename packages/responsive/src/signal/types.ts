@@ -6,7 +6,7 @@ import {
   REF_SIGNAL_SYMBOL,
   SIGNAL_SYMBOL
 } from './constants'
-import type { Reactive } from './reactive/index'
+import type { UnwrapNestedRefs } from './reactive/index'
 
 /**
  * 用于判断旧值和新值是否相等的函数
@@ -76,7 +76,9 @@ export type RefValue<T, Deep extends boolean = true> = Deep extends false
   : T extends AnyObject
     ? T extends NotSignal
       ? T
-      : Reactive<T>
+      : T extends BaseSignal
+        ? T
+        : ProxySignal<T, UnwrapNestedRefs<T>, Deep>
     : T
 
 /**
