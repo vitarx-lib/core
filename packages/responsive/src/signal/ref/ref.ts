@@ -1,7 +1,7 @@
 import { isObject } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
 import { Observer } from '../../observer/index'
-import { DEEP_SIGNAL_SYMBOL, SIGNAL_SYMBOL, VALUE_SIGNAL_SYMBOL } from '../constants'
+import { DEEP_SIGNAL_SYMBOL, REF_SIGNAL_SYMBOL, SIGNAL_SYMBOL } from '../constants'
 import { SignalManager } from '../manager'
 import { reactive } from '../reactive/index'
 import type { BaseSignal, RefSignal, RefValue, SignalOptions } from '../types'
@@ -22,89 +22,128 @@ import { isMarkNotSignal } from '../utils'
  * ```
  */
 export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, Deep> {
-  // 标识为代理对象
-  readonly [SIGNAL_SYMBOL] = true
-  // 标识为值代理对象
-  readonly [VALUE_SIGNAL_SYMBOL] = true
   /**
-   * 配置选项
-   *
+   * 标识为响应式信号对象
+   * @readonly
+   */
+  readonly [SIGNAL_SYMBOL] = true
+
+  /**
+   * 标识为值引用类型的响应式信号
+   * @readonly
+   */
+  readonly [REF_SIGNAL_SYMBOL] = true
+
+  /**
+   * 响应式配置选项
    * @private
    */
-  private readonly options: Required<SignalOptions<Deep>>
-  private _childSignal?: RefValue<T, Deep>
-  private _needProxy: boolean = false
+  private readonly _options: Required<SignalOptions<Deep>>
+
+  /**
+   * 标识当前值是否需要被代理为响应式对象
+   * @private
+   */
+  private _shouldProxyValue: boolean = false
+
+  /**
+   * 存储被代理后的子响应式对象
+   * @private
+   */
+  private _reactiveValue?: RefValue<T, Deep>
 
   /**
    * 创建Ref值信号对象
    *
-   * @param value
-   * @param {SignalOptions} [options] - 代理配置选项
-   * @param {boolean} [options.deep=true] - 是否深度代理
-   * @param {EqualityFn} [options.equalityFn=Object.is] - 值比较函数
+   * @param {T} value - 需要被包装为响应式的值
+   * @param {SignalOptions} [options] - 响应式配置选项
+   * @param {boolean} [options.deep=true] - 是否深度代理嵌套对象
+   * @param {EqualityFn} [options.equalityFn=Object.is] - 值比较函数，用于决定是否触发更新
    */
   constructor(value: T, options?: SignalOptions<Deep>) {
-    this.options = {
+    this._options = {
       equalityFn: options?.equalityFn ?? Object.is,
       deep: options?.deep ?? (true as Deep)
     }
     this._value = value
-    this._needProxy = this.isNeedProxy()
+    this.evaluateProxyNeeded()
   }
 
   /**
-   * 引用的值
+   * 存储原始值的内部属性
    *
    * @private
    */
   private _value: T
 
-  /** 获取目标变量 */
+  /**
+   * 获取响应式值
+   *
+   * 根据配置和值类型，可能返回原始值或响应式代理对象：
+   * - 如果已存在响应式代理对象，则直接返回
+   * - 如果需要代理且尚未创建代理，则创建新的响应式代理
+   * - 否则返回原始值并追踪依赖
+   *
+   * @returns {RefValue<T, Deep>} 响应式值或原始值
+   */
   get value(): RefValue<T, Deep> {
-    if (this._childSignal) {
-      return this._childSignal
-    } else if (this._needProxy) {
-      this._childSignal = reactive(this._value as AnyObject, this.options) as RefValue<T, Deep>
-      SignalManager.addParent(this._childSignal as BaseSignal, this, 'value')
-      this._needProxy = false
-      return this._childSignal
+    if (this._reactiveValue) {
+      return this._reactiveValue
+    } else if (this._shouldProxyValue) {
+      this._reactiveValue = reactive(this._value as AnyObject, this._options) as RefValue<T, Deep>
+      SignalManager.addParent(this._reactiveValue as BaseSignal, this, 'value')
+      this._shouldProxyValue = false
+      return this._reactiveValue
     }
     Depend.track(this, 'value')
     return this._value as RefValue<T, Deep>
   }
 
-  /** 修改目标变量 */
-  set value(newValue: T) {
-    if (this.options.equalityFn(this._value, newValue)) return
-    // 删除子代理
-    if (this._childSignal) {
-      SignalManager.removeParent(this._childSignal as unknown as BaseSignal, this, 'value')
-      this._childSignal = undefined
-    }
-    this._needProxy = this.isNeedProxy()
-    this._value = newValue
-    this.trigger()
-  }
-
   /**
-   * 是否深度代理
+   * 设置新值并触发更新
+   *
+   * 当新值与旧值不同时：
+   * - 清理旧的响应式代理（如果存在）
+   * - 更新内部值
+   * - 重新评估是否需要代理
+   * - 通知观察者和父级信号
+   *
+   * @param {T} newValue - 要设置的新值
    */
-  get deep() {
-    return this.options.deep
+  set value(newValue: T) {
+    if (this._options.equalityFn(this._value, newValue)) return
+    // 清理旧的响应式代理
+    if (this._reactiveValue) {
+      SignalManager.removeParent(this._reactiveValue as unknown as BaseSignal, this, 'value')
+      this._reactiveValue = undefined
+    }
+    this._value = newValue
+    this.evaluateProxyNeeded()
+    Observer.notify(this, 'value')
+    SignalManager.notifyParent(this)
   }
 
   /**
    * 是否深度代理标识
+   *
+   * @returns {Deep} 当前实例的深度代理配置
    */
   get [DEEP_SIGNAL_SYMBOL](): Deep {
-    return this.deep
+    return this._options.deep
   }
 
   /**
    * 定义当对象需要转换成原始值时的行为
-   * @param hint
+   *
+   * 根据不同的转换提示返回适当的值：
+   * - 'number': 返回值本身，尝试进行数值转换
+   * - 'string': 调用toString方法
+   * - 'default': 返回值本身
+   *
+   * @param {string} hint - 转换提示类型
+   * @returns {any} 根据提示类型转换后的原始值
    */
-  [Symbol.toPrimitive](hint: any) {
+  [Symbol.toPrimitive](hint: string): any {
     switch (hint) {
       case 'number':
         return this.value
@@ -116,28 +155,15 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
   }
 
   /**
-   * 手动触发更新事件
-   *
-   * @private
-   */
-  trigger() {
-    Observer.notify(this, 'value')
-    const parentMap = SignalManager.getParents(this)
-    if (!parentMap) return
-    // 通知父级
-    for (const [parent, keys] of parentMap) {
-      Observer.notify(parent, Array.from(keys) as any)
-    }
-  }
-
-  /**
    * 将引用的目标值转换为字符串
    *
-   * 如果目标值有`toString`方法，则会返回目标值的字符串形式，否则返回[Object Ref<`typeof target`>]。
+   * 如果目标值有`toString`方法，则会返回目标值的字符串形式，
+   * 否则返回格式化的类型描述。
    *
+   * @returns {string} 字符串表示
    * @override
    */
-  toString() {
+  toString(): string {
     if (this._value?.toString) {
       return this._value.toString()
     } else {
@@ -146,11 +172,17 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
   }
 
   /**
-   * 判断是否需要代理
+   * 重新评估当前值是否需要代理
+   *
+   * 根据以下条件决定是否需要将value转换为响应式对象：
+   * - deep配置为true（启用深度响应）
+   * - 当前值是对象类型
+   * - 当前值未被标记为非响应式对象
    *
    * @private
    */
-  private isNeedProxy() {
-    return this.options.deep && isObject(this._value) && !isMarkNotSignal(this._value)
+  private evaluateProxyNeeded() {
+    this._shouldProxyValue =
+      this._options.deep && isObject(this._value) && !isMarkNotSignal(this._value)
   }
 }
