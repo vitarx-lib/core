@@ -38,15 +38,22 @@ type SubscriberStore = WeakMap<AnyObject, PropertySubscriberMap>
  */
 export class Observer {
   /**
-   * 全局变更标识符
-   * 用于订阅对象的所有属性变更
+   * 全局属性变更标识符
+   *
+   * 用于订阅对象的所有属性变更，作为通配符使用。
+   * 当使用此标识符订阅时，对象的任何属性变更都会触发通知。
+   *
+   * @type {Symbol}
    */
-  static ALL_PROPERTIES_SYMBOL = Symbol('GLOBAL_CHANGE_SYMBOL')
+  static ALL_PROPERTIES_SYMBOL = Symbol('ALL_PROPERTIES_SYMBOL')
 
   /**
    * 目标对象标识符
    *
-   * 可用词标识符做为对象的属性，属性值为实际用于订阅的目标对象！
+   * 用于在代理对象上标识原始目标对象的Symbol。
+   * 可将此标识符作为对象的属性，属性值为实际用于订阅的原始目标对象。
+   *
+   * @type {Symbol}
    */
   static TARGET_SYMBOL = Symbol('TARGET_SYMBOL')
 
@@ -68,26 +75,27 @@ export class Observer {
   /**
    * 获取订阅存储
    *
+   * 根据批处理模式参数返回相应的订阅存储。
+   *
    * @param {boolean} [batch=true] - 是否获取批处理模式的存储
-   * @returns {Readonly<SubscriberStore>} - 只读的订阅存储
+   * @returns {Readonly<SubscriberStore>} - 只读的订阅存储实例
    */
   static getSubscriberStore(batch: boolean = true): Readonly<SubscriberStore> {
     return batch ? this.#batchSubscribers : this.#immediateSubscribers
   }
 
   /**
-   * ## 触发变更通知
+   * 触发变更通知
    *
    * 通知订阅者目标对象的指定属性已变更。该方法会将变更添加到队列中，
    * 并通过微任务异步处理，以提高性能。对于即时模式的订阅者，会立即触发通知。
    *
    * @template T - 目标对象类型
-   * @template P - 属性键类型，必须是T的键
    * @param {T} target - 变更的目标对象
-   * @param {P | P[]} property - 变更的属性名或属性名数组
-   * @returns {void} 无返回值
+   * @param {keyof T | Array<keyof T>} property - 变更的属性名或属性名数组
+   * @returns {void} - 无返回值
    */
-  static notify<T extends AnyObject, P extends keyof T>(target: T, property: P | P[]): void {
+  static notify<T extends AnyObject>(target: T, property: keyof T | Array<keyof T>): void {
     // 如果队列未在处理中，初始化处理流程
     if (!this.#isProcessingQueue) {
       this.#pendingChanges = new Map()
@@ -128,9 +136,12 @@ export class Observer {
   /**
    * 检查对象是否有订阅者
    *
-   * @param {AnyObject} target - 目标对象
-   * @param {AnyKey} property - 属性名，默认为全局变更标识符
-   * @returns {boolean} - 是否存在订阅者
+   * 检查指定对象的特定属性是否有订阅者，包括批处理和即时模式。
+   *
+   * @template T - 目标对象类型
+   * @param {T} target - 目标对象
+   * @param {keyof T | AllPropertiesSymbol} property - 属性名，默认为全局变更标识符
+   * @returns {boolean} - 如果存在订阅者返回true，否则返回false
    */
   static hasSubscribers<T extends AnyObject>(
     target: T,
@@ -144,13 +155,20 @@ export class Observer {
   }
 
   /**
-   * ## 注册订阅者
+   * 注册订阅者
    *
-   * @param {AnyObject} target - 目标对象
-   * @param {Function|Subscriber} callback - 回调函数或订阅者实例
-   * @param {AnyKey} property - 属性名，默认为全局变更标识符
-   * @param {SubscriptionOptions} options - 订阅选项
-   * @returns {Subscriber} - 订阅者实例
+   * 为指定对象的属性注册变更订阅，返回可用于管理订阅生命周期的订阅者实例。
+   *
+   * @template T - 目标对象类型
+   * @template C - 回调函数类型
+   * @param {T} target - 目标对象
+   * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
+   * @param {keyof T | AllPropertiesSymbol} property - 属性名，默认为全局变更标识符
+   * @param {SubscriptionOptions} [options] - 订阅选项
+   * @param {boolean} [options.batch=true] - 是否使用批处理模式
+   * @param {number} [options.limit=0] - 触发次数限制，0表示无限制
+   * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
+   * @returns {Subscriber<C>} - 订阅者实例
    */
   static subscribe<T extends AnyObject, C extends AnyCallback>(
     target: T,
@@ -164,13 +182,18 @@ export class Observer {
   }
 
   /**
-   * ## 同时订阅多个属性
+   * 同时订阅多个属性
    *
-   * @param {AnyObject} target - 目标对象
-   * @param {AnyKey[]|Set<AnyKey>} properties - 属性名集合
-   * @param {Function|Subscriber} callback - 回调函数或订阅者实例
-   * @param {SubscriptionOptions} options - 订阅选项
-   * @returns {Subscriber} - 订阅者实例
+   * 为目标对象的多个属性注册相同的订阅者，当任何一个属性变更时触发回调。
+   * 内部会优化处理方式，避免重复通知。
+   *
+   * @template T - 目标对象类型
+   * @template C - 回调函数类型
+   * @param {T} target - 目标对象
+   * @param {Array<keyof T>|Set<keyof T>} properties - 属性名集合
+   * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
+   * @param {SubscriptionOptions} [options] - 订阅选项
+   * @returns {Subscriber<C>} - 订阅者实例
    */
   static subscribeMultipleProps<T extends AnyObject, C extends AnyCallback>(
     target: T,
@@ -237,14 +260,17 @@ export class Observer {
   }
 
   /**
-   * ## 添加即时回调函数
+   * 添加即时回调函数
    *
-   * 添加一个不使用批处理的回调函数，用于高级场景
+   * 添加一个不使用批处理的回调函数，用于需要立即响应变更的高级场景。
+   * 每次属性变更都会立即触发回调，而不会等待微任务队列处理。
    *
-   * @param {AnyObject} target - 目标对象
-   * @param {AnyFunction} callback - 回调函数
-   * @param {AnyKey} property - 属性名，默认为全局变更标识符
-   * @returns {Function} - 取消订阅函数
+   * @template T - 目标对象类型
+   * @template C - 回调函数类型
+   * @param {T} target - 目标对象
+   * @param {C} callback - 回调函数
+   * @param {keyof T | AllPropertiesSymbol} property - 属性名，默认为全局变更标识符
+   * @returns {() => void} - 取消订阅函数
    */
   static addSyncSubscriber<T extends AnyObject, C extends AnyCallback>(
     target: T,
@@ -256,12 +282,17 @@ export class Observer {
   }
 
   /**
-   * ## 同时为多个对象注册相同的订阅者
+   * 同时为多个对象注册相同的订阅者
    *
-   * @param {AnyObject[]|Set<AnyObject>} targets - 目标对象集合
-   * @param {Function|Subscriber} callback - 回调函数或订阅者实例
-   * @param {SubscriptionOptions} options - 订阅选项
-   * @returns {Subscriber} - 订阅者实例
+   * 为多个目标对象注册相同的订阅者，当任何一个对象发生变更时触发回调。
+   * 返回的订阅者实例可用于统一管理所有订阅。
+   *
+   * @template T - 目标对象类型
+   * @template C - 回调函数类型
+   * @param {Set<T>|T[]} targets - 目标对象集合
+   * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
+   * @param {SubscriptionOptions} [options] - 订阅选项
+   * @returns {Subscriber<C>} - 订阅者实例
    */
   static subscribeToMultiple<T extends AnyObject, C extends AnyCallback>(
     targets: Set<T> | T[],
@@ -296,9 +327,13 @@ export class Observer {
   /**
    * 创建订阅者实例
    *
-   * @param {Function|Subscriber} callback - 回调函数或订阅者实例
-   * @param {SubscriberOptions} options - 订阅选项
-   * @returns {Subscriber} - 订阅者实例
+   * 根据提供的回调函数或现有订阅者创建新的订阅者实例。
+   * 如果传入的是函数，则创建新实例；如果是订阅者实例，则直接返回。
+   *
+   * @template C - 回调函数类型
+   * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
+   * @param {SubscriberOptions} [options] - 订阅选项
+   * @returns {Subscriber<C>} - 订阅者实例
    */
   static createSubscriber<C extends AnyCallback>(
     callback: C | Subscriber<C>,
@@ -310,20 +345,30 @@ export class Observer {
   /**
    * 获取响应式对象的原始目标
    *
-   * @param {AnyObject} object - 响应式对象
-   * @returns {AnyObject} - 原始目标对象
+   * 从可能是代理的响应式对象中获取原始目标对象。
+   * 如果对象上存在TARGET_SYMBOL属性，则返回该属性值；否则返回对象本身。
+   *
+   * @template T - 对象类型
+   * @param {T} object - 响应式对象或原始对象
+   * @returns {T} - 原始目标对象
    */
   static getOriginalTarget<T extends AnyObject>(object: T): T {
     return (Reflect.get(object, this.TARGET_SYMBOL) as T) ?? object
   }
 
   /**
-   * ## 添加订阅者
+   * 添加订阅者
    *
-   * @param {AnyObject} target - 目标对象
-   * @param {AnyKey} property - 属性名
-   * @param {Subscriber|AnyCallback} subscriber - 订阅者或回调函数
-   * @param {boolean} batch - 是否使用批处理模式，默认为true
+   * 为目标对象的指定属性添加订阅者或回调函数。
+   * 内部实现方法，用于支持各种订阅API。
+   *
+   * @template T - 目标对象类型
+   * @template C - 回调函数类型
+   * @param {T} target - 目标对象
+   * @param {keyof T | AllPropertiesSymbol} property - 属性名
+   * @param {Subscriber<C>|C} subscriber - 订阅者或回调函数
+   * @param {boolean} [batch=true] - 是否使用批处理模式
+   * @returns {void}
    */
   static addSubscriber<T extends AnyObject, C extends AnyCallback>(
     target: T,
@@ -369,12 +414,17 @@ export class Observer {
   }
 
   /**
-   * ## 移除订阅者
+   * 移除订阅者
    *
+   * 从目标对象的指定属性中移除订阅者或回调函数。
+   * 会自动清理空的集合和映射，释放内存。
+   *
+   * @template C - 回调函数类型
    * @param {AnyObject} target - 目标对象
    * @param {AnyKey} property - 属性名
-   * @param {Subscriber|AnyCallback} subscriber - 订阅者或回调函数
-   * @param {boolean} batch - 是否使用批处理模式，默认为true
+   * @param {Subscriber<C>|AnyCallback} subscriber - 订阅者或回调函数
+   * @param {boolean} [batch=true] - 是否使用批处理模式
+   * @returns {void}
    */
   static removeSubscriber<C extends AnyCallback>(
     target: AnyObject,
@@ -408,9 +458,13 @@ export class Observer {
   }
 
   /**
-   * ## 处理变更队列
+   * 处理变更队列
+   *
+   * 处理批处理模式下积累的所有变更通知。
+   * 通过微任务异步执行，提高性能并避免重复通知。
    *
    * @private
+   * @returns {void}
    */
   static #flushChangeQueue(): void {
     // 重置处理状态
@@ -426,9 +480,13 @@ export class Observer {
   /**
    * 处理目标对象的属性变更
    *
-   * @param target - 目标对象
-   * @param properties - 变更的属性集合
+   * 通知目标对象的批处理模式订阅者属性已变更。
+   * 会分别通知每个属性的订阅者和全局变更订阅者。
+   *
+   * @param {AnyObject} target - 目标对象
+   * @param {Set<AnyKey>} properties - 变更的属性集合
    * @private
+   * @returns {void}
    */
   static #notifyTargetChanges(target: AnyObject, properties: Set<AnyKey>): void {
     // 获取批处理订阅者
@@ -451,12 +509,17 @@ export class Observer {
   }
 
   /**
-   * ## 通知订阅者
+   * 通知订阅者
    *
-   * @param target - 目标对象
-   * @param subscribers - 订阅者集合
-   * @param changedProperties - 变更的属性列表
+   * 触发订阅者集合中所有订阅者的回调函数。
+   * 根据订阅者类型分别处理函数回调和Subscriber实例。
+   *
+   * @template T - 目标对象类型
+   * @param {T} target - 目标对象
+   * @param {SubscriberSet|undefined} subscribers - 订阅者集合
+   * @param {AnyKey[]} changedProperties - 变更的属性列表
    * @private
+   * @returns {void}
    */
   static #notifySubscribers<T extends AnyObject>(
     target: T,
@@ -475,12 +538,13 @@ export class Observer {
   }
 
   /**
-   * ## 锁定目标对象的访问
+   * 锁定目标对象的访问
    *
-   * 防止并发修改导致的问题
+   * 使用自旋锁机制防止并发修改导致的问题。
+   * 返回解锁函数，必须在完成操作后调用以释放锁。
    *
-   * @param target - 目标对象
-   * @returns {Function} - 解锁函数
+   * @param {AnyObject} target - 目标对象
+   * @returns {() => void} - 解锁函数
    * @private
    */
   static #acquireLock(target: AnyObject): () => void {
