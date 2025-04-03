@@ -9,7 +9,7 @@ import {
 } from '../constants'
 import { SignalManager } from '../manager'
 import type { BaseSignal, EqualityFn, SignalOptions } from '../types'
-import { isMarkNotSignal, isSignal, isValueSignal } from '../utils'
+import { isMarkNotSignal, isProxySignal, isRefSignal, isSignal } from '../utils'
 import type { Reactive, ShallowReactive } from './types'
 
 /**
@@ -144,12 +144,12 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
       if (isSignal(value)) {
         this.childSignalMap.set(prop, value)
         SignalManager.addParent(value, this.proxy, prop)
-        return isValueSignal(value) ? value.value : value
+        return isRefSignal(value) ? value.value : value
       }
       // 如果不是被标记为不代理的则创建子代理并添加映射关系
       if (!isMarkNotSignal(value)) {
         // 创建子代理
-        const childProxy = createReactiveProxySignal(value, this.options)
+        const childProxy = new ReactiveProxyHandler(value, { ...this.options }).proxy
         // 映射父级关系
         SignalManager.addParent(childProxy, this.proxy, prop)
         this.childSignalMap.set(prop, childProxy)
@@ -159,7 +159,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
     // 如果值不是一个信号则上报给依赖管理器跟踪
     if (!isSignal(value)) this.track(prop)
     // 如果是值代理则返回被代理的值
-    return this.options.deep && isValueSignal(value) ? value.value : value
+    return this.options.deep && isRefSignal(value) ? value.value : value
   }
 
   /**
@@ -202,7 +202,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (this.options.equalityFn(oldValue, newValue)) return true
     // 删除子代理
     this.removeChildSignal(prop)
-    if (isValueSignal(oldValue)) {
+    if (isRefSignal(oldValue)) {
       oldValue.value = newValue
     } else {
       if (!Reflect.set(target, prop, newValue, target)) return false
@@ -275,5 +275,16 @@ export function createReactiveProxySignal<T extends AnyObject>(
   target: T,
   options?: SignalOptions
 ): Reactive<T> | ShallowReactive<T> {
+  if (!isObject(target)) {
+    throw new TypeError('Parameter 1 (target) must be an object!')
+  }
+  if (Object.isFrozen(target)) {
+    throw new TypeError('Parameter 1 (target) cannot be a frozen object')
+  }
+  // 避免嵌套代理
+  if (isRefSignal(target)) {
+    throw new TypeError('Parameter 1 (target) cannot be a value reference object!')
+  }
+  if (isProxySignal(target)) return target as Reactive<T>
   return new ReactiveProxyHandler(target, options).proxy
 }
