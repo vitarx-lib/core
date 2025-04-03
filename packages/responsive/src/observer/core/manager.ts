@@ -1,7 +1,22 @@
 import { isArray, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
 import { Subscriber, type SubscriberOptions } from './subscriber.js'
 
-export type AllPropertiesSymbol = typeof Observer.ALL_PROPERTIES_SYMBOL
+/**
+ * 全局属性变更标识符
+ *
+ * 用于订阅对象的所有属性变更，作为通配符使用。
+ * 当使用此标识符订阅时，对象的任何属性变更都会触发通知。
+ */
+export const ALL_PROPERTIES_SYMBOL = Symbol('ALL_PROPERTIES_SYMBOL')
+export type ALL_PROPERTIES_SYMBOL = typeof ALL_PROPERTIES_SYMBOL
+/**
+ * 目标对象标识符
+ *
+ * 用于在代理对象上标识原始目标对象的Symbol。
+ * 可将此标识符作为对象的属性，属性值为实际用于订阅的原始目标对象。
+ */
+const OBS_TARGET_SYMBOL = Symbol('OBSERVER_TARGET_SYMBOL')
+export type OBS_TARGET_SYMBOL = typeof OBS_TARGET_SYMBOL
 
 /**
  * 订阅者配置选项
@@ -43,9 +58,9 @@ export class Observer {
    * 用于订阅对象的所有属性变更，作为通配符使用。
    * 当使用此标识符订阅时，对象的任何属性变更都会触发通知。
    *
-   * @type {Symbol}
+   * @type {ALL_PROPERTIES_SYMBOL}
    */
-  static ALL_PROPERTIES_SYMBOL = Symbol('ALL_PROPERTIES_SYMBOL')
+  static ALL_PROPERTIES_SYMBOL: ALL_PROPERTIES_SYMBOL = ALL_PROPERTIES_SYMBOL
 
   /**
    * 目标对象标识符
@@ -53,9 +68,9 @@ export class Observer {
    * 用于在代理对象上标识原始目标对象的Symbol。
    * 可将此标识符作为对象的属性，属性值为实际用于订阅的原始目标对象。
    *
-   * @type {Symbol}
+   * @type {OBS_TARGET_SYMBOL}
    */
-  static TARGET_SYMBOL = Symbol('TARGET_SYMBOL')
+  static TARGET_SYMBOL: OBS_TARGET_SYMBOL = OBS_TARGET_SYMBOL
 
   // 防止并发修改的锁
   static #accessLock = new WeakSet<object>()
@@ -140,12 +155,12 @@ export class Observer {
    *
    * @template T - 目标对象类型
    * @param {T} target - 目标对象
-   * @param {keyof T | AllPropertiesSymbol} property - 属性名，默认为全局变更标识符
+   * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名，默认为全局变更标识符
    * @returns {boolean} - 如果存在订阅者返回true，否则返回false
    */
   static hasSubscribers<T extends AnyObject>(
     target: T,
-    property: keyof T | AllPropertiesSymbol = this.ALL_PROPERTIES_SYMBOL
+    property: keyof T | ALL_PROPERTIES_SYMBOL = this.ALL_PROPERTIES_SYMBOL
   ): boolean {
     target = this.getOriginalTarget(target)
     return !!(
@@ -163,7 +178,7 @@ export class Observer {
    * @template C - 回调函数类型
    * @param {T} target - 目标对象
    * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
-   * @param {keyof T | AllPropertiesSymbol} property - 属性名，默认为全局变更标识符
+   * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名，默认为全局变更标识符
    * @param {SubscriptionOptions} [options] - 订阅选项
    * @param {boolean} [options.batch=true] - 是否使用批处理模式
    * @param {number} [options.limit=0] - 触发次数限制，0表示无限制
@@ -173,7 +188,7 @@ export class Observer {
   static subscribe<T extends AnyObject, C extends AnyCallback>(
     target: T,
     callback: C | Subscriber<C>,
-    property: keyof T | AllPropertiesSymbol = this.ALL_PROPERTIES_SYMBOL,
+    property: keyof T | ALL_PROPERTIES_SYMBOL = this.ALL_PROPERTIES_SYMBOL,
     options?: SubscriptionOptions
   ): Subscriber<C> {
     const subscriber = this.createSubscriber(callback, options)
@@ -269,13 +284,13 @@ export class Observer {
    * @template C - 回调函数类型
    * @param {T} target - 目标对象
    * @param {C} callback - 回调函数
-   * @param {keyof T | AllPropertiesSymbol} property - 属性名，默认为全局变更标识符
+   * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名，默认为全局变更标识符
    * @returns {() => void} - 取消订阅函数
    */
   static addSyncSubscriber<T extends AnyObject, C extends AnyCallback>(
     target: T,
     callback: C,
-    property: keyof T | AllPropertiesSymbol = this.ALL_PROPERTIES_SYMBOL
+    property: keyof T | ALL_PROPERTIES_SYMBOL = this.ALL_PROPERTIES_SYMBOL
   ): () => void {
     this.addSubscriber(target, property, callback, false)
     return () => this.removeSubscriber(target, property, callback, false)
@@ -365,14 +380,14 @@ export class Observer {
    * @template T - 目标对象类型
    * @template C - 回调函数类型
    * @param {T} target - 目标对象
-   * @param {keyof T | AllPropertiesSymbol} property - 属性名
+   * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名
    * @param {Subscriber<C>|C} subscriber - 订阅者或回调函数
    * @param {boolean} [batch=true] - 是否使用批处理模式
    * @returns {void}
    */
   static addSubscriber<T extends AnyObject, C extends AnyCallback>(
     target: T,
-    property: keyof T | AllPropertiesSymbol,
+    property: keyof T | ALL_PROPERTIES_SYMBOL,
     subscriber: Subscriber<C> | C,
     batch: boolean = true
   ): void {
