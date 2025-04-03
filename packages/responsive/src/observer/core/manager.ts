@@ -1,8 +1,7 @@
-import { Subscriber, type SubscriberOptions } from './subscriber.js'
 import { isArray, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
+import { Subscriber, type SubscriberOptions } from './subscriber.js'
 
-/** 全局变更标识符类型 */
-export type GlobalChangeSymbol = typeof Observer.GLOBAL_CHANGE_SYMBOL
+export type AllPropertiesSymbol = typeof Observer.ALL_PROPERTIES_SYMBOL
 
 /**
  * 订阅者配置选项
@@ -22,13 +21,13 @@ export interface SubscriptionOptions extends SubscriberOptions {
 }
 
 // 变更队列
-type ChangeQueue = Map<AnyObject, Set<AnyKey | GlobalChangeSymbol>>
+type ChangeQueue = Map<AnyObject, Set<AnyKey>>
 // 订阅者集合
-export type SubscriberSet = Set<Subscriber | AnyCallback>
+type SubscriberSet = Set<Subscriber | AnyCallback>
 // 属性订阅映射
-export type PropertySubscriberMap = Map<AnyKey | GlobalChangeSymbol, SubscriberSet>
+type PropertySubscriberMap = Map<AnyKey, SubscriberSet>
 // 订阅存储
-export type SubscriberStore = WeakMap<AnyObject, PropertySubscriberMap>
+type SubscriberStore = WeakMap<AnyObject, PropertySubscriberMap>
 
 /**
  * # 观察者管理器
@@ -42,7 +41,7 @@ export class Observer {
    * 全局变更标识符
    * 用于订阅对象的所有属性变更
    */
-  static GLOBAL_CHANGE_SYMBOL = Symbol('GLOBAL_CHANGE_SYMBOL')
+  static ALL_PROPERTIES_SYMBOL = Symbol('GLOBAL_CHANGE_SYMBOL')
 
   /**
    * 目标对象标识符
@@ -79,10 +78,14 @@ export class Observer {
   /**
    * ## 触发变更通知
    *
-   * 通知订阅者目标对象的指定属性已变更
+   * 通知订阅者目标对象的指定属性已变更。该方法会将变更添加到队列中，
+   * 并通过微任务异步处理，以提高性能。对于即时模式的订阅者，会立即触发通知。
    *
-   * @param {AnyObject} target - 变更的目标对象
-   * @param {AnyKey|AnyKey[]} property - 变更的属性名或属性名数组
+   * @template T - 目标对象类型
+   * @template P - 属性键类型，必须是T的键
+   * @param {T} target - 变更的目标对象
+   * @param {P | P[]} property - 变更的属性名或属性名数组
+   * @returns {void} 无返回值
    */
   static notify<T extends AnyObject, P extends keyof T>(target: T, property: P | P[]): void {
     // 如果队列未在处理中，初始化处理流程
@@ -116,7 +119,7 @@ export class Observer {
       // 通知关注全局变更的即时订阅者
       this.#notifySubscribers(
         target,
-        immediateSubscribers?.get(this.GLOBAL_CHANGE_SYMBOL),
+        immediateSubscribers?.get(this.ALL_PROPERTIES_SYMBOL),
         properties
       )
     }
@@ -129,7 +132,10 @@ export class Observer {
    * @param {AnyKey} property - 属性名，默认为全局变更标识符
    * @returns {boolean} - 是否存在订阅者
    */
-  static hasSubscribers(target: AnyObject, property: AnyKey = this.GLOBAL_CHANGE_SYMBOL): boolean {
+  static hasSubscribers<T extends AnyObject>(
+    target: T,
+    property: keyof T | AllPropertiesSymbol = this.ALL_PROPERTIES_SYMBOL
+  ): boolean {
     target = this.getOriginalTarget(target)
     return !!(
       this.#batchSubscribers.get(target)?.has(property) ||
@@ -149,7 +155,7 @@ export class Observer {
   static subscribe<T extends AnyObject, C extends AnyCallback>(
     target: T,
     callback: C | Subscriber<C>,
-    property: AnyKey = this.GLOBAL_CHANGE_SYMBOL,
+    property: keyof T | AllPropertiesSymbol = this.ALL_PROPERTIES_SYMBOL,
     options?: SubscriptionOptions
   ): Subscriber<C> {
     const subscriber = this.createSubscriber(callback, options)
@@ -166,9 +172,9 @@ export class Observer {
    * @param {SubscriptionOptions} options - 订阅选项
    * @returns {Subscriber} - 订阅者实例
    */
-  static subscribeMultipleProps<C extends AnyCallback>(
-    target: AnyObject,
-    properties: AnyKey[] | Set<AnyKey>,
+  static subscribeMultipleProps<T extends AnyObject, C extends AnyCallback>(
+    target: T,
+    properties: Array<keyof T> | Set<keyof T>,
     callback: C | Subscriber<C>,
     options?: SubscriptionOptions
   ): Subscriber<C> {
@@ -240,10 +246,10 @@ export class Observer {
    * @param {AnyKey} property - 属性名，默认为全局变更标识符
    * @returns {Function} - 取消订阅函数
    */
-  static addSyncSubscriber<C extends AnyCallback>(
-    target: AnyObject,
+  static addSyncSubscriber<T extends AnyObject, C extends AnyCallback>(
+    target: T,
     callback: C,
-    property: AnyKey = this.GLOBAL_CHANGE_SYMBOL
+    property: keyof T | AllPropertiesSymbol = this.ALL_PROPERTIES_SYMBOL
   ): () => void {
     this.addSubscriber(target, property, callback, false)
     return () => this.removeSubscriber(target, property, callback, false)
@@ -274,13 +280,13 @@ export class Observer {
 
     // 为每个目标添加订阅
     for (const target of targets) {
-      this.addSubscriber(target, this.GLOBAL_CHANGE_SYMBOL, subscriber, options?.batch)
+      this.addSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, options?.batch)
     }
 
     // 订阅者销毁时取消所有订阅
     subscriber.onCleanup(() => {
       for (const target of targets) {
-        this.removeSubscriber(target, this.GLOBAL_CHANGE_SYMBOL, subscriber, options?.batch)
+        this.removeSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, options?.batch)
       }
     })
 
@@ -319,9 +325,9 @@ export class Observer {
    * @param {Subscriber|AnyCallback} subscriber - 订阅者或回调函数
    * @param {boolean} batch - 是否使用批处理模式，默认为true
    */
-  static addSubscriber<C extends AnyCallback>(
-    target: AnyObject,
-    property: AnyKey,
+  static addSubscriber<T extends AnyObject, C extends AnyCallback>(
+    target: T,
+    property: keyof T | AllPropertiesSymbol,
     subscriber: Subscriber<C> | C,
     batch: boolean = true
   ): void {
@@ -435,10 +441,10 @@ export class Observer {
     }
 
     // 如果没有全局变更订阅，则通知全局订阅者
-    if (!properties.has(this.GLOBAL_CHANGE_SYMBOL)) {
+    if (!properties.has(this.ALL_PROPERTIES_SYMBOL)) {
       this.#notifySubscribers(
         target,
-        subscribers.get(this.GLOBAL_CHANGE_SYMBOL),
+        subscribers.get(this.ALL_PROPERTIES_SYMBOL),
         Array.from(properties)
       )
     }
