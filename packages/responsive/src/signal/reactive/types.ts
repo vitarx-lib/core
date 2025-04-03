@@ -1,4 +1,4 @@
-import type { ProxySignal, VaklueSignal } from '../types'
+import type { ProxySignal, RefSignal } from '../types'
 
 /**
  * 解包嵌套的响应式信号值
@@ -20,7 +20,7 @@ import type { ProxySignal, VaklueSignal } from '../types'
  * ```
  */
 export type UnwrapNestedRefs<T extends AnyObject> = {
-  [K in keyof T]: T[K] extends VaklueSignal<infer U> ? U : T[K]
+  [K in keyof T]: T[K] extends RefSignal<infer U> ? U : T[K]
 }
 
 /**
