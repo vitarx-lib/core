@@ -2,13 +2,14 @@ import { isCollection, isObject } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
 import { Observer } from '../../observer/index'
 import {
+  type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
   GET_RAW_TARGET_SYMBOL,
   PROXY_SIGNAL_SYMBOL,
-  SIGNAL_SYMBOL
-} from '../constants'
-import { SignalManager } from '../manager'
-import type { BaseSignal, EqualityFn, SignalOptions } from '../types'
+  SIGNAL_SYMBOL,
+  SignalManager,
+  type SignalOptions
+} from '../common/index'
 import { isMarkNotSignal, isProxySignal, isRefSignal, isSignal } from '../utils'
 import type { Reactive, ShallowReactive } from './types'
 

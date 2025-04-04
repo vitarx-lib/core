@@ -1,4 +1,4 @@
-import { Observer } from '../observer/index'
+import { Observer } from '../../observer/index'
 import type { BaseSignal } from './types'
 
 /**

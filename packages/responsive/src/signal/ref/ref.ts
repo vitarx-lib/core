@@ -1,9 +1,16 @@
 import { isObject } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
-import { DEEP_SIGNAL_SYMBOL, REF_SIGNAL_SYMBOL, SIGNAL_SYMBOL } from '../constants'
-import { SignalManager } from '../manager'
+import {
+  type BaseSignal,
+  DEEP_SIGNAL_SYMBOL,
+  REF_SIGNAL_SYMBOL,
+  type RefSignal,
+  type RefValue,
+  SIGNAL_SYMBOL,
+  SignalManager,
+  type SignalOptions
+} from '../common/index'
 import { reactive } from '../reactive/index'
-import type { BaseSignal, RefSignal, RefValue, SignalOptions } from '../types'
 import { isMarkNotSignal, isRefSignal, isSignal } from '../utils'
 
 /**
