@@ -86,12 +86,12 @@ export class SignalManager {
   /**
    * 通知父级信号对象，触发其更新操作。
    *
-   * 该函数会获取给定信号的父级信号映射，并遍历每个父级信号，通知其进行更新。
+   * 该方法会获取给定信号的父级信号映射，并遍历每个父级信号，通知其进行更新。
    *
-   * @param signal - 需要通知父级的信号对象，类型为 `BaseSignal`。
-   * @returns 无返回值。
+   * @param {BaseSignal} signal - 需要通知父级的信号对象，类型为 `BaseSignal`。
+   * @returns {void} 无返回值。
    */
-  public static notifyParent(signal: BaseSignal) {
+  public static notifyParent(signal: BaseSignal): void {
     // 获取信号的父级映射
     const parentMap = SignalManager.getParents(signal)
     if (!parentMap) return
@@ -99,5 +99,23 @@ export class SignalManager {
     for (const [parent, keys] of parentMap) {
       Observer.notify(parent, Array.from(keys) as any)
     }
+  }
+
+  /**
+   * 通知订阅者属性已更新
+   *
+   * @template T - 信号类型
+   * @param {T} signal - 信号
+   * @param {keyof T | Array<keyof T>} property - 属性
+   * @param {boolean} [notifyParent=true] - 是否通知父级信号
+   * @returns {void}
+   */
+  public static notifySubscribers<T extends BaseSignal>(
+    signal: T,
+    property: keyof T | Array<keyof T>,
+    notifyParent: boolean = true
+  ): void {
+    Observer.notify(signal, property)
+    if (notifyParent) SignalManager.notifyParent(signal)
   }
 }
