@@ -41,7 +41,7 @@ export type RefValue<T, Deep extends boolean = true> = Deep extends false
 /**
  * 引用信号的接口
  */
-export interface RefSignal<Value = any, Deep extends boolean = true> extends BaseSignal {
+export interface RefSignal<Value = any, Deep extends boolean = true> extends BaseSignal<Value> {
   readonly [DEEP_SIGNAL_SYMBOL]: Deep
   readonly [REF_SIGNAL_SYMBOL]: true
 
