@@ -1,4 +1,4 @@
-import type { SignalOptions } from '../common/index'
+import type { SignalOptions } from '../core/index'
 import { Ref } from './ref'
 
 /**

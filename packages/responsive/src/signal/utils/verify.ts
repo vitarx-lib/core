@@ -6,7 +6,7 @@ import {
   REF_SIGNAL_SYMBOL,
   type RefSignal,
   SIGNAL_SYMBOL
-} from '../common/index'
+} from '../core/index'
 
 /**
  * 检查一个值是否为响应式信号。信号是一个具有特殊标识符的响应式数据容器。

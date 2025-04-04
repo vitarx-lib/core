@@ -1,4 +1,4 @@
-import { PROXY_SIGNAL_SYMBOL, type SignalOptions } from '../common/index'
+import { PROXY_SIGNAL_SYMBOL, type SignalOptions } from '../core/index'
 import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
 import type { Reactive, ShallowReactive, UnReactive } from './types'
 

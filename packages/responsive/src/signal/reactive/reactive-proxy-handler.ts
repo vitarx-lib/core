@@ -9,7 +9,7 @@ import {
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
-} from '../common/index'
+} from '../core/index'
 import { isMarkNotSignal, isProxySignal, isRefSignal, isSignal } from '../utils'
 import type { Reactive, ShallowReactive } from './types'
 
