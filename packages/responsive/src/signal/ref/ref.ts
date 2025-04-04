@@ -190,4 +190,15 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
       !isMarkNotSignal(this._value) &&
       !isSignal(!this._value)
   }
+
+  /**
+   * 手动触发value值的更新事件
+   *
+   * 即使值没有发生变化，也会强制触发更新通知。
+   * 这在一些特殊场景下很有用，比如更新了浅层Ref的深层值且希望触发监听器。
+   */
+  public forceUpdate(): void {
+    Observer.notify(this, 'value')
+    SignalManager.notifyParent(this)
+  }
 }
