@@ -5,12 +5,15 @@ import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
   GET_RAW_TARGET_SYMBOL,
+  isMarkNotSignal,
+  isProxySignal,
+  isRefSignal,
+  isSignal,
   PROXY_SIGNAL_SYMBOL,
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
 } from '../../core/index'
-import { isMarkNotSignal, isProxySignal, isRefSignal, isSignal } from '../../utils/index'
 import type { Reactive, ShallowReactive } from './types'
 
 /**

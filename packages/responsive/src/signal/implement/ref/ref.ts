@@ -3,6 +3,9 @@ import { Depend } from '../../../depend/index'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
+  isMarkNotSignal,
+  isRefSignal,
+  isSignal,
   REF_SIGNAL_SYMBOL,
   type RefSignal,
   type RefValue,
@@ -10,7 +13,6 @@ import {
   SignalManager,
   type SignalOptions
 } from '../../core/index'
-import { isMarkNotSignal, isRefSignal, isSignal } from '../../utils/index'
 import { reactive } from '../reactive/index'
 
 /**

@@ -1,4 +1,5 @@
-import { NOT_SIGNAL_SYMBOL, type NotSignal } from '../core/index'
+import { NOT_SIGNAL_SYMBOL } from '../constants'
+import type { NotSignal } from '../types/index'
 
 /**
  * 将一个对象标记为永远不会被转换为响应式信号。
