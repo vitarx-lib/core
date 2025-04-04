@@ -6,7 +6,6 @@ import {
   REF_SIGNAL_SYMBOL,
   SIGNAL_SYMBOL
 } from './constants'
-import type { UnwrapNestedRefs } from './reactive/index'
 
 /**
  * 用于判断旧值和新值是否相等的函数
@@ -67,6 +66,29 @@ export type ProxySignal<
   readonly [PROXY_SIGNAL_SYMBOL]: true
   readonly [GET_RAW_TARGET_SYMBOL]: Target
 } & Proxy
+
+/**
+ * 解包嵌套的响应式信号值
+ *
+ * @template T - 目标对象类型，必须是一个对象类型
+ * @remarks
+ * 该类型用于递归解包对象中所有的响应式信号值。如果属性值是 ValueSignal 类型，
+ * 则提取其内部值类型；否则保持原类型不变。
+ *
+ * @example
+ * ```typescript
+ * type User = {
+ *   name: RefSignal<string>
+ *   age: number
+ * }
+ *
+ * type UnwrappedUser = UnwrapNestedRefs<User>
+ * // 等价于 { name: string; age: number }
+ * ```
+ */
+export type UnwrapNestedRefs<T extends AnyObject> = {
+  [K in keyof T]: T[K] extends NotSignal ? T[K] : T extends RefSignal<infer U> ? U : T[K]
+}
 
 /**
  * 响应式引用信号的值类型
