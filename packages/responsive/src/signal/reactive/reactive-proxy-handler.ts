@@ -233,8 +233,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @private
    */
   private notify(prop: AnyKey) {
-    Observer.notify(this.proxy, prop as any)
-    SignalManager.notifyParent(this.proxy)
+    SignalManager.notifySubscribers(this.proxy, prop as any)
   }
 
   /**
