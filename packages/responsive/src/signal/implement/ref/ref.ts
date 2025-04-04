@@ -3,6 +3,7 @@ import { Depend } from '../../../depend/index'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
+  GET_RAW_TARGET_SYMBOL,
   isMarkNotSignal,
   isRefSignal,
   isSignal,
@@ -105,6 +106,16 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
     }
     Depend.track(this, 'value')
     return this._value as RefValue<T, Deep>
+  }
+
+  /**
+   * 获取原始值目标值
+   *
+   * @private
+   * @returns {T} 原始值
+   */
+  get [GET_RAW_TARGET_SYMBOL](): T {
+    return this._value
   }
 
   /**
