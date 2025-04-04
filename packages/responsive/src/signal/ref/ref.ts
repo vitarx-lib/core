@@ -1,6 +1,5 @@
 import { isObject } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
-import { Observer } from '../../observer/index'
 import { DEEP_SIGNAL_SYMBOL, REF_SIGNAL_SYMBOL, SIGNAL_SYMBOL } from '../constants'
 import { SignalManager } from '../manager'
 import { reactive } from '../reactive/index'
@@ -121,8 +120,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
     }
     this._value = newValue
     this.evaluateProxyNeeded()
-    Observer.notify(this, 'value')
-    SignalManager.notifyParent(this)
+    SignalManager.notifySubscribers(this, 'value')
   }
 
   /**
@@ -198,7 +196,6 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
    * 这在一些特殊场景下很有用，比如更新了浅层Ref的深层值且希望触发监听器。
    */
   public forceUpdate(): void {
-    Observer.notify(this, 'value')
-    SignalManager.notifyParent(this)
+    SignalManager.notifySubscribers(this, 'value')
   }
 }
