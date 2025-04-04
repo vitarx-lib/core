@@ -1,4 +1,4 @@
-import { PROXY_SIGNAL_SYMBOL, type SignalOptions } from '../../core/index'
+import { GET_RAW_TARGET_SYMBOL, type SignalOptions } from '../../core/index'
 import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
 import type { Reactive, ShallowReactive, UnReactive } from './types'
 
@@ -103,7 +103,6 @@ export function isReactive(val: unknown): boolean {
  * @returns {UnReactive<T>} 返回对象的原始值：
  *   - 如果输入是响应式对象，返回其原始未代理的对象
  *   - 如果输入不是响应式对象，则原样返回
- * @alias toRaw - 为了兼容Vue API而提供的别名
  * @example
  * ```typescript
  * const original = { count: 0 }
@@ -112,12 +111,8 @@ export function isReactive(val: unknown): boolean {
  * proxy.count // 访问会被跟踪
  * unReactive(proxy).count // 访问不会被跟踪
  * unReactive(proxy) === original // true
- * // 别名
- * toRaw(proxy) === original // true
  * ```
  */
 export function unReactive<T extends object>(proxy: T | Reactive<T>): UnReactive<T> {
-  return (Reflect.get(proxy, PROXY_SIGNAL_SYMBOL) ?? proxy) as UnReactive<T>
+  return (Reflect.get(proxy, GET_RAW_TARGET_SYMBOL) ?? proxy) as UnReactive<T>
 }
-
-export { unReactive as toRaw }
