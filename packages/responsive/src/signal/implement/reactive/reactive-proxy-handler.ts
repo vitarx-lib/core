@@ -1,6 +1,6 @@
 import { isCollection, isObject } from '@vitarx/utils'
-import { Depend } from '../../depend/index'
-import { Observer } from '../../observer/index'
+import { Depend } from '../../../depend/index'
+import { Observer } from '../../../observer/index'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
@@ -9,8 +9,8 @@ import {
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
-} from '../core/index'
-import { isMarkNotSignal, isProxySignal, isRefSignal, isSignal } from '../utils'
+} from '../../core/index'
+import { isMarkNotSignal, isProxySignal, isRefSignal, isSignal } from '../../utils/index'
 import type { Reactive, ShallowReactive } from './types'
 
 /**
@@ -82,14 +82,14 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @param {T} _target - 需要被代理的目标对象
    * @param {SignalOptions} [options] - 代理配置选项
    * @param {boolean} [options.deep=true] - 是否深度代理
-   * @param {EqualityFn} [options.equalityFn=Object.is] - 值比较函数
+   * @param {CompareFunction} [options.compare=Object.is] - 值比较函数
    */
   constructor(
     private readonly _target: T,
     options?: SignalOptions
   ) {
     this.options = {
-      equalityFn: options?.equalityFn ?? Object.is,
+      compare: options?.compare ?? Object.is,
       deep: options?.deep ?? true
     }
     this.childSignalMap = this.options.deep ? new Map() : undefined
@@ -200,7 +200,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    */
   set(target: T, prop: AnyKey, newValue: any): boolean {
     const oldValue = Reflect.get(target, prop)
-    if (this.options.equalityFn(oldValue, newValue)) return true
+    if (this.options.compare(oldValue, newValue)) return true
     // 删除子代理
     this.removeChildSignal(prop)
     if (isRefSignal(oldValue)) {
@@ -256,13 +256,13 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
  * @param {T} target - 要代理的目标对象
  * @param {object} options - 代理配置选项
  * @param {boolean} [options.deep=true] - 启用深度代理
- * @param {EqualityFn} [options.equalityFn=Object.is] - 自定义值比较函数
+ * @param {CompareFunction} [options.compare=Object.is] - 自定义值比较函数
  * @returns {Reactive<T> | ShallowReactive<T>} 响应式代理对象
  * @example
  * ```typescript
  * const proxy = createReactiveProxy(target, {
  *   deep: true,
- *   equalityFn: (a, b) => a === b
+ *   compare: (a, b) => a === b
  * })
  * ```
  */

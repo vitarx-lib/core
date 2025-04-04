@@ -1,4 +1,4 @@
-import { PROXY_SIGNAL_SYMBOL, type SignalOptions } from '../core/index'
+import { PROXY_SIGNAL_SYMBOL, type SignalOptions } from '../../core/index'
 import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
 import type { Reactive, ShallowReactive, UnReactive } from './types'
 
@@ -23,13 +23,13 @@ export function reactive<T extends AnyObject>(target: T): Reactive<T>
  * @param {T} target - 要代理的目标对象
  * @param {object} options - 代理配置选项
  * @param {boolean} options.deep - 启用深度代理
- * @param {EqualityFn} [options.equalityFn=Object.is] - 自定义值比较函数
+ * @param {CompareFunction} [options.compare=Object.is] - 自定义值比较函数
  * @returns {Reactive<T> | ShallowReactive<T>} 响应式代理对象
  * @example
  * ```typescript
  * const proxy = reactive(target, {
  *   deep: true,
- *   equalityFn: (a, b) => a === b
+ *   compare: (a, b) => a === b
  * })
  * ```
  */
@@ -56,7 +56,7 @@ export function reactive<T extends AnyObject>(
  * @template T - 目标对象类型
  * @param { T } target - 目标对象
  * @param { object } [options] - 代理选项
- * @param { EqualityFn } [options.equalityFn=Object.is] - 自定义值比较函数
+ * @param { CompareFunction } [options.compare=Object.is] - 自定义值比较函数
  * @returns {ShallowReactive<T>} 浅层响应式对象
  */
 export function shallowReactive<T extends AnyObject>(

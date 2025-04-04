@@ -1,4 +1,4 @@
-import type { ProxySignal, UnwrapNestedRefs } from '../core/index'
+import type { ProxySignal, UnwrapNestedRefs } from '../../core/index'
 
 /**
  * 响应式代理对象类型

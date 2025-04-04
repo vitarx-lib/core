@@ -1,5 +1,5 @@
 import { isObject } from '@vitarx/utils'
-import { Depend } from '../../depend/index'
+import { Depend } from '../../../depend/index'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
@@ -9,9 +9,9 @@ import {
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
-} from '../core/index'
+} from '../../core/index'
+import { isMarkNotSignal, isRefSignal, isSignal } from '../../utils/index'
 import { reactive } from '../reactive/index'
-import { isMarkNotSignal, isRefSignal, isSignal } from '../utils'
 
 /**
  * # `Ref`值代理对象，用于代理一个值，使其成为响应式变量。
@@ -64,11 +64,11 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
    * @param {T} value - 需要被包装为响应式的值
    * @param {SignalOptions} [options] - 响应式配置选项
    * @param {boolean} [options.deep=true] - 是否深度代理嵌套对象
-   * @param {EqualityFn} [options.equalityFn=Object.is] - 值比较函数，用于决定是否触发更新
+   * @param {CompareFunction} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新
    */
   constructor(value: T, options?: SignalOptions<Deep>) {
     this._options = {
-      equalityFn: options?.equalityFn ?? Object.is,
+      compare: options?.compare ?? Object.is,
       deep: options?.deep ?? (true as Deep)
     }
     this._value = value
@@ -119,7 +119,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
    */
   set value(newValue: T) {
     if (isRefSignal(newValue)) throw new Error('Cannot set value of Ref to Ref')
-    if (this._options.equalityFn(this._value, newValue)) return
+    if (this._options.compare(this._value, newValue)) return
     // 清理旧的响应式代理
     if (this._reactiveValue) {
       SignalManager.removeParent(this._reactiveValue as unknown as BaseSignal, this, 'value')

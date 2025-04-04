@@ -1,4 +1,4 @@
-import type { SignalOptions } from '../core/index'
+import type { SignalOptions } from '../../core/index'
 import { Ref } from './ref'
 
 /**
@@ -12,7 +12,7 @@ import { Ref } from './ref'
  * @param {Value} value - 信号初始值
  * @param {object} [options] - 信号的选项配置
  * @param {boolean} [options.deep=true] - 是否深度代理嵌套对象，为true时会递归代理所有嵌套属性
- * @param {function} [options.equalityFn=Object.is] - 值比较函数，用于决定是否触发更新，默认使用Object.is进行比较
+ * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新，默认使用Object.is进行比较
  * @returns {Ref<Value, Deep>} - 创建的响应式引用信号
  * @example
  * // 创建一个简单的ref
@@ -23,7 +23,7 @@ import { Ref } from './ref'
  *
  * // 创建一个对象ref并使用自定义比较函数
  * const user = ref({ name: 'Zhang', age: 25 }, {
- *   equalityFn: (prev, next) => prev.name === next.name
+ *   compare: (prev, next) => prev.name === next.name
  * })
  */
 export function ref<Value, Deep extends boolean = true>(
@@ -39,7 +39,7 @@ export function ref<Value, Deep extends boolean = true>(
  * @template Value - 信号值的类型
  * @param {Value} value - 信号初始值
  * @param {object} [options] - 信号的选项，包括是否使用深度信号和比较函数
- * @param {function} [options.equalityFn=Object.is] - 值比较函数，用于决定是否触发更新
+ * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新
  * @returns {Ref<Value, false>} - 创建的浅响应式引用信号
  * @example
  * // 创建一个基本的浅响应式引用
@@ -62,7 +62,7 @@ export function ref<Value, Deep extends boolean = true>(
  *
  * // 使用自定义比较函数的场景
  * const list = shallowRef([1, 2, 3], {
- *   equalityFn: (prev, next) => prev.length === next.length
+ *   compare: (prev, next) => prev.length === next.length
  * })
  */
 export function shallowRef<Value>(value: Value, options?: SignalOptions<false>): Ref<Value, false> {
