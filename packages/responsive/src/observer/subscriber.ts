@@ -1,4 +1,4 @@
-import { Effect, EffectScope } from '../../effect'
+import { Effect, EffectScope } from '../effect/index'
 
 /**
  * 订阅者配置选项
