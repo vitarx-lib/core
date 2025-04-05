@@ -13,10 +13,14 @@ export type DependencyMap = Map<Record<AnyKey, any>, Set<AnyKey>>
 export type CollectionMode = 'shared' | 'exclusive'
 /** 依赖收集结果 */
 export type CollectionResult<T> = {
-  /** 函数执行结果 */
+  /**
+   * 函数执行结果
+   */
   result: T
-  /** 收集到的依赖映射 */
-  dependencies: DependencyMap
+  /**
+   * 收集到的依赖映射
+   */
+  deps: DependencyMap
 }
 
 /**
@@ -79,10 +83,25 @@ export class Depend {
 
     try {
       const result = fn()
-      return { result, dependencies }
+      return { result, deps: dependencies }
     } finally {
       // 清理收集器
       this.#collectorRegistry.delete(collectorId)
+    }
+  }
+
+  /**
+   * ## 记录单个依赖关系
+   *
+   * @private
+   */
+  static #recordDependency(collector: DependencyMap, target: AnyObject, property: AnyKey): void {
+    if (collector.has(target)) {
+      // 如果已经收集了该对象，则添加新属性
+      collector.get(target)!.add(property as keyof typeof target)
+    } else {
+      // 否则创建新的属性集合
+      collector.set(target, new Set([property as keyof typeof target]))
     }
   }
 
@@ -99,25 +118,10 @@ export class Depend {
 
     try {
       const result = fn()
-      return { result, dependencies: this.#activeCollector }
+      return { result, deps: this.#activeCollector }
     } finally {
       // 恢复之前的收集器
       this.#activeCollector = previousCollector
-    }
-  }
-
-  /**
-   * ## 记录单个依赖关系
-   *
-   * @private
-   */
-  static #recordDependency(collector: DependencyMap, target: AnyObject, property: AnyKey): void {
-    if (collector.has(target)) {
-      // 如果已经收集了该对象，则添加新属性
-      collector.get(target)!.add(property as keyof typeof target)
-    } else {
-      // 否则创建新的属性集合
-      collector.set(target, new Set([property as keyof typeof target]))
     }
   }
 }

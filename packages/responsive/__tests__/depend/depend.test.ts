@@ -5,34 +5,34 @@ describe('依赖收集器', () => {
   describe('基础依赖跟踪', () => {
     it('应该正确跟踪单个属性访问', () => {
       const target = { name: 'test' }
-      const { dependencies } = depCollect(() => {
+      const { deps } = depCollect(() => {
         depTrack(target, 'name')
       })
 
-      expect(dependencies.has(target)).toBe(true)
-      expect(dependencies.get(target)?.has('name')).toBe(true)
+      expect(deps.has(target)).toBe(true)
+      expect(deps.get(target)?.has('name')).toBe(true)
     })
 
     it('应该去重重复的属性访问', () => {
       const target = { count: 0 }
-      const { dependencies } = depCollect(() => {
+      const { deps } = depCollect(() => {
         depTrack(target, 'count')
         depTrack(target, 'count')
       })
 
-      expect(dependencies.get(target)?.size).toBe(1)
+      expect(deps.get(target)?.size).toBe(1)
     })
 
     it('应该跟踪多个对象的属性访问', () => {
       const target1 = { name: 'test1' }
       const target2 = { name: 'test2' }
-      const { dependencies } = depCollect(() => {
+      const { deps } = depCollect(() => {
         depTrack(target1, 'name')
         depTrack(target2, 'name')
       })
 
-      expect(dependencies.has(target1)).toBe(true)
-      expect(dependencies.has(target2)).toBe(true)
+      expect(deps.has(target1)).toBe(true)
+      expect(deps.has(target2)).toBe(true)
     })
   })
 
@@ -47,8 +47,8 @@ describe('依赖收集器', () => {
         depTrack(target, 'value')
       }, 'shared')
 
-      expect(collector1.dependencies.has(target)).toBe(true)
-      expect(collector2.dependencies.has(target)).toBe(true)
+      expect(collector1.deps.has(target)).toBe(true)
+      expect(collector2.deps.has(target)).toBe(true)
     })
   })
 
@@ -61,26 +61,26 @@ describe('依赖收集器', () => {
           depTrack(target, 'inner')
         }, 'exclusive')
 
-        expect(innerCollector.dependencies.get(target)?.has('inner')).toBe(true)
-        expect(innerCollector.dependencies.get(target)?.has('outer')).toBe(false)
+        expect(innerCollector.deps.get(target)?.has('inner')).toBe(true)
+        expect(innerCollector.deps.get(target)?.has('outer')).toBe(false)
       })
 
-      expect(outerCollector.dependencies.get(target)?.has('outer')).toBe(true)
+      expect(outerCollector.deps.get(target)?.has('outer')).toBe(true)
     })
   })
 
   describe('嵌套收集', () => {
     it('应该正确处理嵌套的依赖收集', () => {
       const target = { nested: { value: 0 } }
-      const { dependencies } = depCollect(() => {
+      const { deps } = depCollect(() => {
         depTrack(target, 'nested')
         depCollect(() => {
           depTrack(target.nested, 'value')
         })
       })
 
-      expect(dependencies.has(target)).toBe(true)
-      expect(dependencies.get(target)?.has('nested')).toBe(true)
+      expect(deps.has(target)).toBe(true)
+      expect(deps.get(target)?.has('nested')).toBe(true)
     })
   })
 })
