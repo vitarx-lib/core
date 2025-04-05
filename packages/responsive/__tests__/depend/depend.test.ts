@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { depCollect, depTrack } from '../../src/depend/index'
+import { depCollect, depTrack } from '../../src/index'
 
 describe('依赖收集器', () => {
   describe('基础依赖跟踪', () => {
@@ -54,7 +54,7 @@ describe('依赖收集器', () => {
 
   describe('独占模式收集', () => {
     it('应该只收集当前函数的依赖', () => {
-      const target = { value: 0 }
+      const target = { value: 0, inner: 0, outer: 0 }
       const outerCollector = depCollect(() => {
         depTrack(target, 'outer')
         const innerCollector = depCollect(() => {

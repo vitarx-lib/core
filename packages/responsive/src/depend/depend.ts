@@ -3,7 +3,7 @@
  *
  * 键为响应式对象，值为被访问的属性集合
  */
-export type DependencyMap<T extends object = object> = Map<T, Set<keyof T>>
+export type DependencyMap = Map<Record<AnyKey, any>, Set<AnyKey>>
 /**
  * 收集模式
  *
