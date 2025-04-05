@@ -1,4 +1,5 @@
-import { type CollectionResult, Depend } from './depend'
+import type { SubscriptionOptions } from '../observer/index'
+import { type CollectionResult, Depend, type DependSubscribeResult } from './depend'
 
 /**
  * ## 跟踪依赖关系
@@ -66,4 +67,40 @@ export function depCollect<T>(
   mode: 'shared' | 'exclusive' = 'shared'
 ): CollectionResult<T> {
   return Depend.collect(fn, mode)
+}
+
+/**
+ * ## 订阅依赖变化
+ *
+ * 执行effect函数并收集其中访问的所有响应式对象的属性，然后为这些属性建立订阅关系。
+ * 当这些属性发生变化时，会自动触发callback函数执行。
+ *
+ * @template R - effect函数的返回值类型
+ * @param {() => R} effect - 副作用函数，用于收集依赖。函数执行过程中访问的响应式对象属性都会被追踪
+ * @param {() => void} [callback] - 依赖变化时的回调函数。如果不提供，则默认使用effect函数作为回调
+ * @param {SubscriptionOptions} [options] - 订阅选项
+ * @returns {DependSubscribeResult<R>} 包含订阅结果的对象
+ * @returns {R} returns.result - effect函数的执行结果
+ * @returns {DependencyMap} returns.deps - 收集到的依赖映射
+ * @returns {Subscriber<VoidCallback>} returns.subscriber - 如果有依赖被收集，则返回订阅者对象
+ * @example
+ * ```ts
+ * const state = reactive({ count: 0 })
+ *
+ * // 订阅count属性的变化
+ * const { result } = subscribe(
+ *   () => state.count * 2, // effect函数，访问count属性并返回计算结果
+ *   () => console.log('count changed!') // 当count变化时触发的回调
+ * )
+ *
+ * console.log(result) // 输出: 0
+ * state.count++ // 触发回调，输出: count changed!
+ * ```
+ */
+export function depSubscribe<R>(
+  effect: () => R,
+  callback?: () => void,
+  options?: SubscriptionOptions
+): DependSubscribeResult<R> {
+  return Depend.subscribe(effect, callback, options)
 }
