@@ -191,6 +191,12 @@ export class Effect<ErrorSource extends string = string>
     }
   }
 
+  /**
+   * 触发回调
+   *
+   * @param type
+   * @protected
+   */
   protected triggerCallback(type: EffectInherentErrorSource): void {
     const callbacks = this.callbacks?.get(type)
     if (!callbacks) return
@@ -225,25 +231,4 @@ export class Effect<ErrorSource extends string = string>
     this.callbacks.set(type, callbackSet)
     return this
   }
-}
-
-/**
- * 检测是否为可处置副作用对象
- *
- * @param {any} obj - 要检测的对象
- * @returns {boolean} 如果对象实现了 EffectInterface，则返回 true，否则返回 false
- */
-export const isEffect = (obj: any): obj is EffectInterface => {
-  if (!obj || typeof obj !== 'object') return false
-  if (obj instanceof Effect) return true
-  return (
-    typeof obj.dispose === 'function' &&
-    typeof obj.onDispose === 'function' &&
-    typeof obj.pause === 'function' &&
-    typeof obj.onPause === 'function' &&
-    typeof obj.resume === 'function' &&
-    typeof obj.onResume === 'function' &&
-    typeof obj.onError === 'function' &&
-    typeof obj.getState === 'function'
-  )
 }

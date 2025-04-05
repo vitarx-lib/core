@@ -1,6 +1,7 @@
-import { Effect, isEffect } from './effect'
-import type { EffectInterface } from './effect-interface'
 import { getContext, runInContext } from '../context/index'
+import { Effect } from './effect'
+import type { EffectInterface } from './effect-interface'
+import { isEffect } from './helpers'
 
 /**
  * 作用域配置项接口，用于配置EffectScope实例的行为
