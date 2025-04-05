@@ -248,7 +248,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    * @private
    */
   private track(prop: AnyKey) {
-    Depend.track(this.proxy, prop)
+    Depend.track(this.proxy as Record<AnyKey, any>, prop)
   }
 }
 
