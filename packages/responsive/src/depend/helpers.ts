@@ -72,12 +72,14 @@ export function depCollect<T>(
 /**
  * ## 订阅依赖变化
  *
- * 执行effect函数并收集其中访问的所有响应式对象的属性，然后为这些属性建立订阅关系。
+ * 执行effect函数并收集其中访问的所有响应式信号对象的属性，然后为这些属性建立订阅关系。
  * 当这些属性发生变化时，会自动触发callback函数执行。
  *
- * @template R - effect函数的返回值类型
- * @param {() => R} effect - 副作用函数，用于收集依赖。函数执行过程中访问的响应式对象属性都会被追踪
- * @param {() => void} [callback] - 依赖变化时的回调函数。如果不提供，则默认使用effect函数作为回调
+ * @alias watchDepend - 兼容 Vitarx 2.0 api
+ * @alias watchEffect - 兼容 Vue api
+ * @template R - tracker函数的返回值类型
+ * @param {() => R} tracker - 任意函数，用于收集依赖。函数执行过程中访问的响应式信号对象属性都会被追踪
+ * @param {() => void} [callback] - 依赖变化时的回调函数。如果不提供，则默认使用tracker函数作为回调
  * @param {SubscriptionOptions} [options] - 订阅选项
  * @returns {DependSubscribeResult<R>} 包含订阅结果的对象
  * @returns {R} returns.result - effect函数的执行结果
@@ -98,9 +100,12 @@ export function depCollect<T>(
  * ```
  */
 export function depSubscribe<R>(
-  effect: () => R,
+  tracker: () => R,
   callback?: () => void,
   options?: SubscriptionOptions
 ): DependSubscribeResult<R> {
-  return Depend.subscribe(effect, callback, options)
+  return Depend.subscribe(tracker, callback, options)
 }
+
+export { depSubscribe as watchDepend }
+export { depSubscribe as watchEffect }
