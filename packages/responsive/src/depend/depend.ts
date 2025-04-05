@@ -3,7 +3,7 @@
  *
  * 键为响应式对象，值为被访问的属性集合
  */
-export type DependencyMap = Map<AnyObject, Set<AnyKey>>
+export type DependencyMap<T extends object = object> = Map<T, Set<keyof T>>
 /**
  * 收集模式
  *
@@ -37,10 +37,11 @@ export class Depend {
    * 记录响应式对象的属性访问，建立依赖关系。
    * 通常在响应式系统内部自动调用，无需手动调用。
    *
-   * @param {AnyObject} target - 响应式对象
-   * @param {AnyKey} property - 被访问的属性
+   * @template T - 跟踪的目标对象类型
+   * @param {T} target - 跟踪目标
+   * @param {keyof T} property - 被访问的属性
    */
-  static track(target: AnyObject, property: AnyKey): void {
+  static track<T extends object>(target: T, property: keyof T): void {
     // 如果有活跃的收集器，优先使用活跃收集器
     if (this.#activeCollector) {
       this.#recordDependency(this.#activeCollector, target, property)
@@ -113,10 +114,10 @@ export class Depend {
   static #recordDependency(collector: DependencyMap, target: AnyObject, property: AnyKey): void {
     if (collector.has(target)) {
       // 如果已经收集了该对象，则添加新属性
-      collector.get(target)!.add(property)
+      collector.get(target)!.add(property as keyof typeof target)
     } else {
       // 否则创建新的属性集合
-      collector.set(target, new Set([property]))
+      collector.set(target, new Set([property as keyof typeof target]))
     }
   }
 }
