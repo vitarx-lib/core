@@ -134,24 +134,24 @@ export class Depend {
   /**
    * 订阅依赖变化并自动追踪响应式对象的属性访问
    *
-   * 该方法会执行effect函数并收集其中访问的所有响应式对象的属性，然后为这些属性建立订阅关系。
-   * 当这些属性发生变化时，会自动触发callback函数执行（如果没有传入callback则会重新执行effect函数）。
+   * 该方法会执行tracker函数并收集其中访问的所有响应式对象的属性，然后为这些属性建立订阅关系。
+   * 当这些属性发生变化时，会自动触发callback函数执行（如果没有传入callback则会重新执行tracker函数）。
    *
-   * @template R - effect函数的返回值类型
-   * @param {() => R} effect - 副作用函数，用于收集依赖。函数执行过程中访问的响应式对象属性都会被追踪
-   * @param {() => void} [callback] - 依赖变化时的回调函数。如果不提供，则默认使用effect函数作为回调
+   * @template R - tracker函数的返回值类型
+   * @param {() => R} tracker - 副作用函数，用于收集依赖。函数执行过程中访问的响应式对象属性都会被追踪
+   * @param {() => void} [callback] - 依赖变化时的回调函数。如果不提供，则默认使用tracker函数作为回调
    * @param {SubscriptionOptions} [options] - 订阅选项
    * @returns {DependSubscribeResult<R>} 包含订阅结果的对象
-   * @returns {R} returns.result - effect函数的执行结果
+   * @returns {R} returns.result - tracker函数的执行结果
    * @returns {DependencyMap} returns.deps - 收集到的依赖映射
    * @returns {Subscriber<VoidCallback>} returns.subscriber - 如果有依赖被收集，则返回订阅者对象
-   *
+   * @throws {TypeError} 如果参数类型不符合要求，则抛出TypeError异常
    * @example
    * const state = reactive({ count: 0 })
    *
    * // 订阅count属性的变化
    * const { result } = Depend.subscribe(
-   *   () => state.count * 2, // effect函数，访问count属性并返回计算结果
+   *   () => state.count * 2, // tracker函数，访问count属性并返回计算结果
    *   () => console.log('count changed!') // 当count变化时触发的回调
    * )
    *
@@ -159,17 +159,17 @@ export class Depend {
    * state.count++ // 触发回调，输出: count changed!
    */
   static subscribe<R>(
-    effect: () => R,
+    tracker: () => R,
     callback?: () => void,
     options?: SubscriptionOptions
   ): DependSubscribeResult<R> {
-    if (!isFunction(effect)) {
+    if (!isFunction(tracker)) {
       throw new TypeError('effect argument must be a callable function')
     }
-    const { deps, result } = Depend.collect(effect)
+    const { deps, result } = Depend.collect(tracker)
     let subscriber: Subscriber<VoidCallback> | undefined
     if (deps.size > 0) {
-      callback = callback ?? effect
+      callback = callback ?? tracker
       if (typeof callback !== 'function') {
         throw new TypeError('callback argument must be a callable function')
       }

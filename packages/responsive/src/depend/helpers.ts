@@ -72,7 +72,7 @@ export function depCollect<T>(
 /**
  * ## 订阅依赖变化
  *
- * 执行effect函数并收集其中访问的所有响应式信号对象的属性，然后为这些属性建立订阅关系。
+ * 执行tracker函数并收集其中访问的所有响应式信号对象的属性，然后为这些属性建立订阅关系。
  * 当这些属性发生变化时，会自动触发callback函数执行。
  *
  * @alias watchDepend - 兼容 Vitarx 2.0 api
@@ -85,6 +85,7 @@ export function depCollect<T>(
  * @returns {R} returns.result - effect函数的执行结果
  * @returns {DependencyMap} returns.deps - 收集到的依赖映射
  * @returns {Subscriber<VoidCallback>} returns.subscriber - 如果有依赖被收集，则返回订阅者对象
+ * @throws {TypeError} 如果参数类型不符合要求，则抛出TypeError异常
  * @example
  * ```ts
  * const state = reactive({ count: 0 })
