@@ -132,15 +132,4 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
     this.#notificationCount = 0
     return true
   }
-
-  /**
-   * 添加清理回调
-   *
-   * 别名方法，与onDispose保持一致，但名称更符合语义
-   *
-   * @param {Function} callback - 清理回调函数
-   */
-  onCleanup(callback: () => void): void {
-    this.onDispose(callback)
-  }
 }

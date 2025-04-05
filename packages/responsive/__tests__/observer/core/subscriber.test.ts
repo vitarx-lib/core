@@ -135,7 +135,7 @@ describe('Subscriber', () => {
       const cleanupFn = vi.fn()
       const subscriber = new Subscriber(callback)
 
-      subscriber.onCleanup(cleanupFn)
+      subscriber.onDispose(cleanupFn)
       subscriber.dispose()
 
       expect(cleanupFn).toHaveBeenCalled()

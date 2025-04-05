@@ -268,7 +268,7 @@ export class Observer {
       )
 
       // 订阅者销毁时取消订阅
-      subscriber.onCleanup(unsubscribe)
+      subscriber.onDispose(unsubscribe)
     }
 
     return subscriber
@@ -330,7 +330,7 @@ export class Observer {
     }
 
     // 订阅者销毁时取消所有订阅
-    subscriber.onCleanup(() => {
+    subscriber.onDispose(() => {
       for (const target of targets) {
         this.removeSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, options?.batch)
       }
@@ -418,7 +418,7 @@ export class Observer {
 
       // 如果是Subscriber实例，添加清理回调
       if (subscriber instanceof Subscriber) {
-        subscriber.onCleanup(() =>
+        subscriber.onDispose(() =>
           this.removeSubscriber(originalTarget, property, subscriber, batch)
         )
       }
