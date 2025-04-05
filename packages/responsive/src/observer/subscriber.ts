@@ -29,11 +29,11 @@ export interface SubscriberOptions {
  *
  * 负责管理订阅回调和生命周期，支持限制通知次数和作用域管理。
  *
- * @template C - 回调函数类型
+ * @template CB - 回调函数类型
  */
-export class Subscriber<C extends AnyCallback = AnyCallback> extends Effect<'notify'> {
+export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'notify'> {
   // 订阅回调函数
-  #callback?: C
+  #callback?: CB
   // 限制触发次数
   readonly #limit: number
   // 已触发次数
@@ -42,11 +42,14 @@ export class Subscriber<C extends AnyCallback = AnyCallback> extends Effect<'not
   /**
    * 创建订阅者
    *
-   * @param {C} callback - 回调函数
-   * @param {SubscriberOptions} options - 配置选项
+   * @param {CB} callback - 回调函数
+   * @param {SubscriberOptions} [options] - 配置选项
+   * @param {number} [options.limit=0] - 限制触发次数，默认为0（不限制）
+   * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域，默认为true
    */
-  constructor(callback: C, { limit = 0, scope = true }: SubscriberOptions = {}) {
+  constructor(callback: CB, options: SubscriberOptions = {}) {
     super()
+    const { limit = 0, scope = true } = options
     this.#callback = callback
     this.#limit = limit
 
@@ -91,7 +94,7 @@ export class Subscriber<C extends AnyCallback = AnyCallback> extends Effect<'not
    * @param {any[]} params - 传递给回调函数的参数
    * @returns {boolean} - 返回订阅者是否仍然活跃
    */
-  trigger(...params: Parameters<C>): boolean {
+  trigger(...params: Parameters<CB>): boolean {
     // 如果已销毁或没有回调函数，返回false
     if (this.isDeprecated || !this.#callback) return false
 
