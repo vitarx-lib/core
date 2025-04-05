@@ -11,7 +11,7 @@ export const ALL_PROPERTIES_SYMBOL = Symbol('ALL_PROPERTIES_SYMBOL')
 export type ALL_PROPERTIES_SYMBOL = typeof ALL_PROPERTIES_SYMBOL
 
 /**
- * 回调函数类型
+ * 监听目标变化时的回调函数
  *
  * 用于处理对象属性变更的回调函数类型。
  *
@@ -19,7 +19,7 @@ export type ALL_PROPERTIES_SYMBOL = typeof ALL_PROPERTIES_SYMBOL
  * @param {Array<keyof T>} properties - 变更的属性名数组
  * @param {T} target - 变更的目标对象
  */
-export type ObserverCallback<T extends AnyObject> = (properties: Array<keyof T>, target: T) => void
+export type ChangeCallback<T extends AnyObject> = (properties: Array<keyof T>, target: T) => void
 
 /**
  * 目标对象标识符
@@ -196,7 +196,7 @@ export class Observer {
    * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
    * @returns {Subscriber<CB>} - 订阅者实例
    */
-  static subscribe<T extends AnyObject, CB extends ObserverCallback<T>>(
+  static subscribe<T extends AnyObject, CB extends ChangeCallback<T>>(
     target: T,
     callback: CB | Subscriber<CB>,
     options?: SubscriptionOptions
@@ -222,7 +222,7 @@ export class Observer {
    * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
    * @returns {Subscriber<CB>} - 订阅者实例
    */
-  static subscribeProperty<T extends AnyObject, CB extends ObserverCallback<T>>(
+  static subscribeProperty<T extends AnyObject, CB extends ChangeCallback<T>>(
     target: T,
     property: keyof T,
     callback: CB | Subscriber<CB>,
@@ -250,7 +250,7 @@ export class Observer {
    * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
    * @returns {Subscriber<CB>} - 订阅者实例
    */
-  static subscribeProperties<T extends AnyObject, CB extends ObserverCallback<T>>(
+  static subscribeProperties<T extends AnyObject, CB extends ChangeCallback<T>>(
     target: T,
     properties: Array<keyof T> | Set<keyof T>,
     callback: CB | Subscriber<CB>,
@@ -326,7 +326,7 @@ export class Observer {
    * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名，默认为全局变更标识符
    * @returns {() => void} - 取消订阅函数
    */
-  static addSyncSubscriber<T extends AnyObject, CB extends ObserverCallback<T>>(
+  static addSyncSubscriber<T extends AnyObject, CB extends ChangeCallback<T>>(
     target: T,
     callback: CB,
     property: keyof T | ALL_PROPERTIES_SYMBOL = this.ALL_PROPERTIES_SYMBOL
@@ -348,7 +348,7 @@ export class Observer {
    * @param {SubscriptionOptions} [options] - 订阅选项
    * @returns {Subscriber<CB>} - 订阅者实例
    */
-  static subscribes<T extends AnyObject, CB extends ObserverCallback<T>>(
+  static subscribes<T extends AnyObject, CB extends ChangeCallback<T>>(
     targets: Set<T> | T[],
     callback: CB | Subscriber<CB>,
     options?: SubscriptionOptions
