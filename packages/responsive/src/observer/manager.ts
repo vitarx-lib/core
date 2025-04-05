@@ -210,7 +210,7 @@ export class Observer {
    * @param {SubscriptionOptions} [options] - 订阅选项
    * @returns {Subscriber<C>} - 订阅者实例
    */
-  static subscribeMultipleProps<T extends AnyObject, C extends AnyCallback>(
+  static subscribeMultipleProperty<T extends AnyObject, C extends AnyCallback>(
     target: T,
     properties: Array<keyof T> | Set<keyof T>,
     callback: C | Subscriber<C>,

@@ -102,7 +102,7 @@ describe('依赖触发器', () => {
       const callback = () => {
         callCount++
       }
-      ObserverManager.subscribeMultipleProps(target, ['a', 'b'], callback, { batch: true })
+      ObserverManager.subscribeMultipleProperty(target, ['a', 'b'], callback, { batch: true })
       ObserverManager.notify(target, ['a', 'b'])
       expect(callCount).toBe(0)
       await Promise.resolve()
