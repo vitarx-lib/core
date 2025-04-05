@@ -182,11 +182,14 @@ export function throttle<T extends AnyCallback>(
  * - 当需要确保一系列连续调用只触发一次回调时，例如批量处理多个请求或事件。
  * - 合并多次调用的参数，以减少不必要地重复操作。
  */
-export function microTaskDebouncedCallback<T extends AnyCallback>(
+export function microTaskDebouncedCallback<
+  T extends AnyCallback,
+  Params extends any[] = Parameters<T>
+>(
   callback: T,
-  handleParams?: (last: Parameters<T>, prev: Parameters<T> | null) => Parameters<T>
+  handleParams?: (last: Parameters<T>, prev: Params | null) => Params
 ): FnCallback<Parameters<T>> {
-  let taskParams: Parameters<T> | null = null
+  let taskParams: Params | null = null
 
   return (...args: Parameters<T>) => {
     if (taskParams === null) {
@@ -196,6 +199,8 @@ export function microTaskDebouncedCallback<T extends AnyCallback>(
         callback.apply(null, requestParams)
       })
     }
-    taskParams = typeof handleParams === 'function' ? handleParams(args, taskParams) : args
+    taskParams = (
+      typeof handleParams === 'function' ? handleParams(args, taskParams) : args
+    ) as Params
   }
 }
