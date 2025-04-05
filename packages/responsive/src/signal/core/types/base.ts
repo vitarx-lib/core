@@ -1,6 +1,4 @@
 import { GET_RAW_TARGET_SYMBOL, NOT_SIGNAL_SYMBOL, SIGNAL_SYMBOL } from '../constants'
-import type { ProxySignal } from './proxy'
-import type { RefSignal } from './ref'
 
 /**
  * 用于判断旧值和新值是否相等的函数
@@ -58,11 +56,3 @@ export interface BaseSignal<T = any> {
 export type NotSignal<T extends AnyObject = AnyObject> = T & {
   readonly [NOT_SIGNAL_SYMBOL]: true
 }
-
-/**
- * 信号转换为原始对象的类型
- *
- * @template T - 信号类型
- */
-export type SignalToRaw<T> =
-  T extends RefSignal<infer U> ? U : T extends ProxySignal<infer U> ? U : T

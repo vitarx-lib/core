@@ -1,6 +1,13 @@
 import { isObject } from '@vitarx/utils'
 import { GET_RAW_TARGET_SYMBOL } from '../constants'
-import type { SignalToRaw } from '../types/index'
+import type { ProxySignal, RefSignal } from '../types/index'
+
+/**
+ * 信号转换为原始对象的类型
+ *
+ * @template T - 信号类型
+ */
+export type SignalToRaw<T> = T extends RefSignal<infer U> | ProxySignal<infer U> ? U : T
 
 /**
  * 将响应式信号对象转换为其原始值。
