@@ -174,11 +174,13 @@ export class Depend {
         throw new TypeError('callback argument must be a callable function')
       }
       subscriber = new Subscriber(
-        options?.batch === false ? callback : microTaskDebouncedCallback(callback),
+        options?.batch === false
+          ? () => callback!()
+          : microTaskDebouncedCallback(() => callback!()),
         options
       )
       for (const [proxy, props] of deps) {
-        Observer.subscribeMultipleProperty(proxy, props, subscriber, { batch: false })
+        Observer.subscribeProperties(proxy, props, subscriber, { batch: false })
       }
     }
     return { subscriber, result, deps }
