@@ -9,6 +9,18 @@ import { Subscriber, type SubscriberOptions } from './subscriber.js'
  */
 export const ALL_PROPERTIES_SYMBOL = Symbol('ALL_PROPERTIES_SYMBOL')
 export type ALL_PROPERTIES_SYMBOL = typeof ALL_PROPERTIES_SYMBOL
+
+/**
+ * 回调函数类型
+ *
+ * 用于处理对象属性变更的回调函数类型。
+ *
+ * @template T - 目标对象类型
+ * @param {Array<keyof T>} properties - 变更的属性名数组
+ * @param {T} target - 变更的目标对象
+ */
+export type ObserverCallback<T extends AnyObject> = (properties: Array<keyof T>, target: T) => void
+
 /**
  * 目标对象标识符
  *
@@ -160,7 +172,7 @@ export class Observer {
    */
   static hasSubscribers<T extends AnyObject>(
     target: T,
-    property: keyof T | ALL_PROPERTIES_SYMBOL = this.ALL_PROPERTIES_SYMBOL
+    property: keyof T | ALL_PROPERTIES_SYMBOL = ALL_PROPERTIES_SYMBOL
   ): boolean {
     target = this.getOriginalTarget(target)
     return !!(
@@ -170,29 +182,54 @@ export class Observer {
   }
 
   /**
-   * 注册订阅者
+   * 订阅对象变化
    *
-   * 为指定对象的属性注册变更订阅，返回可用于管理订阅生命周期的订阅者实例。
+   * 为指定对象注册变更订阅，返回可用于管理订阅生命周期的订阅者实例。
    *
    * @template T - 目标对象类型
-   * @template C - 回调函数类型
+   * @template CB - 回调函数类型
    * @param {T} target - 目标对象
-   * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
-   * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名，默认为全局变更标识符
+   * @param {CB|Subscriber<CB>} callback - 回调函数或订阅者实例
    * @param {SubscriptionOptions} [options] - 订阅选项
    * @param {boolean} [options.batch=true] - 是否使用批处理模式
    * @param {number} [options.limit=0] - 触发次数限制，0表示无限制
    * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
-   * @returns {Subscriber<C>} - 订阅者实例
+   * @returns {Subscriber<CB>} - 订阅者实例
    */
-  static subscribe<T extends AnyObject, C extends AnyCallback>(
+  static subscribe<T extends AnyObject, CB extends ObserverCallback<T>>(
     target: T,
-    callback: C | Subscriber<C>,
-    property: keyof T | ALL_PROPERTIES_SYMBOL = this.ALL_PROPERTIES_SYMBOL,
+    callback: CB | Subscriber<CB>,
     options?: SubscriptionOptions
-  ): Subscriber<C> {
+  ): Subscriber<CB> {
     const subscriber = this.createSubscriber(callback, options)
-    this.addSubscriber(target, property, subscriber, options?.batch)
+    this.addSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, { batch: options?.batch })
+    return subscriber
+  }
+
+  /**
+   * 订阅对象属性变更
+   *
+   * 为指定对象的属性注册变更订阅，返回可用于管理订阅生命周期的订阅者实例。
+   *
+   * @template T - 目标对象类型
+   * @template CB - 回调函数类型
+   * @param {T} target - 目标对象
+   * @param {CB|Subscriber<CB>} callback - 回调函数或订阅者实例
+   * @param {keyof T} property - 属性名。
+   * @param {SubscriptionOptions} [options] - 订阅选项
+   * @param {boolean} [options.batch=true] - 是否使用批处理模式
+   * @param {number} [options.limit=0] - 触发次数限制，0表示无限制
+   * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
+   * @returns {Subscriber<CB>} - 订阅者实例
+   */
+  static subscribeProperty<T extends AnyObject, CB extends ObserverCallback<T>>(
+    target: T,
+    property: keyof T,
+    callback: CB | Subscriber<CB>,
+    options?: SubscriptionOptions
+  ): Subscriber<CB> {
+    const subscriber = this.createSubscriber(callback, options)
+    this.addSubscriber(target, property, subscriber, { batch: options?.batch })
     return subscriber
   }
 
@@ -203,19 +240,22 @@ export class Observer {
    * 内部会优化处理方式，避免重复通知。
    *
    * @template T - 目标对象类型
-   * @template C - 回调函数类型
+   * @template CB - 回调函数类型
    * @param {T} target - 目标对象
    * @param {Array<keyof T>|Set<keyof T>} properties - 属性名集合
-   * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
+   * @param {CB|Subscriber<CB>} callback - 回调函数或订阅者实例
    * @param {SubscriptionOptions} [options] - 订阅选项
-   * @returns {Subscriber<C>} - 订阅者实例
+   * @param {boolean} [options.batch=true] - 是否使用批处理模式
+   * @param {number} [options.limit=0] - 触发次数限制，0表示无限制
+   * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
+   * @returns {Subscriber<CB>} - 订阅者实例
    */
-  static subscribeMultipleProperty<T extends AnyObject, C extends AnyCallback>(
+  static subscribeProperties<T extends AnyObject, CB extends ObserverCallback<T>>(
     target: T,
     properties: Array<keyof T> | Set<keyof T>,
-    callback: C | Subscriber<C>,
+    callback: CB | Subscriber<CB>,
     options?: SubscriptionOptions
-  ): Subscriber<C> {
+  ): Subscriber<CB> {
     if (!target || typeof target !== 'object') {
       throw new TypeError('Target must be an object')
     }
@@ -234,7 +274,7 @@ export class Observer {
     // 对单个属性或禁用批处理时，为每个属性单独添加订阅
     if (options?.batch === false || properties.size === 1) {
       for (const property of properties) {
-        this.addSubscriber(target, property, subscriber, options?.batch)
+        this.addSubscriber(target, property, subscriber, { batch: options?.batch })
       }
     } else {
       // 使用批处理模式，创建一个过滤器回调
@@ -244,11 +284,10 @@ export class Observer {
       const unsubscribe = this.addSyncSubscriber(
         target,
         microTaskDebouncedCallback(
-          (changedProps: AnyKey[]) => {
+          (properties: Array<keyof T>) => {
             const relevantChanges: AnyKey[] = []
-
             // 过滤出订阅的属性
-            for (const prop of new Set(changedProps)) {
+            for (const prop of new Set(properties)) {
               if (propertySet.has(prop)) {
                 relevantChanges.push(prop)
               }
@@ -281,18 +320,18 @@ export class Observer {
    * 每次属性变更都会立即触发回调，而不会等待微任务队列处理。
    *
    * @template T - 目标对象类型
-   * @template C - 回调函数类型
+   * @template CB - 回调函数类型
    * @param {T} target - 目标对象
-   * @param {C} callback - 回调函数
+   * @param {CB} callback - 回调函数
    * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名，默认为全局变更标识符
    * @returns {() => void} - 取消订阅函数
    */
-  static addSyncSubscriber<T extends AnyObject, C extends AnyCallback>(
+  static addSyncSubscriber<T extends AnyObject, CB extends ObserverCallback<T>>(
     target: T,
-    callback: C,
+    callback: CB,
     property: keyof T | ALL_PROPERTIES_SYMBOL = this.ALL_PROPERTIES_SYMBOL
   ): () => void {
-    this.addSubscriber(target, property, callback, false)
+    this.addSubscriber(target, property, callback, { batch: false })
     return () => this.removeSubscriber(target, property, callback, false)
   }
 
@@ -303,17 +342,17 @@ export class Observer {
    * 返回的订阅者实例可用于统一管理所有订阅。
    *
    * @template T - 目标对象类型
-   * @template C - 回调函数类型
+   * @template CB - 回调函数类型
    * @param {Set<T>|T[]} targets - 目标对象集合
-   * @param {C|Subscriber<C>} callback - 回调函数或订阅者实例
+   * @param {CB|Subscriber<CB>} callback - 回调函数或订阅者实例
    * @param {SubscriptionOptions} [options] - 订阅选项
-   * @returns {Subscriber<C>} - 订阅者实例
+   * @returns {Subscriber<CB>} - 订阅者实例
    */
-  static subscribeToMultiple<T extends AnyObject, C extends AnyCallback>(
+  static subscribes<T extends AnyObject, CB extends ObserverCallback<T>>(
     targets: Set<T> | T[],
-    callback: C | Subscriber<C>,
+    callback: CB | Subscriber<CB>,
     options?: SubscriptionOptions
-  ): Subscriber<C> {
+  ): Subscriber<CB> {
     if (Array.isArray(targets)) {
       targets = new Set(targets)
     }
@@ -326,7 +365,10 @@ export class Observer {
 
     // 为每个目标添加订阅
     for (const target of targets) {
-      this.addSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, options?.batch)
+      this.addSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, {
+        batch: options?.batch,
+        autoRemove: false
+      })
     }
 
     // 订阅者销毁时取消所有订阅
@@ -382,15 +424,22 @@ export class Observer {
    * @param {T} target - 目标对象
    * @param {keyof T | ALL_PROPERTIES_SYMBOL} property - 属性名
    * @param {Subscriber<C>|C} subscriber - 订阅者或回调函数
-   * @param {boolean} [batch=true] - 是否使用批处理模式
+   * @param {object} [options] - 是否使用批处理模式
+   * @param {boolean} [options.batch=true] - 是否使用批处理模式
+   * @param {boolean} [options.autoRemove=true] - 是否自动移除订阅者
+   * @param options
    * @returns {void}
    */
   static addSubscriber<T extends AnyObject, C extends AnyCallback>(
     target: T,
     property: keyof T | ALL_PROPERTIES_SYMBOL,
     subscriber: Subscriber<C> | C,
-    batch: boolean = true
+    options?: {
+      batch?: boolean
+      autoRemove?: boolean
+    }
   ): void {
+    const { batch = true, autoRemove = true } = options || {}
     // 获取存储
     const store = this.getSubscriberStore(batch)
     // 获取原始目标对象
@@ -417,7 +466,7 @@ export class Observer {
       propertyMap.get(property)!.add(subscriber)
 
       // 如果是Subscriber实例，添加清理回调
-      if (subscriber instanceof Subscriber) {
+      if (autoRemove && subscriber instanceof Subscriber) {
         subscriber.onDispose(() =>
           this.removeSubscriber(originalTarget, property, subscriber, batch)
         )
