@@ -1,4 +1,5 @@
 import { isArray, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
+import { isObject } from '@vitarx/utils/src/index'
 import { Subscriber, type SubscriberOptions } from './subscriber.js'
 
 /**
@@ -358,13 +359,18 @@ export class Observer {
     }
 
     if (!(targets instanceof Set) || targets.size === 0) {
-      throw new TypeError('Targets must be a non-empty array or set')
+      throw new TypeError('Targets must be a non-empty array or set collection')
     }
 
     const subscriber = this.createSubscriber(callback, options)
 
     // 为每个目标添加订阅
     for (const target of targets) {
+      // 跳过非对象目标
+      if (!isObject(target)) {
+        targets.delete(target)
+        continue
+      }
       this.addSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, {
         batch: options?.batch,
         autoRemove: false
