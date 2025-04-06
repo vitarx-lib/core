@@ -1,7 +1,7 @@
 import {
   DEEP_SIGNAL_SYMBOL,
-  GET_RAW_TARGET_SYMBOL,
   NOT_SIGNAL_SYMBOL,
+  SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL
 } from '../constants'
 
@@ -54,7 +54,7 @@ export type SignalOptions<Deep extends boolean = boolean> = {
 export interface BaseSignal<Raw = any, Deep extends boolean = boolean> {
   readonly [SIGNAL_SYMBOL]: true
   readonly [DEEP_SIGNAL_SYMBOL]: Deep
-  readonly [GET_RAW_TARGET_SYMBOL]?: Raw
+  readonly [SIGNAL_RAW_VALUE_SYMBOL]?: Raw
 }
 
 /**
