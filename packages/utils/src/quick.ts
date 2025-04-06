@@ -185,13 +185,10 @@ export function throttle<T extends AnyCallback>(
 export function microTaskDebouncedCallback<
   T extends AnyCallback,
   Params extends any[] = Parameters<T>
->(
-  callback: T,
-  handleParams?: (last: Parameters<T>, prev: Params | null) => Params
-): FnCallback<Parameters<T>> {
+>(callback: T, handleParams?: (last: Parameters<T>, prev: Params | null) => Params): T {
   let taskParams: Params | null = null
 
-  return (...args: Parameters<T>) => {
+  return ((...args: Parameters<T>) => {
     if (taskParams === null) {
       Promise.resolve().then(() => {
         const requestParams = taskParams!
@@ -202,5 +199,5 @@ export function microTaskDebouncedCallback<
     taskParams = (
       typeof handleParams === 'function' ? handleParams(args, taskParams) : args
     ) as Params
-  }
+  }) as T
 }
