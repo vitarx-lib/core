@@ -3,8 +3,11 @@ import type { BaseSignal } from './base'
 
 /**
  * 引用信号的接口
+ *
+ * @template Value - 信号的值类型
+ * @template Raw - 信号的原始值类型，默认为Value类型
  */
-export interface RefSignal<Value = any, RAW = Value> extends BaseSignal<RAW> {
+export interface RefSignal<Value = any, Raw = Value> extends BaseSignal<Raw> {
   readonly [REF_SIGNAL_SYMBOL]: true
 
   /**

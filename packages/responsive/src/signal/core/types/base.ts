@@ -47,17 +47,22 @@ export type SignalOptions<Deep extends boolean = boolean> = {
 
 /**
  * 响应式信号的基础接口
+ *
+ * @template Raw - 信号原始值类型
+ * @template Deep - 是否启用深层响应式转换
  */
-export interface BaseSignal<RAW = any, Deep extends boolean = boolean> {
+export interface BaseSignal<Raw = any, Deep extends boolean = boolean> {
   readonly [SIGNAL_SYMBOL]: true
   readonly [DEEP_SIGNAL_SYMBOL]: Deep
-  readonly [GET_RAW_TARGET_SYMBOL]?: RAW
+  readonly [GET_RAW_TARGET_SYMBOL]?: Raw
 }
 
 /**
  * 非响应式信号
  *
  * 具有 `NOT_SIGNAL_SYMBOL` 属性标记的对象不会被识别或构造为响应式信号。
+ *
+ * @template T - 对象的类型
  */
 export type NotSignal<T extends AnyObject = AnyObject> = T & {
   readonly [NOT_SIGNAL_SYMBOL]: true
