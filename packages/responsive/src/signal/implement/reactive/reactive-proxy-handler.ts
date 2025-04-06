@@ -4,12 +4,12 @@ import { Observer } from '../../../observer/index'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
-  GET_RAW_TARGET_SYMBOL,
   isMarkNotSignal,
   isProxySignal,
   isRefSignal,
   isSignal,
   PROXY_SIGNAL_SYMBOL,
+  SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
@@ -123,7 +123,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
     if (typeof prop === 'symbol') {
       if (ReactiveProxyHandler.staticSymbol.includes(SIGNAL_SYMBOL)) return true
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
-      if (prop === GET_RAW_TARGET_SYMBOL) return target
+      if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
       if (prop === Observer.TARGET_SYMBOL) return this.proxy
     } else if (typeof prop === 'string' && this.collectionMethodProxy) {
       // 处理集合写入方法

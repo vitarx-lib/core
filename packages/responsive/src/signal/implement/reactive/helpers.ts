@@ -1,4 +1,4 @@
-import { GET_RAW_TARGET_SYMBOL, type SignalOptions } from '../../core/index'
+import { SIGNAL_RAW_VALUE_SYMBOL, type SignalOptions } from '../../core/index'
 import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
 import type { Reactive, ShallowReactive, UnReactive } from './types'
 
@@ -114,5 +114,5 @@ export function isReactive(val: unknown): boolean {
  * ```
  */
 export function unReactive<T extends object>(proxy: T | Reactive<T>): UnReactive<T> {
-  return (Reflect.get(proxy, GET_RAW_TARGET_SYMBOL) ?? proxy) as UnReactive<T>
+  return (Reflect.get(proxy, SIGNAL_RAW_VALUE_SYMBOL) ?? proxy) as UnReactive<T>
 }

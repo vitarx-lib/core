@@ -3,12 +3,12 @@ import { Depend } from '../../../depend/index'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
-  GET_RAW_TARGET_SYMBOL,
   isMarkNotSignal,
   isRefSignal,
   isSignal,
   REF_SIGNAL_SYMBOL,
   type RefSignal,
+  SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
@@ -114,7 +114,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
    * @private
    * @returns {T} 原始值
    */
-  get [GET_RAW_TARGET_SYMBOL](): T {
+  get [SIGNAL_RAW_VALUE_SYMBOL](): T {
     return this._value
   }
 
