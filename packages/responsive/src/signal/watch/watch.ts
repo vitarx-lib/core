@@ -101,7 +101,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
       subscriptionOptions
     )
     if (subscriber) {
-      if (clone) oldValue = deepClone(result)
+      oldValue = copyValue(result, undefined, clone)
       return subscriber.onDispose(clean)
     }
     target = result
