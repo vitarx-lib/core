@@ -172,7 +172,7 @@ export class Computed<T> implements ValueProxy<T> {
               Observers.trigger(this, 'value' as any)
             }
           }),
-          { scope: false }
+          { scope: this.#options.autoDestroy }
         )
         deps.forEach((props, proxy) => {
           Observers.registerProps(proxy, props, this.#listener!, { batch: false })
