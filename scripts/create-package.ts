@@ -1,6 +1,6 @@
-import { resolve } from 'node:path'
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import chalk from 'chalk'
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const args = process.argv.slice(2)
 if (args.length !== 1) {
@@ -33,12 +33,12 @@ const packageJson = {
     url: 'git+https://github.com/vitarx-lib/core',
     directory: `packages/${packageName}`
   },
-  main: 'index.mjs',
+  main: 'dist/index.js',
   module: 'dist/index.js',
   types: 'dist/index.d.ts',
   unpkg: 'dist/index.iife.js',
   jsdelivr: 'dist/index.iife.js',
-  files: ['dist', 'LICENSE', 'index.mjs', 'README.md'],
+  files: ['dist', 'LICENSE', 'README.md'],
   exports: {
     '.': {
       import: {
@@ -54,12 +54,6 @@ const packageJson = {
 }
 
 writeFileSync(resolve(packagePath, 'package.json'), JSON.stringify(packageJson, null, 2))
-
-// 创建 index.mjs
-writeFileSync(
-  resolve(packagePath, 'index.mjs'),
-  "// noinspection JSFileReferences\nexport * from './dist/index.js'\n"
-)
 
 // 创建 src/index.ts
 writeFileSync(resolve(packagePath, 'src', 'index.ts'), '// Add exports here\n')
