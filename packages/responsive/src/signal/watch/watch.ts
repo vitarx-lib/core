@@ -1,6 +1,6 @@
-import { deepClone, isFunction } from '@vitarx/utils'
+import { deepClone, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
-import { Observer, Subscriber } from '../../observer/index'
+import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
 import { isRefSignal, isSignal, type SignalToRaw } from '../core/index'
 import type { WatchOptions } from './types'
 
@@ -144,4 +144,40 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
     return Observer.subscribe(target, subscriber, subscriptionOptions).onDispose(clean)
   }
   throw new TypeError('watch: origin is not a signal or valid side effect function')
+}
+
+/**
+ * ## 监听多个信号变化
+ *
+ * @example
+ * ```ts
+ * import { watchChanges,reactive,ref,microTaskDebouncedCallback } from 'vitarx'
+ * const reactiveObj = reactive({a:1})
+ * const refObj = ref({a:1})
+ * watchChanges([reactiveObj,refObj],(props,signal)=>{
+ *    // 其中任意一个对象变化都会触发此回调
+ *    // signal是变化的对象，props是变化的属性名数组
+ * })
+ * reactiveObj.a++
+ * refObj.value.a++
+ * refObj.value.a++
+ * // 上面这样修改数据，回调会触发两次，因为修改了不同的对象
+ *
+ * // 如果需要只触发一次，且不需要知道哪个对象变化了，可以使用微任务防抖函数实现
+ * watchChanges([reactiveObj,refObj],microTaskDebouncedCallback(()=>{
+ *    console.log('这样可以确保在同一个微任务中只执行一次回调')
+ * }))
+ * ```
+ *
+ * @param targets
+ * @param {function} callback - 回调函数
+ * @param {object} options - 监听器配置选项
+ * @returns {object} - 监听器实例
+ */
+export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
+  targets: Array<T> | Set<T>,
+  callback: CB,
+  options?: WatchOptions
+): Subscriber<CB> {
+  return Observer.subscribes(targets, microTaskDebouncedCallback(callback), options)
 }
