@@ -222,5 +222,5 @@ export function isComputed(val: any): val is Computed<any> {
  * @param computed - 如果传入的是`Computed`对象则返回其value属性值，否则返回原值
  */
 export function unComputed<T>(computed: T | Computed<T>): T {
-  return isComputed(computed) ? computed.stop() : computed
+  return isComputed(computed) ? computed.stop() : computed as T
 }
