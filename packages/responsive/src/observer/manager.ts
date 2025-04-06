@@ -1,5 +1,4 @@
-import { isArray, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
-import { isObject } from '@vitarx/utils/src/index'
+import { isArray, isFunction, isObject, microTaskDebouncedCallback } from '@vitarx/utils'
 import { Subscriber, type SubscriberOptions } from './subscriber.js'
 
 /**
