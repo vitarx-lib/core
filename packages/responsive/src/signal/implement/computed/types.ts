@@ -61,4 +61,15 @@ export type ComputedOptions<T> = {
    * @default true
    */
   scope?: boolean
+  /**
+   * 是否使用批处理模式
+   *
+   * 启用批处理时，多个连续的变更会合并为一次计算，提高性能。
+   * 禁用批处理时，每次变更都会重新运行getter计算，适用于需要实时响应的场景。
+   *
+   * 注意：禁用批处理可能导致性能问题。
+   *
+   * @default true
+   */
+  batch?: boolean
 }

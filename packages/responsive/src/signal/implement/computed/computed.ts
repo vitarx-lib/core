@@ -78,6 +78,7 @@ export class Computed<T> implements RefSignal<T> {
    * @param {(newValue: T) => void} [options.setter] - 计算属性的setter函数，用于处理对计算属性的赋值操作
    * @param {boolean} [options.immediate=false] - 是否立即计算，默认为false，首次访问时才计算
    * @param {boolean} [options.scope=true] - 是否添加到当前作用域，默认为true，作用域销毁时自动清理
+   * @param {boolean} [options.batch=true] - 是否使用批处理模式，默认为true，多个连续的变更会合并为一次计算
    */
   constructor(getter: (oldValue: T | undefined) => T, options: ComputedOptions<T> = {}) {
     this._getter = getter
@@ -242,18 +243,19 @@ export class Computed<T> implements RefSignal<T> {
 
       // 如果有依赖，则创建订阅处理器
       if (deps.size > 0) {
+        const handler = () => {
+          // 重新计算结果
+          const newResult = this._getter(this._computedResult)
+
+          // 只有当结果发生变化时才通知订阅者
+          if (newResult !== this._computedResult) {
+            this._computedResult = newResult
+            SignalManager.notifySubscribers(this, 'value')
+          }
+        }
         // 创建订阅处理器，使用微任务延迟执行以提高性能
         this._handler = new Subscriber(
-          microTaskDebouncedCallback(() => {
-            // 重新计算结果
-            const newResult = this._getter(this._computedResult)
-
-            // 只有当结果发生变化时才通知订阅者
-            if (newResult !== this._computedResult) {
-              this._computedResult = newResult
-              SignalManager.notifySubscribers(this, 'value')
-            }
-          }),
+          this._options.batch === false ? handler : microTaskDebouncedCallback(handler),
           { scope: this._options.scope }
         )
 
