@@ -1,4 +1,4 @@
-import { DEEP_SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL } from '../constants'
+import { PROXY_SIGNAL_SYMBOL } from '../constants'
 import type { BaseSignal } from './base'
 
 /**
@@ -8,7 +8,6 @@ export type ProxySignal<
   Target extends AnyObject = AnyObject,
   Proxy extends AnyObject = Target,
   Deep extends boolean = boolean
-> = BaseSignal<Target> & {
-  readonly [DEEP_SIGNAL_SYMBOL]: Deep
+> = BaseSignal<Target, Deep> & {
   readonly [PROXY_SIGNAL_SYMBOL]: true
 } & Proxy

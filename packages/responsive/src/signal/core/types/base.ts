@@ -1,4 +1,9 @@
-import { GET_RAW_TARGET_SYMBOL, NOT_SIGNAL_SYMBOL, SIGNAL_SYMBOL } from '../constants'
+import {
+  DEEP_SIGNAL_SYMBOL,
+  GET_RAW_TARGET_SYMBOL,
+  NOT_SIGNAL_SYMBOL,
+  SIGNAL_SYMBOL
+} from '../constants'
 
 /**
  * 用于判断旧值和新值是否相等的函数
@@ -43,9 +48,10 @@ export type SignalOptions<Deep extends boolean = boolean> = {
 /**
  * 响应式信号的基础接口
  */
-export interface BaseSignal<T = any> {
+export interface BaseSignal<RAW = any, Deep extends boolean = boolean> {
   readonly [SIGNAL_SYMBOL]: true
-  readonly [GET_RAW_TARGET_SYMBOL]?: T
+  readonly [DEEP_SIGNAL_SYMBOL]: Deep
+  readonly [GET_RAW_TARGET_SYMBOL]?: RAW
 }
 
 /**
