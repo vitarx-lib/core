@@ -7,7 +7,8 @@ import type { ProxySignal, RefSignal } from '../types/index'
  *
  * @template T - 信号类型
  */
-export type SignalToRaw<T> = T extends RefSignal<unknown, infer U> | ProxySignal<infer U> ? U : T
+export type SignalToRaw<T> =
+  T extends RefSignal<unknown, infer U> ? U : T extends ProxySignal<infer U> ? U : T
 
 /**
  * 将响应式信号对象转换为其原始值。
