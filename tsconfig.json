@@ -42,7 +42,8 @@
   "include": [
     "**/__tests__",
     "**/src",
-    "**/global.d.ts"
+    "**/global.d.ts",
+    "scripts/*.ts"
   ],
   "exclude": [
     "**/dist",
