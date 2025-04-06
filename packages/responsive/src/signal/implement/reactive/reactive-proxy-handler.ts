@@ -121,7 +121,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
   get(target: T, prop: AnyKey): any {
     // 拦截内部标识符属性
     if (typeof prop === 'symbol') {
-      if (ReactiveProxyHandler.staticSymbol.includes(SIGNAL_SYMBOL)) return true
+      if (ReactiveProxyHandler.staticSymbol.includes(prop)) return true
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
       if (prop === Observer.TARGET_SYMBOL) return this.proxy
