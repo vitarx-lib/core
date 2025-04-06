@@ -20,7 +20,7 @@ import type { BaseSignal, NotSignal, ProxySignal, RefSignal } from '../../core/i
  * ```
  */
 export type UnwrapNestedRefs<T extends AnyObject> = {
-  [K in keyof T]: T[K] extends NotSignal ? T[K] : T extends RefSignal<infer U> ? U : T[K]
+  [K in keyof T]: T[K] extends NotSignal ? T[K] : T[K] extends RefSignal<infer U> ? U : T[K]
 }
 
 /**
