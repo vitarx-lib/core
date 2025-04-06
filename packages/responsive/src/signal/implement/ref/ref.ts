@@ -9,12 +9,12 @@ import {
   isSignal,
   REF_SIGNAL_SYMBOL,
   type RefSignal,
-  type RefValue,
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
 } from '../../core/index'
 import { reactive } from '../reactive/index'
+import type { RefValue } from './types'
 
 /**
  * # `Ref`值代理对象，用于代理一个值，使其成为响应式变量。
@@ -30,7 +30,7 @@ import { reactive } from '../reactive/index'
  * count.value++ // count.value 的值变为1
  * ```
  */
-export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, Deep> {
+export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefValue<T, Deep>, T> {
   /**
    * 标识为响应式信号对象
    * @readonly
