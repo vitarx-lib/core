@@ -1,35 +1,8 @@
-import { deepClone, isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
+import { deepClone, isFunction, isSet } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
 import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
 import { isRefSignal, isSignal, type SignalToRaw } from '../core/index'
-import type { WatchOptions } from './types'
-
-/**
- * 监听信号变化的回调函数类型
- *
- * 当被监听的信号或计算函数发生变化时，此回调函数将被触发执行。
- * 回调接收新值、旧值以及清理函数注册器，可用于管理副作用资源。
- *
- * @template T - 监听源的类型
- * @param {SignalToRaw<T>} newValue - 信号的新值，已经转换为原始类型
- * @param {SignalToRaw<T>} oldValue - 信号的旧值，已经转换为原始类型
- * @param {(handler: VoidCallback) => void} onCleanup - 注册清理函数的方法
- *   - 传入的清理函数将在下次回调触发前或监听被销毁时执行
- *   - 用于释放资源，如定时器、事件监听器等
- * @returns {void} - 回调函数不需要返回值
- *
- * @example
- * // 使用清理函数管理资源
- * watch(signal, (newVal, oldVal, onCleanup) => {
- *   const timer = setTimeout(() => console.log(newVal), 1000)
- *   onCleanup(() => clearTimeout(timer)) // 自动清理定时器
- * })
- */
-export type WatchCallback<T> = (
-  newValue: SignalToRaw<T>,
-  oldValue: SignalToRaw<T>,
-  onCleanup: (handler: VoidCallback) => void
-) => void
+import type { CanWatchProperty, WatchCallback, WatchOptions, WatchPropertyCallback } from './types'
 
 /**
  * 复制值，支持深度克隆
@@ -149,35 +122,89 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
 /**
  * ## 监听多个信号变化
  *
- * @example
- * ```ts
- * import { watchChanges,reactive,ref,microTaskDebouncedCallback } from 'vitarx'
- * const reactiveObj = reactive({a:1})
- * const refObj = ref({a:1})
- * watchChanges([reactiveObj,refObj],(props,signal)=>{
- *    // 其中任意一个对象变化都会触发此回调
- *    // signal是变化的对象，props是变化的属性名数组
- * })
- * reactiveObj.a++
- * refObj.value.a++
- * refObj.value.a++
- * // 上面这样修改数据，回调会触发两次，因为修改了不同的对象
- *
- * // 如果需要只触发一次，且不需要知道哪个对象变化了，可以使用微任务防抖函数实现
- * watchChanges([reactiveObj,refObj],microTaskDebouncedCallback(()=>{
- *    console.log('这样可以确保在同一个微任务中只执行一次回调')
- * }))
- * ```
- *
  * @param targets
  * @param {function} callback - 回调函数
  * @param {object} options - 监听器配置选项
  * @returns {object} - 监听器实例
+ * @example
+ * import { watchChanges,reactive,ref,microTaskDebouncedCallback } from 'vitarx'
+ * const reactiveObj = reactive({a:1})
+ * const refObj = ref({a:1})
+ * watchChanges([reactiveObj,refObj],(props,target)=>{
+ *    // 其中任意一个对象变化都会触发此回调
+ *    console.log(`被修改的属性名：${props.join('，')}，是refObj：${target === refObj}`)
+ * })
+ * reactiveObj.a++ // 被修改的属性名：a,是refObj：false
+ * refObj.value.a++
+ * refObj.value.a++ // 被修改的属性名：value,是refObj：true
+ *
+ * // 合并回调
+ * watchChanges([reactiveObj,refObj],microTaskDebouncedCallback((props,target)=>{
+ *   console.log(`被修改的属性名：${props.join('，')}，是refObj：${target === refObj}`)
+ * }))
+ * reactiveObj.a++
+ * refObj.value.a++ // 被修改的属性名：value,是refObj：true
  */
 export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
   targets: Array<T> | Set<T>,
   callback: CB,
   options?: WatchOptions
 ): Subscriber<CB> {
-  return Observer.subscribes(targets, microTaskDebouncedCallback(callback), options)
+  return Observer.subscribes(targets, callback, options)
+}
+
+/**
+ * ## 监听属性变化（支持多个属性）
+ *
+ * 它和 `watch` 存在不同之处，它不会记录新值和旧值，只关注哪些属性发生了变化。
+ * 可以同时监听多个属性，当任意属性发生变化时触发回调。
+ *
+ * @template T 目标对象类型，必须是一个对象类型
+ * @template PROPS 属性列表类型，可以是单个属性、属性数组或Set集合
+ * @template CB 回调函数类型，默认为WatchPropertyCallback<T>
+ *
+ * @param {T} signal - 目标对象，被监听的信号源
+ * @param {PROPS} properties - 属性列表，指定要监听的属性
+ *   - 可以是单个属性名
+ *   - 可以是属性名数组
+ *   - 可以是属性名Set集合
+ *   - 如果的目标信号的原始值为集合类型，那么只能监听集合的size属性
+ * @param {CB} callback - 回调函数，当指定的属性发生变化时被调用
+ * @param {WatchOptions} [options] - 监听器配置选项
+ *   - batch: 是否使用批处理模式，默认为true
+ *   - clone: 是否克隆新旧值，默认为false
+ *   - limit: 限制触发次数，默认为0（不限制）
+ *   - scope: 是否自动添加到当前作用域，默认为true
+ * @returns {Subscriber<CB>} - 返回订阅者实例，可用于管理订阅生命周期
+ *
+ * @example
+ * // 监听单个属性
+ * const obj = reactive({ name: 'John', age: 30 });
+ * const sub = watchProperty(obj, 'name', (props, obj) => {
+ *   console.log(`属性 ${props.join(', ')} 已变更`);
+ * });
+ *
+ * // 监听多个属性
+ * const sub2 = watchProperty(obj, ['name', 'age'], (props, obj) => {
+ *   console.log(`属性 ${props.join(', ')} 已变更`);
+ * });
+ *
+ * // 使用Set集合监听属性
+ * const propsToWatch = new Set(['name', 'age']);
+ * const sub3 = watchProperty(obj, propsToWatch, (props, obj) => {
+ *   console.log(`属性 ${props.join(', ')} 已变更`);
+ * });
+ *
+ * // 取消订阅
+ * sub.dispose();
+ */
+export function watchProperty<
+  T extends AnyObject,
+  PROPS extends Array<CanWatchProperty<T>> | Set<CanWatchProperty<T>> | CanWatchProperty<T>,
+  CB extends AnyCallback = WatchPropertyCallback<T>
+>(signal: T, properties: PROPS, callback: CB, options?: WatchOptions): Subscriber<CB> {
+  if (!isSet(properties) && !Array.isArray(properties)) {
+    properties = [properties] as unknown as PROPS
+  }
+  return Observer.subscribeProperties(signal, properties as Array<keyof T>, callback, options)
 }

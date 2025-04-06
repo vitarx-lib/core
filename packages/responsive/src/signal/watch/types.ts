@@ -1,5 +1,5 @@
 import type { SubscriptionOptions } from '../../observer/index'
-import type { RefSignal } from '../core/index'
+import type { RefSignal, SignalToRaw } from '../core/index'
 
 /**
  * 提取出监听目标可被监听的属性
@@ -32,3 +32,46 @@ export interface WatchOptions extends SubscriptionOptions {
    */
   clone?: boolean
 }
+
+/**
+ * 监听信号变化的回调函数类型
+ *
+ * 当被监听的信号或计算函数发生变化时，此回调函数将被触发执行。
+ * 回调接收新值、旧值以及清理函数注册器，可用于管理副作用资源。
+ *
+ * @template T - 监听源的类型
+ * @param {SignalToRaw<T>} newValue - 信号的新值，已经转换为原始类型
+ * @param {SignalToRaw<T>} oldValue - 信号的旧值，已经转换为原始类型
+ * @param {(handler: VoidCallback) => void} onCleanup - 注册清理函数的方法
+ *   - 传入的清理函数将在下次回调触发前或监听被销毁时执行
+ *   - 用于释放资源，如定时器、事件监听器等
+ * @returns {void} - 回调函数不需要返回值
+ *
+ * @example
+ * // 使用清理函数管理资源
+ * watch(signal, (newVal, oldVal, onCleanup) => {
+ *   const timer = setTimeout(() => console.log(newVal), 1000)
+ *   onCleanup(() => clearTimeout(timer)) // 自动清理定时器
+ * })
+ */
+export type WatchCallback<T> = (
+  newValue: SignalToRaw<T>,
+  oldValue: SignalToRaw<T>,
+  onCleanup: (handler: VoidCallback) => void
+) => void
+
+/**
+ * 监听属性变化的回调函数
+ *
+ * @template T 信号对象类型
+ * @param {CanWatchProperty<T>[]} props 变化的属性列表，根据不同信号类型会有不同的可监听属性
+ * @param {T} signal 监听的信号对象，即原始被监听的对象
+ * @returns {void}
+ * @example
+ * // 回调函数示例
+ * const callback = (changedProps, signal) => {
+ *   console.log('变化的属性:', changedProps);
+ *   console.log('信号源:', signal);
+ * }
+ */
+export type WatchPropertyCallback<T> = (props: CanWatchProperty<T>[], signal: T) => void
