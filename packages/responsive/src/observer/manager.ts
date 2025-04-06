@@ -411,11 +411,11 @@ export class Observer {
    * 如果对象上存在TARGET_SYMBOL属性，则返回该属性值；否则返回对象本身。
    *
    * @template T - 对象类型
-   * @param {T} object - 响应式对象或原始对象
    * @returns {T} - 原始目标对象
+   * @param obj
    */
-  static getOriginalTarget<T extends AnyObject>(object: T): T {
-    return (Reflect.get(object, this.TARGET_SYMBOL) as T) ?? object
+  static getOriginalTarget<T extends AnyObject>(obj: T): T {
+    return (Reflect.get(obj, this.TARGET_SYMBOL) as T) ?? obj
   }
 
   /**
@@ -449,7 +449,6 @@ export class Observer {
     const store = this.getSubscriberStore(batch)
     // 获取原始目标对象
     const originalTarget = this.getOriginalTarget(target)
-
     // 加锁防止并发修改
     const unlock = this.#acquireLock(originalTarget)
 
