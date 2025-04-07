@@ -33,6 +33,7 @@ const packageJson = {
     url: 'git+https://github.com/vitarx-lib/core',
     directory: `packages/${packageName}`
   },
+  type: 'module',
   main: 'dist/index.js',
   module: 'dist/index.js',
   types: 'dist/index.d.ts',

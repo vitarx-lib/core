@@ -9,6 +9,7 @@
     "url": "git+https://github.com/vitarx-lib/core",
     "directory": "packages/responsive"
   },
+  "type": "module",
   "main": "index.mjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
