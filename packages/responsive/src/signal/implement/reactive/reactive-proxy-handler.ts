@@ -14,7 +14,7 @@ import {
   SignalManager,
   type SignalOptions
 } from '../../core/index'
-import type { Reactive, ShallowReactive } from './types'
+import type { Reactive } from './types'
 
 /**
  * 响应式代理对象标识符
@@ -26,6 +26,7 @@ export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
  * 实现了ES6 Proxy的处理器接口，用于创建响应式对象
  *
  * @template T - 目标对象类型，必须是一个对象类型
+ * @template Deep - 是否深度代理
  * @implements {ProxyHandler<T>}
  * @example
  * ```typescript
@@ -35,7 +36,9 @@ export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
  * // 现在proxy是一个响应式对象
  * ```
  */
-class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
+class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
+  implements ProxyHandler<T>
+{
   /**
    * 集合写入方法
    *
@@ -54,7 +57,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    *
    * @private
    */
-  public readonly proxy: Reactive<T> | ShallowReactive<T>
+  public readonly proxy: Reactive<T, Deep>
   /**
    * 代理对象配置
    *
@@ -89,7 +92,7 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
    */
   constructor(
     private readonly _target: T,
-    options?: SignalOptions
+    options?: SignalOptions<Deep>
   ) {
     this.options = {
       compare: options?.compare ?? Object.is,
@@ -256,23 +259,22 @@ class ReactiveProxyHandler<T extends AnyObject> implements ProxyHandler<T> {
  * ## 创建响应式代理信号
  *
  * @template T - 目标对象类型
+ * @template Deep - 是否启用深度代理
  * @param {T} target - 要代理的目标对象
  * @param {object} options - 代理配置选项
  * @param {boolean} [options.deep=true] - 启用深度代理
  * @param {CompareFunction} [options.compare=Object.is] - 自定义值比较函数
- * @returns {Reactive<T> | ShallowReactive<T>} 响应式代理对象
+ * @returns {Reactive<T,Deep>} 响应式代理对象
  * @example
- * ```typescript
  * const proxy = createReactiveProxy(target, {
  *   deep: true,
  *   compare: (a, b) => a === b
  * })
- * ```
  */
-export function createReactiveProxySignal<T extends AnyObject>(
+export function createReactiveProxySignal<T extends AnyObject, Deep extends boolean = true>(
   target: T,
-  options?: SignalOptions
-): Reactive<T> | ShallowReactive<T> {
+  options?: SignalOptions<Deep>
+): Reactive<T, Deep> {
   if (!isObject(target)) {
     throw new TypeError('Parameter 1 (target) must be an object!')
   }
@@ -283,6 +285,6 @@ export function createReactiveProxySignal<T extends AnyObject>(
   if (isRefSignal(target)) {
     throw new TypeError('Parameter 1 (target) cannot be a value reference object!')
   }
-  if (isProxySignal(target)) return target as Reactive<T>
+  if (isProxySignal(target)) return target as Reactive<T, Deep>
   return new ReactiveProxyHandler(target, options).proxy
 }
