@@ -50,7 +50,7 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
    *
    * @private
    */
-  private static readonly collectionQueryMethods = ['size', 'length', 'has']
+  private static readonly collectionQueryMethods = ['size', 'length', 'has', 'get']
   private static readonly staticSymbol = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
   /**
    * 代理对象
@@ -100,10 +100,18 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
     }
     this.childSignalMap = this.options.deep ? new Map() : undefined
     this.collectionMethodProxy = isCollection(this._target)
-      ? (prop: string, ...args: any[]) => {
-          const result = (this._target as any)[prop].apply(this._target, args)
-          if (result) this.notify('size')
-          return result
+      ? (method: string, args: any[]) => {
+          // 处理集合写入方法
+          if (ReactiveProxyHandler.collectionWriteMethods.includes(method)) {
+            const result = (this._target as any)[method].apply(this._target, args)
+            if (result) this.notify('size')
+            return result
+          }
+          // 处理集合查询方法
+          if (ReactiveProxyHandler.collectionQueryMethods.includes(method)) {
+            this.track('size')
+            return (this._target as any)[method].apply(this._target, args)
+          }
         }
       : null
     this.proxy = new Proxy(this._target, this) as unknown as any
@@ -129,15 +137,7 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
       if (prop === Observer.TARGET_SYMBOL) return this.proxy
     } else if (typeof prop === 'string' && this.collectionMethodProxy) {
-      // 处理集合写入方法
-      if (ReactiveProxyHandler.collectionWriteMethods.includes(prop)) {
-        return this.collectionMethodProxy
-      }
-      // 处理集合查询方法
-      if (ReactiveProxyHandler.collectionQueryMethods.includes(prop)) {
-        this.track('size')
-        return Reflect.get(target, prop, target)
-      }
+      return (...args: any[]) => this.collectionMethodProxy!(prop, args)
     }
     // 获取值
     const value = Reflect.get(target, prop, target)
