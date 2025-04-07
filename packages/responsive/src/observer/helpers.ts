@@ -7,6 +7,7 @@ import { Subscriber } from './subscriber'
  * 通知订阅者目标对象的指定属性已变更。当响应式对象的属性发生变化时，
  * 调用此函数可以手动触发通知机制，使所有订阅该属性的订阅者收到更新。
  *
+ * @alias trigger
  * @template T - 目标对象的类型
  * @template P - 目标对象的属性键类型
  * @param {T} target - 变更的目标对象
@@ -20,6 +21,8 @@ import { Subscriber } from './subscriber'
 export function notify<T extends AnyObject, P extends keyof T>(target: T, property: P | P[]): void {
   ObserverManager.notify(target, property)
 }
+
+export { notify as trigger }
 
 /**
  * ## 订阅对象变化
