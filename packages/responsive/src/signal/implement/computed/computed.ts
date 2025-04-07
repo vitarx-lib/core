@@ -1,5 +1,6 @@
 import { isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
 import { Depend } from '../../../depend/index'
+import { EffectScope } from '../../../effect/index'
 import { Observer, Subscriber } from '../../../observer/index'
 import {
   DEEP_SIGNAL_SYMBOL,
@@ -146,7 +147,7 @@ export class Computed<T> implements RefSignal<T> {
       this._options.setter(newValue)
     } else {
       console.warn(
-        'Computed properties should not be modified directly unless a setter function is defined。'
+        '[Computed]：Computed properties should not be modified directly unless a setter function is defined。'
       )
     }
   }
@@ -206,16 +207,20 @@ export class Computed<T> implements RefSignal<T> {
   }
 
   /**
-   * 设置是否允许添加到作用域
+   * 设置作用域
    *
    * 控制计算属性是否随作用域一起销毁。
    * 如果设置为false，则计算属性不会随作用域销毁而停止观察依赖变化。
    *
-   * @param {boolean} allow - 是否允许添加到作用域
+   * @param {boolean | EffectScope} scope - 作用域或boolean值，表示是否允许添加到作用域
    * @returns {this} 当前实例，支持链式调用
    */
-  public scope(allow: boolean): this {
-    this._options.scope = allow
+  public scope(scope: boolean | EffectScope): this {
+    if (scope instanceof EffectScope) {
+      if (this._handler) scope.addEffect(this._handler)
+    } else {
+      this._options.scope = scope
+    }
     return this
   }
 
@@ -280,7 +285,7 @@ export class Computed<T> implements RefSignal<T> {
         })
       } else {
         console.warn(
-          'No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
+          '[Computed]：No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
         )
       }
     }
