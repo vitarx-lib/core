@@ -98,6 +98,7 @@ export class SignalManager {
     // 遍历父级映射，通知每个父级信号进行更新
     for (const [parent, keys] of parentMap) {
       Observer.notify(parent, Array.from(keys) as any)
+      this.notifyParent(parent) // 递归通知父级信号
     }
   }
 
