@@ -165,7 +165,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
       )
     }
     cacheValue = (clone ? deepClone(targets) : targets) as any
-    return new Subscriber(
+    const subscriber = new Subscriber(
       subscriptionOptions.batch === false ? handler : microTaskDebouncedCallback(handler),
       subscriptionOptions
     ).onDispose(() => {
@@ -173,6 +173,8 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
         SignalManager.removeParent(targets[index], targets as any, index)
       }
     })
+    Observer.addSubscriber(targets, Observer.ALL_PROPERTIES_SYMBOL, subscriber, { batch: false })
+    return subscriber
   }
   throw new TypeError(
     'The source parameter can only be a valid signal object, or a function with side effects, an array with a signal object'
