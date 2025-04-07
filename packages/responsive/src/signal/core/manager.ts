@@ -35,7 +35,7 @@ export class SignalManager {
    * @param key - 关联的键
    * @returns {void}
    */
-  public static addParent(signal: BaseSignal, parentSignal: BaseSignal, key: AnyKey): void {
+  public static addParent(signal: BaseSignal, parentSignal: AnyObject, key: AnyKey): void {
     const signalMap = this._parentSignalMap.get(signal) || new Map()
     const parentSet = signalMap.get(parentSignal) || new Set()
 
