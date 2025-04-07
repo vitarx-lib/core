@@ -1,69 +1,55 @@
 import { SIGNAL_RAW_VALUE_SYMBOL, type SignalOptions } from '../../core/index'
 import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
-import type { Reactive, ShallowReactive, UnReactive } from './types'
+import type { Reactive, Unreactive } from './types'
 
 /**
- * ## 创建默认的深层响应式代理对象
+ * ## 创建响应式代理对象
  *
  * @template T - 目标对象类型
+ * @template Deep - 是否深度代理
  * @param {T} target - 要代理的目标对象
- * @returns {Reactive<T>} 深层响应式代理对象
- * @example
- * ```typescript
- * const obj = { foo: { bar: 1 } }
- * const proxy = reactive(obj)
- * // proxy.foo和proxy.foo.bar都是响应式的
- * ```
- */
-export function reactive<T extends AnyObject>(target: T): Reactive<T>
-/**
- * ## 创建响应式代理对象，自定义选项
- *
- * @template T - 目标对象类型
- * @param {T} target - 要代理的目标对象
- * @param {object} options - 代理配置选项
- * @param {boolean} options.deep - 启用深度代理
+ * @param {object | boolean} options - 代理配置选项，支持直接传入boolean指定deep配置
+ * @param {boolean} [options.deep=true] - 启用深度代理
  * @param {CompareFunction} [options.compare=Object.is] - 自定义值比较函数
- * @returns {Reactive<T> | ShallowReactive<T>} 响应式代理对象
+ * @returns {Reactive<T,Deep>} 响应式代理对象
  * @example
- * ```typescript
- * const proxy = reactive(target, {
- *   deep: true,
- *   compare: (a, b) => a === b
+ * // 深层代理
+ * const deepProxy = reactive({a:{b:1}}, {
+ *   deep: true, // 可以不传，默认值是 true
+ *   compare: (a, b) => a === b // 自定义比较函数
  * })
- * ```
+ * deepProxy.a.b++ // 会触发订阅deepProxy的回调函数
+ * // 浅层代理
+ * const shallowProxy = reactive({a:{b:1}}, false) // 第二个参数支持boolean值指定deep选项
+ * shallowProxy.a.b++ // 不会触发订阅shallowProxy的回调函数
+ * notifySubscribers(shallowProxy,'a') // 手动通知触发订阅者
  */
-export function reactive<T extends AnyObject>(
+export function reactive<T extends AnyObject, Deep extends boolean = true>(
   target: T,
-  options: SignalOptions<true> | {} | undefined
-): Reactive<T>
-export function reactive<T extends AnyObject>(
-  target: T,
-  options: SignalOptions<false>
-): ShallowReactive<T>
-export function reactive<T extends AnyObject>(
-  target: T,
-  options?: SignalOptions
-): Reactive<T> | ShallowReactive<T> {
+  options?: SignalOptions<Deep> | Deep
+): Reactive<T, Deep> {
+  if (typeof options === 'boolean') {
+    return createReactiveProxySignal(target, { deep: options })
+  }
   return createReactiveProxySignal(target, options)
 }
 
 /**
  * ## 创建浅层响应式对象
  *
- * 该方法与`reactive({},{deep:false})`的效果是一致的。
+ * 与`reactive({},{deep:false})`的效果是一致的。
  *
  * @template T - 目标对象类型
  * @param { T } target - 目标对象
  * @param { object } [options] - 代理选项
  * @param { CompareFunction } [options.compare=Object.is] - 自定义值比较函数
- * @returns {ShallowReactive<T>} 浅层响应式对象
+ * @returns {Reactive<T,false>} 浅层响应式对象
  */
 export function shallowReactive<T extends AnyObject>(
   target: T,
   options?: Omit<SignalOptions, 'deep'>
-): ShallowReactive<T> {
-  return createReactiveProxySignal(target, { ...options, deep: false }) as ShallowReactive<T>
+): Reactive<T, false> {
+  return createReactiveProxySignal(target, { ...options, deep: false })
 }
 
 /**
@@ -100,7 +86,7 @@ export function isReactive(val: unknown): boolean {
  * @param {T | Reactive<T>} proxy - 要获取原始值的对象。可以是：
  *   - 响应式对象：将返回其原始未代理的值
  *   - 非响应式对象：将原样返回
- * @returns {UnReactive<T>} 返回对象的原始值：
+ * @returns {Unreactive<T>} 返回对象的原始值：
  *   - 如果输入是响应式对象，返回其原始未代理的对象
  *   - 如果输入不是响应式对象，则原样返回
  * @example
@@ -109,10 +95,10 @@ export function isReactive(val: unknown): boolean {
  * const proxy = reactive(original)
  *
  * proxy.count // 访问会被跟踪
- * unReactive(proxy).count // 访问不会被跟踪
- * unReactive(proxy) === original // true
+ * unreactive(proxy).count // 访问不会被跟踪
+ * unreactive(proxy) === original // true
  * ```
  */
-export function unReactive<T extends object>(proxy: T | Reactive<T>): UnReactive<T> {
-  return (Reflect.get(proxy, SIGNAL_RAW_VALUE_SYMBOL) ?? proxy) as UnReactive<T>
+export function unreactive<T extends object>(proxy: T | Reactive<T>): Unreactive<T> {
+  return (Reflect.get(proxy, SIGNAL_RAW_VALUE_SYMBOL) ?? proxy) as Unreactive<T>
 }
