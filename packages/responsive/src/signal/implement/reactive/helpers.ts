@@ -1,5 +1,5 @@
 import { SIGNAL_RAW_VALUE_SYMBOL, type SignalOptions } from '../../core/index'
-import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './reactive-proxy-handler'
+import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './proxy-handler'
 import type { Reactive, Unreactive } from './types'
 
 /**
