@@ -211,8 +211,8 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
     this.removeChildSignal(prop)
     if (isRefSignal(oldValue)) {
       oldValue.value = newValue
-    } else {
-      if (!Reflect.set(target, prop, newValue, target)) return false
+    } else if (!Reflect.set(target, prop, newValue, target)) {
+      return false
     }
     this.notify(prop)
     return true
