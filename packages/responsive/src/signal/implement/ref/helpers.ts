@@ -10,7 +10,7 @@ import { Ref } from './ref'
  * @template Value - 信号值的类型
  * @template Deep - 是否使用深度信号，默认为true
  * @param {Value} value - 信号初始值
- * @param {object} [options] - 信号的选项配置
+ * @param {object | boolean} [options] - 信号的选项配置，支持直接传入boolean指定deep配置
  * @param {boolean} [options.deep=true] - 是否深度代理嵌套对象，为true时会递归代理所有嵌套属性
  * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新，默认使用Object.is进行比较
  * @returns {Ref<Value, Deep>} - 创建的响应式引用信号
@@ -26,6 +26,9 @@ import { Ref } from './ref'
  *   compare: (prev, next) => prev.name === next.name
  * })
  *
+ * // 创建一个一个浅层ref
+ * const shallow = ref({ a:{b:1} }, false)
+ *
  * // 创建一个嵌套对象ref
  * const userInfo = ref({ name: 'Zhang', profile: { age: 25 } })
  *
@@ -36,9 +39,12 @@ import { Ref } from './ref'
  */
 export function ref<Value, Deep extends boolean = true>(
   value: Value | Ref<Value, Deep>,
-  options?: SignalOptions<Deep>
+  options?: SignalOptions<Deep> | Deep
 ): Ref<Value, Deep> {
   if (isRef(value)) return value as Ref<Value, Deep>
+  if (typeof options === 'boolean') {
+    return new Ref(value, { deep: options }) as Ref<Value, Deep>
+  }
   return new Ref(value, options) as Ref<Value, Deep>
 }
 
@@ -74,8 +80,12 @@ export function ref<Value, Deep extends boolean = true>(
  *   compare: (prev, next) => prev.length === next.length
  * })
  */
-export function shallowRef<Value>(value: Value, options?: SignalOptions<false>): Ref<Value, false> {
-  return new Ref(value, { ...options, deep: false })
+export function shallowRef<Value>(
+  value: Value | Ref<Value, false>,
+  options?: Omit<SignalOptions, 'deep'>
+): Ref<Value, false> {
+  if (isRef(value)) return value as Ref<Value, false>
+  return new Ref(value, { ...options, deep: false }) as Ref<Value, false>
 }
 
 /**
