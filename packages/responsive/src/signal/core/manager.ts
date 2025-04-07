@@ -102,7 +102,7 @@ export class SignalManager {
   }
 
   /**
-   * 通知订阅者属性已更新
+   * 通知订阅者信号对象已更新
    *
    * @template T - 信号类型
    * @param {T} signal - 信号
@@ -119,3 +119,30 @@ export class SignalManager {
     if (notifyParent) SignalManager.notifyParent(signal)
   }
 }
+
+/**
+ * 通知订阅者信号对象已更新
+ *
+ * {@linkcode SignalManager.notifySubscribers} 的助手函数
+ *
+ * @alias triggerSubscribers
+ * @template T - 信号类型
+ * @param {T} signal - 信号
+ * @param {keyof T | Array<keyof T>} property - 属性
+ * @param {boolean} [notifyParent=true] - 是否通知父级信号
+ * @returns {void}
+ * @example
+ * // 浅层代理
+ * const shallowProxy = reactive({a:{b:1}}, false)
+ * shallowProxy.a.b++ // 不会触发订阅shallowProxy的回调函数
+ * notifySubscribers(shallowProxy,'a') // 手动通知触发订阅者
+ */
+export function notifySubscribers<T extends BaseSignal>(
+  signal: T,
+  property: keyof T | Array<keyof T>,
+  notifyParent: boolean = true
+): void {
+  SignalManager.notifySubscribers(signal, property, notifyParent)
+}
+
+export { notifySubscribers as triggerSubscribers }
