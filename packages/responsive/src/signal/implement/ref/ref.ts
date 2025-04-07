@@ -70,6 +70,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
    * @param {CompareFunction} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新
    */
   constructor(value: T, options?: SignalOptions<Deep>) {
+    if (isRefSignal(value)) throw new Error('Cannot set value of Ref to Ref')
     this._options = {
       compare: options?.compare ?? Object.is,
       deep: options?.deep ?? (true as Deep)
