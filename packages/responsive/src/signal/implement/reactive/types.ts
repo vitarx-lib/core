@@ -5,6 +5,7 @@ import type { UnwrapNestedRefs } from '../ref/index'
  * 响应式代理对象类型
  *
  * @template T - 目标对象类型，必须是一个对象类型
+ * @template Deep - 是否进行深度转换，默认为`true`，表示将所有属性转换为响应式信号。
  * @remarks
  * 创建一个深层响应式代理对象，会自动解包对象中的所有响应式信号值。
  * 对象的所有属性都将被转换为响应式的，包括嵌套对象。
@@ -23,31 +24,11 @@ import type { UnwrapNestedRefs } from '../ref/index'
  * console.log(user.name) // 'Alice'
  * ```
  */
-export type Reactive<T extends AnyObject = {}> = ProxySignal<T, UnwrapNestedRefs<T>, true>
-
-/**
- * 浅层响应式代理对象类型
- *
- * @template T - 目标对象类型，必须是一个对象类型
- * @remarks
- * 创建一个浅层响应式代理对象，只有根级属性是响应式的，嵌套对象不会被转换。
- * 适用于性能敏感场景或只需要跟踪对象顶层属性变化的情况。
- *
- * @example
- * ```typescript
- * const user = shallowReactive({
- *   name: 'Alice',
- *   profile: {
- *     avatar: ref('avatar.png')
- *   }
- * })
- *
- * // 只有顶层属性是响应式的
- * user.name = 'Bob' // 触发更新
- * user.profile.avatar = 'new.png' // 不会触发更新
- * ```
- */
-export type ShallowReactive<T extends AnyObject = {}> = ProxySignal<T, T, false>
+export type Reactive<T extends AnyObject = {}, Deep extends boolean = true> = ProxySignal<
+  T,
+  Deep extends true ? UnwrapNestedRefs<T> : T,
+  true
+>
 
 /**
  * 解除响应式对象的代理，获取原始对象
@@ -66,4 +47,4 @@ export type ShallowReactive<T extends AnyObject = {}> = ProxySignal<T, T, false>
  * const original = unReactive(proxy) // 获取原始对象
  * ```
  */
-export type UnReactive<T> = T extends Reactive<infer U> | ShallowReactive<infer U> ? U : T
+export type Unreactive<T> = T extends Reactive<infer U> ? U : T
