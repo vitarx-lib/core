@@ -13,7 +13,7 @@ export const isObject = (val: any): val is object => {
 /**
  * 判断变量是否为键值对记录对象
  *
- * @note 不区分 Map、Set、WeakMap、WeakSet
+ * @note 仅排除 Array 类型，集合类型也会被认为是一个键值对对象
  *
  * @param val - 要判断的变量
  * @returns { boolean } - 如果是键值对对象则返回true
