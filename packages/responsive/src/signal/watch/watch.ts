@@ -1,7 +1,8 @@
-import { deepClone, isFunction, isSet } from '@vitarx/utils'
+import { deepClone, isArray, isFunction, isSet } from '@vitarx/utils'
+import { microTaskDebouncedCallback } from '@vitarx/utils/src/index'
 import { Depend } from '../../depend/index'
 import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
-import { isRefSignal, isSignal, type SignalToRaw } from '../core/index'
+import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index'
 import type { CanWatchProperty, WatchCallback, WatchOptions, WatchPropertyCallback } from './types'
 
 /**
@@ -26,7 +27,7 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  *
  * @template T - 监听源类型，可以是对象或函数
  * @template CB - 回调函数类型
- * @param {T} origin - 监听源对象或函数
+ * @param {T} source - 监听源对象或函数
  *   - 当传入信号对象时：直接监听该信号的变化
  *   - 当传入函数时：优先监听函数内部依赖的信号变化，若无依赖则监听函数返回值
  * @param {CB} callback - 变化时触发的回调函数
@@ -36,7 +37,7 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
  * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域（自动销毁）
  * @param {boolean} [options.batch=true] - 是否使用批处理模式（合并同一周期内的多次更新）
- * @param {boolean} [options.clone=false] - 是否深度克隆新旧值（解决引用类型比较问题）
+ * @param {boolean} [options.clone=false] - 是否深度克隆新旧值（解决对象类型比较问题）
  * @returns {Subscriber<VoidCallback>} - 返回订阅者实例，可用于手动取消监听
  * @throws {TypeError} - 当参数类型不正确或监听源无效时抛出类型错误
  *
@@ -47,76 +48,136 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  *   console.log(`Count changed from ${oldVal} to ${newVal}`)
  * })
  *
+ * // 监听proxy信号
+ * const obj = reactive({ count: 0 })
+ * watch(obj, (newVal, oldVal) => {
+ *   console.log(`Count changed from ${oldVal.count} to ${oldVal.count}`)
+ * })
+ *
+ * // 监听多个信号
+ * watch([count, obj], ([newCount, newObj], [oldCount, oldObj]) => {
+ *   console.log(`count or obj changed`)
+ * })
+ *
  * // 监听计算函数
  * watch(() => count.value * 2, (newVal) => {
  *   console.log(`Doubled count is now: ${newVal}`)
  * })
  *
  * // 使用清理函数
- * watch(someSignal, (newVal, oldVal, onCleanup) => {
+ * watch(obj, (newVal, oldVal, onCleanup) => {
  *   const timer = setTimeout(() => {}, 1000)
  *   onCleanup(() => clearTimeout(timer)) // 在下次触发前或取消监听时调用
  * })
+ *
+ * // 克隆新旧值，需注意性能开销，建议使用 `watchProperty` 监听变化的属性性能更佳
+ * watch(obj, (newVal, oldVal) => {
+ *   // 解决监听源是对象时新旧值引用地址相同，无法辨别新旧对象差异的问题
+ *   console.log(newVal === oldVal) // false，因为新值和旧值并非同一个对象，它们已被深度克隆拷贝
+ * }, { clone: true })
  */
 export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallback<T>>(
-  origin: T,
+  source: T,
   callback: CB,
   options?: WatchOptions
 ): Subscriber<VoidCallback> {
   if (!isFunction(callback)) throw new TypeError('callback is not a function')
   const { clone = false, ...subscriptionOptions } = options ?? {}
   // 监听目标
-  let target = origin
+  let target = source
+  // 清理函数
   let cleanupFn: AnyFunction | undefined
-  let oldValue: SignalToRaw<T> | undefined
+  // 缓存值
+  let cacheValue: SignalToRaw<T> | undefined
   const onCleanup = (handler: VoidCallback) => {
     if (typeof handler !== 'function') {
       throw new TypeError('onCleanup handler it must be a function')
     }
     cleanupFn = handler
   }
-  // 处理回调
-  const handlerCallback = (newValue: SignalToRaw<T>) => {
-    if (cleanupFn) {
-      cleanupFn()
-      cleanupFn = undefined
-    }
-    callback(newValue, oldValue!, onCleanup)
-    oldValue = newValue
-  }
-  // 清理内存
   const clean = () => {
     if (cleanupFn) {
       cleanupFn()
       cleanupFn = undefined
     }
-    oldValue = undefined
-    // @ts-ignore
-    target = undefined
   }
-  if (isFunction(origin)) {
-    const { subscriber, result } = Depend.subscribe(
-      origin,
-      () => handlerCallback(copyValue(origin(), undefined, clone)),
+  // 如果是函数，则监听函数返回值
+  if (isFunction(source)) {
+    let { subscriber, result: cacheRunResult } = Depend.subscribe(
+      source,
+      () => {
+        // 获取新的返回值
+        const newRunResult = source()
+        // 如果返回值没有变化，则不执行回调
+        if (cacheRunResult === newRunResult) return
+        // 将新的运行结果赋值给缓存
+        cacheRunResult = newRunResult
+        // 克隆运行结果
+        const newValue = clone ? deepClone(newRunResult) : newRunResult
+        // 获取旧值
+        const oldValue = cacheValue!
+        // 更新缓存
+        cacheValue = newValue
+        callback(newValue, oldValue, onCleanup)
+      },
       subscriptionOptions
     )
     if (subscriber) {
-      oldValue = copyValue(result, undefined, clone)
+      cacheValue = clone ? deepClone(cacheRunResult) : cacheRunResult
       return subscriber.onDispose(clean)
     }
-    target = result
+    target = cacheRunResult
   }
+  // 处理信号
   if (isSignal(target)) {
     // 处理值类型代理，让其返回value
     const prop = isRefSignal(target) ? ('value' as keyof T) : undefined
-    oldValue = copyValue(target, prop, clone)
-    const subscriber = new Subscriber(
-      () => handlerCallback(copyValue(target, prop, clone)),
-      subscriptionOptions
-    )
+    cacheValue = copyValue(target, prop, clone)
+    const subscriber = new Subscriber(() => {
+      clean()
+      const newValue = copyValue(target, prop, clone)
+      const oldValue = cacheValue!
+      cacheValue = newValue
+      callback(newValue, oldValue, onCleanup)
+    }, subscriptionOptions)
     return Observer.subscribe(target, subscriber, subscriptionOptions).onDispose(clean)
   }
-  throw new TypeError('watch: origin is not a signal or valid side effect function')
+  // 处理多数组监听源
+  if (isArray(target)) {
+    const targets = [...target]
+    const handler = () => {
+      clean()
+      const newValue = (clone ? deepClone(targets) : targets) as any
+      const oldValue = cacheValue!
+      cacheValue = newValue
+      callback(newValue, oldValue, onCleanup)
+    }
+    const watchIndex: number[] = []
+    // 添加父级
+    for (let i = 0; i < targets.length; i++) {
+      const signal = targets[i]
+      if (!isSignal(signal)) continue
+      watchIndex.push(i)
+      SignalManager.addParent(signal, targets, i)
+    }
+    if (watchIndex.length === 0) {
+      throw new TypeError(
+        'If the source parameter is passed into a normal array, the array contains at least one signal object that can be listened to'
+      )
+    }
+    cacheValue = (clone ? deepClone(targets) : targets) as any
+    return new Subscriber(
+      subscriptionOptions.batch === false ? handler : microTaskDebouncedCallback(handler),
+      subscriptionOptions
+    ).onDispose(() => {
+      for (const index of watchIndex) {
+        SignalManager.removeParent(targets[index], targets as any, index)
+      }
+    })
+  }
+  throw new TypeError(
+    'The source parameter can only be a valid signal object, or a function with side effects, an array with a signal object'
+  )
 }
 
 /**
@@ -148,7 +209,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
 export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
   targets: Array<T> | Set<T>,
   callback: CB,
-  options?: WatchOptions
+  options?: Omit<WatchOptions, 'clone'>
 ): Subscriber<CB> {
   return Observer.subscribes(targets, callback, options)
 }
@@ -202,7 +263,12 @@ export function watchProperty<
   T extends AnyObject,
   PROPS extends Array<CanWatchProperty<T>> | Set<CanWatchProperty<T>> | CanWatchProperty<T>,
   CB extends AnyCallback = WatchPropertyCallback<T>
->(signal: T, properties: PROPS, callback: CB, options?: WatchOptions): Subscriber<CB> {
+>(
+  signal: T,
+  properties: PROPS,
+  callback: CB,
+  options?: Omit<WatchOptions, 'clone'>
+): Subscriber<CB> {
   if (!isSet(properties) && !Array.isArray(properties)) {
     properties = [properties] as unknown as PROPS
   }
