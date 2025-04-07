@@ -25,12 +25,21 @@ import { Ref } from './ref'
  * const user = ref({ name: 'Zhang', age: 25 }, {
  *   compare: (prev, next) => prev.name === next.name
  * })
+ *
+ * // 创建一个嵌套对象ref
+ * const userInfo = ref({ name: 'Zhang', profile: { age: 25 } })
+ *
+ * // 嵌套ref
+ * const count2 = ref(ref(1))
+ * count2.value++
+ * console.log(count2.value) // 2
  */
 export function ref<Value, Deep extends boolean = true>(
-  value: Value,
+  value: Value | Ref<Value, Deep>,
   options?: SignalOptions<Deep>
 ): Ref<Value, Deep> {
-  return new Ref(value, options)
+  if (isRef(value)) return value as Ref<Value, Deep>
+  return new Ref(value, options) as Ref<Value, Deep>
 }
 
 /**
