@@ -1,5 +1,4 @@
-import { deepClone, isArray, isFunction, isSet } from '@vitarx/utils'
-import { microTaskDebouncedCallback } from '@vitarx/utils/src/index'
+import { deepClone, isArray, isFunction, isSet, microTaskDebouncedCallback } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
 import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
 import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index'
