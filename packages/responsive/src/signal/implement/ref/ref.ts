@@ -101,7 +101,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
       return this._reactiveValue
     } else if (this._shouldProxyValue) {
       this._reactiveValue = reactive(this._value as AnyObject, this._options) as RefValue<T, Deep>
-      SignalManager.addParent(this._reactiveValue as BaseSignal, this, 'value')
+      SignalManager.bindParent(this._reactiveValue as BaseSignal, this, 'value')
       this._shouldProxyValue = false
       return this._reactiveValue
     }
@@ -136,7 +136,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
     if (this._options.compare(this._value, newValue)) return
     // 清理旧的响应式代理
     if (this._reactiveValue) {
-      SignalManager.removeParent(this._reactiveValue as unknown as BaseSignal, this, 'value')
+      SignalManager.unbindParent(this._reactiveValue as unknown as BaseSignal, this, 'value')
       this._reactiveValue = undefined
     }
     this._value = newValue

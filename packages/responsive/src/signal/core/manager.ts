@@ -28,14 +28,14 @@ export class SignalManager {
   }
 
   /**
-   * 添加父子信号关系
+   * 绑定父子信号关系
    *
    * @param signal - 子信号
    * @param parentSignal - 父信号
    * @param key - 关联的键
    * @returns {void}
    */
-  public static addParent(signal: BaseSignal, parentSignal: AnyObject, key: AnyKey): void {
+  public static bindParent(signal: BaseSignal, parentSignal: AnyObject, key: AnyKey): void {
     const signalMap = this._parentSignalMap.get(signal) || new Map()
     const parentSet = signalMap.get(parentSignal) || new Set()
 
@@ -50,14 +50,14 @@ export class SignalManager {
   }
 
   /**
-   * 移除父子信号关系
+   * 取消绑定父子信号关系
    *
    * @param signal - 子信号
    * @param parentSignal - 父信号
    * @param key - 要移除的关联键
    * @returns {void}
    */
-  public static removeParent(signal: BaseSignal, parentSignal: BaseSignal, key: AnyKey): void {
+  public static unbindParent(signal: BaseSignal, parentSignal: BaseSignal, key: AnyKey): void {
     const parentMap = this._parentSignalMap.get(signal)
     if (!parentMap) return
     const keySet = parentMap.get(parentSignal)

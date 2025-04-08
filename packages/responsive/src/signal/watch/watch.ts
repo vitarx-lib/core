@@ -157,7 +157,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
       const signal = targets[i]
       if (!isSignal(signal)) continue
       watchIndex.push(i)
-      SignalManager.addParent(signal, targets, i)
+      SignalManager.bindParent(signal, targets, i)
     }
     if (watchIndex.length === 0) {
       throw new TypeError(
@@ -170,7 +170,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
       subscriptionOptions
     ).onDispose(() => {
       for (const index of watchIndex) {
-        SignalManager.removeParent(targets[index], targets as any, index)
+        SignalManager.unbindParent(targets[index], targets as any, index)
       }
     })
     Observer.addSubscriber(targets, Observer.ALL_PROPERTIES_SYMBOL, subscriber, { batch: false })

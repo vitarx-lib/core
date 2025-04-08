@@ -16,7 +16,7 @@ describe('Signal Core', () => {
       const parentSignal = ref(1)
       const key = 'testKey'
 
-      SignalManager.addParent(childSignal, parentSignal, key)
+      SignalManager.bindParent(childSignal, parentSignal, key)
 
       expect(SignalManager.hasParent(childSignal, parentSignal, key)).toBe(true)
     })
@@ -26,8 +26,8 @@ describe('Signal Core', () => {
       const parentSignal = ref(1)
       const key = 'testKey'
 
-      SignalManager.addParent(childSignal, parentSignal, key)
-      SignalManager.removeParent(childSignal, parentSignal, key)
+      SignalManager.bindParent(childSignal, parentSignal, key)
+      SignalManager.unbindParent(childSignal, parentSignal, key)
 
       expect(SignalManager.hasParent(childSignal, parentSignal, key)).toBe(false)
     })
@@ -39,8 +39,8 @@ describe('Signal Core', () => {
       const key1 = 'testKey1'
       const key2 = 'testKey2'
 
-      SignalManager.addParent(childSignal, parentSignal1, key1)
-      SignalManager.addParent(childSignal, parentSignal2, key2)
+      SignalManager.bindParent(childSignal, parentSignal1, key1)
+      SignalManager.bindParent(childSignal, parentSignal2, key2)
 
       const parents = SignalManager.getParents(childSignal)
 
@@ -61,7 +61,7 @@ describe('Signal Core', () => {
     const notifySpy = vi.spyOn(Observer, 'notify')
 
     // 建立父子关系
-    SignalManager.addParent(childSignal, parentSignal, key)
+    SignalManager.bindParent(childSignal, parentSignal, key)
 
     // 触发通知
     SignalManager.notifyParent(childSignal)
