@@ -6,7 +6,7 @@
  * @param val - 要判断的变量
  * @returns {boolean} 如果是对象则返回true
  */
-export const isObject = (val: any): val is object => {
+export function isObject(val: any): val is object {
   return typeof val === 'object' && val !== null
 }
 
@@ -18,7 +18,7 @@ export const isObject = (val: any): val is object => {
  * @param val - 要判断的变量
  * @returns { boolean } - 如果是键值对对象则返回true
  */
-export const isRecordObject = (val: any): val is Record<any, any> => {
+export function isRecordObject(val: any): val is Record<any, any> {
   return val !== null && typeof val === 'object' && !Array.isArray(val)
 }
 
@@ -28,7 +28,7 @@ export const isRecordObject = (val: any): val is Record<any, any> => {
  * @param val - 要判断的变量
  * @returns {boolean} 如果是数组则返回true
  */
-export const isArray = (val: any): val is Array<any> => {
+export function isArray(val: any): val is Array<any> {
   return Array.isArray(val)
 }
 
@@ -38,7 +38,7 @@ export const isArray = (val: any): val is Array<any> => {
  * @param val - 要判断的变量
  * @returns {boolean} 如果是字符串则返回true
  */
-export const isString = (val: any): val is string => {
+export function isString(val: any): val is string {
   return typeof val === 'string'
 }
 
@@ -48,7 +48,7 @@ export const isString = (val: any): val is string => {
  * @param val - 要判断的变量
  * @returns {boolean} 如果是数字则返回true
  */
-export const isNumber = (val: any): val is number => {
+export function isNumber(val: any): val is number {
   return typeof val === 'number'
 }
 
@@ -58,7 +58,7 @@ export const isNumber = (val: any): val is number => {
  * @param val - 要判断的变量
  * @returns {boolean} 如果是布尔值则返回true
  */
-export const isBool = (val: any): val is boolean => {
+export function isBool(val: any): val is boolean {
   return typeof val === 'boolean'
 }
 
@@ -70,7 +70,7 @@ export const isBool = (val: any): val is boolean => {
  * @param val - 要判断的变量
  * @returns {boolean} 如果为空返回true
  */
-export const isEmpty = (val: any): boolean => {
+export function isEmpty(val: any): boolean {
   if (!val) return true
 
   if (typeof val === 'object') {
@@ -93,7 +93,7 @@ export const isEmpty = (val: any): boolean => {
  * @param func - 要判断的函数
  * @returns {boolean} 如果是异步函数则返回true
  */
-export const isAsyncFunction = (func: Function): func is (...args: any[]) => Promise<any> => {
+export function isAsyncFunction(func: Function): func is (...args: any[]) => Promise<any> {
   return Object.getPrototypeOf(func) === Object.getPrototypeOf(async function () {})
 }
 
@@ -103,7 +103,7 @@ export const isAsyncFunction = (func: Function): func is (...args: any[]) => Pro
  * @param val - 要判断的变量
  * @returns {boolean} 如果是函数则返回true
  */
-export const isFunction = (val: any): val is (...args: any[]) => any => {
+export function isFunction(val: any): val is (...args: any[]) => any {
   return typeof val === 'function'
 }
 
@@ -113,7 +113,7 @@ export const isFunction = (val: any): val is (...args: any[]) => any => {
  * @param val - 要判断的变量
  * @returns {boolean} 如果是纯函数则返回true
  */
-export const isPureFunction = (val: any): val is (...args: any[]) => any => {
+export function isPureFunction(val: any): val is (...args: any[]) => any {
   return typeof val === 'function' && !val.toString().startsWith('class ')
 }
 
@@ -125,7 +125,7 @@ export const isPureFunction = (val: any): val is (...args: any[]) => any => {
  * @param func - 要判断的函数
  * @returns {boolean} 如果是类构造函数则返回true
  */
-export const isConstructor = (func: any): func is new (...args: any[]) => any => {
+export function isConstructor(func: any): func is new (...args: any[]) => any {
   return typeof func === 'function' && func.toString().startsWith('class ')
 }
 
@@ -137,7 +137,7 @@ export const isConstructor = (func: any): func is new (...args: any[]) => any =>
  * @param fn - 要判断的函数
  * @returns {boolean} 如果是简单getter函数则返回true
  */
-export const isSimpleGetterFunction = (fn: any): fn is () => any => {
+export function isSimpleGetterFunction(fn: any): fn is () => any {
   if (typeof fn !== 'function') return false
   const fnString = fn.toString().trim()
   const regex = /^\(\s*\)\s*=>\s*[^{]+$/
@@ -151,7 +151,7 @@ export const isSimpleGetterFunction = (fn: any): fn is () => any => {
  * @param allowSpace - 是否允许包含空格字符
  * @returns {boolean} 是否为纯数字字符串
  */
-export const isNumString = (str: any, allowSpace: boolean = false): str is `${number}` => {
+export function isNumString(str: any, allowSpace: boolean = false): str is `${number}` {
   if (typeof str !== 'string') return false
   const integerRegex = /^\d+$/
   str = String(str)
@@ -165,7 +165,7 @@ export const isNumString = (str: any, allowSpace: boolean = false): str is `${nu
  * @param obj - 要判断的变量
  * @returns {boolean} 如果是Map对象则返回true
  */
-export const isMap = (obj: any): obj is Map<any, any> => {
+export function isMap(obj: any): obj is Map<any, any> {
   return Object.prototype.toString.call(obj) === '[object Map]'
 }
 
@@ -175,7 +175,7 @@ export const isMap = (obj: any): obj is Map<any, any> => {
  * @param obj - 要判断的变量
  * @returns {boolean} 如果是Set对象则返回true
  */
-export const isSet = (obj: any): obj is Set<any> => {
+export function isSet(obj: any): obj is Set<any> {
   return Object.prototype.toString.call(obj) === '[object Set]'
 }
 
@@ -185,7 +185,7 @@ export const isSet = (obj: any): obj is Set<any> => {
  * @param obj - 要判断的变量
  * @returns {boolean} 如果是WeakMap对象则返回true
  */
-export const isWeakMap = (obj: any): obj is WeakMap<WeakKey, any> => {
+export function isWeakMap(obj: any): obj is WeakMap<WeakKey, any> {
   return Object.prototype.toString.call(obj) === '[object WeakMap]'
 }
 
@@ -195,7 +195,7 @@ export const isWeakMap = (obj: any): obj is WeakMap<WeakKey, any> => {
  * @param obj - 要判断的变量
  * @returns {boolean} 如果是WeakSet对象则返回true
  */
-export const isWeakSet = (obj: any): obj is WeakSet<WeakKey> => {
+export function isWeakSet(obj: any): obj is WeakSet<WeakKey> {
   return Object.prototype.toString.call(obj) === '[object WeakSet]'
 }
 
@@ -207,7 +207,7 @@ export const isWeakSet = (obj: any): obj is WeakSet<WeakKey> => {
  * @param obj - 要判断的变量
  * @returns {boolean} 如果是集合对象则返回true
  */
-export const isCollection = (obj: any): obj is AnyCollection => {
+export function isCollection(obj: any): obj is AnyCollection {
   return isMap(obj) || isSet(obj) || isWeakMap(obj) || isWeakSet(obj)
 }
 
@@ -218,7 +218,7 @@ export const isCollection = (obj: any): obj is AnyCollection => {
  * @param var2 - 要比较的第二个变量
  * @returns {boolean} 如果两个变量完全相等，则返回true；否则返回false
  */
-export const isDeepEqual = (var1: any, var2: any): boolean => {
+export function isDeepEqual(var1: any, var2: any): boolean {
   // 精确比较两个值是否相同
   if (Object.is(var1, var2)) return true
 
@@ -254,6 +254,6 @@ export const isDeepEqual = (var1: any, var2: any): boolean => {
  * @param val - 要判断的变量
  * @returns {boolean} 如果是Promise对象则返回true
  */
-export const isPromise = (val: any): val is Promise<any> => {
+export function isPromise(val: any): val is Promise<any> {
   return val instanceof Promise
 }
