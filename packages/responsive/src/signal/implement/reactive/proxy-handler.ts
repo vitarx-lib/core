@@ -1,4 +1,4 @@
-import { isCollection, isObject } from '@vitarx/utils'
+import { isObject } from '@vitarx/utils'
 import { Depend } from '../../../depend/index'
 import { Observer } from '../../../observer/index'
 import {
@@ -50,7 +50,6 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
    *
    * @private
    */
-  private static readonly collectionQueryMethods = ['size', 'length', 'has', 'get']
   private static readonly staticSymbol = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
   /**
    * 代理对象
@@ -70,18 +69,6 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
    * @private
    */
   private readonly childSignalMap?: Map<AnyKey, BaseSignal>
-  /**
-   * 集合方法代理
-   *
-   * @private
-   */
-  /**
-   * 集合方法代理函数
-   * 用于拦截和处理集合类型（如Map、Set等）的写入操作
-   * @private
-   * @type {null | AnyFunction}
-   */
-  private readonly collectionMethodProxy: null | AnyFunction
 
   /**
    * 创建响应式代理对象处理器实例
@@ -99,21 +86,6 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
       deep: options?.deep ?? true
     }
     this.childSignalMap = this.options.deep ? new Map() : undefined
-    this.collectionMethodProxy = isCollection(this._target)
-      ? (method: string, args: any[]) => {
-          // 处理集合写入方法
-          if (ReactiveProxyHandler.collectionWriteMethods.includes(method)) {
-            const result = (this._target as any)[method].apply(this._target, args)
-            if (result) this.notify('size')
-            return result
-          }
-          // 处理集合查询方法
-          if (ReactiveProxyHandler.collectionQueryMethods.includes(method)) {
-            this.track('size')
-            return (this._target as any)[method].apply(this._target, args)
-          }
-        }
-      : null
     this.proxy = new Proxy(this._target, this) as unknown as any
   }
 
@@ -136,13 +108,11 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
       if (prop === Observer.TARGET_SYMBOL) return this.proxy
-    } else if (typeof prop === 'string' && this.collectionMethodProxy) {
-      return (...args: any[]) => this.collectionMethodProxy!(prop, args)
     }
     // 获取值
     const value = Reflect.get(target, prop, target)
     // 惰性深度代理
-    if (this.childSignalMap && isObject(value)) {
+    if (this.childSignalMap && isObject(value) && !isMarkNotSignal(value)) {
       // 已经创建过子代理则直接返回
       if (this.childSignalMap.has(prop)) {
         return this.childSignalMap.get(prop)
@@ -150,18 +120,15 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
       // 如果是信号则判断则添加映射关系
       if (isSignal(value)) {
         this.childSignalMap.set(prop, value)
-        SignalManager.addParent(value, this.proxy, prop)
+        SignalManager.bindParent(value, this.proxy, prop)
         return isRefSignal(value) ? value.value : value
       }
-      // 如果不是被标记为不代理的则创建子代理并添加映射关系
-      if (!isMarkNotSignal(value)) {
-        // 创建子代理
-        const childProxy = new ReactiveProxyHandler(value, { ...this.options }).proxy
-        // 映射父级关系
-        SignalManager.addParent(childProxy, this.proxy, prop)
-        this.childSignalMap.set(prop, childProxy)
-        return childProxy
-      }
+      // 创建子代理
+      const childProxy = new ReactiveProxyHandler(value, { ...this.options }).proxy
+      // 映射父级关系
+      SignalManager.bindParent(childProxy, this.proxy, prop)
+      this.childSignalMap.set(prop, childProxy)
+      return childProxy
     }
     // 如果值不是一个信号则上报给依赖管理器跟踪
     if (!isSignal(value)) this.track(prop)
@@ -227,7 +194,7 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
    */
   private removeChildSignal(prop: AnyKey) {
     if (this.childSignalMap && this.childSignalMap.has(prop)) {
-      SignalManager.removeParent(this.childSignalMap.get(prop)!, this.proxy, prop)
+      SignalManager.unbindParent(this.childSignalMap.get(prop)!, this.proxy, prop)
       this.childSignalMap.delete(prop)
     }
   }
@@ -253,6 +220,46 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
   private track(prop: AnyKey) {
     Depend.track(this.proxy as Record<AnyKey, any>, prop)
   }
+}
+
+/**
+ * 辅助创建集合代理的函数
+ *
+ * @param target - 目标集合
+ * @param type - 集合类型，'set' 或 'map'
+ */
+function createCollectionProxy(target: any, type: 'set' | 'map') {
+  // 统一处理size变化的工具函数
+  const triggerSizeChange = (operation: (...args: any[]) => void) => {
+    return (...args: any[]) => {
+      const oldSize = (target as any).size
+      operation.apply(target, args)
+      if ((target as any).size !== oldSize) SignalManager.notifySubscribers(proxy, 'size')
+    }
+  }
+  const proxy = new Proxy(target, {
+    get(target: any, prop: string | symbol, receiver: any): any {
+      if (prop === SIGNAL_SYMBOL || prop === PROXY_SIGNAL_SYMBOL || prop === REACTIVE_PROXY_SYMBOL)
+        return true
+      if (prop === DEEP_SIGNAL_SYMBOL) return false
+      if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
+      if (prop === Observer.TARGET_SYMBOL) return proxy
+      if (typeof prop === 'string') {
+        if (prop === 'clear' || prop === 'delete') {
+          return triggerSizeChange(target.clear)
+        }
+        if (type === 'set' && prop === 'add') {
+          return triggerSizeChange(target.add)
+        }
+        if (type === 'map' && prop === 'set') {
+          return triggerSizeChange(target.set)
+        }
+      }
+      Depend.track(proxy, 'size')
+      return Reflect.get(target, prop, target)
+    }
+  })
+  return proxy as any
 }
 
 /**
@@ -286,5 +293,9 @@ export function createReactiveProxySignal<T extends AnyObject, Deep extends bool
     throw new TypeError('Parameter 1 (target) cannot be a value reference object!')
   }
   if (isProxySignal(target)) return target as Reactive<T, Deep>
+  const type = target instanceof Set ? 'set' : target instanceof Map ? 'map' : 'object'
+  if (type === 'set' || type === 'map') {
+    return createCollectionProxy(target, type) as Reactive<T, Deep>
+  }
   return new ReactiveProxyHandler(target, options).proxy
 }
