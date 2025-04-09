@@ -74,13 +74,17 @@ declare global {
    * // }
    */
   type DeepReadonly<T> = {
-    readonly [P in keyof T]: T[P] extends ((...args: any[]) => any) | AnyPrimitive
+    readonly [P in keyof T]: T[P] extends AnyFunction | AnyPrimitive
       ? T[P]
-      : T[P] extends Array<infer U>
-        ? ReadonlyArray<DeepReadonly<U>>
-        : T[P] extends object
-          ? DeepReadonly<T[P]>
-          : T[P]
+      : T[P] extends Set<infer U>
+        ? ReadonlySet<U>
+        : T[P] extends Map<infer K, infer V>
+          ? ReadonlyMap<K, V>
+          : T[P] extends Array<infer U>
+            ? ReadonlyArray<DeepReadonly<U>>
+            : T[P] extends object
+              ? DeepReadonly<T[P]>
+              : T[P]
   }
   /**
    * 递归移除对象类型中所有属性的只读修饰符
