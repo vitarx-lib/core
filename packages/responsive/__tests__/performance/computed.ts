@@ -7,15 +7,16 @@ const data = ref(1)
 const startMemory = memoryUsage()
 console.time('executionTime')
 
-const max = 1000
+const max = 10000
 let changeCount = 0
-
 for (let i = 0; i < max; i++) {
   const c = computed(() => data.value + 100).init()
   watch(c, () => changeCount++, { batch: false })
 }
+
 // 修改响应式变量
 data.value++
+
 Promise.resolve().then(() => {
   console.log(`changeCount: ${changeCount}`)
   console.timeEnd('executionTime')
