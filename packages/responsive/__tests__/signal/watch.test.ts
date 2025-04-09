@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { reactive, ref, watch, watchChanges } from '../../src/index'
+import { reactive, ref, watch, watchChanges, watchProperty } from '../../src/index'
 import { computed } from '../../src/signal/implement/computed'
 
 describe('watch', () => {
@@ -101,11 +101,28 @@ describe('watch', () => {
       const count2 = ref(10)
       const fn = vi.fn()
       const fn2 = vi.fn()
-      watchChanges([count1, count2], fn, { batch: false })
-      watch([count1, count2], fn2, { batch: false })
+      watchChanges([count1, count2], fn)
+      watch([count1, count2], fn2)
       count1.value = 1
-      expect(fn).toHaveBeenCalledWith(['value'], count1)
-      expect(fn2).toHaveBeenCalledOnce()
+      Promise.resolve().then(() => {
+        expect(fn).toHaveBeenCalledWith(['value'], count1)
+        expect(fn2).toHaveBeenCalledOnce()
+      })
+    })
+  })
+
+  describe('监听属性', () => {
+    it('应该支持监听属性', () => {
+      const data = ref({ count: 0 })
+      const fn = vi.fn()
+      watchProperty(data, 'value', fn)
+      const fn2 = vi.fn()
+      watchProperty(data.value, 'count', fn2)
+      data.value.count++
+      Promise.resolve().then(() => {
+        expect(fn).toHaveBeenCalledWith(['value'], data)
+        expect(fn2).toHaveBeenCalledWith(['count'], data.value)
+      })
     })
   })
 })
