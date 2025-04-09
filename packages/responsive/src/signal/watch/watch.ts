@@ -1,4 +1,4 @@
-import { deepClone, isArray, isFunction, isSet, microTaskDebouncedCallback } from '@vitarx/utils'
+import { deepClone, isArray, isFunction, isSet } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
 import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
 import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index'
@@ -165,15 +165,14 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
       )
     }
     cacheValue = (clone ? deepClone(targets) : targets) as any
-    const subscriber = new Subscriber(
-      subscriptionOptions.batch === false ? handler : microTaskDebouncedCallback(handler),
-      subscriptionOptions
-    ).onDispose(() => {
+    const subscriber = new Subscriber(handler, subscriptionOptions).onDispose(() => {
       for (const index of watchIndex) {
         SignalManager.unbindParent(targets[index], targets as any, index)
       }
     })
-    Observer.addSubscriber(targets, Observer.ALL_PROPERTIES_SYMBOL, subscriber, { batch: false })
+    Observer.addSubscriber(targets, Observer.ALL_PROPERTIES_SYMBOL, subscriber, {
+      batch: subscriptionOptions.batch
+    })
     return subscriber
   }
   throw new TypeError(
