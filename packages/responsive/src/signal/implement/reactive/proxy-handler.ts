@@ -230,11 +230,12 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
  */
 function createCollectionProxy(target: any, type: 'set' | 'map') {
   // 统一处理size变化的工具函数
-  const triggerSizeChange = (operation: (...args: any[]) => void) => {
+  const triggerSizeChange = (method: string) => {
     return (...args: any[]) => {
       const oldSize = (target as any).size
-      operation.apply(target, args)
+      const result = target[method](...args)
       if ((target as any).size !== oldSize) SignalManager.notifySubscribers(proxy, 'size')
+      return result
     }
   }
   const proxy = new Proxy(target, {
@@ -246,17 +247,21 @@ function createCollectionProxy(target: any, type: 'set' | 'map') {
       if (prop === Observer.TARGET_SYMBOL) return proxy
       if (typeof prop === 'string') {
         if (prop === 'clear' || prop === 'delete') {
-          return triggerSizeChange(target.clear)
+          return triggerSizeChange(prop)
         }
         if (type === 'set' && prop === 'add') {
-          return triggerSizeChange(target.add)
+          return triggerSizeChange(prop)
         }
         if (type === 'map' && prop === 'set') {
-          return triggerSizeChange(target.set)
+          return triggerSizeChange(prop)
         }
       }
       Depend.track(proxy, 'size')
-      return Reflect.get(target, prop, target)
+      const value = Reflect.get(target, prop, receiver)
+      if (typeof value === 'function') {
+        return value.bind(target)
+      }
+      return value
     }
   })
   return proxy as any
