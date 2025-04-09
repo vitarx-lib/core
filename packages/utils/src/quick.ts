@@ -201,3 +201,30 @@ export function microTaskDebouncedCallback<
     ) as Params
   }) as T
 }
+
+/**
+ * 在下一次微任务开始之前执行回调函数
+ *
+ * @param {function} cb - 回调函数
+ * @returns {void}
+ */
+export function nextTick(cb: () => void): void
+/**
+ * 等待微任务队列执行完毕
+ *
+ * @returns {Promise<void>} - 返回Promise对象，可以使用await来等待任务完成
+ */
+export function nextTick(): Promise<void>
+/**
+ * 在微任务队列中执行回调，或返回一个Promise
+ *
+ * @param {function} [cb] - 可选回调函数
+ * @returns {Promise<void>|void} - 如果传入回调，返回void；否则返回Promise对象
+ */
+export function nextTick(cb?: () => void): Promise<void> | void {
+  if (cb) {
+    Promise.resolve().then(cb)
+  } else {
+    return Promise.resolve()
+  }
+}
