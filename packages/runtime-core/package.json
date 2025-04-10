@@ -1,7 +1,7 @@
 {
-  "name": "@vitarx/runtime-dom",
+  "name": "@vitarx/runtime-core",
   "version": "0.0.1",
-  "description": "Vitarx runtime-dom package",
+  "description": "Vitarx runtime-core package",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
   "repository": {
@@ -30,7 +30,8 @@
     }
   },
   "dependencies": {
+    "@vitarx/responsive": "workspace:*",
     "@vitarx/utils": "workspace:*",
-    "@vitarx/responsive": "workspace:*"
+    "csstype": "^3.1.3"
   }
 }
