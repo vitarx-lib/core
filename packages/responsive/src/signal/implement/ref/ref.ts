@@ -116,6 +116,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
    * @returns {T} 原始值
    */
   get [SIGNAL_RAW_VALUE_SYMBOL](): T {
+    Depend.track(this, 'value')
     return this._value
   }
 
