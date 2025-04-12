@@ -1,4 +1,3 @@
-import { isObject } from '@vitarx/utils'
 import { SIGNAL_RAW_VALUE_SYMBOL } from '../constants'
 import type { ProxySignal, RefSignal } from '../types/index'
 
@@ -32,8 +31,5 @@ export type SignalToRaw<T> =
  * ```
  */
 export function toRaw<T>(signal: T): SignalToRaw<T> {
-  if (isObject(signal)) {
-    return (Reflect.get(signal, SIGNAL_RAW_VALUE_SYMBOL) ?? signal) as SignalToRaw<T>
-  }
-  return signal as SignalToRaw<T>
+  return (signal as any)?.[SIGNAL_RAW_VALUE_SYMBOL] ?? (signal as SignalToRaw<T>)
 }
