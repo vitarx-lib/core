@@ -17,11 +17,14 @@ const unmountListens = new WeakMap<VNode, Set<AnyCallback>>()
 /**
  * 获取当前正在实例化的Widget节点
  *
+ * @alias useCurrentVNode
  * @returns {WidgetVNode | undefined} 当前Widget节点，如果不在Widget上下文中则返回undefined
  */
 export function getCurrentVNode(): WidgetVNode | undefined {
   return getContext<WidgetVNode>(VNodeContextSymbol)
 }
+
+export { getCurrentVNode as useCurrentVNode }
 
 /**
  * 添加父节点映射关系
