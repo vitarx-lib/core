@@ -38,7 +38,7 @@ export function isSignal(val: any): val is BaseSignal {
  * console.log(isRefSignal(proxySignal)); // false
  * ```
  */
-export function isRefSignal(val: any): val is RefSignal {
+export function isRefSignal<V = any, R = any>(val: any | RefSignal<V, R>): val is RefSignal<V, R> {
   return val?.[SIGNAL_SYMBOL] === true && val?.[REF_SIGNAL_SYMBOL] === true
 }
 
