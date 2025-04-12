@@ -40,12 +40,6 @@ class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
   implements ProxyHandler<T>
 {
   /**
-   * 集合写入方法
-   *
-   * @private
-   */
-  private static readonly collectionWriteMethods = ['set', 'add', 'delete', 'clear']
-  /**
    * 集合查询方法
    *
    * @private
