@@ -7,8 +7,7 @@ import type {
   RuntimeNoTagElement
 } from '../../renderer/index'
 import { Widget } from '../../widget/index'
-import { type Fragment, VNodeSymbol } from '../constant'
-import type { RefEl } from '../ref'
+import { type Fragment, type RefEl, VNodeSymbol } from '../core/index'
 import type { UniqueKey } from './attributes'
 
 /**
