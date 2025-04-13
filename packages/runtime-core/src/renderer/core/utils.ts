@@ -1,6 +1,6 @@
 import { toRaw } from '@vitarx/responsive'
 import { isRecordObject, isString } from '@vitarx/utils'
-import type { ClassProperties, EventOptions, StyleProperties, StyleRules } from './types/index'
+import type { ClassProperties, EventOptions, StyleProperties, StyleRules } from '../types/index'
 
 function toCamelCase(str: string): string {
   return str.replace(/-([a-z])/g, (_match, group1) => group1.toUpperCase())
