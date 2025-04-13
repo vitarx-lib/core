@@ -18,7 +18,6 @@ describe('watch', () => {
       count.value = 2
       expect(fn).toHaveBeenCalledTimes(1)
     })
-
     it('应该监听reactive对象的变化', () => {
       const state = reactive({ count: 0 })
       const fn = vi.fn()
@@ -28,7 +27,6 @@ describe('watch', () => {
       state.count = 1
       expect(fn).toHaveBeenCalledWith(1, 0, expect.any(Function))
     })
-
     it('应该监听computed的变化', () => {
       const count = ref(0)
       const double = computed(() => count.value * 2, { batch: false })
@@ -39,11 +37,10 @@ describe('watch', () => {
       count.value = 1
       expect(fn).toHaveBeenCalledWith(2, 0, expect.any(Function))
     })
-
-    it('应该支持deep选项深度监听', () => {
+    it('应该能监听到深度变化监听', () => {
       const state = reactive({ nested: { count: 0 } })
       const fn = vi.fn()
-      watch(state.nested, fn, { batch: false })
+      watch(state, fn, { batch: false })
       state.nested.count = 1
       expect(fn).toHaveBeenCalledOnce()
     })
