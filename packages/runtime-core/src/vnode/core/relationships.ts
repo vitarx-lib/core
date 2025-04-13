@@ -1,4 +1,4 @@
-import { getContext } from '@vitarx/responsive'
+import { getContext, runInContext } from '@vitarx/responsive'
 import type { VNode, WidgetVNode } from '../types'
 import { VNodeContextSymbol } from './constant'
 
@@ -15,16 +15,29 @@ const parentNodeMapping = new WeakMap<VNode, VNode>()
 const unmountListens = new WeakMap<VNode, Set<AnyCallback>>()
 
 /**
- * 获取当前正在实例化的Widget节点
+ * 获取当前组件对应的虚拟节点
  *
  * @alias useCurrentVNode
- * @returns {WidgetVNode | undefined} 当前Widget节点，如果不在Widget上下文中则返回undefined
+ * @returns {WidgetVNode | undefined} 如果不存在返回undefined
  */
 export function getCurrentVNode(): WidgetVNode | undefined {
   return getContext<WidgetVNode>(VNodeContextSymbol)
 }
 
 export { getCurrentVNode as useCurrentVNode }
+
+/**
+ * 在指定虚拟节点的上下文中运行函数
+ *
+ * @template T - 函数返回值的类型
+ * @param vnode - 虚拟节点
+ * @param fn - 要运行的函数
+ * @returns {T} 函数运行后的结果
+ * @internal 内部核心逻辑
+ */
+export function runInVNodeContext<T>(vnode: VNode, fn: () => T): T {
+  return runInContext(VNodeContextSymbol, vnode, fn)
+}
 
 /**
  * 添加父节点映射关系
