@@ -160,16 +160,17 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    * @param {T} target - 目标对象
    * @param {keyof T} prop - 属性名
    * @param {any} newValue - 新的属性值
+   * @param receiver - 代理或从代理继承的对象。
    * @returns {boolean} 设置是否成功
    */
-  set(target: T, prop: AnyKey, newValue: any): boolean {
+  set(target: T, prop: AnyKey, newValue: any, receiver: any): boolean {
     const oldValue = Reflect.get(target, prop)
     if (this.#options.compare(oldValue, newValue)) return true
     // 删除子代理
     this.removeChildSignal(prop)
     if (isRefSignal(oldValue)) {
       oldValue.value = newValue
-    } else if (!Reflect.set(target, prop, newValue, target)) {
+    } else if (!Reflect.set(target, prop, newValue, receiver)) {
       return false
     }
     this.notify(prop)
