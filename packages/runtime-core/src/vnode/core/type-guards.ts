@@ -1,6 +1,5 @@
 import { isFunction } from '@vitarx/utils/src/index'
 import type { NoTagElements } from '../../renderer/index'
-import { Fragment, VNodeSymbol } from '../constant'
 import type {
   CommentNode,
   ElementVNode,
@@ -10,6 +9,7 @@ import type {
   VNodeType,
   WidgetVNode
 } from '../types/nodes'
+import { Fragment, VNodeSymbol } from './constant'
 
 /**
  * 判断是否为有效的VNode类型

@@ -1,4 +1,4 @@
-import type { RefEl } from '../ref'
+import type { RefEl } from '../core/index'
 
 /**
  * 唯一键
