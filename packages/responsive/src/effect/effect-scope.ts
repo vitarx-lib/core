@@ -1,6 +1,6 @@
 import { getContext, runInContext } from '../context/index'
 import { Effect } from './effect'
-import type { EffectInterface } from './effect-interface'
+import type { EffectCallbackErrorHandler, EffectInterface } from './effect-interface'
 import { isEffect } from './helpers'
 
 /**
@@ -26,12 +26,11 @@ export interface EffectScopeOptions {
   name?: string | symbol
 
   /**
-   * 用于处理作用域内副作用抛出的异常的回调函数
-   * 当作用域内的副作用执行出错时会调用此函数
+   * 用于处理作用域内副作用抛出的异常
    *
    * @param {unknown} error - 异常对象
    */
-  errorHandler?: ((error: unknown) => void) | null
+  errorHandler?: EffectCallbackErrorHandler | null
 }
 
 /**
