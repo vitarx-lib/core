@@ -58,6 +58,7 @@ export function removeContext(tag: Tag, ctx?: object): boolean {
  *
  * 在指定上下文中同步执行函数
  *
+ * @alias runInContext
  * @template R - 函数返回值的类型
  * @param {Tag} tag - 上下文标签
  * @param {object} ctx - 要设置的上下文对象
@@ -72,6 +73,8 @@ export function removeContext(tag: Tag, ctx?: object): boolean {
 export function runInContext<R>(tag: Tag, ctx: object, fn: () => R): R {
   return Context.run(tag, ctx, fn)
 }
+
+export { runInContext as runContext }
 
 /**
  * Context.withAsyncContext方法的助手函数
