@@ -35,7 +35,7 @@ import { extractEventOptions } from './utils'
  *
  * @abstract
  */
-abstract class Renderer {
+export abstract class Renderer {
   /**
    * 渲染虚拟节点
    *
