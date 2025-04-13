@@ -4,7 +4,7 @@ import type {
   RuntimeContainerElement,
   RuntimeElement
 } from '../../renderer/index'
-import type { ExcludeWidgetIntrinsicKeywords } from '../../widget/constant'
+import type { ExcludeWidgetIntrinsicKeywords } from '../../widget/core/constant'
 import { type Fragment, RefElSymbol } from './constant'
 
 type ComputedRefElType<T> = T extends IntrinsicElementNames

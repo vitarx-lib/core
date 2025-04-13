@@ -1,6 +1,6 @@
-import type { VNode, VNodeType } from '../vnode/index'
-import type { WidgetType } from '../widget/types'
-import type { EventNames, EventOptions, RuntimeElements, StyleProperties } from './types/index'
+import type { VNode, VNodeType } from '../../vnode/index'
+import type { WidgetType } from '../../widget/types/widget'
+import type { EventNames, EventOptions, RuntimeElements, StyleProperties } from '../types/index'
 import { extractEventOptions } from './utils'
 
 /**
