@@ -20,6 +20,7 @@ import type { Reactive } from './types'
  * 响应式代理对象标识符
  */
 export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
+const staticSymbol = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
 /**
  * # 响应式代理对象处理器
  *
@@ -40,14 +41,7 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
   implements ProxyHandler<T>
 {
   /**
-   * 集合查询方法
-   *
-   * @private
-   */
-  private static readonly staticSymbol = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
-  /**
    * 代理对象
-   *
    * @private
    */
   public readonly proxy: Reactive<T, Deep>
@@ -56,31 +50,28 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    *
    * @private
    */
-  private readonly options: Required<SignalOptions>
+  readonly #options: Required<SignalOptions>
   /**
    * 子代理映射
    *
    * @private
    */
-  private readonly childSignalMap?: Map<AnyKey, BaseSignal>
+  readonly #childSignalMap?: Map<AnyKey, BaseSignal>
 
   /**
    * 创建响应式代理对象处理器实例
-   * @param {T} _target - 需要被代理的目标对象
+   * @param target
    * @param {SignalOptions} [options] - 代理配置选项
    * @param {boolean} [options.deep=true] - 是否深度代理
    * @param {CompareFunction} [options.compare=Object.is] - 值比较函数
    */
-  constructor(
-    private readonly _target: T,
-    options?: SignalOptions<Deep>
-  ) {
-    this.options = {
+  constructor(target: T, options?: SignalOptions<Deep>) {
+    this.#options = {
       compare: options?.compare ?? Object.is,
       deep: options?.deep ?? true
     }
-    this.childSignalMap = this.options.deep ? new Map() : undefined
-    this.proxy = new Proxy(this._target, this) as unknown as any
+    this.#childSignalMap = this.#options.deep ? new Map() : undefined
+    this.proxy = new Proxy(target, this) as Reactive<T, Deep>
   }
 
   /**
@@ -93,41 +84,47 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    *
    * @param {T} target - 目标对象
    * @param {keyof T} prop - 属性名
+   * @param receiver - 代理或从代理继承的对象。
    * @returns {any} 属性值
    */
-  get(target: T, prop: AnyKey): any {
+  get(target: T, prop: AnyKey, receiver: any): any {
     // 拦截内部标识符属性
     if (typeof prop === 'symbol') {
-      if (ReactiveProxyHandler.staticSymbol.includes(prop)) return true
-      if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
+      if (staticSymbol.includes(prop)) return true
+      if (prop === DEEP_SIGNAL_SYMBOL) return this.#options.deep
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
-      if (prop === Observer.TARGET_SYMBOL) return this.proxy
+      if (prop === Observer.TARGET_SYMBOL) return receiver
     }
     // 获取值
-    const value = Reflect.get(target, prop, target)
+    const value = Reflect.get(target, prop, receiver)
     // 惰性深度代理
-    if (this.childSignalMap && isObject(value) && !isMarkNotSignal(value)) {
+    if (this.#childSignalMap && isObject(value) && !isMarkNotSignal(value)) {
       // 已经创建过子代理则直接返回
-      if (this.childSignalMap.has(prop)) {
-        return this.childSignalMap.get(prop)
+      if (this.#childSignalMap.has(prop)) {
+        return this.#childSignalMap.get(prop)
       }
       // 如果是信号则判断则添加映射关系
       if (isSignal(value)) {
-        this.childSignalMap.set(prop, value)
+        this.#childSignalMap.set(prop, value)
         SignalManager.bindParent(value, this.proxy, prop)
         return isRefSignal(value) ? value.value : value
       }
-      // 创建子代理
-      const childProxy = new ReactiveProxyHandler(value, { ...this.options }).proxy
+      const type = value instanceof Set ? 'set' : value instanceof Map ? 'map' : 'object'
+      let childProxy: Reactive<any, Deep>
+      if (type === 'set' || type === 'map') {
+        childProxy = createCollectionProxy(value, type) as any
+      } else {
+        childProxy = new ReactiveProxyHandler(value, { ...this.#options }).proxy
+      }
       // 映射父级关系
       SignalManager.bindParent(childProxy, this.proxy, prop)
-      this.childSignalMap.set(prop, childProxy)
+      this.#childSignalMap.set(prop, childProxy)
       return childProxy
     }
     // 如果值不是一个信号则上报给依赖管理器跟踪
     if (!isSignal(value)) this.track(prop)
     // 如果是值代理则返回被代理的值
-    return this.options.deep && isRefSignal(value) ? value.value : value
+    return this.#options.deep && isRefSignal(value) ? value.value : value
   }
 
   /**
@@ -167,7 +164,7 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    */
   set(target: T, prop: AnyKey, newValue: any): boolean {
     const oldValue = Reflect.get(target, prop)
-    if (this.options.compare(oldValue, newValue)) return true
+    if (this.#options.compare(oldValue, newValue)) return true
     // 删除子代理
     this.removeChildSignal(prop)
     if (isRefSignal(oldValue)) {
@@ -187,9 +184,9 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    * @private
    */
   private removeChildSignal(prop: AnyKey) {
-    if (this.childSignalMap && this.childSignalMap.has(prop)) {
-      SignalManager.unbindParent(this.childSignalMap.get(prop)!, this.proxy, prop)
-      this.childSignalMap.delete(prop)
+    if (this.#childSignalMap && this.#childSignalMap.has(prop)) {
+      SignalManager.unbindParent(this.#childSignalMap.get(prop)!, this.proxy, prop)
+      this.#childSignalMap.delete(prop)
     }
   }
 
@@ -260,7 +257,6 @@ function createCollectionProxy(target: any, type: 'set' | 'map') {
   })
   return proxy as any
 }
-
 /**
  * ## 创建响应式代理信号
  *
