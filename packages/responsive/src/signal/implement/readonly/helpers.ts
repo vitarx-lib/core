@@ -16,7 +16,7 @@ export const READONLY_OBJECT_SYMBOL = Symbol('READONLY_OBJECT_SYMBOL')
  * @template T - 目标对象类型
  * @template Deep - 是否深度只读，此函数固定为true
  * @param {T} target - 要代理的目标对象
- * @param {ReadonlyOptions<Deep> | Deep} [options={deep=true,write:'error'}] - 可选的配置选项，包括是否深度只读和写入行为处理模式，可以传入布尔值快捷设置deep配置
+ * @param {ReadonlyOptions<Deep> | Deep} [options={deep=true,write:'error',message:'The object is read-only, and the ${prop} attribute cannot be modify!'}] - 可选的配置选项，包括是否深度只读和写入行为处理模式，可以传入布尔值快捷设置deep配置
  * @returns {DeepReadonly<T>} 深度只读的代理对象
  * @example
  * ```typescript
@@ -49,7 +49,7 @@ export function readonly<T extends AnyObject, Deep extends boolean = true>(
  *
  * @template T - 目标对象类型
  * @param {T} target - 要代理的目标对象
- * @param {Omit<ReadonlyOptions, 'deep'>} [options={write:'error'}] - 可选的配置选项，包括写入行为处理模式
+ * @param {Omit<ReadonlyOptions, 'deep'>} [options={write:'error', message:'The object is read-only, and the ${prop} attribute cannot be modify!'}] - 可选的配置选项，包括写入行为处理模式
  * @returns {Readonly<T>} 浅层只读的代理对象
  * @example
  * ```typescript

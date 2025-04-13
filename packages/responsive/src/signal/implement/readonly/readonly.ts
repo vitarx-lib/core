@@ -8,12 +8,13 @@ import type { ReadonlyOptions } from './types'
  */
 export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
   static #cache = new WeakMap()
-  readonly #options: ReadonlyOptions
+  readonly #options: Required<ReadonlyOptions>
 
   protected constructor(options?: ReadonlyOptions) {
     this.#options = {
       deep: options?.deep ?? true,
-      write: options?.write ?? 'error'
+      write: options?.write ?? 'error',
+      message: 'the object is read-only, and the ${prop} attribute cannot be modify!'
     }
   }
 
@@ -35,17 +36,9 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
 
   set(target: any, prop: any, value: any): boolean {
     if (this.#options.write === 'error') {
-      throw new Error(
-        `[Readonly][ERROR]：The object is read-only, and the ${String(
-          prop
-        )} attribute cannot be removed!`
-      )
+      throw new Error(this.createMessage(prop, 'ERROR'))
     }
-    console.warn(
-      `[Readonly][WARN]：The object is read-only, and the ${String(
-        prop
-      )} attribute cannot be removed!`
-    )
+    console.warn(this.createMessage(prop, 'WARN'))
     if (this.#options.write === 'warningAndWrite') {
       return Reflect.set(target, prop, value)
     }
@@ -54,21 +47,24 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
 
   deleteProperty(target: any, prop: any): boolean {
     if (this.#options.write === 'error') {
-      throw new Error(
-        `[Readonly][ERROR]：The object is read-only, and the ${String(
-          prop
-        )} attribute cannot be removed!`
-      )
+      throw new Error(this.createMessage(prop, 'ERROR'))
     }
-    console.warn(
-      `[Readonly][WARN]：The object is read-only, and the ${String(
-        prop
-      )} attribute cannot be removed!`
-    )
+    console.warn(this.createMessage(prop, 'WARN'))
     if (this.#options.write === 'warningAndWrite') {
       return Reflect.deleteProperty(target, prop)
     }
     return true
+  }
+
+  /**
+   * 创建提示信息
+   *
+   * @param prop
+   * @param type
+   * @private
+   */
+  private createMessage(prop: any, type: 'ERROR' | 'WARN') {
+    return `[Readonly][${type}]：` + this.#options.message!.replace('${prop}', String(prop))
   }
 
   get(target: T, prop: any, receiver: any): any {

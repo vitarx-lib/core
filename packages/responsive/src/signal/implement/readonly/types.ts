@@ -9,7 +9,6 @@ export interface ReadonlyOptions<Deep extends boolean = boolean> {
    * @default true
    */
   deep?: Deep
-
   /**
    * 写入行为处理模式
    * - error: 抛出错误
@@ -19,4 +18,12 @@ export interface ReadonlyOptions<Deep extends boolean = boolean> {
    * @default "error"
    */
   write?: WriteHandleMode
+  /**
+   * 要输出的信息
+   *
+   * 支持 ${prop} 占位符
+   *
+   * @default "The object is read-only, and the ${prop} attribute cannot be removed!"
+   */
+  message?: string
 }
