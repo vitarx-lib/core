@@ -74,7 +74,7 @@ declare global {
    * // }
    */
   type DeepReadonly<T> = {
-    readonly [P in keyof T]: T[P] extends AnyFunction | AnyPrimitive
+    readonly [P in keyof T]: T[P] extends AnyFunction | AnyPrimitive | AnyCollection
       ? T[P]
       : T[P] extends Set<infer U>
         ? ReadonlySet<U>
@@ -121,7 +121,19 @@ declare global {
    * // }
    */
   type UnReadonly<T> = {
-    -readonly [P in keyof T]: T[P] extends Record<string | symbol, any> ? UnReadonly<T[P]> : T[P]
+    -readonly [P in keyof T]: T[P] extends AnyFunction | AnyPrimitive | AnyCollection
+      ? T[P]
+      : T[P] extends Array<infer U>
+        ? Array<UnReadonly<U>>
+        : T[P] extends Map<infer K, infer V>
+          ? Map<K, V>
+          : T[P] extends WeakMap<infer K, infer V>
+            ? WeakMap<K, V>
+            : T[P] extends WeakSet<infer V>
+              ? WeakSet<V>
+              : T[P] extends object
+                ? UnReadonly<T[P]>
+                : T[P]
   }
   /**
    * 将对象类型中的指定属性设为必填项
