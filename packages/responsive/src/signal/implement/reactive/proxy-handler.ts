@@ -36,7 +36,7 @@ export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
  * // 现在proxy是一个响应式对象
  * ```
  */
-class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
+export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = true>
   implements ProxyHandler<T>
 {
   /**
