@@ -6,7 +6,7 @@ import type {
   RuntimeElement,
   RuntimeNoTagElement
 } from '../../renderer/index'
-import { Widget } from '../../widget/index'
+import { Widget, type WidgetType } from '../../widget/index'
 import { type Fragment, type RefEl, VNodeSymbol } from '../core/index'
 import type { UniqueKey } from './attributes'
 
@@ -17,7 +17,7 @@ import type { UniqueKey } from './attributes'
  * - Fragment - 片段类型
  * - Function - 函数类型
  */
-export type VNodeType = IntrinsicElementNames | Fragment | Function
+export type VNodeType = IntrinsicElementNames | Fragment | WidgetType
 
 /**
  * HTML节点Props类型重载
@@ -87,7 +87,7 @@ export interface ElementVNode<T extends ExcludeNoTagElements = ExcludeNoTagEleme
 /**
  * 组件节点
  */
-export interface WidgetVNode<T extends Function = Function> extends BaseVNode<T> {
+export interface WidgetVNode<T extends WidgetType = WidgetType> extends BaseVNode<T> {
   /**
    * 组件实例
    */
@@ -112,6 +112,6 @@ export type VNode<T extends VNodeType = VNodeType> = T extends NoTagElements
   ? NoTagElementVNode<T>
   : T extends Fragment
     ? FragmentNode
-    : T extends Function
+    : T extends WidgetType
       ? WidgetVNode<T>
       : ElementVNode
