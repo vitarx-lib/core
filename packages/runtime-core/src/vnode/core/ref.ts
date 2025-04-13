@@ -42,3 +42,12 @@ export function refEl<T>(): RefEl<T> {
   Object.defineProperty(obj, RefElSymbol, { value: true })
   return obj
 }
+
+/**
+ * 判断是否为引用元素
+ *
+ * @param obj
+ */
+export function isRefEl(obj: any): obj is RefEl<any> {
+  return obj?.[RefElSymbol] === true
+}

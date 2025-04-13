@@ -36,8 +36,8 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
    * VNode对象标识符
    */
   readonly [VNodeSymbol]: true
-  readonly type: T
   readonly props: VNodePropsType<T> | null
+  readonly type: T
   /**
    * 唯一标识符
    */
@@ -45,12 +45,12 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
   /**
    * 引用
    */
-  ref: RefEl<T> | null
+  readonly ref: RefEl<T> | null
   /**
    * 仅在渲染过后才存在
    */
-  el?: T extends IntrinsicElementNames ? RuntimeElement<T> : RuntimeNoTagElement
-  children: VNode[]
+  readonly el?: T extends IntrinsicElementNames ? RuntimeElement<T> : RuntimeNoTagElement
+  readonly children: VNode[]
 }
 
 /**

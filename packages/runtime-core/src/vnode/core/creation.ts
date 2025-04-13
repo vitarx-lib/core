@@ -193,6 +193,6 @@ export function createVNode<T extends VNodeType>(
   }
   propsHandler(vnode)
   // 格式化children
-  vnode.children = formatChildren(children, vnode)
+  vnode.children.push(...formatChildren(children, vnode))
   return vnode
 }
