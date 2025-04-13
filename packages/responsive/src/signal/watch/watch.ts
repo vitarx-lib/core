@@ -1,4 +1,4 @@
-import { deepClone, isArray, isFunction, isSet } from '@vitarx/utils'
+import { deepClone, isArray, isFunction } from '@vitarx/utils'
 import { Depend } from '../../depend/index'
 import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
 import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index'
@@ -36,7 +36,8 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
  * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域（自动销毁）
  * @param {boolean} [options.batch=true] - 是否使用批处理模式（合并同一周期内的多次更新）
- * @param {boolean} [options.clone=false] - 是否深度克隆新旧值（解决对象类型比较问题）
+ * @param {boolean} [options.clone=false] - 是否深度克隆新旧值（解决对象引用无法辨别差异问题）
+ * @param {boolean} [options.immediate=false] - 立即执行一次回调
  * @returns {Subscriber<VoidCallback>} - 返回订阅者实例，可用于手动取消监听
  * @throws {TypeError} - 当参数类型不正确或监听源无效时抛出类型错误
  *
@@ -81,7 +82,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
   options?: WatchOptions
 ): Subscriber<VoidCallback> {
   if (!isFunction(callback)) throw new TypeError('callback is not a function')
-  const { clone = false, ...subscriptionOptions } = options ?? {}
+  const { clone = false, immediate = false, ...subscriptionOptions } = options ?? {}
   // 监听目标
   let target = source
   // 清理函数
@@ -139,6 +140,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
       cacheValue = newValue
       callback(newValue, oldValue, onCleanup)
     }, subscriptionOptions)
+    if (immediate) subscriber.trigger()
     return Observer.subscribe(target, subscriber, subscriptionOptions).onDispose(clean)
   }
   // 处理多数组监听源
@@ -173,6 +175,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
     Observer.addSubscriber(targets, Observer.ALL_PROPERTIES_SYMBOL, subscriber, {
       batch: subscriptionOptions.batch
     })
+    if (immediate) subscriber.trigger()
     return subscriber
   }
   throw new TypeError(
@@ -185,7 +188,10 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
  *
  * @param targets
  * @param {function} callback - 回调函数
- * @param {object} options - 监听器配置选项
+ * @param {WatchOptions} [options] - 监听器配置选项
+ * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
+ * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域（自动销毁）
+ * @param {boolean} [options.batch=true] - 是否使用批处理模式（合并同一周期内的多次更新）
  * @returns {object} - 监听器实例
  * @example
  * import { watchChanges,reactive,ref,microTaskDebouncedCallback } from 'vitarx'
@@ -209,7 +215,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
 export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
   targets: Array<T> | Set<T>,
   callback: CB,
-  options?: Omit<WatchOptions, 'clone'>
+  options?: Omit<WatchOptions, 'clone' | 'immediate'>
 ): Subscriber<CB> {
   return Observer.subscribes(targets, callback, options)
 }
@@ -225,17 +231,16 @@ export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
  * @template CB 回调函数类型，默认为WatchPropertyCallback<T>
  *
  * @param {T} signal - 目标对象，被监听的信号源
- * @param {PROPS} properties - 属性列表，指定要监听的属性
+ * @param {PROPS} properties - 属性列表，指定要监听的属性，集合类型只能监听size
  *   - 可以是单个属性名
  *   - 可以是属性名数组
  *   - 可以是属性名Set集合
- *   - 如果的目标信号的原始值为集合类型，那么只能监听集合的size属性
  * @param {CB} callback - 回调函数，当指定的属性发生变化时被调用
  * @param {WatchOptions} [options] - 监听器配置选项
- *   - batch: 是否使用批处理模式，默认为true
- *   - clone: 是否克隆新旧值，默认为false
- *   - limit: 限制触发次数，默认为0（不限制）
- *   - scope: 是否自动添加到当前作用域，默认为true
+ * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
+ * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域（自动销毁）
+ * @param {boolean} [options.batch=true] - 是否使用批处理模式（合并同一周期内的多次更新）
+ * @param {boolean} [options.immediate=false] - 立即执行一次回调
  * @returns {Subscriber<CB>} - 返回订阅者实例，可用于管理订阅生命周期
  *
  * @example
@@ -269,8 +274,15 @@ export function watchProperty<
   callback: CB,
   options?: Omit<WatchOptions, 'clone'>
 ): Subscriber<CB> {
-  if (!isSet(properties) && !Array.isArray(properties)) {
-    properties = [properties] as unknown as PROPS
+  const { immediate = false, ...subscriptionOptions } = options ?? {}
+  let props = properties as Array<keyof T>
+  if (typeof properties === 'string') {
+    props = [properties as any]
   }
-  return Observer.subscribeProperties(signal, properties as Array<keyof T>, callback, options)
+  const subscriber = Observer.subscribeProperties(signal, props, callback, subscriptionOptions)
+  if (immediate) {
+    // @ts-ignore
+    subscriber.trigger(Array.from(props), signal)
+  }
+  return subscriber
 }

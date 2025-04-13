@@ -39,6 +39,35 @@ describe('watch', () => {
       count.value = 1
       expect(fn).toHaveBeenCalledWith(2, 0, expect.any(Function))
     })
+
+    it('应该支持deep选项深度监听', () => {
+      const state = reactive({ nested: { count: 0 } })
+      const fn = vi.fn()
+      watch(state.nested, fn, { batch: false })
+      state.nested.count = 1
+      expect(fn).toHaveBeenCalledOnce()
+    })
+    it('应该支持immediate选项立即执行', () => {
+      const state = reactive({ count: 0 })
+      const fn = vi.fn()
+      watch(state, fn, { immediate: true, batch: false })
+      expect(fn).toHaveBeenCalledOnce()
+      const fn2 = vi.fn()
+      watchProperty(state, 'count', fn2, { immediate: true, batch: false })
+      expect(fn2).toHaveBeenCalledWith(['count'], state)
+    })
+    it('应该支持监听集合', () => {
+      const map = reactive(new Map())
+      const fn = vi.fn()
+      watch(map, fn, { batch: false })
+      map.set('key', 'value')
+      expect(fn).toHaveBeenCalledOnce()
+      const set = ref(new Set())
+      const fn2 = vi.fn()
+      watch(set, fn2, { batch: false })
+      set.value.add('key')
+      expect(fn2).toHaveBeenCalledOnce()
+    })
   })
 
   describe('选项', () => {

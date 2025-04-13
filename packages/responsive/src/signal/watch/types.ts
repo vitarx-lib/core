@@ -31,6 +31,12 @@ export interface WatchOptions extends SubscriptionOptions {
    * @default false
    */
   clone?: boolean
+  /**
+   * 立即执行一次回调
+   *
+   * @default false
+   */
+  immediate?: boolean
 }
 
 /**
