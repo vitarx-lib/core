@@ -1,4 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
+import type { IntrinsicAttributes } from '../../vnode/index'
 import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event'
 import type { ClassProperties, StyleProperties } from './style'
 
@@ -672,4 +673,5 @@ type ExtractElementProperties<T extends Element> = {
 export type ElementProperties<T extends Element> = ExtractElementProperties<T> &
   EventHumpMap<T> &
   EventModifierMap<T> &
-  CustomProperties
+  CustomProperties &
+  Omit<IntrinsicAttributes, 'v-retry' | 'v-timeout'>
