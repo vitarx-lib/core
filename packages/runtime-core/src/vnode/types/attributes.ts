@@ -45,6 +45,29 @@ export interface IntrinsicAttributes {
    *  第二个元素可以指定哪些属性不需要绑定。
    */
   'v-bind'?: VBind
-
+  /**
+   * 超时时间
+   *
+   * 懒加载组件的超时时间，单位为毫秒。
+   *
+   * @default 10000
+   */
+  'v-timeout'?: number
+  /**
+   * 重试次数
+   *
+   * 如果组件加载失败，重试次数。
+   */
+  'v-retry'?: number
+  /**
+   * 条件渲染，会销毁组件
+   */
+  'v-if'?: boolean
+  'v-else'?: boolean
+  'v-else-if'?: boolean
+  /**
+   * 显示隐藏，不会销毁组件
+   */
+  'v-show'?: boolean
   [key: string]: any
 }
