@@ -46,20 +46,6 @@ export interface IntrinsicAttributes {
    */
   'v-bind'?: VBind
   /**
-   * 超时时间
-   *
-   * 懒加载组件的超时时间，单位为毫秒。
-   *
-   * @default 10000
-   */
-  'v-timeout'?: number
-  /**
-   * 重试次数
-   *
-   * 如果组件加载失败，重试次数。
-   */
-  'v-retry'?: number
-  /**
    * 条件渲染，会销毁组件
    */
   'v-if'?: boolean
