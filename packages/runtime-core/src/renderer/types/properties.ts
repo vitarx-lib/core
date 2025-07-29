@@ -674,4 +674,4 @@ export type ElementProperties<T extends Element> = ExtractElementProperties<T> &
   EventHumpMap<T> &
   EventModifierMap<T> &
   CustomProperties &
-  Omit<IntrinsicAttributes, 'v-retry' | 'v-timeout'>
+  IntrinsicAttributes
