@@ -8,7 +8,11 @@ import { proxyWidgetProps } from './props'
 /**
  * 创建组件实例
  *
- * @param vnode
+ * 用于创建组件实例，可以通过vnode.instance同步获取组件实例
+ *
+ * @internal 内部核心函数
+ * @param {VNode<WidgetType>} vnode - 节点
+ * @returns {Promise<Widget>} - 组件实例
  */
 export function createInstance(vnode: VNode<WidgetType>): Promise<Widget> {
   // 获取最新模块，仅在开发时进行HMR处理
