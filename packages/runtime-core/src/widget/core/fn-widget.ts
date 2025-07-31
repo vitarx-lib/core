@@ -2,7 +2,6 @@ import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
 import { createVNode } from '../../vnode/core/creation'
 import { isVNode, type VNode, type WidgetVNode } from '../../vnode/index'
-import { HookCollector, type HookCollectResult } from '../manager/hooks'
 import type {
   AnyProps,
   BuildVNode,
@@ -15,6 +14,7 @@ import {
   __WIDGET_INTRINSIC_KEYWORDS__,
   __WIDGET_INTRINSIC_PROPERTY_KEYWORDS__
 } from './constant'
+import { HookCollector, type HookCollectResult } from './manager/hooks'
 import { Widget } from './widget'
 
 /**
