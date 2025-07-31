@@ -1,3 +1,4 @@
 export * from './widget'
 export * from './fn-widget'
+export * from './manager'
 export * from './utils'
