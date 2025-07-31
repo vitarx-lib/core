@@ -1,7 +1,9 @@
 import { createScope } from '@vitarx/responsive'
-import { getCurrentVNode, isRefEl, runInVNodeContext, type VNode } from '../../vnode/index'
-import { _createFnWidget, isClassWidget, Widget } from '../core/index'
-import type { FunctionWidget, WidgetType } from '../types/index'
+import { getCurrentVNode, isRefEl, runInVNodeContext, type VNode } from '../../../vnode/index'
+import type { FunctionWidget, WidgetType } from '../../types/index'
+import { _createFnWidget } from '../fn-widget'
+import { isClassWidget } from '../utils'
+import type { Widget } from '../widget'
 import { reportWidgetError } from './error-hanler'
 import { proxyWidgetProps } from './props'
 

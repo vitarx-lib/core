@@ -1,7 +1,7 @@
-import { findParentVNode } from '../../vnode/index'
-import { LifecycleHooks } from '../core/constant'
-import { Widget } from '../core/index'
-import type { ErrorInfo, LifecycleHookParameter } from '../types/index'
+import { findParentVNode } from '../../../vnode/index'
+import type { ErrorInfo, LifecycleHookParameter } from '../../types/index'
+import { LifecycleHooks } from '../constant'
+import type { Widget } from '../widget'
 import { triggerLifecycleHook } from './lifecycle'
 
 /**

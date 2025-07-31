@@ -1,7 +1,7 @@
 import { getContext, runInContext } from '@vitarx/responsive'
-import { type WidgetVNode } from '../../vnode/index'
-import { LifecycleHooks } from '../core/constant'
-import type { FunctionWidget, ValidFunctionWidgetReturnValue } from '../types/index'
+import type { WidgetVNode } from '../../../vnode/index'
+import type { FunctionWidget, ValidFunctionWidgetReturnValue } from '../../types/index'
+import type { LifecycleHooks } from '../constant'
 
 interface CollectContext {
   exposed: Record<string, any>
