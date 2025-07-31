@@ -1,6 +1,10 @@
-import { LifecycleHooks } from '../core/constant'
-import { type Widget } from '../core/index'
-import type { ErrorSource, LifecycleHookParameter, LifecycleHookReturnType } from '../types/index'
+import type {
+  ErrorSource,
+  LifecycleHookParameter,
+  LifecycleHookReturnType
+} from '../../types/index'
+import { LifecycleHooks } from '../constant'
+import type { Widget } from '../widget'
 import { errorHandler } from './error-hanler'
 import { HookCollector } from './hooks'
 
