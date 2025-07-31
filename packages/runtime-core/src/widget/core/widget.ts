@@ -1,7 +1,9 @@
 import { EffectScope, getCurrentScope } from '@vitarx/responsive'
-import { getCurrentVNode, type WidgetVNode } from '../../vnode/index'
+import { getCurrentVNode, type VNode, type WidgetVNode } from '../../vnode/index'
 import type { ErrorInfo } from '../types/error'
-import { CLASS_WIDGET_BASE_SYMBOL } from './constant'
+import { CLASS_WIDGET_BASE_SYMBOL, LifecycleHooks } from './constant'
+import { triggerLifecycleHook } from './manager/index'
+import { WidgetRenderer } from './manager/renderer'
 
 /**
  * 此类型用于推导出组件的子节点类型。
@@ -19,7 +21,7 @@ type WidgetChildren<P> = P extends { children: infer U }
  * @template Props - `this.props`的类型，默认=InputProps
  *
  * @remarks
- * `Props`泛型详细说明：假设`InputProps`中有一个属性的类型是可选的string，
+ * `Props`泛型详细说明：假设`InputProps`中有一个name属性类型是可选的string，
  * 但通过 `defineProps` 定义了默认值，调用`this.props.name`获取数据时，`this.props.name`的类型是string|undefined，
  * 这是TS类型推导的问题，满屏的错误提示需使用`!`强制断言不为空，为了解决这个问题我们可以传入`Props`泛型来重载`this.props`的类型，
  * 就像下面那样：
@@ -65,13 +67,33 @@ export abstract class Widget<
    * @private
    */
   readonly #vnode: WidgetVNode
+  /**
+   * 内部私有属性，用于存放渲染器实例。
+   *
+   * @internal
+   * @private
+   */
+  #renderer?: WidgetRenderer<this>
 
   public constructor(props: InputProps) {
     this.#props = props
     this.#scope = getCurrentScope()!
     this.#vnode = getCurrentVNode()!
     if (!this.#scope) throw new Error('Widget must be created in a EffectScope')
-    this.onCreate?.()
+    if (import.meta.env?.MODE !== 'development' || !this.#vnode.__$HMR_STATE$__) {
+      // 仅在非开发环境或开发环境不处于HMR模式下，才会触发生命周期钩子
+      triggerLifecycleHook(this, LifecycleHooks.create)
+    }
+  }
+
+  /**
+   * 获取组件的 EffectScope
+   *
+   * @returns {EffectScope}
+   * @internal 该获取器被内部逻辑依赖，请勿重写！
+   */
+  get scope(): EffectScope {
+    return this.#scope
   }
 
   /**
@@ -81,6 +103,18 @@ export abstract class Widget<
    */
   get props(): Readonly<InputProps & Props> {
     return this.#props as InputProps & Props
+  }
+
+  /**
+   * 获取渲染器实例。
+   *
+   * @internal 该获取器被内部逻辑依赖，谨慎重写！
+   */
+  protected get renderer(): WidgetRenderer<this> {
+    if (!this.#renderer) {
+      this.#renderer = new WidgetRenderer(this)
+    }
+    return this.#renderer
   }
 
   /**
@@ -102,8 +136,6 @@ export abstract class Widget<
     return this.#props.children
   }
 
-  update() {}
-
   /**
    * 组件创建时调用
    *
@@ -113,19 +145,55 @@ export abstract class Widget<
    * ```tsx
    * class MyWidget extends Widget {
    *   private data = ref([])
-   *
+   *   private timer: null|number = null
    *   onCreate() {
    *     // 初始化组件的响应式数据
    *     this.data.value = ['初始数据']
    *     // 设置定时器或订阅事件
-   *     const timer = setInterval(() => this.updateData(), 1000)
-   *     // 在组件卸载时清理
-   *     onUnmounted(() => clearInterval(timer))
+   *     const this.timer = setInterval(() => this.updateData(), 1000)
    *   }
+   *   onUnmounted(){
+   *    // 在组件卸载时清理
+   *      clearInterval(this.timer)
+   *    }
    * }
    * ```
    */
   onCreate?(): void
+
+  /**
+   * 强制更新视图
+   *
+   * 如果你修改了非响应式数据，则可以调用此方法，强制更新视图。
+   *
+   * @param {VNode} newChildVNode - 可选的新`child`虚拟节点，如果不提供，则使用`build`方法构建。
+   * @protected
+   */
+  protected update(newChildVNode?: VNode) {}
+
+  /**
+   * 构建`UI`元素。
+   *
+   * 该方法会被多次调用，所以在方法内不应该存在任何副作用。
+   *
+   * > **注意**：在类组件的build方法中不要返回 `() => Element`，而是应返回`Element`。
+   *
+   * 示例：
+   * ```ts
+   * // JSX语法
+   * build() {
+   *   return <div>Hello World</div>
+   * }
+   * // 使用`createVNode`或`createElement` API函数创建元素
+   * build() {
+   *  return createVNode('div',{},'Hello World')
+   * }
+   * ```
+   * @note 该方法应由子类实现，且该方法是受保护的，仅供内部渲染逻辑使用。
+   * @protected
+   * @returns {Element} - 返回的是虚拟的VNode节点
+   */
+  protected abstract build(): VNode | null
 
   /**
    * 组件挂载前调用
