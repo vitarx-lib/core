@@ -3,6 +3,7 @@ import type {
   IntrinsicElementNames,
   IntrinsicElements,
   NoTagElements,
+  RuntimeContainerElement,
   RuntimeElement,
   RuntimeNoTagElement
 } from '../../renderer/index'
@@ -20,15 +21,12 @@ import type { UniqueKey } from './attributes'
 export type VNodeType = IntrinsicElementNames | Fragment | WidgetType
 
 /**
- * HTML节点Props类型重载
- */
-/**
  * 节点Props类型重载
  */
 export type VNodePropsType<T extends VNodeType> = T extends IntrinsicElementNames
   ? IntrinsicElements[T]
-  : T extends Function
-    ? any
+  : T extends WidgetType<infer P>
+    ? P
     : {}
 
 export interface BaseVNode<T extends VNodeType = VNodeType> {
@@ -49,7 +47,11 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
   /**
    * 仅在渲染过后才存在
    */
-  readonly el?: T extends IntrinsicElementNames ? RuntimeElement<T> : RuntimeNoTagElement
+  readonly el?: T extends IntrinsicElementNames
+    ? RuntimeElement<T>
+    : T extends WidgetType
+      ? RuntimeContainerElement
+      : RuntimeNoTagElement
   readonly children: VNode[]
 }
 
