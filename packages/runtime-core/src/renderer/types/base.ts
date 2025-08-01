@@ -36,7 +36,7 @@ export type IntrinsicElements = {
 }
 
 /**
- * 子闭合的元素
+ * 自闭合的元素
  *
  * 表示没有子节点的元素，如img、area、input等
  *
