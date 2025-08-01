@@ -91,7 +91,7 @@ export function depCollect<T>(
  * const state = reactive({ count: 0 })
  *
  * // 订阅count属性的变化
- * const { result } = subscribe(
+ * const { result } = depSubscribe(
  *   () => state.count * 2, // effect函数，访问count属性并返回计算结果
  *   () => console.log('count changed!') // 当count变化时触发的回调
  * )
