@@ -1,3 +1,4 @@
+import { unref } from '@vitarx/responsive'
 import type { VNode, VNodeType } from '../../vnode/index'
 import type { WidgetType } from '../../widget/index'
 import type {
@@ -7,12 +8,7 @@ import type {
   RuntimeElements,
   StyleProperties
 } from '../types/index'
-import {
-  cssClassValueToString,
-  cssStyleValueToString,
-  extractEventOptions,
-  formatPropValue
-} from './utils'
+import { cssClassValueToString, cssStyleValueToString, extractEventOptions } from './utils'
 
 /**
  * 渲染器抽象基类
@@ -65,7 +61,7 @@ export abstract class Renderer {
    * @returns {void}
    */
   setText(el: RuntimeElements, text: string): void {
-    el.nodeValue = formatPropValue(text)
+    el.nodeValue = unref(text)
   }
 
   /**
@@ -75,7 +71,7 @@ export abstract class Renderer {
    * @param html - HTML 字符串
    */
   setRichText(el: RuntimeElements, html: string): void {
-    'innerHTML' in el && (el.innerHTML = formatPropValue(html))
+    'innerHTML' in el && (el.innerHTML = unref(html))
   }
 
   /**
