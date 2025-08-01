@@ -1,7 +1,18 @@
 import type { VNode, VNodeType } from '../../vnode/index'
 import type { WidgetType } from '../../widget/index'
-import type { EventNames, EventOptions, RuntimeElements, StyleProperties } from '../types/index'
-import { extractEventOptions } from './utils'
+import type {
+  ClassProperties,
+  EventNames,
+  EventOptions,
+  RuntimeElements,
+  StyleProperties
+} from '../types/index'
+import {
+  cssClassValueToString,
+  cssStyleValueToString,
+  extractEventOptions,
+  formatPropValue
+} from './utils'
 
 /**
  * 渲染器抽象基类
@@ -50,10 +61,12 @@ export abstract class Renderer {
    *
    * @description 设置元素的文本内容，如果非文本/注释节点则
    * @param el - 元素实例
-   * @param text - 文本内容或文本对象
+   * @param text - 文本内容
    * @returns {void}
    */
-  abstract setText(el: RuntimeElements, text: string): void
+  setText(el: RuntimeElements, text: string): void {
+    el.nodeValue = formatPropValue(text)
+  }
 
   /**
    * 设置富文本内容
@@ -61,7 +74,9 @@ export abstract class Renderer {
    * @param el - 元素实例
    * @param html - HTML 字符串
    */
-  abstract setRichText(el: RuntimeElements, html: string): void
+  setRichText(el: RuntimeElements, html: string): void {
+    'innerHTML' in el && (el.innerHTML = formatPropValue(html))
+  }
 
   /**
    * 设置元素的样式
@@ -71,17 +86,30 @@ export abstract class Renderer {
    * @param style - 样式属性或样式对象
    * @returns {void}
    */
-  abstract setStyle(el: RuntimeElements, style: StyleProperties): void
+  setStyle(el: RuntimeElements, style: StyleProperties): void {
+    const cssText = cssStyleValueToString(style)
+    if (el.style.cssText !== cssText) {
+      el.style.cssText = cssText
+    }
+    // 如果没有有效样式，移除 style 属性
+    if (el.style.length === 0) el.removeAttribute('style')
+  }
 
   /**
    * 设置元素的样式类名
    *
    * @description 设置元素的类名，包括设置类名和类名对象
    * @param el - 元素实例
-   * @param className - 类名或类名对象
+   * @param classValue - 类名或类名对象
    * @returns {void}
    */
-  abstract setClass(el: RuntimeElements, className: string[]): void
+  setClass(el: RuntimeElements, classValue: ClassProperties): void {
+    const className = cssClassValueToString(classValue)
+    if (el.className !== className) {
+      el.setAttribute('class', className)
+    }
+    if (el.classList.length === 0) el.removeAttribute('class')
+  }
 
   /**
    * 设置元素的属性值
@@ -101,7 +129,13 @@ export abstract class Renderer {
    * @param {string} name - 要移除的属性名
    * @returns {void}
    */
-  abstract removeAttribute(el: RuntimeElements, name: string): void
+  removeAttribute(el: RuntimeElements, name: string): void {
+    if (name === 'className' || name === 'classname' || name === 'class') {
+      el.removeAttribute('class')
+    } else {
+      el.removeAttribute(name)
+    }
+  }
 
   /**
    * 获取元素的属性值
