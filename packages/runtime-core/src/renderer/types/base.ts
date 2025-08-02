@@ -14,7 +14,7 @@ type ElementTagMap = HTMLElementTagNameMap &
  *
  * @extends RuntimeChildlessElement
  */
-export type SingleNodeElementNames =
+export type SingleNodeElementName =
   | 'img'
   | 'area'
   | 'input'
@@ -30,29 +30,38 @@ export type SingleNodeElementNames =
   | 'param'
   | 'wbr'
 
-export type ContainerElementNames = Exclude<keyof ElementTagMap, SingleNodeElementNames>
-export type NoTagElementNames = 'comment-node' | 'text-node'
-export type FragmentElementNames = 'fragment-node'
+/**
+ * 无标签元素名称
+ */
+export type NoTagNodeElementName = 'comment-node' | 'text-node'
+/**
+ * 片段节点元素名称
+ */
+export type FragmentNodeElementName = 'fragment-node'
 /**
  * 固有的元素标签名
  *
- * 包含了所有HTML元素标签名，如div、span、a...以及特殊的无标签元素，如comment-node、text-node等
+ * 包含了所有HTML元素标签名，如div、span、a等元素
  */
-export type IntrinsicElementNames = keyof ElementTagMap | NoTagElementNames | FragmentElementNames
+export type IntrinsicNodeElementName = keyof ElementTagMap
 /**
- * ## 固有元素，用于 jsx ide 提示
- *
- * Vitarx 在解析元素属性时遵循`W3C`标准语法，元素的属性和在html中编写是一致的，但有以下不同之处。
- *
- * 1. style属性接受对象和字符串，对象会自动转为字符串。
- * 2. class属性接受字符串、数组和对象，对象和数组都会自动转为字符串。
- * 3. 绑定事件支持多种语法，事件名称不区分大小写，示例如下：
- *    - `W3C`标准语法，如onclick。
- *    - 小驼峰式语法，如onClick。
+ * 容器元素
  */
-export type IntrinsicElements = {
-  [K in keyof ElementTagMap]: ElementProperties<ElementTagMap[K]>
-} & {
+export type ContainerNodeElementName = Exclude<IntrinsicNodeElementName, SingleNodeElementName>
+/**
+ * 特殊元素
+ */
+export type SpecialNodeElementName = SingleNodeElementName | FragmentNodeElementName
+/**
+ * 所有元素
+ *
+ * 包含了所有元素，如div、span、a等元素，以及特殊元素如注释节点、文本节点、片段节点等
+ */
+export type AllNodeElementName = IntrinsicNodeElementName | SpecialNodeElementName
+/**
+ * 特殊元素节点映射
+ */
+export type SpecialNodeElement = {
   /**
    * 注释节点
    */
@@ -65,7 +74,22 @@ export type IntrinsicElements = {
    * 片段节点
    */
   'fragment-node': { children: any }
-} // 兼容特殊元素
+}
+/**
+ * ## 固有元素节点映射，用于 jsx ide 提示
+ *
+ * Vitarx 在解析元素属性时遵循`W3C`标准语法，元素的属性和在html中编写是一致的，但有以下不同之处。
+ *
+ * 1. style属性接受对象和字符串，对象会自动转为字符串。
+ * 2. class属性接受字符串、数组和对象，对象和数组都会自动转为字符串。
+ * 3. 绑定事件支持多种语法，事件名称不区分大小写，示例如下：
+ *    - `W3C`标准语法，如onclick。
+ *    - 小驼峰式语法，如onClick。
+ */
+export type IntrinsicNodeElement = {
+  [K in IntrinsicNodeElementName]: ElementProperties<ElementTagMap[K]>
+}
+export type AllNodeElement = IntrinsicNodeElement & SpecialNodeElement
 
 /**
  * 运行时元素接口
@@ -87,7 +111,7 @@ interface BaseRuntimeElement {
    * 如果当前元素是最后一个子元素，则该值为null
    * @readonly 只读属性，不可直接修改
    */
-  readonly nextSibling: RuntimeElements | null
+  readonly nextSibling: RuntimeElement | null
   /**
    * 节点的文本内容
    * @readonly 只读属性，通过setText方法修改
@@ -201,15 +225,15 @@ interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
    * // 遍历所有子节点
    * element.children.forEach(child => console.log(child.tagName));
    */
-  readonly children: RuntimeElements[]
+  readonly children: RuntimeElement[]
   /**
    * Returns the last child.
    */
-  readonly lastChild: RuntimeElements | null
+  readonly lastChild: RuntimeElement | null
   /**
    * Returns the first child.
    */
-  readonly firstChild: RuntimeElements | null
+  readonly firstChild: RuntimeElement | null
 
   /**
    * 在指定的锚点节点之前插入新的子节点
@@ -284,7 +308,7 @@ export interface RuntimeChildlessElement extends BaseRuntimeConventionElement {
   /**
    * 当前元素的标签名
    */
-  readonly tagName: SingleNodeElementNames
+  readonly tagName: SingleNodeElementName
 }
 /**
  * 运行时容器元素接口
@@ -297,7 +321,7 @@ export interface RuntimeContainerElement extends BaseRuntimeContainerElement {
   /**
    * 当前元素的标签名
    */
-  readonly tagName: ContainerElementNames
+  readonly tagName: ContainerNodeElementName
   /**
    * 节点的HTML内容
    *
@@ -319,19 +343,8 @@ export interface RuntimeContainerElement extends BaseRuntimeContainerElement {
  * @extends RuntimeContainerElement
  */
 export interface RuntimeFragmentElement extends BaseRuntimeContainerElement {
-  placeholderElement: NoTagElementNames
+  placeholderElement: RuntimeNoTagElement
 }
-
-/**
- * 运行时元素接口的联合类型
- *
- * 表示运行时元素可以是任何类型的元素。
- */
-export type RuntimeElements =
-  | RuntimeNoTagElement
-  | RuntimeChildlessElement
-  | RuntimeContainerElement
-  | RuntimeFragmentElement
 
 /**
  * 运行时元素接口
@@ -340,10 +353,11 @@ export type RuntimeElements =
  *
  * @template T - 元素标签
  */
-export type RuntimeElement<T extends IntrinsicElementNames> = T extends SingleNodeElementNames
-  ? RuntimeChildlessElement
-  : T extends NoTagElementNames
-    ? RuntimeNoTagElement
-    : T extends FragmentElementNames
-      ? RuntimeFragmentElement
-      : RuntimeContainerElement
+export type RuntimeElement<T extends AllNodeElementName = AllNodeElementName> =
+  T extends SingleNodeElementName
+    ? RuntimeChildlessElement
+    : T extends NoTagNodeElementName
+      ? RuntimeNoTagElement
+      : T extends FragmentNodeElementName
+        ? RuntimeFragmentElement
+        : RuntimeContainerElement
