@@ -3,11 +3,9 @@ import type {
   IntrinsicElementNames,
   IntrinsicElements,
   NoTagElements,
-  RuntimeChildlessElement,
   RuntimeContainerElement,
   RuntimeElement,
-  RuntimeNoTagElement,
-  SingleNodeElements
+  RuntimeNoTagElement
 } from '../../renderer/index'
 import { Widget, type WidgetType } from '../../widget/index'
 import { type Fragment, type RefEl, VNodeSymbol } from '../core/index'
@@ -50,9 +48,7 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
    * 仅在渲染过后才存在
    */
   readonly el?: T extends IntrinsicElementNames
-    ? T extends SingleNodeElements
-      ? RuntimeChildlessElement
-      : RuntimeElement<T>
+    ? RuntimeElement<T>
     : T extends WidgetType
       ? RuntimeContainerElement
       : RuntimeNoTagElement
