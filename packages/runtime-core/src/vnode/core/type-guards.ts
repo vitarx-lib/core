@@ -1,9 +1,10 @@
 import { isFunction } from '@vitarx/utils/src/index'
-import type { NoTagElements } from '../../renderer/index'
+import type { NoTagNodeElementName } from '../../renderer/index'
 import type {
-  CommentNode,
+  CommentVNode,
   ElementVNode,
-  NoTagElementVNode,
+  FragmentVNode,
+  NoTagVNode,
   TextNode,
   VNode,
   VNodeType,
@@ -27,7 +28,7 @@ export function isValidVNodeType(type: any): type is VNodeType {
  * @param {any} type - 要检查的类型
  * @returns {boolean} 如果是无标签VNode类型则返回true
  */
-export function isNoTagVNodeType(type: any): type is NoTagElements {
+export function isNoTagVNodeType(type: any): type is NoTagNodeElementName {
   return type === 'text-node' || type === 'comment-node'
 }
 
@@ -77,7 +78,7 @@ export function isTextVNode(obj: any): obj is TextNode {
  * @param {any} obj - 要检查的对象
  * @returns {boolean} 如果对象是注释节点则返回true
  */
-export function isCommentVNode(obj: any): obj is CommentNode {
+export function isCommentVNode(obj: any): obj is CommentVNode {
   return obj?.type === 'comment-node'
 }
 
@@ -87,6 +88,16 @@ export function isCommentVNode(obj: any): obj is CommentNode {
  * @param {any} obj - 要检查的对象
  * @returns {boolean} 如果对象是无标签元素节点则返回true
  */
-export function isNoTagElementVNode(obj: any): obj is NoTagElementVNode {
+export function isNoTagVNode(obj: any): obj is NoTagVNode {
   return obj?.type === 'text-node' || obj?.type === 'comment-node'
+}
+
+/**
+ * 判断对象是否为Fragment节点
+ *
+ * @param {any} obj - 要检查的对象
+ * @returns {boolean} 如果对象是Fragment节点则返回true
+ */
+export function isFragmentVNode(obj: any): obj is FragmentVNode {
+  return obj?.type === Fragment
 }
