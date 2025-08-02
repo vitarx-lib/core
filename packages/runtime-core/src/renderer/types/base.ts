@@ -8,9 +8,19 @@ type ElementTagMap = HTMLElementTagNameMap &
   Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
 
 /**
+ * 特殊元素
+ *
+ * 没有标签的特殊元素，文本节点和注释节点。
+ *
+ * @extends RuntimeNoTagElement
+ */
+export type NoTagElements = 'comment-node' | 'text-node'
+
+/**
  * 固有的元素标签名
  */
-export type IntrinsicElementNames = keyof ElementTagMap | 'comment-node' | 'text-node'
+export type IntrinsicElementNames = keyof ElementTagMap | NoTagElements
+
 /**
  * ## 固有元素，用于 jsx ide 提示
  *
@@ -57,14 +67,6 @@ export type SingleNodeElements =
   | 'embed'
   | 'param'
   | 'wbr'
-/**
- * 特殊元素
- *
- * 没有标签的特殊元素，文本节点和注释节点。
- *
- * @extends RuntimeNoTagElement
- */
-export type NoTagElements = 'comment-node' | 'text-node'
 export type ExcludeNoTagElements = Exclude<IntrinsicElementNames, NoTagElements>
 
 /**
@@ -293,7 +295,6 @@ export interface RuntimeContainerElement extends Omit<RuntimeChildlessElement, '
    */
   removeChild(child: RuntimeBaseElement): void
 }
-
 /**
  * 运行时元素接口的联合类型
  *
