@@ -8,19 +8,37 @@ type ElementTagMap = HTMLElementTagNameMap &
   Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
 
 /**
- * 特殊元素
+ * 自闭合的元素
  *
- * 没有标签的特殊元素，文本节点和注释节点。
+ * 表示没有子节点的元素，如img、area、input等
  *
- * @extends RuntimeNoTagElement
+ * @extends RuntimeChildlessElement
  */
-export type NoTagElements = 'comment-node' | 'text-node'
+export type SingleNodeElementNames =
+  | 'img'
+  | 'area'
+  | 'input'
+  | 'br'
+  | 'hr'
+  | 'link'
+  | 'meta'
+  | 'base'
+  | 'source'
+  | 'track'
+  | 'col'
+  | 'embed'
+  | 'param'
+  | 'wbr'
 
+export type ContainerElementNames = Exclude<keyof ElementTagMap, SingleNodeElementNames>
+export type NoTagElementNames = 'comment-node' | 'text-node'
+export type FragmentElementNames = 'fragment-node'
 /**
  * 固有的元素标签名
+ *
+ * 包含了所有HTML元素标签名，如div、span、a...以及特殊的无标签元素，如comment-node、text-node等
  */
-export type IntrinsicElementNames = keyof ElementTagMap | NoTagElements
-
+export type IntrinsicElementNames = keyof ElementTagMap | NoTagElementNames | FragmentElementNames
 /**
  * ## 固有元素，用于 jsx ide 提示
  *
@@ -43,38 +61,18 @@ export type IntrinsicElements = {
    * 文本节点
    */
   'text-node': { children: string }
-}
-
-/**
- * 自闭合的元素
- *
- * 表示没有子节点的元素，如img、area、input等
- *
- * @extends RuntimeChildlessElement
- */
-export type SingleNodeElements =
-  | 'img'
-  | 'area'
-  | 'input'
-  | 'br'
-  | 'hr'
-  | 'link'
-  | 'meta'
-  | 'base'
-  | 'source'
-  | 'track'
-  | 'col'
-  | 'embed'
-  | 'param'
-  | 'wbr'
-export type ExcludeNoTagElements = Exclude<IntrinsicElementNames, NoTagElements>
+  /**
+   * 片段节点
+   */
+  'fragment-node': { children: any }
+} // 兼容特殊元素
 
 /**
  * 运行时元素接口
  *
  * 表示运行时元素的基本接口，包括父元素、文本内容、节点值、移除元素等方法。
  */
-interface RuntimeBaseElement {
+interface BaseRuntimeElement {
   /**
    * 当前元素的父元素
    *
@@ -117,31 +115,10 @@ interface RuntimeBaseElement {
    */
   [key: string | symbol]: any
 }
-
 /**
- * 运行时无标签元素
- *
- * 表示没有标签的元素
- * 例如：文本节点、注释节点等
- *
- * @extends RuntimeBaseElement
+ * 常规元素基本功能接口
  */
-export interface RuntimeNoTagElement extends RuntimeBaseElement {}
-
-/**
- * 运行时无子节点元素
- *
- * 表示没有子节点的元素
- * 例如：input、img 等 HTML 元素
- *
- * @extends RuntimeBaseElement
- */
-export interface RuntimeChildlessElement extends RuntimeBaseElement {
-  /**
-   * 当前元素的标签名
-   */
-  readonly tagName: SingleNodeElements
-
+interface BaseRuntimeConventionElement extends BaseRuntimeElement {
   /**
    * 设置元素的属性值
    *
@@ -212,28 +189,9 @@ export interface RuntimeChildlessElement extends RuntimeBaseElement {
 }
 
 /**
- * 运行时容器元素接口
- *
- * 表示具有子节点的元素
- *
- * @extends RuntimeChildlessElement
+ * 容器元素基本功能接口
  */
-export interface RuntimeContainerElement extends Omit<RuntimeChildlessElement, 'tagName'> {
-  /**
-   * 当前元素的标签名
-   */
-  readonly tagName: Exclude<IntrinsicElementNames, SingleNodeElements>
-  /**
-   * 节点的HTML内容
-   *
-   * @readonly 只读属性，通过setInnerHTML方法修改
-   * @type {string} HTML内容
-   * @description 获取或设置节点的HTML内容。对于元素节点，返回所有子节点的HTML内容；对于文本节点为空字符串
-   * @example
-   * // 获取节点HTML内容
-   * const html = node.innerHTML;
-   */
-  innerHTML: string
+interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
   /**
    * 当前元素包含的所有子节点列表
    *
@@ -243,7 +201,15 @@ export interface RuntimeContainerElement extends Omit<RuntimeChildlessElement, '
    * // 遍历所有子节点
    * element.children.forEach(child => console.log(child.tagName));
    */
-  readonly children: RuntimeBaseElement[]
+  readonly children: RuntimeElements[]
+  /**
+   * Returns the last child.
+   */
+  readonly lastChild: RuntimeElements | null
+  /**
+   * Returns the first child.
+   */
+  readonly firstChild: RuntimeElements | null
 
   /**
    * 在指定的锚点节点之前插入新的子节点
@@ -256,7 +222,7 @@ export interface RuntimeContainerElement extends Omit<RuntimeChildlessElement, '
    * // 在锚点节点前插入新节点
    * parent.insertBefore(newNode, anchorNode);
    */
-  insertBefore(child: RuntimeBaseElement, anchor: RuntimeBaseElement): void
+  insertBefore(child: BaseRuntimeElement, anchor: BaseRuntimeElement): void
 
   /**
    * 使用新节点替换现有的子节点
@@ -269,7 +235,7 @@ export interface RuntimeContainerElement extends Omit<RuntimeChildlessElement, '
    * // 替换子节点
    * parent.replaceChild(newChild, oldChild);
    */
-  replaceChild(newChild: RuntimeBaseElement, oldChild: RuntimeBaseElement): void
+  replaceChild(newChild: BaseRuntimeElement, oldChild: BaseRuntimeElement): void
 
   /**
    * 在当前元素的末尾添加一个子节点
@@ -281,7 +247,7 @@ export interface RuntimeContainerElement extends Omit<RuntimeChildlessElement, '
    * // 添加一个子节点
    * parent.appendChild(newChild);
    */
-  appendChild(child: RuntimeBaseElement): void
+  appendChild(child: BaseRuntimeElement): void
 
   /**
    * 移除指定的子节点
@@ -293,8 +259,69 @@ export interface RuntimeContainerElement extends Omit<RuntimeChildlessElement, '
    * // 移除子节点
    * parent.removeChild(childToRemove);
    */
-  removeChild(child: RuntimeBaseElement): void
+  removeChild(child: BaseRuntimeElement): void
 }
+
+/**
+ * 运行时无标签元素
+ *
+ * 表示没有标签的元素
+ * 例如：文本节点、注释节点等
+ *
+ * @extends BaseRuntimeElement
+ */
+export interface RuntimeNoTagElement extends BaseRuntimeElement {}
+
+/**
+ * 运行时无子节点元素
+ *
+ * 表示没有子节点的元素
+ * 例如：input、img 等 HTML 元素
+ *
+ * @extends BaseRuntimeElement
+ */
+export interface RuntimeChildlessElement extends BaseRuntimeConventionElement {
+  /**
+   * 当前元素的标签名
+   */
+  readonly tagName: SingleNodeElementNames
+}
+/**
+ * 运行时容器元素接口
+ *
+ * 表示具有子节点的元素
+ *
+ * @extends RuntimeChildlessElement
+ */
+export interface RuntimeContainerElement extends BaseRuntimeContainerElement {
+  /**
+   * 当前元素的标签名
+   */
+  readonly tagName: ContainerElementNames
+  /**
+   * 节点的HTML内容
+   *
+   * @readonly 只读属性，通过setInnerHTML方法修改
+   * @type {string} HTML内容
+   * @description 获取或设置节点的HTML内容。对于元素节点，返回所有子节点的HTML内容；对于文本节点为空字符串
+   * @example
+   * // 获取节点HTML内容
+   * const html = node.innerHTML;
+   */
+  innerHTML: string
+}
+
+/**
+ * 运行时片段元素接口
+ *
+ * 片段元素是运行时容器元素的一种特殊形式，用于表示多个子节点的片段。
+ *
+ * @extends RuntimeContainerElement
+ */
+export interface RuntimeFragmentElement extends BaseRuntimeContainerElement {
+  placeholderElement: NoTagElementNames
+}
+
 /**
  * 运行时元素接口的联合类型
  *
@@ -304,6 +331,7 @@ export type RuntimeElements =
   | RuntimeNoTagElement
   | RuntimeChildlessElement
   | RuntimeContainerElement
+  | RuntimeFragmentElement
 
 /**
  * 运行时元素接口
@@ -312,8 +340,10 @@ export type RuntimeElements =
  *
  * @template T - 元素标签
  */
-export type RuntimeElement<T extends IntrinsicElementNames> = T extends SingleNodeElements
+export type RuntimeElement<T extends IntrinsicElementNames> = T extends SingleNodeElementNames
   ? RuntimeChildlessElement
-  : T extends NoTagElements
+  : T extends NoTagElementNames
     ? RuntimeNoTagElement
-    : RuntimeContainerElement
+    : T extends FragmentElementNames
+      ? RuntimeFragmentElement
+      : RuntimeContainerElement
