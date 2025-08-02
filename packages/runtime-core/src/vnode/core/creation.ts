@@ -6,9 +6,9 @@ import {
   cssClassValueToArray,
   mergeCssClass,
   mergeCssStyle,
-  type NoTagElements
+  type NoTagNodeElementName
 } from '../../renderer/index'
-import type { NoTagElementVNode, UniqueKey, VNode, VNodePropsType, VNodeType } from '../types'
+import type { NoTagVNode, UniqueKey, VNode, VNodePropsType, VNodeType } from '../types'
 import { VNodeSymbol } from './constant'
 import { addParentVNodeMapping } from './relationships'
 import { isNoTagVNodeType, isValidVNodeType, isVNode } from './type-guards'
@@ -27,10 +27,10 @@ export type Children = Array<Child>
  * 处理节点属性，包括v-bind、样式和类名合并等
  *
  * @private
- * @param {Exclude<VNode, NoTagElementVNode>} vnode - 要处理属性的节点
+ * @param {Exclude<VNode, NoTagVNode>} vnode - 要处理属性的节点
  * @returns {void}
  */
-function propsHandler(vnode: Exclude<VNode, NoTagElementVNode>): void {
+function propsHandler(vnode: Exclude<VNode, NoTagVNode>): void {
   const vBind = popProperty(vnode.props, 'v-bind')
   let attrs: Record<string, any> = vBind
   let exclude: string[] = []
@@ -129,12 +129,12 @@ function formatChildren(child: Children | Child, parent: VNode): VNode[] {
  * @template T - 无标签元素类型
  * @param {T} type - 节点类型（'text-node'或'comment-node'）
  * @param {string} value - 节点内容
- * @returns {NoTagElementVNode<T>} 创建的无标签VNode
+ * @returns {NoTagVNode<T>} 创建的无标签VNode
  */
-export function createNoTagVNode<T extends NoTagElements>(
+export function createNoTagVNode<T extends NoTagNodeElementName>(
   type: T,
   value: string
-): NoTagElementVNode<T> {
+): NoTagVNode<T> {
   return {
     [VNodeSymbol]: true,
     type: type,
@@ -175,7 +175,7 @@ export function createVNode<T extends VNodeType>(
     ref: ref_el,
     props: newProps,
     children: []
-  } as unknown as VNode<Exclude<T, NoTagElements>>
+  } as unknown as VNode<Exclude<T, NoTagNodeElementName>>
   // 处理函数组件，合并 children 到 props 中
   if (isFunction(type)) {
     if (children.length > 0) {
