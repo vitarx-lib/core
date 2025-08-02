@@ -51,29 +51,22 @@ export type ContainerNodeElementName = Exclude<IntrinsicNodeElementName, SingleN
 /**
  * 特殊元素
  */
-export type SpecialNodeElementName = SingleNodeElementName | FragmentNodeElementName
+export type SpecialNodeElementName = NoTagNodeElementName | FragmentNodeElementName
 /**
  * 所有元素
  *
  * 包含了所有元素，如div、span、a等元素，以及特殊元素如注释节点、文本节点、片段节点等
  */
-export type AllNodeElementName = IntrinsicNodeElementName | SpecialNodeElementName
+export type AllNodeElementName =
+  | IntrinsicNodeElementName
+  | SpecialNodeElementName
+  | FragmentNodeElementName
+  | NoTagNodeElementName
 /**
  * 特殊元素节点映射
  */
 export type SpecialNodeElement = {
-  /**
-   * 注释节点
-   */
-  'comment-node': { children: string }
-  /**
-   * 文本节点
-   */
-  'text-node': { children: string }
-  /**
-   * 片段节点
-   */
-  'fragment-node': { children: any }
+  [K in SpecialNodeElementName]: { children: K extends NoTagNodeElementName ? string : any }
 }
 /**
  * ## 固有元素节点映射，用于 jsx ide 提示
@@ -90,6 +83,7 @@ export type IntrinsicNodeElement = {
   [K in IntrinsicNodeElementName]: ElementProperties<ElementTagMap[K]>
 }
 export type AllNodeElement = IntrinsicNodeElement & SpecialNodeElement
+export type NodeElement<T extends AllNodeElementName = AllNodeElementName> = AllNodeElement[T]
 
 /**
  * 运行时元素接口
