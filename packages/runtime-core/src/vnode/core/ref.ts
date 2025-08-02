@@ -1,17 +1,11 @@
 // 辅助计算出元素类型
-import type {
-  IntrinsicElementNames,
-  RuntimeContainerElement,
-  RuntimeElement
-} from '../../renderer/index'
+import type { IntrinsicNodeElementName, RuntimeElement } from '../../renderer/index'
 import type { ExcludeWidgetIntrinsicKeywords } from '../../widget/core/constant'
-import { type Fragment, RefElSymbol } from './constant'
+import { RefElSymbol } from './constant'
 
-type ComputedRefElType<T> = T extends IntrinsicElementNames
+type ComputedRefElType<T> = T extends IntrinsicNodeElementName
   ? RuntimeElement<T>
-  : T extends Fragment
-    ? RuntimeContainerElement
-    : ExcludeWidgetIntrinsicKeywords<T>
+  : ExcludeWidgetIntrinsicKeywords<T>
 
 /** 引用元素类型 */
 export type RefEl<T> = {
