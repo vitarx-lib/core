@@ -1,8 +1,8 @@
 import type {
-  ExcludeNoTagElements,
-  IntrinsicElementNames,
-  IntrinsicElements,
-  NoTagElements,
+  AllNodeElementName,
+  IntrinsicNodeElementName,
+  NodeElement,
+  NoTagNodeElementName,
   RuntimeContainerElement,
   RuntimeElement,
   RuntimeNoTagElement
@@ -18,13 +18,13 @@ import type { UniqueKey } from './attributes'
  * - Fragment - 片段类型
  * - Function - 函数类型
  */
-export type VNodeType = IntrinsicElementNames | Fragment | WidgetType
+export type VNodeType = AllNodeElementName | WidgetType
 
 /**
  * 节点Props类型重载
  */
-export type VNodePropsType<T extends VNodeType> = T extends IntrinsicElementNames
-  ? IntrinsicElements[T]
+export type VNodePropsType<T extends VNodeType> = T extends AllNodeElementName
+  ? NodeElement<T>
   : T extends WidgetType<infer P>
     ? P
     : {}
@@ -47,7 +47,7 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
   /**
    * 仅在渲染过后才存在
    */
-  readonly el?: T extends IntrinsicElementNames
+  readonly el?: T extends IntrinsicNodeElementName
     ? RuntimeElement<T>
     : T extends WidgetType
       ? RuntimeContainerElement
@@ -58,7 +58,7 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
 /**
  * 特殊元素节点
  */
-export type NoTagElementVNode<T extends NoTagElements = NoTagElements> = Pick<
+export type NoTagVNode<T extends NoTagNodeElementName = NoTagNodeElementName> = Pick<
   BaseVNode<T>,
   'el' | VNodeSymbol | 'type'
 > & {
@@ -68,22 +68,22 @@ export type NoTagElementVNode<T extends NoTagElements = NoTagElements> = Pick<
 /**
  * 纯文本节点
  */
-export interface TextNode extends NoTagElementVNode<'text-node'> {}
+export interface TextNode extends NoTagVNode<'text-node'> {}
 
 /**
  * 注释节点
  */
-export interface CommentNode extends NoTagElementVNode<'comment-node'> {}
+export interface CommentVNode extends NoTagVNode<'comment-node'> {}
 
 /**
  * 片段节点
  */
-export interface FragmentNode extends BaseVNode<Fragment> {}
+export interface FragmentVNode extends BaseVNode<Fragment> {}
 
 /**
  * 普通元素节点
  */
-export interface ElementVNode<T extends ExcludeNoTagElements = ExcludeNoTagElements>
+export interface ElementVNode<T extends IntrinsicNodeElementName = IntrinsicNodeElementName>
   extends BaseVNode<T> {}
 
 /**
@@ -110,10 +110,10 @@ export interface WidgetVNode<T extends WidgetType = WidgetType> extends BaseVNod
  * @template T - VNode类型
  * @internal 所有属性都是内部进行管理，开发者请勿随意修改此对象！
  */
-export type VNode<T extends VNodeType = VNodeType> = T extends NoTagElements
-  ? NoTagElementVNode<T>
+export type VNode<T extends VNodeType = VNodeType> = T extends NoTagNodeElementName
+  ? NoTagVNode<T>
   : T extends Fragment
-    ? FragmentNode
+    ? FragmentVNode
     : T extends WidgetType
       ? WidgetVNode<T>
       : ElementVNode
