@@ -1,11 +1,12 @@
 import { unref } from '@vitarx/responsive'
-import type { VNode, VNodeType } from '../../vnode/index'
-import type { WidgetType } from '../../widget/index'
+import type { VNode } from '../../vnode/index'
 import type {
+  BaseRuntimeConventionElement,
   ClassProperties,
   EventNames,
   EventOptions,
-  RuntimeElements,
+  RuntimeContainerElement,
+  RuntimeElement,
   StyleProperties
 } from '../types/index'
 import { cssClassValueToString, cssStyleValueToString, extractEventOptions } from './utils'
@@ -20,22 +21,22 @@ import { cssClassValueToString, cssStyleValueToString, extractEventOptions } fro
  * @example
  * ```typescript
  * class WebRenderer extends Renderer {
- *   render(vnode: VNode): RuntimeElements {
+ *   render(vnode: VNode): RuntimeElement {
  *     // 实现实际的渲染操作
  *   }
- *   setText(el: RuntimeElements, text: string): void {
+ *   setText(el: RuntimeElement, text: string): void {
  *     // 实现实际的文本设置操作
  *   }
- *   setStyle(el: RuntimeElements, style: StyleProperties): void {
+ *   setStyle(el: RuntimeElement, style: StyleProperties): void {
  *     // 实现实际的样式设置操作
  *   }
- *   setClass(el: RuntimeElements, className: string[]): void {
+ *   setClass(el: RuntimeElement, className: string[]): void {
  *     // 实现实际的类设置操作
  *   }
- *   setAttribute(el: RuntimeElements, name: string, value: any): void {
+ *   setAttribute(el: RuntimeElement, name: string, value: any): void {
  *     // 实现实际的属性设置操作
  *   }
- *   removeAttribute(el: RuntimeElements, name: string): void {
+ *   removeAttribute(el: RuntimeElement, name: string): void {
  *     // 实现实际的属性移除操作
  *   }
  * }
@@ -43,37 +44,27 @@ import { cssClassValueToString, cssStyleValueToString, extractEventOptions } fro
  * @abstract
  */
 export abstract class Renderer {
-  /**
-   * 渲染虚拟节点
-   *
-   * @description 根据虚拟节点创建对应的真实DOM节点
-   * @param vnode - 虚拟节点
-   * @returns {RuntimeElements}
-   */
-  abstract render(vnode: VNode<Exclude<VNodeType, WidgetType>>): RuntimeElements
-
+  abstract render(vnode: VNode): RuntimeElement
   /**
    * 设置元素的文本内容
    *
-   * @description 设置元素的文本内容，如果非文本/注释节点则
+   * @description 设置元素的文本内容
    * @param el - 元素实例
    * @param text - 文本内容
    * @returns {void}
    */
-  setText(el: RuntimeElements, text: string): void {
+  setText(el: RuntimeElement, text: string): void {
     el.nodeValue = unref(text)
   }
-
   /**
    * 设置富文本内容
    *
    * @param el - 元素实例
    * @param html - HTML 字符串
    */
-  setRichText(el: RuntimeElements, html: string): void {
+  setRichText(el: RuntimeElement, html: string): void {
     'innerHTML' in el && (el.innerHTML = unref(html))
   }
-
   /**
    * 设置元素的样式
    *
@@ -82,7 +73,7 @@ export abstract class Renderer {
    * @param style - 样式属性或样式对象
    * @returns {void}
    */
-  setStyle(el: RuntimeElements, style: StyleProperties): void {
+  setStyle(el: BaseRuntimeConventionElement, style: StyleProperties): void {
     const cssText = cssStyleValueToString(style)
     if (el.style.cssText !== cssText) {
       el.style.cssText = cssText
@@ -90,7 +81,6 @@ export abstract class Renderer {
     // 如果没有有效样式，移除 style 属性
     if (el.style.length === 0) el.removeAttribute('style')
   }
-
   /**
    * 设置元素的样式类名
    *
@@ -99,14 +89,13 @@ export abstract class Renderer {
    * @param classValue - 类名或类名对象
    * @returns {void}
    */
-  setClass(el: RuntimeElements, classValue: ClassProperties): void {
+  setClass(el: BaseRuntimeConventionElement, classValue: ClassProperties): void {
     const className = cssClassValueToString(classValue)
     if (el.className !== className) {
       el.setAttribute('class', className)
     }
     if (el.classList.length === 0) el.removeAttribute('class')
   }
-
   /**
    * 设置元素的属性值
    *
@@ -116,8 +105,62 @@ export abstract class Renderer {
    * @param value - 属性值
    * @returns {void}
    */
-  abstract setAttribute(el: RuntimeElements, name: string, value: any): void
-
+  setAttribute(el: BaseRuntimeConventionElement, name: string, value: any): void {
+    value = unref(value)
+    switch (name) {
+      case 'style':
+        this.setStyle(el, value)
+        break
+      case 'className':
+      case 'classname':
+      case 'class':
+        this.setClass(el, value)
+        break
+      case 'v-html':
+        this.setRichText(el as RuntimeContainerElement, value)
+        break
+      default:
+        // 如果属性以 data- 开头，则使用 dataset
+        if (name.startsWith('data-')) {
+          'dataset' in el && (el.dataset[name.slice(5)] = value)
+          return
+        }
+        try {
+          const svgNamespaceURI = 'http://www.w3.org/2000/svg'
+          // 检查是否是需要使用 setAttributeNS 的属性
+          if (el.namespaceURI === svgNamespaceURI) {
+            if (name.startsWith('xlink:')) {
+              // 对于 xlink:href 等需要使用 setAttributeNS
+              el.setAttributeNS('http://www.w3.org/2000/xlink', name, String(value))
+              return
+            }
+            if (name === 'href') {
+              // SVG 中的 href 也需要使用命名空间
+              el.setAttributeNS(svgNamespaceURI, 'href', String(value))
+              return
+            }
+          }
+          const isWritable = name in el
+          // 尝试使用 setAttribute
+          if (isWritable) {
+            const descriptor = Object.getOwnPropertyDescriptor(el, name)
+            // 如果该属性是可写的，直接赋值
+            if (descriptor && descriptor.set) {
+              ;(el as any)[name] = value
+              return
+            }
+          }
+          // 如果属性不存在，使用 setAttribute
+          el.setAttribute(name, String(value))
+        } catch (error) {
+          console.error(
+            `[Vitarx.WebRenderer][ERROR]：An error occurred when setting the attribute ${name}`,
+            error,
+            el
+          )
+        }
+    }
+  }
   /**
    * 移除元素的指定属性
    *
@@ -125,14 +168,13 @@ export abstract class Renderer {
    * @param {string} name - 要移除的属性名
    * @returns {void}
    */
-  removeAttribute(el: RuntimeElements, name: string): void {
+  removeAttribute(el: BaseRuntimeConventionElement, name: string): void {
     if (name === 'className' || name === 'classname' || name === 'class') {
       el.removeAttribute('class')
     } else {
       el.removeAttribute(name)
     }
   }
-
   /**
    * 获取元素的属性值
    *
@@ -141,10 +183,9 @@ export abstract class Renderer {
    * @param name - 属性名
    * @returns {any} 属性值，如果属性不存在则返回null
    */
-  getAttribute(el: RuntimeElements, name: string): any {
+  getAttribute(el: BaseRuntimeConventionElement, name: string): any {
     return el.getAttribute(name)
   }
-
   /**
    * 为元素添加事件监听器
    *
@@ -162,16 +203,15 @@ export abstract class Renderer {
    * element.addEventListener("click", (e) => console.log("clicked"), { capture: true });
    */
   addEventListener(
-    el: RuntimeElements,
+    el: BaseRuntimeConventionElement,
     name: EventNames,
-    handler: Function,
+    handler: AnyFunction,
     options?: EventOptions
   ): void {
     const { event, options: eventOptions } = extractEventOptions(name)
     Object.assign(eventOptions, options)
     el.addEventListener(event, handler, eventOptions)
   }
-
   /**
    * 移除元素的事件监听器
    *
@@ -186,16 +226,15 @@ export abstract class Renderer {
    * element.removeEventListener("click", clickHandler);
    */
   removeEventListener(
-    el: RuntimeElements,
+    el: BaseRuntimeConventionElement,
     name: EventNames,
-    handler: Function,
+    handler: AnyFunction,
     useCapture: boolean = false
   ): void {
     const { event, options } = extractEventOptions(name)
     useCapture = options.capture ?? useCapture
     el.removeEventListener(event, handler, useCapture)
   }
-
   /**
    * 在指定的锚点节点之前插入新的子元素
    *
@@ -204,10 +243,9 @@ export abstract class Renderer {
    * @param anchor - 锚点节点
    * @returns {void}
    */
-  insertBefore(child: RuntimeElements, anchor: RuntimeElements): void {
+  insertBefore(child: RuntimeElement, anchor: RuntimeElement): void {
     child.parentElement?.insertBefore(child, anchor)
   }
-
   /**
    * 在指定的锚点节点之后插入新的子元素
    *
@@ -216,7 +254,7 @@ export abstract class Renderer {
    * @param anchor - 锚点节点
    * @returns {void}
    */
-  insertAfter(child: RuntimeElements, anchor: RuntimeElements): void {
+  insertAfter(child: RuntimeElement, anchor: RuntimeElement): void {
     const parent = anchor.parentElement
     if (!parent) return
     const next = anchor.nextSibling
@@ -226,7 +264,6 @@ export abstract class Renderer {
       parent.appendChild(child)
     }
   }
-
   /**
    * 使用新元素替换现有的子元素
    *
@@ -235,10 +272,9 @@ export abstract class Renderer {
    * @param oldChild - 要被替换的现有子元素
    * @returns {void}
    */
-  replaceChild(newChild: RuntimeElements, oldChild: RuntimeElements): void {
+  replaceChild(newChild: RuntimeContainerElement, oldChild: RuntimeElement): void {
     oldChild.parentElement?.replaceChild(newChild, oldChild)
   }
-
   /**
    * 在当前元素的末尾添加一个子元素
    *
@@ -247,10 +283,9 @@ export abstract class Renderer {
    * @param child - 要添加的子元素
    * @returns {void}
    */
-  appendChild(container: RuntimeElements, child: RuntimeElements): void {
+  appendChild(container: RuntimeContainerElement, child: RuntimeElement): void {
     container.appendChild(child)
   }
-
   /**
    * 移除指定的子元素
    *
@@ -259,7 +294,7 @@ export abstract class Renderer {
    * @param child - 要移除的子元素
    * @returns {void}
    */
-  removeChild(container: RuntimeElements, child: RuntimeElements): void {
+  removeChild(container: RuntimeContainerElement, child: RuntimeElement): void {
     container.removeChild(child)
   }
 }
