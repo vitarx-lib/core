@@ -90,7 +90,7 @@ export type NodeElement<T extends AllNodeElementName = AllNodeElementName> = All
  *
  * 表示运行时元素的基本接口，包括父元素、文本内容、节点值、移除元素等方法。
  */
-interface BaseRuntimeElement {
+export interface BaseRuntimeElement {
   /**
    * 当前元素的父元素
    *
@@ -139,7 +139,7 @@ interface BaseRuntimeElement {
 /**
  * 常规元素基本功能接口
  */
-interface BaseRuntimeConventionElement extends BaseRuntimeElement {
+export interface BaseRuntimeConventionElement extends BaseRuntimeElement {
   /**
    * 设置元素的属性值
    *
