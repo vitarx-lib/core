@@ -3,7 +3,6 @@ import type {
   IntrinsicNodeElementName,
   NodeElement,
   NoTagNodeElementName,
-  RuntimeContainerElement,
   RuntimeElement,
   RuntimeNoTagElement
 } from '../../renderer/index'
@@ -47,10 +46,10 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
   /**
    * 仅在渲染过后才存在
    */
-  readonly el?: T extends IntrinsicNodeElementName
+  el?: T extends IntrinsicNodeElementName
     ? RuntimeElement<T>
     : T extends WidgetType
-      ? RuntimeContainerElement
+      ? RuntimeElement
       : RuntimeNoTagElement
   readonly children: VNode[]
 }
