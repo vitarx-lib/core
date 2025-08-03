@@ -11,6 +11,7 @@ import type {
   WidgetVNode
 } from '../types/nodes'
 import { Fragment, VNodeSymbol } from './constant'
+import { findParentVNode } from './relationships'
 
 /**
  * 判断是否为有效的VNode类型
@@ -100,4 +101,22 @@ export function isNoTagVNode(obj: any): obj is NoTagVNode {
  */
 export function isFragmentVNode(obj: any): obj is FragmentVNode {
   return obj?.type === Fragment
+}
+
+/**
+ * 判断是否为svg节点
+ *
+ * @param vnode - ElementVNode
+ * @returns {boolean}
+ */
+export function isSvgVNode(vnode: ElementVNode): boolean {
+  const svgNamespace = 'http://www.w3.org/2000/svg'
+  if (vnode.props?.xmlns === svgNamespace) return true
+  if (vnode.type === 'svg') return true
+  let parent = findParentVNode(vnode)
+  while (parent) {
+    if (parent.type === 'svg') return true
+    parent = findParentVNode(parent)
+  }
+  return false
 }
