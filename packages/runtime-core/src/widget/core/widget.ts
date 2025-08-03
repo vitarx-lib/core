@@ -110,7 +110,7 @@ export abstract class Widget<
    *
    * @internal 该获取器被内部逻辑依赖，谨慎重写！
    */
-  protected get renderer(): WidgetRenderer<this> {
+  get renderer(): WidgetRenderer<this> {
     if (!this.#renderer) {
       this.#renderer = new WidgetRenderer(this)
     }
@@ -197,7 +197,7 @@ export abstract class Widget<
 
   /**
    * 组件挂载前调用
-   * 在组件即将被挂载到DOM之前触发
+   * 在组件即将首次渲染挂载到DOM之前触发
    *
    * @example
    * ```tsx
@@ -207,15 +207,13 @@ export abstract class Widget<
    *     const theme = localStorage.getItem('theme')
    *     document.body.classList.add(theme)
    *
-   *     // 可以返回一个元素作为组件的根元素
-   *     const root = document.createElement('div')
-   *     root.className = 'my-widget'
-   *     return root
+   *     // 可以返回一个字符串选择器，以挂载到指定的容器元素
+   *     return '#root'
    *   }
    * }
    * ```
    */
-  onBeforeMount?(): void
+  onBeforeMount?(): string | void
 
   /**
    * 组件挂载后调用
