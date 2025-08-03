@@ -152,6 +152,20 @@ export interface BaseRuntimeConventionElement extends BaseRuntimeElement {
    * element.setAttribute("class", "my-class");
    */
   setAttribute(name: string, value: any): void
+
+  /**
+   * 添加命名空间属性
+   *
+   * @param {string} namespace - 属性命名空间
+   * @param {string} name - 属性名
+   * @param {string} value - 属性值
+   * @returns {void}
+   * @description 添加命名空间属性
+   * @example
+   * // 添加命名空间属性
+   * element.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+   */
+  setAttributeNS(namespace: string | null, name: string, value: string): void
   /**
    * 获取元素的属性值
    *
