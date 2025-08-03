@@ -1,5 +1,11 @@
 import { createScope } from '@vitarx/responsive'
-import { getCurrentVNode, isRefEl, runInVNodeContext, type VNode } from '../../../vnode/index'
+import {
+  getCurrentVNode,
+  isRefEl,
+  runInVNodeContext,
+  type VNode,
+  type WidgetVNode
+} from '../../../vnode/index'
 import type { FunctionWidget, WidgetType } from '../../types/index'
 import { _createFnWidget } from '../fn-widget'
 import { isClassWidget } from '../utils'
@@ -16,7 +22,7 @@ import { proxyWidgetProps } from './props'
  * @param {VNode<WidgetType>} vnode - 节点
  * @returns {Promise<Widget>} - 组件实例
  */
-export function createInstance(vnode: VNode<WidgetType>): Promise<Widget> {
+export function createInstance(vnode: WidgetVNode): Promise<Widget> {
   // 获取最新模块，仅在开发时进行HMR处理
   if (import.meta.env?.MODE === 'development') {
     if (typeof window !== 'undefined') {
