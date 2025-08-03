@@ -145,6 +145,7 @@ export function createNoTagVNode<T extends NoTagNodeElementName>(
 /**
  * 创建VNode节点
  *
+ * @alias createElement
  * @template T - VNode类型
  * @param {T} type - 节点类型（标签名、组件函数或Fragment）
  * @param {Record<string, any> | null} props - 节点属性
@@ -196,3 +197,5 @@ export function createVNode<T extends VNodeType>(
   vnode.children.push(...formatChildren(children, vnode))
   return vnode
 }
+
+export { createVNode as createElement }
