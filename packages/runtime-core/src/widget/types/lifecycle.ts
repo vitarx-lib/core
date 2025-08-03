@@ -23,7 +23,7 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  * 生命周期钩子返回值类型
  */
 export type LifecycleHookReturnType<T> = T extends LifecycleHooks.beforeMount
-  ? void | HTMLElement
+  ? void | string
   : T extends LifecycleHooks.error
     ? any
     : T extends LifecycleHooks.beforeRemove
