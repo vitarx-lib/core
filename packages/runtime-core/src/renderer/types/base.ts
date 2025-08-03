@@ -100,6 +100,17 @@ interface BaseRuntimeElement {
    */
   readonly parentElement: RuntimeContainerElement | null
   /**
+   * 当前元素的前一个兄弟元素
+   *
+   * 如果当前元素是第一个子元素，则该值为null
+   */
+  readonly previousSibling: RuntimeElement | null
+  /**
+   * 当前元素的后一个兄弟元素
+   *
+   * 如果当前元素是最后一个子元素，则该值为null
+   */
+  /**
    * 当前元素的下一个兄弟元素
    *
    * 如果当前元素是最后一个子元素，则该值为null
@@ -107,27 +118,19 @@ interface BaseRuntimeElement {
    */
   readonly nextSibling: RuntimeElement | null
   /**
-   * 节点的文本内容
-   * @readonly 只读属性，通过setText方法修改
-   * @type {string} 文本内容
-   * @description 获取或设置节点的文本内容。对于文本节点，返回实际文本；对于元素节点，返回所有子节点的文本内容的连接
-   * @example
-   * // 获取节点文本
-   * const text = node.textContent;
-   */
-  textContent: string | null
-  /**
    * 节点的值
    */
   nodeValue: string | null
-
+  /**
+   * 元素中嵌套子 DOM 元素的序列化HTML字符串
+   */
+  innerHTML: string
   /**
    * 移除当前元素
    *
    * @description 从树中删除当前元素
    */
   remove(): void
-
   /**
    * 其他属性
    */
@@ -149,7 +152,6 @@ interface BaseRuntimeConventionElement extends BaseRuntimeElement {
    * element.setAttribute("class", "my-class");
    */
   setAttribute(name: string, value: any): void
-
   /**
    * 获取元素的属性值
    *
@@ -161,7 +163,6 @@ interface BaseRuntimeConventionElement extends BaseRuntimeElement {
    * const id = element.getAttribute("id");
    */
   getAttribute(name: string): any
-
   /**
    * 移除元素的指定属性
    *
@@ -173,7 +174,6 @@ interface BaseRuntimeConventionElement extends BaseRuntimeElement {
    * element.removeAttribute("style");
    */
   removeAttribute(name: string): void
-
   /**
    * 为元素添加事件监听器
    *
@@ -190,7 +190,6 @@ interface BaseRuntimeConventionElement extends BaseRuntimeElement {
    * element.addEventListener("click", (e) => console.log("clicked"), { capture: true });
    */
   addEventListener(name: string, handler: AnyFunction, options?: EventOptions): void
-
   /**
    * 移除元素的事件监听器
    *
@@ -228,7 +227,6 @@ interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
    * Returns the first child.
    */
   readonly firstChild: RuntimeElement | null
-
   /**
    * 在指定的锚点节点之前插入新的子节点
    *
@@ -241,7 +239,6 @@ interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
    * parent.insertBefore(newNode, anchorNode);
    */
   insertBefore(child: BaseRuntimeElement, anchor: BaseRuntimeElement): void
-
   /**
    * 使用新节点替换现有的子节点
    *
@@ -254,7 +251,6 @@ interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
    * parent.replaceChild(newChild, oldChild);
    */
   replaceChild(newChild: BaseRuntimeElement, oldChild: BaseRuntimeElement): void
-
   /**
    * 在当前元素的末尾添加一个子节点
    *
@@ -266,7 +262,6 @@ interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
    * parent.appendChild(newChild);
    */
   appendChild(child: BaseRuntimeElement): void
-
   /**
    * 移除指定的子节点
    *
@@ -316,17 +311,6 @@ export interface RuntimeContainerElement extends BaseRuntimeContainerElement {
    * 当前元素的标签名
    */
   readonly tagName: ContainerNodeElementName
-  /**
-   * 节点的HTML内容
-   *
-   * @readonly 只读属性，通过setInnerHTML方法修改
-   * @type {string} HTML内容
-   * @description 获取或设置节点的HTML内容。对于元素节点，返回所有子节点的HTML内容；对于文本节点为空字符串
-   * @example
-   * // 获取节点HTML内容
-   * const html = node.innerHTML;
-   */
-  innerHTML: string
 }
 
 /**
@@ -337,7 +321,10 @@ export interface RuntimeContainerElement extends BaseRuntimeContainerElement {
  * @extends RuntimeContainerElement
  */
 export interface RuntimeFragmentElement extends BaseRuntimeContainerElement {
-  placeholderElement: RuntimeNoTagElement
+  /**
+   * 当前元素的标签名
+   */
+  readonly tagName: FragmentNodeElementName
 }
 
 /**
