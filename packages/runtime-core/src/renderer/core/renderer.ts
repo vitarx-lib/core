@@ -1,6 +1,7 @@
 import { unref } from '@vitarx/responsive'
-import type { VNode } from '../../vnode/index'
+import { mountVNode, type VNode } from '../../vnode/index'
 import type {
+  BaseRuntimeContainerElement,
   BaseRuntimeConventionElement,
   ClassProperties,
   EventNames,
@@ -44,7 +45,34 @@ import { cssClassValueToString, cssStyleValueToString, extractEventOptions } fro
  * @abstract
  */
 export abstract class Renderer {
-  abstract render(vnode: VNode): RuntimeElement
+  /**
+   * 渲染一个虚拟节点
+   *
+   * @param {VNode} vnode - 虚拟节点对象
+   * @param {BaseRuntimeContainerElement} container - 父容器元素，如果传入则会自动挂载到父容器中
+   * @returns {RuntimeElement} 渲染后的元素实例
+   */
+  abstract render(vnode: VNode, container?: BaseRuntimeContainerElement): RuntimeElement
+
+  /**
+   * 渲染子节点列表
+   *
+   * @param {BaseRuntimeContainerElement} parent - 父元素
+   * @param {VNode[]} children - 子节点列表
+   * @param {boolean} [triggerMountHook=false] - 是否触发挂载钩子
+   * @returns {void}
+   */
+  renderChildren(
+    parent: BaseRuntimeContainerElement,
+    children: VNode[],
+    triggerMountHook: boolean = false
+  ): void {
+    for (const child of children) {
+      const el = this.render(child)
+      parent.appendChild(el)
+      if (triggerMountHook) mountVNode(child)
+    }
+  }
   /**
    * 设置元素的文本内容
    *
@@ -161,6 +189,19 @@ export abstract class Renderer {
         }
     }
   }
+  /**
+   * 为元素设置多个属性
+   *
+   * @param el - 元素实例
+   * @param props - 属性对象
+   * @returns {void}
+   */
+  setAttributes(el: BaseRuntimeConventionElement, props: Record<string, any>): void {
+    Object.keys(props).forEach(key => {
+      this.setAttribute(el, key, props[key])
+    })
+  }
+
   /**
    * 移除元素的指定属性
    *
