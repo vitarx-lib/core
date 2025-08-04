@@ -92,6 +92,10 @@ export type NodeElement<T extends AllNodeElementName = AllNodeElementName> = All
  */
 export interface BaseRuntimeElement {
   /**
+   * 当前元素的标签名
+   */
+  tagName: string
+  /**
    * 当前元素的父元素
    *
    * 表示当前元素所属的父容器元素。如果当前节点是根节点（如document.body），则该值为null
@@ -152,7 +156,6 @@ export interface BaseRuntimeConventionElement extends BaseRuntimeElement {
    * element.setAttribute("class", "my-class");
    */
   setAttribute(name: string, value: any): void
-
   /**
    * 添加命名空间属性
    *
@@ -222,7 +225,7 @@ export interface BaseRuntimeConventionElement extends BaseRuntimeElement {
 /**
  * 容器元素基本功能接口
  */
-interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
+export interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
   /**
    * 当前元素包含的所有子节点列表
    *
@@ -297,7 +300,13 @@ interface BaseRuntimeContainerElement extends BaseRuntimeConventionElement {
  *
  * @extends BaseRuntimeElement
  */
-export interface RuntimeNoTagElement extends BaseRuntimeElement {}
+export interface RuntimeNoTagElement<T extends NoTagNodeElementName = NoTagNodeElementName>
+  extends BaseRuntimeElement {
+  /**
+   * 当前元素的标签名
+   */
+  tagName: T
+}
 
 /**
  * 运行时无子节点元素
@@ -311,7 +320,7 @@ export interface RuntimeChildlessElement extends BaseRuntimeConventionElement {
   /**
    * 当前元素的标签名
    */
-  readonly tagName: SingleNodeElementName
+  tagName: SingleNodeElementName
 }
 /**
  * 运行时容器元素接口
@@ -324,7 +333,7 @@ export interface RuntimeContainerElement extends BaseRuntimeContainerElement {
   /**
    * 当前元素的标签名
    */
-  readonly tagName: ContainerNodeElementName
+  tagName: ContainerNodeElementName
 }
 
 /**
@@ -338,9 +347,12 @@ export interface RuntimeFragmentElement extends BaseRuntimeContainerElement {
   /**
    * 当前元素的标签名
    */
-  readonly tagName: FragmentNodeElementName
+  tagName: FragmentNodeElementName
+  /**
+   * 如果片段元素为空时，则会存在一个影子元素，用于占位，它在窗口中是不可见的
+   */
+  shadowElement?: RuntimeNoTagElement<'comment-node'>
 }
-
 /**
  * 运行时元素接口
  *
