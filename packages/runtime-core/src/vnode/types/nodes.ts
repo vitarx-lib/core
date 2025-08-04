@@ -33,6 +33,9 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
    * VNode对象标识符
    */
   readonly [VNodeSymbol]: true
+  /**
+   * 元素属性
+   */
   readonly props: VNodePropsType<T> | null
   readonly type: T
   /**
