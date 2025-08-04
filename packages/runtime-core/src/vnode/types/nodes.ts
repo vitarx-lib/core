@@ -1,3 +1,4 @@
+import type { RefSignal } from '@vitarx/responsive'
 import type {
   AllNodeElementName,
   IntrinsicNodeElementName,
@@ -64,7 +65,7 @@ export type NoTagVNode<T extends NoTagNodeElementName = NoTagNodeElementName> = 
   BaseVNode<T>,
   'el' | VNodeSymbol | 'type'
 > & {
-  value: string
+  value: string | RefSignal<string>
 }
 
 /**
