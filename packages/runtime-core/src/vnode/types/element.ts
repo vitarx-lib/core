@@ -1,0 +1,85 @@
+import type { ElementProperties } from './properties'
+
+/**
+ * 元素标签映射类型
+ */
+type ElementTagMap = HTMLElementTagNameMap &
+  Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
+
+/**
+ * 自闭合的元素
+ *
+ * 表示没有子节点的元素，如img、area、input等
+ *
+ * @extends RuntimeChildlessElement
+ */
+export type SingleNodeElementName =
+  | 'img'
+  | 'area'
+  | 'input'
+  | 'br'
+  | 'hr'
+  | 'link'
+  | 'meta'
+  | 'base'
+  | 'source'
+  | 'track'
+  | 'col'
+  | 'embed'
+  | 'param'
+  | 'wbr'
+
+/**
+ * 无标签元素名称
+ */
+export type NoTagNodeElementName = 'comment-node' | 'text-node'
+/**
+ * 片段节点元素名称
+ */
+export type FragmentNodeElementName = 'fragment-node'
+/**
+ * 固有的元素标签名
+ *
+ * 包含了所有HTML元素标签名，如div、span、a等元素
+ */
+export type IntrinsicNodeElementName = keyof ElementTagMap
+/**
+ * 容器元素
+ */
+export type ContainerNodeElementName = Exclude<IntrinsicNodeElementName, SingleNodeElementName>
+/**
+ * 特殊元素
+ */
+export type SpecialNodeElementName = NoTagNodeElementName | FragmentNodeElementName
+/**
+ * 所有元素
+ *
+ * 包含了所有元素，如div、span、a等元素，以及特殊元素如注释节点、文本节点、片段节点等
+ */
+export type AllNodeElementName =
+  | IntrinsicNodeElementName
+  | SpecialNodeElementName
+  | FragmentNodeElementName
+  | NoTagNodeElementName
+/**
+ * 特殊元素节点映射
+ */
+export type SpecialNodeElement = {
+  [K in SpecialNodeElementName]: { children: K extends NoTagNodeElementName ? string : any }
+}
+/**
+ * ## 固有元素节点映射，用于 jsx ide 提示
+ *
+ * Vitarx 在解析元素属性时遵循`W3C`标准语法，元素的属性和在html中编写是一致的，但有以下不同之处。
+ *
+ * 1. style属性接受对象和字符串，对象会自动转为字符串。
+ * 2. class属性接受字符串、数组和对象，对象和数组都会自动转为字符串。
+ * 3. 绑定事件支持多种语法，事件名称不区分大小写，示例如下：
+ *    - `W3C`标准语法，如onclick。
+ *    - 小驼峰式语法，如onClick。
+ */
+export type IntrinsicNodeElement = {
+  [K in IntrinsicNodeElementName]: ElementProperties<ElementTagMap[K]>
+}
+export type AllNodeElement = IntrinsicNodeElement & SpecialNodeElement
+export type NodeElement<T extends AllNodeElementName = AllNodeElementName> = AllNodeElement[T]
