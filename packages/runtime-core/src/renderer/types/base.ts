@@ -124,7 +124,7 @@ export interface BaseRuntimeElement {
   /**
    * 节点的值
    */
-  nodeValue: string | null
+  nodeValue: string
   /**
    * 元素中嵌套子 DOM 元素的序列化HTML字符串
    */
