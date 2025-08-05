@@ -67,7 +67,9 @@ export class WebRenderer extends Renderer {
    * @protected
    */
   protected renderCommentElement(vnode: CommentVNode): RuntimeNoTagElement<'comment-node'> {
-    const el = document.createComment(vnode.value) as unknown as RuntimeNoTagElement<'comment-node'>
+    const el = document.createComment(
+      unref(vnode.value)
+    ) as unknown as RuntimeNoTagElement<'comment-node'>
     el.tagName = 'comment-node'
     return el
   }
