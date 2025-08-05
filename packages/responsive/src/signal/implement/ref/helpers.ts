@@ -1,4 +1,4 @@
-import { type SignalOptions, toRaw } from '../../core/index'
+import { type SignalOptions, type SignalToRaw, toRaw } from '../../core/index'
 import { Ref } from './ref'
 
 /**
@@ -132,11 +132,10 @@ export function isRef(val: any): val is Ref {
  * @example
  * // 处理Ref对象
  * const count = ref(0)
- * console.log(unref(count)) // 0
- *
+ * console.log(unref(count)) // 0 等效于 toRaw(count)
  * // 处理普通值
  * console.log(unref(100)) // 100
  */
-export function unref<T>(ref: T | Ref<T>): T {
-  return toRaw(ref) as T
+export function unref<T>(ref: T): SignalToRaw<T> {
+  return toRaw(ref)
 }
