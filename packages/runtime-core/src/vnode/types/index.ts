@@ -1,2 +1,5 @@
 export * from './attributes'
 export * from './nodes'
+export * from './event'
+export * from './properties'
+export * from './style'
