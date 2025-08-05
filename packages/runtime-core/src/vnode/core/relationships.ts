@@ -1,7 +1,6 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import type { VNode, WidgetVNode } from '../types'
 import { VNodeContextSymbol } from './constant'
-import { isVNode } from './type-guards'
 
 /**
  * 存储节点父子关系的映射
@@ -89,42 +88,5 @@ export function destroyVNode(vnode: VNode) {
     listens.forEach(cb => cb())
     listens.clear()
     unmountListens.delete(vnode)
-  }
-}
-
-/**
- * 挂载虚拟节点
- *
- * @param {VNode} vnode - 要挂载的虚拟节点
- * @returns {void}
- */
-export function mountVNode(vnode: VNode): void {
-  if (!isVNode(vnode)) return
-  if ('instance' in vnode) {
-    // 挂载当前节点
-    vnode.instance?.renderer.mount()
-  } else if ('children' in vnode && vnode.children.length) {
-    // 递归挂载子级
-    vnode.children.forEach(child => mountVNode(child))
-  }
-}
-
-/**
- * 卸载虚拟节点
- *
- * @param {VNode} vnode - 要卸载的虚拟节点
- * @param {boolean} [isRemoveEl=true] - 是否删除元素，默认为true
- * @returns {void}
- */
-export function unmountVNode(vnode: VNode, isRemoveEl: boolean = true): void {
-  if (!isVNode(vnode)) return
-  if ('instance' in vnode) {
-    vnode.instance?.renderer.unmount(isRemoveEl)
-  } else {
-    if ('children' in vnode && vnode.children.length) {
-      vnode.children.forEach(child => unmountVNode(child, isRemoveEl))
-      // 删除元素
-      if (isRemoveEl) vnode.el?.remove()
-    }
   }
 }

@@ -6,7 +6,7 @@ import {
   type VNode,
   type WidgetVNode
 } from '../../../vnode/index'
-import type { FunctionWidget, WidgetType } from '../../types/index'
+import type { FunctionWidget } from '../../types/index'
 import { _createFnWidget } from '../fn-widget'
 import { isClassWidget } from '../utils'
 import type { Widget } from '../widget'

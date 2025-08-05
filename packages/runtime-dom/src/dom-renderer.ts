@@ -1,15 +1,27 @@
 import { unref } from '@vitarx/responsive'
-import { mountVNode, type VNode } from '../../vnode/index'
+import {
+  type CommentVNode,
+  createInstance,
+  type Fragment,
+  isSvgVNode,
+  mountVNode,
+  type TextNode,
+  type VNode,
+  type WidgetVNode
+} from '@vitarx/runtime-core'
 import type {
   BaseRuntimeContainerElement,
   BaseRuntimeConventionElement,
   ClassProperties,
   EventNames,
   EventOptions,
+  IntrinsicNodeElementName,
   RuntimeContainerElement,
   RuntimeElement,
+  RuntimeFragmentElement,
+  RuntimeNoTagElement,
   StyleProperties
-} from '../types/index'
+} from './types/index'
 import { cssClassValueToString, cssStyleValueToString, extractEventOptions } from './utils'
 
 /**
@@ -44,7 +56,7 @@ import { cssClassValueToString, cssStyleValueToString, extractEventOptions } fro
  *
  * @abstract
  */
-export abstract class Renderer {
+export class DomRenderer {
   /**
    * 渲染一个虚拟节点
    *
@@ -52,7 +64,29 @@ export abstract class Renderer {
    * @param {BaseRuntimeContainerElement} container - 父容器元素，如果传入则会自动挂载到父容器中
    * @returns {RuntimeElement} 渲染后的元素实例
    */
-  abstract render(vnode: VNode, container?: BaseRuntimeContainerElement): RuntimeElement
+  render(vnode: VNode, container?: BaseRuntimeContainerElement): RuntimeElement {
+    let el: RuntimeElement
+    if (typeof vnode.type === 'string') {
+      switch (vnode.type) {
+        case 'text-node':
+          el = this.renderTextElement(vnode)
+          break
+        case 'comment-node':
+          el = this.renderCommentElement(vnode)
+          break
+        case 'fragment-node':
+          el = this.renderFragmentElement(vnode)
+          break
+        default:
+          el = this.renderIntrinsicElement(vnode)
+      }
+    } else {
+      el = this.renderWidgetElement(vnode)
+    }
+    if (container) container.appendChild(el)
+    vnode.el = el
+    return el
+  }
 
   /**
    * 渲染子节点列表
@@ -73,6 +107,7 @@ export abstract class Renderer {
       if (triggerMountHook) mountVNode(child)
     }
   }
+
   /**
    * 设置元素的文本内容
    *
@@ -84,6 +119,7 @@ export abstract class Renderer {
   setText(el: RuntimeElement, text: string): void {
     el.nodeValue = unref(text)
   }
+
   /**
    * 设置富文本内容
    *
@@ -93,6 +129,7 @@ export abstract class Renderer {
   setRichText(el: RuntimeElement, html: string): void {
     'innerHTML' in el && (el.innerHTML = unref(html))
   }
+
   /**
    * 设置元素的样式
    *
@@ -109,6 +146,7 @@ export abstract class Renderer {
     // 如果没有有效样式，移除 style 属性
     if (el.style.length === 0) el.removeAttribute('style')
   }
+
   /**
    * 设置元素的样式类名
    *
@@ -124,6 +162,7 @@ export abstract class Renderer {
     }
     if (el.classList.length === 0) el.removeAttribute('class')
   }
+
   /**
    * 设置元素的属性值
    *
@@ -189,6 +228,7 @@ export abstract class Renderer {
         }
     }
   }
+
   /**
    * 为元素设置多个属性
    *
@@ -216,6 +256,7 @@ export abstract class Renderer {
       el.removeAttribute(name)
     }
   }
+
   /**
    * 获取元素的属性值
    *
@@ -227,6 +268,7 @@ export abstract class Renderer {
   getAttribute(el: BaseRuntimeConventionElement, name: string): any {
     return el.getAttribute(name)
   }
+
   /**
    * 为元素添加事件监听器
    *
@@ -253,6 +295,7 @@ export abstract class Renderer {
     Object.assign(eventOptions, options)
     el.addEventListener(event, handler, eventOptions)
   }
+
   /**
    * 移除元素的事件监听器
    *
@@ -276,6 +319,7 @@ export abstract class Renderer {
     useCapture = options.capture ?? useCapture
     el.removeEventListener(event, handler, useCapture)
   }
+
   /**
    * 在指定的锚点节点之前插入新的子元素
    *
@@ -287,6 +331,7 @@ export abstract class Renderer {
   insertBefore(child: RuntimeElement, anchor: RuntimeElement): void {
     child.parentElement?.insertBefore(child, anchor)
   }
+
   /**
    * 在指定的锚点节点之后插入新的子元素
    *
@@ -305,6 +350,7 @@ export abstract class Renderer {
       parent.appendChild(child)
     }
   }
+
   /**
    * 使用新元素替换现有的子元素
    *
@@ -316,6 +362,7 @@ export abstract class Renderer {
   replaceChild(newChild: RuntimeContainerElement, oldChild: RuntimeElement): void {
     oldChild.parentElement?.replaceChild(newChild, oldChild)
   }
+
   /**
    * 在当前元素的末尾添加一个子元素
    *
@@ -327,6 +374,7 @@ export abstract class Renderer {
   appendChild(container: RuntimeContainerElement, child: RuntimeElement): void {
     container.appendChild(child)
   }
+
   /**
    * 移除指定的子元素
    *
@@ -337,5 +385,83 @@ export abstract class Renderer {
    */
   removeChild(container: RuntimeContainerElement, child: RuntimeElement): void {
     container.removeChild(child)
+  }
+
+  /**
+   * 渲染文本元素
+   *
+   * @param vnode
+   * @protected
+   */
+  protected renderTextElement(vnode: TextNode): RuntimeNoTagElement<'text-node'> {
+    const el = document.createTextNode(
+      unref(vnode.value)
+    ) as unknown as RuntimeNoTagElement<'text-node'>
+    el.tagName = 'text-node'
+    return el
+  }
+
+  /**
+   * 渲染注释元素
+   *
+   * @param vnode
+   * @protected
+   */
+  protected renderCommentElement(vnode: CommentVNode): RuntimeNoTagElement<'comment-node'> {
+    const el = document.createComment(
+      unref(vnode.value)
+    ) as unknown as RuntimeNoTagElement<'comment-node'>
+    el.tagName = 'comment-node'
+    return el
+  }
+
+  /**
+   * 渲染片段元素
+   *
+   * @param vnode
+   * @protected
+   */
+  protected renderFragmentElement(vnode: VNode<Fragment>): RuntimeFragmentElement {
+    const el = document.createDocumentFragment() as unknown as RuntimeFragmentElement
+    el.tagName = 'fragment-node'
+    if (vnode.children.length === 0) {
+      el.shadowElement = this.renderCommentElement({ value: 'empty fragment node' } as CommentVNode)
+    } else {
+      this.renderChildren(el, vnode.children)
+    }
+    return el
+  }
+
+  /**
+   * 渲染内置元素
+   *
+   * @param vnode
+   * @protected
+   */
+  protected renderIntrinsicElement(vnode: VNode<IntrinsicNodeElementName>): RuntimeElement {
+    const el = (
+      isSvgVNode(vnode)
+        ? document.createElementNS('http://www.w3.org/2000/svg', vnode.type)
+        : document.createElement(vnode.type)
+    ) as RuntimeElement
+    // 如果元素能够设置属性，则设置属性
+    if (vnode.props && el.setAttribute) {
+      this.setAttributes(el as unknown as BaseRuntimeContainerElement, vnode.props)
+    }
+    if (vnode.children && el.children) {
+      this.renderChildren(el as unknown as RuntimeContainerElement, vnode.children)
+    }
+    return el as unknown as RuntimeElement
+  }
+
+  /**
+   * 渲染组件元素
+   *
+   * @param vnode
+   * @protected
+   */
+  protected renderWidgetElement(vnode: WidgetVNode): RuntimeElement {
+    createInstance(vnode).then()
+    return vnode.instance!.renderer.render()
   }
 }

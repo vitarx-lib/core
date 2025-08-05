@@ -1,6 +1,6 @@
 // 辅助计算出元素类型
-import type { IntrinsicNodeElementName, RuntimeElement } from '../../renderer/index'
 import type { ExcludeWidgetIntrinsicKeywords } from '../../widget/core/constant'
+import type { IntrinsicNodeElementName, RuntimeElement } from '../types/index'
 import { RefElSymbol } from './constant'
 
 type ComputedRefElType<T> = T extends IntrinsicNodeElementName

@@ -1,4 +1,7 @@
 import type { RefSignal } from '@vitarx/responsive'
+import { Widget, type WidgetType } from '../../widget/index'
+import { type Fragment, type RefEl, VNodeSymbol } from '../core/index'
+import type { UniqueKey } from './attributes'
 import type {
   AllNodeElementName,
   IntrinsicNodeElementName,
@@ -6,10 +9,7 @@ import type {
   NoTagNodeElementName,
   RuntimeElement,
   RuntimeNoTagElement
-} from '../../renderer/index'
-import { Widget, type WidgetType } from '../../widget/index'
-import { type Fragment, type RefEl, VNodeSymbol } from '../core/index'
-import type { UniqueKey } from './attributes'
+} from './element'
 
 /**
  * 支持的VNode类型

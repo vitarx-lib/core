@@ -1,15 +1,17 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { isRefSignal } from '@vitarx/responsive'
 import { isFunction, isRecordObject, isString, popProperty } from '@vitarx/utils/src/index'
-import {
-  type ClassProperties,
-  cssClassValueToArray,
-  mergeCssClass,
-  mergeCssStyle,
-  type NoTagNodeElementName
-} from '../../renderer/index'
-import type { NoTagVNode, UniqueKey, VNode, VNodePropsType, VNodeType } from '../types'
+import type {
+  ClassProperties,
+  NoTagNodeElementName,
+  NoTagVNode,
+  UniqueKey,
+  VNode,
+  VNodePropsType,
+  VNodeType
+} from '../types'
 import { VNodeSymbol } from './constant'
+import { cssClassValueToArray, mergeCssClass, mergeCssStyle } from './property-utils'
 import { addParentVNodeMapping } from './relationships'
 import { isNoTagVNodeType, isValidVNodeType, isVNode } from './type-guards'
 

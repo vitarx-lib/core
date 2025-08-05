@@ -1,5 +1,5 @@
 import { isFunction } from '@vitarx/utils/src/index'
-import type { NoTagNodeElementName } from '../../renderer/index'
+import type { NoTagNodeElementName } from '../types/index'
 import type {
   CommentVNode,
   ElementVNode,

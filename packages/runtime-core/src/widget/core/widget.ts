@@ -3,7 +3,6 @@ import { getCurrentVNode, type VNode, type WidgetVNode } from '../../vnode/index
 import type { ErrorInfo } from '../types/error'
 import { CLASS_WIDGET_BASE_SYMBOL, LifecycleHooks } from './constant'
 import { triggerLifecycleHook } from './manager/index'
-import { WidgetRenderer } from './manager/renderer'
 
 /**
  * 此类型用于推导出组件的子节点类型。
@@ -67,13 +66,6 @@ export abstract class Widget<
    * @private
    */
   readonly #vnode: WidgetVNode
-  /**
-   * 内部私有属性，用于存放渲染器实例。
-   *
-   * @internal
-   * @private
-   */
-  #renderer?: WidgetRenderer<this>
 
   public constructor(props: InputProps) {
     this.#props = props
@@ -103,18 +95,6 @@ export abstract class Widget<
    */
   get props(): Readonly<InputProps & Props> {
     return this.#props as InputProps & Props
-  }
-
-  /**
-   * 获取渲染器实例。
-   *
-   * @internal 该获取器被内部逻辑依赖，谨慎重写！
-   */
-  get renderer(): WidgetRenderer<this> {
-    if (!this.#renderer) {
-      this.#renderer = new WidgetRenderer(this)
-    }
-    return this.#renderer
   }
 
   /**
