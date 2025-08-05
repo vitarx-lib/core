@@ -2,6 +2,7 @@
 export * from './clone'
 export * from './detect'
 export * from './quick'
+export * from './str'
 
 declare global {
   /** 任意函数 */
