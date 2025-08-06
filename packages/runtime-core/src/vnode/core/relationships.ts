@@ -1,7 +1,7 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import type { VNode, WidgetVNode } from '../types'
 import { VNodeContextSymbol } from './constant'
-import { isVNode } from './type-guards'
+import { isFragmentVNode, isVNode } from './type-guards'
 
 /**
  * 存储节点父子关系的映射
@@ -124,7 +124,26 @@ export function unmountVNode(vnode: VNode, isRemoveEl: boolean = true): void {
     if ('children' in vnode && vnode.children.length) {
       vnode.children.forEach(child => unmountVNode(child, isRemoveEl))
       // 删除元素
-      if (isRemoveEl && vnode.el && 'remove' in vnode.el) vnode.el.remove()
+      if (isRemoveEl) removeVNodeElement(vnode)
     }
+  }
+}
+
+/**
+ * 删除虚拟节点元素
+ *
+ * @param vnode
+ */
+export function removeVNodeElement(vnode: VNode) {
+  if (!vnode.el || !isVNode(vnode)) return
+  if (isFragmentVNode(vnode)) {
+    if (vnode.el.childNodes.length) {
+      vnode.children.forEach(child => removeVNodeElement(child))
+    } else {
+      // 如果节点是空的则删除影子元素
+      ;(vnode.el as any).shadowElement?.remove()
+    }
+  } else if ('remove' in vnode.el) {
+    vnode.el.remove()
   }
 }
