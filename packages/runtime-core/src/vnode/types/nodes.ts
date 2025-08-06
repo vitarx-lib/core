@@ -7,8 +7,7 @@ import type {
   IntrinsicNodeElementName,
   NodeElement,
   NoTagNodeElementName,
-  RuntimeElement,
-  RuntimeNoTagElement
+  RuntimeElement
 } from './element'
 
 /**
@@ -27,7 +26,7 @@ export type VNodePropsType<T extends VNodeType> = T extends AllNodeElementName
   ? NodeElement<T>
   : T extends WidgetType<infer P>
     ? P
-    : {}
+    : never
 
 export interface BaseVNode<T extends VNodeType = VNodeType> {
   /**
@@ -50,11 +49,7 @@ export interface BaseVNode<T extends VNodeType = VNodeType> {
   /**
    * 仅在渲染过后才存在
    */
-  el?: T extends IntrinsicNodeElementName
-    ? RuntimeElement<T>
-    : T extends WidgetType
-      ? RuntimeElement
-      : RuntimeNoTagElement
+  el?: T extends AllNodeElementName ? RuntimeElement<T> : RuntimeElement
   readonly children: VNode[]
 }
 
@@ -92,7 +87,7 @@ export interface ElementVNode<T extends IntrinsicNodeElementName = IntrinsicNode
 /**
  * 组件节点
  */
-export interface WidgetVNode<T extends WidgetType = WidgetType> extends BaseVNode<T> {
+export interface WidgetVNode<T extends WidgetType = any> extends BaseVNode<T> {
   /**
    * 组件实例
    */
@@ -119,4 +114,9 @@ export type VNode<T extends VNodeType = VNodeType> = T extends NoTagNodeElementN
     ? FragmentVNode
     : T extends WidgetType
       ? WidgetVNode<T>
-      : ElementVNode
+      : T extends IntrinsicNodeElementName
+        ? ElementVNode<T>
+        : never
+
+const d: VNode = {} as WidgetVNode
+console.debug('VNode', d)
