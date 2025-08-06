@@ -4,6 +4,7 @@ import {
   addParentVNodeMapping,
   Fragment,
   isVNode,
+  removeVNodeElement,
   type RuntimeElement,
   unmountVNode,
   type VNode,
@@ -203,6 +204,10 @@ export class WidgetRenderer<T extends Widget> {
     return this
   }
 
+  /**
+   * 卸载组件实例
+   * @param root 是否为根节点卸载，默认为true
+   */
   unmount(root: boolean = true) {
     if (this.state !== 'uninstalling' && this.state !== 'unloaded') {
       this.#state = 'uninstalling'
@@ -216,7 +221,7 @@ export class WidgetRenderer<T extends Widget> {
         // 触发onUnmounted生命周期
         this.triggerLifeCycle(LifecycleHooks.unmounted)
       }
-      // 触发onDeactivated生命周期
+      // 触发onBeforeUnmount生命周期
       this.triggerLifeCycle(LifecycleHooks.beforeUnmount)
       // 异步卸载标志
       let isAsyncUnmount = false
@@ -228,7 +233,7 @@ export class WidgetRenderer<T extends Widget> {
           isAsyncUnmount = true
           // 异步卸载
           result.finally(() => {
-            // removeElement(this.el!)
+            removeVNodeElement(this.child)
             postUnmount()
           })
         }
