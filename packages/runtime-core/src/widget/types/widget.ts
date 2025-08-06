@@ -6,14 +6,12 @@ import type { Widget } from '../core/index'
  * 任意组件属性类型
  */
 export type AnyProps = Record<string, any>
-
 /**
  * 组件联合类型
  *
  * 所有组件类型，包括函数组件、类组件、懒加载组件、异步组件等。
  */
 export type WidgetType<P extends AnyProps = any> = ClassWidget<P> | FunctionWidget<P>
-
 /**
  * 类组件构造器类型
  */

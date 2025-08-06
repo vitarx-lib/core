@@ -1,15 +1,15 @@
-import { depSubscribe, Subscriber } from '@vitarx/responsive'
+import { depSubscribe, EffectScope, Subscriber } from '@vitarx/responsive'
 import { createVNode } from '../../../vnode/core/creation'
 import {
   addParentVNodeMapping,
-  type BaseRuntimeContainerElement,
   Fragment,
   isVNode,
   type RuntimeElement,
-  type RuntimeNoTagElement,
+  unmountVNode,
   type VNode,
   type WidgetVNode
 } from '../../../vnode/index'
+import type { LifecycleHookParameter, LifecycleHookReturnType } from '../../types/index'
 import { LifecycleHooks } from '../constant'
 import type { Widget } from '../widget'
 import { triggerLifecycleHook } from './lifecycle'
@@ -52,7 +52,7 @@ export class WidgetRenderer<T extends Widget> {
    *
    * @private
    */
-  #shadowElement: RuntimeNoTagElement | null = null
+  #shadowElement: RuntimeElement<'comment-node'> | null = null
   /**
    * 当前组件的Child虚拟节点
    *
@@ -87,10 +87,16 @@ export class WidgetRenderer<T extends Widget> {
    *
    * @returns {VNode}
    */
-  get vnode(): Readonly<WidgetVNode> {
+  get vnode(): WidgetVNode {
     return this.widget['vnode']
   }
 
+  /**
+   * 当前作用域
+   */
+  get scope(): EffectScope {
+    return this.widget.scope
+  }
   /**
    * 获取小部件名称
    *
@@ -174,7 +180,7 @@ export class WidgetRenderer<T extends Widget> {
    *
    * @param container - 容器元素实例，如果`beforeMount`钩子返回了指定的容器元素，则此参数无效。
    */
-  mount(container?: BaseRuntimeContainerElement) {
+  mount(container?: HTMLElement) {
     if (this.state === 'notRendered') {
       // this.render()
     } else if (this.state !== 'notMounted') {
@@ -197,8 +203,56 @@ export class WidgetRenderer<T extends Widget> {
     return this
   }
 
-  unmount(root: boolean = true) {}
+  unmount(root: boolean = true) {
+    if (this.state !== 'uninstalling' && this.state !== 'unloaded') {
+      this.#state = 'uninstalling'
+      const postUnmount = () => {
+        // 销毁当前作用域
+        this.scope?.dispose()
+        // 移除占位元素
+        this.#shadowElement?.remove()
+        // 修改状态为已卸载
+        this.#state = 'unloaded'
+        // 触发onUnmounted生命周期
+        this.triggerLifeCycle(LifecycleHooks.unmounted)
+      }
+      // 触发onDeactivated生命周期
+      this.triggerLifeCycle(LifecycleHooks.beforeUnmount)
+      // 异步卸载标志
+      let isAsyncUnmount = false
+      // 如果是根节点且是激活状态，则需要触发删除元素前的回调
+      if (root && this.state === 'activated') {
+        const result = this.triggerLifeCycle(LifecycleHooks.beforeRemove, this.el!, 'unmount')
+        // 兼容异步卸载
+        if (result instanceof Promise) {
+          isAsyncUnmount = true
+          // 异步卸载
+          result.finally(() => {
+            // removeElement(this.el!)
+            postUnmount()
+          })
+        }
+      }
+      // 递归卸载子节点
+      unmountVNode(this.child, root && !isAsyncUnmount)
+      // 如果不是异步卸载直接执行卸载逻辑
+      if (!isAsyncUnmount) postUnmount()
+    }
+  }
 
+  /**
+   * 触发生命周期钩子
+   *
+   * @param hook - 生命周期钩子名称
+   * @param args - 参数列表
+   * @protected
+   */
+  protected triggerLifeCycle<T extends LifecycleHooks>(
+    hook: T,
+    ...args: LifecycleHookParameter<T>
+  ): LifecycleHookReturnType<T> {
+    return triggerLifecycleHook(this.widget, hook, ...args)
+  }
   /**
    * 构建虚拟节点+依赖收集
    *

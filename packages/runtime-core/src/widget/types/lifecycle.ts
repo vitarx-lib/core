@@ -1,3 +1,4 @@
+import type { RuntimeElement } from '../../vnode/index'
 import type { LifecycleHooks } from '../core/constant'
 import type { ErrorInfo } from './error'
 
@@ -16,7 +17,7 @@ export type LifecycleHookMethods = `${LifecycleHooks}`
 export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
   ? [error: unknown, info: ErrorInfo]
   : T extends LifecycleHooks.beforeRemove
-    ? [el: HTMLElement, type: 'unmount' | 'deactivate']
+    ? [el: RuntimeElement, type: 'unmount' | 'deactivate']
     : []
 
 /**

@@ -1,5 +1,10 @@
 import { EffectScope, getCurrentScope } from '@vitarx/responsive'
-import { getCurrentVNode, type VNode, type WidgetVNode } from '../../vnode/index'
+import {
+  getCurrentVNode,
+  type RuntimeElement,
+  type VNode,
+  type WidgetVNode
+} from '../../vnode/index'
 import type { ErrorInfo } from '../types/error'
 import { CLASS_WIDGET_BASE_SYMBOL, LifecycleHooks } from './constant'
 import { triggerLifecycleHook, WidgetRenderer } from './manager/index'
@@ -105,7 +110,7 @@ export abstract class Widget<
    * @returns {WidgetVNode}
    * @internal 该获取器被内部逻辑依赖，请勿重写！
    */
-  get vnode(): Readonly<WidgetVNode> {
+  get vnode(): WidgetVNode {
     return this.#vnode
   }
   /**
@@ -410,7 +415,7 @@ export abstract class Widget<
    *   setTimeout(resolve, 300) // 延迟300ms后移除元素
    * })
    */
-  onBeforeRemove?<T extends HTMLElement>(el: T, type: 'unmount' | 'deactivate'): Promise<void>
+  onBeforeRemove?<T extends RuntimeElement>(el: T, type: 'unmount' | 'deactivate'): Promise<void>
   /**
    * 服务端预取钩子
    *
