@@ -81,8 +81,7 @@ export interface FragmentVNode extends BaseVNode<Fragment> {}
 /**
  * 普通元素节点
  */
-export interface ElementVNode<T extends IntrinsicNodeElementName = IntrinsicNodeElementName>
-  extends BaseVNode<T> {}
+export interface ElementVNode<T extends IntrinsicNodeElementName = any> extends BaseVNode<T> {}
 
 /**
  * 组件节点
@@ -118,5 +117,5 @@ export type VNode<T extends VNodeType = VNodeType> = T extends NoTagNodeElementN
         ? ElementVNode<T>
         : never
 
-const d: VNode = {} as WidgetVNode
+const d: VNode = {} as ElementVNode<'a'>
 console.debug('VNode', d)
