@@ -1,28 +1,24 @@
 import { unref } from '@vitarx/responsive'
+import type { AllNodeElementName, VNodeType } from '@vitarx/runtime-core'
 import {
+  type ClassProperties,
   type CommentVNode,
   createInstance,
+  cssClassValueToString,
+  cssStyleValueToString,
+  type EventNames,
+  type EventOptions,
+  extractEventOptions,
   type Fragment,
+  type IntrinsicNodeElementName,
   isSvgVNode,
   mountVNode,
+  type RuntimeElement,
+  type StyleProperties,
   type TextNode,
   type VNode,
   type WidgetVNode
 } from '@vitarx/runtime-core'
-import type {
-  BaseRuntimeContainerElement,
-  BaseRuntimeConventionElement,
-  ClassProperties,
-  EventNames,
-  EventOptions,
-  IntrinsicNodeElementName,
-  RuntimeContainerElement,
-  RuntimeElement,
-  RuntimeFragmentElement,
-  RuntimeNoTagElement,
-  StyleProperties
-} from './types/index'
-import { cssClassValueToString, cssStyleValueToString, extractEventOptions } from './utils'
 
 /**
  * 渲染器抽象基类
@@ -61,10 +57,13 @@ export class DomRenderer {
    * 渲染一个虚拟节点
    *
    * @param {VNode} vnode - 虚拟节点对象
-   * @param {BaseRuntimeContainerElement} container - 父容器元素，如果传入则会自动挂载到父容器中
-   * @returns {RuntimeElement} 渲染后的元素实例
+   * @param {HTMLElement} container - 父容器元素，如果传入则会自动挂载到父容器中
+   * @returns {HTMLElement} 渲染后的元素实例
    */
-  render(vnode: VNode, container?: BaseRuntimeContainerElement): RuntimeElement {
+  render<T extends VNodeType>(
+    vnode: VNode<T>,
+    container?: HTMLElement | DocumentFragment
+  ): T extends AllNodeElementName ? RuntimeElement<T> : RuntimeElement {
     let el: RuntimeElement
     if (typeof vnode.type === 'string') {
       switch (vnode.type) {
@@ -85,22 +84,18 @@ export class DomRenderer {
     }
     if (container) container.appendChild(el)
     vnode.el = el
-    return el
+    return el as any
   }
 
   /**
    * 渲染子节点列表
    *
-   * @param {BaseRuntimeContainerElement} parent - 父元素
+   * @param {Node} parent - 父元素
    * @param {VNode[]} children - 子节点列表
    * @param {boolean} [triggerMountHook=false] - 是否触发挂载钩子
    * @returns {void}
    */
-  renderChildren(
-    parent: BaseRuntimeContainerElement,
-    children: VNode[],
-    triggerMountHook: boolean = false
-  ): void {
+  renderChildren(parent: Node, children: VNode[], triggerMountHook: boolean = false): void {
     for (const child of children) {
       const el = this.render(child)
       parent.appendChild(el)
@@ -126,8 +121,8 @@ export class DomRenderer {
    * @param el - 元素实例
    * @param html - HTML 字符串
    */
-  setRichText(el: RuntimeElement, html: string): void {
-    'innerHTML' in el && (el.innerHTML = unref(html))
+  setRichText(el: HTMLElement | SVGElement, html: string): void {
+    el.innerHTML = html
   }
 
   /**
@@ -138,7 +133,7 @@ export class DomRenderer {
    * @param style - 样式属性或样式对象
    * @returns {void}
    */
-  setStyle(el: BaseRuntimeConventionElement, style: StyleProperties): void {
+  setStyle(el: HTMLElement | SVGElement, style: StyleProperties): void {
     const cssText = cssStyleValueToString(style)
     if (el.style.cssText !== cssText) {
       el.style.cssText = cssText
@@ -155,7 +150,7 @@ export class DomRenderer {
    * @param classValue - 类名或类名对象
    * @returns {void}
    */
-  setClass(el: BaseRuntimeConventionElement, classValue: ClassProperties): void {
+  setClass(el: HTMLElement | SVGElement, classValue: ClassProperties): void {
     const className = cssClassValueToString(classValue)
     if (el.className !== className) {
       el.setAttribute('class', className)
@@ -172,7 +167,7 @@ export class DomRenderer {
    * @param value - 属性值
    * @returns {void}
    */
-  setAttribute(el: BaseRuntimeConventionElement, name: string, value: any): void {
+  setAttribute(el: HTMLElement | SVGElement, name: string, value: any): void {
     value = unref(value)
     switch (name) {
       case 'style':
@@ -184,12 +179,12 @@ export class DomRenderer {
         this.setClass(el, value)
         break
       case 'v-html':
-        this.setRichText(el as RuntimeContainerElement, value)
+        this.setRichText(el, value)
         break
       default:
         // 如果属性以 data- 开头，则使用 dataset
         if (name.startsWith('data-')) {
-          'dataset' in el && (el.dataset[name.slice(5)] = value)
+          el.dataset[name.slice(5)] = value
           return
         }
         try {
@@ -236,7 +231,7 @@ export class DomRenderer {
    * @param props - 属性对象
    * @returns {void}
    */
-  setAttributes(el: BaseRuntimeConventionElement, props: Record<string, any>): void {
+  setAttributes(el: HTMLElement | SVGElement, props: Record<string, any>): void {
     Object.keys(props).forEach(key => {
       this.setAttribute(el, key, props[key])
     })
@@ -249,7 +244,7 @@ export class DomRenderer {
    * @param {string} name - 要移除的属性名
    * @returns {void}
    */
-  removeAttribute(el: BaseRuntimeConventionElement, name: string): void {
+  removeAttribute(el: HTMLElement | SVGElement, name: string): void {
     if (name === 'className' || name === 'classname' || name === 'class') {
       el.removeAttribute('class')
     } else {
@@ -265,7 +260,7 @@ export class DomRenderer {
    * @param name - 属性名
    * @returns {any} 属性值，如果属性不存在则返回null
    */
-  getAttribute(el: BaseRuntimeConventionElement, name: string): any {
+  getAttribute(el: HTMLElement | SVGElement, name: string): any {
     return el.getAttribute(name)
   }
 
@@ -286,7 +281,7 @@ export class DomRenderer {
    * element.addEventListener("click", (e) => console.log("clicked"), { capture: true });
    */
   addEventListener(
-    el: BaseRuntimeConventionElement,
+    el: HTMLElement | SVGElement,
     name: EventNames,
     handler: AnyFunction,
     options?: EventOptions
@@ -310,7 +305,7 @@ export class DomRenderer {
    * element.removeEventListener("click", clickHandler);
    */
   removeEventListener(
-    el: BaseRuntimeConventionElement,
+    el: HTMLElement | SVGElement,
     name: EventNames,
     handler: AnyFunction,
     useCapture: boolean = false
@@ -319,7 +314,6 @@ export class DomRenderer {
     useCapture = options.capture ?? useCapture
     el.removeEventListener(event, handler, useCapture)
   }
-
   /**
    * 在指定的锚点节点之前插入新的子元素
    *
@@ -331,7 +325,6 @@ export class DomRenderer {
   insertBefore(child: RuntimeElement, anchor: RuntimeElement): void {
     child.parentElement?.insertBefore(child, anchor)
   }
-
   /**
    * 在指定的锚点节点之后插入新的子元素
    *
@@ -350,7 +343,6 @@ export class DomRenderer {
       parent.appendChild(child)
     }
   }
-
   /**
    * 使用新元素替换现有的子元素
    *
@@ -359,10 +351,9 @@ export class DomRenderer {
    * @param oldChild - 要被替换的现有子元素
    * @returns {void}
    */
-  replaceChild(newChild: RuntimeContainerElement, oldChild: RuntimeElement): void {
+  replaceChild(newChild: HTMLElement | SVGElement, oldChild: RuntimeElement): void {
     oldChild.parentElement?.replaceChild(newChild, oldChild)
   }
-
   /**
    * 在当前元素的末尾添加一个子元素
    *
@@ -371,10 +362,9 @@ export class DomRenderer {
    * @param child - 要添加的子元素
    * @returns {void}
    */
-  appendChild(container: RuntimeContainerElement, child: RuntimeElement): void {
+  appendChild(container: HTMLElement | SVGElement, child: RuntimeElement): void {
     container.appendChild(child)
   }
-
   /**
    * 移除指定的子元素
    *
@@ -383,85 +373,76 @@ export class DomRenderer {
    * @param child - 要移除的子元素
    * @returns {void}
    */
-  removeChild(container: RuntimeContainerElement, child: RuntimeElement): void {
+  removeChild(container: HTMLElement | SVGElement, child: RuntimeElement): void {
     container.removeChild(child)
   }
-
   /**
    * 渲染文本元素
    *
    * @param vnode
    * @protected
    */
-  protected renderTextElement(vnode: TextNode): RuntimeNoTagElement<'text-node'> {
-    const el = document.createTextNode(
-      unref(vnode.value)
-    ) as unknown as RuntimeNoTagElement<'text-node'>
-    el.tagName = 'text-node'
-    return el
+  protected renderTextElement(vnode: TextNode): Text {
+    return document.createTextNode(unref(vnode.value))
   }
-
   /**
    * 渲染注释元素
    *
    * @param vnode
    * @protected
    */
-  protected renderCommentElement(vnode: CommentVNode): RuntimeNoTagElement<'comment-node'> {
-    const el = document.createComment(
-      unref(vnode.value)
-    ) as unknown as RuntimeNoTagElement<'comment-node'>
-    el.tagName = 'comment-node'
-    return el
+  protected renderCommentElement(vnode: CommentVNode): Comment {
+    return document.createComment(unref(vnode.value))
   }
-
   /**
    * 渲染片段元素
    *
    * @param vnode
    * @protected
    */
-  protected renderFragmentElement(vnode: VNode<Fragment>): RuntimeFragmentElement {
-    const el = document.createDocumentFragment() as unknown as RuntimeFragmentElement
-    el.tagName = 'fragment-node'
+  protected renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment {
+    const el = document.createDocumentFragment()
     if (vnode.children.length === 0) {
-      el.shadowElement = this.renderCommentElement({ value: 'empty fragment node' } as CommentVNode)
+      Object.defineProperty(el, 'shadowElement', {
+        value: this.renderCommentElement({ value: 'empty fragment node' } as CommentVNode),
+        configurable: true
+      })
     } else {
       this.renderChildren(el, vnode.children)
     }
     return el
   }
-
   /**
    * 渲染内置元素
    *
    * @param vnode
    * @protected
    */
-  protected renderIntrinsicElement(vnode: VNode<IntrinsicNodeElementName>): RuntimeElement {
-    const el = (
-      isSvgVNode(vnode)
-        ? document.createElementNS('http://www.w3.org/2000/svg', vnode.type)
-        : document.createElement(vnode.type)
-    ) as RuntimeElement
+  protected renderIntrinsicElement(
+    vnode: VNode<IntrinsicNodeElementName>
+  ): HTMLElement | SVGElement {
+    const el = isSvgVNode(vnode)
+      ? document.createElementNS('http://www.w3.org/2000/svg', vnode.type)
+      : document.createElement(vnode.type)
     // 如果元素能够设置属性，则设置属性
-    if (vnode.props && el.setAttribute) {
-      this.setAttributes(el as unknown as BaseRuntimeContainerElement, vnode.props)
+    if (vnode.props) {
+      this.setAttributes(el, vnode.props)
     }
     if (vnode.children && el.children) {
-      this.renderChildren(el as unknown as RuntimeContainerElement, vnode.children)
+      this.renderChildren(el, vnode.children)
     }
-    return el as unknown as RuntimeElement
+    return el
   }
-
   /**
    * 渲染组件元素
    *
    * @param vnode
    * @protected
    */
-  protected renderWidgetElement(vnode: WidgetVNode): RuntimeElement {
+  protected renderWidgetElement(
+    vnode: WidgetVNode
+  ): HTMLElement | DocumentFragment | Comment | Text {
     createInstance(vnode).then()
-    return vnode.instance!.renderer.render()
+    throw new Error('Method not implemented.')
   }
 }
