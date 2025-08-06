@@ -124,7 +124,7 @@ export function unmountVNode(vnode: VNode, isRemoveEl: boolean = true): void {
     if ('children' in vnode && vnode.children.length) {
       vnode.children.forEach(child => unmountVNode(child, isRemoveEl))
       // 删除元素
-      if (isRemoveEl) vnode.el?.remove()
+      if (isRemoveEl && vnode.el && 'remove' in vnode.el) vnode.el.remove()
     }
   }
 }
