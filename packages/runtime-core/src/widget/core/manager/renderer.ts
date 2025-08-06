@@ -1,15 +1,12 @@
 import { depSubscribe, Subscriber } from '@vitarx/responsive'
-import { App } from '../../../app'
-import type {
-  BaseRuntimeContainerElement,
-  RuntimeElement,
-  RuntimeNoTagElement
-} from '../../../renderer/index'
 import { createVNode } from '../../../vnode/core/creation'
 import {
   addParentVNodeMapping,
+  type BaseRuntimeContainerElement,
   Fragment,
   isVNode,
+  type RuntimeElement,
+  type RuntimeNoTagElement,
   type VNode,
   type WidgetVNode
 } from '../../../vnode/index'
@@ -135,7 +132,13 @@ export class WidgetRenderer<T extends Widget> {
    */
   update(newChildVNode?: VNode): void {}
 
-  render(): RuntimeElement {
+  /**
+   * 渲染组件并返回运行时元素
+   * @param render - 渲染函数，接收虚拟节点并返回运行时元素
+   * @returns 返回渲染后的运行时元素
+   */
+  render(render: (vnode: VNode) => RuntimeElement): RuntimeElement {
+    // 检查组件状态，防止重复渲染
     if (this.state !== 'notRendered') {
       throw new Error(
         '[Vitarx.WidgetRenderer.render]：The component is rendered, do not render it repeatedly!'
@@ -143,19 +146,24 @@ export class WidgetRenderer<T extends Widget> {
     }
     let el: RuntimeElement
     try {
-      el = App.renderer.render(this.#child)
+      // 尝试渲染子节点
+      el = render(this.#child)
     } catch (e) {
+      // 渲染出错时触发错误生命周期钩子
       const errVNode = triggerLifecycleHook(this.widget, LifecycleHooks.error, e, {
         source: 'render',
         instance: this.widget
       })
+      // 根据错误处理结果创建新的虚拟节点
       this.#child = isVNode(errVNode)
         ? errVNode
         : createVNode('comment-node', {
             children: `${this.name} componentRenderingFailed：${String(e)}`
           })
-      el = App.renderer.render(this.#child)
+      // 重新渲染处理后的虚拟节点
+      el = render(this.#child)
     }
+    // 更新组件状态和元素引用
     this.#state = 'notMounted'
     this.#child.el = el
     return el
@@ -168,7 +176,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   mount(container?: BaseRuntimeContainerElement) {
     if (this.state === 'notRendered') {
-      this.render()
+      // this.render()
     } else if (this.state !== 'notMounted') {
       throw new Error(
         '[Vitarx.WidgetRenderer.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
@@ -227,42 +235,5 @@ export class WidgetRenderer<T extends Widget> {
     // 添加到作用域中
     if (subscriber) this.widget['scope'].addEffect(subscriber)
     return result
-  }
-}
-
-/**
- * 挂载虚拟节点
- *
- * @param {VNode} vnode - 要挂载的虚拟节点
- * @returns {void}
- */
-export function mountVNode(vnode: VNode): void {
-  if (!isVNode(vnode)) return
-  if ('instance' in vnode) {
-    // 挂载当前节点
-    vnode.instance?.renderer.mount()
-  } else if ('children' in vnode && vnode.children.length) {
-    // 递归挂载子级
-    vnode.children.forEach(child => mountVNode(child))
-  }
-}
-
-/**
- * 卸载虚拟节点
- *
- * @param {VNode} vnode - 要卸载的虚拟节点
- * @param {boolean} [isRemoveEl=true] - 是否删除元素，默认为true
- * @returns {void}
- */
-export function unmountVNode(vnode: VNode, isRemoveEl: boolean = true): void {
-  if (!isVNode(vnode)) return
-  if ('instance' in vnode) {
-    vnode.instance?.renderer.unmount(isRemoveEl)
-  } else {
-    if ('children' in vnode && vnode.children.length) {
-      vnode.children.forEach(child => unmountVNode(child, isRemoveEl))
-      // 删除元素
-      if (isRemoveEl) vnode.el?.remove()
-    }
   }
 }

@@ -1,14 +1,9 @@
 import { isReactive, ReactiveProxyHandler } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
 import { isObject } from '@vitarx/utils/src/index'
-import {
-  findParentVNode,
-  getCurrentVNode,
-  type VNode,
-  type WidgetVNode
-} from '../../../vnode/index'
-import type { Widget } from '../widget'
-import { useCurrentInstance } from './instance'
+import { useCurrentInstance, Widget } from '../../widget/index'
+import type { VNode, WidgetVNode } from '../types/index'
+import { findParentVNode, getCurrentVNode } from './relationships'
 
 const VNODE_PROPS_DEFAULT_DATA = Symbol('VNODE_PROPS_DEFAULT_DATA')
 const VNODE_PROPS_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')

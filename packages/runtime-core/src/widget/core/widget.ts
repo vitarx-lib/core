@@ -2,7 +2,7 @@ import { EffectScope, getCurrentScope } from '@vitarx/responsive'
 import { getCurrentVNode, type VNode, type WidgetVNode } from '../../vnode/index'
 import type { ErrorInfo } from '../types/error'
 import { CLASS_WIDGET_BASE_SYMBOL, LifecycleHooks } from './constant'
-import { triggerLifecycleHook } from './manager/index'
+import { triggerLifecycleHook, WidgetRenderer } from './manager/index'
 
 /**
  * 此类型用于推导出组件的子节点类型。
@@ -66,7 +66,12 @@ export abstract class Widget<
    * @private
    */
   readonly #vnode: WidgetVNode
-
+  /**
+   * 存储组件的渲染器实例
+   *
+   * @private
+   */
+  #renderer: WidgetRenderer<this> | null = null
   public constructor(props: InputProps) {
     this.#props = props
     this.#scope = getCurrentScope()!
@@ -77,7 +82,6 @@ export abstract class Widget<
       triggerLifecycleHook(this, LifecycleHooks.create)
     }
   }
-
   /**
    * 获取组件的 EffectScope
    *
@@ -87,7 +91,6 @@ export abstract class Widget<
   get scope(): EffectScope {
     return this.#scope
   }
-
   /**
    * 组件接收到的属性
    *
@@ -96,7 +99,6 @@ export abstract class Widget<
   get props(): Readonly<InputProps & Props> {
     return this.#props as InputProps & Props
   }
-
   /**
    * 获取小部件自身的虚拟节点
    *
@@ -106,7 +108,6 @@ export abstract class Widget<
   get vnode(): Readonly<WidgetVNode> {
     return this.#vnode
   }
-
   /**
    * 获取组件的子节点
    *
@@ -115,7 +116,6 @@ export abstract class Widget<
   get children(): WidgetChildren<InputProps> {
     return this.#props.children
   }
-
   /**
    * 组件创建时调用
    *
@@ -140,7 +140,6 @@ export abstract class Widget<
    * ```
    */
   onCreate?(): void
-
   /**
    * 强制更新视图
    *
@@ -150,7 +149,6 @@ export abstract class Widget<
    * @protected
    */
   protected update(newChildVNode?: VNode) {}
-
   /**
    * 构建`UI`元素。
    *
@@ -174,7 +172,6 @@ export abstract class Widget<
    * @returns {Element} - 返回的是虚拟的VNode节点
    */
   protected abstract build(): VNode | null
-
   /**
    * 组件挂载前调用
    * 在组件即将首次渲染挂载到DOM之前触发
@@ -195,6 +192,17 @@ export abstract class Widget<
    */
   onBeforeMount?(): string | void
 
+  /**
+   * 获取渲染器实例。
+   *
+   * @internal 该获取器被内部逻辑依赖，谨慎重写！
+   */
+  get renderer(): WidgetRenderer<this> {
+    if (!this.#renderer) {
+      this.#renderer = new WidgetRenderer(this)
+    }
+    return this.#renderer
+  }
   /**
    * 组件挂载后调用
    * 在组件被挂载到DOM后触发，此时可以访问DOM元素
@@ -218,7 +226,6 @@ export abstract class Widget<
    * ```
    */
   onMounted?(): void
-
   /**
    * 组件激活时调用
    * 当缓存的组件重新被激活时触发
@@ -244,7 +251,6 @@ export abstract class Widget<
    * ```
    */
   onActivated?(): void
-
   /**
    * 组件停用时调用
    * 当组件被缓存时触发
@@ -267,7 +273,6 @@ export abstract class Widget<
    * ```
    */
   onDeactivated?(): void
-
   /**
    * 组件更新前调用
    * 在组件即将重新渲染之前触发
@@ -290,7 +295,6 @@ export abstract class Widget<
    * ```
    */
   onBeforeUpdate?(): void
-
   /**
    * 组件更新后调用
    * 在组件重新渲染后触发
@@ -316,7 +320,6 @@ export abstract class Widget<
    * ```
    */
   onUpdated?(): void
-
   /**
    * 组件卸载后调用
    * 在组件从DOM中移除后触发
@@ -340,7 +343,6 @@ export abstract class Widget<
    * ```
    */
   onUnmounted?(): void
-
   /**
    * 组件卸载前调用
    * 在组件即将从DOM中移除之前触发
@@ -368,7 +370,6 @@ export abstract class Widget<
    * ```
    */
   onBeforeUnmount?(): void
-
   /**
    * 组件错误处理钩子
    * 当组件渲染过程中出现错误时触发
@@ -395,7 +396,6 @@ export abstract class Widget<
    * ```
    */
   onError?(error: unknown, info: ErrorInfo): any
-
   /**
    * 组件移除前调用
    *
@@ -411,7 +411,6 @@ export abstract class Widget<
    * })
    */
   onBeforeRemove?<T extends HTMLElement>(el: T, type: 'unmount' | 'deactivate'): Promise<void>
-
   /**
    * 服务端预取钩子
    *
