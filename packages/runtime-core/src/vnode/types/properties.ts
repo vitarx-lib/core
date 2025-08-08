@@ -1,4 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
+import { AnyPrimitive } from '@vitarx/utils'
 import type { Child, IntrinsicAttributes } from '../../vnode/index'
 import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event'
 import type { ClassProperties, StyleProperties } from './style'

@@ -1,4 +1,5 @@
 import { getContext, runInContext } from '@vitarx/responsive'
+import { AnyCallback, MakeRequired } from '@vitarx/utils'
 import type { WidgetVNode } from '../../../vnode/index'
 import type { FunctionWidget, ValidFunctionWidgetReturnValue } from '../../types/index'
 import type { LifecycleHooks } from '../constant'

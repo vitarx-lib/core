@@ -1,4 +1,5 @@
 import { getContext, runInContext } from '@vitarx/responsive'
+import { AnyCallback, VoidCallback } from '@vitarx/utils'
 import type { VNode, WidgetVNode } from '../types'
 import { VNodeContextSymbol } from './constant'
 import { isFragmentVNode, isVNode } from './type-guards'

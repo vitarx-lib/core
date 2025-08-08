@@ -1,6 +1,6 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { isRefSignal } from '@vitarx/responsive'
-import { isFunction, isRecordObject, isString, popProperty } from '@vitarx/utils/src/index'
+import { type AnyPrimitive, isFunction, isRecordObject, isString, popProperty } from '@vitarx/utils'
 import type {
   ClassProperties,
   NoTagNodeElementName,

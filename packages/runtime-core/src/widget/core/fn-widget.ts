@@ -1,7 +1,6 @@
 import { withAsyncContext } from '@vitarx/responsive'
-import { isPromise } from '@vitarx/utils'
-import { createVNode } from '../../vnode/core/creation'
-import { isVNode, type VNode, type WidgetVNode } from '../../vnode/index'
+import { isPromise, MakeRequired } from '@vitarx/utils'
+import { createVNode, isVNode, type VNode, type WidgetVNode } from '../../vnode/index'
 import type {
   AnyProps,
   BuildVNode,
