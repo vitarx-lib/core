@@ -21,36 +21,10 @@ import {
 } from '@vitarx/runtime-core'
 
 /**
- * 渲染器抽象基类
+ * DOM 渲染器类
  *
- * @remarks
- * 渲染器是一个抽象基类，它提供了一些通用的渲染操作，如创建绑定事件，删除事件等基本操作。
- * 渲染器必须继承此类，并实现抽象方法，以实现实际的渲染操作。
- *
- * @example
- * ```typescript
- * class WebRenderer extends Renderer {
- *   render(vnode: VNode): RuntimeElement {
- *     // 实现实际的渲染操作
- *   }
- *   setText(el: RuntimeElement, text: string): void {
- *     // 实现实际的文本设置操作
- *   }
- *   setStyle(el: RuntimeElement, style: StyleProperties): void {
- *     // 实现实际的样式设置操作
- *   }
- *   setClass(el: RuntimeElement, className: string[]): void {
- *     // 实现实际的类设置操作
- *   }
- *   setAttribute(el: RuntimeElement, name: string, value: any): void {
- *     // 实现实际的属性设置操作
- *   }
- *   removeAttribute(el: RuntimeElement, name: string): void {
- *     // 实现实际的属性移除操作
- *   }
- * }
- *
- * @abstract
+ * @description 负责将虚拟节点渲染为真实的 DOM 元素，提供完整的 DOM 操作能力
+ * 包括元素创建、属性设置、事件绑定、节点插入等核心功能
  */
 export class DomRenderer {
   /**
@@ -86,7 +60,6 @@ export class DomRenderer {
     vnode.el = el
     return el as any
   }
-
   /**
    * 渲染子节点列表
    *
@@ -102,7 +75,6 @@ export class DomRenderer {
       if (triggerMountHook) mountVNode(child)
     }
   }
-
   /**
    * 设置元素的文本内容
    *
@@ -114,7 +86,6 @@ export class DomRenderer {
   setText(el: RuntimeElement, text: string): void {
     el.nodeValue = unref(text)
   }
-
   /**
    * 设置富文本内容
    *
@@ -124,7 +95,6 @@ export class DomRenderer {
   setRichText(el: HTMLElement | SVGElement, html: string): void {
     el.innerHTML = html
   }
-
   /**
    * 设置元素的样式
    *
@@ -141,7 +111,6 @@ export class DomRenderer {
     // 如果没有有效样式，移除 style 属性
     if (el.style.length === 0) el.removeAttribute('style')
   }
-
   /**
    * 设置元素的样式类名
    *
@@ -157,7 +126,6 @@ export class DomRenderer {
     }
     if (el.classList.length === 0) el.removeAttribute('class')
   }
-
   /**
    * 设置元素的属性值
    *
@@ -223,7 +191,6 @@ export class DomRenderer {
         }
     }
   }
-
   /**
    * 为元素设置多个属性
    *
@@ -236,7 +203,6 @@ export class DomRenderer {
       this.setAttribute(el, key, props[key])
     })
   }
-
   /**
    * 移除元素的指定属性
    *
@@ -251,7 +217,6 @@ export class DomRenderer {
       el.removeAttribute(name)
     }
   }
-
   /**
    * 获取元素的属性值
    *
@@ -263,7 +228,6 @@ export class DomRenderer {
   getAttribute(el: HTMLElement | SVGElement, name: string): any {
     return el.getAttribute(name)
   }
-
   /**
    * 为元素添加事件监听器
    *
@@ -290,7 +254,6 @@ export class DomRenderer {
     Object.assign(eventOptions, options)
     el.addEventListener(event, handler, eventOptions)
   }
-
   /**
    * 移除元素的事件监听器
    *

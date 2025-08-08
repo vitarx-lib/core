@@ -1,1 +1,1 @@
-export * from './web-renderer'
+export * from './dom-renderer'
