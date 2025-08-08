@@ -1,5 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
-import type { IntrinsicAttributes, VNode } from '../../vnode/index'
+import type { Child, IntrinsicAttributes } from '../../vnode/index'
 import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event'
 import type { ClassProperties, StyleProperties } from './style'
 
@@ -598,14 +598,6 @@ type CoverProperties = SupportRefSignal<GlobalProperties & PartProperties>
  * 要覆盖HTML属性的键
  */
 type CoverPropertiesNames = keyof CoverProperties
-/**
- * 节点子元素类型
- */
-export type Children =
-  | VNode
-  | Exclude<AnyPrimitive, symbol>
-  | RefSignal<VNode | Exclude<AnyPrimitive, symbol>>
-  | Array<Children>
 
 /**
  * 自定义全局属性
@@ -641,7 +633,7 @@ interface CustomProperties {
    * </div>
    * ```
    */
-  children?: Children
+  children?: Child
 
   /**
    * data-* 自定义数据属性
