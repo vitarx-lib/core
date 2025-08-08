@@ -1,3 +1,4 @@
+import { AnyObject } from '@vitarx/utils'
 import type { BaseSignal, NotSignal, ProxySignal, RefSignal } from '../../core/index'
 
 /**

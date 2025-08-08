@@ -1,3 +1,5 @@
+import { VoidCallback } from '@vitarx/utils'
+
 /**
  * 错误处理回调函数类型
  *

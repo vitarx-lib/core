@@ -1,3 +1,4 @@
+import { AnyCollection, VoidCallback } from '@vitarx/utils'
 import type { SubscriptionOptions } from '../../observer/index'
 import type { RefSignal, SignalToRaw } from '../core/index'
 

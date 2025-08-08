@@ -1,3 +1,4 @@
+import { AnyKey, AnyObject } from '@vitarx/utils'
 import { Observer } from '../../observer/index'
 import type { BaseSignal } from './types'
 

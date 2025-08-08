@@ -1,3 +1,4 @@
+import { AnyCallback, VoidCallback } from '@vitarx/utils'
 import type { EffectCallbackErrorHandler, EffectInterface, EffectState } from './effect-interface'
 
 /**

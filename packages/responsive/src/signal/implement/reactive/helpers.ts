@@ -1,3 +1,4 @@
+import { AnyObject } from '@vitarx/utils'
 import { SIGNAL_RAW_VALUE_SYMBOL, type SignalOptions } from '../../core/index'
 import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './proxy-handler'
 import type { Reactive, Unreactive } from './types'

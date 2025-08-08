@@ -1,3 +1,4 @@
+import { AnyObject, DeepReadonly } from '@vitarx/utils'
 import { ReadonlyHandler } from './readonly'
 import { ReadonlyOptions } from './types'
 

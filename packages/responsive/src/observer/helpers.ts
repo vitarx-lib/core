@@ -1,3 +1,4 @@
+import { AnyCallback, AnyObject } from '@vitarx/utils'
 import { ObserverManager, type SubscriptionOptions } from './manager'
 import { Subscriber } from './subscriber'
 

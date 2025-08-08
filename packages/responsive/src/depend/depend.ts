@@ -1,4 +1,10 @@
-import { isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
+import {
+  AnyKey,
+  AnyObject,
+  isFunction,
+  microTaskDebouncedCallback,
+  VoidCallback
+} from '@vitarx/utils'
 import { Observer, Subscriber, type SubscriptionOptions } from '../observer/index'
 
 /**

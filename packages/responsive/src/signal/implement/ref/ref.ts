@@ -1,4 +1,4 @@
-import { isObject } from '@vitarx/utils'
+import { AnyObject, isObject } from '@vitarx/utils'
 import { Depend } from '../../../depend/index'
 import {
   type BaseSignal,

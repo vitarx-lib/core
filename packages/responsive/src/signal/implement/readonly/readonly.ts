@@ -1,4 +1,4 @@
-import { isObject } from '@vitarx/utils'
+import { DeepReadonly, isObject } from '@vitarx/utils'
 import { Observer } from '../../../observer/index'
 import { isReadonly, READONLY_OBJECT_SYMBOL } from './helpers'
 import type { ReadonlyOptions } from './types'

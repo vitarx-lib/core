@@ -1,4 +1,4 @@
-import { isObject } from '@vitarx/utils'
+import { AnyKey, AnyObject, isObject } from '@vitarx/utils'
 import { Depend } from '../../../depend/index'
 import { Observer } from '../../../observer/index'
 import {

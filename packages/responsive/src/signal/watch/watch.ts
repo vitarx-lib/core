@@ -1,4 +1,12 @@
-import { deepClone, isArray, isFunction } from '@vitarx/utils'
+import {
+  AnyCallback,
+  AnyFunction,
+  AnyObject,
+  deepClone,
+  isArray,
+  isFunction,
+  VoidCallback
+} from '@vitarx/utils'
 import { Depend } from '../../depend/index'
 import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
 import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index'

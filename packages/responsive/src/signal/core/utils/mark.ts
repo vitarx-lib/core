@@ -1,3 +1,4 @@
+import { AnyObject } from '@vitarx/utils'
 import { NOT_SIGNAL_SYMBOL } from '../constants'
 import type { NotSignal } from '../types/index'
 

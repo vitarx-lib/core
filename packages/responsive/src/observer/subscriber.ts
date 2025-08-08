@@ -1,3 +1,4 @@
+import { AnyCallback } from '@vitarx/utils'
 import { Effect, EffectScope } from '../effect/index'
 
 /**

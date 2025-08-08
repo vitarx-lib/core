@@ -1,3 +1,4 @@
+import { AnyObject } from '@vitarx/utils'
 import type { ProxySignal } from '../../core/index'
 import type { UnwrapNestedRefs } from '../ref/index'
 

@@ -1,3 +1,4 @@
+import type { AnyObject } from '@vitarx/utils'
 import {
   DEEP_SIGNAL_SYMBOL,
   NOT_SIGNAL_SYMBOL,
