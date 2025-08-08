@@ -247,12 +247,12 @@ export class DomRenderer {
   addEventListener(
     el: HTMLElement | SVGElement,
     name: EventNames,
-    handler: AnyFunction,
+    handler: (...args: any[]) => any,
     options?: EventOptions
   ): void {
     const { event, options: eventOptions } = extractEventOptions(name)
     Object.assign(eventOptions, options)
-    el.addEventListener(event, handler, eventOptions)
+    el.addEventListener(event, handler as any, eventOptions)
   }
   /**
    * 移除元素的事件监听器
@@ -270,12 +270,12 @@ export class DomRenderer {
   removeEventListener(
     el: HTMLElement | SVGElement,
     name: EventNames,
-    handler: AnyFunction,
+    handler: (...args: any[]) => any,
     useCapture: boolean = false
   ): void {
     const { event, options } = extractEventOptions(name)
     useCapture = options.capture ?? useCapture
-    el.removeEventListener(event, handler, useCapture)
+    el.removeEventListener(event, handler as any, useCapture)
   }
   /**
    * 在指定的锚点节点之前插入新的子元素
