@@ -18,7 +18,11 @@ import { isNoTagVNodeType, isValidVNodeType, isVNode } from './type-guards'
 /**
  * 表示可以作为子节点的类型
  */
-export type Child = VNode | AnyPrimitive | RefSignal<VNode | AnyPrimitive> | Array<Child>
+export type Child =
+  | VNode
+  | Exclude<AnyPrimitive, symbol>
+  | RefSignal<VNode | Exclude<AnyPrimitive, symbol>>
+  | Array<Child>
 
 /**
  * 表示子节点数组
@@ -158,7 +162,7 @@ export function createNoTagVNode<T extends NoTagNodeElementName>(
 export function createVNode<T extends VNodeType>(
   type: T,
   props: VNodePropsType<T> | null = null,
-  ...children: Child[]
+  ...children: Children
 ): VNode<T> {
   if (!isValidVNodeType(type)) {
     throw new Error(`Invalid VNode type: ${type}`)
