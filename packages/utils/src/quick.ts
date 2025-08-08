@@ -1,4 +1,5 @@
 import { isArray, isObject, isRecordObject } from './detect.js'
+import type { AnyCallback, FnCallback } from './types'
 
 /**
  * 弹出对象属性。

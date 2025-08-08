@@ -1,3 +1,5 @@
+import type { AnyCollection } from './types'
+
 /**
  * 判断是否为对象
  *
