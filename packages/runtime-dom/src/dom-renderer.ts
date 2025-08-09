@@ -1,5 +1,10 @@
 import { unref } from '@vitarx/responsive'
-import type { AllNodeElementName, VNodeType } from '@vitarx/runtime-core'
+import type {
+  AllNodeElementName,
+  FragmentElement,
+  FragmentVNode,
+  VNodeType
+} from '@vitarx/runtime-core'
 import {
   type ClassProperties,
   type CommentVNode,
@@ -11,6 +16,7 @@ import {
   extractEventOptions,
   type Fragment,
   type IntrinsicNodeElementName,
+  isFragmentVNode,
   isSvgVNode,
   mountVNode,
   type RuntimeElement,
@@ -34,7 +40,7 @@ export class DomRenderer {
    * @param {HTMLElement} container - 父容器元素，如果传入则会自动挂载到父容器中
    * @returns {HTMLElement} 渲染后的元素实例
    */
-  render<T extends VNodeType>(
+  static render<T extends VNodeType>(
     vnode: VNode<T>,
     container?: HTMLElement | DocumentFragment
   ): T extends AllNodeElementName ? RuntimeElement<T> : RuntimeElement {
@@ -68,7 +74,7 @@ export class DomRenderer {
    * @param {boolean} [triggerMountHook=false] - 是否触发挂载钩子
    * @returns {void}
    */
-  renderChildren(parent: Node, children: VNode[], triggerMountHook: boolean = false): void {
+  static renderChildren(parent: Node, children: VNode[], triggerMountHook: boolean = false): void {
     for (const child of children) {
       const el = this.render(child)
       parent.appendChild(el)
@@ -83,7 +89,7 @@ export class DomRenderer {
    * @param text - 文本内容
    * @returns {void}
    */
-  setText(el: RuntimeElement, text: string): void {
+  static setText(el: RuntimeElement, text: string): void {
     el.nodeValue = unref(text)
   }
   /**
@@ -92,7 +98,7 @@ export class DomRenderer {
    * @param el - 元素实例
    * @param html - HTML 字符串
    */
-  setRichText(el: HTMLElement | SVGElement, html: string): void {
+  static setRichText(el: HTMLElement | SVGElement, html: string): void {
     el.innerHTML = html
   }
   /**
@@ -103,7 +109,7 @@ export class DomRenderer {
    * @param style - 样式属性或样式对象
    * @returns {void}
    */
-  setStyle(el: HTMLElement | SVGElement, style: StyleProperties): void {
+  static setStyle(el: HTMLElement | SVGElement, style: StyleProperties): void {
     const cssText = cssStyleValueToString(style)
     if (el.style.cssText !== cssText) {
       el.style.cssText = cssText
@@ -119,7 +125,7 @@ export class DomRenderer {
    * @param classValue - 类名或类名对象
    * @returns {void}
    */
-  setClass(el: HTMLElement | SVGElement, classValue: ClassProperties): void {
+  static setClass(el: HTMLElement | SVGElement, classValue: ClassProperties): void {
     const className = cssClassValueToString(classValue)
     if (el.className !== className) {
       el.setAttribute('class', className)
@@ -135,7 +141,7 @@ export class DomRenderer {
    * @param value - 属性值
    * @returns {void}
    */
-  setAttribute(el: HTMLElement | SVGElement, name: string, value: any): void {
+  static setAttribute(el: HTMLElement | SVGElement, name: string, value: any): void {
     value = unref(value)
     switch (name) {
       case 'style':
@@ -198,7 +204,7 @@ export class DomRenderer {
    * @param props - 属性对象
    * @returns {void}
    */
-  setAttributes(el: HTMLElement | SVGElement, props: Record<string, any>): void {
+  static setAttributes(el: HTMLElement | SVGElement, props: Record<string, any>): void {
     Object.keys(props).forEach(key => {
       this.setAttribute(el, key, props[key])
     })
@@ -210,7 +216,7 @@ export class DomRenderer {
    * @param {string} name - 要移除的属性名
    * @returns {void}
    */
-  removeAttribute(el: HTMLElement | SVGElement, name: string): void {
+  static removeAttribute(el: HTMLElement | SVGElement, name: string): void {
     if (name === 'className' || name === 'classname' || name === 'class') {
       el.removeAttribute('class')
     } else {
@@ -225,7 +231,7 @@ export class DomRenderer {
    * @param name - 属性名
    * @returns {any} 属性值，如果属性不存在则返回null
    */
-  getAttribute(el: HTMLElement | SVGElement, name: string): any {
+  static getAttribute(el: HTMLElement | SVGElement, name: string): any {
     return el.getAttribute(name)
   }
   /**
@@ -244,7 +250,7 @@ export class DomRenderer {
    * // 添加点击事件监听器
    * element.addEventListener("click", (e) => console.log("clicked"), { capture: true });
    */
-  addEventListener(
+  static addEventListener(
     el: HTMLElement | SVGElement,
     name: EventNames,
     handler: (...args: any[]) => any,
@@ -267,7 +273,7 @@ export class DomRenderer {
    * // 移除点击事件监听器
    * element.removeEventListener("click", clickHandler);
    */
-  removeEventListener(
+  static removeEventListener(
     el: HTMLElement | SVGElement,
     name: EventNames,
     handler: (...args: any[]) => any,
@@ -285,7 +291,7 @@ export class DomRenderer {
    * @param anchor - 锚点节点
    * @returns {void}
    */
-  insertBefore(child: RuntimeElement, anchor: RuntimeElement): void {
+  static insertBefore(child: RuntimeElement, anchor: RuntimeElement): void {
     child.parentElement?.insertBefore(child, anchor)
   }
   /**
@@ -296,7 +302,7 @@ export class DomRenderer {
    * @param anchor - 锚点节点
    * @returns {void}
    */
-  insertAfter(child: RuntimeElement, anchor: RuntimeElement): void {
+  static insertAfter(child: RuntimeElement, anchor: RuntimeElement): void {
     const parent = anchor.parentElement
     if (!parent) return
     const next = anchor.nextSibling
@@ -307,45 +313,167 @@ export class DomRenderer {
     }
   }
   /**
-   * 使用新元素替换现有的子元素
+   * 获取虚拟节点的父级真实DOM元素
    *
-   * @description 用新元素替换当前元素中的现有子元素。如果要替换的节点不是当前元素的子元素，则此操作无效
-   * @param newChild - 用于替换的新元素
-   * @param oldChild - 要被替换的现有子元素
-   * @returns {void}
+   * @param vnode - 虚拟节点对象
+   * @returns {RuntimeElement | null} 返回父级真实DOM元素，如果不存在则返回null
    */
-  replaceChild(newChild: HTMLElement | SVGElement, oldChild: RuntimeElement): void {
-    oldChild.parentElement?.replaceChild(newChild, oldChild)
+  static getParentElement(vnode: VNode): RuntimeElement | null {
+    const el = this.getFirstChildElement(vnode)
+    return el?.parentElement ?? null
   }
+
   /**
-   * 在当前元素的末尾添加一个子元素
+   * 获取虚拟节点对应的真实DOM元素的第一个子元素
+   * 如果元素不具有 children 则返回当前元素本身
    *
-   * @description 将指定的节点添加为容器的最后一个子元素
-   * @param container
-   * @param child - 要添加的子元素
-   * @returns {void}
+   * @param vnode - 虚拟节点对象
+   * @returns 返回第一个子元素，如果不存在则返回null
    */
-  appendChild(container: HTMLElement | SVGElement, child: RuntimeElement): void {
-    container.appendChild(child)
+  static getFirstChildElement(vnode: VNode): RuntimeElement | null {
+    // 检查虚拟节点是否有关联的真实DOM元素
+    if (!vnode.el) return null
+    let el = vnode.el
+    // 检查元素是否具有children属性
+    if (!('children' in el)) return el
+    // 处理DocumentFragment类型的情况
+    if (el instanceof DocumentFragment) {
+      const fragmentVNode = vnode as FragmentVNode
+
+      // 如果fragment没有子节点，返回shadow元素（需确保存在）
+      if (fragmentVNode.children.length === 0) {
+        return el.$shadowElement ?? null
+      } else {
+        // 获取第一个子虚拟节点并递归处理
+        const firstChildVNode = fragmentVNode.children[0]
+        if (!firstChildVNode.el) return null
+        el = firstChildVNode.el
+
+        // 如果第一个子节点仍然是DocumentFragment，递归调用
+        if (el instanceof DocumentFragment) {
+          return this.getFirstChildElement(firstChildVNode)
+        }
+      }
+    }
+
+    // 返回第一个子元素，确保firstChild存在
+    return el.firstChild ? (el.firstChild as RuntimeElement) : null
   }
+
   /**
-   * 移除指定的子元素
-   *
-   * @description 从容器元素中移除指定的子元素。如果要移除的节点不是当前元素的子元素，则此操作无效
-   * @param container - 当前元素的容器节点
-   * @param child - 要移除的子元素
-   * @returns {void}
+   * 获取虚拟节点对应的真实DOM元素的最后一个子元素
+   * @param vnode - 虚拟节点对象
+   * @returns 返回最后一个子元素，如果不存在则返回null
    */
-  removeChild(container: HTMLElement | SVGElement, child: RuntimeElement): void {
-    container.removeChild(child)
+  static getLastChildElement(vnode: VNode): RuntimeElement | null {
+    // 检查虚拟节点是否有关联的真实DOM元素
+    if (!vnode.el) return null
+    let el = vnode.el
+
+    // 检查元素是否具有children属性
+    if (!('children' in el)) return null
+
+    // 处理DocumentFragment类型的情况
+    if (el instanceof DocumentFragment) {
+      const fragmentVNode = vnode as FragmentVNode
+
+      // 如果fragment没有子节点，返回shadow元素（需确保存在）
+      if (fragmentVNode.children.length === 0) {
+        return el.$shadowElement ?? null
+      } else {
+        // 获取最后一个子虚拟节点并递归处理
+        const lastChildrenVNode = fragmentVNode.children[fragmentVNode.children.length - 1]
+        if (!lastChildrenVNode.el) return null
+        el = lastChildrenVNode.el
+
+        // 如果最后一个子节点仍然是DocumentFragment，递归调用
+        if (el instanceof DocumentFragment) {
+          return this.getLastChildElement(lastChildrenVNode)
+        }
+      }
+    }
+
+    // 返回最后一个子元素，确保lastChild存在
+    return el.lastChild ? (el.lastChild as RuntimeElement) : null
   }
+
+  /**
+   * 将虚拟节点挂载到指定容器中
+   *
+   * @param container - 挂载容器，可以是HTMLElement、SVGElement或FragmentElement
+   * @param vnode - 虚拟节点
+   * @returns 无返回值
+   */
+  static mount(container: HTMLElement | SVGElement | FragmentElement, vnode: VNode): void {
+    let el: RuntimeElement = vnode.el!
+    if (isFragmentVNode(vnode)) {
+      el = this.recoveryFragmentChildNodes(vnode)
+    }
+    container.appendChild(el)
+  }
+
+  /**
+   * 从DOM中移除虚拟节点对应的真实元素
+   * @param vnode - 需要移除的虚拟节点
+   * @returns 无返回值
+   */
+  static remove(vnode: VNode): void {
+    if (!vnode.el) return
+    const el = vnode.el
+    if (!(el instanceof DocumentFragment)) {
+      return el.remove()
+    }
+    const children = (vnode as FragmentVNode).children
+    if (children?.length) {
+      // 递归移除片段中的所有子节点
+      for (let i = 0; i < children.length; i++) {
+        const childVNode = children[i]
+        const childEl = childVNode.el!
+        if (childEl instanceof DocumentFragment) {
+          this.remove(childVNode)
+        } else {
+          childEl.remove()
+        }
+      }
+    } else {
+      el.$shadowElement?.remove()
+    }
+  }
+
+  /**
+   * 恢复片段节点的子节点
+   *
+   * @param vnode - 片段虚拟节点
+   * @returns 返回恢复后的片段元素
+   */
+  static recoveryFragmentChildNodes(vnode: FragmentVNode): FragmentElement {
+    const el = vnode.el as FragmentElement
+    if (el.childNodes.length === 0) {
+      if (vnode.children?.length) {
+        // 递归恢复片段节点
+        for (let i = 0; i < vnode.children.length; i++) {
+          const childVNode = vnode.children[i]
+          let childEl = childVNode.el
+          if (isFragmentVNode(childVNode)) {
+            childEl = this.recoveryFragmentChildNodes(childVNode)
+          }
+          el.appendChild(childEl!)
+        }
+      } else {
+        // 恢复空节点
+        el.appendChild(el.$shadowElement!)
+      }
+    }
+    return el
+  }
+
   /**
    * 渲染文本元素
    *
    * @param vnode
    * @protected
    */
-  protected renderTextElement(vnode: TextNode): Text {
+  protected static renderTextElement(vnode: TextNode): Text {
     return document.createTextNode(unref(vnode.value))
   }
   /**
@@ -354,7 +482,7 @@ export class DomRenderer {
    * @param vnode
    * @protected
    */
-  protected renderCommentElement(vnode: CommentVNode): Comment {
+  protected static renderCommentElement(vnode: CommentVNode): Comment {
     return document.createComment(unref(vnode.value))
   }
   /**
@@ -363,13 +491,12 @@ export class DomRenderer {
    * @param vnode
    * @protected
    */
-  protected renderFragmentElement(vnode: VNode<Fragment>): DocumentFragment {
-    const el = document.createDocumentFragment()
+  protected static renderFragmentElement(vnode: VNode<Fragment>): FragmentElement {
+    const el = document.createDocumentFragment() as FragmentElement
     if (vnode.children.length === 0) {
-      Object.defineProperty(el, 'shadowElement', {
-        value: this.renderCommentElement({ value: 'empty fragment node' } as CommentVNode),
-        configurable: true
-      })
+      el.$shadowElement = this.renderCommentElement({
+        value: 'empty fragment node'
+      } as CommentVNode)
     } else {
       this.renderChildren(el, vnode.children)
     }
@@ -381,7 +508,7 @@ export class DomRenderer {
    * @param vnode
    * @protected
    */
-  protected renderIntrinsicElement(
+  protected static renderIntrinsicElement(
     vnode: VNode<IntrinsicNodeElementName>
   ): HTMLElement | SVGElement {
     const el = isSvgVNode(vnode)
@@ -402,7 +529,7 @@ export class DomRenderer {
    * @param vnode
    * @protected
    */
-  protected renderWidgetElement(
+  protected static renderWidgetElement(
     vnode: WidgetVNode
   ): HTMLElement | DocumentFragment | Comment | Text {
     createInstance(vnode).then()
