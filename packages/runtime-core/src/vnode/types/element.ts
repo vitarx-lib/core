@@ -58,6 +58,13 @@ export type AllNodeElement = IntrinsicNodeElement & SpecialNodeElement
 export type NodeElement<T extends AllNodeElementName = AllNodeElementName> = AllNodeElement[T]
 
 /**
+ * 片段元素接口
+ */
+export interface FragmentElement extends DocumentFragment {
+  $shadowElement?: RuntimeElement<'comment-node'>
+}
+
+/**
  * 运行时元素接口
  *
  * 根据元素标签推导出元素类型
@@ -70,7 +77,7 @@ export type RuntimeElement<T extends AllNodeElementName = AllNodeElementName> =
     : T extends 'text-node'
       ? Text
       : T extends FragmentNodeElementName
-        ? DocumentFragment
+        ? FragmentElement
         : T extends IntrinsicNodeElementName
           ? ElementTagMap[T]
           : never
