@@ -1,4 +1,6 @@
-import { EffectScope, getCurrentScope } from '@vitarx/responsive'
+import { EffectScope } from '@vitarx/responsive'
+import { getCurrentScope } from '@vitarx/responsive/'
+import { WidgetRenderer } from '../../renderer/widget-renderer'
 import {
   getCurrentVNode,
   type RuntimeElement,
@@ -7,7 +9,7 @@ import {
 } from '../../vnode/index'
 import type { ErrorInfo } from '../types/error'
 import { CLASS_WIDGET_BASE_SYMBOL, LifecycleHooks } from './constant'
-import { triggerLifecycleHook, WidgetRenderer } from './manager/index'
+import { triggerLifecycleHook } from './manager/index'
 
 /**
  * 此类型用于推导出组件的子节点类型。

@@ -1,19 +1,22 @@
 import { depSubscribe, EffectScope, Subscriber } from '@vitarx/responsive'
-import { createVNode } from '../../../vnode/core/creation'
 import {
   addParentVNodeMapping,
+  createVNode,
   Fragment,
   isVNode,
-  removeVNodeElement,
-  type RuntimeElement,
+  RuntimeElement,
   unmountVNode,
   type VNode,
   type WidgetVNode
-} from '../../../vnode/index'
-import type { LifecycleHookParameter, LifecycleHookReturnType } from '../../types/index'
-import { LifecycleHooks } from '../constant'
-import type { Widget } from '../widget'
-import { triggerLifecycleHook } from './lifecycle'
+} from '../vnode'
+import {
+  type LifecycleHookParameter,
+  type LifecycleHookReturnType,
+  LifecycleHooks,
+  triggerLifecycleHook,
+  Widget
+} from '../widget'
+import { DomRenderer } from './dom-renderer'
 
 /**
  * 渲染状态
@@ -91,7 +94,6 @@ export class WidgetRenderer<T extends Widget> {
   get vnode(): WidgetVNode {
     return this.widget['vnode']
   }
-
   /**
    * 当前作用域
    */
@@ -106,7 +108,6 @@ export class WidgetRenderer<T extends Widget> {
   get name(): string {
     return this.vnode.type.name || 'anonymous'
   }
-
   /**
    * 小部件实例
    *
@@ -116,18 +117,32 @@ export class WidgetRenderer<T extends Widget> {
     return this.#widget
   }
 
+  /**
+   * 获取组件当前状态
+   *
+   * @returns {WidgetState} 返回组件当前的状态值
+   */
   get state(): WidgetState {
     return this.#state
   }
 
-  get child() {
+  /**
+   * 获取子虚拟节点
+   *
+   * @returns {VNode} 返回组件的子虚拟节点
+   */
+  get child(): VNode {
     return this.#child
   }
 
-  get el() {
+  /**
+   * 获取组件元素实例
+   *
+   * @returns {RuntimeElement} 返回组件元素实例
+   */
+  get el(): RuntimeElement | undefined {
     return this.#child.el
   }
-
   /**
    * 更新视图
    *
@@ -137,14 +152,57 @@ export class WidgetRenderer<T extends Widget> {
    * @return {void}
    * @internal 核心方法
    */
-  update(newChildVNode?: VNode): void {}
+  update(newChildVNode?: VNode): void {
+    if (newChildVNode && !isVNode(newChildVNode)) {
+      throw new TypeError(
+        `The new child node must be a valid VNode object, given: ${typeof newChildVNode}`
+      )
+    }
+    if (this.state === 'unloaded') {
+      this.triggerLifecycle(
+        LifecycleHooks.error,
+        new Error(
+          '[Vitarx.WidgetRenderer.update]：The component is destroyed and the view can no longer be updated！'
+        ),
+        {
+          source: 'update',
+          instance: this.widget
+        }
+      )
+    }
+    // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
+    if (this.state === 'deactivated') return
+    // 如果是挂起的更新，则直接返回
+    if (this.#pendingUpdate) return
+    this.#pendingUpdate = true
+    try {
+      // 触发更新前生命周期
+      this.triggerLifecycle(LifecycleHooks.beforeUpdate)
+      // 使用 requestAnimationFrame 来延迟更新，合并多个微任务
+      requestAnimationFrame(() => {
+        this.#pendingUpdate = false
+        // 如果组件已卸载，则不进行更新
+        if (this.state === 'unloaded' || !DomRenderer.getParentElement(this.child)) return
+        const oldVNode = this.#child
+        const newVNode = newChildVNode || this.build()
+        this.#child = this.patchUpdate(oldVNode, newVNode)
+        // 触发更新后生命周期
+        this.triggerLifecycle(LifecycleHooks.updated)
+      })
+    } catch (e) {
+      this.#pendingUpdate = false
+      throw e
+    }
+  }
 
+  patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
+    throw new Error('Method not implemented.')
+  }
   /**
    * 渲染组件并返回运行时元素
-   * @param render - 渲染函数，接收虚拟节点并返回运行时元素
-   * @returns 返回渲染后的运行时元素
+   * @returns { RuntimeElement } 返回渲染后的运行时元素
    */
-  render(render: (vnode: VNode) => RuntimeElement): RuntimeElement {
+  render(): RuntimeElement {
     // 检查组件状态，防止重复渲染
     if (this.state !== 'notRendered') {
       throw new Error(
@@ -154,7 +212,7 @@ export class WidgetRenderer<T extends Widget> {
     let el: RuntimeElement
     try {
       // 尝试渲染子节点
-      el = render(this.#child)
+      el = DomRenderer.render(this.#child)
     } catch (e) {
       // 渲染出错时触发错误生命周期钩子
       const errVNode = triggerLifecycleHook(this.widget, LifecycleHooks.error, e, {
@@ -168,14 +226,13 @@ export class WidgetRenderer<T extends Widget> {
             children: `${this.name} componentRenderingFailed：${String(e)}`
           })
       // 重新渲染处理后的虚拟节点
-      el = render(this.#child)
+      el = DomRenderer.render(this.#child)
     }
     // 更新组件状态和元素引用
     this.#state = 'notMounted'
     this.#child.el = el
     return el
   }
-
   /**
    * 挂载组件
    *
@@ -183,7 +240,7 @@ export class WidgetRenderer<T extends Widget> {
    */
   mount(container?: HTMLElement) {
     if (this.state === 'notRendered') {
-      // this.render()
+      this.render()
     } else if (this.state !== 'notMounted') {
       throw new Error(
         '[Vitarx.WidgetRenderer.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
@@ -203,7 +260,6 @@ export class WidgetRenderer<T extends Widget> {
     triggerLifecycleHook(this.widget, LifecycleHooks.activated)
     return this
   }
-
   /**
    * 卸载组件实例
    * @param root 是否为根节点卸载，默认为true
@@ -219,21 +275,21 @@ export class WidgetRenderer<T extends Widget> {
         // 修改状态为已卸载
         this.#state = 'unloaded'
         // 触发onUnmounted生命周期
-        this.triggerLifeCycle(LifecycleHooks.unmounted)
+        this.triggerLifecycle(LifecycleHooks.unmounted)
       }
       // 触发onBeforeUnmount生命周期
-      this.triggerLifeCycle(LifecycleHooks.beforeUnmount)
+      this.triggerLifecycle(LifecycleHooks.beforeUnmount)
       // 异步卸载标志
       let isAsyncUnmount = false
       // 如果是根节点且是激活状态，则需要触发删除元素前的回调
       if (root && this.state === 'activated') {
-        const result = this.triggerLifeCycle(LifecycleHooks.beforeRemove, this.el!, 'unmount')
+        const result = this.triggerLifecycle(LifecycleHooks.beforeRemove, this.el!, 'unmount')
         // 兼容异步卸载
         if (result instanceof Promise) {
           isAsyncUnmount = true
           // 异步卸载
           result.finally(() => {
-            removeVNodeElement(this.child)
+            DomRenderer.remove(this.child)
             postUnmount()
           })
         }
@@ -244,7 +300,6 @@ export class WidgetRenderer<T extends Widget> {
       if (!isAsyncUnmount) postUnmount()
     }
   }
-
   /**
    * 触发生命周期钩子
    *
@@ -252,7 +307,7 @@ export class WidgetRenderer<T extends Widget> {
    * @param args - 参数列表
    * @protected
    */
-  protected triggerLifeCycle<T extends LifecycleHooks>(
+  protected triggerLifecycle<T extends LifecycleHooks>(
     hook: T,
     ...args: LifecycleHookParameter<T>
   ): LifecycleHookReturnType<T> {

@@ -1,6 +1,6 @@
 import type { VNode } from '../../vnode/index'
-import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from '../core/constant'
 import type { Widget } from '../core/index'
+import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from '../core/index'
 
 /**
  * 任意组件属性类型

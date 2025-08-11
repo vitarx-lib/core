@@ -1,5 +1,5 @@
 import type { RuntimeElement } from '../../vnode/index'
-import type { LifecycleHooks } from '../core/constant'
+import type { LifecycleHooks } from '../core'
 import type { ErrorInfo } from './error'
 
 /**
