@@ -1,20 +1,16 @@
 import { unref } from '@vitarx/responsive'
-import type {
-  AllNodeElementName,
-  FragmentElement,
-  FragmentVNode,
-  VNodeType
-} from '@vitarx/runtime-core'
 import {
+  type AllNodeElementName,
   type ClassProperties,
   type CommentVNode,
-  createInstance,
   cssClassValueToString,
   cssStyleValueToString,
   type EventNames,
   type EventOptions,
   extractEventOptions,
   type Fragment,
+  type FragmentElement,
+  type FragmentVNode,
   type IntrinsicNodeElementName,
   isFragmentVNode,
   isSvgVNode,
@@ -23,8 +19,10 @@ import {
   type StyleProperties,
   type TextNode,
   type VNode,
+  VNodeType,
   type WidgetVNode
-} from '@vitarx/runtime-core'
+} from '../vnode'
+import { createInstance } from '../widget/index'
 
 /**
  * DOM 渲染器类
@@ -322,7 +320,6 @@ export class DomRenderer {
     const el = this.getFirstChildElement(vnode)
     return el?.parentElement ?? null
   }
-
   /**
    * 获取虚拟节点对应的真实DOM元素的第一个子元素
    * 如果元素不具有 children 则返回当前元素本身
@@ -359,7 +356,6 @@ export class DomRenderer {
     // 返回第一个子元素，确保firstChild存在
     return el.firstChild ? (el.firstChild as RuntimeElement) : null
   }
-
   /**
    * 获取虚拟节点对应的真实DOM元素的最后一个子元素
    * @param vnode - 虚拟节点对象
@@ -396,7 +392,6 @@ export class DomRenderer {
     // 返回最后一个子元素，确保lastChild存在
     return el.lastChild ? (el.lastChild as RuntimeElement) : null
   }
-
   /**
    * 将虚拟节点挂载到指定容器中
    *
@@ -411,7 +406,6 @@ export class DomRenderer {
     }
     container.appendChild(el)
   }
-
   /**
    * 从DOM中移除虚拟节点对应的真实元素
    * @param vnode - 需要移除的虚拟节点
@@ -425,21 +419,11 @@ export class DomRenderer {
     }
     const children = (vnode as FragmentVNode).children
     if (children?.length) {
-      // 递归移除片段中的所有子节点
-      for (let i = 0; i < children.length; i++) {
-        const childVNode = children[i]
-        const childEl = childVNode.el!
-        if (childEl instanceof DocumentFragment) {
-          this.remove(childVNode)
-        } else {
-          childEl.remove()
-        }
-      }
+      children.forEach(this.remove)
     } else {
       el.$shadowElement?.remove()
     }
   }
-
   /**
    * 恢复片段节点的子节点
    *
@@ -466,7 +450,6 @@ export class DomRenderer {
     }
     return el
   }
-
   /**
    * 渲染文本元素
    *
@@ -529,10 +512,8 @@ export class DomRenderer {
    * @param vnode
    * @protected
    */
-  protected static renderWidgetElement(
-    vnode: WidgetVNode
-  ): HTMLElement | DocumentFragment | Comment | Text {
+  protected static renderWidgetElement(vnode: WidgetVNode): RuntimeElement {
     createInstance(vnode).then()
-    throw new Error('Method not implemented.')
+    return vnode.instance!.renderer.render()
   }
 }
