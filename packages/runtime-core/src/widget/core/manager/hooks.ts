@@ -1,6 +1,6 @@
 import { getContext, runInContext } from '@vitarx/responsive'
-import { WidgetVNode } from '@vitarx/runtime-core'
 import { AnyCallback, MakeRequired } from '@vitarx/utils'
+import type { WidgetVNode } from '../../../vnode/index'
 import type { FunctionWidget, ValidFunctionWidgetReturnValue } from '../../types/index'
 import type { LifecycleHooks } from '../constant'
 
