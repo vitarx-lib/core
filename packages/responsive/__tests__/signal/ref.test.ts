@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Depend, isRef, isSignal, ref, watch } from '../../src/index'
+import { Depend, isRef, isSignal, ref, watch } from '../../src'
 
 describe('ref', () => {
   describe('基础功能', () => {

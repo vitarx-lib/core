@@ -1,5 +1,5 @@
-import { ref, watch } from '../../src/index'
-import { computed } from '../../src/signal/implement/computed/index'
+import { ref, watch } from '../../src'
+import { computed } from '../../src/signal/implement/computed'
 
 const { memoryUsage } = process
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { EffectScope, Subscriber } from '../../../src/index'
+import { EffectScope, Subscriber } from '../../../src'
 
 describe('Subscriber', () => {
   let callback: ReturnType<typeof vi.fn>

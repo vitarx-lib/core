@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ObserverManager } from '../../../src/observer/index'
+import { ObserverManager } from '../../../src/observer'
 
 describe('依赖触发器', () => {
   describe('基础触发', () => {

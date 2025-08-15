@@ -1,4 +1,4 @@
-import { Observer, ref } from '../../src/index'
+import { Observer, ref } from '../../src'
 
 const startMemory = process.memoryUsage()
 console.time('executionTime')

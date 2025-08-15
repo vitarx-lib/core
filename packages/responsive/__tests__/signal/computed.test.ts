@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { isSignal, reactive, ref } from '../../src/index'
+import { isSignal, reactive, ref } from '../../src'
 import { computed } from '../../src/signal/implement/computed'
 
 describe('computed', () => {

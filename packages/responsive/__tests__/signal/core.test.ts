@@ -7,7 +7,7 @@ import {
   reactive,
   ref,
   SignalManager
-} from '../../src/index'
+} from '../../src'
 
 describe('Signal Core', () => {
   describe('SignalManager', () => {

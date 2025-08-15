@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { depCollect, depTrack } from '../../src/index'
+import { depCollect, depTrack } from '../../src'
 
 describe('依赖收集器', () => {
   describe('基础依赖跟踪', () => {

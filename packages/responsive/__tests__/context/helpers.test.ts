@@ -9,7 +9,7 @@ import {
   removeContext,
   runInContext,
   withAsyncContext
-} from '../../src/context/index'
+} from '../../src'
 
 describe('Context辅助函数', () => {
   beforeEach(() => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { isReactive, isSignal, reactive, ref, shallowReactive, watch } from '../../src/index'
+import { isReactive, isSignal, reactive, ref, shallowReactive, watch } from '../../src'
 
 describe('reactive', () => {
   describe('基础功能', () => {
