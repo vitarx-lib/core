@@ -1,6 +1,6 @@
 import { AnyObject } from '@vitarx/utils'
-import type { ProxySignal } from '../../core/index'
-import type { UnwrapNestedRefs } from '../ref/index'
+import type { ProxySignal } from '../../core'
+import type { UnwrapNestedRefs } from '../ref'
 
 /**
  * 响应式代理对象类型

@@ -5,7 +5,7 @@ import {
   microTaskDebouncedCallback,
   VoidCallback
 } from '@vitarx/utils'
-import { Observer, Subscriber, type SubscriptionOptions } from '../observer/index'
+import { Observer, Subscriber, type SubscriptionOptions } from '../observer'
 
 /**
  * 依赖映射集合

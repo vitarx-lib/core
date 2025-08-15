@@ -1,4 +1,4 @@
-import { type SignalOptions, type SignalToRaw, toRaw } from '../../core/index'
+import { type SignalOptions, type SignalToRaw, toRaw } from '../../core'
 import { Ref } from './ref'
 
 /**

@@ -1,4 +1,4 @@
-import { getContext, runInContext } from '../context/index'
+import { getContext, runInContext } from '../context'
 import { Effect } from './effect'
 import type { EffectCallbackErrorHandler, EffectInterface } from './effect-interface'
 import { isEffect } from './helpers'

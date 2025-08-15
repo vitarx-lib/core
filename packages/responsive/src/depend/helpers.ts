@@ -1,4 +1,4 @@
-import type { SubscriptionOptions } from '../observer/index'
+import type { SubscriptionOptions } from '../observer'
 import { type CollectionResult, Depend, type DependSubscribeResult } from './depend'
 
 /**

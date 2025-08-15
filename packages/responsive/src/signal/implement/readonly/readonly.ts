@@ -1,5 +1,5 @@
 import { DeepReadonly, isObject } from '@vitarx/utils'
-import { Observer } from '../../../observer/index'
+import { Observer } from '../../../observer'
 import { isReadonly, READONLY_OBJECT_SYMBOL } from './helpers'
 import type { ReadonlyOptions } from './types'
 

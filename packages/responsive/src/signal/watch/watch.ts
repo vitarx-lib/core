@@ -7,9 +7,9 @@ import {
   isFunction,
   VoidCallback
 } from '@vitarx/utils'
-import { Depend } from '../../depend/index'
-import { type ChangeCallback, Observer, Subscriber } from '../../observer/index'
-import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index'
+import { Depend } from '../../depend'
+import { type ChangeCallback, Observer, Subscriber } from '../../observer'
+import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core'
 import type { CanWatchProperty, WatchCallback, WatchOptions, WatchPropertyCallback } from './types'
 
 /**

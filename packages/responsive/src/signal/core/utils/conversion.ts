@@ -1,5 +1,5 @@
 import { SIGNAL_RAW_VALUE_SYMBOL } from '../constants'
-import type { ProxySignal, RefSignal } from '../types/index'
+import type { ProxySignal, RefSignal } from '../types'
 
 /**
  * 信号转换为原始对象的类型

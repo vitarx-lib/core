@@ -1,7 +1,7 @@
 import { isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
-import { Depend } from '../../../depend/index'
-import { EffectScope } from '../../../effect/index'
-import { Observer, Subscriber } from '../../../observer/index'
+import { Depend } from '../../../depend'
+import { EffectScope } from '../../../effect'
+import { Observer, Subscriber } from '../../../observer'
 import {
   DEEP_SIGNAL_SYMBOL,
   REF_SIGNAL_SYMBOL,

@@ -1,6 +1,6 @@
 import { AnyCollection, VoidCallback } from '@vitarx/utils'
-import type { SubscriptionOptions } from '../../observer/index'
-import type { RefSignal, SignalToRaw } from '../core/index'
+import type { SubscriptionOptions } from '../../observer'
+import type { RefSignal, SignalToRaw } from '../core'
 
 /**
  * 提取出监听目标可被监听的属性

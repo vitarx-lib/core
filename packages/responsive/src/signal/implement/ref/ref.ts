@@ -1,5 +1,5 @@
 import { AnyObject, isObject } from '@vitarx/utils'
-import { Depend } from '../../../depend/index'
+import { Depend } from '../../../depend'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,

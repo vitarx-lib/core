@@ -1,5 +1,5 @@
 import { AnyObject } from '@vitarx/utils'
-import type { BaseSignal, NotSignal, ProxySignal, RefSignal } from '../../core/index'
+import type { BaseSignal, NotSignal, ProxySignal, RefSignal } from '../../core'
 
 /**
  * 解包嵌套的响应式信号值

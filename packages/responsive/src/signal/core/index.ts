@@ -1,4 +1,4 @@
 export * from './constants'
-export * from './types/index'
+export * from './types'
 export * from './manager'
 export * from './utils'
