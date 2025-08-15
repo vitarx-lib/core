@@ -1,5 +1,5 @@
 import { AnyCallback } from '@vitarx/utils'
-import { Effect, EffectScope } from '../effect/index'
+import { Effect, EffectScope } from '../effect'
 
 /**
  * 订阅者配置选项
