@@ -1,0 +1,113 @@
+import { DomHelper } from '../../dom'
+import { IntrinsicNodeElementName, RuntimeElement } from '../types'
+import { ContainerVNode } from './container'
+import { VNode } from './vnode'
+
+/**
+ * ElementVNode 类表示一个元素类型的虚拟节点（Virtual Node），用于在虚拟DOM中表示HTML或SVG元素。
+ * 它继承自VNode类，并扩展了元素特有的功能，如DOM元素的创建、属性设置和子节点渲染。
+ *
+ * 核心功能：
+ * - 提供DOM元素的延迟创建和访问机制
+ * - 支持HTML和SVG元素的创建和渲染
+ * - 自动处理元素属性设置
+ * - 支持子节点的渲染和管理
+ *
+ * 使用示例：
+ * ```typescript
+ * // 创建一个div元素虚拟节点
+ * const divVNode = new ElementVNode('div', { id: 'example' }, [
+ *   new TextVNode('Hello, World!')
+ * ]);
+ *
+ * // 访问DOM元素（此时会自动创建）
+ * const element = divVNode.element;
+ * ```
+ *
+ * 构造函数参数：
+ * - T: 泛型参数，限制元素名称必须是有效的HTML或SVG元素名
+ * - type: 元素类型（如'div', 'span', 'svg'等）
+ * - props: 元素属性对象
+ * - children: 子节点数组
+ *
+ * 使用限制：
+ * - 在非浏览器环境中使用可能会出错，因为依赖DOM API
+ * - SVG元素的创建会自动处理命名空间，无需手动指定
+ *
+ * @template T - 元素名称类型，必须是有效的HTML或SVG元素名
+ */
+export class ElementVNode<
+  T extends IntrinsicNodeElementName = IntrinsicNodeElementName
+> extends ContainerVNode<T> {
+  /**
+   * 运行时元素实例
+   * 这是一个私有属性，用于存储DOM元素的引用
+   */
+  #element: RuntimeElement<T> | null = null
+  /**
+   * 获取运行时元素的getter方法
+   * 当访问此属性时，如果元素尚未创建，则会自动创建并初始化
+   * @returns {RuntimeElement<T>} 返回运行时元素实例
+   */
+  override get element(): RuntimeElement<T> {
+    // 检查元素是否已创建，若未创建则进行创建
+    if (!this.#element) {
+      // 根据是否为SVG元素创建对应的DOM元素
+      this.#element = // 判断是否为SVG虚拟节点，如果是则使用SVG命名空间创建元素
+        (
+          ElementVNode.isSvgVNode(this)
+            ? document.createElementNS('http://www.w3.org/2000/svg', this.type)
+            : // 否则使用常规方法创建元素
+              document.createElement(this.type)
+        ) as RuntimeElement<T>
+      // 如果元素能够设置属性，则设置属性
+      if (Object.keys(this.props).length) {
+        DomHelper.setAttributes(this.#element, this.props)
+      }
+      // 渲染子节点
+      ContainerVNode.renderChildren(this)
+    }
+    return this.#element
+  }
+
+  /**
+   * 判断是否为svg节点
+   * 该方法用于判断给定的虚拟节点是否属于SVG元素，通过检查节点类型和命名空间
+
+   *
+   * @param vnode - ElementVNode 需要检查的虚拟节点
+   * @returns {boolean} - 如果是svg节点则返回true，否则返回false
+   */
+  static isSvgVNode(vnode: ElementVNode): boolean {
+    const svgNamespace = 'http://www.w3.org/2000/svg'
+
+    // 检查当前节点是否直接声明为SVG命名空间或是svg标签
+    if (vnode.props.xmlns === svgNamespace || vnode.type === 'svg') return true
+
+    // 如果当前节点不是SVG，则检查其父节点
+    let parent = this.findParentVNode(vnode)
+    while (parent) {
+      // 检查父节点是否为SVG命名空间或svg标签
+      if (parent.props.xmlns === svgNamespace || parent.type === 'svg') return true
+      // 继续向上查找父节点
+      parent = this.findParentVNode(parent)
+    }
+
+    // 如果没有找到任何SVG命名空间或svg标签，返回false
+    return false
+  }
+
+  /**
+   * 判断给定的虚拟节点是否为元素类型的虚拟节点
+   * @param vnode - 需要判断的虚拟节点
+   * @returns {boolean} 如果是元素类型的虚拟节点则返回true，否则返回false
+   */
+  static override is(vnode: VNode): vnode is ElementVNode {
+    // 检查vnode的类型是否为字符串，如果不是则直接返回false
+    if (typeof vnode.type !== 'string') return false
+    // 检查vnode的类型是否为特殊节点类型（片段节点、文本节点、注释节点），如果是则返回false
+    if (['fragment-node', 'text-node', 'comment-node'].includes(vnode.type)) return false
+    // 通过以上检查后，确认是元素类型的虚拟节点，返回true
+    return true
+  }
+}

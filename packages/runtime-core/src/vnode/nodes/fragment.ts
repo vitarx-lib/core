@@ -1,0 +1,59 @@
+import { type Child, type FragmentElement } from '../types'
+import { ContainerVNode } from './container'
+import { VNode } from './vnode'
+
+export class FragmentVNode extends ContainerVNode<'fragment-node'> {
+  /**
+   * 运行时元素实例
+   */
+  #element: FragmentElement | null = null
+  #shadowElement: Comment | null = null
+
+  constructor(children: Child[] | null = null) {
+    super('fragment-node', null, children)
+  }
+
+  /**
+   * 获取 shadow 元素的访问器属性
+   * 如果 shadow 元素不存在，则创建一个空的注释节点作为占位符
+   * @returns {Comment} 返回 shadow 元素，可能是已存在的或新创建的注释节点
+   */
+  get shadowElement(): Comment {
+    if (!this.#shadowElement) {
+      // 检查 shadowElement 是否已初始化
+      this.#shadowElement = document.createComment('empty fragment node') // 如果未初始化，创建一个注释节点作为占位符
+    }
+    return this.#shadowElement // 返回 shadow 元素
+  }
+
+  /**
+   * 获取元素的运行时实例
+   * 这是一个重写的方法，用于获取或创建片段元素的实例
+   *
+   * @return {FragmentElement} 返回片段元素，这是一个文档片段对象，包含了虚拟DOM的节点信息
+   */
+  override get element(): FragmentElement {
+    // 如果元素尚未渲染，则先进行渲染
+    if (!this.#element) {
+      this.#element = document.createDocumentFragment() as FragmentElement
+      Object.defineProperty(this.#element, '$vnode', {
+        value: this
+      })
+      if (this.children.length === 0) {
+        this.#element.appendChild(this.shadowElement)
+      } else {
+        ContainerVNode.renderChildren(this)
+      }
+    }
+    return this.#element
+  }
+
+  /**
+   * 判断给定的虚拟节点是否为片段节点(FragmentVNode)
+   * @param vnode - 待检查的虚拟节点
+   * @returns {boolean} 如果节点类型为fragment-node则返回true，否则返回false
+   */
+  static override is(vnode: VNode): vnode is FragmentVNode {
+    return vnode.type === 'fragment-node' // 通过检查节点的类型是否为comment-node来判断
+  }
+}
