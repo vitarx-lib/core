@@ -9,8 +9,8 @@ export class FragmentVNode extends ContainerVNode<'fragment-node'> {
   #element: FragmentElement | null = null
   #shadowElement: Comment | null = null
 
-  constructor(children: Child[] | null = null) {
-    super('fragment-node', null, children)
+  constructor(props: { children: Child[] } | null = null, children: Child[] | null = null) {
+    super('fragment-node', props, children)
   }
 
   /**
