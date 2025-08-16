@@ -18,6 +18,7 @@ import {
 } from '../../widget'
 import { _createFnWidget } from '../../widget/fn-widget'
 import { proxyWidgetProps } from '../props'
+import { inject } from '../provide'
 import { isRefEl } from '../ref'
 import type {
   AnyElement,
@@ -596,9 +597,9 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    */
   #handleRootError(args: any[]): void {
     // 获取应用实例
-    const app = this.inject('App')
+    const app = inject<any>('App')
     // 如果应用配置了错误处理函数，则调用该函数处理错误
-    if (app?.config.errorHandler) {
+    if (app?.config?.errorHandler) {
       return app.config.errorHandler(...args)
     } else {
       // 如果没有配置错误处理函数，则在控制台输出错误信息
