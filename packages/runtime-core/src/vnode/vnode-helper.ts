@@ -209,11 +209,9 @@ export class VNodeHelper {
 
   /**
    * 新节点替换旧节点
-   *
-   *
-   * @param newVNode
-   * @param oldVNode
-   * @param autoMount
+   * @param newVNode - 新的虚拟节点
+   * @param oldVNode - 旧的虚拟节点
+   * @param [autoMount=true] - 自动触发挂载钩子
    * @protected
    */
   static replace(newVNode: VNode, oldVNode: VNode, autoMount: boolean = true): VNode {
