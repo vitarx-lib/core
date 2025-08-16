@@ -79,7 +79,7 @@ export abstract class Widget<
    */
   readonly #props: InputProps
 
-  protected constructor(props: InputProps) {
+  constructor(props: InputProps) {
     this.#props = props
     this.#scope = getCurrentScope()!
     this.#vnode = WidgetVNode.getCurrentVNode()!
