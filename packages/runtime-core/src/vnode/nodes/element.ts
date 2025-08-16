@@ -1,5 +1,6 @@
 import { isRefSignal } from '@vitarx/responsive'
 import { DomHelper } from '../../dom'
+import { isRefEl } from '../ref'
 import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types'
 import { ContainerVNode } from './container'
 import { VNode } from './vnode'
@@ -67,6 +68,8 @@ export class ElementVNode<
       if (Object.keys(this.props).length) {
         DomHelper.setAttributes(this.#element, this.props)
       }
+      // 绑定ref
+      if (isRefEl(this.ref)) this.ref.value = this.#element
       // 渲染子节点
       this.renderChildren()
     }
