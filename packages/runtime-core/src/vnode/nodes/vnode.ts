@@ -1,4 +1,6 @@
+import { isRecordObject } from '@vitarx/utils'
 import { popProperty } from '@vitarx/utils/src/index'
+import { DomHelper } from '../../dom/index'
 import type { FragmentElement, RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 
 /**
@@ -45,9 +47,43 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     this.#key = props ? popProperty(props, 'key') : null
     // 引用
     this.#ref = props ? popProperty(props, 'ref') : null
-    // TODO 需格式化props
+    this.propsHandler()
   }
 
+  /**
+   * 处理属性的方法
+   * 该方法负责处理和合并传递给组件的属性，包括样式、类名等特殊属性
+   */
+  protected propsHandler(): void {
+    // 从props中提取v-bind属性，并返回剩余的props
+    const vBind = popProperty(this.props, 'v-bind')
+    let attrs: Record<string, any> = vBind // 初始化属性对象
+    let exclude: string[] = [] // 初始化排除列表
+    // 如果vBind是数组，则分别获取属性对象和排除列表
+    if (Array.isArray(vBind)) {
+      attrs = vBind[0] // 获取属性对象
+      exclude = vBind[1] || [] // 获取排除列表，如果不存在则为空数组
+    }
+    // 如果属性对象存在，则遍历合并属性
+    if (isRecordObject(attrs)) {
+      for (const key in attrs) {
+        // 如果排除列表中包含当前属性或属性是`children`，则跳过
+        if (exclude.includes(key) || key === 'children') continue
+        if (key in this.props) {
+          // 合并样式
+          if (key === 'style') {
+            this.props[key] = DomHelper.mergeCssStyle(this.props[key], attrs[key])
+            continue
+          }
+          if (key === 'class' || key === 'className' || key === 'classname') {
+            this.props[key] = DomHelper.mergeCssClass(this.props[key], attrs[key])
+            continue
+          }
+        }
+        this.props[key] = attrs[key]
+      }
+    }
+  }
   /**
    * 获取运行时元素实例
    *

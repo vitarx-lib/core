@@ -56,4 +56,13 @@ export class FragmentVNode extends ContainerVNode<'fragment-node'> {
   static override is(vnode: VNode): vnode is FragmentVNode {
     return vnode.type === 'fragment-node' // 通过检查节点的类型是否为comment-node来判断
   }
+
+  /**
+   * 受保护的方法重写，用于处理属性
+   * 该方法是一个重写方法，用于处理组件的属性逻辑
+   * 片段节点没有属性，目前方法体为空，仅有一个return语句
+   */
+  protected override propsHandler() {
+    return // 直接返回，不执行任何操作
+  }
 }

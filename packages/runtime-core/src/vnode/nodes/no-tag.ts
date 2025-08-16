@@ -37,4 +37,12 @@ export abstract class NoTagVNode<T extends Type> extends VNode<T> {
   override unmount() {
     if (this.element.parentNode) this.element.parentNode.removeChild(this.element)
   }
+
+  /**
+   * 无标签节点不支持任何属性
+   * @protected
+   */
+  protected override propsHandler() {
+    return
+  }
 }

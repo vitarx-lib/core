@@ -1,5 +1,6 @@
+import { isRefSignal } from '@vitarx/responsive'
 import { DomHelper } from '../../dom'
-import { IntrinsicNodeElementName, RuntimeElement } from '../types'
+import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types'
 import { ContainerVNode } from './container'
 import { VNode } from './vnode'
 
@@ -109,5 +110,36 @@ export class ElementVNode<
     if (['fragment-node', 'text-node', 'comment-node'].includes(vnode.type)) return false
     // 通过以上检查后，确认是元素类型的虚拟节点，返回true
     return true
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected override propsHandler() {
+    super.propsHandler()
+    // 如果是字符串标签，格式化一次value，使值Ref对象能够被依赖跟踪
+    // 解包ref
+    for (const prop in this.props) {
+      let value = this.props[prop]
+      while (isRefSignal(value)) value = value.value
+      // 将格式化过后的值赋值回去
+      this.props[prop] = value
+    }
+    // 处理 class 属性
+    let cssClass: ClassProperties =
+      'class' in this.props
+        ? DomHelper.cssClassValueToArray(this.props.class as ClassProperties)
+        : []
+    if ('className' in this.props) {
+      cssClass = DomHelper.mergeCssClass(cssClass, this.props.className as ClassProperties)
+      // @ts-ignore
+      delete this.props.className
+    }
+    if ('classname' in this.props) {
+      cssClass = DomHelper.mergeCssClass(cssClass, this.props.classname)
+      delete this.props.classname
+    }
+    // 如果合并后的 class 存在，赋值给 newProps.class
+    if (cssClass.length > 0) this.props.class = cssClass
   }
 }
