@@ -251,15 +251,15 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   /**
    * 判断给定的虚拟节点是否为组件类型的虚拟节点
    *
-   * @param vnode - 需要检查的虚拟节点
+   * @param val - 要检查的虚拟节点
    * @returns {boolean} 如果虚拟节点是组件类型则返回 true，否则返回 false
    */
-  static override is(vnode: VNode): vnode is WidgetVNode {
+  static override is(val: any): val is WidgetVNode {
+    if (!super.is(val)) return false
     // 检查虚拟节点的 type 属性是否为函数类型
     // 在虚拟 DOM 中，组件通常是一个函数或类
-    return typeof vnode.type === 'function'
+    return typeof val.type === 'function'
   }
-
   /**
    * 获取当前的虚拟节点对象
    *
@@ -272,14 +272,62 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     return getContext<WidgetVNode>(VNodeContextSymbol)
   }
 
-  getProvide<T = any>(name: string | symbol): T
-
-  getProvide<T>(name: string | symbol, defaultValue: T): T
-
-  getProvide<T = any>(name: string | symbol, defaultValue?: T): T {
+  /**
+   * 获取提供（provide）的值
+   * @template T - 泛型类型，默认为 any
+   * @param {string | symbol} name - 要获取的提供项的名称，可以是字符串或 Symbol
+   * @returns {T} 返回对应名称的提供值，类型为 T
+   */
+  inject<T = any>(name: string | symbol): T
+  /**
+   * 获取提供的依赖项值
+   * @template T - 依赖项值的类型
+   * @param {string | symbol} name - 依赖项的名称，可以是字符串或 Symbol 类型
+   * @param {T} defaultValue - 当依赖项不存在时返回的默认值
+   * @returns {T} - 返回获取到的依赖项值，如果不存在则返回默认值
+   */
+  inject<T>(name: string | symbol, defaultValue: T): T
+  /**
+   * 获取提供（provide）的值
+   * @template T - 泛型参数，指定返回值的类型，默认为 any
+   * @param {string | symbol} name - 要获取的提供值的名称，可以是字符串或 Symbol 类型
+   * @param {T} [defaultValue] - 可选参数，当指定的名称不存在时返回的默认值
+   * @returns {T} 返回获取到的提供值，如果不存在则返回默认值
+   */
+  inject<T = any>(name: string | symbol, defaultValue?: T): T {
+    // 使用可选链操作符访问 provide 对象的属性，如果不存在则返回默认值
     return this.#provide?.[name] ?? defaultValue
   }
 
+  /**
+   * 设置提供者方法
+   * @param name - 提供者的名称，可以是字符串或symbol类型
+   * @param value - 提供者对应的值，可以是任意类型
+   * @throws {Error} 当名称为'App'时会抛出错误，因为这是内部保留关键词
+   */
+  provide(name: string | symbol, value: any) {
+    // 检查是否使用了内部保留关键词'App'
+    if (name === 'App') {
+      throw new Error('App 是内部保留关键词，不能用于注册提供者！')
+    }
+    // 如果当前没有提供者对象，则创建一个新的
+    if (!this.#provide) {
+      this.#provide = { [name]: value }
+    } else {
+      // 如果已存在提供者对象，则直接添加或更新属性
+      this.#provide[name] = value
+    }
+  }
+
+  /**
+   * 检查是否提供了指定的名称或符号
+   * @param name - 要检查的名称或符号，可以是字符串或类型
+   * @returns - 如果提供了指定的名称或符号则返回true，否则返回false
+   */
+  hasProvide(name: string | symbol) {
+    // 定义一个名为hasProvide的方法，接受一个字符串或类型的参数
+    return this.#provide?.hasOwnProperty(name) ?? false // 使用可选链操作符检查this.#provide是否存在hasOwnProperty属性，如果存在则检查是否包含指定的name，否则返回false
+  }
   /**
    * 渲染小部件并返回对应的DOM元素
    *
@@ -320,7 +368,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     this.#state = 'notMounted'
     return el as RuntimeElement<T>
   }
-
   /**
    * 挂载组件到指定容器
    * @param container - 可以是HTMLElement、SVGElement或FragmentElement类型的容器元素
@@ -357,7 +404,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
 
     return this
   }
-
   /**
    * 触发生命周期钩子
    *
@@ -393,7 +439,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       }
     }
   }
-
   /**
    * 用于组件的卸载过程
    * 该方法会处理卸载前的状态检查、生命周期触发、子元素卸载等操作
@@ -425,7 +470,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 如果不是异步卸载直接执行卸载逻辑
     if (!isAsyncUnmount) this.#completeUnmount()
   }
-
   /**
    * 负责触发生命周期钩子函数
    *
@@ -440,7 +484,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       return this.#handleRootError(args)
     }
   }
-
   /**
    * 完成卸载流程的辅助方法
    */
@@ -452,7 +495,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     this.#state = 'unloaded'
     this.triggerLifecycleHook(LifecycleHooks.unmounted)
   }
-
   /**
    * 更新视图
    *
@@ -503,7 +545,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       throw e
     }
   }
-
   /**
    * 构建子虚拟节点
    *
@@ -548,7 +589,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (subscriber) this.instance.$scope.addEffect(subscriber)
     return result
   }
-
   /**
    * 处理根节点错误的函数
    *
@@ -556,7 +596,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    */
   #handleRootError(args: any[]): void {
     // 获取应用实例
-    const app = this.getProvide('App')
+    const app = this.inject('App')
     // 如果应用配置了错误处理函数，则调用该函数处理错误
     if (app?.config.errorHandler) {
       return app.config.errorHandler(...args)
