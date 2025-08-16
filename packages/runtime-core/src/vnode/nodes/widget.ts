@@ -16,12 +16,14 @@ import {
   type LifecycleState,
   Widget
 } from '../../widget'
+import { _createFnWidget } from '../../widget/fn-widget'
 import { proxyWidgetProps } from '../props'
 import { isRefEl } from '../ref'
 import type {
   AnyElement,
   Child,
   FragmentElement,
+  FunctionWidget,
   RuntimeElement,
   VNodeProps,
   WidgetType
@@ -225,8 +227,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
           if (Widget.isClassWidget(this.type)) {
             this.#instance = new this.type(this.props)
           } else {
-            // TODO 创建异步小部件
-            // _createFnWidget(vnode as VNode<FunctionWidget>).then()
+            const { instance } = _createFnWidget(this as unknown as WidgetVNode<FunctionWidget>)
+            this.#instance = instance
           }
           // 绑定ref
           if (isRefEl(this.ref)) this.ref.value = this.instance
