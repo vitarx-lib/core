@@ -74,7 +74,7 @@ const VNodeContextSymbol = Symbol('WidgetVNode Context Symbol')
  * - Widget 实例的创建是惰性的，只有在访问 instance 属性时才会创建
  * - 异步 Widget 组件的支持尚未完全实现
  */
-export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<WidgetType> {
+export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   /**
    * HMR热更新状态，仅在开发时由编译器注入
    */
@@ -183,7 +183,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
    * @returns {AnyElement} 返回子元素对象
    * @note 该方法会返回 this.instance.$child.element 的值
    */
-  override get element(): AnyElement {
+  override get element(): RuntimeElement<T> {
     return this.render()
   }
 
@@ -220,7 +220,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
       return scope.run(() =>
         runInContext(VNodeContextSymbol, this, () => {
           // 包装props为响应式对象
-          this.props = proxyWidgetProps(this.props)
+          this.props = proxyWidgetProps(this.props) as VNodeProps<T>
           // 异步实例
           if (Widget.isClassWidget(this.type)) {
             this.#instance = new this.type(this.props)
@@ -283,10 +283,10 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
    *
    * @returns {AnyElement} 渲染后的DOM元素
    */
-  render(): AnyElement {
+  render(): RuntimeElement<T> {
     // 检查组件状态，如果已经渲染过则抛出错误
     if (this.state !== 'notRendered') {
-      return this.child.element
+      return this.child.element as RuntimeElement<T>
     }
     // 触发beforeMount生命周期钩子，获取可能的传送目标
     const teleport = this.triggerLifecycleHook(LifecycleHooks.beforeMount)
@@ -316,7 +316,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
     }
     // 更新组件状态为未挂载
     this.#state = 'notMounted'
-    return el
+    return el as RuntimeElement<T>
   }
 
   /**
