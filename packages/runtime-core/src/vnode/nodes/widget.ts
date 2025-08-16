@@ -404,7 +404,9 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
     }
     // 设置状态为卸载中
     this.#state = 'uninstalling'
-    // 触发onDeactivated生命周期
+    // 递归卸载子节点
+    this.child.unmount()
+    // 触发onBeforeUnmount生命周期
     this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
     // 异步卸载标志
     let isAsyncUnmount = false
@@ -419,8 +421,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
         })
       }
     }
-    // 递归卸载子节点
-    this.child.unmount()
     // 如果不是异步卸载直接执行卸载逻辑
     if (!isAsyncUnmount) this.#completeUnmount()
   }
