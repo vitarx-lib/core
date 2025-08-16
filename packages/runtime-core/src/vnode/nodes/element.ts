@@ -66,7 +66,7 @@ export class ElementVNode<
         DomHelper.setAttributes(this.#element, this.props)
       }
       // 渲染子节点
-      ContainerVNode.renderChildren(this)
+      this.renderChildren()
     }
     return this.#element
   }

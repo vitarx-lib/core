@@ -42,7 +42,7 @@ export class FragmentVNode extends ContainerVNode<'fragment-node'> {
       if (this.children.length === 0) {
         this.#element.appendChild(this.shadowElement)
       } else {
-        ContainerVNode.renderChildren(this)
+        this.renderChildren()
       }
     }
     return this.#element

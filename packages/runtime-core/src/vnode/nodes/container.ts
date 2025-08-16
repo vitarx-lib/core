@@ -50,15 +50,12 @@ export abstract class ContainerVNode<
 
   /**
    * 渲染子节点的函数
-   *
-   * @param {VNode} vnode - 虚拟节点对象，包含要渲染的子节点信息
    */
-  static renderChildren(vnode: ContainerVNode): void {
-    // TODO 可能可以改成受保护的方法
+  protected renderChildren(): void {
     // 检查是否存在子节点并且目标元素具有children属性
-    if (vnode.children.length && 'children' in vnode.element) {
+    if (this.children.length && 'children' in this.element) {
       // 遍历所有子节点
-      for (const child of vnode.children) {
+      for (const child of this.children) {
         const el = child.element // 获取当前子节点的DOM元素
         // 检查子节点是否是WidgetVNode类型
         if (WidgetVNode.is(child)) {
@@ -67,11 +64,11 @@ export abstract class ContainerVNode<
             DomHelper.appendChild(child.teleport, child.shadowElement)
           } else {
             // 否则直接附加到当前节点的元素上
-            DomHelper.appendChild(vnode.element, el)
+            DomHelper.appendChild(this.element, el)
           }
         } else {
           // 如果不是WidgetVNode类型，直接附加到当前节点的元素上
-          DomHelper.appendChild(vnode.element, el)
+          DomHelper.appendChild(this.element, el)
         }
       }
     }
