@@ -6,18 +6,14 @@ import { LifecycleHooks } from './types/index'
 export const __WIDGET_INTRINSIC_METHOD_KEYWORDS__ = [
   'build',
   'update',
+  '$patchUpdate',
   ...Object.values(LifecycleHooks)
 ] as const
 
 /**
  * 组件内部保留属性
  */
-export const __WIDGET_INTRINSIC_PROPERTY_KEYWORDS__ = [
-  'vnode',
-  'children',
-  'props',
-  'scope'
-] as const
+export const __WIDGET_INTRINSIC_PROPERTY_KEYWORDS__ = ['$scope', '$el', '$vnode'] as const
 
 /**
  * 组件内部保留关键字
@@ -34,7 +30,7 @@ export const SIMPLE_FUNCTION_WIDGET_SYMBOL = Symbol('SIMPLE_FUNCTION_WIDGET_SYMB
 /** 排除生命周期方法和保留属性 */
 export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
   T,
-  Exclude<(typeof __WIDGET_INTRINSIC_KEYWORDS__)[number], 'el'>
+  (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
 >
 /**
  * 初始化函数组件的标识符
