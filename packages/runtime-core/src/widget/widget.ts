@@ -400,4 +400,15 @@ export abstract class Widget<
   $patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
     return VNodeUpdate.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
   }
+
+  /**
+   * 更新子节点VNode的方法
+   * 本方法主要用于手动强制更新视图
+   *
+   * @param {VNode} newChildVNode 可选参数，新的子节点虚拟节点
+   */
+  update(newChildVNode?: VNode): void {
+    // 调用当前虚拟节点的updateChild方法，传入新的子节点VNode进行更新
+    this.$vnode.updateChild(newChildVNode)
+  }
 }
