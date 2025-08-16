@@ -453,51 +453,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
   }
 
   /**
-   * 构建子虚拟节点
-   *
-   * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
-   * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
-   *
-   * @returns {VNode} 返回构建好的虚拟节点
-   */
-  #buildChild(): VNode {
-    // 如果已存在视图依赖订阅器，则先释放旧的订阅器
-    if (this.#viewDepSubscriber) this.#viewDepSubscriber.dispose()
-
-    // 订阅依赖并构建虚拟节点
-    const { result, subscriber } = depSubscribe((): VNode => {
-      let vnode: VNode
-      try {
-        // 执行构建逻辑
-        const buildNode = this.instance.build()
-        if (VNode.is(buildNode)) {
-          vnode = buildNode
-        } else {
-          vnode = new FragmentVNode()
-        }
-      } catch (e) {
-        // 处理构建过程中的异常
-        const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
-          source: 'build',
-          instance: this
-        })
-        // 如果构建出错，则使用错误虚拟节点
-        vnode = VNode.is(errVNode) ? errVNode : new FragmentVNode()
-      }
-
-      // 建立父子虚拟节点的映射关系
-      VNode.addParentVNodeMapping(vnode, this)
-      return vnode
-    }, this.#updateChild)
-
-    // 更新订阅器
-    this.#viewDepSubscriber = subscriber
-    // 添加到作用域中
-    if (subscriber) this.instance.$scope.addEffect(subscriber)
-    return result
-  }
-
-  /**
    * 更新视图
    *
    * 更新视图不是同步的，会延迟更新，合并多个微任务。
@@ -505,7 +460,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
    * @param {VNode} newChildVNode - 新子节点，没有则使用`build`方法构建。
    * @return {void}
    */
-  #updateChild(newChildVNode?: VNode): void {
+  updateChild(newChildVNode?: VNode): void {
     if (this.state === 'unloaded') {
       this.triggerLifecycleHook(
         LifecycleHooks.error,
@@ -546,6 +501,51 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
       this.#pendingUpdate = false
       throw e
     }
+  }
+
+  /**
+   * 构建子虚拟节点
+   *
+   * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
+   * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
+   *
+   * @returns {VNode} 返回构建好的虚拟节点
+   */
+  #buildChild(): VNode {
+    // 如果已存在视图依赖订阅器，则先释放旧的订阅器
+    if (this.#viewDepSubscriber) this.#viewDepSubscriber.dispose()
+
+    // 订阅依赖并构建虚拟节点
+    const { result, subscriber } = depSubscribe((): VNode => {
+      let vnode: VNode
+      try {
+        // 执行构建逻辑
+        const buildNode = this.instance.build()
+        if (VNode.is(buildNode)) {
+          vnode = buildNode
+        } else {
+          vnode = new FragmentVNode()
+        }
+      } catch (e) {
+        // 处理构建过程中的异常
+        const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
+          source: 'build',
+          instance: this
+        })
+        // 如果构建出错，则使用错误虚拟节点
+        vnode = VNode.is(errVNode) ? errVNode : new FragmentVNode()
+      }
+
+      // 建立父子虚拟节点的映射关系
+      VNode.addParentVNodeMapping(vnode, this)
+      return vnode
+    }, this.updateChild)
+
+    // 更新订阅器
+    this.#viewDepSubscriber = subscriber
+    // 添加到作用域中
+    if (subscriber) this.instance.$scope.addEffect(subscriber)
+    return result
   }
 
   /**
