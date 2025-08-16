@@ -32,7 +32,3 @@ export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
   T,
   (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
 >
-/**
- * 初始化函数组件的标识符
- */
-export const __INITIALIZE_FN_WIDGET__ = Symbol('__INITIALIZE_FN_WIDGET__')
