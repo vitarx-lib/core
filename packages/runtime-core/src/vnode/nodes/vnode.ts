@@ -3,12 +3,14 @@ import { popProperty } from '@vitarx/utils/src/index'
 import { DomHelper } from '../../dom/index'
 import type { FragmentElement, RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 
+const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
 /**
  * 虚拟节点抽象类
  *
  * @template T - 节点类型
  */
 export abstract class VNode<T extends VNodeType = VNodeType> {
+  readonly [VNODE_SYMBOL] = true
   /**
    * 父节点映射
    *
@@ -187,7 +189,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @returns {boolean} 如果对象是VNode实例则返回true，否则返回false
    */
   static is(val: any): val is VNode {
-    return val instanceof VNode
+    return val?.[VNODE_SYMBOL] === true
   }
 
   /**
