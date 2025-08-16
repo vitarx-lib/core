@@ -1,6 +1,5 @@
 import { type Child, type FragmentElement } from '../types'
 import { ContainerVNode } from './container'
-import { VNode } from './vnode'
 
 export class FragmentVNode extends ContainerVNode<'fragment-node'> {
   /**
@@ -47,16 +46,16 @@ export class FragmentVNode extends ContainerVNode<'fragment-node'> {
     }
     return this.#element
   }
-
   /**
    * 判断给定的虚拟节点是否为片段节点(FragmentVNode)
-   * @param vnode - 待检查的虚拟节点
-   * @returns {boolean} 如果节点类型为fragment-node则返回true，否则返回false
+   *
+   * @param val - 要检测的变量
+   * @returns {boolean} 如果虚拟节点是文本节点则返回true，否则返回false
    */
-  static override is(vnode: VNode): vnode is FragmentVNode {
-    return vnode.type === 'fragment-node' // 通过检查节点的类型是否为comment-node来判断
+  static override is(val: any): val is FragmentVNode {
+    if (!super.is(val)) return false
+    return val.type === 'fragment-node' // 通过检查节点的类型是否为text-node来判断
   }
-
   /**
    * 受保护的方法重写，用于处理属性
    * 该方法是一个重写方法，用于处理组件的属性逻辑
