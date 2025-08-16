@@ -493,7 +493,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
         if (this.state === 'unloaded') return
         const oldVNode = this.child
         const newVNode = newChildVNode || this.#buildChild()
-        this.#child = this.instance.patchUpdate(oldVNode, newVNode)
+        this.#child = this.instance.$patchUpdate(oldVNode, newVNode)
         // 触发更新后生命周期
         this.triggerLifecycleHook(LifecycleHooks.updated)
       })

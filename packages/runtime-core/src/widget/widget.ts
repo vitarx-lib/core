@@ -1,5 +1,5 @@
 import { EffectScope, getCurrentScope, Subscriber } from '@vitarx/responsive'
-import { type ClassWidget, type RuntimeElement, VNode, WidgetVNode } from '../vnode/index'
+import { type ClassWidget, type RuntimeElement, VNode, VNodeHelper, WidgetVNode } from '../vnode'
 import { type ErrorInfo, LifecycleHooks, type LifecycleState } from './types'
 
 /**
@@ -422,9 +422,17 @@ export abstract class Widget<
    */
   abstract build(): VNode | null
 
-  patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
-    // TODO 应该编写差异化diff更新操作
-    throw new Error('Method not implemented.')
+  /**
+   * 对虚拟节点进行打补丁更新操作
+   *
+   * 默认使用VNodeHelper.patchUpdate进行更新节点，如需特殊处理更新逻辑，可自行实现此方法！
+   *
+   * @param oldVNode - 旧的虚拟节点，表示更新前的DOM状态
+   * @param newVNode - 新的虚拟节点，表示更新后的DOM状态
+   * @returns {VNode} 返回更新后的虚拟节点
+   */
+  $patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
+    return VNodeHelper.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
   }
 }
 
