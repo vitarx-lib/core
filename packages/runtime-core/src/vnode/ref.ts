@@ -1,9 +1,12 @@
+import type { ExcludeWidgetIntrinsicKeywords } from '../widget'
 import type { IntrinsicNodeElementName, RuntimeElement } from './types'
 
 /**
  * 辅助计算出元素类型
  */
-type ComputedRefElType<T> = T extends IntrinsicNodeElementName ? RuntimeElement<T> : T
+type ComputedRefElType<T> = T extends IntrinsicNodeElementName
+  ? RuntimeElement<T>
+  : ExcludeWidgetIntrinsicKeywords<T>
 /**
  * 引用元素标识符
  */
