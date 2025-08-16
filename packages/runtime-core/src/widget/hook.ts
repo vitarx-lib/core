@@ -215,7 +215,7 @@ export const onServerPrefetch = createLifecycleHook(LifecycleHooks.serverPrefetc
 export function defineExpose(exposed: Record<string, any>): void {
   for (const exposedKey in exposed) {
     if (__WIDGET_INTRINSIC_KEYWORDS__.includes(exposedKey as any)) {
-      throw new Error(
+      console.warn(
         `[Vitarx.defineExpose]：${exposedKey} is an internal reserved keyword in the Widget class, please modify.`
       )
     }
