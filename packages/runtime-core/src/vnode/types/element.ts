@@ -1,7 +1,7 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { FragmentVNode } from '../nodes'
 import type { ElementProperties } from './properties'
-import type { Child, VNodeType, WidgetType } from './vnode'
+import type { Child, VNodeType } from './vnode'
 
 /**
  * 元素标签映射类型
@@ -85,6 +85,4 @@ export type RuntimeElement<T extends VNodeType = VNodeType> = T extends 'comment
       ? FragmentElement
       : T extends IntrinsicNodeElementName
         ? ElementTagMap[T]
-        : T extends WidgetType
-          ? AnyElement
-          : never
+        : AnyElement
