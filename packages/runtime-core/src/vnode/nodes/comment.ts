@@ -1,6 +1,5 @@
 import { RefSignal } from '@vitarx/responsive'
 import { NoTagVNode } from './no-tag'
-import { VNode } from './vnode'
 
 export class CommentVNode extends NoTagVNode<'comment-node'> {
   /**
@@ -22,13 +21,14 @@ export class CommentVNode extends NoTagVNode<'comment-node'> {
     }
     return this.#element
   }
-
   /**
    * 判断给定的虚拟节点是否为注释节点
-   * @param vnode - 需要检查的虚拟节点
-   * @returns {boolean} 如果节点是注释节点则返回true，否则返回false
+   *
+   * @param val - 要检测的变量
+   * @returns {boolean} 如果虚拟节点是文本节点则返回true，否则返回false
    */
-  static override is(vnode: VNode): vnode is CommentVNode {
-    return vnode.type === 'comment-node' // 通过检查节点的类型是否为comment-node来判断
+  static override is(val: any): val is CommentVNode {
+    if (!super.is(val)) return false
+    return val.type === 'comment-node' // 通过检查节点的类型是否为text-node来判断
   }
 }
