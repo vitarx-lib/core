@@ -123,7 +123,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
    * @private
    */
   #shadowElement: RuntimeElement<'comment-node'> | null = null
-  #children: VNodeProps<T>['children'] | undefined
+  readonly #children: VNodeProps<T>['children'] | undefined
 
   constructor(type: T, props: VNodeProps<T> | null = null, children: Child[] | null = null) {
     super(type, props)
@@ -133,9 +133,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<Widget
       children = Array.isArray(attrChildren)
         ? [...attrChildren, ...(children ?? [])]
         : [attrChildren, ...(children ?? [])]
-      this.#children = children.length === 1 ? children[0] : children
     }
-    this.#children = undefined
+    if (children) this.#children = children.length === 1 ? children[0] : children
   }
 
   /**
