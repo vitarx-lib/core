@@ -15,7 +15,7 @@ export type Child =
 /**
  * 视图构建器类型
  */
-type BuildVNode = () => VNode | null
+export type BuildVNode = () => VNode | null
 /**
  * 类小部件构造器类型
  */
