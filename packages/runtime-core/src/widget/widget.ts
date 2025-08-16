@@ -10,11 +10,11 @@ import {
 import { type ErrorInfo, LifecycleHooks } from './types'
 
 /**
- * 类组件的标识符
+ * 类小部件的标识符
  */
 const CLASS_WIDGET_BASE_SYMBOL = Symbol('CLASS_WIDGET_SYMBOL')
 /**
- * 此类型用于推导出组件的子节点类型。
+ * 此类型用于推导出小部件的子节点类型。
  */
 type WidgetChildren<P> = P extends { children: infer U }
   ? U
@@ -73,7 +73,7 @@ export abstract class Widget<
    */
   readonly #scope: EffectScope
   /**
-   * 存储组件的传入属性
+   * 存储小部件的传入属性
    *
    * @private
    */
@@ -119,7 +119,7 @@ export abstract class Widget<
 
   /**
    * 获取当前虚拟节点对应的 DOM 元素
-   * 这是一个 getter 属性，用于返回组件或虚拟节点挂载后的真实 DOM 元素
+   * 这是一个 getter 属性，用于返回小部件或虚拟节点挂载后的真实 DOM 元素
    * @returns {AnyElement} 返回虚拟节点对应的 DOM 元素实例
    */
   get $el(): AnyElement {
@@ -127,8 +127,8 @@ export abstract class Widget<
   }
 
   /**
-   * 获取组件的虚拟DOM节点
-   * @returns {WidgetVNode} 返回组件的虚拟DOM节点
+   * 获取小部件的虚拟DOM节点
+   * @returns {WidgetVNode} 返回小部件的虚拟DOM节点
    */
   get $vnode(): WidgetVNode {
     return this.#vnode
@@ -154,7 +154,9 @@ export abstract class Widget<
   }
 
   /**
-   * 组件创建时调用
+   * 小部件实例创建时调用
+   *
+   * 此时完全处于节点上下文中
    */
   onCreate?(): void
 
@@ -164,8 +166,8 @@ export abstract class Widget<
   onBeforeMount?(): void | string | HTMLElement | SVGElement
 
   /**
-   * 组件挂载后调用
-   * 在组件被挂载到DOM后触发，此时可以访问DOM元素
+   * 小部件挂载后调用
+   * 在小部件被挂载到DOM后触发，此时可以访问DOM元素
    *
    * @example
    * ```tsx
@@ -188,8 +190,8 @@ export abstract class Widget<
   onMounted?(): void
 
   /**
-   * 组件激活时调用
-   * 当缓存的组件重新被激活时触发
+   * 小部件激活时调用
+   * 当缓存的小部件重新被激活时触发
    *
    * @example
    * ```tsx
@@ -214,8 +216,8 @@ export abstract class Widget<
   onActivated?(): void
 
   /**
-   * 组件停用时调用
-   * 当组件被缓存时触发
+   * 小部件停用时调用
+   * 当小部件被缓存时触发
    *
    * @example
    * ```tsx
@@ -237,8 +239,9 @@ export abstract class Widget<
   onDeactivated?(): void
 
   /**
-   * 组件更新前调用
-   * 在组件即将重新渲染之前触发
+   * 小部件更新前调用
+   *
+   * 在小部件即将重新渲染之前触发
    *
    * @example
    * ```tsx
@@ -260,8 +263,7 @@ export abstract class Widget<
   onBeforeUpdate?(): void
 
   /**
-   * 组件更新后调用
-   * 在组件重新渲染后触发
+   * 小部件状态更新后调用
    *
    * @example
    * ```tsx
@@ -286,13 +288,19 @@ export abstract class Widget<
   onUpdated?(): void
 
   /**
-   * 组件卸载后调用
-   * 在组件从DOM中移除后触发
+   * 小部件被卸载完成后调用
+   */
+  onUnmounted?(): void
+
+  /**
+   * 小部件即将被卸载时调用
+   *
+   * 此时小部件功能还完全可用
    *
    * @example
    * ```tsx
    * class MyWidget extends Widget {
-   *   onUnmounted() {
+   *   onUnmount() {
    *     // 清理事件监听器
    *     window.removeEventListener('resize', this.handleResize)
    *     // 清理定时器
@@ -307,42 +315,14 @@ export abstract class Widget<
    * }
    * ```
    */
-  onUnmounted?(): void
-
-  /**
-   * 组件卸载前调用
-   * 在组件即将从DOM中移除之前触发
-   *
-   * @example
-   * ```tsx
-   * class MyWidget extends Widget {
-   *   onBeforeUnmount() {
-   *     // 提示用户保存未保存的更改
-   *     if (this.hasUnsavedChanges()) {
-   *       const confirmed = window.confirm('您有未保存的更改，确定要离开吗？')
-   *       if (!confirmed) {
-   *         throw new Error('用户取消了组件卸载')
-   *       }
-   *     }
-   *     // 保存状态到localStorage
-   *     localStorage.setItem('widgetState', JSON.stringify(this.state))
-   *   }
-   *
-   *   private hasUnsavedChanges() {
-   *     // 检查是否有未保存的更改
-   *     return true
-   *   }
-   * }
-   * ```
-   */
   onBeforeUnmount?(): void
 
   /**
-   * 组件错误处理钩子
-   * 当组件渲染过程中出现错误时触发
+   * 错误处理钩子
+   *
    * @param error - 捕获到的错误
    * @param info - 错误的详细信息
-   * @returns 可选的错误处理结果
+   * @returns {VNode|void} 备用UI，如果返回null或undefined，则不显示备用UI
    *
    * @example
    * ```tsx
@@ -351,13 +331,8 @@ export abstract class Widget<
    *     // 记录错误日志
    *     console.error(`Error in ${info.source}:`, error)
    *
-   *     // 显示用户友好的错误提示
-   *     const errorMessage = document.createElement('div')
-   *     errorMessage.className = 'error-message'
-   *     errorMessage.textContent = '组件发生错误，请刷新页面重试'
-   *
    *     // 返回备用UI
-   *     return errorMessage
+   *     return <div>小部件发生错误，请刷新页面重试</div>
    *   }
    * }
    * ```
@@ -365,9 +340,9 @@ export abstract class Widget<
   onError?(error: unknown, info: ErrorInfo): VNode | void
 
   /**
-   * 组件移除前调用
+   * 移除元素前调用
    *
-   * 在元素被移除前触发，可用于执行离开动画等，需注意元素布局冲突！
+   * 在小部件的视图元素被即将被移除时触发，可用于执行离开动画等，需注意元素布局冲突！
    *
    * @param el - 将要被移除的HTML元素
    * @param type - 移除的类型，可能是卸载或停用
@@ -394,7 +369,7 @@ export abstract class Widget<
    *
    * 该方法会被多次调用，所以在方法内不应该存在任何副作用。
    *
-   * > **注意**：在类组件的build方法中不要返回 `() => Element`，而是应返回`Element`。
+   * > **注意**：在类小部件的build方法中不要返回 `() => Element`，而是应返回`Element`。
    *
    * 示例：
    * ```ts
@@ -416,7 +391,7 @@ export abstract class Widget<
   /**
    * 对虚拟节点进行打补丁更新操作
    *
-   * 默认使用VNodeHelper.patchUpdate进行更新节点，如需特殊处理更新逻辑，可自行实现此方法！
+   * 默认使用VNodeUpdate.patchUpdate进行更新节点，如需特殊处理更新逻辑，可自行实现此方法！
    *
    * @param oldVNode - 旧的虚拟节点，表示更新前的DOM状态
    * @param newVNode - 新的虚拟节点，表示更新后的DOM状态
