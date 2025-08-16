@@ -75,32 +75,39 @@ export class VNodeHelper {
     if (changedAttrs.length > 0) Observer.notify(oldVNode.props, changedAttrs)
   }
 
-  static patchUpdateChildren<T extends ContainerVNode>(oldVNode: T, newVNode: T) {
-    const oldChildren = oldVNode.children
-    const newChildren = newVNode.children
+  /**
+   * 更新子节点的核心方法
+   * @param oldVNode - 旧的虚拟DOM节点
+   * @param newVNode - 新的虚拟DOM节点
+   * @returns {VNode[]} 更新后的子节点数组
+   */
+  static patchUpdateChildren<T extends ContainerVNode>(oldVNode: T, newVNode: T): VNode[] {
+    const oldChildren = oldVNode.children // 旧子节点列表
+    const newChildren = newVNode.children // 新子节点列表
     /** 是否为片段节点 */
     const isFragment = FragmentVNode.is(oldVNode)
 
     // 处理边缘情况：新增全部子节点
     if (newChildren.length && !oldChildren.length) {
       newVNode.children.forEach(child => {
-        child.mount(oldVNode.element)
+        child.mount(oldVNode.element) // 挂载所有新子节点
       })
-      return newChildren
+      return newChildren // 返回新子节点列表
     }
     // 删除全部子节点
     if (!newChildren.length && oldChildren.length) {
       if (isFragment) {
+        // 如果是片段节点，将第一个子节点插入到shadowElement之前
         DomHelper.insertBefore(oldVNode.shadowElement, oldVNode.children[0].element)
       }
-      oldVNode.unmount()
-      return newChildren
+      oldVNode.unmount() // 卸载旧节点
+      return newChildren // 返回空的新子节点列表
     }
 
-    // 创建旧节点的key映射表
+    // 创建旧节点的key映射表，用于快速查找具有相同key的节点
     const oldKeyToVNode = this.#createOldKeyToVNodeMap(oldChildren)
 
-    // 被删除的节点
+    // 被删除的节点集合
     const removedNodes = new Set(oldVNode.children)
     // 新子节点列表，未挂载！
     const newChildrenNotMounted: VNode[] = []
