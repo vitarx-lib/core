@@ -1,6 +1,7 @@
 import { Observer, toRaw } from '@vitarx/responsive'
 import { DomHelper } from '../dom'
 import { CommentVNode, ContainerVNode, FragmentVNode, TextVNode, VNode, WidgetVNode } from './nodes'
+import { type Child, type VNodeProps, VNodeType } from './types'
 
 /**
  * VNodeHelper 是一个用于虚拟DOM节点操作的工具类，提供了虚拟DOM节点的创建、更新、替换等功能。
@@ -321,5 +322,18 @@ export class VNodeHelper {
       }
     }
     return oldKeyToVNode
+  }
+}
+
+export function createVNode<T extends VNodeType>(
+  type: T,
+  props: VNodeProps<T> | null = null,
+  ...children: Child[]
+) {
+  if (typeof type === 'string') {
+    switch (type) {
+      case 'text-node':
+        return new TextVNode('666')
+    }
   }
 }
