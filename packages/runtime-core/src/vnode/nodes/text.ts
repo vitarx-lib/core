@@ -1,6 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { NoTagVNode } from './no-tag'
-import { VNode } from './vnode'
 
 export class TextVNode extends NoTagVNode<'text-node'> {
   /**
@@ -25,11 +24,12 @@ export class TextVNode extends NoTagVNode<'text-node'> {
 
   /**
    * 检查给定的虚拟节点是否为文本节点
-   * 这是一个静态方法，并且重写了父类的实现
-   * @param vnode - 需要检查的虚拟节点
+   *
+   * @param val - 要检测的变量
    * @returns {boolean} 如果虚拟节点是文本节点则返回true，否则返回false
    */
-  static override is(vnode: VNode): vnode is TextVNode {
-    return vnode.type === 'text-node' // 通过检查节点的类型是否为text-node来判断
+  static override is(val: any): val is TextVNode {
+    if (!super.is(val)) return false
+    return val.type === 'text-node' // 通过检查节点的类型是否为text-node来判断
   }
 }
