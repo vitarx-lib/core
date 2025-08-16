@@ -2,6 +2,39 @@ import { Observer, toRaw } from '@vitarx/responsive'
 import { DomHelper } from '../dom'
 import { CommentVNode, ContainerVNode, FragmentVNode, TextVNode, VNode, WidgetVNode } from './nodes'
 
+/**
+ * VNodeHelper 是一个用于虚拟DOM节点操作的工具类，提供了虚拟DOM节点的创建、更新、替换等功能。
+ *
+ * 核心功能包括：
+ * - patchUpdate: 更新虚拟DOM节点，处理节点类型、属性和子节点的变更
+ * - patchUpdateAttrs: 更新虚拟节点的属性，处理属性的增加、删除和修改
+ * - patchUpdateChildren: 更新子节点，处理子节点的增删改查和位置调整
+ * - replace: 替换旧节点为新节点，处理不同类型节点的替换逻辑
+ *
+ * 使用示例：
+ * ```typescript
+ * // 更新虚拟节点
+ * const updatedNode = VNodeHelper.patchUpdate(oldNode, newNode);
+ *
+ * // 更新节点属性
+ * VNodeHelper.patchUpdateAttrs(oldNode, newNode);
+ *
+ * // 更新子节点
+ * const newChildren = VNodeHelper.patchUpdateChildren(containerNode, newContainerNode);
+ * ```
+ *
+ * 构造函数参数：
+ * - 该类为静态工具类，无需实例化，所有方法均为静态方法
+ *
+ * 使用限制：
+ * - 需要确保传入的节点参数符合 VNode 类型规范
+ * - 在处理节点替换时，需要确保节点已正确挂载到DOM树上
+ * - 对于传送节点(teleport)有特殊的处理逻辑，需要特别注意其占位元素的处理
+ *
+ * 潜在副作用：
+ * - 频繁的节点更新可能导致性能问题，建议合理使用节点的key属性以优化更新性能
+ * - 在处理节点替换时，会自动调用节点的挂载和卸载钩子，可能会影响组件的生命周期
+ */
 export class VNodeHelper {
   /**
    * 用于更新虚拟DOM节点的patch方法
