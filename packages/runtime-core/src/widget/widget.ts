@@ -435,10 +435,3 @@ export abstract class Widget<
     return VNodeHelper.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
   }
 }
-
-class Class extends Widget<{ children: string }> {
-  override build(): VNode | null {
-    const d = this.children
-    throw new Error('Method not implemented.')
-  }
-}
