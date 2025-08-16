@@ -4,6 +4,10 @@ import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '
 import { ContainerVNode } from './container'
 import { VNode } from './vnode'
 
+const NAMESPACE_URI = {
+  svg: 'http://www.w3.org/2000/svg',
+  html: 'http://www.w3.org/1999/xhtml'
+}
 /**
  * ElementVNode 类表示一个元素类型的虚拟节点（Virtual Node），用于在虚拟DOM中表示HTML或SVG元素。
  * 它继承自VNode类，并扩展了元素特有的功能，如DOM元素的创建、属性设置和子节点渲染。
@@ -55,11 +59,9 @@ export class ElementVNode<
     if (!this.#element) {
       // 根据是否为SVG元素创建对应的DOM元素
       this.#element = // 判断是否为SVG虚拟节点，如果是则使用SVG命名空间创建元素
-        (
-          ElementVNode.isSvgVNode(this)
-            ? document.createElementNS('http://www.w3.org/2000/svg', this.type)
-            : // 否则使用常规方法创建元素
-              document.createElement(this.type)
+        document.createElementNS(
+          ElementVNode.isSvgVNode(this) ? NAMESPACE_URI.svg : NAMESPACE_URI.html,
+          this.type
         ) as RuntimeElement<T>
       // 如果元素能够设置属性，则设置属性
       if (Object.keys(this.props).length) {
@@ -80,16 +82,14 @@ export class ElementVNode<
    * @returns {boolean} - 如果是svg节点则返回true，否则返回false
    */
   static isSvgVNode(vnode: ElementVNode): boolean {
-    const svgNamespace = 'http://www.w3.org/2000/svg'
-
     // 检查当前节点是否直接声明为SVG命名空间或是svg标签
-    if (vnode.props.xmlns === svgNamespace || vnode.type === 'svg') return true
+    if (vnode.props.xmlns === NAMESPACE_URI.svg || vnode.type === 'svg') return true
 
     // 如果当前节点不是SVG，则检查其父节点
     let parent = this.findParentVNode(vnode)
     while (parent) {
       // 检查父节点是否为SVG命名空间或svg标签
-      if (parent.props.xmlns === svgNamespace || parent.type === 'svg') return true
+      if (parent.props.xmlns === NAMESPACE_URI.svg || parent.type === 'svg') return true
       // 继续向上查找父节点
       parent = this.findParentVNode(parent)
     }
