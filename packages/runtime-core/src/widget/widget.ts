@@ -1,6 +1,13 @@
-import { EffectScope, getCurrentScope, Subscriber } from '@vitarx/responsive'
-import { type ClassWidget, type RuntimeElement, VNode, VNodeHelper, WidgetVNode } from '../vnode'
-import { type ErrorInfo, LifecycleHooks, type LifecycleState } from './types'
+import { EffectScope, getCurrentScope } from '@vitarx/responsive'
+import {
+  type AnyElement,
+  type ClassWidget,
+  type RuntimeElement,
+  VNode,
+  VNodeHelper,
+  WidgetVNode
+} from '../vnode'
+import { type ErrorInfo, LifecycleHooks } from './types'
 
 /**
  * 类组件的标识符
@@ -60,11 +67,6 @@ export abstract class Widget<
    */
   readonly #vnode: WidgetVNode
   /**
-   * 生命周期状态
-   * @private
-   */
-  #state: LifecycleState = 'notRendered'
-  /**
    * 小部件的作用域
    *
    * @private
@@ -76,33 +78,6 @@ export abstract class Widget<
    * @private
    */
   readonly #props: InputProps
-  /**
-   * 用于缓存 build 方法的返回值
-   */
-  #child?: VNode
-  /**
-   * 视图依赖订阅实例
-   *
-   * @private
-   */
-  #viewDepSubscriber?: Subscriber
-  /**
-   * 等待更新标识
-   * @private
-   */
-  #pendingUpdate: boolean = false
-  /**
-   * 传送的目标元素
-   *
-   * @private
-   */
-  #teleport: Element | null = null
-  /**
-   * 影子占位元素
-   *
-   * @private
-   */
-  #shadowElement: RuntimeElement<'comment-node'> | null = null
 
   protected constructor(props: InputProps) {
     this.#props = props
@@ -142,6 +117,22 @@ export abstract class Widget<
     return this.#scope
   }
 
+  /**
+   * 获取当前虚拟节点对应的 DOM 元素
+   * 这是一个 getter 属性，用于返回组件或虚拟节点挂载后的真实 DOM 元素
+   * @returns {AnyElement} 返回虚拟节点对应的 DOM 元素实例
+   */
+  get $el(): AnyElement {
+    return this.#vnode.element
+  }
+
+  /**
+   * 获取组件的虚拟DOM节点
+   * @returns {WidgetVNode} 返回组件的虚拟DOM节点
+   */
+  get $vnode(): WidgetVNode {
+    return this.#vnode
+  }
   /**
    * 判断给定的值是否为 ClassWidget 类型的实例
    *
