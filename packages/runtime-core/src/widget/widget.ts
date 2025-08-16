@@ -4,7 +4,7 @@ import {
   type ClassWidget,
   type RuntimeElement,
   VNode,
-  VNodeHelper,
+  VNodeUpdate,
   WidgetVNode
 } from '../vnode'
 import { type ErrorInfo, LifecycleHooks } from './types'
@@ -423,6 +423,6 @@ export abstract class Widget<
    * @returns {VNode} 返回更新后的虚拟节点
    */
   $patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
-    return VNodeHelper.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
+    return VNodeUpdate.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
   }
 }
