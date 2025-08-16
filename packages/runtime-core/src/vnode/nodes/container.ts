@@ -26,17 +26,17 @@ export abstract class ContainerVNode<
   #children: VNode[]
 
   constructor(type: T, props: VNodeProps<T> | null = null, children: Child[] | null = null) {
-    super(type, props)
-    if ('children' in this.props) {
+    if (props && 'children' in props) {
       // 如果props中有children属性，合并到children
-      const attrChildren = popProperty(this.props, 'children')
+      const attrChildren = popProperty(props, 'children')
       if (attrChildren) {
         children = Array.isArray(attrChildren)
           ? [...attrChildren, ...(children ?? [])]
           : [attrChildren, ...(children ?? [])]
       }
     }
-    this.#children = this.#formatChildren(children)
+    super(type, props)
+    this.#children = children ? this.#formatChildren(children) : []
   }
 
   /**
@@ -128,7 +128,7 @@ export abstract class ContainerVNode<
    * @param target
    * @returns {VNode[]} 返回一个包含所有子节点的数组
    */
-  #formatChildren(target: Child[] | Child | null): VNode[] {
+  #formatChildren(target: Child[] | Child): VNode[] {
     const childList: VNode[] = []
     // 用于检测重复key的集合
     const keySet = new Set<UniqueKey>()
