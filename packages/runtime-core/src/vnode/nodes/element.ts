@@ -3,7 +3,6 @@ import { DomHelper } from '../../dom'
 import { isRefEl } from '../ref'
 import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types'
 import { ContainerVNode } from './container'
-import { VNode } from './vnode'
 
 const NAMESPACE_URI = {
   svg: 'http://www.w3.org/2000/svg',
@@ -100,21 +99,21 @@ export class ElementVNode<
     // 如果没有找到任何SVG命名空间或svg标签，返回false
     return false
   }
-
   /**
    * 判断给定的虚拟节点是否为元素类型的虚拟节点
-   * @param vnode - 需要判断的虚拟节点
+   *
+   * @param val - 要检测的变量
    * @returns {boolean} 如果是元素类型的虚拟节点则返回true，否则返回false
    */
-  static override is(vnode: VNode): vnode is ElementVNode {
+  static override is(val: any): val is ElementVNode {
+    if (!super.is(val)) return false
     // 检查vnode的类型是否为字符串，如果不是则直接返回false
-    if (typeof vnode.type !== 'string') return false
+    if (typeof val.type !== 'string') return false
     // 检查vnode的类型是否为特殊节点类型（片段节点、文本节点、注释节点），如果是则返回false
-    if (['fragment-node', 'text-node', 'comment-node'].includes(vnode.type)) return false
+    if (['fragment-node', 'text-node', 'comment-node'].includes(val.type)) return false
     // 通过以上检查后，确认是元素类型的虚拟节点，返回true
     return true
   }
-
   /**
    * @inheritDoc
    */
