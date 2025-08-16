@@ -16,6 +16,7 @@ import {
   type LifecycleState,
   Widget
 } from '../../widget'
+import { proxyWidgetProps } from '../props'
 import { isRefEl } from '../ref'
 import type {
   AnyElement,
@@ -27,7 +28,6 @@ import type {
 } from '../types'
 import { CommentVNode } from './comment'
 import { FragmentVNode } from './fragment'
-import { proxyWidgetProps } from './props'
 import { VNode } from './vnode'
 
 declare global {

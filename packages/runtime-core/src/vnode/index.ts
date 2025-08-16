@@ -1,4 +1,5 @@
 export * from './types'
 export * from './nodes'
 export * from './ref'
+export * from './props'
 export * from './vnode-helper'

@@ -1,6 +1,6 @@
 import { isReactive, ReactiveProxyHandler } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import { WidgetVNode } from './widget'
+import { WidgetVNode } from './nodes'
 
 const VNODE_PROPS_DEFAULT_DATA = Symbol('VNODE_PROPS_DEFAULT_DATA')
 const VNODE_PROPS_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
