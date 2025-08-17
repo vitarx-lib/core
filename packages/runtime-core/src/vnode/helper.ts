@@ -76,3 +76,13 @@ export function getCurrentVNode(): WidgetVNode | undefined {
 }
 
 export { getCurrentVNode as useCurrentVNode }
+
+/**
+ * 检查给定的值是否为VNode节点
+ *
+ * @param val - 需要检查的值
+ * @returns {boolean} 如果值是VNode节点则返回true，否则返回false
+ */
+export function isVNode(val: any): val is VNode {
+  return VNode.is(val) // 调用VNode类的静态is方法来判断传入的值是否为VNode实例
+}
