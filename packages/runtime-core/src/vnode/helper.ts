@@ -53,7 +53,8 @@ export function createVNode<T extends VNodeType>(
   }
   if (isSimpleWidget(type)) {
     const vnode = type.call(null, props)
-    if (VNode.is(vnode)) return vnode as unknown as VNode<T>
+    if (!VNode.is(vnode)) throw new Error('simple widget must return a VNode')
+    return vnode as unknown as VNode<T>
   }
   return new WidgetVNode(type, props) as unknown as VNode<T>
 }
