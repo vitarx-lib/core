@@ -23,13 +23,13 @@ import { isRefEl } from '../ref'
 import type {
   AnyElement,
   Child,
-  FragmentElement,
   FunctionWidget,
   RuntimeElement,
   VNodeProps,
   WidgetType
 } from '../types'
 import { CommentVNode } from './comment'
+import { ContainerVNode } from './container'
 import { FragmentVNode } from './fragment'
 import { VNode } from './vnode'
 
@@ -120,12 +120,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @private
    */
   #teleport: Element | null = null
-  /**
-   * 影子占位元素
-   *
-   * @private
-   */
-  #shadowElement: RuntimeElement<'comment-node'> | null = null
   readonly #children: VNodeProps<T>['children'] | undefined
 
   constructor(type: T, props: VNodeProps<T> | null = null, children: Child[] | null = null) {
@@ -154,19 +148,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    */
   get teleport(): Element | null {
     return this.#teleport
-  }
-
-  /**
-   * 获取影子元素的getter方法
-   * 返回一个运行时元素对象或null，该对象表示注释节点类型的运行时元素
-   *
-   * @returns {RuntimeElement<'comment-node'> | null} 返回影子元素，如果不存在则返回null
-   */
-  get shadowElement(): RuntimeElement<'comment-node'> {
-    if (!this.#shadowElement) {
-      this.#shadowElement = document.createComment(`${this.name} Shadow Element`)
-    }
-    return this.#shadowElement // 返回私有属性shadowElement的值
   }
 
   get state(): LifecycleState {
@@ -369,13 +350,36 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     this.#state = 'notMounted'
     return el as RuntimeElement<T>
   }
+
+  /**
+   * 更新虚拟节点的激活状态
+   * @param vnode - 虚拟节点对象
+   * @param activate - 是否激活状态的布尔值
+   */
+  static #updateActivateState(vnode: VNode, activate: boolean): void {
+    // 如果是组件节点
+    if (WidgetVNode.is(vnode)) {
+      // 根据activate参数决定激活或停用组件
+      vnode[activate ? 'activate' : 'deactivate'](false)
+    } else {
+      // 递归激活/停用子节点
+      if (ContainerVNode.is(vnode)) {
+        // 遍历所有子节点
+        for (let i = 0; i < vnode.children.length; i++) {
+          // 递归调用更新每个子节点的激活状态
+          WidgetVNode.#updateActivateState(vnode.children[i], activate)
+        }
+      }
+    }
+  }
+
   /**
    * 挂载组件到指定容器
    * @param container - 可以是HTMLElement、SVGElement或FragmentElement类型的容器元素
    * @returns {this} 返回组件实例this，以便链式调用
    * @throws {Error} 如果组件非未挂载状态，则会抛出错误
    */
-  override mount(container?: HTMLElement | SVGElement | FragmentElement): this {
+  override mount(container?: ParentNode): this {
     // 检查组件状态
     if (this.state === 'notRendered') {
       this.render()
@@ -384,20 +388,12 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         '[Vitarx.WidgetRenderer.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
       )
     }
-    // 子节点挂载
-    this.child.mount()
-    // 处理DOM挂载
-    const targetElement = this.#teleport || container
-    const elementToMount = this.#teleport ? this.shadowElement : this.element
-
-    if (targetElement) {
-      // 如果目标元素存在，则将组件元素附加到目标元素
-      DomHelper.appendChild(targetElement, elementToMount)
-    } else if (this.#teleport && this.element.parentElement !== this.teleport) {
-      // 如果目标元素不存在，但组件元素已经未附加到teleport目标，则挂载到teleport目标
-      DomHelper.appendChild(this.#teleport, this.element)
+    // 子节点挂载，挂载到传送目标/容器
+    this.child.mount(this.#teleport || container)
+    if (container && this.#teleport) {
+      // 如果指定了容器，则将影子元素挂载到容器
+      DomHelper.appendChild(container, this.shadowElement)
     }
-
     // 更新状态并触发生命周期
     this.#state = 'activated'
     this.triggerLifecycleHook(LifecycleHooks.mounted)
@@ -405,6 +401,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
 
     return this
   }
+
   /**
    * 触发生命周期钩子
    *
@@ -440,6 +437,22 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       }
     }
   }
+
+  /**
+   * 将元素追加的父元素，仅进行DOM操作，不触发 mounted生命周期钩子
+   *
+   * @param container - 父节点，用于挂载组件的容器
+   */
+  appendToContainer(container: ParentNode): void {
+    const parent = this.#teleport || container
+    // 将元素挂载到父元素
+    DomHelper.appendChild(parent, this.element)
+    // 如果指定了容器，则将影子元素挂载到容器
+    if (this.#teleport) {
+      DomHelper.appendChild(container, this.shadowElement)
+    }
+  }
+
   /**
    * 用于组件的卸载过程
    * 该方法会处理卸载前的状态检查、生命周期触发、子元素卸载等操作
@@ -451,10 +464,10 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     }
     // 设置状态为卸载中
     this.#state = 'uninstalling'
-    // 递归卸载子节点
-    this.child.unmount()
     // 触发onBeforeUnmount生命周期
     this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
+    // 递归卸载子节点
+    this.child.unmount()
     // 异步卸载标志
     let isAsyncUnmount = false
     // 如果是根节点且是激活状态，则需要触发删除元素前的回调
@@ -471,30 +484,31 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 如果不是异步卸载直接执行卸载逻辑
     if (!isAsyncUnmount) this.#completeUnmount()
   }
+
   /**
-   * 负责触发生命周期钩子函数
-   *
-   * @param args - 生命周期钩子参数，包含错误信息等相关数据
-   * @return {VNode | void} VNode对象或void，用于渲染错误状态或执行错误处理逻辑
+   * @inheritDoc
    */
-  protected reportWidgetError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
-    // 查找当前节点的父级虚拟节点
-    let parentNode = VNode.findParentVNode(this)
-    // 处理根节点错误
-    if (!parentNode) {
-      return this.#handleRootError(args)
+  override activate(root: boolean = true): void {
+    if (this.state === 'deactivated') {
+      this.#state = 'activated'
+      if (root) {
+        if (this.teleport) {
+          // 将元素重新插入到传送目标
+          this.teleport.appendChild(this.element)
+        } else {
+          // 将元素重新插入到影子元素
+          DomHelper.replace(this.element, this.shadowElement)
+        }
+      }
+      // 恢复作用域
+      this.scope.resume()
+      // 更新视图
+      this.updateChild()
+      // 触发onActivated生命周期
+      this.triggerLifecycleHook(LifecycleHooks.activated)
+      // 激活子节点
+      this.child.activate(false)
     }
-  }
-  /**
-   * 完成卸载流程的辅助方法
-   */
-  #completeUnmount(): void {
-    // 执行卸载后续操作
-    this.scope.dispose()
-    this.#shadowElement?.remove()
-    DomHelper.remove(this.element)
-    this.#state = 'unloaded'
-    this.triggerLifecycleHook(LifecycleHooks.unmounted)
   }
   /**
    * 更新视图
@@ -605,5 +619,67 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       // 如果没有配置错误处理函数，则在控制台输出错误信息
       console.error('[Vitarx]：there are unhandled exceptions', ...args)
     }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  override deactivate(root: boolean = true): void {
+    // 如果当前状态不是已激活，则直接返回
+    if (this.state !== 'activated') return
+    // 设置状态为停用中
+    this.#state = 'deactivating'
+    // 递归停用子节点
+    this.child.deactivate(false)
+    // 如果是根节点，且不是传送节点，则将影子元素插入到元素之前
+    if (root && !this.teleport) {
+      DomHelper.insertBefore(this.shadowElement, this.element)
+    }
+    const post = () => {
+      // 如果是根节点，则移除元素
+      if (root) DomHelper.remove(this.element)
+      this.scope.pause()
+      this.#state = 'deactivated'
+      // 触发onDeactivated生命周期
+      this.triggerLifecycleHook(LifecycleHooks.deactivated)
+    }
+    // 触发beforeRemove生命周期钩子，获取返回值
+    const result = this.triggerLifecycleHook(
+      LifecycleHooks.beforeRemove,
+      this.element,
+      'deactivate'
+    )
+    if (result instanceof Promise) {
+      result.finally(post)
+    } else {
+      post()
+    }
+  }
+
+  /**
+   * 负责触发生命周期钩子函数
+   *
+   * @param args - 生命周期钩子参数，包含错误信息等相关数据
+   * @return {VNode | void} VNode对象或void，用于渲染错误状态或执行错误处理逻辑
+   */
+  protected reportWidgetError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
+    // 查找当前节点的父级虚拟节点
+    let parentNode = VNode.findParentVNode(this)
+    // 处理根节点错误
+    if (!parentNode) {
+      return this.#handleRootError(args)
+    }
+  }
+
+  /**
+   * 完成卸载流程的辅助方法
+   */
+  #completeUnmount(): void {
+    // 执行卸载后续操作
+    this.scope.dispose()
+    this.removeShadowElement()
+    DomHelper.remove(this.element)
+    this.#state = 'unloaded'
+    this.triggerLifecycleHook(LifecycleHooks.unmounted)
   }
 }
