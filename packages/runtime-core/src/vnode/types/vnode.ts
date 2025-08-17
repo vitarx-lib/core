@@ -1,5 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
-import type { AnyPrimitive } from '@vitarx/utils/src/index'
+import type { AnyPrimitive } from '@vitarx/utils'
 import { Widget } from '../../widget/index'
 import { VNode } from '../nodes'
 import type { AllNodeElementName, NodeElement } from './element'

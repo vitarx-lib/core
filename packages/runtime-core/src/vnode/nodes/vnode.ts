@@ -1,5 +1,4 @@
-import { isRecordObject } from '@vitarx/utils'
-import { popProperty } from '@vitarx/utils/src/index'
+import { isRecordObject, popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index'
 import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 
