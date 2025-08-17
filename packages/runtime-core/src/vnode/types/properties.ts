@@ -50,10 +50,6 @@ export interface IntrinsicProperties {
    * 条件渲染，会销毁组件
    */
   'v-if'?: boolean
-  /**
-   * 显示隐藏，不会销毁组件
-   */
-  'v-show'?: boolean
   [key: string]: any
 }
 
