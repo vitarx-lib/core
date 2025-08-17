@@ -39,11 +39,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   readonly #ref: NonNullable<VNodeProps<T>>['ref'] | null = null
   #shadowElement?: Comment
-  /**
-   * 元素是否显示
-   * @private
-   */
-  #show: boolean = true
 
   /**
    * 创建一个虚拟节点实例
@@ -63,7 +58,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     }
     this.propsHandler()
   }
-
   /**
    * 处理属性的方法
    * 该方法负责处理和合并传递给组件的属性，包括样式、类名等特殊属性
