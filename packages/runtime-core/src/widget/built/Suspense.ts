@@ -1,24 +1,15 @@
 import { Ref, ref, Subscriber, watch } from '@vitarx/responsive'
 import { createVNode, defineProps, inject, provide, VNode } from '../../vnode'
-import { ErrorInfo } from '../types'
+import { type ErrorHandler } from '../types'
 import { Widget } from '../widget'
-
-/**
- * onError生命周期钩子
- *
- * @param {unknown} error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
- * @param {ErrorSource} info - 捕获异常的阶段，可以是`build`或`render`
- * @returns {void|Element} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
- */
-type OnErrorCallback = (this: Suspense, error: unknown, info: ErrorInfo) => void | VNode
 
 /**
  * Suspense小部件的配置选项
  *
- * @property {Element} fallback - 回退内容
- * @property {Element} children - 子节点
- * @property {OnErrorCallback} onError - 异常处理钩子
- * @property {() => void} onShow - 子节点渲染完成钩子
+ * @property {VNode} fallback - 回退内容
+ * @property {VNode} children - 子节点
+ * @property {ErrorHandler<Suspense>} onError - 异常处理钩子
+ * @property {() => void} onShow - 子节点渲染完成时触发的钩子
  */
 interface SuspenseProps {
   /**
@@ -35,7 +26,7 @@ interface SuspenseProps {
   /**
    * 异常处理钩子
    */
-  onError?: OnErrorCallback
+  onError?: ErrorHandler<Suspense>
   /**
    * 监听子节点渲染完成
    *
