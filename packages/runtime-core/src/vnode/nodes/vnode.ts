@@ -41,7 +41,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
    * @param props 虚拟节点的属性对象
    */
-  protected constructor(type: T, props: VNodeProps<T> | null = null) {
+  constructor(type: T, props: VNodeProps<T> | null = null) {
     // 节点类型
     this.#type = type
     // 节点属性
