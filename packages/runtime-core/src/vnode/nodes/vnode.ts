@@ -33,12 +33,17 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 唯一标识符
    */
-  readonly #key: UniqueKey | null
+  readonly #key: UniqueKey | null = null
   /**
    * 引用
    */
-  readonly #ref: NonNullable<VNodeProps<T>>['ref'] | null
+  readonly #ref: NonNullable<VNodeProps<T>>['ref'] | null = null
   #shadowElement?: Comment
+  /**
+   * 元素是否显示
+   * @private
+   */
+  #show: boolean = true
 
   /**
    * 创建一个虚拟节点实例
@@ -50,10 +55,12 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     this.#type = type
     // 节点属性
     this.#props = props ?? ({} as VNodeProps<T>)
-    // 提取key属性
-    this.#key = props ? popProperty(props, 'key') : null
-    // 引用
-    this.#ref = props ? popProperty(props, 'ref') : null
+    if (props) {
+      // 提取key属性
+      this.#key = popProperty(props, 'key')
+      // 引用
+      this.#ref = popProperty(props, 'ref')
+    }
     this.propsHandler()
   }
 
