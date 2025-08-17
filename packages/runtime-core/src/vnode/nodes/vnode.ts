@@ -1,7 +1,7 @@
 import { isRecordObject } from '@vitarx/utils'
 import { popProperty } from '@vitarx/utils/src/index'
 import { DomHelper } from '../../dom/index'
-import type { FragmentElement, RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
+import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 
 const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
 /**
@@ -197,7 +197,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    *
    * @param [container] - 可选的容器元素，可以是HTML元素、SVG元素或片段元素
    */
-  abstract mount(container?: HTMLElement | SVGElement | FragmentElement): void
+  abstract mount(container?: ParentNode): void
 
   /**
    * 卸载组件的方法

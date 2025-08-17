@@ -1,6 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { unref } from '@vitarx/responsive'
-import type { FragmentElement } from '../types'
 import { VNode } from './vnode'
 
 type Type = 'comment-node' | 'text-node'
@@ -27,7 +26,7 @@ export abstract class NoTagVNode<T extends Type> extends VNode<T> {
   /**
    * @inheritDoc
    */
-  override mount(container?: SVGElement | HTMLElement | FragmentElement) {
+  override mount(container?: ParentNode) {
     if (container) container.appendChild(this.element)
   }
 

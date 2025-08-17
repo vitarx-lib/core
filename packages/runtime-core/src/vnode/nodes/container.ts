@@ -91,7 +91,7 @@ export abstract class ContainerVNode<
   /**
    * @inheritDoc
    */
-  override mount(container?: HTMLElement | SVGElement | FragmentElement): void {
+  override mount(container?: ParentNode | FragmentElement): void {
     // 获取片段节点元素
     const element = this.element
     // 如果不是组件节点，将元素添加到容器中
