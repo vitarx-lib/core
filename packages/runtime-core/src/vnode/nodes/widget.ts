@@ -636,12 +636,12 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
-   * 负责触发生命周期钩子函数
+   * 负责触发错误处理器钩子函数
    *
    * @param args - 生命周期钩子参数，包含错误信息等相关数据
    * @return {VNode | void} VNode对象或void，用于渲染错误状态或执行错误处理逻辑
    */
-  protected reportWidgetError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
+  reportWidgetError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
     // 查找当前节点的父级虚拟节点
     let parentNode = VNode.findParentVNode(this)
     // 处理根节点错误
