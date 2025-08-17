@@ -34,6 +34,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * 引用
    */
   readonly #ref: NonNullable<VNodeProps<T>>['ref'] | null
+  #shadowElement?: Comment
 
   /**
    * 创建一个虚拟节点实例
@@ -198,10 +199,60 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param [container] - 可选的容器元素，可以是HTML元素、SVG元素或片段元素
    */
   abstract mount(container?: ParentNode): void
-
   /**
    * 卸载组件的方法
    * 该方法会递归卸载所有子组件，并从DOM中移除当前组件的元素
    */
   abstract unmount(): void
+
+  /**
+   * 获取 shadow 元素的访问器属性
+   * 如果 shadow 元素不存在，则创建一个空的注释节点作为占位符
+   * @returns {Comment} 返回 shadow 元素，可能是已存在的或新创建的注释节点
+   */
+  get shadowElement(): Comment {
+    if (!this.#shadowElement) {
+      // 检查 shadowElement 是否已初始化
+      this.#shadowElement = document.createComment(
+        `${typeof this.type === 'function' ? this.type.name : this.type} shadow element`
+      ) // 如果未初始化，创建一个注释节点作为占位符
+    }
+    return this.#shadowElement // 返回 shadow 元素
+  }
+
+  /**
+   * 移除Shadow DOM元素并将其引用设置为undefined
+   * 这个方法会检查shadowElement是否存在，如果存在则从DOM中移除它，然后将引用置为undefined
+   */
+  removeShadowElement(): void {
+    if (this.hasShadowElement()) {
+      this.#shadowElement?.remove() // 使用可选链操作符，如果shadowElement存在则调用remove()方法
+      this.#shadowElement = undefined // 将shadowElement的引用置为undefined，便于垃圾回收
+    }
+  }
+
+  /**
+   * 检查是否存在阴影元素
+   * @returns {boolean} 如果存在阴影元素则返回true，否则返回false
+   */
+  hasShadowElement(): boolean {
+    return !!this.#shadowElement // 使用双重非运算符将shadowElement转换为布尔值
+  }
+
+  /**
+   * 让小部件恢复激活状态，重新挂载到父元素上。
+   *
+   * @param {boolean} root - 是否是根节点，默认为true，内部递归激活时使用，勿肆意传入！
+   * @returns {void}
+   */
+  abstract activate(root: boolean): void
+
+  /**
+   * 停用小部件
+   * 此方法用于停用当前小部件及其子节点，处理相关的生命周期钩子，
+   * 并根据是否为根节点执行不同的移除逻辑。
+   *
+   * @param root - 该参数用于递归时内部判断是否需要移除当前元素。
+   */
+  abstract deactivate(root: boolean): void
 }
