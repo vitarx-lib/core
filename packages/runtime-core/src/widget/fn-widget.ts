@@ -8,6 +8,7 @@ import {
   WidgetType,
   WidgetVNode
 } from '../vnode'
+import { getSuspenseCounter } from './built'
 import { __WIDGET_INTRINSIC_KEYWORDS__ } from './constant'
 import { HookCollector, type HookCollectResult } from './hook'
 import { LifecycleHookMethods } from './types'
@@ -63,6 +64,9 @@ class FnWidget extends Widget<Record<string, any>> {
     const hookCount = Object.keys(data.lifeCycleHooks).length
     let build: BuildVNode | VNode | null | { default: WidgetType } = data.build as BuildVNode
     if (isPromise(data.build)) {
+      const suspenseCounter = getSuspenseCounter(this)
+      // 如果有上级暂停计数器则让计数器+1
+      if (suspenseCounter) suspenseCounter.value++
       try {
         build = await withAsyncContext(data.build as Promise<BuildVNode>)
       } catch (e) {
@@ -80,11 +84,27 @@ class FnWidget extends Widget<Record<string, any>> {
         if (exposedCount !== Object.keys(data.exposed).length) {
           this.#injectExposed(data.exposed)
         }
+        this.#updateView()
+        // 如果有上级暂停计数器则让计数器-1
+        if (suspenseCounter) suspenseCounter.value--
       }
+    } else {
+      this.#updateView()
     }
     return this
   }
 
+  /**
+   * 更新视图的方法
+   * 根据组件的状态决定是否执行更新操作
+   */
+  #updateView() {
+    // 检查组件状态是否为未挂载或激活状态
+    if (this.$vnode.state === 'notMounted' || this.$vnode.state === 'activated') {
+      // 如果条件满足，则执行更新操作
+      this.update()
+    }
+  }
   /**
    * @inheritDoc
    */
