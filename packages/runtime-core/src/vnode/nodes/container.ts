@@ -20,22 +20,12 @@ import { WidgetVNode } from './widget'
 export abstract class ContainerVNode<
   T extends IntrinsicNodeElementName | 'fragment-node' = IntrinsicNodeElementName | 'fragment-node'
 > extends VNode<T> {
-  /**
-   * 子节点列表
-   */
   #children: VNode[]
 
-  constructor(type: T, props: VNodeProps<T> | null = null, children: Child[] | null = null) {
-    if (props && 'children' in props) {
-      // 如果props中有children属性，合并到children
-      const attrChildren = popProperty(props, 'children')
-      if (attrChildren) {
-        children = Array.isArray(attrChildren)
-          ? [...attrChildren, ...(children ?? [])]
-          : [attrChildren, ...(children ?? [])]
-      }
-    }
+  constructor(type: T, props: VNodeProps<T> | null = null) {
     super(type, props)
+    const children = popProperty(this.props, 'children')
+    // 如果存在children属性，则格式化子节点
     this.#children = children ? this.#formatChildren(children) : []
   }
 
@@ -113,10 +103,10 @@ export abstract class ContainerVNode<
   }
 
   /**
-   * 更新子节点数组的方法
+   * 替换子节点列表
    * @param nodes - 新的虚拟节点(VNode)数组，用于替换当前的子节点
    */
-  updateChildren(nodes: VNode[]) {
+  replaceChildren(nodes: VNode[]) {
     // 将传入的节点数组赋值给实例的私有属性 children
     this.#children = nodes
   }
