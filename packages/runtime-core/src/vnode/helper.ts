@@ -16,9 +16,12 @@ export function createVNode<T extends VNodeType>(
   props: VNodeProps<T> | null = null,
   ...children: Child[]
 ): VNode<T> {
-  props ??= {} as VNodeProps<T>
-  const vIf = popProperty(props!, 'v-if')
-  if (vIf) return new CommentVNode('v-if') as unknown as VNode<T>
+  if (props) {
+    const vIf = popProperty(props, 'v-if')
+    if (vIf) return new CommentVNode('v-if') as unknown as VNode<T>
+  } else {
+    props = {} as VNodeProps<T>
+  }
   if (children) {
     if (props!.children) {
       if (Array.isArray(props!.children)) {
