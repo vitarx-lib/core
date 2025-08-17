@@ -4,6 +4,7 @@ import { DomHelper } from '../../dom/index'
 import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 
 const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
+type Source = { fileName: string; lineNumber: number; columnNumber: number }
 /**
  * 虚拟节点抽象类
  *
@@ -17,6 +18,10 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @private
    */
   static #parentNodeMapping = new WeakMap<VNode, VNode>()
+  /**
+   * 源信息，仅在开发调试阶段存在
+   */
+  source?: Source
   /**
    * 虚拟节点类型
    * 可以是标签名（如 'div'）、组件（函数或类）或特殊符号
