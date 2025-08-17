@@ -163,7 +163,7 @@ export abstract class Widget<
   /**
    * 挂载之前调用之前调用
    */
-  onBeforeMount?(): void | string | HTMLElement | SVGElement
+  onBeforeMount?(): void | string | ParentNode
 
   /**
    * 小部件挂载后调用
