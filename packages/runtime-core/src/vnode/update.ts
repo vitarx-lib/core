@@ -57,7 +57,7 @@ export class VNodeUpdate {
         // 递归更新子节点并获取更新后的子节点列表
         const newChildren = this.patchUpdateChildren(oldVNode, newVNode as ContainerVNode)
         // 更新当前节点的子节点列表
-        oldVNode.updateChildren(newChildren)
+        oldVNode.replaceChildren(newChildren)
       }
       // 返回更新后的旧节点
       return oldVNode
