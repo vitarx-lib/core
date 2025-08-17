@@ -338,7 +338,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       // 触发onError生命周期
       const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
         source: 'render',
-        instance: this
+        instance: this.instance
       })
       // 如果渲染失败，则使用错误视图替换原视图
       this.#child = VNode.is(errVNode)
@@ -432,7 +432,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       } else {
         return this.reportWidgetError(e, {
           source: `hook:${hook.replace('on', '').toLowerCase()}` as ErrorSource,
-          instance: this
+          instance: this.instance
         }) as LifecycleHookReturnType<T>
       }
     }
@@ -527,7 +527,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         ),
         {
           source: 'update',
-          instance: this
+          instance: this.instance
         }
       )
     }
@@ -587,7 +587,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         // 处理构建过程中的异常
         const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
           source: 'build',
-          instance: this
+          instance: this.instance
         })
         // 如果构建出错，则使用错误虚拟节点
         vnode = VNode.is(errVNode) ? errVNode : new FragmentVNode()
