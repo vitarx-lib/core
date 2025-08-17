@@ -225,12 +225,25 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * 这个方法会检查shadowElement是否存在，如果存在则从DOM中移除它，然后将引用置为undefined
    */
   removeShadowElement(): void {
-    if (this.hasShadowElement()) {
-      this.#shadowElement?.remove() // 使用可选链操作符，如果shadowElement存在则调用remove()方法
-      this.#shadowElement = undefined // 将shadowElement的引用置为undefined，便于垃圾回收
-    }
+    this.#shadowElement?.remove() // 使用可选链操作符，如果shadowElement存在则调用remove()方法
+    this.#shadowElement = undefined // 将shadowElement的引用置为undefined，便于垃圾回收
   }
 
+  /**
+   * 切换DOM元素与阴影DOM元素
+   * 此方法会根据当前元素的挂载状态，在真实DOM元素和阴影元素之间进行切换
+   */
+  toggleElement(): void {
+    // 检查当前元素是否已挂载到DOM树中
+    if (this.element.parentNode) {
+      // 如果已挂载，用shadowElement替换当前元素
+      this.element.parentNode.replaceChild(this.shadowElement, this.element)
+    } else {
+      // 如果未挂载（处于shadow状态），将元素恢复到DOM树中
+      this.shadowElement.parentNode?.replaceChild(this.element, this.shadowElement)
+      this.#shadowElement = undefined // 清除shadowElement引用，便于垃圾回收
+    }
+  }
   /**
    * 检查是否存在阴影元素
    * @returns {boolean} 如果存在阴影元素则返回true，否则返回false
