@@ -1,5 +1,5 @@
 import { toRaw, unref } from '@vitarx/responsive'
-import { isRecordObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils/src'
+import { isRecordObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
 import {
   type ClassProperties,
   type EventNames,
