@@ -499,18 +499,13 @@ export class DomHelper {
     // 处理DocumentFragment类型的情况
     if (target instanceof DocumentFragment) {
       const fragmentVNode = target.$vnode
-      // 如果fragment没有子节点，返回shadow元素（需确保存在）
-      if (fragmentVNode.children.length === 0) {
-        return fragmentVNode.shadowElement
-      } else {
-        const index = type === 'first' ? 0 : fragmentVNode.children.length - 1
-        // 获取最后一个子虚拟节点并递归处理
-        const childVNode = fragmentVNode.children[index]
-        if (!childVNode.element) return null
-        target = childVNode.element
-        // 如果最后一个子节点仍然是DocumentFragment，递归调用
-        return target instanceof DocumentFragment ? this.getChild(target, type) : target
-      }
+      const index = type === 'first' ? 0 : fragmentVNode.children.length - 1
+      // 获取最后一个子虚拟节点并递归处理
+      const childVNode = fragmentVNode.children[index]
+      if (!childVNode.element) return null
+      target = childVNode.element
+      // 如果最后一个子节点仍然是DocumentFragment，递归调用
+      return target instanceof DocumentFragment ? this.getChild(target, type) : target
     }
     const child = target[`${type}Child`]
     // 返回最后一个子元素，确保lastChild存在
