@@ -347,11 +347,12 @@ export class DomHelper {
    * @description 在当前元素的指定子元素之前插入新元素。如果锚点节点不是当前元素的子元素，则此操作无效
    * @param child - 要插入的子元素
    * @param anchor - 锚点节点
-   * @returns {void}
+   * @returns {ParentNode} - 父节点元素
    */
-  static insertBefore(child: RuntimeElement, anchor: RuntimeElement): void {
-    if (!child.parentElement) throw new Error('The child element does not have a parent element')
-    child.parentElement.insertBefore(child, anchor)
+  static insertBefore(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
+    if (!child.parentNode) throw new Error('The child element does not have a parent node')
+    child.parentNode.insertBefore(child, anchor)
+    return child.parentNode
   }
 
   /**
@@ -360,17 +361,18 @@ export class DomHelper {
    * @description 在当前元素的指定子元素之前插入新元素。如果锚点节点不是当前元素的子元素，则此操作无效
    * @param child - 要插入的子元素
    * @param anchor - 锚点节点
-   * @returns {void}
+   * @returns {ParentNode} - 父节点元素
    */
-  static insertAfter(child: RuntimeElement, anchor: RuntimeElement): void {
-    const parent = anchor.parentElement
-    if (!parent) throw new Error('The child element does not have a parent element')
+  static insertAfter(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
+    const parent = anchor.parentNode
+    if (!parent) throw new Error('The child element does not have a parent node')
     const next = anchor.nextSibling
     if (next) {
       parent.insertBefore(child, next)
     } else {
       parent.appendChild(child)
     }
+    return parent
   }
 
   /**
