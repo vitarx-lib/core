@@ -1,4 +1,5 @@
 import { type RuntimeElement, VNode } from '../../vnode'
+import type { Widget } from '../widget'
 
 /**
  * 错误来源联合类型
@@ -21,7 +22,7 @@ export interface ErrorInfo {
   /**
    * 抛出异常的实例
    */
-  instance: any
+  instance: Widget
 }
 
 /**
