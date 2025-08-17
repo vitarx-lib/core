@@ -683,7 +683,7 @@ interface CustomProperties {
    * </div>
    * ```
    */
-  children?: Child[]
+  children?: Child[] | Child
 
   /**
    * data-* 自定义数据属性
