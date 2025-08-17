@@ -1,6 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { unref } from '@vitarx/responsive'
-import { DomHelper } from '../../dom/index'
 import { VNode } from './vnode'
 
 type Type = 'comment-node' | 'text-node'
@@ -35,14 +34,14 @@ export abstract class NoTagVNode<T extends Type> extends VNode<T> {
    * @inheritDoc
    */
   override activate(root: boolean = true): void {
-    if (root) DomHelper.replace(this.element, this.shadowElement)
+    if (root) this.toggleElement()
   }
 
   /**
    * @inheritDoc
    */
   override deactivate(root: boolean = true) {
-    if (root) DomHelper.replace(this.shadowElement, this.element)
+    if (root) this.toggleElement()
   }
   /**
    * @inheritDoc
