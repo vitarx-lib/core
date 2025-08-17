@@ -163,4 +163,26 @@ export abstract class ContainerVNode<
     }
     return childList
   }
+
+  /**
+   * @inheritDoc
+   */
+  override activate(root: boolean = true): void {
+    if (root) this.toggleElement()
+    // 遍历所有子节点
+    for (let i = 0; i < this.children.length; i++) {
+      // 递归调用更新每个子节点的激活状态
+      this.children[i].activate(false)
+    }
+  }
+
+  /**
+   * @inheritDoc
+   */
+  override deactivate(root: boolean = true) {
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].deactivate(false)
+    }
+    if (root) this.toggleElement()
+  }
 }
