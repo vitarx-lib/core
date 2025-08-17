@@ -1,4 +1,5 @@
 import { type Child, type FragmentElement } from '../types'
+import { CommentVNode } from './comment'
 import { ContainerVNode } from './container'
 
 export class FragmentVNode extends ContainerVNode<'fragment-node'> {
@@ -6,23 +7,13 @@ export class FragmentVNode extends ContainerVNode<'fragment-node'> {
    * 运行时元素实例
    */
   #element: FragmentElement | null = null
-  #shadowElement: Comment | null = null
 
   constructor(props: { children: Child[] } | null = null, children: Child[] | null = null) {
     super('fragment-node', props, children)
-  }
-
-  /**
-   * 获取 shadow 元素的访问器属性
-   * 如果 shadow 元素不存在，则创建一个空的注释节点作为占位符
-   * @returns {Comment} 返回 shadow 元素，可能是已存在的或新创建的注释节点
-   */
-  get shadowElement(): Comment {
-    if (!this.#shadowElement) {
-      // 检查 shadowElement 是否已初始化
-      this.#shadowElement = document.createComment('empty fragment node') // 如果未初始化，创建一个注释节点作为占位符
+    // 如果没有子节点，则创建一个默认的注释节点元素
+    if (this.children.length === 0) {
+      this.children.push(new CommentVNode('empty fragment shadow element'))
     }
-    return this.#shadowElement // 返回 shadow 元素
   }
 
   /**
@@ -35,14 +26,12 @@ export class FragmentVNode extends ContainerVNode<'fragment-node'> {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
       this.#element = document.createDocumentFragment() as FragmentElement
+      // 设置虚拟节点属性
       Object.defineProperty(this.#element, '$vnode', {
         value: this
       })
-      if (this.children.length === 0) {
-        this.#element.appendChild(this.shadowElement)
-      } else {
-        this.renderChildren()
-      }
+      // 渲染子节点
+      this.renderChildren()
     }
     return this.#element
   }
