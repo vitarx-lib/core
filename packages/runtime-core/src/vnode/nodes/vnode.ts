@@ -3,7 +3,7 @@ import { DomHelper } from '../../dom/index'
 import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 
 const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
-type Source = { fileName: string; lineNumber: number; columnNumber: number }
+export type Source = { fileName: string; lineNumber: number; columnNumber: number }
 /**
  * 虚拟节点抽象类
  *
