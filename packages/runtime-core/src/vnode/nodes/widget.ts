@@ -6,7 +6,6 @@ import {
   runInContext,
   Subscriber
 } from '@vitarx/responsive'
-import { popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index'
 import {
   type ErrorSource,
@@ -20,14 +19,7 @@ import { _createFnWidget } from '../../widget/fn-widget'
 import { proxyWidgetProps } from '../props'
 import { inject } from '../provide'
 import { isRefEl } from '../ref'
-import type {
-  AnyElement,
-  Child,
-  FunctionWidget,
-  RuntimeElement,
-  VNodeProps,
-  WidgetType
-} from '../types'
+import type { AnyElement, FunctionWidget, RuntimeElement, VNodeProps, WidgetType } from '../types'
 import { CommentVNode } from './comment'
 import { ContainerVNode } from './container'
 import { FragmentVNode } from './fragment'
@@ -120,26 +112,13 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @private
    */
   #teleport: Element | null = null
-  readonly #children: VNodeProps<T>['children'] | undefined
-
-  constructor(type: T, props: VNodeProps<T> | null = null, children: Child[] | null = null) {
-    super(type, props)
-    // 如果props中有children属性，合并到children
-    const attrChildren = popProperty(this.props, 'children')
-    if (attrChildren) {
-      children = Array.isArray(attrChildren)
-        ? [...attrChildren, ...(children ?? [])]
-        : [attrChildren, ...(children ?? [])]
-    }
-    if (children) this.#children = children.length === 1 ? children[0] : children
-  }
 
   /**
    * 获取子元素的访问器属性
    * 返回存储在私有字段 #children 中的子元素数组
    */
   get children() {
-    return this.#children
+    return this.props.children
   }
 
   /**
