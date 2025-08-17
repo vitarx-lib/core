@@ -3,6 +3,7 @@ import type { AnyPrimitive } from '@vitarx/utils/src/index'
 import { Widget } from '../../widget/index'
 import { VNode } from '../nodes'
 import type { AllNodeElementName, NodeElement } from './element'
+import type { IntrinsicProperties } from './properties'
 
 /**
  * 表示可以作为子节点的类型
@@ -56,5 +57,5 @@ export type VNodeType = AllNodeElementName | WidgetType
 export type VNodeProps<T extends VNodeType> = T extends AllNodeElementName
   ? NodeElement<T>
   : T extends WidgetType<infer P>
-    ? P
+    ? P & IntrinsicProperties
     : never
