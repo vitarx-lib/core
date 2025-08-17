@@ -431,11 +431,11 @@ export class DomHelper {
   /**
    * 给指定容器元素附加子元素
    *
-   * @param container - 容器，可以是HTMLElement、SVGElement或FragmentElement
+   * @param container - 容器，可以是所有继承了ParentNode的元素实例
    * @param el - 要挂载的元素
    * @returns 无返回值
    */
-  static appendChild(container: Element | FragmentElement, el: RuntimeElement): void {
+  static appendChild(container: ParentNode, el: RuntimeElement): void {
     if (el instanceof DocumentFragment) {
       el = this.recoveryFragmentChildNodes(el)
     }
