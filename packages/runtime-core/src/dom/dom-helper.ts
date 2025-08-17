@@ -412,6 +412,8 @@ export class DomHelper {
    *
    * @param newEl - 要插入的新元素
    * @param oldEl - 要被替换的旧元素
+   * @throws {Error} 如果旧元素是DocumentFragment且没有子元素，则抛出错误
+   * @throws {Error} 如果要被替换的元素没有父节点，则抛出错误
    */
   static replace(newEl: RuntimeElement, oldEl: RuntimeElement): void {
     if (oldEl instanceof DocumentFragment) {
