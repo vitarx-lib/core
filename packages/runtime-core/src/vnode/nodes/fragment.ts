@@ -8,8 +8,8 @@ export class FragmentVNode extends ContainerVNode<'fragment-node'> {
    */
   #element: FragmentElement | null = null
 
-  constructor(props: { children: Child[] } | null = null, children: Child[] | null = null) {
-    super('fragment-node', props, children)
+  constructor(props: { children: Child[] } | null = null) {
+    super('fragment-node', props)
     // 如果没有子节点，则创建一个默认的注释节点元素
     if (this.children.length === 0) {
       this.children.push(new CommentVNode('empty fragment shadow element'))
