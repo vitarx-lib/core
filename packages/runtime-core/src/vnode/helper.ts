@@ -1,3 +1,4 @@
+import { popProperty } from '@vitarx/utils'
 import { isSimpleWidget } from '../widget/index'
 import { CommentVNode, ElementVNode, FragmentVNode, TextVNode, VNode, WidgetVNode } from './nodes'
 import { type Child, type VNodeProps, VNodeType } from './types'
@@ -16,6 +17,8 @@ export function createVNode<T extends VNodeType>(
   ...children: Child[]
 ): VNode<T> {
   props ??= {} as VNodeProps<T>
+  const vIf = popProperty(props!, 'v-if')
+  if (vIf) return new CommentVNode('v-if') as unknown as VNode<T>
   if (children) {
     if (props!.children) {
       if (Array.isArray(props!.children)) {
