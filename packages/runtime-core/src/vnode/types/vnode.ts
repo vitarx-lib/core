@@ -52,10 +52,15 @@ export type WidgetType<P extends Record<string, any> = any> = ClassWidget<P> | F
  */
 export type VNodeType = AllNodeElementName | WidgetType
 /**
+ * Widget节点Props类型重载
+ */
+export type WidgetPropsType<T extends WidgetType> = (T extends WidgetType<infer P> ? P : {}) &
+  IntrinsicProperties
+/**
  * 节点Props类型重载
  */
 export type VNodeProps<T extends VNodeType> = T extends AllNodeElementName
   ? NodeElement<T>
-  : T extends WidgetType<infer P>
-    ? P & IntrinsicProperties
+  : T extends WidgetType
+    ? WidgetPropsType<T>
     : never
