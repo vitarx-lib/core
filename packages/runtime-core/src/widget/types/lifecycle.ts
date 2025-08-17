@@ -9,7 +9,7 @@ export type ErrorSource =
   | 'render'
   | 'update'
   | `effect.${string}`
-  | `hook:${Exclude<any, 'error'>}`
+  | `hook:${Exclude<LifecycleHookNames, 'error'>}`
 
 /**
  * 错误信息对象接口
@@ -87,3 +87,12 @@ export type LifecycleState =
   | 'deactivated'
   | 'uninstalling'
   | 'unloaded'
+
+/**
+ * 错误处理器类型
+ */
+export type ErrorHandler<T extends Widget> = (
+  this: T,
+  error: unknown,
+  info: ErrorInfo
+) => void | VNode
