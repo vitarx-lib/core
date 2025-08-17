@@ -27,6 +27,14 @@
         "node": "./index.mjs",
         "default": "./dist/index.js"
       }
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx-runtime.d.ts",
+      "default": "./dist/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-dev-runtime.d.ts",
+      "default": "./dist/jsx-dev-runtime.js"
     }
   },
   "dependencies": {
