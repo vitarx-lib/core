@@ -440,7 +440,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   override unmount() {
     // 检查当前状态是否允许卸载
     if (this.state === 'uninstalling' || this.state === 'unloaded') {
-      return
+      throw new Error(`[Vitarx.WidgetVNode.unmount]：The widget is already ${this.state}`)
     }
     // 设置状态为卸载中
     this.#state = 'uninstalling'
