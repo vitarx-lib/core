@@ -10,7 +10,7 @@ import {
   TextVNode,
   useCurrentVNode,
   WidgetVNode
-} from '../src'
+} from '../../src'
 
 describe('createVNode', () => {
   it('当props中v-if为true时应该创建CommentVNode', () => {
