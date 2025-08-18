@@ -1,17 +1,10 @@
 import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
-import {
-  type BuildVNode,
-  createVNode,
-  type FunctionWidget,
-  VNode,
-  WidgetType,
-  WidgetVNode
-} from '../vnode'
+import { createVNode, VNode, WidgetType, WidgetVNode } from '../vnode'
 import { getSuspenseCounter } from './built'
 import { __WIDGET_INTRINSIC_KEYWORDS__ } from './constant'
 import { HookCollector, type HookCollectResult } from './hook'
-import { LifecycleHookMethods } from './types'
+import { type BuildVNode, type FunctionWidget, LifecycleHookMethods } from './types'
 import { Widget } from './widget'
 
 /**
