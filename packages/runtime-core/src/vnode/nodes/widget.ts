@@ -9,17 +9,19 @@ import {
 import { DomHelper } from '../../dom/index'
 import {
   type ErrorSource,
+  type FunctionWidget,
   type LifecycleHookParameter,
   type LifecycleHookReturnType,
   LifecycleHooks,
   type LifecycleState,
-  Widget
+  Widget,
+  type WidgetInstance
 } from '../../widget'
 import { _createFnWidget } from '../../widget/fn-widget'
 import { proxyWidgetProps } from '../props'
 import { inject } from '../provide'
 import { isRefEl } from '../ref'
-import type { AnyElement, FunctionWidget, RuntimeElement, VNodeProps, WidgetType } from '../types'
+import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types'
 import { CommentVNode } from './comment'
 import { FragmentVNode } from './fragment'
 import { VNode } from './vnode'
@@ -33,7 +35,6 @@ declare global {
 }
 
 const VNodeContextSymbol = Symbol('WidgetVNode Context Symbol')
-
 /**
  * WidgetVNode 类是一个扩展自 VNode<WidgetType> 的虚拟节点实现，专门用于表示和管理 Widget 类型的组件实例。
  *
@@ -78,7 +79,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    *
    * @private
    */
-  #instance: Widget | null = null
+  #instance: WidgetInstance<T> | null = null
   /**
    * 依赖提供
    *
@@ -155,7 +156,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    *
    * @returns {Widget} 返回Widget实例
    */
-  get instance(): Widget {
+  get instance(): WidgetInstance<T> {
     // 检查实例是否已存在
     if (!this.#instance) {
       // 检查是否为开发环境
@@ -185,12 +186,12 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
           this.props = proxyWidgetProps(this.props) as VNodeProps<T>
           // 异步实例
           if (Widget.isClassWidget(this.type)) {
-            this.#instance = new this.type(this.props)
+            this.#instance = new this.type(this.props) as WidgetInstance<T>
           } else {
             const { instance, init } = _createFnWidget(
               this as unknown as WidgetVNode<FunctionWidget>
             )
-            this.#instance = instance
+            this.#instance = instance as unknown as WidgetInstance<T>
             init().then()
           }
           // 绑定ref
