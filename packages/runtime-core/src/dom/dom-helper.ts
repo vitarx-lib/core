@@ -165,7 +165,7 @@ export class DomHelper {
       options.capture = true
     }
     if (event.endsWith('once')) {
-      event = event.slice(0, -5)
+      event = event.slice(0, -4)
       options.once = true
     }
     if (event.endsWith('passive')) {
