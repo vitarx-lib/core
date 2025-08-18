@@ -19,8 +19,13 @@ export type Child =
 export type BuildVNode = () => VNode | null
 /**
  * 类小部件构造器类型
+ *
+ * @template P - 小部件的属性类型
+ * @template I - 小部件实例类型
  */
-export type ClassWidget<P extends Record<string, any> = any> = new (props: P) => Widget
+export type ClassWidget<P extends Record<string, any> = any, I extends Widget = Widget> = new (
+  props: P
+) => I
 /**
  * 函数小部件有效地返回值
  *
