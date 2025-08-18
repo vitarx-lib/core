@@ -1,6 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DomHelper, type StyleRules } from '../src'
+import { DomHelper, type StyleRules } from '../../src'
 
 describe('DomHelper', () => {
   beforeEach(() => {
