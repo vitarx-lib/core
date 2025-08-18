@@ -192,7 +192,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
             this.#instance = instance
           }
           // 绑定ref
-          if (isRefEl(this.ref)) this.ref.value = this.instance
+          if (isRefEl(this.ref)) this.ref.value = this.#instance
           return this.#instance!
         })
       )
