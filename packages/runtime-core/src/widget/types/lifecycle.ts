@@ -1,4 +1,5 @@
 import { type RuntimeElement, VNode } from '../../vnode'
+import type { LifecycleHooks } from '../constant'
 import type { Widget } from '../widget'
 
 /**
@@ -51,22 +52,6 @@ export type LifecycleHookReturnType<T> = T extends LifecycleHooks.beforeMount
     : T extends LifecycleHooks.beforeRemove
       ? Promise<void> | void
       : void
-
-/** 生命周期钩子枚举 */
-export enum LifecycleHooks {
-  create = 'onCreate',
-  beforeMount = 'onBeforeMount',
-  mounted = 'onMounted',
-  deactivated = 'onDeactivated',
-  activated = 'onActivated',
-  beforeUpdate = 'onBeforeUpdate',
-  updated = 'onUpdated',
-  error = 'onError',
-  unmounted = 'onUnmounted',
-  beforeUnmount = 'onBeforeUnmount',
-  beforeRemove = 'onBeforeRemove',
-  serverPrefetch = 'onServerPrefetch'
-}
 
 /**
  * 渲染状态
