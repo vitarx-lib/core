@@ -178,12 +178,11 @@ class FnWidget extends Widget<Record<string, any>> {
  */
 export function _createFnWidget(vnode: WidgetVNode<FunctionWidget>): {
   instance: FnWidget
-  init: Promise<FnWidget>
+  init: () => Promise<FnWidget>
 } {
   const instance = new FnWidget(vnode.props)
-  const result = HookCollector.collect(vnode, instance)
   return {
     instance,
-    init: instance[__INITIALIZE_FN_WIDGET__](result)
+    init: () => instance[__INITIALIZE_FN_WIDGET__](HookCollector.collect(vnode, instance))
   }
 }
