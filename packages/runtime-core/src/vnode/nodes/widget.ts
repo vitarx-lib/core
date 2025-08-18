@@ -547,7 +547,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       // 建立父子虚拟节点的映射关系
       VNode.addParentVNodeMapping(vnode, this)
       return vnode
-    }, this.updateChild)
+    }, this.updateChild.bind(this))
 
     // 更新订阅器
     this.#viewDepSubscriber = subscriber
