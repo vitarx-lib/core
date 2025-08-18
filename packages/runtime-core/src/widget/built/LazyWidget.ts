@@ -153,7 +153,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
           : createVNode(widget)
       )
     } catch (e) {
-      const result = this.$vnode.reportWidgetError(e, {
+      const result = this.$vnode.reportError(e, {
         source: 'build',
         instance: this
       })
