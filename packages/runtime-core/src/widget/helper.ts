@@ -1,6 +1,6 @@
-import { type FunctionWidget, VNode, WidgetVNode } from '../vnode'
+import { VNode, WidgetVNode } from '../vnode'
 import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from './constant'
-import { AnyProps, type SimpleWidget, type TsFunctionWidget } from './types'
+import type { AnyProps, FunctionWidget, SimpleWidget, TsFunctionWidget } from './types'
 import type { Widget } from './widget'
 
 /**
