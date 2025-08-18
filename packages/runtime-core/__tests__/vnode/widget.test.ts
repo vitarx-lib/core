@@ -181,7 +181,7 @@ describe('WidgetVNode 单元测试', () => {
         source: 'update',
         instance: widgetVNode.instance
       })
-      expect(widgetVNode.reportWidgetError).toHaveBeenCalled()
+      expect(widgetVNode.reportError).toHaveBeenCalled()
     })
   })
 
@@ -283,7 +283,7 @@ describe('WidgetVNode 单元测试', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
       const handleRootErrorSpy = vi.spyOn(widgetVNode, 'reportWidgetError')
 
-      widgetVNode.reportWidgetError(new Error('Test error'), {
+      widgetVNode.reportError(new Error('Test error'), {
         source: 'render',
         instance: widgetVNode.instance
       })
