@@ -113,7 +113,7 @@ export class DomHelper {
       return classInput
     }
 
-    if (typeof classInput === 'object') {
+    if (typeof classInput === 'object' && classInput !== null) {
       // 如果是对象类型，返回键名数组
       return Object.keys(classInput).filter(key => classInput[key])
     }
