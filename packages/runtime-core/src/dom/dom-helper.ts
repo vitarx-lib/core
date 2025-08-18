@@ -345,15 +345,15 @@ export class DomHelper {
   /**
    * 在指定的锚点节点之前插入新的子元素
    *
-   * @description 在当前元素的指定子元素之前插入新元素。如果锚点节点不是当前元素的子元素，则此操作无效
    * @param child - 要插入的子元素
    * @param anchor - 锚点节点
    * @returns {ParentNode} - 父节点元素
+   * @throws {Error} - 如果锚点节点没有父节点，则抛出错误
    */
   static insertBefore(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
-    if (!child.parentNode) throw new Error('The child element does not have a parent node')
-    child.parentNode.insertBefore(child, anchor)
-    return child.parentNode
+    if (!anchor.parentNode) throw new Error('The anchor element does not have a parent node')
+    anchor.parentNode.insertBefore(child, anchor)
+    return anchor.parentNode
   }
 
   /**
