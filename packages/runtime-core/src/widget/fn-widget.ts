@@ -181,7 +181,7 @@ export function _createFnWidget(vnode: WidgetVNode<FunctionWidget>): {
   init: Promise<FnWidget>
 } {
   const instance = new FnWidget(vnode.props)
-  const result = HookCollector.collect(vnode)
+  const result = HookCollector.collect(vnode, instance)
   return {
     instance,
     init: instance[__INITIALIZE_FN_WIDGET__](result)
