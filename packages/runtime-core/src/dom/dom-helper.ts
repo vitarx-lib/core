@@ -351,9 +351,10 @@ export class DomHelper {
    * @throws {Error} - 如果锚点节点没有父节点，则抛出错误
    */
   static insertBefore(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
-    if (!anchor.parentNode) throw new Error('The anchor element does not have a parent node')
-    anchor.parentNode.insertBefore(child, anchor)
-    return anchor.parentNode
+    const parent = this.getParentElement(anchor)
+    if (!parent) throw new Error('The anchor element does not have a parent node')
+    parent.insertBefore(child, anchor)
+    return parent
   }
 
   /**
@@ -365,8 +366,8 @@ export class DomHelper {
    * @returns {ParentNode} - 父节点元素
    */
   static insertAfter(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
-    const parent = anchor.parentNode
-    if (!parent) throw new Error('The child element does not have a parent node')
+    const parent = this.getParentElement(anchor)
+    if (!parent) throw new Error('The anchor element does not have a parent node')
     const next = anchor.nextSibling
     if (next) {
       parent.insertBefore(child, next)
@@ -382,9 +383,11 @@ export class DomHelper {
    * @param {RuntimeElement} target - 目标元素
    * @returns {RuntimeElement | null} 返回父级真实DOM元素，如果不存在则返回null
    */
-  static getParentElement(target: RuntimeElement): RuntimeElement | null {
-    const el = this.getFirstChildElement(target)
-    return el?.parentElement ?? null
+  static getParentElement(target: RuntimeElement): ParentNode | null {
+    if (target instanceof DocumentFragment) {
+      return this.getFirstChildElement(target)?.parentNode ?? null
+    }
+    return target?.parentNode ?? null
   }
 
   /**
