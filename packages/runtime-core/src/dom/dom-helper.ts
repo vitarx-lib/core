@@ -155,22 +155,23 @@ export class DomHelper {
    * @example
    * extractEventOptions('onclick') // { event: 'click', options: {} }
    * extractEventOptions('onClickCapture') // { event: 'click', options: { capture: true } }
+   * extractEventOptions('onClickCaptureOnce') // { event: 'click', options: { capture: true, once: true } }
    */
   static extractEventOptions(name: string): { event: string; options: EventOptions } {
     const options = {} as EventOptions
     let event = name.toLowerCase()
     if (event.startsWith('on')) event = event.slice(2)
-    if (event.endsWith('capture')) {
+    if (event.endsWith('passive')) {
       event = event.slice(0, -7)
-      options.capture = true
+      options.passive = true
     }
     if (event.endsWith('once')) {
       event = event.slice(0, -4)
       options.once = true
     }
-    if (event.endsWith('passive')) {
+    if (event.endsWith('capture')) {
       event = event.slice(0, -7)
-      options.passive = true
+      options.capture = true
     }
     return { event, options }
   }
