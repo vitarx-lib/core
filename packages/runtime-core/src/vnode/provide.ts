@@ -118,7 +118,7 @@ export function inject<T>(name: string | symbol, defaultValue?: T, instance?: Wi
     // 判断当前 VNode 是否包含提供的数据
     if (parentVNode.hasProvide(name)) {
       // 如果包含，返回提供的数据
-      return parentVNode.inject(name) as T
+      return parentVNode.getProvide(name) as T
     }
     // 获取父级 VNode
     parentVNode = VNode.findParentVNode(currentVNode) as WidgetVNode | undefined
