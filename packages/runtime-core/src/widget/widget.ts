@@ -1,13 +1,6 @@
 import { EffectScope, getCurrentScope } from '@vitarx/responsive'
-import {
-  type AnyElement,
-  type ClassWidget,
-  type RuntimeElement,
-  VNode,
-  VNodeUpdate,
-  WidgetVNode
-} from '../vnode'
-import { type ErrorInfo } from './types'
+import { type AnyElement, type RuntimeElement, VNode, VNodeUpdate, WidgetVNode } from '../vnode'
+import { type ClassWidget, type ErrorInfo } from './types'
 
 /**
  * 类小部件的标识符
