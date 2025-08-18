@@ -44,7 +44,7 @@ const packageJson = {
     '.': {
       import: {
         types: './dist/index.d.ts',
-        node: './index.mjs',
+        node: './dist/index.js',
         default: './dist/index.js'
       }
     }
