@@ -427,7 +427,7 @@ export class DomHelper {
       this.remove(oldEl)
     } else {
       const parent = this.getParentElement(oldEl)
-      if (!parent) throw new Error('The child element does not have a parent element')
+      if (!parent) throw new Error('The old element does not have a parent element')
       // 替换新元素
       parent.replaceChild(newEl, oldEl)
     }
