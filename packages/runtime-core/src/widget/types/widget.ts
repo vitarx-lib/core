@@ -1,11 +1,6 @@
-import {
-  type BuildVNode,
-  type ClassWidget,
-  type FunctionWidget,
-  VNode,
-  type WidgetType
-} from '../../vnode'
+import { VNode, type WidgetType } from '../../vnode'
 import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from '../constant'
+import { Widget } from '../widget'
 
 /**
  * 任意组件属性类型
@@ -15,7 +10,44 @@ export type AnyProps = Record<string, any>
  * 兼容tsx函数小部件类型
  */
 export type TsFunctionWidget<P extends AnyProps = any> = (props: P) => VNode | null
-
+/**
+ * 视图构建器类型
+ */
+export type BuildVNode = () => VNode | null
+/**
+ * 类小部件构造器类型
+ *
+ * @template P - 小部件的属性类型
+ * @template I - 小部件实例类型
+ */
+export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget> = new (props: P) => I
+/**
+ * 函数小部件有效地返回值
+ *
+ * - `null`：不渲染任何内容
+ * - `VNode`：直接返回虚拟节点
+ * - `Promise<null>`：异步返回null
+ * - `Promise<VNode>`：异步返回虚拟节点
+ * - `Promise<()=>VNode|null>`：异步返回视图构建器
+ * - `Promise<{ default: WidgetType }>`：异步返回EsModule对象，必须有默认导出
+ */
+export type ValidFunctionWidgetReturnValue =
+  | VNode
+  | null
+  | BuildVNode
+  | Promise<VNode | null | BuildVNode>
+  | Promise<{ default: WidgetType }>
+/**
+ * 函数小部件类型
+ */
+export type FunctionWidget<P extends AnyProps = any> = (props: P) => ValidFunctionWidgetReturnValue
+/**
+ * 小部件实例推导
+ *
+ * 通过小部件构造函数推导出小部件的实例类型
+ */
+export type WidgetInstance<T extends WidgetType> =
+  T extends ClassWidget<any, infer R> ? R : T extends FunctionWidget<infer R> ? Widget<R> : Widget
 /**
  * 懒加载小部件类型
  */
