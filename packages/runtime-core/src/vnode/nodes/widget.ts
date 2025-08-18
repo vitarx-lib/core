@@ -21,7 +21,6 @@ import { inject } from '../provide'
 import { isRefEl } from '../ref'
 import type { AnyElement, FunctionWidget, RuntimeElement, VNodeProps, WidgetType } from '../types'
 import { CommentVNode } from './comment'
-import { ContainerVNode } from './container'
 import { FragmentVNode } from './fragment'
 import { VNode } from './vnode'
 
@@ -173,7 +172,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         name: this.type.name,
         // 错误处理函数
         errorHandler: (e: unknown, source) => {
-          this.reportWidgetError(e, {
+          this.reportError(e, {
             source: `effect.${source}`,
             instance: this.instance
           })
@@ -199,7 +198,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     }
     return this.#instance!
   }
-
   /**
    * 获取当前实例的scope属性
    * 这是一个getter方法，用于访问内部实例的scope属性
@@ -208,7 +206,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   get scope(): EffectScope {
     return this.instance.$scope
   }
-
   /**
    * 判断给定的虚拟节点是否为组件类型的虚拟节点
    *
@@ -232,7 +229,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   static getCurrentVNode(): WidgetVNode | undefined {
     return getContext<WidgetVNode>(VNodeContextSymbol)
   }
-
   /**
    * 获取提供（provide）的值
    * @template T - 泛型类型，默认为 any
@@ -259,7 +255,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 使用可选链操作符访问 provide 对象的属性，如果不存在则返回默认值
     return this.#provide?.[name] ?? defaultValue
   }
-
   /**
    * 设置提供者方法
    * @param name - 提供者的名称，可以是字符串或symbol类型
@@ -279,7 +274,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.#provide[name] = value
     }
   }
-
   /**
    * 检查是否提供了指定的名称或符号
    * @param name - 要检查的名称或符号，可以是字符串或类型
@@ -329,29 +323,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     this.#state = 'notMounted'
     return el as RuntimeElement<T>
   }
-
-  /**
-   * 更新虚拟节点的激活状态
-   * @param vnode - 虚拟节点对象
-   * @param activate - 是否激活状态的布尔值
-   */
-  static #updateActivateState(vnode: VNode, activate: boolean): void {
-    // 如果是组件节点
-    if (WidgetVNode.is(vnode)) {
-      // 根据activate参数决定激活或停用组件
-      vnode[activate ? 'activate' : 'deactivate'](false)
-    } else {
-      // 递归激活/停用子节点
-      if (ContainerVNode.is(vnode)) {
-        // 遍历所有子节点
-        for (let i = 0; i < vnode.children.length; i++) {
-          // 递归调用更新每个子节点的激活状态
-          WidgetVNode.#updateActivateState(vnode.children[i], activate)
-        }
-      }
-    }
-  }
-
   /**
    * 挂载组件到指定容器
    * @param container - 可以是HTMLElement、SVGElement或FragmentElement类型的容器元素
@@ -380,7 +351,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
 
     return this
   }
-
   /**
    * 触发生命周期钩子
    *
@@ -396,7 +366,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     try {
       // 处理错误钩子的未处理情况
       if (isCallOnError) {
-        return this.reportWidgetError.apply(
+        return this.reportError.apply(
           this,
           args as LifecycleHookParameter<LifecycleHooks.error>
         ) as LifecycleHookReturnType<T>
@@ -410,14 +380,13 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
           e
         )
       } else {
-        return this.reportWidgetError(e, {
+        return this.reportError(e, {
           source: `hook:${hook.replace('on', '').toLowerCase()}` as ErrorSource,
           instance: this.instance
         }) as LifecycleHookReturnType<T>
       }
     }
   }
-
   /**
    * 将元素追加的父元素，仅进行DOM操作，不触发 mounted生命周期钩子
    *
@@ -432,7 +401,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       DomHelper.appendChild(container, this.shadowElement)
     }
   }
-
   /**
    * 用于组件的卸载过程
    * 该方法会处理卸载前的状态检查、生命周期触发、子元素卸载等操作
@@ -464,7 +432,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 如果不是异步卸载直接执行卸载逻辑
     if (!isAsyncUnmount) this.#completeUnmount()
   }
-
   /**
    * @inheritDoc
    */
@@ -600,7 +567,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       console.error('[Vitarx]：there are unhandled exceptions', ...args)
     }
   }
-
   /**
    * @inheritDoc
    */
@@ -635,14 +601,13 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       post()
     }
   }
-
   /**
    * 负责触发错误处理器钩子函数
    *
    * @param args - 生命周期钩子参数，包含错误信息等相关数据
    * @return {VNode | void} VNode对象或void，用于渲染错误状态或执行错误处理逻辑
    */
-  reportWidgetError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
+  reportError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
     // 首先检查实例上是否存在自定义错误处理器
     if (this.instance.onError) {
       // 如果存在，则调用该错误处理器并返回结果
@@ -658,9 +623,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 如果没有找到任何父级WidgetVNode，则处理根级错误
     if (!parentNode) return this.#handleRootError(args)
     // 如果找到父级WidgetVNode，则将错误向上传递给该父级组件处理
-    if (WidgetVNode.is(parentNode)) return parentNode.reportWidgetError(...args)
+    if (WidgetVNode.is(parentNode)) return parentNode.reportError(...args)
   }
-
   /**
    * 完成卸载流程的辅助方法
    */
