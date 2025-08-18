@@ -7,7 +7,7 @@ import {
   VNodeUpdate,
   WidgetVNode
 } from '../vnode'
-import { type ErrorInfo, LifecycleHooks } from './types'
+import { type ErrorInfo } from './types'
 
 /**
  * 类小部件的标识符
@@ -86,7 +86,8 @@ export abstract class Widget<
     if (!this.#scope) throw new Error('Widget must be created in a EffectScope')
     if (import.meta.env?.MODE !== 'development' || !this.#vnode.__$HMR_STATE$__) {
       // 仅在非开发环境或开发环境不处于HMR模式下，才触发 create 生命周期钩子
-      this.#vnode.triggerLifecycleHook(LifecycleHooks.create)
+      // 切记不能使用this.#vnode.triggerLifecycleHook触发钩子，会导致无限循环
+      this.onCreate?.call(this)
     }
   }
 
