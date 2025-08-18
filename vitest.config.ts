@@ -8,7 +8,7 @@ export default defineConfig({
   test: {
     // 设置测试运行的环境为Node.js
     // 这意味着测试将在Node.js环境中执行，而不是浏览器环境
-    environment: 'node',
+    environment: 'jsdom',
 
     // 指定需要包含的测试文件的匹配模式
     // 这里会匹配所有__tests__目录下的.test或.spec结尾的各种JavaScript/TypeScript文件
