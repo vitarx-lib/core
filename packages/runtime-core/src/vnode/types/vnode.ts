@@ -1,6 +1,6 @@
 import type { RefSignal } from '@vitarx/responsive'
 import type { AnyPrimitive } from '@vitarx/utils'
-import { Widget } from '../../widget/index'
+import { type ClassWidget, type FunctionWidget } from '../../widget'
 import { VNode } from '../nodes'
 import type { AllNodeElementName, NodeElement } from './element'
 import type { IntrinsicProperties } from './properties'
@@ -13,41 +13,6 @@ export type Child =
   | Exclude<AnyPrimitive, symbol>
   | RefSignal<VNode | Exclude<AnyPrimitive, symbol>>
   | Array<Child>
-/**
- * 视图构建器类型
- */
-export type BuildVNode = () => VNode | null
-/**
- * 类小部件构造器类型
- *
- * @template P - 小部件的属性类型
- * @template I - 小部件实例类型
- */
-export type ClassWidget<P extends Record<string, any> = any, I extends Widget = Widget> = new (
-  props: P
-) => I
-/**
- * 函数小部件有效地返回值
- *
- * - `null`：不渲染任何内容
- * - `VNode`：直接返回虚拟节点
- * - `Promise<null>`：异步返回null
- * - `Promise<VNode>`：异步返回虚拟节点
- * - `Promise<()=>VNode|null>`：异步返回视图构建器
- * - `Promise<{ default: WidgetType }>`：异步返回EsModule对象，必须有默认导出
- */
-export type ValidFunctionWidgetReturnValue =
-  | VNode
-  | null
-  | BuildVNode
-  | Promise<VNode | null | BuildVNode>
-  | Promise<{ default: WidgetType }>
-/**
- * 函数小部件类型
- */
-export type FunctionWidget<P extends Record<string, any> = any> = (
-  props: P
-) => ValidFunctionWidgetReturnValue
 /**
  * 小部件类型
  */
