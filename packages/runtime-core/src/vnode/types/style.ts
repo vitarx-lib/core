@@ -1,23 +1,21 @@
+// 假设 RefSignal 是从某个地方导入的类型
+import type { RefSignal } from '@vitarx/responsive'
 import type { Properties as CssProperties } from 'csstype'
 
+// 基础样式规则类型
+type BaseStyleRules = CssProperties<string | number> &
+  Partial<Pick<CSSStyleDeclaration, Exclude<keyof CSSStyleDeclaration, keyof CssProperties>>>
+
 /**
- * CSS样式规则类型
+ * 支持 RefSignal 的 CSS 样式规则类型
  *
  * @remarks
- * 该类型结合了csstype库的CssProperties类型和DOM原生CSSStyleDeclaration类型。
- * 它包含了所有标准CSS属性，同时也支持浏览器特定的样式属性。
- *
- * @example
- * ```typescript
- * const styles: CssRules = {
- *   display: 'flex',
- *   backgroundColor: '#fff',
- *   WebkitUserSelect: 'none'
- * }
- * ```
+ * 该类型扩展了基础样式规则，使每个属性值都可以是 RefSignal 类型
  */
-export type StyleRules = CssProperties &
-  Partial<Pick<CSSStyleDeclaration, Exclude<keyof CSSStyleDeclaration, keyof CssProperties>>>
+export type StyleRules = {
+  [K in keyof BaseStyleRules]: BaseStyleRules[K] | RefSignal<NonNullable<BaseStyleRules[K]>>
+}
+
 /**
  * CSS样式规则类型
  *
