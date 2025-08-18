@@ -175,7 +175,7 @@ describe('WidgetVNode 单元测试', () => {
 
     it('错误钩子应该调用reportWidgetError', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
-      vi.spyOn(widgetVNode, 'reportWidgetError')
+      vi.spyOn(widgetVNode, 'reportError')
       widgetVNode.instance.onError = vi.fn()
       widgetVNode.triggerLifecycleHook(LifecycleHooks.error, new Error('Test'), {
         source: 'update',
@@ -281,7 +281,7 @@ describe('WidgetVNode 单元测试', () => {
   describe('错误处理', () => {
     it('reportWidgetError应该处理根节点错误', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
-      const handleRootErrorSpy = vi.spyOn(widgetVNode, 'reportWidgetError')
+      const handleRootErrorSpy = vi.spyOn(widgetVNode, 'reportError')
 
       widgetVNode.reportError(new Error('Test error'), {
         source: 'render',
