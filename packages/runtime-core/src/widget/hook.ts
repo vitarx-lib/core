@@ -3,6 +3,7 @@ import { AnyCallback } from '@vitarx/utils'
 import { type FunctionWidget, type ValidFunctionWidgetReturnValue, WidgetVNode } from '../vnode'
 import { __WIDGET_INTRINSIC_KEYWORDS__ } from './constant'
 import { type LifecycleHookParameter, type LifecycleHookReturnType, LifecycleHooks } from './types'
+import type { Widget } from './widget'
 
 interface CollectContext {
   exposed: Record<string, any>
@@ -62,16 +63,16 @@ export class HookCollector {
    * 收集函数中使用的HOOK
    *
    * @param vnode - 节点
+   * @param instance - 实例
    * @returns {HookCollectResult} - 同步收集结果
    */
-  static collect(vnode: WidgetVNode<FunctionWidget>): HookCollectResult {
+  static collect(vnode: WidgetVNode<FunctionWidget>, instance: Widget): HookCollectResult {
     // 创建新的上下文
     const context: HookCollectResult = {
       exposed: {},
       lifeCycleHooks: {}
     } as HookCollectResult
-    // 为组件注入`instance`
-    const callFnWidget = () => vnode.type.call(vnode.instance, vnode.props)
+    const callFnWidget = () => vnode.type.call(instance, vnode.props)
     // 运行函数式组件
     context.build = runInContext(HOOK_COLLECTOR_CONTEXT, context, callFnWidget)
     return context
