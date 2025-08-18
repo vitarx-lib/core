@@ -1,4 +1,5 @@
 import { Observer, toRaw } from '@vitarx/responsive'
+import { isDeepEqual } from '@vitarx/utils'
 import { DomHelper } from '../dom'
 import { CommentVNode, ContainerVNode, FragmentVNode, TextVNode, VNode, WidgetVNode } from './nodes'
 
@@ -84,7 +85,7 @@ export class VNodeUpdate {
     // 遍历 newAttrs，检查是否有新的属性或属性值需要更新
     for (const key in newAttrs) {
       // 更新或新增属性
-      if (oldAttrs[key] !== newAttrs[key]) {
+      if (!isDeepEqual(oldAttrs[key], newAttrs[key])) {
         if (isWidget) {
           changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
         } else {
