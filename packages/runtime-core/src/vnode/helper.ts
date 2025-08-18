@@ -22,7 +22,7 @@ export function createVNode<T extends VNodeType>(
   } else {
     props = {} as VNodeProps<T>
   }
-  if (children) {
+  if (children.length) {
     if (props!.children) {
       if (Array.isArray(props!.children)) {
         props!.children.push(...children)
