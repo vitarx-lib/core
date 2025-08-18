@@ -5,18 +5,18 @@ import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
 export type Source = { fileName: string; lineNumber: number; columnNumber: number }
 /**
+ * 父节点映射
+ *
+ * @private
+ */
+const PARENT_NODE_MAPPING = new WeakMap<VNode, VNode>()
+/**
  * 虚拟节点抽象类
  *
  * @template T - 节点类型
  */
 export abstract class VNode<T extends VNodeType = VNodeType> {
   readonly [VNODE_SYMBOL] = true
-  /**
-   * 父节点映射
-   *
-   * @private
-   */
-  static #parentNodeMapping = new WeakMap<VNode, VNode>()
   /**
    * 源信息，仅在开发调试阶段存在
    */
@@ -175,7 +175,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param parent - 父节点
    */
   static addParentVNodeMapping(child: VNode, parent: VNode) {
-    this.#parentNodeMapping.set(child, parent)
+    PARENT_NODE_MAPPING.set(child, parent)
   }
 
   /**
@@ -185,7 +185,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
    */
   static findParentVNode(vnode: VNode): VNode | undefined {
-    return this.#parentNodeMapping.get(vnode)
+    return PARENT_NODE_MAPPING.get(vnode)
   }
 
   /**
