@@ -187,8 +187,11 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
           if (Widget.isClassWidget(this.type)) {
             this.#instance = new this.type(this.props)
           } else {
-            const { instance } = _createFnWidget(this as unknown as WidgetVNode<FunctionWidget>)
+            const { instance, init } = _createFnWidget(
+              this as unknown as WidgetVNode<FunctionWidget>
+            )
             this.#instance = instance
+            init().then()
           }
           // 绑定ref
           if (isRefEl(this.ref)) this.ref.value = this.#instance
