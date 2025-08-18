@@ -643,12 +643,22 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @return {VNode | void} VNode对象或void，用于渲染错误状态或执行错误处理逻辑
    */
   reportWidgetError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
-    // 查找当前节点的父级虚拟节点
-    let parentNode = VNode.findParentVNode(this)
-    // 处理根节点错误
-    if (!parentNode) {
-      return this.#handleRootError(args)
+    // 首先检查实例上是否存在自定义错误处理器
+    if (this.instance.onError) {
+      // 如果存在，则调用该错误处理器并返回结果
+      return this.instance.onError.apply(this.instance, args)
     }
+    // 如果没有自定义错误处理器，则开始查找父级组件
+    let parentNode = VNode.findParentVNode(this)
+    // 遍历父级组件树，直到找到最近的WidgetVNode或到达根节点
+    while (parentNode && !WidgetVNode.is(parentNode)) {
+      parentNode = VNode.findParentVNode(parentNode)
+      if (!parentNode) break
+    }
+    // 如果没有找到任何父级WidgetVNode，则处理根级错误
+    if (!parentNode) return this.#handleRootError(args)
+    // 如果找到父级WidgetVNode，则将错误向上传递给该父级组件处理
+    if (WidgetVNode.is(parentNode)) return parentNode.reportWidgetError(...args)
   }
 
   /**
