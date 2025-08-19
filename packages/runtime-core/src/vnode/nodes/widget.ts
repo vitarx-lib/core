@@ -23,7 +23,6 @@ import { inject } from '../provide'
 import { isRefEl } from '../ref'
 import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types'
 import { CommentVNode } from './comment'
-import { FragmentVNode } from './fragment'
 import { VNode } from './vnode'
 
 declare global {
@@ -532,7 +531,9 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         if (VNode.is(buildNode)) {
           vnode = buildNode
         } else {
-          vnode = new FragmentVNode()
+          vnode = new CommentVNode(
+            `The return value of the widget(${this.name}) build is not a VNode`
+          )
         }
       } catch (e) {
         // 处理构建过程中的异常
@@ -541,7 +542,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
           instance: this.instance
         })
         // 如果构建出错，则使用错误虚拟节点
-        vnode = VNode.is(errVNode) ? errVNode : new FragmentVNode()
+        vnode = VNode.is(errVNode) ? errVNode : new CommentVNode(`${this.name} Widget build fail`)
       }
 
       // 建立父子虚拟节点的映射关系
