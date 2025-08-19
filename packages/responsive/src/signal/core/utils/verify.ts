@@ -79,6 +79,6 @@ export { isProxySignal as isProxy }
  * console.log(isDeepSignal(shallowSignal)); // false
  * ```
  */
-export function isDeepSignal(val: BaseSignal): boolean {
-  return Reflect.get(val, DEEP_SIGNAL_SYMBOL)
+export function isDeepSignal(val: any): boolean {
+  return val?.[DEEP_SIGNAL_SYMBOL] === true
 }
