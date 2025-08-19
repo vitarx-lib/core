@@ -375,7 +375,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         ) as LifecycleHookReturnType<T>
       }
       const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
-      return typeof method === 'function' ? method.apply(null, args) : undefined
+      return typeof method === 'function' ? method.apply(this.instance, args) : undefined
     } catch (e) {
       if (isCallOnError) {
         console.error(
