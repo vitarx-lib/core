@@ -62,7 +62,7 @@ describe('WidgetVNode 单元测试', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
       const child1 = widgetVNode.child
       const child2 = widgetVNode.child
-      expect(child1).toBeInstanceOf(FragmentVNode)
+      expect(child1).toBeInstanceOf(TextVNode)
       expect(child1).toBe(child2)
     })
   })
