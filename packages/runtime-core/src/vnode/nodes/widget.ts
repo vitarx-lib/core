@@ -473,7 +473,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.triggerLifecycleHook(
         LifecycleHooks.error,
         new Error(
-          '[Vitarx.Widget.update]：The component is destroyed and the view can no longer be updated！'
+          '[Vitarx.Widget.update]：The widget is destroyed and the view can no longer be updated！'
         ),
         {
           source: 'update',
