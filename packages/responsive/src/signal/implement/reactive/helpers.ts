@@ -71,7 +71,7 @@ export function shallowReactive<T extends AnyObject>(
  * isReactive(null) // false
  * ```
  */
-export function isReactive(val: unknown): boolean {
+export function isReactive(val: any): boolean {
   return typeof val === 'object' && val !== null && !!Reflect.get(val, REACTIVE_PROXY_SYMBOL)
 }
 
