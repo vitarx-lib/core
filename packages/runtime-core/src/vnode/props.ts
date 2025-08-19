@@ -9,7 +9,10 @@ const message = `[Vitarx.PropsProxyHandler][WARN]：The component's props should
 /**
  * props代理处理器
  */
-class PropsProxyHandler<T extends Record<string, any>> extends ReactiveProxyHandler<T> {
+class PropsProxyHandler<T extends Record<string, any>> extends ReactiveProxyHandler<T, false> {
+  constructor(target: T) {
+    super(target, { deep: false })
+  }
   override get(target: any, prop: any, receiver: any) {
     if (prop === VNODE_PROPS_SYMBOL) return true
     let value = super.get(target, prop, receiver)
