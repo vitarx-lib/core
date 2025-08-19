@@ -12,8 +12,8 @@ import {
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
-} from '../../core/index'
-import { reactive } from '../reactive/index'
+} from '../../core'
+import { reactive } from '../reactive'
 import type { RefValue } from './types'
 
 /**
