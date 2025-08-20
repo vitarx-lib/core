@@ -18,7 +18,7 @@ import { VNode, WidgetVNode } from './nodes/index'
  * class MyWidget extends Widget {
  *   constructor(props) {
  *     super(props);
- *     // 构造函数中可以省略this
+ *     // 构造函数中可以省略第三个参数
  *     provide('theme', 'dark');
  *   }
  *
@@ -33,6 +33,7 @@ import { VNode, WidgetVNode } from './nodes/index'
  * @param value - 要提供的数据值
  * @param [instance] - 实例，在非构造阶段必须提供实例
  * @returns {void}
+ * @throws {Error} 当名称为'App'时会抛出错误，因为这是内部保留关键词
  */
 export function provide(name: string | symbol, value: any, instance?: Widget): void {
   if (name === 'App') {
