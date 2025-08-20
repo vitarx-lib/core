@@ -47,9 +47,18 @@ export interface IntrinsicProperties {
    */
   'v-bind'?: VBind
   /**
-   * 条件渲染，会销毁组件
+   * 条件渲染指令
+   * 如果是v-if为false，则会使用 CommonVNode 代替原始节点，
+   * CommonVNode节点的开销非常小，视觉效果上也看不见该节点。
    */
   'v-if'?: boolean
+  /**
+   * 缓存节点的指令
+   *
+   * 该指令接收一个固定引用(在生命周期中保持引用不变)的数组，内部会将虚拟节点与该数组进行绑定。
+   * 当重新创建该节点时会判断数组内容是否相同，如果相同则会复用缓存的节点，如果不同则会创建新的节点，并刷新缓存。
+   */
+  'v-memo'?: any[]
   [key: string]: any
 }
 
