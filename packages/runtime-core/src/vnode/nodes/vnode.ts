@@ -32,18 +32,25 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   #props: VNodeProps<T>
   /**
+   * 缓存
+   *
+   * 请勿外部修改此属性！
+   */
+  readonly #memo?: Array<any>
+  /**
    * 唯一标识符
    */
-  readonly #key: UniqueKey | null = null
+  readonly #key?: UniqueKey
+  #shadowElement?: Comment
   /**
    * 引用
    */
-  readonly #ref: NonNullable<VNodeProps<T>>['ref'] | null = null
-  #shadowElement?: Comment
+  readonly #ref?: NonNullable<VNodeProps<T>>['ref']
   /**
-   * 缓存
+   * 静态节点
+   * @private
    */
-  memo?: Array<any>
+  readonly #isStatic: boolean = false
   /**
    * 创建一个虚拟节点实例
    * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
@@ -64,22 +71,29 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 初始化缓存
       if (Array.isArray(memo) && !MEMO_STORE.get(memo)) {
         // 备份之前的值
-        this.memo = Array.from(memo)
+        this.#memo = Array.from(memo)
         MEMO_STORE.set(memo, this)
       }
+      this.#isStatic = !!popProperty(props, 'static')
     }
     this.propsHandler()
   }
 
   /**
-   * 从内存存储中获取指定索引对应的虚拟节点(VNode)
-   *
-   * @param memo - memo条件数组，用于匹配缓存的节点
-   * @returns {VNode|undefined} 返回找到的且匹配则VNode，如果未找到则返回undefined
+   * 获取一个布尔值，表示当前元素是否为静态定位
+   * @returns {boolean} 如果元素是静态定位则返回true，否则返回false
    */
-  static getMemoNode(memo: Array<any>): VNode | undefined {
-    const node = MEMO_STORE.get(memo)
-    return node && isArrayEqual(memo, node.memo!) ? node : undefined
+  get isStatic(): boolean {
+    return this.#isStatic
+  }
+
+  /**
+   * 获取节点的唯一标识符
+   *
+   * @returns {UniqueKey | null} 返回节点的key值，如果未设置则返回null
+   */
+  get key(): UniqueKey | undefined {
+    return this.#key
   }
   /**
    * 处理属性的方法
@@ -123,21 +137,21 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   abstract get element(): RuntimeElement<T>
 
   /**
-   * 获取节点的唯一标识符
-   *
-   * @returns {UniqueKey | null} 返回节点的key值，如果未设置则返回null
-   */
-  get key(): UniqueKey | null {
-    return this.#key
-  }
-
-  /**
    * 获取节点的引用属性
    *
    * @returns {NonNullable<VNodeProps<T>>['ref'] | null} 返回节点的ref值，如果未设置则返回null
    */
-  get ref(): NonNullable<VNodeProps<T>>['ref'] | null {
+  get ref(): NonNullable<VNodeProps<T>>['ref'] | undefined {
     return this.#ref
+  }
+
+  /**
+   * 获取存储在类中的备忘录数组
+   * 这是一个getter方法，用于返回私有属性#memo的值
+   * @returns {Array<any> | undefined} 返回存储的备忘录数组，如果未设置则返回undefined
+   */
+  get memo(): Array<any> | undefined {
+    return this.#memo
   }
 
   /**
@@ -147,6 +161,17 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   get type(): T {
     return this.#type
+  }
+
+  /**
+   * 从内存存储中获取指定索引对应的虚拟节点(VNode)
+   *
+   * @param memo - memo条件数组，用于匹配缓存的节点
+   * @returns {VNode|undefined} 返回找到的且匹配则VNode，如果未找到则返回undefined
+   */
+  static getMemoNode(memo: Array<any>): VNode | undefined {
+    const node = MEMO_STORE.get(memo)
+    return node && isArrayEqual(memo, node.memo!) ? node : undefined
   }
 
   /**
