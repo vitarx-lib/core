@@ -47,7 +47,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 缓存
    */
-  public readonly cache: Map<WidgetType, Map<UniqueKey | null, VNode<WidgetType>>> = new Map()
+  public readonly cache: Map<WidgetType, Map<UniqueKey | undefined, VNode<WidgetType>>> = new Map()
   protected currentChild: VNode<WidgetType>
 
   constructor(props: KeepAliveProps) {
