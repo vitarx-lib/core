@@ -1,9 +1,13 @@
 {
   "name": "@vitarx/runtime-core",
-  "version": "0.0.1",
+  "version": "1.0.0-alpha.1",
   "description": "Vitarx runtime-core package",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
+  "keywords": [
+    "vitarx",
+    "runtime-core"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitarx-lib/core",
