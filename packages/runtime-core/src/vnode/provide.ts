@@ -132,7 +132,7 @@ export function inject<T>(
 
   // 如果没有在组件树中找到，尝试从 App 实例获取
   if (app) {
-    const value = app.inject(name)
+    const value = app.getProvide(name)
     if (value !== undefined) return value
   }
 
