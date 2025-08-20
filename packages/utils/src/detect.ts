@@ -1,4 +1,4 @@
-import type { AnyCollection } from './types'
+import type { AnyArray, AnyCollection } from './types'
 
 /**
  * 判断是否为对象
@@ -211,6 +211,34 @@ export function isWeakSet(obj: any): obj is WeakSet<WeakKey> {
  */
 export function isCollection(obj: any): obj is AnyCollection {
   return isMap(obj) || isSet(obj) || isWeakMap(obj) || isWeakSet(obj)
+}
+
+/**
+ * 判断两个数组是否相等
+ *
+ * @param a - 第一个数组
+ * @param b - 第二个数组
+ * @returns {boolean} 如果两个数组长度相等且对应位置元素相等则返回true，否则返回false
+ */
+export function isArrayEqual(a: AnyArray, b: AnyArray): boolean {
+  // 如果不是数组，直接返回false
+  if (!Array.isArray(a) || !Array.isArray(b)) {
+    return false
+  }
+
+  // 如果长度不同，直接返回false
+  if (a.length !== b.length) {
+    return false
+  }
+
+  // 逐个比较元素
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false
+    }
+  }
+
+  return true
 }
 
 /**
