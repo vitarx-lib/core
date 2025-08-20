@@ -10,6 +10,7 @@ import { build, type InlineConfig, mergeConfig } from 'vite'
 interface PackageJson {
   name: string
   vite?: InlineConfig
+  version: string
 }
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -119,6 +120,10 @@ const buildPackage = async (
       },
       outDir: resolve(packagePath, 'dist'),
       emptyOutDir: false
+    },
+    define: {
+      // 版本号
+      __VERSION__: JSON.stringify(pkg.version)
     }
   }
   // 合并包配置与默认配置，并开始构建
