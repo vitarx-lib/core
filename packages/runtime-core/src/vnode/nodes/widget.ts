@@ -179,7 +179,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       })
       // 在指定上下文中运行代码
       return scope.run(() =>
-        runInContext(VNODE_CONTEXT_SYMBOL, this, () => {
+        this.runInContext(() => {
           // 包装props为响应式对象
           this.props = proxyWidgetProps(this.props) as VNodeProps<T>
           // 异步实例
@@ -199,6 +199,18 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       )
     }
     return this.#instance!
+  }
+
+  /**
+   * 在指定上下文中执行函数
+   *
+   * @template R - 函数返回值的类型
+   * @param {() => R} fn - 需要在特定上下文中执行的函数
+   * @returns {R} 函数执行后的返回值
+   */
+  runInContext<R>(fn: () => R): R {
+    // 调用runInContext函数，传入虚拟节点上下文符号、当前对象和要执行的函数
+    return runInContext(VNODE_CONTEXT_SYMBOL, this, fn)
   }
   /**
    * 获取当前实例的scope属性
