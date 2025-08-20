@@ -1,4 +1,4 @@
-import { isRecordObject, popProperty } from '@vitarx/utils'
+import { isArrayEqual, isRecordObject, popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index'
 import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
 
@@ -10,6 +10,7 @@ export type Source = { fileName: string; lineNumber: number; columnNumber: numbe
  * @private
  */
 const PARENT_NODE_MAPPING = new WeakMap<VNode, VNode>()
+const MEMO_STORE = new WeakMap<Array<any>, VNode>()
 /**
  * 虚拟节点抽象类
  *
@@ -39,7 +40,10 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   readonly #ref: NonNullable<VNodeProps<T>>['ref'] | null = null
   #shadowElement?: Comment
-
+  /**
+   * 缓存
+   */
+  memo?: Array<any>
   /**
    * 创建一个虚拟节点实例
    * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
@@ -55,8 +59,27 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       this.#key = popProperty(props, 'key')
       // 引用
       this.#ref = popProperty(props, 'ref')
+      // 缓存
+      const memo = popProperty(props, 'v-memo')
+      // 初始化缓存
+      if (Array.isArray(memo) && !MEMO_STORE.get(memo)) {
+        // 备份之前的值
+        this.memo = Array.from(memo)
+        MEMO_STORE.set(memo, this)
+      }
     }
     this.propsHandler()
+  }
+
+  /**
+   * 从内存存储中获取指定索引对应的虚拟节点(VNode)
+   *
+   * @param memo - memo条件数组，用于匹配缓存的节点
+   * @returns {VNode|undefined} 返回找到的且匹配则VNode，如果未找到则返回undefined
+   */
+  static getMemoNode(memo: Array<any>): VNode | undefined {
+    const node = MEMO_STORE.get(memo)
+    return node && isArrayEqual(memo, node.memo!) ? node : undefined
   }
   /**
    * 处理属性的方法
