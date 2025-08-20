@@ -1,7 +1,15 @@
 import { Observer, toRaw } from '@vitarx/responsive'
 import { isDeepEqual } from '@vitarx/utils'
 import { DomHelper } from '../dom'
-import { CommentVNode, ContainerVNode, FragmentVNode, TextVNode, VNode, WidgetVNode } from './nodes'
+import {
+  CommentVNode,
+  ContainerVNode,
+  FragmentVNode,
+  NoTagVNode,
+  TextVNode,
+  VNode,
+  WidgetVNode
+} from './nodes'
 
 /**
  * VNodeUpdate 是一个用于虚拟DOM节点更新的工具类，提供了虚拟DOM节点的更新、替换等功能。
@@ -42,15 +50,15 @@ export class VNodeUpdate {
    * @param oldVNode - 旧的虚拟DOM节点
    * @param newVNode - 新的虚拟DOM节点
    * @param autoMount - 是否自动挂载，默认为true
-   * @returns 更新后的虚拟DOM节点
+   * @returns {VNode} 更新后的虚拟DOM节点
    */
-  static patchUpdate(oldVNode: VNode, newVNode: VNode, autoMount = true) {
+  static patchUpdate(oldVNode: VNode, newVNode: VNode, autoMount = true): VNode {
     // 如果新旧节点的类型或key不同，则替换整个节点
     if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
       // 替换旧节点为新节点
       this.replace(newVNode, oldVNode, autoMount)
       return newVNode
-    } else {
+    } else if (!oldVNode.isStatic) {
       // 更新节点的属性
       this.patchUpdateAttrs(oldVNode, newVNode)
       // 如果是容器节点，则更新其子节点
@@ -63,6 +71,7 @@ export class VNodeUpdate {
       // 返回更新后的旧节点
       return oldVNode
     }
+    return oldVNode
   }
 
   /**
@@ -73,7 +82,12 @@ export class VNodeUpdate {
    */
   static patchUpdateAttrs<T extends VNode>(oldVNode: T, newVNode: T) {
     // 如果是特殊的无props节点，则不进行任何更新
-    if (['comment-node', 'text-node', 'fragment-node'].includes(oldVNode.type as any)) return
+    if (oldVNode.type === 'text-node' || oldVNode.type === 'comment-node') {
+      ;(oldVNode as unknown as NoTagVNode<any>).value = (
+        oldVNode as unknown as NoTagVNode<any>
+      ).value
+    }
+    if (oldVNode.type === 'fragment-node') return
     const isWidget = WidgetVNode.is(oldVNode) // 判断是否是Widget类型的节点
     const el = oldVNode.element as HTMLElement // 获取DOM元素
     // 旧的属性
@@ -209,7 +223,6 @@ export class VNodeUpdate {
       ) {
         if (oldChild.value !== newChild.value) {
           oldChild.value = newChild.value
-          oldChild.element.nodeValue = newChild.value
         }
         // 取消标记旧节点为删除
         removedNodes.delete(oldChild)
