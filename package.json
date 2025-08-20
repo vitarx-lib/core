@@ -9,6 +9,9 @@
   "scripts": {
     "create": "tsx scripts/create-package.ts",
     "build": "tsx scripts/build.ts --test",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
     "build:utils": "tsx scripts/build.ts utils --test",
     "test:utils": "vitest run --dir packages/utils",
     "test:utils:coverage": "vitest run --dir packages/utils --coverage",
@@ -21,9 +24,9 @@
     "build:runtime-dom": "tsx scripts/build.ts runtime-dom --test",
     "test:runtime-dom": "vitest run --dir packages/runtime-dom",
     "test:runtime-dom:coverage": "vitest run --dir packages/runtime-dom --coverage",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest watch"
+    "build:vitarx": "tsx scripts/build.ts vitarx --test",
+    "test:vitarx": "vitest run --dir packages/vitarx",
+    "test:vitarx:coverage": "vitest run --dir packages/vitarx --coverage"
   },
   "devDependencies": {
     "@types/node": "^22.17.2",
