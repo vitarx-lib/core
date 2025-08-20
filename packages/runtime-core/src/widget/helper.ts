@@ -31,7 +31,7 @@ export { getCurrentInstance as useCurrentInstance }
  *   color?: string
  * }
  * // 构建一个简单的小部件，它内部不包含任何副作用代码，也没有生命周期钩子
- * const Title = simple(({title,color}:Props) => {
+ * const Title = markSimpleWidget(({title,color}:Props) => {
  *   // 对属性参数做一些处理
  *   color = color || 'black'
  *   // 返回需要渲染的元素
