@@ -107,7 +107,7 @@ const buildPackage = async (
       chalk.red(`❌  TypeScript compilation failed:\n${error?.stdout || error?.message}`)
     )
     if (!isTsConfigExists) rmSync(pakTsConfigPath)
-    process.exit(0)
+    process.exit(1)
   }
 
   // 使用vite构建不同格式的包
