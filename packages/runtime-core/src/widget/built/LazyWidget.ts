@@ -96,7 +96,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     if (props.loading && VNode.is(props.loading)) {
       this.#childVNode = props.loading
     } else {
-      this.suspenseCounter = getSuspenseCounter(this)
+      this.suspenseCounter = getSuspenseCounter()
       // 如果有上级暂停计数器则让计数器+1
       if (this.suspenseCounter) this.suspenseCounter.value++
     }
