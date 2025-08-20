@@ -43,6 +43,7 @@ const __INITIALIZE_FN_WIDGET__ = Symbol('__INITIALIZE_FN_WIDGET__')
  * @template T - 组件属性类型，继承自 Widget 基类
  */
 class FnWidget extends Widget<Record<string, any>> {
+  #suspenseCounter = getSuspenseCounter()
   /**
    * 初始化函数小部件
    *
@@ -57,9 +58,8 @@ class FnWidget extends Widget<Record<string, any>> {
     const hookCount = Object.keys(data.lifeCycleHooks).length
     let build: BuildVNode | VNode | null | { default: WidgetType } = data.build as BuildVNode
     if (isPromise(data.build)) {
-      const suspenseCounter = getSuspenseCounter(this)
       // 如果有上级暂停计数器则让计数器+1
-      if (suspenseCounter) suspenseCounter.value++
+      if (this.#suspenseCounter) this.#suspenseCounter.value++
       try {
         build = await withAsyncContext(data.build as Promise<BuildVNode>)
       } catch (e) {
@@ -79,7 +79,7 @@ class FnWidget extends Widget<Record<string, any>> {
         }
         this.#updateView()
         // 如果有上级暂停计数器则让计数器-1
-        if (suspenseCounter) suspenseCounter.value--
+        if (this.#suspenseCounter) this.#suspenseCounter.value--
       }
     } else {
       this.#updateView()
