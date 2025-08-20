@@ -9,7 +9,8 @@
  */
 
 import chalk from 'chalk'
-import { execSync } from 'child_process'
+import { execSync, spawnSync } from 'child_process'
+
 import { existsSync } from 'fs'
 import { resolve } from 'path'
 
@@ -53,7 +54,12 @@ try {
   // 构建指定的包
   // 使用build.ts脚本进行构建，生成生产环境代码
   console.log(chalk.blue(`Building package: ${packageName}...`))
-  execSync(`tsx scripts/build.ts ${packageName} --test`, { stdio: 'inherit' })
+  const result = spawnSync('tsx', ['scripts/build.ts', packageName, '--test'], {
+    stdio: 'inherit'
+  })
+  if (result.status !== 0) {
+    process.exit(1)
+  }
 
   // 发布包到npm仓库
   // 切换到包目录并执行npm publish命令，设置为公共访问权限
