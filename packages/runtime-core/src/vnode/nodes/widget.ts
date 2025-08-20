@@ -262,13 +262,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * 设置提供者方法
    * @param name - 提供者的名称，可以是字符串或symbol类型
    * @param value - 提供者对应的值，可以是任意类型
-   * @throws {Error} 当名称为'App'时会抛出错误，因为这是内部保留关键词
    */
   provide(name: string | symbol, value: any) {
-    // 检查是否使用了内部保留关键词'App'
-    if (name === 'App') {
-      throw new Error('App 是内部保留关键词，不能用于注册提供者！')
-    }
     // 如果当前没有提供者对象，则创建一个新的
     if (!this.#provide) {
       this.#provide = { [name]: value }
