@@ -20,7 +20,10 @@ export abstract class NoTagVNode<T extends Type> extends VNode<T> {
   }
 
   set value(value: string) {
-    this.#value = value
+    if (value !== this.#value) {
+      this.#value = value
+      this.element.nodeValue = value
+    }
   }
 
   /**
