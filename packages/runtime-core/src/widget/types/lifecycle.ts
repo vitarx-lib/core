@@ -75,8 +75,10 @@ export type LifecycleState =
 
 /**
  * 错误处理器类型
+ *
+ * @template T - 错误处理器的宿主对象类型
  */
-export type ErrorHandler<T extends Widget> = (
+export type ErrorHandler<T extends Widget = Widget> = (
   this: T,
   error: unknown,
   info: ErrorInfo
