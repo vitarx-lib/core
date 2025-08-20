@@ -20,7 +20,7 @@ export abstract class NoTagVNode<T extends Type> extends VNode<T> {
   }
 
   set value(value: string) {
-    if (value !== this.#value) {
+    if (!this.isStatic && value !== this.#value) {
       this.#value = value
       this.element.nodeValue = value
     }
