@@ -33,7 +33,7 @@ declare global {
   }
 }
 
-const VNodeContextSymbol = Symbol('WidgetVNode Context Symbol')
+const VNODE_CONTEXT_SYMBOL = Symbol('WidgetVNode Context Symbol')
 /**
  * WidgetVNode 类是一个扩展自 VNode<WidgetType> 的虚拟节点实现，专门用于表示和管理 Widget 类型的组件实例。
  *
@@ -180,7 +180,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       })
       // 在指定上下文中运行代码
       return scope.run(() =>
-        runInContext(VNodeContextSymbol, this, () => {
+        runInContext(VNODE_CONTEXT_SYMBOL, this, () => {
           // 包装props为响应式对象
           this.props = proxyWidgetProps(this.props) as VNodeProps<T>
           // 异步实例
@@ -230,7 +230,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @returns {WidgetVNode | undefined} 返回当前上下文中的WidgetVNode实例，如果不存在则返回undefined
    */
   static getCurrentVNode(): WidgetVNode | undefined {
-    return getContext<WidgetVNode>(VNodeContextSymbol)
+    return getContext<WidgetVNode>(VNODE_CONTEXT_SYMBOL)
   }
   /**
    * 获取提供（provide）的值
