@@ -1,11 +1,11 @@
+import chalk from 'chalk'
+import { exec } from 'child_process'
+import { existsSync, readdirSync, statSync } from 'fs'
+import { rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'path'
 import { fileURLToPath } from 'url'
-import { build, type InlineConfig, mergeConfig } from 'vite'
-import { existsSync, readdirSync, statSync } from 'fs'
-import { exec } from 'child_process'
 import { promisify } from 'util'
-import { rmSync, writeFileSync } from 'node:fs'
-import chalk from 'chalk'
+import { build, type InlineConfig, mergeConfig } from 'vite'
 
 interface PackageJson {
   name: string
@@ -36,8 +36,7 @@ const buildPackage = async (
   runTest: boolean
 ) => {
   // 导入包的package.json文件
-  const pkg = (await import(`${packagePath}/package.json`, { assert: { type: 'json' } }))
-    .default as PackageJson
+  const pkg = (await import(`${packagePath}/package.json`)).default as PackageJson
   // 用于分隔输出的等号线
   const separator = '='.repeat(50)
 
