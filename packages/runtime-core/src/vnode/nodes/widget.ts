@@ -233,21 +233,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
   /**
    * 获取提供（provide）的值
-   * @template T - 泛型类型，默认为 any
-   * @param {string | symbol} name - 要获取的提供项的名称，可以是字符串或 Symbol
-   * @returns {T} 返回对应名称的提供值，类型为 T
-   */
-  getProvide<T = any>(name: string | symbol): T
-  /**
-   * 获取提供的依赖项值
-   * @template T - 依赖项值的类型
-   * @param {string | symbol} name - 依赖项的名称，可以是字符串或 Symbol 类型
-   * @param {T} defaultValue - 当依赖项不存在时返回的默认值
-   * @returns {T} - 返回获取到的依赖项值，如果不存在则返回默认值
-   */
-  getProvide<T>(name: string | symbol, defaultValue: T): T
-  /**
-   * 获取提供（provide）的值
    * @template T - 泛型参数，指定返回值的类型，默认为 any
    * @param {string | symbol} name - 要获取的提供值的名称，可以是字符串或 Symbol 类型
    * @param {T} [defaultValue] - 可选参数，当指定的名称不存在时返回的默认值
