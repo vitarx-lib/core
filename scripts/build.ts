@@ -1,8 +1,8 @@
 import chalk from 'chalk'
 import { exec } from 'child_process'
-import { existsSync, readdirSync, statSync } from 'fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import { rmSync, writeFileSync } from 'node:fs'
-import { resolve } from 'path'
+import { join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { promisify } from 'util'
 import { build, type InlineConfig, mergeConfig } from 'vite'
@@ -94,6 +94,13 @@ const buildPackage = async (
     const buildCommand = `tsc --outDir ${dist} -p ${pakTsConfigPath}`
     await execAsync(buildCommand)
     if (!isTsConfigExists) rmSync(pakTsConfigPath)
+    // 替换vitarx app.js中的版本号
+    if (packageDirName === 'vitarx') {
+      const distPath = join(packagePath, 'dist', 'app.js')
+      const content = readFileSync(distPath, 'utf-8')
+      const updatedContent = content.replace(/__VERSION__/g, `"${pkg.version}"`)
+      writeFileSync(distPath, updatedContent, 'utf-8')
+    }
     console.log(chalk.green('  ✓ TypeScript compilation completed'))
   } catch (error: any) {
     console.error(
