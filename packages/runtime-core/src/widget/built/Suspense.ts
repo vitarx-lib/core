@@ -69,7 +69,7 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
         this.onError = props.onError
       }
     }
-    provide(provideSymbol, this.counter, this)
+    provide(provideSymbol, this.counter)
     // 监听计数器变化，手动管理视图更新，优化性能
     this.listener = watch(this.counter, () => {
       const newValue = this.counter.value
@@ -127,9 +127,8 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
 /**
  * 获取上级 `Suspense` 计数器
  *
- * @param {Widget} [instance] - 当前小部件实例
  * @returns {Ref<number> | undefined} 如果存在则返回计数器Ref，不存在则返回undefined
  */
-export function getSuspenseCounter(instance?: Widget): Ref<number> | undefined {
-  return inject<Ref<number> | undefined>(provideSymbol, undefined, instance)
+export function getSuspenseCounter(): Ref<number> | undefined {
+  return inject<Ref<number> | undefined>(provideSymbol, undefined)
 }
