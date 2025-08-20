@@ -28,6 +28,7 @@ const packageJson = {
   description: `Vitarx ${packageName} package`,
   author: 'ZhuChongLin <8210856@qq.com>',
   license: 'MIT',
+  keywords: ['vitarx', packageName],
   repository: {
     type: 'git',
     url: 'git+https://github.com/vitarx-lib/core',
