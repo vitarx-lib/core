@@ -1,12 +1,11 @@
 # @vitarx/runtime-core
 
-runtime-core 是 Vitarx 框架的核心运行时模块，提供了创建和管理虚拟 DOM、组件系统以及 JSX 运行时支持等核心功能。
+runtime-core 是 Vitarx 框架的核心运行时模块，提供了创建和管理虚拟 DOM、组件系统等核心功能。
 
 ## 功能特性
 
 - **虚拟 DOM 系统**：高效的虚拟 DOM 实现和 diff 算法
 - **组件系统**：支持函数组件和类组件的定义与管理
-- **JSX 运行时**：支持 JSX 语法的编译时和运行时支持
 - **DOM 操作**：封装了常用的 DOM 操作方法
 - **响应式集成**：与 @vitarx/responsive 模块深度集成
 
@@ -57,11 +56,9 @@ Widget 是组件系统的核心，支持创建函数组件和类组件。
 
 函数组件是接收 props 并返回 VNode 的简单函数：
 
-```typescript
-import { jsx } from '@vitarx/runtime-core'
-
+```tsx
 const MyComponent = (props) => {
-  return jsx('div', { className: 'my-component' }, props.message)
+  return <div>Hello Vitarx!</div>
 }
 ```
 
@@ -70,21 +67,14 @@ const MyComponent = (props) => {
 类组件通过继承 Widget 类来实现，提供更多功能：
 
 ```typescript
-import { Widget, jsx } from '@vitarx/runtime-core'
+import { Widget, createVNode } from '@vitarx/runtime-core' // vitarx
 
 class MyComponent extends Widget {
-  render() {
-    return jsx('div', { className: 'my-component' }, 'Hello World')
+  build() {
+    return createVNode('div', { className: 'my-component' }, 'Hello World') // 使用 createVNode 创建虚拟节点
   }
 }
 ```
-
-### JSX 运行时
-
-提供了 JSX 语法的支持：
-
-- `jsx()`：生产环境 JSX 运行时
-- `jsxDEV()`：开发环境 JSX 运行时
 
 ### DOM Helper
 
@@ -103,12 +93,12 @@ npm install @vitarx/runtime-core
 
 ## 使用示例
 
-```typescript
-import { createApp, jsx, Widget } from 'vitarx'
+```tsx
+import { createApp, Widget } from 'vitarx'
 
 // 创建函数组件
 const App = () => {
-  return jsx('div', { className: 'app' }, 'Hello Vitarx!')
+  return <div>Hello Vitarx!</div>
 }
 
 // 创建应用并挂载
