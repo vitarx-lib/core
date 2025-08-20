@@ -45,7 +45,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 引用
    */
-  readonly #ref?: NonNullable<VNodeProps<T>>['ref']
+  #ref?: NonNullable<VNodeProps<T>>['ref']
   /**
    * 静态节点
    * @private
@@ -146,6 +146,14 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   }
 
   /**
+   * 设置引用属性的方法
+   * @param value - 新的引用值，类型为 NonNullable<VNodeProps<T>>['ref'] 或 undefined
+   */
+  protected set ref(value: NonNullable<VNodeProps<T>>['ref'] | undefined) {
+    // 将传入的值赋给实例的私有属性 #ref
+    this.#ref = value
+  }
+  /**
    * 获取存储在类中的备忘录数组
    * 这是一个getter方法，用于返回私有属性#memo的值
    * @returns {Array<any> | undefined} 返回存储的备忘录数组，如果未设置则返回undefined
@@ -162,7 +170,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   get type(): T {
     return this.#type
   }
-
   /**
    * 从内存存储中获取指定索引对应的虚拟节点(VNode)
    *
@@ -274,6 +281,13 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   }
 
   /**
+   * 设置 shadow 元素
+   * @param el - Comment 类型的 DOM 节点，作为 shadow 元素
+   */
+  protected set shadowElement(el: Comment) {
+    this.#shadowElement = el // 设置 shadow 元素
+  }
+  /**
    * 移除Shadow DOM元素并将其引用设置为undefined
    * 这个方法会检查shadowElement是否存在，如果存在则从DOM中移除它，然后将引用置为undefined
    */
@@ -297,6 +311,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       this.#shadowElement = undefined // 清除shadowElement引用，便于垃圾回收
     }
   }
+
   /**
    * 检查是否存在阴影元素
    * @returns {boolean} 如果存在阴影元素则返回true，否则返回false
