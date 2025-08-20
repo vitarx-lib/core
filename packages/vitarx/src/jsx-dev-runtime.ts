@@ -1,5 +1,11 @@
+import {
+  type Source,
+  type UniqueKey,
+  VNode,
+  type VNodeProps,
+  type VNodeType
+} from '@vitarx/runtime-core'
 import { jsx } from './jsx-runtime.js'
-import { type Source, type UniqueKey, VNode, type VNodeProps, type VNodeType } from './vnode'
 
 export { Fragment } from './jsx-runtime.js'
 
