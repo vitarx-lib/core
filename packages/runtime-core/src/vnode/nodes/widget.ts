@@ -19,7 +19,6 @@ import {
 } from '../../widget'
 import { _createFnWidget } from '../../widget/fn-widget'
 import { proxyWidgetProps } from '../props'
-import { inject } from '../provide'
 import { isRefEl } from '../ref'
 import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types'
 import { CommentVNode } from './comment'
@@ -557,16 +556,32 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @param args - 错误处理函数的参数数组
    */
   #handleRootError(args: any[]): void {
-    // 获取应用实例
-    const app = inject<any>('App', null, this.instance)
-    // 如果应用配置了错误处理函数，则调用该函数处理错误
+    // 首先尝试获取当前 App 实例
+    let app = this.getProvide('App')
+
+    // 如果没有 App 实例，则查找根节点并获取 App 实例
+    if (!app) {
+      // 获取根节点
+      let root: VNode = this
+      while (true) {
+        const parent = VNode.findParentVNode(root)
+        if (!parent) break
+        root = parent
+      }
+      // 如果根节点是 WidgetVNode，获取其 App 实例
+      if (WidgetVNode.is(root)) {
+        app = root.getProvide('App')
+      }
+    }
+
+    // 处理错误
     if (app?.config?.errorHandler) {
-      return app.config.errorHandler(...args)
+      app.config.errorHandler(...args)
     } else {
-      // 如果没有配置错误处理函数，则在控制台输出错误信息
       console.error('[Vitarx]：there are unhandled exceptions', ...args)
     }
   }
+
   /**
    * @inheritDoc
    */
