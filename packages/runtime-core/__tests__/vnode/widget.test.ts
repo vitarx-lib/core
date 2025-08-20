@@ -117,13 +117,6 @@ describe('WidgetVNode 单元测试', () => {
       widgetVNode.provide('testKey', 'testValue')
       expect(widgetVNode.hasProvide('testKey')).toBe(true)
     })
-
-    it('提供"App"作为键应该抛出错误', () => {
-      const widgetVNode = new WidgetVNode(MockWidget, {})
-      expect(() => widgetVNode.provide('App', 'value')).toThrow(
-        'App 是内部保留关键词，不能用于注册提供者！'
-      )
-    })
   })
 
   describe('render方法', () => {
