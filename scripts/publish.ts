@@ -8,10 +8,10 @@
  * 5. 发布到npm仓库
  */
 
-import { execSync } from 'child_process'
-import { resolve } from 'path'
-import { existsSync } from 'fs'
 import chalk from 'chalk'
+import { execSync } from 'child_process'
+import { existsSync } from 'fs'
+import { resolve } from 'path'
 
 // 获取命令行参数，去除前两个参数(node和脚本路径)
 const args = process.argv.slice(2)
@@ -44,7 +44,7 @@ try {
   // 检查用户是否已登录npm
   // 使用whoami命令验证，如果未登录则会抛出异常
   try {
-    execSync('npm whoami', { stdio: 'ignore' })
+    execSync('pnpm whoami', { stdio: 'ignore' })
   } catch (e) {
     console.error(chalk.red('Error: You are not logged in to npm. Please run `npm login` first'))
     process.exit(1)
@@ -58,7 +58,7 @@ try {
   // 发布包到npm仓库
   // 切换到包目录并执行npm publish命令，设置为公共访问权限
   console.log(chalk.blue(`Publishing package: ${packageName}...`))
-  execSync(`cd ${packagePath} && npm publish --access public`, { stdio: 'inherit' })
+  execSync(`cd ${packagePath} && pnpm publish --access public`, { stdio: 'inherit' })
 
   // 发布成功提示
   console.log(chalk.green(`\n✨ Successfully published ${packageName}!`))
