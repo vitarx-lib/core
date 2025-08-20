@@ -59,6 +59,13 @@ export interface IntrinsicProperties {
    * 当重新创建该节点时会判断数组内容是否相同，如果相同则会复用缓存的节点，如果不同则会创建新的节点，并刷新缓存。
    */
   'v-memo'?: any[]
+  /**
+   * 静态节点的指令
+   *
+   * 该指令将节点标记为静态节点，只会被渲染一次，并跳过之后的更新。
+   * 这可以用来优化更新时的性能
+   */
+  'v-static'?: boolean
   [key: string]: any
 }
 
