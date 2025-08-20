@@ -1,5 +1,3 @@
 export * from './dom'
 export * from './vnode'
 export * from './widget'
-export * from './jsx-runtime'
-export * from './jsx-dev-runtime'
