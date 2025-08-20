@@ -129,7 +129,8 @@ export function inject<T>(
     // 移动到父级 VNode
     vnode = VNode.findParentVNode(vnode)
   }
-
+  // 如果获取的是App实例，则返回App
+  if (name === 'App') return app
   // 如果没有在组件树中找到，尝试从 App 实例获取
   if (app) {
     const value = app.getProvide(name)
