@@ -4,8 +4,8 @@ import {
   type UniqueKey,
   VNode,
   type VNodeProps,
-  type VNodeType
-} from './vnode'
+  VNodeType
+} from '@vitarx/runtime-core'
 
 /**
  * JSX构建VNode
