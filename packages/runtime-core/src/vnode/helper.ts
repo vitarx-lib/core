@@ -19,6 +19,11 @@ export function createVNode<T extends VNodeType>(
   if (props) {
     const vIf = popProperty(props, 'v-if')
     if (vIf) return new CommentVNode('v-if') as unknown as VNode<T>
+    const vMemoValue = props['v-memo']
+    if (Array.isArray(vMemoValue)) {
+      const cached = VNode.getMemoNode(vMemoValue)
+      if (cached) return cached as VNode<T>
+    }
   } else {
     props = {} as VNodeProps<T>
   }
@@ -64,6 +69,7 @@ export function createVNode<T extends VNodeType>(
   }
   return new WidgetVNode(type, props) as unknown as VNode<T>
 }
+
 /**
  * 获取当前虚拟节点(WidgetVNode)的函数
  * 该函数通过调用WidgetVNode类的静态方法getCurrentVNode()来实现
