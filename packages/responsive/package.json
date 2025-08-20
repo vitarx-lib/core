@@ -4,6 +4,10 @@
   "description": "Vitarx responsive package",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
+  "keywords": [
+    "vitarx",
+    "responsive"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitarx-lib/core",
