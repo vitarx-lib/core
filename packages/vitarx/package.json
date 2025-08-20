@@ -1,9 +1,12 @@
 {
   "name": "@vitarx/vitarx",
-  "version": "3.0.0-beta.1",
+  "version": "3.0.0-alpha.1",
   "description": "Vitarx vitarx package",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
+  "keywords": [
+    "vitarx"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitarx-lib/core",
