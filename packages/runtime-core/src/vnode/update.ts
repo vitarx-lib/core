@@ -68,8 +68,6 @@ export class VNodeUpdate {
         // 更新当前节点的子节点列表
         oldVNode.replaceChildren(newChildren)
       }
-      // 返回更新后的旧节点
-      return oldVNode
     }
     return oldVNode
   }
@@ -86,6 +84,7 @@ export class VNodeUpdate {
       ;(oldVNode as unknown as NoTagVNode<any>).value = (
         oldVNode as unknown as NoTagVNode<any>
       ).value
+      return
     }
     if (oldVNode.type === 'fragment-node') return
     const isWidget = WidgetVNode.is(oldVNode) // 判断是否是Widget类型的节点
@@ -195,7 +194,6 @@ export class VNodeUpdate {
         }
         continue
       }
-
       // 处理新增节点
       if (!oldChild) {
         // 如果旧父节点是片段节点
@@ -216,21 +214,7 @@ export class VNodeUpdate {
         newChildrenNotMounted.push(newChild)
         continue
       }
-      // 更新特殊节点：文本节点和注释节点
-      if (
-        (TextVNode.is(oldChild) && TextVNode.is(newChild)) ||
-        (CommentVNode.is(oldChild) && CommentVNode.is(newChild))
-      ) {
-        if (oldChild.value !== newChild.value) {
-          oldChild.value = newChild.value
-        }
-        // 取消标记旧节点为删除
-        removedNodes.delete(oldChild)
-        newChildren[index] = oldChild
-        continue
-      }
-
-      // 更新常规虚拟节点
+      // 更新虚拟节点
       if (VNode.is(oldChild) && VNode.is(newChild)) {
         const updatedNewChild = this.patchUpdate(oldChild, newChild, false)
         // 如果更新后的虚拟节点和旧虚拟节点相同，则取消将旧节点标记为删除
