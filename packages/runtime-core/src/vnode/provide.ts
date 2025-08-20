@@ -113,6 +113,7 @@ export function inject<T>(name: string | symbol, defaultValue?: T, instance?: Wi
       `[Vitarx.inject][ERROR]：未能获取上下文，inject只能在小部件构造阶段获取到上下文或显式指定小部件实例`
     )
   }
+  let app = currentVNode.getProvide('App')
   // 从当前 VNode 向上查找父级 VNode，直到找到或没有父级
   let parentVNode = VNode.findParentVNode(currentVNode) as WidgetVNode | undefined
   while (parentVNode) {
@@ -121,8 +122,13 @@ export function inject<T>(name: string | symbol, defaultValue?: T, instance?: Wi
       // 如果包含，返回提供的数据
       return parentVNode.getProvide(name) as T
     }
-    // 获取父级 VNode
-    parentVNode = VNode.findParentVNode(currentVNode) as WidgetVNode | undefined
+    app = parentVNode.getProvide('App')
+    // 获取父级 VNode，并更新 parentVNode 变量
+    parentVNode = VNode.findParentVNode(parentVNode) as WidgetVNode | undefined
+  }
+  if (!parentVNode) {
+    const app = currentVNode.getProvide('App')
+    if (app) return app.inject(name, defaultValue)
   }
   // 如果没有找到数据，返回默认值
   return defaultValue as T
