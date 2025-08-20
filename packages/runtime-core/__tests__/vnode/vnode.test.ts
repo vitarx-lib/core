@@ -82,6 +82,15 @@ describe('createVNode', () => {
     expect(vnode.children[0]).toBeInstanceOf(TextVNode)
     expect((vnode.children[0] as TextVNode).value).toBe('child')
   })
+  it('应该支持v-memo指令', () => {
+    const memo = ['a', 'b']
+    const vnode1 = createVNode('div', { 'v-memo': memo })
+    const vnode2 = createVNode('div', { 'v-memo': memo })
+    memo.push('c')
+    const vnode3 = createVNode('div', { 'v-memo': memo })
+    expect(vnode1).toBe(vnode2)
+    expect(vnode1).not.toBe(vnode3)
+  })
 })
 
 describe('getCurrentVNode / useCurrentVNode', () => {
