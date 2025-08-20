@@ -1,3 +1,4 @@
+import type { AnyFunction } from '@vitarx/utils'
 import { VNode, WidgetVNode } from './nodes/index'
 
 /**
@@ -39,24 +40,52 @@ export function provide(name: string | symbol, value: any): void {
 }
 
 /**
- * 依赖注入函数
+ * 依赖注入函数 - 基本用法
  *
- * @template T - 泛型类型，表示依赖项的类型
- * @param {string | symbol} name - 依赖项的名称，可以是字符串或符号
- * @returns {T | undefined} 返回类型为T的依赖项，如果未找到则返回undefined
+ * @template T - 注入数据的类型
+ * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
+ * @returns {T | undefined} - 注入的数据，如果找不到则返回 undefined
  */
 export function inject<T>(name: string | symbol): T | undefined
+
 /**
- * 依赖注入函数
+ * 依赖注入函数 - 带默认值
  *
- * @template T - 泛型类型，表示注入值的类型
- * @param name - 依赖的名称，可以是字符串或符号
- * @param defaultValue - 当找不到对应依赖时返回的默认值
- * @returns {T} 返回找到的依赖值或默认值
+ * @template T - 注入数据的类型
+ * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
+ * @param defaultValue - 当找不到指定名称的依赖数据时返回的默认值
+ * @returns {T} - 注入的数据或默认值
  */
 export function inject<T>(name: string | symbol, defaultValue: T): T
+
 /**
- * 依赖注入函数
+ * 依赖注入函数 - 明确指定默认值不作为工厂函数
+ *
+ * @template T - 注入数据的类型
+ * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
+ * @param defaultValue - 当找不到指定名称的依赖数据时返回的默认值
+ * @param treatDefaultAsFactory - 明确指定不将默认值作为工厂函数
+ * @returns {T} - 注入的数据或默认值
+ */
+export function inject<T>(name: string | symbol, defaultValue: T, treatDefaultAsFactory: false): T
+
+/**
+ * 依赖注入函数 - 默认值作为工厂函数
+ *
+ * @template T - 注入数据的类型，必须是函数类型
+ * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
+ * @param defaultValue - 当找不到指定名称的依赖数据时调用的工厂函数
+ * @param treatDefaultAsFactory - 明确指定将默认值作为工厂函数
+ * @returns {ReturnType<T>} - 工厂函数的返回值
+ */
+export function inject<T extends AnyFunction>(
+  name: string | symbol,
+  defaultValue: T,
+  treatDefaultAsFactory: true
+): ReturnType<T>
+
+/**
+ * 依赖注入函数 - 完整参数
  *
  * @remarks
  * 在类小部件中使用时，只能是属性初始化值或 `constructor`、`onCreate`方法中使用
@@ -64,37 +93,54 @@ export function inject<T>(name: string | symbol, defaultValue: T): T
  * @template T - 注入数据的类型
  * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
  * @param [defaultValue] - 当找不到指定名称的依赖数据时返回的默认值
+ * @param [treatDefaultAsFactory=false] - 是否将默认值作为工厂函数
  * @returns {T} - 注入的数据或默认值
  * @throws - 当无法获取上下文时抛出错误
  */
-export function inject<T>(name: string | symbol, defaultValue?: T): T {
-  // 如果没有提供实例，则使用当前实例
+export function inject<T>(
+  name: string | symbol,
+  defaultValue?: T,
+  treatDefaultAsFactory?: boolean
+): T {
+  // 获取当前 VNode
   const currentVNode = WidgetVNode.getCurrentVNode()
-  // 如果没有虚拟节点，抛出错误
   if (!currentVNode) {
     throw new Error(
-      `[Vitarx.inject][ERROR]：未能获取上下文，inject只能在小部件构造阶段获取到上下文或显式指定小部件实例`
+      `[Vitarx.inject] [ERROR]: inject can only be used during widget constructor/onCreate`
     )
   }
+
+  // 从当前 VNode 的父级开始查找
+  let vnode: VNode | undefined = VNode.findParentVNode(currentVNode)
+  // 缓存 App 实例
   let app = currentVNode.getProvide('App')
-  // 从当前 VNode 向上查找父级 VNode，直到找到或没有父级
-  let parentVNode = VNode.findParentVNode(currentVNode)
-  while (parentVNode) {
-    if (WidgetVNode.is(parentVNode)) {
-      // 判断当前 VNode 是否包含提供的数据
-      if (parentVNode.hasProvide(name)) {
-        // 如果包含，返回提供的数据
-        return parentVNode.getProvide(name) as T
-      }
-      app = parentVNode.getProvide('App')
+
+  while (vnode) {
+    // 如果是 WidgetVNode 且包含提供的数据，直接返回
+    if (WidgetVNode.is(vnode) && vnode.hasProvide(name)) {
+      return vnode.getProvide(name) as T
     }
-    // 获取父级 VNode，并更新 parentVNode 变量
-    parentVNode = VNode.findParentVNode(parentVNode)
+
+    // 更新 App 实例（如果当前 VNode 有提供）
+    if (WidgetVNode.is(vnode)) {
+      app = vnode.getProvide('App')
+    }
+
+    // 移动到父级 VNode
+    vnode = VNode.findParentVNode(vnode)
   }
-  if (!parentVNode) {
-    const app = currentVNode.getProvide('App')
-    if (app) return app.inject(name, defaultValue)
+
+  // 如果没有在组件树中找到，尝试从 App 实例获取
+  if (app) {
+    const value = app.inject(name)
+    if (value !== undefined) return value
   }
-  // 如果没有找到数据，返回默认值
+
+  // 处理默认值工厂函数
+  if (typeof defaultValue === 'function' && treatDefaultAsFactory) {
+    return defaultValue()
+  }
+
+  // 返回默认值
   return defaultValue as T
 }
