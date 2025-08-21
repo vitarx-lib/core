@@ -25,11 +25,11 @@ declare global {
     /**
      * HTML style 属性类型
      */
-    type HtmlStyleProperties = StyleProperties
+    type HTMLStyleProperties = StyleProperties
     /**
      * HTML class 属性类型
      */
-    type HtmlClassProperties = ClassProperties
+    type HTMLClassProperties = ClassProperties
     /**
      * 函数式小部件函数类型
      */
