@@ -4,6 +4,16 @@ import { Ref } from './ref'
 /**
  * 创建一个响应式引用信号
  *
+ * @template Value - 信号值的类型
+ * @returns {Ref<Value>} - 创建的响应式引用信号
+ * @example
+ * const count = ref<number>() // count.value的类型为number | undefined
+ * console.log(count.value) // undefined
+ */
+export function ref<Value>(): Ref<Value | undefined>
+/**
+ * 创建一个响应式引用信号
+ *
  * 创建一个包装对象，使其成为响应式数据源。当引用的值发生变化时，
  * 所有依赖于该引用的计算和副作用将自动更新。默认情况下，对嵌套对象进行深度代理。
  *
@@ -15,7 +25,7 @@ import { Ref } from './ref'
  * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新，默认使用Object.is进行比较
  * @returns {Ref<Value, Deep>} - 创建的响应式引用信号
  * @example
- * // 创建一个简单的ref
+ * // 创建一个基本类型的ref
  * const count = ref(0)
  * console.log(count.value) // 0
  * count.value++
@@ -50,12 +60,18 @@ export function ref<Value = any, Deep extends boolean = true>(
 
 /**
  * 创建一个浅响应式引用信号
+ * @template Value - 信号值的类型
+ * @return {Ref<Value | undefined, false>} - 浅响应式引用信号对象
+ */
+export function shallowRef<Value>(): Ref<Value | undefined, false>
+/**
+ * 创建一个浅响应式引用信号
  *
  * @template Value - 信号值的类型
  * @param {Value} [value=undefined] - 信号初始值
  * @param {object} [options] - 信号的选项，包括是否使用深度信号和比较函数
  * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新
- * @returns {Ref<Value, false>} - 创建的浅响应式引用信号
+ * @returns {Ref<Value, false>} - 浅响应式引用信号对象
  * @example
  * // 创建一个基本的浅响应式引用
  * const count = shallowRef(0)
