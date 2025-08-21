@@ -70,6 +70,7 @@ export function createVNode<T extends VNodeType>(
   return new WidgetVNode(type, props) as unknown as VNode<T>
 }
 
+export { createVNode as createElement }
 /**
  * 获取当前虚拟节点(WidgetVNode)的函数
  * 该函数通过调用WidgetVNode类的静态方法getCurrentVNode()来实现
