@@ -9,7 +9,7 @@ import { Ref } from './ref'
  *
  * @template Value - 信号值的类型
  * @template Deep - 是否使用深度信号，默认为true
- * @param {Value} value - 信号初始值
+ * @param {Value} [value=undefined] - 信号初始值
  * @param {object | boolean} [options] - 信号的选项配置，支持直接传入boolean指定deep配置
  * @param {boolean} [options.deep=true] - 是否深度代理嵌套对象，为true时会递归代理所有嵌套属性
  * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新，默认使用Object.is进行比较
@@ -37,8 +37,8 @@ import { Ref } from './ref'
  * count2.value++
  * console.log(count2.value) // 2
  */
-export function ref<Value, Deep extends boolean = true>(
-  value: Value | Ref<Value, Deep>,
+export function ref<Value = any, Deep extends boolean = true>(
+  value?: Value | Ref<Value, Deep>,
   options?: SignalOptions<Deep> | Deep
 ): Ref<Value, Deep> {
   if (isRef(value)) return value as Ref<Value, Deep>
@@ -52,7 +52,7 @@ export function ref<Value, Deep extends boolean = true>(
  * 创建一个浅响应式引用信号
  *
  * @template Value - 信号值的类型
- * @param {Value} value - 信号初始值
+ * @param {Value} [value=undefined] - 信号初始值
  * @param {object} [options] - 信号的选项，包括是否使用深度信号和比较函数
  * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新
  * @returns {Ref<Value, false>} - 创建的浅响应式引用信号
@@ -80,8 +80,8 @@ export function ref<Value, Deep extends boolean = true>(
  *   compare: (prev, next) => prev.length === next.length
  * })
  */
-export function shallowRef<Value>(
-  value: Value | Ref<Value, false>,
+export function shallowRef<Value = any>(
+  value?: Value | Ref<Value, false>,
   options?: Omit<SignalOptions, 'deep'>
 ): Ref<Value, false> {
   if (isRef(value)) return value as Ref<Value, false>
@@ -91,7 +91,7 @@ export function shallowRef<Value>(
 /**
  * 判断是否为 Ref 对象
  *
- * 注意和 `isRefSignal` 的区别，`isRef` 只判断是否为 `Ref` 对象，而 `isRefSignal` 会判断对象是否具有响应式的 value 属性
+ * 注意和 `isRefSignal` 的区别，`isRef` 只判断是否为 `Ref` 对象，而 `isRefSignal` 是判断对象是否具有响应式的 value 属性
  *
  * @param {any} val - 任意值
  * @return {boolean} 是否为 Ref 对象
