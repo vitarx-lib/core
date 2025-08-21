@@ -179,3 +179,32 @@ export function _createFnWidget(vnode: WidgetVNode<FunctionWidget>): {
     init: () => instance[__INITIALIZE_FN_WIDGET__](HookCollector.collect(vnode, instance))
   }
 }
+
+/**
+ * ## 视图构建器。
+ *
+ * > 注意：在类小部件中不要使用`build`函数，类中的build方法就是构建器。
+ *
+ * 一般情况编译器会自动添加`()=>`，但是使用了三元运算符或包裹在了if块中则无法添加，
+ * 所以需要使用返回`()=>Element`来保证响应式，但是这样做tsx会不认可返回()=>Element的函数做为组件，特此声明了此方法。
+ *
+ * 在编译时会自动去除build调用表达式
+ *
+ * ```tsx
+ * const App = () => {
+ *  const show = ref(true)
+ *  // ❌ 这样写编译器不会自动添加 () => 会导致视图是静态的，丢失响应式
+ *  return state.value ? <div>真</div> : <div>假</div>
+ *  // ✅ 这样写只是强制转换了类型，在编译时 build会被自动去除
+ *  return build(() => show.value ? <div>真</div> : <div>假</div>)
+ * }
+ * export default App
+ * ```
+ *
+ * @param element - 虚拟节点对象|视图构建器函数|null
+ * @returns - 为了符合TSX类型校验，会将视图构建器函数重载为VNode类型
+ * @throws TypeError - 如果传入的参数不符合要求，则会抛出TypeError异常
+ */
+export function build<T extends BuildVNode>(element: T): T extends null ? null : VNode {
+  return element as unknown as T extends null ? null : VNode
+}
