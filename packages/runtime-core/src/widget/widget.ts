@@ -7,6 +7,10 @@ import { type ClassWidget, type ErrorInfo } from './types'
  */
 const CLASS_WIDGET_BASE_SYMBOL = Symbol('CLASS_WIDGET_SYMBOL')
 /**
+ * VNode类型的别名
+ */
+export type Element = VNode
+/**
  * 此类型用于推导出小部件的子节点类型。
  */
 type WidgetChildren<P> = P extends { children: infer U }
@@ -331,7 +335,7 @@ export abstract class Widget<
    * }
    * ```
    */
-  onError?(error: unknown, info: ErrorInfo): VNode | void
+  onError?(error: unknown, info: ErrorInfo): Element | void
 
   /**
    * 移除元素前调用
@@ -380,7 +384,7 @@ export abstract class Widget<
    * @protected
    * @returns {Element} - 返回的是虚拟的VNode节点
    */
-  abstract build(): VNode | null
+  abstract build(): Element | null
 
   /**
    * 对虚拟节点进行打补丁更新操作
@@ -391,7 +395,7 @@ export abstract class Widget<
    * @param newVNode - 新的虚拟节点，表示更新后的DOM状态
    * @returns {VNode} 返回更新后的虚拟节点
    */
-  $patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
+  $patchUpdate(oldVNode: Element, newVNode: Element): Element {
     return VNodeUpdate.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
   }
 
@@ -401,7 +405,7 @@ export abstract class Widget<
    *
    * @param {VNode} newChildVNode 可选参数，新的子节点虚拟节点
    */
-  update(newChildVNode?: VNode): void {
+  update(newChildVNode?: Element): void {
     // 调用当前虚拟节点的updateChild方法，传入新的子节点VNode进行更新
     this.$vnode.updateChild(newChildVNode)
   }
