@@ -82,7 +82,7 @@ export class VNodeUpdate {
     // 如果是特殊的无props节点，则不进行任何更新
     if (oldVNode.type === 'text-node' || oldVNode.type === 'comment-node') {
       ;(oldVNode as unknown as NoTagVNode<any>).value = (
-        oldVNode as unknown as NoTagVNode<any>
+        newVNode as unknown as NoTagVNode<any>
       ).value
       return
     }
