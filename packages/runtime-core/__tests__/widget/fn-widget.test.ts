@@ -53,9 +53,13 @@ describe('函数组件测试套件', () => {
     expect(counter).toBeInstanceOf(HTMLDivElement)
     expect(counter?.textContent).toBe('0')
     inc.element.dispatchEvent(new MouseEvent('click'))
-    await vi.waitFor(() => {
+    await vi.waitFor(async () => {
       expect(update).toBeCalledTimes(1)
       expect(counter?.textContent).toBe(`${count.value}`)
+      count.value = 0
+      await vi.waitFor(() => {
+        expect(counter?.textContent).toBe(`${count.value}`)
+      })
     })
   })
 })
