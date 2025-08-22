@@ -1,3 +1,4 @@
+import { toRaw } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom'
 import type {
@@ -124,11 +125,13 @@ export abstract class ContainerVNode<
     const keySet = new Set<UniqueKey>()
     if (Array.isArray(target)) {
       target.forEach(item => {
+        item = toRaw(item)
         const itemChildren = this.#formatChildren(item)
         childList.push(...itemChildren)
       })
     } else {
       let vnode: VNode
+      target = toRaw(target)
       if (target instanceof VNode) {
         vnode = target
         // 检查key是否重复
