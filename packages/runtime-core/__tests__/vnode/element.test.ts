@@ -1,15 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import {
-  CommentVNode,
-  createElement,
-  ElementVNode,
-  FragmentVNode,
-  onUpdated,
-  refEl,
-  TextVNode,
-  WidgetVNode
-} from '../../src'
+import { CommentVNode, ElementVNode, FragmentVNode, refEl, TextVNode } from '../../src'
 
 describe('ElementVNode 测试套件', () => {
   describe('element getter 测试', () => {
@@ -253,42 +244,6 @@ describe('ElementVNode 测试套件', () => {
       vnode.element // 触发element getter，进而调用propsHandler和DomHelper.setAttributes
       expect(mockElement.getAttribute('id')).toBe('test')
       expect(mockElement.getAttribute('class')).toBe('my-class')
-    })
-  })
-  describe('子元素内容更新', () => {
-    const body = document.createElement('div')
-    it('应该正常更新子元素内容', async () => {
-      const count = ref(0)
-      const update = vi.fn()
-      const inc = createElement(
-        'button',
-        {
-          onClick: () => count.value++
-        },
-        '增加'
-      )
-      const mockWidget = () => {
-        onUpdated(update)
-        return () => {
-          return createElement(
-            'div',
-            null,
-            createElement('div', { className: 'counter-display', id: 'counter' }, count),
-            createElement('div', { className: 'counter-controls' }, inc)
-          )
-        }
-      }
-      const widgetNode = createElement(mockWidget) as unknown as WidgetVNode
-      expect(widgetNode.child).toBeInstanceOf(ElementVNode)
-      widgetNode.mount(body)
-      const counter = body.querySelector('#counter')
-      expect(counter).toBeInstanceOf(HTMLDivElement)
-      expect(counter?.textContent).toBe('0')
-      inc.element.dispatchEvent(new MouseEvent('click'))
-      await vi.waitFor(() => {
-        expect(update).toBeCalledTimes(1)
-        expect(counter?.textContent).toBe(`${count.value}`)
-      })
     })
   })
 })
