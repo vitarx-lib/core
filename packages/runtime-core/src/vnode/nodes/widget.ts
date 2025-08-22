@@ -519,11 +519,13 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       try {
         // 执行构建逻辑
         const buildNode = this.instance.build()
-        if (VNode.is(buildNode)) {
+        if (buildNode === null) {
+          vnode = new CommentVNode(`Widget(${this.name}) build null`)
+        } else if (VNode.is(buildNode)) {
           vnode = buildNode
         } else {
           vnode = new CommentVNode(
-            `The return value of the widget(${this.name}) build is not a VNode`
+            `The return value of the Widget(${this.name}) build is not a VNode`
           )
         }
       } catch (e) {
