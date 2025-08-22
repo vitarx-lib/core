@@ -82,6 +82,7 @@ class FnWidget extends Widget<Record<string, any>> {
         if (this.#suspenseCounter) this.#suspenseCounter.value--
       }
     } else {
+      this.#setBuild(build)
       this.#updateView()
     }
     return this
