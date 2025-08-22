@@ -4,16 +4,6 @@ import { Ref } from './ref'
 /**
  * 创建一个响应式引用信号
  *
- * @template Value - 信号值的类型
- * @returns {Ref<Value>} - 创建的响应式引用信号
- * @example
- * const count = ref<number>() // count.value的类型为number | undefined
- * console.log(count.value) // undefined
- */
-export function ref<Value>(): Ref<Value | undefined>
-/**
- * 创建一个响应式引用信号
- *
  * 创建一个包装对象，使其成为响应式数据源。当引用的值发生变化时，
  * 所有依赖于该引用的计算和副作用将自动更新。默认情况下，对嵌套对象进行深度代理。
  *
@@ -58,12 +48,6 @@ export function ref<Value = any, Deep extends boolean = true>(
   return new Ref(value, options) as Ref<Value, Deep>
 }
 
-/**
- * 创建一个浅响应式引用信号
- * @template Value - 信号值的类型
- * @return {Ref<Value | undefined, false>} - 浅响应式引用信号对象
- */
-export function shallowRef<Value>(): Ref<Value | undefined, false>
 /**
  * 创建一个浅响应式引用信号
  *
