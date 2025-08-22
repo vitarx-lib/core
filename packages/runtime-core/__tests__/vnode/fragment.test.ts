@@ -1,12 +1,19 @@
 import { ref } from '@vitarx/responsive'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createElement, Fragment, FragmentVNode, onUpdated, WidgetVNode } from '../../src'
+import {
+  CommentVNode,
+  createElement,
+  Fragment,
+  FragmentVNode,
+  onUpdated,
+  WidgetVNode
+} from '../../src'
 
 describe('片段节点测试套件', () => {
   describe('创建节点测试', () => {
     it('应该正常渲染空片段节点', () => {
-      const node = createElement(Fragment)
-      expect(node.shadowElement.parentNode).toBe(node.element)
+      const node = createElement(Fragment) as unknown as FragmentVNode
+      expect(node.children[0]).toBeInstanceOf(CommentVNode)
     })
     it('应该正常渲染有子节点的片段节点', () => {
       const node = createElement(
