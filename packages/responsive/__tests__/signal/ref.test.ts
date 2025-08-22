@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Depend, isRef, isSignal, ref, watch } from '../../src'
+import { Depend, isDeepSignal, isRef, isSignal, ref, watch } from '../../src'
 
 describe('ref', () => {
   describe('基础功能', () => {
@@ -66,6 +66,17 @@ describe('ref', () => {
 
       expect(isRef(count)).toBe(true)
       expect(isRef(plainObj)).toBe(false)
+    })
+    it('ts类型声明校验', () => {
+      const count = ref()
+      expect(count.value).toBeUndefined()
+      const count2 = ref(0)
+      expect(count2.value).toBe(0)
+      const count3 = ref<number>()
+      expect(count3.value).toBeUndefined()
+      const count4 = ref(0, { deep: false })
+      expect(count4.value).toBe(0)
+      expect(isDeepSignal(count4)).toBe(false)
     })
   })
 })
