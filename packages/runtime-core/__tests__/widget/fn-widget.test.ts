@@ -11,14 +11,14 @@ describe('函数组件测试套件', () => {
     node.mount(body)
     expect(body.innerHTML).toBe('<div>test</div>')
   })
-  it('应该支持渲染异步组件', () => {
+  it('应该支持渲染异步组件', async () => {
     const Test = async (props: { name: string }) => {
-      await new Promise(resolve => resolve)
+      await new Promise(resolve => setTimeout(resolve))
       return createVNode('div', { children: props.name })
     }
     const node = createVNode(Test, { name: 'test' })
     node.mount(body)
-    vi.waitFor(() => {
+    await vi.waitFor(() => {
       expect(body.innerHTML).toBe('<div>test</div>')
     })
   })
