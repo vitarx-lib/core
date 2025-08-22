@@ -35,6 +35,13 @@ describe('函数组件测试套件', () => {
       },
       '增加'
     )
+    const reset = createElement(
+      'button',
+      {
+        onClick: () => (count.value = 0)
+      },
+      '重置'
+    )
     const mockWidget = () => {
       onUpdated(update)
       return () => {
@@ -42,7 +49,7 @@ describe('函数组件测试套件', () => {
           'div',
           null,
           createElement('div', { className: 'counter-display', id: 'counter' }, count),
-          createElement('div', { className: 'counter-controls' }, inc)
+          createElement('div', { className: 'counter-controls' }, inc, reset)
         )
       }
     }
@@ -56,7 +63,7 @@ describe('函数组件测试套件', () => {
     await vi.waitFor(async () => {
       expect(update).toBeCalledTimes(1)
       expect(counter?.textContent).toBe(`${count.value}`)
-      count.value = 0
+      reset.element.dispatchEvent(new MouseEvent('click'))
       await vi.waitFor(() => {
         expect(counter?.textContent).toBe(`${count.value}`)
       })
