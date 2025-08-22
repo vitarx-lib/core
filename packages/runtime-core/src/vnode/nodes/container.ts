@@ -88,7 +88,7 @@ export abstract class ContainerVNode<
     if (container) DomHelper.appendChild(container, element)
     for (const child of this.children) {
       // 遍历所有子组件
-      child.mount(this.element) // 递归挂载每个子组件
+      child.mount() // 递归挂载每个子组件
     }
   }
 
