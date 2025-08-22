@@ -275,7 +275,11 @@ describe('WidgetVNode 单元测试', () => {
     it('reportWidgetError应该处理根节点错误', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
       const handleRootErrorSpy = vi.spyOn(widgetVNode, 'reportError')
-
+      widgetVNode.provide('App', {
+        config: {
+          errorHandler: () => {}
+        }
+      })
       widgetVNode.reportError(new Error('Test error'), {
         source: 'render',
         instance: widgetVNode.instance
