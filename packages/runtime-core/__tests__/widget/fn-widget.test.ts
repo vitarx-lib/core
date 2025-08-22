@@ -12,6 +12,7 @@ describe('函数组件测试套件', () => {
     expect(body.innerHTML).toBe('<div>test</div>')
   })
   it('应该支持渲染异步组件', async () => {
+    body.innerHTML = ''
     const Test = async (props: { name: string }) => {
       await new Promise(resolve => setTimeout(resolve))
       return createVNode('div', { children: props.name })
