@@ -25,9 +25,9 @@ export abstract class ContainerVNode<
 
   constructor(type: T, props: VNodeProps<T> | null = null) {
     super(type, props)
-    const children = popProperty(this.props, 'children')
     // 如果存在children属性，则格式化子节点
-    this.#children = children ? this.#formatChildren(children) : []
+    this.#children =
+      'children' in this.props ? this.#formatChildren(popProperty(this.props, 'children')) : []
   }
 
   /**
@@ -132,7 +132,7 @@ export abstract class ContainerVNode<
     } else {
       let vnode: VNode
       target = toRaw(target)
-      if ([false, undefined, null].includes(target as any)) {
+      if (target === false || target === undefined || target === null) {
         vnode = new CommentVNode(String(target))
       } else if (VNode.is(target)) {
         vnode = target
