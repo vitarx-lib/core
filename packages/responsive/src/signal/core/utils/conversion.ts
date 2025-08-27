@@ -22,12 +22,17 @@ export type SignalToRaw<T> =
  *
  * @example
  * ```ts
- * const signal = ref({ count: 0 })
- * const rawValue = toRaw(signal) // 获取原始对象 { count: 0 }
+ * // 用于获取ref引用信号的原始值
+ * const signal = ref(1)
+ * const rawValue = toRaw(signal) // 1
+ *
+ * // 用于获取reactive代理信号的原始值
+ * const proxySignal = reactive({ count: 0 })
+ * const rawValue = toRaw(proxySignal) // { count: 0 }
  *
  * // 对于非响应式值，直接返回原值
- * const plainValue = 100
- * console.log(toRaw(plainValue)) // 输出: 100
+ * const plainValue = 'any'
+ * console.log(toRaw(plainValue)) // 输出: any
  * ```
  */
 export function toRaw<T>(signal: T): SignalToRaw<T> {
