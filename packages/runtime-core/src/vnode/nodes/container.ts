@@ -117,43 +117,43 @@ export abstract class ContainerVNode<
    *
    * @private
    * @param target
+   * @param keySet 用于检测重复key的集合
    * @returns {VNode[]} 返回一个包含所有子节点的数组
    */
-  #formatChildren(target: Child[] | Child): VNode[] {
+  #formatChildren(target: Child[] | Child, keySet: Set<UniqueKey> = new Set<UniqueKey>()): VNode[] {
     const childList: VNode[] = []
-    // 用于检测重复key的集合
-    const keySet = new Set<UniqueKey>()
+
     if (Array.isArray(target)) {
-      target.forEach(item => {
-        item = toRaw(item)
-        const itemChildren = this.#formatChildren(item)
+      for (const item of target) {
+        const itemChildren = this.#formatChildren(toRaw(item), keySet)
         childList.push(...itemChildren)
-      })
+      }
     } else {
       let vnode: VNode
-      target = toRaw(target)
-      if (target === false || target === undefined || target === null) {
-        vnode = new CommentVNode(String(target))
-      } else if (VNode.is(target)) {
-        vnode = target
+      const rawTarget = toRaw(target)
+      if (rawTarget === false || rawTarget === undefined || rawTarget === null) {
+        vnode = new CommentVNode(String(rawTarget))
+      } else if (VNode.is(rawTarget)) {
+        vnode = rawTarget
         // 检查key是否重复
-        if ('key' in target && target.key) {
-          if (keySet.has(target.key)) {
+        if ('key' in rawTarget && rawTarget.key) {
+          if (keySet.has(rawTarget.key)) {
             console.warn(
-              `[Vitarx.VNode][WARN]：Duplicate key: ${String(target.key)} detected, which can cause rendering errors or performance issues。`
+              `[Vitarx.VNode][WARN]：Duplicate key: ${String(rawTarget.key)} detected, which can cause rendering errors or performance issues。`
             )
           } else {
-            keySet.add(target.key)
+            keySet.add(rawTarget.key)
           }
         }
       } else {
         // 文本节点
-        vnode = new TextVNode(String(target))
+        vnode = new TextVNode(String(rawTarget))
       }
       childList.push(vnode)
       // 添加父映射
       VNode.addParentVNodeMapping(vnode, this)
     }
+
     return childList
   }
 
