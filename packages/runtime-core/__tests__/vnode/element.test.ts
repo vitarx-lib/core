@@ -89,6 +89,21 @@ describe('ElementVNode 测试套件', () => {
       expect(createElementNSMock).toHaveBeenCalledTimes(1)
       expect(element1).toBe(element2)
     })
+
+    it('应该在创建元素时设置事件处理程序', () => {
+      const mockElement = document.createElement('div')
+      vi.spyOn(document, 'createElementNS').mockReturnValue(mockElement)
+      const eventHandler = vi.fn()
+      const vnode = new ElementVNode('div', { onClick: eventHandler })
+      vnode.element
+      vnode.element.dispatchEvent(new MouseEvent('click'))
+      expect(eventHandler).toHaveBeenCalled()
+    })
+
+    it('应该兼容props.children设置为0', () => {
+      const vnode = new ElementVNode('div', { children: 0 })
+      expect(vnode.element.textContent).toBe('0')
+    })
   })
 
   describe('isSvgVNode 静态方法测试', () => {
