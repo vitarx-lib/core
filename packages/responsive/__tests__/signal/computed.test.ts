@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { isSignal, reactive, ref } from '../../src'
-import { computed } from '../../src/signal/implement/computed'
+import { computed, isSignal, reactive, ref } from '../../src'
 
 describe('computed', () => {
   describe('基础功能', () => {
@@ -90,9 +89,9 @@ describe('computed', () => {
 
   describe('immediate选项', () => {
     it('应该支持immediate选项立即计算', () => {
-      const fn = vi.fn(() => 42)
+      const count = ref(0)
+      const fn = vi.fn(() => count.value)
       computed(fn, { immediate: true })
-
       // 不访问value属性也应该已经计算过一次
       expect(fn).toHaveBeenCalledTimes(1)
     })
