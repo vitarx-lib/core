@@ -132,7 +132,9 @@ export abstract class ContainerVNode<
     } else {
       let vnode: VNode
       target = toRaw(target)
-      if (target instanceof VNode) {
+      if ([false, undefined, null].includes(target as any)) {
+        vnode = new CommentVNode(String(target))
+      } else if (VNode.is(target)) {
         vnode = target
         // 检查key是否重复
         if ('key' in target && target.key) {
@@ -144,8 +146,6 @@ export abstract class ContainerVNode<
             keySet.add(target.key)
           }
         }
-      } else if ([false, undefined, null].includes(target as any)) {
-        vnode = new CommentVNode(String(target))
       } else {
         // 文本节点
         vnode = new TextVNode(String(target))
