@@ -391,9 +391,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 将元素挂载到父元素
     DomHelper.appendChild(parent, this.element)
     // 如果指定了容器，则将影子元素挂载到容器
-    if (this.#teleport) {
-      DomHelper.appendChild(container, this.shadowElement)
-    }
+    if (this.#teleport) DomHelper.appendChild(container, this.shadowElement)
   }
   /**
    * 用于组件的卸载过程
@@ -418,9 +416,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       // 兼容异步卸载
       if (result instanceof Promise) {
         isAsyncUnmount = true
-        result.finally(() => {
-          this.#completeUnmount()
-        })
+        result.finally(this.#completeUnmount)
       }
     }
     // 如果不是异步卸载直接执行卸载逻辑
@@ -657,14 +653,18 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * 仅提供给HMR使用
    *
    * @param module - 需要更新的模块对象，类型为泛型T
+   * @param resetState - 是否重置状态
    */
-  private updateModule(module: T) {
+  private updateModule(module: T, resetState: boolean = false) {
     if (import.meta.env?.MODE === 'development') {
       // 设置当前实例的类型为传入的模块
       this.type = module
       this.#instance?.$scope?.dispose()
       // 将实例变量重置为null，以便下次使用时重新创建
       this.#instance = null
+      this.#teleport = null
+      this.removeShadowElement()
+      if (resetState) this.#state = 'notRendered'
     }
   }
 }
