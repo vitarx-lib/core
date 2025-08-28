@@ -8,7 +8,7 @@ describe('update', () => {
     const callback = vi.fn()
     const childNode = createElement(() => {
       onMounted(callback)
-      return null
+      return createElement('span', null, 'test')
     })
     const vnode = createElement(() => {
       return () => (show.value ? createElement(Fragment) : childNode)
@@ -18,6 +18,7 @@ describe('update', () => {
     await vi.waitFor(() => {
       expect(callback).toBeCalled()
       expect(childNode.state).toBe('activated')
+      expect(vnode.element).toBeInstanceOf(HTMLSpanElement)
     })
   })
 })
