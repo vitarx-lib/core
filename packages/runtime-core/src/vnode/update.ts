@@ -299,7 +299,7 @@ export class VNodeUpdate {
       // 卸载旧节点
       oldVNode.unmount()
       // 挂载新节点
-      oldVNode.mount()
+      newVNode.mount()
     }
     return newVNode
   }
