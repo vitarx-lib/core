@@ -652,24 +652,19 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
-   * 恢复旧节点的状态和属性
+   * 更新模块的方法
    *
-   * 此方法供HMR使用，它会根据旧节点的属性和状态恢复当前节点的状态和属性
+   * 仅提供给HMR使用
    *
-   * @param oldNode - 需要恢复的旧节点
+   * @param module - 需要更新的模块对象，类型为泛型T
    */
-  recover(oldNode: WidgetVNode) {
-    // 恢复子节点
-    this.#child = oldNode.child
-    // 恢复状态
-    this.#state = oldNode.state
-    // 恢复传送门状态
-    this.#teleport = oldNode.teleport
-    // 如果旧节点有 shadow 元素，则恢复 shadow 元素
-    if (oldNode.hasShadowElement()) this.shadowElement = oldNode.shadowElement
-    // 恢复引用
-    this.ref = oldNode.ref
-    // 如果存在引用，则将实例赋值给引用的 value 属性
-    this.ref && (this.ref.value = this.instance)
+  private updateModule(module: T) {
+    if (import.meta.env?.MODE === 'development') {
+      // 设置当前实例的类型为传入的模块
+      this.type = module
+      this.#instance?.$scope?.dispose()
+      // 将实例变量重置为null，以便下次使用时重新创建
+      this.#instance = null
+    }
   }
 }
