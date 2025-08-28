@@ -21,9 +21,6 @@
     "build:runtime-core": "tsx scripts/build.ts runtime-core --test",
     "test:runtime-core": "vitest run --dir packages/runtime-core",
     "test:runtime-core:coverage": "vitest run --dir packages/runtime-core --coverage",
-    "build:runtime-dom": "tsx scripts/build.ts runtime-dom --test",
-    "test:runtime-dom": "vitest run --dir packages/runtime-dom",
-    "test:runtime-dom:coverage": "vitest run --dir packages/runtime-dom --coverage",
     "build:vitarx": "tsx scripts/build.ts vitarx --test",
     "test:vitarx": "vitest run --dir packages/vitarx",
     "test:vitarx:coverage": "vitest run --dir packages/vitarx --coverage"
