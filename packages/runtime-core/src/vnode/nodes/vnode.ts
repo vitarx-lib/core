@@ -260,8 +260,9 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   abstract mount(container?: ParentNode): void
   /**
-   * 卸载组件的方法
-   * 该方法会递归卸载所有子组件，并从DOM中移除当前组件的元素
+   * 卸载元素或组件的方法
+   *
+   * 此方法需实现元素/组件的卸载逻辑
    */
   abstract unmount(): void
 
