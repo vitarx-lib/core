@@ -87,7 +87,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   /**
    * 用于缓存 build 方法的返回值
    */
-  #child?: VNode
+  #child: VNode | null = null
   /**
    * 生命周期状态
    * @private
@@ -664,6 +664,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.#instance = null
       this.#teleport = null
       this.removeShadowElement()
+      this.#child = null
       if (resetState) this.#state = 'notRendered'
     }
   }
