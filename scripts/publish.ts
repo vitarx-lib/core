@@ -45,9 +45,13 @@ try {
   // 检查用户是否已登录npm
   // 使用whoami命令验证，如果未登录则会抛出异常
   try {
-    execSync('pnpm whoami', { stdio: 'ignore' })
+    execSync('pnpm whoami --registry https://registry.npmjs.org/', { stdio: 'ignore' })
   } catch (e) {
-    console.error(chalk.red('Error: You are not logged in to npm. Please run `npm login` first'))
+    console.error(
+      chalk.red(
+        'Error: You are not logged in to npm. Please run `pnpm login --registry https://registry.npmjs.org/` first'
+      )
+    )
     process.exit(1)
   }
 
@@ -64,7 +68,10 @@ try {
   // 发布包到npm仓库
   // 切换到包目录并执行npm publish命令，设置为公共访问权限
   console.log(chalk.blue(`Publishing package: ${packageName}...`))
-  execSync(`cd ${packagePath} && pnpm publish --access public`, { stdio: 'inherit' })
+  execSync(
+    `cd ${packagePath} && pnpm publish --access public --registry https://registry.npmjs.org/`,
+    { stdio: 'inherit' }
+  )
 
   // 发布成功提示
   console.log(chalk.green(`\n✨ Successfully published ${packageName}!`))
