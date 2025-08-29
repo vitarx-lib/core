@@ -24,7 +24,7 @@ function jsx<T extends VNodeType>(
       props.key = key
     }
   }
-  return createVNode(type, props)
+  return createVNode(type, props) as VNode<T>
 }
 
 export { jsx, Fragment, jsx as jsxs }
