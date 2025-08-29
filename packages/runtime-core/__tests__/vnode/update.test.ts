@@ -1,6 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import { createElement, Fragment, onMounted } from '../../src'
+import { createElement, Fragment, onMounted, WidgetVNode } from '../../src'
 
 describe('update', () => {
   it('should update', async () => {
@@ -9,7 +9,7 @@ describe('update', () => {
     const childNode = createElement(() => {
       onMounted(callback)
       return createElement('span', null, 'test')
-    })
+    }) as unknown as WidgetVNode
     const vnode = createElement(() => {
       return () => (show.value ? createElement(Fragment) : childNode)
     })
