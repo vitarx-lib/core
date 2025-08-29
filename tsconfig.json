@@ -33,6 +33,8 @@
     "noUnusedLocals": false,
     // 确保文件名大小写一致
     "forceConsistentCasingInFileNames": true,
+    // 允许使用类字段
+    "useDefineForClassFields": true,
     "types": [
       "vitest/globals",
       "vite/client",
