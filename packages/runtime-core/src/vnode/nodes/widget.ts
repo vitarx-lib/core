@@ -397,7 +397,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * 用于组件的卸载过程
    * 该方法会处理卸载前的状态检查、生命周期触发、子元素卸载等操作
    */
-  override unmount() {
+  override unmount(root: boolean = true) {
     // 检查当前状态是否允许卸载
     if (this.state === 'uninstalling' || this.state === 'unloaded') {
       throw new Error(`[Vitarx.WidgetVNode.unmount]：The widget is already ${this.state}`)
@@ -406,12 +406,10 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     this.#state = 'uninstalling'
     // 触发onBeforeUnmount生命周期
     this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
-    // 递归卸载子节点
-    this.child.unmount()
     // 异步卸载标志
     let isAsyncUnmount = false
     // 如果是根节点且是激活状态，则需要触发删除元素前的回调
-    if (this.state === 'activated') {
+    if (root && this.state === 'activated') {
       const result = this.triggerLifecycleHook(LifecycleHooks.beforeRemove, this.element, 'unmount')
       // 兼容异步卸载
       if (result instanceof Promise) {
@@ -419,6 +417,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         result.finally(this.#completeUnmount)
       }
     }
+    // 递归卸载子节点
+    this.child.unmount(root && !isAsyncUnmount)
     // 如果不是异步卸载直接执行卸载逻辑
     if (!isAsyncUnmount) this.#completeUnmount()
   }
@@ -642,7 +642,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 执行卸载后续操作
     this.scope.dispose()
     this.removeShadowElement()
-    DomHelper.remove(this.element)
+    // 移除元素
+    if (this.element.parentNode) DomHelper.remove(this.element)
     this.#state = 'unloaded'
     this.triggerLifecycleHook(LifecycleHooks.unmounted)
   }

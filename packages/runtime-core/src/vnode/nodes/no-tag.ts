@@ -49,8 +49,8 @@ export abstract class NoTagVNode<T extends Type> extends VNode<T> {
   /**
    * @inheritDoc
    */
-  override unmount() {
-    if (this.element.parentNode) this.element.parentNode.removeChild(this.element)
+  override unmount(root: boolean = true) {
+    if (root && this.element.parentNode) this.element.parentNode.removeChild(this.element)
   }
 
   /**

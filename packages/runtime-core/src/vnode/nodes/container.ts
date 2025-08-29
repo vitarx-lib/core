@@ -96,11 +96,11 @@ export abstract class ContainerVNode<
   /**
    * @inheritDoc
    */
-  override unmount(): void {
+  override unmount(root: boolean = true): void {
     for (const child of this.children) {
-      child.unmount()
+      child.unmount(false)
     }
-    DomHelper.remove(this.element)
+    if (root) DomHelper.remove(this.element)
   }
 
   /**
