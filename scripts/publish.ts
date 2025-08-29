@@ -35,12 +35,12 @@ if (!existsSync(packagePath)) {
 }
 
 // 保存当前npm源配置
-const originalRegistry = execSync('npm config get registry', { encoding: 'utf-8' }).trim()
+const originalRegistry = execSync('pnpm config get registry', { encoding: 'utf-8' }).trim()
 
 try {
   // 切换到npm官方源
   console.log(chalk.blue('Switching to npm official registry...'))
-  execSync('npm config set registry https://registry.npmjs.org/', { stdio: 'inherit' })
+  execSync('pnpm config set registry https://registry.npmjs.org/', { stdio: 'inherit' })
 
   // 检查用户是否已登录npm
   // 使用whoami命令验证，如果未登录则会抛出异常
@@ -76,5 +76,5 @@ try {
 } finally {
   // 恢复原来的npm源配置
   console.log(chalk.blue('\nRestoring original npm registry...'))
-  execSync(`npm config set registry ${originalRegistry}`, { stdio: 'inherit' })
+  execSync(`pnpm config set registry ${originalRegistry}`, { stdio: 'inherit' })
 }
