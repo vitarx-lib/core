@@ -14,15 +14,14 @@ import { TextVNode } from './text'
 import { VNode } from './vnode'
 import { WidgetVNode } from './widget'
 
+type ContainerVNodeType = IntrinsicNodeElementName | FragmentNodeElementName
 /**
  * ContainerElementVNode 类是一个抽象类，继承自 VNode 类
  * 用于表示可以包含子节点的虚拟节点，支持 HTML 元素、SVG 元素或片段节点
  * @typeParam T - 表示节点名称的类型，可以是内置节点元素名称或 'fragment-node'
  */
 export abstract class ContainerVNode<
-  T extends IntrinsicNodeElementName | FragmentNodeElementName =
-    | IntrinsicNodeElementName
-    | FragmentNodeElementName
+  T extends ContainerVNodeType = ContainerVNodeType
 > extends VNode<T> {
   #children: VNode[]
 
