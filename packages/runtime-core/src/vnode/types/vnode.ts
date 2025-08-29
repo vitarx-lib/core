@@ -1,8 +1,17 @@
 import type { RefSignal } from '@vitarx/responsive'
 import type { AnyPrimitive } from '@vitarx/utils'
 import { type ClassWidget, type FunctionWidget } from '../../widget'
-import { VNode } from '../nodes'
-import type { AllNodeElementName, NodeElement } from './element'
+import type { Comment, Fragment, Text } from '../constant'
+import { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes'
+import {
+  type AllNodeElementName,
+  type CommentNodeElementName,
+  type FragmentNodeElementName,
+  IntrinsicNodeElementName,
+  type NodeElement,
+  type NoTagNodeElementName,
+  type TextNodeElementName
+} from './element'
 import type { IntrinsicProperties } from './properties'
 
 /**
@@ -34,3 +43,24 @@ export type VNodeProps<T extends VNodeType> = T extends AllNodeElementName
   : T extends WidgetType
     ? WidgetPropsType<T>
     : never
+
+/**
+ * 节点实例类型重载
+ */
+export type VNodeInstance<T extends VNodeType> = T extends FragmentNodeElementName | Fragment
+  ? FragmentVNode
+  : T extends NoTagNodeElementName | Text | Comment
+    ? NoTagVNode<
+        T extends Text
+          ? TextNodeElementName
+          : T extends Comment
+            ? CommentNodeElementName
+            : T extends NoTagNodeElementName
+              ? T
+              : never
+      >
+    : T extends WidgetType
+      ? WidgetVNode<T>
+      : T extends IntrinsicNodeElementName
+        ? ElementVNode<T>
+        : never

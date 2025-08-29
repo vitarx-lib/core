@@ -1,7 +1,7 @@
 import { popProperty } from '@vitarx/utils'
 import { isSimpleWidget } from '../widget/index'
 import { CommentVNode, ElementVNode, FragmentVNode, TextVNode, VNode, WidgetVNode } from './nodes'
-import { type Child, type VNodeProps, VNodeType } from './types'
+import { type Child, type VNodeInstance, type VNodeProps, VNodeType } from './types'
 
 /**
  * 创建虚拟节点的工厂函数
@@ -15,14 +15,14 @@ export function createVNode<T extends VNodeType>(
   type: T,
   props: VNodeProps<T> | null = null,
   ...children: Child[]
-): VNode<T> {
+): VNodeInstance<T> {
   if (props) {
     const vIf = popProperty(props, 'v-if')
-    if (vIf) return new CommentVNode('v-if') as unknown as VNode<T>
+    if (vIf) return new CommentVNode('v-if') as unknown as VNodeInstance<T>
     const vMemoValue = props['v-memo']
     if (Array.isArray(vMemoValue)) {
       const cached = VNode.getMemoNode(vMemoValue)
-      if (cached) return cached as VNode<T>
+      if (cached) return cached as VNodeInstance<T>
     }
   } else {
     props = {} as VNodeProps<T>
@@ -54,23 +54,26 @@ export function createVNode<T extends VNodeType>(
         }
         // 根据类型创建文本节点或注释节点
         // 处理片段节点
-        return new (type === 'text-node' ? TextVNode : CommentVNode)(value) as unknown as VNode<T>
+        return new (type === 'text-node' ? TextVNode : CommentVNode)(
+          value
+        ) as unknown as VNodeInstance<T>
       case 'fragment-node':
         // 默认处理元素节点
-        return new FragmentVNode(props) as unknown as VNode<T>
+        return new FragmentVNode(props) as unknown as VNodeInstance<T>
       default:
-        return new ElementVNode(type, props) as unknown as VNode<T>
+        return new ElementVNode(type, props) as unknown as VNodeInstance<T>
     }
   }
   if (isSimpleWidget(type)) {
     const vnode = type.call(null, props)
     if (!VNode.is(vnode)) throw new Error('simple widget must return a VNode')
-    return vnode as unknown as VNode<T>
+    return vnode as unknown as VNodeInstance<T>
   }
-  return new WidgetVNode(type, props) as unknown as VNode<T>
+  return new WidgetVNode(type, props) as unknown as VNodeInstance<T>
 }
 
 export { createVNode as createElement }
+
 /**
  * 获取当前虚拟节点(WidgetVNode)的函数
  * 该函数通过调用WidgetVNode类的静态方法getCurrentVNode()来实现
