@@ -1,5 +1,5 @@
 import { isVNode, VNode } from '../../vnode'
-import { Widget } from '../widget'
+import { type Element, Widget } from '../widget'
 
 /**
  * Teleport小部件配置选项
@@ -69,7 +69,7 @@ export class Teleport extends Widget<TeleportProps> {
     return this.props.disabled ? void 0 : this.target
   }
 
-  override build() {
+  override build(): Element {
     return this.children
   }
 }
