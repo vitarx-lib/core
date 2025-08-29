@@ -1,8 +1,8 @@
-import { type Child, type FragmentElement } from '../types'
+import { type Child, type FragmentElement, type FragmentNodeElementName } from '../types'
 import { CommentVNode } from './comment'
 import { ContainerVNode } from './container'
 
-export class FragmentVNode extends ContainerVNode<'fragment-node'> {
+export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
   /**
    * 运行时元素实例
    */
