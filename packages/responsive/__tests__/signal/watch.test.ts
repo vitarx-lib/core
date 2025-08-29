@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { reactive, ref, watch, watchChanges, watchProperty } from '../../src'
-import { computed } from '../../src/signal/implement/computed'
+import { computed, reactive, ref, watch, watchChanges, watchProperty } from '../../src'
 
 describe('watch', () => {
   describe('基础功能', () => {
