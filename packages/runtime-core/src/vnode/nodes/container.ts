@@ -4,6 +4,7 @@ import { DomHelper } from '../../dom'
 import type {
   Child,
   FragmentElement,
+  FragmentNodeElementName,
   IntrinsicNodeElementName,
   UniqueKey,
   VNodeProps
@@ -19,7 +20,9 @@ import { WidgetVNode } from './widget'
  * @typeParam T - 表示节点名称的类型，可以是内置节点元素名称或 'fragment-node'
  */
 export abstract class ContainerVNode<
-  T extends IntrinsicNodeElementName | 'fragment-node' = IntrinsicNodeElementName | 'fragment-node'
+  T extends IntrinsicNodeElementName | FragmentNodeElementName =
+    | IntrinsicNodeElementName
+    | FragmentNodeElementName
 > extends VNode<T> {
   #children: VNode[]
 
