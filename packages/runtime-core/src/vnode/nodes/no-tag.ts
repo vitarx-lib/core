@@ -1,13 +1,12 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { unref } from '@vitarx/responsive'
+import type { NoTagNodeElementName } from '../types'
 import { VNode } from './vnode'
-
-type Type = 'comment-node' | 'text-node'
 
 /**
  * 纯文本节点抽象类
  */
-export abstract class NoTagVNode<T extends Type> extends VNode<T> {
+export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T> {
   #value: string
 
   protected constructor(type: T, value: string | RefSignal<string>) {
