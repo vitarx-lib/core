@@ -157,15 +157,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   get instance(): WidgetInstance<T> {
     // 检查实例是否已存在
     if (!this.#instance) {
-      // 检查是否为开发环境
-      if (import.meta.env?.MODE === 'development') {
-        // 检查是否在浏览器环境中
-        if (typeof window !== 'undefined') {
-          // 避免未渲染的节点引用到旧模块，已渲染的节点会由 hmr 替换为最新模块
-          const newModule = window.__$VITARX_HMR$__?.replaceNewModule?.(this.type)
-          if (newModule) this.type = newModule
-        }
-      }
       // 创建作用域
       const scope = createScope({
         name: this.type.name,
