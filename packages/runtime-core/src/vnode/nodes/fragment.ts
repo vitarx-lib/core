@@ -1,4 +1,9 @@
-import { type Child, type FragmentElement, type FragmentNodeElementName } from '../types'
+import {
+  type Child,
+  type FragmentElement,
+  type FragmentNodeElementName,
+  type RuntimeElement
+} from '../types'
 import { CommentVNode } from './comment'
 import { ContainerVNode } from './container'
 
@@ -22,7 +27,7 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
    *
    * @return {FragmentElement} 返回片段元素，这是一个文档片段对象，包含了虚拟DOM的节点信息
    */
-  override get element(): FragmentElement {
+  override get element(): RuntimeElement<FragmentNodeElementName> {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
       this.#element = document.createDocumentFragment() as FragmentElement
