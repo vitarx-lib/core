@@ -3,14 +3,13 @@ import type { AnyPrimitive } from '@vitarx/utils'
 import { type ClassWidget, type FunctionWidget } from '../../widget'
 import type { Comment, Fragment, Text } from '../constant'
 import { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes'
-import {
-  type AllNodeElementName,
-  type CommentNodeElementName,
-  type FragmentNodeElementName,
+import type {
+  AllNodeElementName,
+  CommentNodeElementName,
+  FragmentNodeElementName,
   IntrinsicNodeElementName,
-  type NodeElement,
-  type NoTagNodeElementName,
-  type TextNodeElementName
+  NodeElement,
+  TextNodeElementName
 } from './element'
 import type { IntrinsicProperties } from './properties'
 
@@ -49,18 +48,12 @@ export type VNodeProps<T extends VNodeType> = T extends AllNodeElementName
  */
 export type VNodeInstance<T extends VNodeType> = T extends FragmentNodeElementName | Fragment
   ? FragmentVNode
-  : T extends NoTagNodeElementName | Text | Comment
-    ? NoTagVNode<
-        T extends Text
-          ? TextNodeElementName
-          : T extends Comment
-            ? CommentNodeElementName
-            : T extends NoTagNodeElementName
-              ? T
-              : never
-      >
-    : T extends WidgetType
-      ? WidgetVNode<T>
-      : T extends IntrinsicNodeElementName
-        ? ElementVNode<T>
-        : never
+  : T extends TextNodeElementName | Text
+    ? NoTagVNode<TextNodeElementName>
+    : T extends CommentNodeElementName | Comment
+      ? NoTagVNode<CommentNodeElementName>
+      : T extends WidgetType
+        ? WidgetVNode<T>
+        : T extends IntrinsicNodeElementName
+          ? ElementVNode<T>
+          : VNode<T>
