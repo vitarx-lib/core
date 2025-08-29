@@ -8,11 +8,18 @@ import type { Child, VNodeType } from './vnode'
  */
 type ElementTagMap = HTMLElementTagNameMap &
   Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>
-
+/**
+ * 文本节点元素名称
+ */
+export type TextNodeElementName = 'text-node'
+/**
+ * 注释节点元素名称
+ */
+export type CommentNodeElementName = 'comment-node'
 /**
  * 无标签元素名称
  */
-export type NoTagNodeElementName = 'comment-node' | 'text-node'
+export type NoTagNodeElementName = TextNodeElementName | CommentNodeElementName
 /**
  * 片段节点元素名称
  */
