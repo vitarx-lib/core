@@ -663,10 +663,12 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.#instance?.$scope?.dispose()
       // 将实例变量重置为null，以便下次使用时重新创建
       this.#instance = null
-      this.#teleport = null
-      this.removeShadowElement()
-      this.#child = null
-      if (resetState) this.#state = 'notRendered'
+      if (resetState) {
+        this.#teleport = null
+        this.removeShadowElement()
+        this.#child = null
+        this.#state = 'notRendered'
+      }
     }
   }
 }
