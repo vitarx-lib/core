@@ -264,9 +264,9 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    *
    * 此方法需实现元素/组件的卸载逻辑
    *
-   * @param {boolean} root - 是否为根元素，递归时传递！
+   * @param {boolean} [root] - 绝对是否做为根元素卸载
    */
-  abstract unmount(root: boolean): void
+  abstract unmount(root?: boolean): void
 
   /**
    * 获取 shadow 元素的访问器属性
