@@ -1,6 +1,6 @@
 {
   "name": "vitarx",
-  "version": "3.0.0-alpha.14",
+  "version": "3.0.0-beta.1",
   "description": "Vitarx 是一个现代化的前端框架",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
@@ -13,11 +13,10 @@
     "directory": "packages/vitarx"
   },
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "unpkg": "dist/index.iife.js",
-  "jsdelivr": "dist/index.iife.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/index.iife.js",
+  "jsdelivr": "./dist/index.iife.js",
   "files": [
     "dist",
     "LICENSE",
@@ -37,7 +36,9 @@
     "./jsx-dev-runtime": {
       "types": "./dist/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx-dev-runtime.js"
-    }
+    },
+    "./unpkg": "./dist/index.iife.js",
+    "./jsdelivr": "./dist/index.iife.js"
   },
   "dependencies": {
     "@vitarx/utils": "workspace:*",
