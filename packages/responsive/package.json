@@ -1,6 +1,6 @@
 {
   "name": "@vitarx/responsive",
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-beta.1",
   "description": "Vitarx responsive package",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
@@ -14,25 +14,24 @@
     "directory": "packages/responsive"
   },
   "type": "module",
-  "main": "index.mjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "unpkg": "dist/index.iife.js",
-  "jsdelivr": "dist/index.iife.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/index.iife.js",
+  "jsdelivr": "./dist/index.iife.js",
   "files": [
     "dist",
     "LICENSE",
-    "index.mjs",
     "README.md"
   ],
   "exports": {
     ".": {
       "import": {
         "types": "./dist/index.d.ts",
-        "node": "./dist/index.js",
         "default": "./dist/index.js"
       }
-    }
+    },
+    "./unpkg": "./dist/index.iife.js",
+    "./jsdelivr": "./dist/index.iife.js"
   },
   "dependencies": {
     "@vitarx/utils": "workspace:*"
