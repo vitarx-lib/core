@@ -133,7 +133,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
 
   get child(): VNode {
     if (!this.#child) {
-      this.#child = this.#buildChild()
+      this.#child = this.#build()
     }
     return this.#child
   }
@@ -478,7 +478,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         // 如果组件已卸载，则不进行更新
         if (this.state === 'unloaded') return
         const oldVNode = this.child
-        const newVNode = newChildVNode || this.#buildChild()
+        const newVNode = newChildVNode || this.#build()
         this.#child = this.instance.$patchUpdate(oldVNode, newVNode)
         // 触发更新后生命周期
         this.triggerLifecycleHook(LifecycleHooks.updated)
@@ -488,6 +488,44 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       throw e
     }
   }
+
+  /**
+   * 构建子虚拟节点的方法
+   *
+   * @returns {VNode} 返回构建的虚拟节点
+   */
+  #buildChild(): VNode {
+    let vnode: VNode // 声明虚拟节点变量
+    try {
+      // 执行构建逻辑
+      const buildNode = this.instance.build() // 调用实例的build方法
+      if (buildNode === null) {
+        // 如果构建结果为null，则创建注释节点
+        vnode = new CommentVNode(`Widget(${this.name}) build null`)
+      } else if (VNode.is(buildNode)) {
+        // 如果构建结果是VNode实例，则直接使用
+        vnode = buildNode
+      } else {
+        // 如果构建结果不是VNode，则创建错误注释节点
+        vnode = new CommentVNode(
+          `The return value of the Widget(${this.name}) build is not a VNode`
+        )
+      }
+    } catch (e) {
+      // 处理构建过程中的异常
+      // 触发生命周期错误钩子
+      const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
+        source: 'build',
+        instance: this.instance
+      })
+      // 如果构建出错，则使用错误虚拟节点
+      vnode = VNode.is(errVNode) ? errVNode : new CommentVNode(`${this.name} Widget build fail`)
+    }
+
+    // 建立父子虚拟节点的映射关系
+    VNode.addParentVNodeMapping(vnode, this)
+    return vnode // 返回构建的虚拟节点
+  }
   /**
    * 构建子虚拟节点
    *
@@ -496,39 +534,18 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    *
    * @returns {VNode} 返回构建好的虚拟节点
    */
-  #buildChild(): VNode {
+  #build(): VNode {
     // 如果已存在视图依赖订阅器，则先释放旧的订阅器
     if (this.#viewDepSubscriber) this.#viewDepSubscriber.dispose()
 
     // 订阅依赖并构建虚拟节点
-    const { result, subscriber } = depSubscribe((): VNode => {
-      let vnode: VNode
-      try {
-        // 执行构建逻辑
-        const buildNode = this.instance.build()
-        if (buildNode === null) {
-          vnode = new CommentVNode(`Widget(${this.name}) build null`)
-        } else if (VNode.is(buildNode)) {
-          vnode = buildNode
-        } else {
-          vnode = new CommentVNode(
-            `The return value of the Widget(${this.name}) build is not a VNode`
-          )
-        }
-      } catch (e) {
-        // 处理构建过程中的异常
-        const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
-          source: 'build',
-          instance: this.instance
-        })
-        // 如果构建出错，则使用错误虚拟节点
-        vnode = VNode.is(errVNode) ? errVNode : new CommentVNode(`${this.name} Widget build fail`)
+    const { result, subscriber } = depSubscribe(
+      this.#buildChild.bind(this),
+      this.updateChild.bind(this),
+      {
+        scope: false
       }
-
-      // 建立父子虚拟节点的映射关系
-      VNode.addParentVNodeMapping(vnode, this)
-      return vnode
-    }, this.updateChild.bind(this))
+    )
 
     // 更新订阅器
     this.#viewDepSubscriber = subscriber
