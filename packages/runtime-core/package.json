@@ -1,6 +1,6 @@
 {
   "name": "@vitarx/runtime-core",
-  "version": "1.0.0-alpha.12",
+  "version": "1.0.0-beta.1",
   "description": "Vitarx runtime-core package",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
@@ -14,11 +14,10 @@
     "directory": "packages/runtime-dom"
   },
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "unpkg": "dist/index.iife.js",
-  "jsdelivr": "dist/index.iife.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/index.iife.js",
+  "jsdelivr": "./dist/index.iife.js",
   "files": [
     "dist",
     "LICENSE",
@@ -26,12 +25,11 @@
   ],
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "node": "./dist/index.js",
-        "default": "./dist/index.js"
-      }
-    }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./unpkg": "./dist/index.iife.js",
+    "./jsdelivr": "./dist/index.iife.js"
   },
   "dependencies": {
     "@vitarx/responsive": "workspace:*",
