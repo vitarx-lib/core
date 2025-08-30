@@ -599,9 +599,14 @@ export class DomHelper {
     value: any
   ): void {
     try {
-      // 处理 SVG 命名空间属性
-      if (this.isSvgNamespaceAttribute(el, name)) {
-        this.setSvgAttribute(el, name, value)
+      // 特殊处理xmlns:xlink
+      if (name === 'xmlns:xlink') {
+        el.setAttributeNS('http://www.w3.org/2000/xmlns/', name, value)
+        return
+      }
+      // 处理 xlink 属性
+      if (name.startsWith('xlink:')) {
+        el.setAttributeNS('http://www.w3.org/1999/xlink/', name, String(value))
         return
       }
       // 尝试直接设置属性
@@ -612,37 +617,6 @@ export class DomHelper {
       el.setAttribute(name, String(value))
     } catch (error) {
       this.handleAttributeError(name, error, el)
-    }
-  }
-
-  /**
-   * 判断是否为 SVG 命名空间属性
-   *
-   * @param {HTMLElement | SVGElement} el - 要检查的元素，可以是 HTMLElement 或 SVGElement 类型
-   * @param {string} name - 要检查的属性名称
-   * @returns {boolean} 如果元素是 SVG 命名空间且属性名以 'xlink:' 开头或等于 'href' 则返回 true，否则返回 false
-   */
-  private static isSvgNamespaceAttribute(el: HTMLElement | SVGElement, name: string): boolean {
-    return (
-      el.namespaceURI === 'http://www.w3.org/2000/svg' &&
-      (name.startsWith('xlink:') || name === 'href')
-    )
-  }
-
-  /**
-   * 设置 SVG 属性
-   * @param el - 要设置属性的元素，可以是 HTMLElement 或 SVGElement 类型
-   * @param name - 属性名称
-   * @param value - 属性值
-   * @returns {void} 无返回值
-   */
-  private static setSvgAttribute(el: HTMLElement | SVGElement, name: string, value: any): void {
-    // 处理 xlink 命名空间的属性
-    if (name.startsWith('xlink:')) {
-      el.setAttributeNS('http://www.w3.org/1999/xlink', name, String(value))
-      // 处理 SVG href 属性
-    } else if (name === 'href') {
-      el.setAttributeNS('http://www.w3.org/2000/svg', 'href', String(value))
     }
   }
 
