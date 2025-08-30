@@ -639,7 +639,7 @@ export class DomHelper {
   private static setSvgAttribute(el: HTMLElement | SVGElement, name: string, value: any): void {
     // 处理 xlink 命名空间的属性
     if (name.startsWith('xlink:')) {
-      el.setAttributeNS('http://www.w3.org/2000/xlink', name, String(value))
+      el.setAttributeNS('http://www.w3.org/1999/xlink', name, String(value))
       // 处理 SVG href 属性
     } else if (name === 'href') {
       el.setAttributeNS('http://www.w3.org/2000/svg', 'href', String(value))
