@@ -1,6 +1,6 @@
 {
   "name": "vitarx",
-  "version": "3.0.0-beta.3",
+  "version": "3.0.0-beta.4",
   "description": "Vitarx是一个现代化的前端框架",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
@@ -41,8 +41,8 @@
     "./jsdelivr": "./dist/index.iife.js"
   },
   "dependencies": {
-    "@vitarx/utils": "workspace:*",
-    "@vitarx/responsive": "workspace:*",
-    "@vitarx/runtime-core": "workspace:*"
+    "@vitarx/utils": "workspace:^",
+    "@vitarx/responsive": "workspace:^",
+    "@vitarx/runtime-core": "workspace:^"
   }
 }
