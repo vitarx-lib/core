@@ -1,6 +1,6 @@
 {
   "name": "@vitarx/runtime-core",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "Vitarx runtime-core package",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
@@ -32,8 +32,8 @@
     "./jsdelivr": "./dist/index.iife.js"
   },
   "dependencies": {
-    "@vitarx/responsive": "workspace:*",
-    "@vitarx/utils": "workspace:*",
+    "@vitarx/responsive": "workspace:^",
+    "@vitarx/utils": "workspace:^",
     "csstype": "^3.1.3"
   }
 }
