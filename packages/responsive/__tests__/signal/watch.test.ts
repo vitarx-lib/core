@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { computed, reactive, ref, watch, watchChanges, watchProperty } from '../../src'
+import { computed, reactive, ref, watch, watchChanges, watchEffect, watchProperty } from '../../src'
 
 describe('watch', () => {
   describe('基础功能', () => {
@@ -63,6 +63,37 @@ describe('watch', () => {
       watch(set, fn2, { batch: false })
       set.value.add('key')
       expect(fn2).toHaveBeenCalledOnce()
+    })
+    it('应该支持监听数组的变化', async () => {
+      const data = ref([1, 2, 3])
+      const fn = vi.fn()
+      watchEffect(() => {
+        data.value.map(item => item + 1)
+      }, fn)
+      data.value.push(0)
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledOnce()
+      })
+      data.value.pop()
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledTimes(2)
+      })
+      data.value.unshift(4)
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledTimes(3)
+      })
+      data.value.reverse()
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledTimes(4)
+      })
+      data.value.shift()
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledTimes(5)
+      })
+      data.value.splice(5)
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledTimes(6)
+      })
     })
   })
 
