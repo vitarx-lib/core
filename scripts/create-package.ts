@@ -35,8 +35,8 @@ const packageJson = {
     directory: `packages/${packageName}`
   },
   type: 'module',
-  main: 'dist/index.js',
-  module: 'dist/index.js',
+  main: './dist/index.js',
+  module: './dist/index.js',
   types: 'dist/index.d.ts',
   unpkg: 'dist/index.iife.js',
   jsdelivr: 'dist/index.iife.js',
@@ -45,13 +45,14 @@ const packageJson = {
     '.': {
       import: {
         types: './dist/index.d.ts',
-        node: './dist/index.js',
         default: './dist/index.js'
       }
-    }
+    },
+    './unpkg': './dist/index.iife.js',
+    './jsdelivr': './dist/index.iife.js'
   },
   dependencies: {
-    '@vitarx/utils': 'workspace:*'
+    '@vitarx/utils': 'workspace:^'
   }
 }
 
