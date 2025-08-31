@@ -1,5 +1,4 @@
-import { ref, watch } from '../../src'
-import { computed } from '../../src/signal/implement/computed'
+import { computed, ref, watch } from '../../src'
 
 const { memoryUsage } = process
 
@@ -7,7 +6,7 @@ const data = ref(1)
 const startMemory = memoryUsage()
 console.time('executionTime')
 
-const max = 10000
+const max = 1000
 let changeCount = 0
 for (let i = 0; i < max; i++) {
   const c = computed(() => data.value + 100).init()
