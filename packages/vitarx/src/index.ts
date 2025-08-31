@@ -10,11 +10,13 @@ import type {
   VNodeType,
   Widget
 } from '@vitarx/runtime-core'
+import { jsx, jsxs } from './jsx-runtime'
 
 export * from '@vitarx/utils'
 export * from '@vitarx/responsive'
 export * from '@vitarx/runtime-core'
 export * from './app'
+export { jsx, jsxs }
 
 declare global {
   namespace Vitarx {
