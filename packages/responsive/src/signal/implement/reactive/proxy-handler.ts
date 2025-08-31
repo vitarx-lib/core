@@ -97,6 +97,8 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
     }
     // 获取值
     const value = Reflect.get(target, prop, receiver)
+    // 如果访问的是数组的函数时，则直接返回，不继续往下执行
+    if (typeof value === 'function' && Array.isArray(target)) return value
     // 惰性深度代理
     if (this.#childSignalMap && isObject(value) && !isMarkNotSignal(value)) {
       // 已经创建过子代理则直接返回
