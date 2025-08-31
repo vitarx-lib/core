@@ -187,6 +187,10 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    */
   set(target: T, prop: AnyKey, newValue: any, receiver: any): boolean {
     const oldValue = Reflect.get(target, prop)
+    if (prop === 'length' && this.isArray) {
+      this.notify(prop)
+      return true
+    }
     if (this.options.compare(oldValue, newValue)) return true
     // 删除子代理
     this.removeChildSignal(prop)
