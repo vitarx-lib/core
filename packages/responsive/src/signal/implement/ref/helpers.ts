@@ -1,5 +1,5 @@
-import { type SignalOptions, type SignalToRaw, toRaw } from '../../core'
-import { Ref } from './ref'
+import { type SignalOptions, type SignalToRaw, toRaw } from '../../core/index.js'
+import { Ref } from './ref.js'
 
 /**
  * 创建一个响应式引用信号

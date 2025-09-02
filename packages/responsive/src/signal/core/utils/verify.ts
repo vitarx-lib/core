@@ -3,8 +3,8 @@ import {
   PROXY_SIGNAL_SYMBOL,
   REF_SIGNAL_SYMBOL,
   SIGNAL_SYMBOL
-} from '../constants'
-import type { BaseSignal, ProxySignal, RefSignal } from '../types'
+} from '../constants.js'
+import type { BaseSignal, ProxySignal, RefSignal } from '../types/index.js'
 
 /**
  * 检查一个值是否为响应式信号。信号是一个具有特殊标识符的响应式数据容器。

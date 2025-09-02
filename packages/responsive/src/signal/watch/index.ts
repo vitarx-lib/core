@@ -1,2 +1,2 @@
-export * from './types'
-export * from './watch'
+export * from './types.js'
+export * from './watch.js'

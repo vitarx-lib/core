@@ -7,10 +7,15 @@ import {
   isFunction,
   VoidCallback
 } from '@vitarx/utils'
-import { Depend } from '../../depend'
-import { type ChangeCallback, Observer, Subscriber } from '../../observer'
-import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core'
-import type { CanWatchProperty, WatchCallback, WatchOptions, WatchPropertyCallback } from './types'
+import { Depend } from '../../depend/index.js'
+import { type ChangeCallback, Observer, Subscriber } from '../../observer/index.js'
+import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index.js'
+import type {
+  CanWatchProperty,
+  WatchCallback,
+  WatchOptions,
+  WatchPropertyCallback
+} from './types.js'
 
 /**
  * 复制值，支持深度克隆

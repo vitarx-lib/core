@@ -1,7 +1,7 @@
 import { AnyObject } from '@vitarx/utils'
-import { SIGNAL_RAW_VALUE_SYMBOL, type SignalOptions } from '../../core'
-import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './proxy-handler'
-import type { Reactive, Unreactive } from './types'
+import { SIGNAL_RAW_VALUE_SYMBOL, type SignalOptions } from '../../core/index.js'
+import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './proxy-handler.js'
+import type { Reactive, Unreactive } from './types.js'
 
 /**
  * ## 创建响应式代理对象

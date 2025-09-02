@@ -1,6 +1,6 @@
 import { AnyObject } from '@vitarx/utils'
-import { NOT_SIGNAL_SYMBOL } from '../constants'
-import type { NotSignal } from '../types'
+import { NOT_SIGNAL_SYMBOL } from '../constants.js'
+import type { NotSignal } from '../types/index.js'
 
 /**
  * 将一个对象标记为永远不会被转换为响应式信号。

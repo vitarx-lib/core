@@ -5,6 +5,6 @@
  */
 
 // 导出依赖收集器
-export * from './depend'
+export * from './depend.js'
 // 导出助手函数
-export * from './helpers'
+export * from './helpers.js'

@@ -4,7 +4,7 @@ import {
   NOT_SIGNAL_SYMBOL,
   SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL
-} from '../constants'
+} from '../constants.js'
 
 /**
  * 用于判断旧值和新值是否相等的函数

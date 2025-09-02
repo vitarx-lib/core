@@ -1,3 +1,3 @@
-export * from './manager'
-export * from './subscriber'
-export * from './helpers'
+export * from './manager.js'
+export * from './subscriber.js'
+export * from './helpers.js'

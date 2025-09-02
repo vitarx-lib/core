@@ -1,6 +1,6 @@
-import { Effect } from './effect'
-import type { EffectInterface } from './effect-interface'
-import { EffectScope, type EffectScopeOptions } from './effect-scope'
+import type { EffectInterface } from './effect-interface.js'
+import { EffectScope, type EffectScopeOptions } from './effect-scope.js'
+import { Effect } from './effect.js'
 
 /**
  * ## 创建作用域

@@ -1,6 +1,6 @@
 import { AnyKey, AnyObject, isObject } from '@vitarx/utils'
-import { Depend } from '../../../depend'
-import { Observer } from '../../../observer'
+import { Depend } from '../../../depend/index.js'
+import { Observer } from '../../../observer/index.js'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,

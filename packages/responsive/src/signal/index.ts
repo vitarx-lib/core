@@ -1,3 +1,3 @@
-export * from './core'
-export * from './implement'
-export * from './watch'
+export * from './core/index.js'
+export * from './implement/index.js'
+export * from './watch/index.js'

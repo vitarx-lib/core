@@ -1,6 +1,6 @@
 import { AnyKey, AnyObject } from '@vitarx/utils'
-import { Observer } from '../../observer'
-import type { BaseSignal } from './types'
+import { Observer } from '../../observer/index.js'
+import type { BaseSignal } from './types/index.js'
 
 /**
  * 信号父级关系映射

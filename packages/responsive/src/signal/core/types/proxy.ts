@@ -1,6 +1,6 @@
 import { AnyObject } from '@vitarx/utils'
-import { PROXY_SIGNAL_SYMBOL } from '../constants'
-import type { BaseSignal } from './base'
+import { PROXY_SIGNAL_SYMBOL } from '../constants.js'
+import type { BaseSignal } from './base.js'
 
 /**
  * 响应式代理信号

@@ -1,7 +1,7 @@
 import { DeepReadonly, isObject } from '@vitarx/utils'
-import { Observer } from '../../../observer'
-import { isReadonly, READONLY_OBJECT_SYMBOL } from './helpers'
-import type { ReadonlyOptions } from './types'
+import { Observer } from '../../../observer/index.js'
+import { isReadonly, READONLY_OBJECT_SYMBOL } from './helpers.js'
+import type { ReadonlyOptions } from './types.js'
 
 /**
  * 只读代理

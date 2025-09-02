@@ -1,5 +1,9 @@
 import { AnyCallback, VoidCallback } from '@vitarx/utils'
-import type { EffectCallbackErrorHandler, EffectInterface, EffectState } from './effect-interface'
+import type {
+  EffectCallbackErrorHandler,
+  EffectInterface,
+  EffectState
+} from './effect-interface.js'
 
 /**
  * 副作用固有错误来源

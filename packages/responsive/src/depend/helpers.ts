@@ -1,5 +1,5 @@
-import type { SubscriptionOptions } from '../observer'
-import { type CollectionResult, Depend, type DependSubscribeResult } from './depend'
+import type { SubscriptionOptions } from '../observer/index.js'
+import { type CollectionResult, Depend, type DependSubscribeResult } from './depend.js'
 
 /**
  * ## 跟踪依赖关系

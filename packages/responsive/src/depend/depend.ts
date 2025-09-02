@@ -1,11 +1,11 @@
 import {
-  AnyKey,
-  AnyObject,
+  type AnyKey,
+  type AnyObject,
   isFunction,
   microTaskDebouncedCallback,
-  VoidCallback
+  type VoidCallback
 } from '@vitarx/utils'
-import { Observer, Subscriber, type SubscriptionOptions } from '../observer'
+import { Observer, Subscriber, type SubscriptionOptions } from '../observer/index.js'
 
 /**
  * 依赖映射集合

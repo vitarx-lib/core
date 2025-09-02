@@ -1,5 +1,5 @@
-import { Computed } from './computed'
-import type { ComputedGetter, ComputedOptions, ComputedSetter } from './types'
+import { Computed } from './computed.js'
+import type { ComputedGetter, ComputedOptions, ComputedSetter } from './types.js'
 
 /**
  * 创建一个计算属性

@@ -1,5 +1,5 @@
-import type { AsyncContextTask, RestoreContext, Tag } from './context'
-import { Context } from './context'
+import type { AsyncContextTask, RestoreContext, Tag } from './context.js'
+import { Context } from './context.js'
 
 /**
  * Context.set方法的助手函数

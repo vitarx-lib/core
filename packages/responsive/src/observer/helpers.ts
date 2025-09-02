@@ -1,6 +1,6 @@
 import { AnyCallback, AnyObject } from '@vitarx/utils'
-import { ObserverManager, type SubscriptionOptions } from './manager'
-import { Subscriber } from './subscriber'
+import { ObserverManager, type SubscriptionOptions } from './manager.js'
+import { Subscriber } from './subscriber.js'
 
 /**
  * ## 触发变更通知

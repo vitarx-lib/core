@@ -1,6 +1,6 @@
 import { AnyObject, DeepReadonly } from '@vitarx/utils'
-import { ReadonlyHandler } from './readonly'
-import { ReadonlyOptions } from './types'
+import { ReadonlyHandler } from './readonly.js'
+import { ReadonlyOptions } from './types.js'
 
 /** 只读对象标识 */
 export const READONLY_OBJECT_SYMBOL = Symbol('READONLY_OBJECT_SYMBOL')
