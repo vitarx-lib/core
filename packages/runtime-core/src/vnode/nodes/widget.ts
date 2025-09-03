@@ -7,6 +7,7 @@ import {
   Subscriber
 } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
+import { _createFnWidget } from '../../widget/fn-widget.js'
 import {
   type ErrorSource,
   type FunctionWidget,
@@ -16,8 +17,7 @@ import {
   type LifecycleState,
   Widget,
   type WidgetInstance
-} from '../../widget'
-import { _createFnWidget } from '../../widget/fn-widget.js'
+} from '../../widget/index.js'
 import { proxyWidgetProps } from '../props.js'
 import { isRefEl } from '../ref.js'
 import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types/index.js'
