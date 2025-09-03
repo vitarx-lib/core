@@ -1,7 +1,9 @@
 import type {
+  Child,
   ClassProperties,
   FunctionWidget,
   IntrinsicNodeElement,
+  IntrinsicNodeElementName,
   IntrinsicProperties,
   StyleProperties,
   StyleRules,
@@ -21,6 +23,10 @@ export { jsx, jsxs }
 declare global {
   namespace Vitarx {
     /**
+     * 固有HTML元素标签名
+     */
+    type HTML = IntrinsicNodeElementName
+    /**
      * CSS样式类型映射
      */
     type CssStyle = StyleRules
@@ -33,9 +39,13 @@ declare global {
      */
     type HTMLClassProperties = ClassProperties
     /**
-     * 函数式小部件函数类型
+     * 函数式小部件类型
      */
     type FnWidget = FunctionWidget
+    /**
+     * 函数式小部件类型
+     */
+    type FW = FunctionWidget
     /**
      * TSX 类型支持工具
      *
@@ -59,6 +69,8 @@ declare global {
     type Element<T extends VNodeType = VNodeType> = VNode<T>
     /** 类组件实例 */
     type ElementClass = Widget
+    /** 子节点类型 */
+    type Children = Child | Child[]
   }
   namespace JSX {
     /** 元素类型 */
