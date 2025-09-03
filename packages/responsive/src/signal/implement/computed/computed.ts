@@ -9,8 +9,8 @@ import {
   SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL,
   SignalManager
-} from '../../core/index'
-import type { ComputedOptions } from './types'
+} from '../../core/index.js'
+import type { ComputedOptions } from './types.js'
 
 /**
  * # 计算属性

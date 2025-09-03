@@ -13,8 +13,8 @@ import {
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
-} from '../../core/index'
-import type { Reactive } from './types'
+} from '../../core/index.js'
+import type { Reactive } from './types.js'
 
 /**
  * 响应式代理对象标识符

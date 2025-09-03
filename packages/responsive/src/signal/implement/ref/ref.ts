@@ -12,9 +12,9 @@ import {
   SIGNAL_SYMBOL,
   SignalManager,
   type SignalOptions
-} from '../../core'
-import { reactive } from '../reactive'
-import type { RefValue } from './types'
+} from '../../core/index.js'
+import { reactive } from '../reactive/index.js'
+import type { RefValue } from './types.js'
 
 /**
  * # `Ref`值代理对象，用于代理一个值，使其成为响应式变量。
