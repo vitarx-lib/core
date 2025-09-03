@@ -1,7 +1,7 @@
 import { watchProperty } from '@vitarx/responsive'
-import { DomHelper } from '../../dom/index'
-import { createVNode, type UniqueKey, VNode, WidgetType, WidgetVNode } from '../../vnode'
-import { Widget } from '../widget'
+import { DomHelper } from '../../dom/index.js'
+import { createVNode, type UniqueKey, VNode, WidgetType, WidgetVNode } from '../../vnode/index.js'
+import { Widget } from '../widget.js'
 
 /**
  * KeepAlive配置选项

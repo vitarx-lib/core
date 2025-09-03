@@ -1,5 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
-import { NoTagVNode } from './no-tag'
+import { NoTagVNode } from './no-tag.js'
 
 export class TextVNode extends NoTagVNode<'text-node'> {
   /**

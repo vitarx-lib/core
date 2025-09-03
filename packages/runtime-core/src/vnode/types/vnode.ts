@@ -1,12 +1,12 @@
 import type { RefSignal } from '@vitarx/responsive'
 import type { AnyPrimitive } from '@vitarx/utils'
-import { type ClassWidget, type FunctionWidget } from '../../widget'
+import { type ClassWidget, type FunctionWidget } from '../../widget/index.js'
 import type {
   Comment as CommentType,
   Fragment as FragmentType,
   Text as TextType
-} from '../constant'
-import { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes'
+} from '../constant.js'
+import { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes/index.js'
 import type {
   AllNodeElementName,
   CommentNodeElementName,
@@ -14,7 +14,7 @@ import type {
   IntrinsicNodeElementName,
   NodeElement,
   TextNodeElementName
-} from './element'
+} from './element.js'
 import type { IntrinsicProperties } from './properties'
 
 /**

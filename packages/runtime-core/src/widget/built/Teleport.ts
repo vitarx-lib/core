@@ -1,5 +1,5 @@
-import { isVNode, VNode } from '../../vnode'
-import { type Element, Widget } from '../widget'
+import { isVNode, VNode } from '../../vnode/index.js'
+import { type Element, Widget } from '../widget.js'
 
 /**
  * Teleport小部件配置选项

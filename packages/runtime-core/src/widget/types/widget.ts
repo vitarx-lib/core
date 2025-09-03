@@ -1,6 +1,6 @@
-import { VNode, type WidgetType } from '../../vnode'
-import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from '../constant'
-import { Widget } from '../widget'
+import { VNode, type WidgetType } from '../../vnode/index.js'
+import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from '../constant.js'
+import { Widget } from '../widget.js'
 
 /**
  * 任意组件属性类型

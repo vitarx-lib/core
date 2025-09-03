@@ -1,2 +1,2 @@
-export * from './lifecycle'
-export * from './widget'
+export * from './lifecycle.js'
+export * from './widget.js'

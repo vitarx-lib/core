@@ -1,14 +1,14 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import { AnyCallback } from '@vitarx/utils'
-import { WidgetVNode } from '../vnode'
-import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from './constant'
+import { WidgetVNode } from '../vnode/index.js'
+import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from './constant.js'
 import {
   type FunctionWidget,
   type LifecycleHookParameter,
   type LifecycleHookReturnType,
   type ValidFunctionWidgetReturnValue
-} from './types'
-import type { Widget } from './widget'
+} from './types/index.js'
+import type { Widget } from './widget.js'
 
 interface CollectContext {
   exposed: Record<string, any>

@@ -1,5 +1,5 @@
 import { RefSignal } from '@vitarx/responsive'
-import { NoTagVNode } from './no-tag'
+import { NoTagVNode } from './no-tag.js'
 
 export class CommentVNode extends NoTagVNode<'comment-node'> {
   /**

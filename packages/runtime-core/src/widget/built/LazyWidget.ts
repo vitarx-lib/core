@@ -1,9 +1,9 @@
 import { Ref, withAsyncContext } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import { createVNode, VNode, WidgetPropsType, WidgetType } from '../../vnode'
-import { type ErrorHandler } from '../types'
-import { Widget } from '../widget'
-import { getSuspenseCounter } from './Suspense'
+import { createVNode, VNode, WidgetPropsType, WidgetType } from '../../vnode/index.js'
+import { type ErrorHandler } from '../types/index.js'
+import { Widget } from '../widget.js'
+import { getSuspenseCounter } from './Suspense.js'
 
 /**
  * 代码分块懒加载

@@ -1,7 +1,7 @@
 import { Ref, ref, Subscriber, watch } from '@vitarx/responsive'
-import { createVNode, defineProps, inject, provide, VNode } from '../../vnode'
-import { type ErrorHandler } from '../types'
-import { Widget } from '../widget'
+import { createVNode, defineProps, inject, provide, VNode } from '../../vnode/index.js'
+import { type ErrorHandler } from '../types/index.js'
+import { Widget } from '../widget.js'
 
 /**
  * Suspense小部件的配置选项

@@ -1,3 +1,3 @@
-export * from './dom'
-export * from './vnode'
-export * from './widget'
+export * from './dom/index.js'
+export * from './vnode/index.js'
+export * from './widget/index.js'

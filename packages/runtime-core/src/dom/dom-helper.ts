@@ -9,7 +9,7 @@ import {
   type RuntimeElement,
   type StyleProperties,
   type StyleRules
-} from '../vnode'
+} from '../vnode/index.js'
 
 /**
  * DOM操作类

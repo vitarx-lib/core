@@ -1,5 +1,5 @@
 import type { AnyFunction } from '@vitarx/utils'
-import { VNode, WidgetVNode } from './nodes/index'
+import { VNode, WidgetVNode } from './nodes/index.js'
 
 /**
  * 提供依赖数据，实现小部件间的依赖注入

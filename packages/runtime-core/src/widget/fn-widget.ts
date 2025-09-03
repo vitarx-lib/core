@@ -1,11 +1,11 @@
 import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
-import { createVNode, VNode, WidgetType, WidgetVNode } from '../vnode'
-import { getSuspenseCounter } from './built'
-import { __WIDGET_INTRINSIC_KEYWORDS__ } from './constant'
-import { HookCollector, type HookCollectResult } from './hook'
-import { type BuildVNode, type FunctionWidget, LifecycleHookMethods } from './types'
-import { Widget } from './widget'
+import { createVNode, VNode, WidgetType, WidgetVNode } from '../vnode/index.js'
+import { getSuspenseCounter } from './built/index.js'
+import { __WIDGET_INTRINSIC_KEYWORDS__ } from './constant.js'
+import { HookCollector, type HookCollectResult } from './hook.js'
+import { type BuildVNode, type FunctionWidget, LifecycleHookMethods } from './types/index.js'
+import { Widget } from './widget.js'
 
 /**
  * 初始化函数组件的标识符

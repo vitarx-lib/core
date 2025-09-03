@@ -1,6 +1,6 @@
-import { type RuntimeElement, VNode } from '../../vnode'
-import type { LifecycleHooks } from '../constant'
-import type { Widget } from '../widget'
+import { type RuntimeElement, VNode } from '../../vnode/index.js'
+import type { LifecycleHooks } from '../constant.js'
+import type { Widget } from '../widget.js'
 
 /**
  * 错误来源联合类型

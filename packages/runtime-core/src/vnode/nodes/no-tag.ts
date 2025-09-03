@@ -1,7 +1,7 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { unref } from '@vitarx/responsive'
-import type { NoTagNodeElementName } from '../types'
-import { VNode } from './vnode'
+import type { NoTagNodeElementName } from '../types/index.js'
+import { VNode } from './vnode.js'
 
 /**
  * 纯文本节点抽象类

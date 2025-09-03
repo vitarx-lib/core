@@ -1,8 +1,8 @@
 import { isRefSignal } from '@vitarx/responsive'
-import { DomHelper } from '../../dom'
-import { isRefEl } from '../ref'
-import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types'
-import { ContainerVNode } from './container'
+import { DomHelper } from '../../dom/index.js'
+import { isRefEl } from '../ref.js'
+import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types/index.js'
+import { ContainerVNode } from './container.js'
 
 const NAMESPACE_URI = {
   svg: 'http://www.w3.org/2000/svg',

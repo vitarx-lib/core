@@ -1,6 +1,6 @@
 import { Observer, toRaw } from '@vitarx/responsive'
 import { isDeepEqual } from '@vitarx/utils'
-import { DomHelper } from '../dom'
+import { DomHelper } from '../dom/index.js'
 import {
   CommentVNode,
   ContainerVNode,
@@ -9,7 +9,7 @@ import {
   TextVNode,
   VNode,
   WidgetVNode
-} from './nodes'
+} from './nodes/index.js'
 
 /**
  * VNodeUpdate 是一个用于虚拟DOM节点更新的工具类，提供了虚拟DOM节点的更新、替换等功能。

@@ -1,9 +1,9 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { AnyPrimitive } from '@vitarx/utils'
-import type { RefEl } from '../ref'
-import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event'
-import type { ClassProperties, StyleProperties } from './style'
-import type { Child } from './vnode'
+import type { RefEl } from '../ref.js'
+import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event.js'
+import type { ClassProperties, StyleProperties } from './style.js'
+import type { Child } from './vnode.js'
 
 /**
  * 唯一键

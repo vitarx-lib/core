@@ -1,6 +1,6 @@
 import { isArrayEqual, isRecordObject, popProperty } from '@vitarx/utils'
-import { DomHelper } from '../../dom/index'
-import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types'
+import { DomHelper } from '../../dom/index.js'
+import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types/index.js'
 
 const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
 export type Source = { fileName: string; lineNumber: number; columnNumber: number }

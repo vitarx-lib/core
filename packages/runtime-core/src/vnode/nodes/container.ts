@@ -1,6 +1,6 @@
 import { toRaw } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
-import { DomHelper } from '../../dom'
+import { DomHelper } from '../../dom/index.js'
 import type {
   Child,
   FragmentElement,
@@ -8,11 +8,11 @@ import type {
   IntrinsicNodeElementName,
   UniqueKey,
   VNodeProps
-} from '../types'
-import { CommentVNode } from './comment'
-import { TextVNode } from './text'
-import { VNode } from './vnode'
-import { WidgetVNode } from './widget'
+} from '../types/index.js'
+import { CommentVNode } from './comment.js'
+import { TextVNode } from './text.js'
+import { VNode } from './vnode.js'
+import { WidgetVNode } from './widget.js'
 
 type ContainerVNodeType = IntrinsicNodeElementName | FragmentNodeElementName
 /**

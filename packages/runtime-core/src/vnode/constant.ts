@@ -1,6 +1,6 @@
 import type { RefSignal } from '@vitarx/responsive'
-import { VNode } from './nodes'
-import type { Child } from './types'
+import { VNode } from './nodes/index.js'
+import type { Child } from './types/index.js'
 
 type FragmentType = ((props: { children?: Child | Child[] }) => VNode) & { __isFragment__: true }
 /**

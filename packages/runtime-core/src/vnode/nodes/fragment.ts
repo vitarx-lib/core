@@ -1,6 +1,6 @@
-import { type Child, type FragmentElement, type FragmentNodeElementName } from '../types'
-import { CommentVNode } from './comment'
-import { ContainerVNode } from './container'
+import type { Child, FragmentElement, FragmentNodeElementName } from '../types/index.js'
+import { CommentVNode } from './comment.js'
+import { ContainerVNode } from './container.js'
 
 /**
  * 片段节点类，继承自ContainerVNode

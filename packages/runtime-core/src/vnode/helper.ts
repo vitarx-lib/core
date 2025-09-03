@@ -1,7 +1,14 @@
 import { popProperty } from '@vitarx/utils'
-import { isSimpleWidget } from '../widget/index'
-import { CommentVNode, ElementVNode, FragmentVNode, TextVNode, VNode, WidgetVNode } from './nodes'
-import { type Child, type VNodeInstance, type VNodeProps, VNodeType } from './types'
+import { isSimpleWidget } from '../widget/index.js'
+import {
+  CommentVNode,
+  ElementVNode,
+  FragmentVNode,
+  TextVNode,
+  VNode,
+  WidgetVNode
+} from './nodes/index.js'
+import { type Child, type VNodeInstance, type VNodeProps, VNodeType } from './types/vnode.js'
 
 /**
  * 创建虚拟节点的工厂函数

@@ -6,7 +6,7 @@ import {
   runInContext,
   Subscriber
 } from '@vitarx/responsive'
-import { DomHelper } from '../../dom/index'
+import { DomHelper } from '../../dom/index.js'
 import {
   type ErrorSource,
   type FunctionWidget,
@@ -17,12 +17,12 @@ import {
   Widget,
   type WidgetInstance
 } from '../../widget'
-import { _createFnWidget } from '../../widget/fn-widget'
-import { proxyWidgetProps } from '../props'
-import { isRefEl } from '../ref'
-import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types'
-import { CommentVNode } from './comment'
-import { VNode } from './vnode'
+import { _createFnWidget } from '../../widget/fn-widget.js'
+import { proxyWidgetProps } from '../props.js'
+import { isRefEl } from '../ref.js'
+import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types/index.js'
+import { CommentVNode } from './comment.js'
+import { VNode } from './vnode.js'
 
 declare global {
   interface Window {

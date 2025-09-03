@@ -1,5 +1,5 @@
-import type { ExcludeWidgetIntrinsicKeywords } from '../widget'
-import type { IntrinsicNodeElementName, RuntimeElement } from './types'
+import type { ExcludeWidgetIntrinsicKeywords } from '../widget/index.js'
+import type { IntrinsicNodeElementName, RuntimeElement } from './types/index.js'
 
 /**
  * 辅助计算出元素类型

@@ -1,7 +1,13 @@
-import { isVNode, VNode, WidgetVNode } from '../vnode'
-import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from './constant'
-import type { AnyProps, BuildVNode, FunctionWidget, SimpleWidget, TsFunctionWidget } from './types'
-import type { Widget } from './widget'
+import { isVNode, VNode, WidgetVNode } from '../vnode/index.js'
+import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from './constant.js'
+import type {
+  AnyProps,
+  BuildVNode,
+  FunctionWidget,
+  SimpleWidget,
+  TsFunctionWidget
+} from './types/index.js'
+import type { Widget } from './widget.js'
 
 /**
  * 获取当前组件实例
