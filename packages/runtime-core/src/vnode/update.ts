@@ -1,6 +1,7 @@
 import { Observer, toRaw } from '@vitarx/responsive'
 import { isDeepEqual } from '@vitarx/utils'
 import { DomHelper } from '../dom/index.js'
+import { Fragment } from './constant.js'
 import {
   CommentVNode,
   ContainerVNode,
@@ -75,18 +76,16 @@ export class VNodeUpdate {
   /**
    * 更新虚拟节点的属性
    * @param oldVNode - 旧的虚拟节点
-   * @param newVNode - 新的虚拟节点
+   * @param newVNode - 新的虚拟节点，必须和旧节点是同类型！！！
    * @template T - 继承自VNode的泛型类型
    */
   static patchUpdateAttrs<T extends VNode>(oldVNode: T, newVNode: T) {
     // 如果是特殊的无props节点，则不进行任何更新
-    if (oldVNode.type === 'text-node' || oldVNode.type === 'comment-node') {
-      ;(oldVNode as unknown as NoTagVNode<any>).value = (
-        newVNode as unknown as NoTagVNode<any>
-      ).value
+    if (NoTagVNode.is(oldVNode)) {
+      oldVNode.value = (newVNode as unknown as NoTagVNode<any>).value
       return
     }
-    if (oldVNode.type === 'fragment-node') return
+    if (oldVNode.type === Fragment) return
     const isWidget = WidgetVNode.is(oldVNode) // 判断是否是Widget类型的节点
     const el = oldVNode.element as HTMLElement // 获取DOM元素
     // 旧的属性
