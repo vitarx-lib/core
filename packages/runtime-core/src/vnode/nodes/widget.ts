@@ -6,6 +6,7 @@ import {
   runInContext,
   Subscriber
 } from '@vitarx/responsive'
+import { nextTick } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
 import { _createFnWidget } from '../../widget/fn-widget.js'
 import {
@@ -472,8 +473,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     try {
       // 触发更新前生命周期
       this.triggerLifecycleHook(LifecycleHooks.beforeUpdate)
-      // 使用 requestAnimationFrame 来延迟更新，合并多个微任务
-      requestAnimationFrame(() => {
+      // 使用 nextTick 来延迟更新，合并多个微任务
+      nextTick(() => {
         this.#pendingUpdate = false
         // 如果组件已卸载，则不进行更新
         if (this.state === 'unloaded') return
