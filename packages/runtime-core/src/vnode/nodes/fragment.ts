@@ -1,6 +1,7 @@
 import type { Child, FragmentElement, FragmentNodeElementName } from '../types/index.js'
 import { CommentVNode } from './comment.js'
 import { ContainerVNode } from './container.js'
+import { VNode } from './vnode.js'
 
 /**
  * 片段节点类，继承自ContainerVNode
@@ -47,7 +48,7 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
    * @returns {boolean} 如果是片段节点则返回true，否则返回false
    */
   static override is(val: any): val is FragmentVNode {
-    if (!super.is(val)) return false
+    if (!VNode.is(val)) return false
     return val.type === 'fragment-node' // 通过检查节点的类型是否为text-node来判断
   }
   /**
