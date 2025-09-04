@@ -30,9 +30,17 @@ export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T
     // 检查节点类型是否为文本节点或注释节点
     return val.type === 'text-node' || val.type === 'comment-node'
   }
+
+  /**
+   * 设置值的setter方法
+   * @param {string} value - 要设置的值
+   */
   set value(value: string) {
+    // 如果不是静态值且新值与当前值不同
     if (!this.isStatic && value !== this.#value) {
+      // 更新私有属性#value
       this.#value = value
+      // 更新DOM元素的节点值
       this.element.nodeValue = value
     }
   }
