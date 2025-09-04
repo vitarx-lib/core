@@ -73,6 +73,7 @@ export abstract class ContainerVNode<
    * @returns {boolean} 如果是容器类型的虚拟节点则返回true，否则返回false
    */
   static override is(vnode: VNode): vnode is ContainerVNode {
+    if (!super.is(vnode)) return false
     // 检查vnode的类型是否为字符串，如果不是则直接返回false
     if (typeof vnode.type !== 'string') return false
     // 排除文本节点和注释节点
