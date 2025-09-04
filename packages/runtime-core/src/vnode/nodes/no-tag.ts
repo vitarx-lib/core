@@ -18,6 +18,18 @@ export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T
     return this.#value
   }
 
+  /**
+   * 判断给定的值是否为NoTagVNode类型的节点
+   *
+   * @param val 需要判断的值
+   * @returns {boolean} 如果是NoTagVNode类型返回true，否则返回false
+   */
+  static override is(val: any): val is NoTagVNode<any> {
+    // 首先检查是否为VNode类型，如果不是则直接返回false
+    if (!VNode.is(val)) return false
+    // 检查节点类型是否为文本节点或注释节点
+    return val.type === 'text-node' || val.type === 'comment-node'
+  }
   set value(value: string) {
     if (!this.isStatic && value !== this.#value) {
       this.#value = value
