@@ -53,7 +53,7 @@ const buildPackage = async (
       console.log(chalk.green('  ✓ Tests passed successfully'))
     } catch (error: any) {
       console.error(chalk.red(`❌  Tests failed:\n${error?.stdout || error?.message}`))
-      process.exit(0)
+      process.exit(1)
     }
   }
 
@@ -73,7 +73,7 @@ const buildPackage = async (
     }
   } catch (error) {
     console.error(chalk.red('❌  Error cleaning dist directory:'), error)
-    process.exit(0)
+    process.exit(1)
   }
   const pakTsConfigPath = `${packagePath}/tsconfig.json`
   const isTsConfigExists = existsSync(pakTsConfigPath)
