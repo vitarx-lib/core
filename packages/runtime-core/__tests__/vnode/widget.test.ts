@@ -1,6 +1,15 @@
 import { EffectScope } from '@vitarx/responsive'
+import { nextTick } from '@vitarx/utils'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { FragmentVNode, LifecycleHooks, TextVNode, VNode, Widget, WidgetVNode } from '../../src'
+import {
+  createElement,
+  FragmentVNode,
+  LifecycleHooks,
+  TextVNode,
+  VNode,
+  Widget,
+  WidgetVNode
+} from '../../src'
 
 // 创建模拟Widget类
 class MockWidget extends Widget {
@@ -239,23 +248,22 @@ describe('WidgetVNode 单元测试', () => {
   })
 
   describe('updateChild方法', () => {
-    it('应该正确更新子节点', () => {
+    it('应该正确更新子节点', async () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
-      widgetVNode.render()
-
-      const rafSpy = vi.spyOn(window, 'requestAnimationFrame')
-      rafSpy.mockImplementation(cb => {
-        cb(0)
-        return 1
-      })
-
-      widgetVNode.updateChild()
-
-      expect(rafSpy).toHaveBeenCalled()
+      widgetVNode.mount(document.body)
+      expect(widgetVNode.state).toContain('activated')
+      widgetVNode.updateChild(createElement('div', { children: ['test'] }))
+      await nextTick()
+      expect(document.body.textContent).toContain('test')
     })
 
     it('已卸载的组件更新应该触发错误', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
+      widgetVNode.provide('App', {
+        config: {
+          errorHandler: () => {}
+        }
+      })
       widgetVNode.render()
       widgetVNode.mount()
       widgetVNode.unmount()
