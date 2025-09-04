@@ -102,6 +102,13 @@ export class App {
   }
 
   /**
+   * 获取当前组件的虚拟DOM节点(VNode)
+   * @returns {WidgetVNode} 返回当前组件的虚拟DOM节点实例
+   */
+  get node(): WidgetVNode {
+    return this.#node
+  }
+  /**
    * 获取版本号
    *
    * @returns {string} - 版本号
