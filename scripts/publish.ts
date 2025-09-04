@@ -34,14 +34,9 @@ if (!existsSync(packagePath)) {
   process.exit(1)
 }
 
-// 保存当前npm源配置
-const originalRegistry = execSync('pnpm config get registry', { encoding: 'utf-8' }).trim()
-
 try {
   // 切换到npm官方源
   console.log(chalk.blue('Switching to npm official registry...'))
-  execSync('pnpm config set registry https://registry.npmjs.org/', { stdio: 'inherit' })
-
   // 检查用户是否已登录npm
   // 使用whoami命令验证，如果未登录则会抛出异常
   try {
@@ -54,17 +49,14 @@ try {
     )
     process.exit(1)
   }
-
   // 构建指定的包
   // 使用build.ts脚本进行构建，生成生产环境代码
   console.log(chalk.blue(`Building package: ${packageName}...`))
   const result = spawnSync('tsx', ['scripts/build.ts', packageName, '--test'], {
     stdio: 'inherit'
   })
-  if (result.status !== 0) {
-    process.exit(1)
-  }
-
+  // 构建失败则退出
+  if (result.status !== 0) process.exit(result.status)
   // 发布包到npm仓库
   // 切换到包目录并执行npm publish命令，设置为公共访问权限
   console.log(chalk.blue(`Publishing package: ${packageName}...`))
@@ -72,7 +64,6 @@ try {
     `cd ${packagePath} && pnpm publish --access public --registry https://registry.npmjs.org/`,
     { stdio: 'inherit' }
   )
-
   // 发布成功提示
   console.log(chalk.green(`\n✨ Successfully published ${packageName}!`))
 } catch (error) {
@@ -80,8 +71,4 @@ try {
   console.error(chalk.red('\nError occurred during publishing:'))
   console.error(error)
   process.exit(1)
-} finally {
-  // 恢复原来的npm源配置
-  console.log(chalk.blue('\nRestoring original npm registry...'))
-  execSync(`pnpm config set registry ${originalRegistry}`, { stdio: 'inherit' })
 }
