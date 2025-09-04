@@ -3,6 +3,7 @@ import { DomHelper } from '../../dom/index.js'
 import { isRefEl } from '../ref.js'
 import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types/index.js'
 import { ContainerVNode } from './container.js'
+import { VNode } from './vnode.js'
 
 const NAMESPACE_URI = {
   svg: 'http://www.w3.org/2000/svg',
@@ -106,7 +107,7 @@ export class ElementVNode<
    * @returns {boolean} 如果是元素类型的虚拟节点则返回true，否则返回false
    */
   static override is(val: any): val is ElementVNode {
-    if (!super.is(val)) return false
+    if (!VNode.is(val)) return false
     // 检查vnode的类型是否为字符串，如果不是则直接返回false
     if (typeof val.type !== 'string') return false
     // 检查vnode的类型是否为特殊节点类型（片段节点、文本节点、注释节点），如果是则返回false
