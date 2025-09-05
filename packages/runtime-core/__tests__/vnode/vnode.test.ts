@@ -108,8 +108,9 @@ describe('getCurrentVNode / useCurrentVNode', () => {
 
   it('当存在当前VNode时应该返回它', () => {
     const mockVNode = new WidgetVNode(vi.fn(), {})
-    vi.spyOn(WidgetVNode, 'getCurrentVNode').mockReturnValue(mockVNode)
-    expect(getCurrentVNode()).toBe(mockVNode)
+    mockVNode.runInContext(() => {
+      expect(useCurrentVNode()).toBe(mockVNode)
+    })
   })
 })
 
