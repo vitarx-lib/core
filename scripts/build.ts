@@ -111,7 +111,7 @@ async function buildPackage(
 
   // 如果需要运行测试
   if (runTest) {
-    log.warn('🧪 Running tests...')
+    log.warn('🧪 Running vitest tests...')
     // 使用 vitest 运行测试
     await runCommand(`vitest run --dir ${packagePath}`)
     log.success('  ✓ Tests passed successfully')
