@@ -7,12 +7,9 @@ import {
   VNodeUpdate,
   type WidgetVNode
 } from '../vnode/index.js'
+import { CLASS_WIDGET_BASE_SYMBOL } from './constant.js'
 import { type ClassWidget, type ErrorInfo } from './types/index.js'
 
-/**
- * 类小部件的标识符
- */
-const CLASS_WIDGET_BASE_SYMBOL = Symbol('CLASS_WIDGET_SYMBOL')
 /**
  * VNode类型的别名
  */

@@ -1,8 +1,9 @@
 import { isVNode, VNode, WidgetVNode } from '../vnode/index.js'
-import { SIMPLE_FUNCTION_WIDGET_SYMBOL } from './constant.js'
+import { CLASS_WIDGET_BASE_SYMBOL, SIMPLE_FUNCTION_WIDGET_SYMBOL } from './constant.js'
 import type {
   AnyProps,
   BuildVNode,
+  ClassWidget,
   FunctionWidget,
   SimpleWidget,
   TsFunctionWidget
@@ -115,4 +116,17 @@ export function build<T extends BuildVNode>(element: T): T extends null ? null :
   if (typeof element === 'function') return element as any
   if (isVNode(element)) return element as any
   throw new TypeError('[Vitarx.build]：函数组件返回值只能是null、VNode、() => VNode | null')
+}
+
+/**
+ * 检查一个值是否是ClassWidget类型的实例
+ * 这是一个类型谓词函数，用于类型收窄
+ *
+ * @param val 需要检查的值
+ * @returns {boolean} 如果值是类Widget构造函数类型返回true，否则返回false
+ */
+export function isClassWidget(val: any): val is ClassWidget {
+  // 使用可选链操作符安全地访问对象的CLASS_WIDGET_BASE_SYMBOL属性
+  // 并检查其值是否为true
+  return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
 }
