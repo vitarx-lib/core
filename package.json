@@ -9,7 +9,7 @@
     "create": "tsx scripts/create-package.ts",
     "release": "tsx scripts/publish.ts",
     "build": "tsx scripts/build.ts --test",
-    "test": "tsx scripts/test.ts",
+    "test": "tsx scripts/vitest.ts",
     "prepare": "husky install"
   },
   "devDependencies": {
