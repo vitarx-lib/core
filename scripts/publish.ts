@@ -35,8 +35,6 @@ if (!existsSync(packagePath)) {
 }
 
 try {
-  // 切换到npm官方源
-  console.log(chalk.blue('Switching to npm official registry...'))
   // 检查用户是否已登录npm
   // 使用whoami命令验证，如果未登录则会抛出异常
   try {
