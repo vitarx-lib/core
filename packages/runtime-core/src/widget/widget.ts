@@ -1,10 +1,11 @@
 import { EffectScope, getCurrentScope } from '@vitarx/responsive'
+import { getCurrentVNode } from '../vnode/context.js'
 import {
   type AnyElement,
   type RuntimeElement,
   VNode,
   VNodeUpdate,
-  WidgetVNode
+  type WidgetVNode
 } from '../vnode/index.js'
 import { type ClassWidget, type ErrorInfo } from './types/index.js'
 
@@ -85,7 +86,7 @@ export abstract class Widget<
   constructor(props: InputProps) {
     this.#props = props
     this.#scope = getCurrentScope()!
-    this.#vnode = WidgetVNode.getCurrentVNode()!
+    this.#vnode = getCurrentVNode()!
     if (!this.#scope) throw new Error('Widget must be created in a EffectScope')
     if (import.meta.env?.MODE !== 'development' || !this.#vnode.__$HMR_STATE$__) {
       // 仅在非开发环境或开发环境不处于HMR模式下，才触发 create 生命周期钩子
@@ -137,6 +138,7 @@ export abstract class Widget<
   get $vnode(): WidgetVNode {
     return this.#vnode
   }
+
   /**
    * 判断给定的值是否为 ClassWidget 类型的实例
    *
