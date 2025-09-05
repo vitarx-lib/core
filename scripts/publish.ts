@@ -1,72 +1,125 @@
 /**
  * 包发布脚本
- * 该脚本用于自动化发布指定的npm包，包括以下步骤：
- * 1. 验证包名参数和包是否存在
- * 2. 检查npm登录状态
- * 3. 运行单元测试
- * 4. 构建包
- * 5. 发布到npm仓库
+ * 功能：
+ * 1. 支持自定义版本号或自动升级 (patch/minor/major/prerelease)
+ * 2. prerelease 支持 --preid
+ * 3. 生成 CHANGELOG.md
+ * 4. 自动 git commit + tag
+ * 5. 发布到 npm
+ * 6. git push && git push --tags
  */
 
 import chalk from 'chalk'
 import { execSync, spawnSync } from 'child_process'
-
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { resolve } from 'path'
+import semver from 'semver'
 
-// 获取命令行参数，去除前两个参数(node和脚本路径)
 const args = process.argv.slice(2)
 
-// 验证是否提供了包名参数
 if (!args.length) {
-  console.error(chalk.red('Error: Please specify the package name to publish'))
-  console.log(chalk.yellow('Usage: pnpm tsx scripts/publish.ts <package-name>'))
+  console.error(chalk.red('Error: Please specify the package name'))
+  console.log(
+    chalk.yellow(
+      'Usage: pnpm tsx scripts/publish.ts <package-name> [version|patch|minor|major|prerelease] [--preid beta]'
+    )
+  )
   process.exit(1)
 }
 
-// 获取包名并构建包路径
 const packageName = args[0]
 const packagePath = resolve(process.cwd(), 'packages', packageName)
-
-// 验证包是否存在于packages目录中
 if (!existsSync(packagePath)) {
-  console.error(chalk.red(`Error: Package '${packageName}' not found in packages directory`))
+  console.error(chalk.red(`Error: Package '${packageName}' not found`))
   process.exit(1)
 }
 
+const versionArg = args[1] // 可能是 patch / minor / major / prerelease / 1.2.3
+const preidArgIndex = args.indexOf('--preid')
+const preid = preidArgIndex !== -1 ? args[preidArgIndex + 1] : undefined
+
+// 检查 npm 登录状态
 try {
-  // 检查用户是否已登录npm
-  // 使用whoami命令验证，如果未登录则会抛出异常
-  try {
-    execSync('pnpm whoami --registry https://registry.npmjs.org/', { stdio: 'ignore' })
-  } catch (e) {
-    console.error(
-      chalk.red(
-        'Error: You are not logged in to npm. Please run `pnpm login --registry https://registry.npmjs.org/` first'
-      )
-    )
-    process.exit(1)
-  }
-  // 构建指定的包
-  // 使用build.ts脚本进行构建，生成生产环境代码
-  console.log(chalk.blue(`Building package: ${packageName}...`))
-  const result = spawnSync('tsx', ['scripts/build.ts', packageName, '--test'], {
-    stdio: 'inherit'
-  })
-  // 构建失败则退出
-  if (result.status !== 0) process.exit(result.status)
-  // 发布包到npm仓库
-  // 切换到包目录并执行npm publish命令，设置为公共访问权限
-  console.log(chalk.blue(`Publishing package: ${packageName}...`))
-  execSync(
-    `cd ${packagePath} && pnpm publish --access public --registry https://registry.npmjs.org/`,
-    { stdio: 'inherit' }
+  execSync('pnpm whoami --registry https://registry.npmjs.org/', { stdio: 'ignore' })
+} catch {
+  console.error(
+    chalk.red('Error: Not logged in. Run `pnpm login --registry https://registry.npmjs.org/` first')
   )
-  // 发布成功提示
-  console.log(chalk.green(`\n✨ Successfully published ${packageName}!`))
+  process.exit(1)
+}
+
+// Step 1: 构建
+console.log(chalk.blue(`📦 Building package: ${packageName}...`))
+const buildResult = spawnSync('tsx', ['scripts/build.ts', packageName, '--test'], {
+  stdio: 'inherit'
+})
+// 检查构建结果
+if (buildResult.status !== 0) process.exit(buildResult.status)
+
+// Step 2: 更新版本号
+let versionCmd = `pnpm version --no-git-tag-version -C ./packages/${packageName}`
+if (versionArg) {
+  if (['patch', 'minor', 'major', 'prerelease'].includes(versionArg)) {
+    versionCmd += ` ${versionArg}`
+    if (versionArg === 'prerelease' && preid) {
+      versionCmd += ` --preid ${preid}`
+    }
+  } else {
+    // 用户输入自定义版本号，需要验证
+    if (!semver.valid(versionArg)) {
+      console.error(chalk.red(`Error: Invalid version number '${versionArg}'`))
+      process.exit(1)
+    }
+    versionCmd += ` ${versionArg}`
+  }
+}
+console.log(chalk.blue(`🔖 Updating version (${versionArg || 'patch'})...`))
+execSync(versionCmd, { stdio: 'inherit' })
+
+// 读取更新后的版本号
+const pkgJson = JSON.parse(readFileSync(resolve(packagePath, 'package.json'), 'utf-8'))
+const newVersion = pkgJson.version
+
+// Step 3: 生成 CHANGELOG.md
+console.log(chalk.blue(`📝 Generating CHANGELOG for ${packageName}...`))
+const changelogPath = resolve(packagePath, 'CHANGELOG.md')
+execSync(
+  `pnpm dlx conventional-changelog-cli -p angular -i ${changelogPath} -s -r 0 --commit-path ${packagePath}`,
+  { stdio: 'inherit' }
+)
+
+try {
+  // Step 4: 提交 git
+  console.log(chalk.blue('📤 Committing changes...'))
+  execSync(`git add ${packagePath}/package.json ${changelogPath}`, { stdio: 'inherit' })
+  execSync(`git commit -m "build(${packageName}): release v${newVersion}"`, { stdio: 'inherit' })
+
+  // 打标签
+  execSync(`git tag v${newVersion}`, { stdio: 'inherit' })
+
+  // Step 5: 发布到 npm
+  console.log(chalk.blue(`🚀 Publishing ${packageName}@${newVersion}...`))
+  execSync(`pnpm publish --access public --registry https://registry.npmjs.org/`, {
+    stdio: 'inherit',
+    cwd: packagePath
+  })
+
+  // Step 6: 推送到远程
+  console.log(chalk.blue('⬆️  Pushing to remote...'))
+  execSync(`git push`, { stdio: 'inherit' })
+  execSync(`git push --tags`, { stdio: 'inherit' })
+
+  console.log(chalk.green(`\n✨ Successfully published ${packageName}@${newVersion}!`))
 } catch (error) {
-  // 发布过程中的错误处理
-  console.error(chalk.red('\nError occurred during publishing:'))
+  console.error(chalk.red('\n❌ Publish failed, rolling back git commit and tag...'))
+  try {
+    execSync(`git tag -d v${newVersion}`, { stdio: 'inherit' })
+    execSync(`git reset --soft HEAD~1`, { stdio: 'inherit' })
+  } catch (rollbackErr) {
+    console.error(chalk.red('Rollback failed:'), rollbackErr)
+  }
   console.error(error)
   process.exit(1)
 }
+
+console.log(chalk.green(`\n✨ Successfully published ${packageName}@${newVersion}!`))
