@@ -1,14 +1,13 @@
 import { toRaw, unref } from '@vitarx/responsive'
 import { isRecordObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
-import {
-  type ClassProperties,
-  type EventNames,
-  type EventOptions,
-  type FragmentElement,
-  FragmentVNode,
-  type RuntimeElement,
-  type StyleProperties,
-  type StyleRules
+import type {
+  ClassProperties,
+  EventNames,
+  EventOptions,
+  FragmentElement,
+  RuntimeElement,
+  StyleProperties,
+  StyleRules
 } from '../vnode/index.js'
 
 /**
@@ -481,8 +480,8 @@ export class DomHelper {
         for (let i = 0; i < vnode.children.length; i++) {
           const childVNode = vnode.children[i]
           let childEl = childVNode.element
-          if (childVNode instanceof FragmentVNode && childVNode.element) {
-            childEl = this.recoveryFragmentChildNodes(childVNode.element)
+          if (childVNode.type === 'fragment-node' && childEl instanceof DocumentFragment) {
+            childEl = this.recoveryFragmentChildNodes(childVNode.element as FragmentElement)
           }
           el.appendChild(childEl!)
         }
