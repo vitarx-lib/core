@@ -1,11 +1,13 @@
 import chalk from 'chalk'
 import { exec } from 'child_process'
-import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
-import { rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
 import { join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { promisify } from 'util'
 import { build, type InlineConfig, mergeConfig } from 'vite'
+
+const execAsync = promisify(exec)
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 interface PackageJson {
   name: string
@@ -13,109 +15,138 @@ interface PackageJson {
   version: string
 }
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const log = {
+  info: (msg: string) => console.log(chalk.cyan(msg)),
+  success: (msg: string) => console.log(chalk.green(msg)),
+  warn: (msg: string) => console.log(chalk.yellow(msg)),
+  error: (msg: string) => console.error(chalk.red(msg))
+}
 
 /**
- * 构建单个包
- *
+ * 清理指定的目录
+ * @param dist - 需要清理的目录路径
+ */
+function cleanDist(dist: string) {
+  // 检查目录是否存在并且是一个目录
+  if (existsSync(dist) && statSync(dist).isDirectory()) {
+    // 递归删除目录及其内容，强制删除
+    rmSync(dist, { recursive: true, force: true })
+    // 输出清理成功的日志信息
+    log.info(`  ✓ Cleaned dist directory: ${dist}`)
+  }
+}
+
+/**
+ * 创建一个临时的TypeScript配置文件
+ * @param packagePath - 项目包的路径
+ * @returns {string} 返回临时配置文件的完整路径
+ */
+function createTempTsConfig(packagePath: string): string {
+  // 定义临时配置文件的完整路径
+  const tsconfigPath = join(packagePath, 'tsconfig.temp.json')
+  // 定义临时配置文件的内容结构
+  const tsconfigJson = {
+    extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
+    compilerOptions: { outDir: 'dist' }, // 设置编译输出目录为dist
+    include: ['src', 'global.d.ts'], // 包含的文件和目录
+    exclude: ['dist', 'node_modules', '__tests__'] // 排除的文件和目录
+  }
+  // 将配置对象写入JSON文件，使用2个空格进行格式化
+  writeFileSync(tsconfigPath, JSON.stringify(tsconfigJson, null, 2))
+  // 返回创建的临时配置文件路径
+  return tsconfigPath
+}
+
+/**
+ * 将字符串转换为驼峰命名格式
+ * @param name 需要转换的字符串，通常可能是包名或文件名
+ * @returns {string} 返回转换后的驼峰格式字符串
+ */
+function toCamelCase(name: string): string {
+  return name
+    .replace(/^@.*\//, '') // 移除开头的@符号和任何斜杠及前面的内容（如@scope/）
+    .split('-') // 按连字符分割字符串为数组
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1)) // 将每个单词首字母大写
+    .join('') // 将处理后的单词数组连接成字符串
+}
+
+/**
+ * 执行命令的异步函数
+ * @param cmd - 要执行的命令字符串
+ * @param cwd - 可选参数，指定命令执行的工作目录
+ */
+async function runCommand(cmd: string, cwd?: string) {
+  try {
+    // 尝试执行命令，如果提供了cwd参数，则在指定目录下执行
+    await execAsync(cmd, { cwd })
+  } catch (err: any) {
+    // 捕获执行过程中的错误
+    // 如果错误包含stdout信息则显示stdout，否则显示错误消息
+    log.error(`Command failed: ${cmd}\n${err?.stdout || err?.message}`)
+    // 以非零状态码退出进程，表示执行失败
+    process.exit(1)
+  }
+}
+
+/**
+ * 构建包的异步函数
  * @param packagePath - 包的路径
+ * @param packageDirName - 包的目录名称
+ * @param index - 包的索引
+ * @param runTest - 是否运行测试
  */
-const execAsync = promisify(exec)
-
-/**
- * 构建指定包的函数
- *
- * @param packagePath 包的路径
- * @param packageDirName 包的目录名
- * @param index 包的索引，用于显示构建顺序
- * @param runTest 是否运行测试
- */
-const buildPackage = async (
+async function buildPackage(
   packagePath: string,
   packageDirName: string,
   index: number,
   runTest: boolean
-) => {
-  // 导入包的package.json文件
-  const pkg = (await import(`${packagePath}/package.json`)).default as PackageJson
-  // 用于分隔输出的等号线
+) {
+  // 导入并解析包的 package.json 文件
+  const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
+  // 创建分隔线，用于日志输出
   const separator = '='.repeat(50)
+  // 记录开始构建包的信息
+  log.info(`\n📦 Building package(${index + 1}): ${pkg.name}`)
+  log.info(separator)
 
-  // 输出构建包的信息
-  console.log(chalk.cyan(`\n📦 Building package(${index + 1}): ${chalk.bold(pkg.name)}`))
-  console.log(chalk.cyan(separator))
-
-  // 如果需要运行测试，则执行测试命令
+  // 如果需要运行测试
   if (runTest) {
-    console.log(chalk.yellow('🧪 Running tests...'))
-    try {
-      await execAsync(`vitest run --dir ${packagePath}`)
-      console.log(chalk.green('  ✓ Tests passed successfully'))
-    } catch (error: any) {
-      console.error(chalk.red(`❌  Tests failed:\n${error?.stdout || error?.message}`))
-      process.exit(1)
-    }
+    log.warn('🧪 Running tests...')
+    // 使用 vitest 运行测试
+    await runCommand(`vitest run --dir ${packagePath}`)
+    log.success('  ✓ Tests passed successfully')
   }
 
-  // 首先使用tsc编译生成.js和.d.ts文件
-  console.log(chalk.yellow('🔨 Compiling TypeScript...'))
+  // 解析 dist 目录路径
   const dist = resolve(packagePath, 'dist')
-  // 清空或检查dist目录
-  try {
-    if (existsSync(dist)) {
-      if (statSync(dist).isDirectory()) {
-        // 清空dist目录
-        rmSync(dist, { recursive: true, force: true })
-        console.log(chalk.gray('  ✓ Cleaned dist directory'))
-      }
-    } else {
-      console.log(chalk.gray('  ℹ dist directory does not exist, skipping cleanup'))
-    }
-  } catch (error) {
-    console.error(chalk.red('❌  Error cleaning dist directory:'), error)
-    process.exit(1)
-  }
-  const pakTsConfigPath = `${packagePath}/tsconfig.json`
-  const isTsConfigExists = existsSync(pakTsConfigPath)
-  // 执行TypeScript编译命令
-  try {
-    if (!isTsConfigExists) {
-      // 创建 tsconfig.json
-      const tsconfigJson = {
-        extends: '../../tsconfig.json',
-        compilerOptions: {
-          outDir: 'dist'
-        },
-        include: ['src', 'global.d.ts'],
-        exclude: ['dist', 'node_modules', '__tests__']
-      }
-      writeFileSync(pakTsConfigPath, JSON.stringify(tsconfigJson, null, 2))
-    }
-    const buildCommand = `tsc --outDir ${dist} -p ${pakTsConfigPath}`
-    await execAsync(buildCommand)
-    if (!isTsConfigExists) rmSync(pakTsConfigPath)
-    // 替换vitarx app.js中的版本号
-    if (packageDirName === 'vitarx') {
-      const distPath = join(packagePath, 'dist', 'app.js')
-      const content = readFileSync(distPath, 'utf-8')
-      const updatedContent = content.replace(/__VERSION__/g, `"${pkg.version}"`)
-      writeFileSync(distPath, updatedContent, 'utf-8')
-    }
-    console.log(chalk.green('  ✓ TypeScript compilation completed'))
-  } catch (error: any) {
-    console.error(
-      chalk.red(`❌  TypeScript compilation failed:\n${error?.stdout || error?.message}`)
-    )
-    if (!isTsConfigExists) rmSync(pakTsConfigPath)
-    process.exit(1)
-  }
+  // 清理 dist 目录
+  cleanDist(dist)
 
-  // 使用vite构建不同格式的包
-  console.log(chalk.yellow('\n📦 Compiling bundle formats...'))
-  // 修改包名处理逻辑，使用更清晰的驼峰命名转换
-  const parts = pkg.name.replace('@vitarx/', '').split('-')
-  const name = parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('')
-  // Vite构建配置
+  // TypeScript 编译阶段
+  log.warn('🔨 Compiling TypeScript...')
+  // 创建临时 TypeScript 配置文件
+  const tempTsConfig = createTempTsConfig(packagePath)
+  // 使用 tsc 编译 TypeScript
+  await runCommand(`tsc -p ${tempTsConfig}`)
+  // 删除临时配置文件
+  rmSync(tempTsConfig)
+
+  // vitarx 特殊版本替换处理
+  if (packageDirName === 'vitarx') {
+    const distPath = join(dist, 'app.js')
+    // 检查文件是否存在
+    if (existsSync(distPath)) {
+      // 读取文件内容
+      const content = readFileSync(distPath, 'utf-8')
+      // 替换版本号占位符
+      writeFileSync(distPath, content.replace(/__VERSION__/g, `"${pkg.version}"`), 'utf-8')
+    }
+  }
+  log.success('  ✓ TypeScript compilation completed')
+
+  // Vite bundle
+  log.warn('\n📦 Compiling bundle formats...')
+  const name = toCamelCase(pkg.name)
   const defaultConfig: InlineConfig = {
     configFile: false,
     build: {
@@ -123,62 +154,73 @@ const buildPackage = async (
         name,
         entry: resolve(packagePath, 'src/index.ts'),
         formats: ['iife'],
-        fileName: (format: string) => `index.${format}.js`
+        fileName: format => `index.${format}.js`
       },
-      outDir: resolve(packagePath, 'dist'),
+      outDir: dist,
       emptyOutDir: false
     },
-    define: {
-      // 版本号
-      __VERSION__: JSON.stringify(pkg.version)
-    }
+    define: { __VERSION__: JSON.stringify(pkg.version) }
   }
-  // 合并包配置与默认配置，并开始构建
   await build(mergeConfig(defaultConfig, pkg.vite || {}))
-  console.log(chalk.green(`✓ Bundle ${packageDirName} compilation completed`))
-  console.log(chalk.cyan(separator + '\n'))
+  log.success(`✓ Bundle ${packageDirName} compilation completed`)
+  log.info(separator + '\n')
 }
 
 /**
- * 解析命令行参数
+ * 解析命令行参数的函数
+ * @returns {Object} 返回一个包含解析结果的对象，包含packages数组和test布尔值
  */
-const parseArgs = (): { packages: string[]; test: boolean } => {
+function parseArgs(): { packages: string[]; test: boolean } {
+  // 获取命令行参数数组，去掉前两个元素(node和脚本路径)
   const args = process.argv.slice(2)
+  // 初始化packages数组，用于存储包名
   const packages: string[] = []
+  // 初始化test标志，默认为false
   let test = false
-  let i = 0
-  while (i < args.length) {
-    if (args[i] === '--test') {
-      test = true
-      i++
-      continue
-    }
-    packages.push(args[i])
-    i++
-  }
+  // 遍历所有命令行参数
+  args.forEach(arg => {
+    // 检查是否是测试参数
+    if (arg === '--test') test = true
+    // 否则将参数添加到packages数组
+    else packages.push(arg)
+  })
+  // 返回解析结果
   return { packages, test }
 }
 
 /**
- * 构建指定的包或所有包
+ * 构建所有指定的包
+ * 这是一个异步函数，用于遍历并构建指定目录下的所有包
  */
-const buildAll = async () => {
+async function buildAll() {
+  // 从命令行参数中解析出目标包和测试标志
   const { packages: targetPackages, test } = parseArgs()
+  // 获取包所在目录的绝对路径
   const packagesDir = resolve(__dirname, '../packages')
+  // 确定要构建的包列表：如果指定了目标包则使用指定的包，否则获取所有符合条件的包
   const packages =
     targetPackages.length > 0
-      ? targetPackages
+      ? targetPackages // 如果指定了目标包，则使用指定的包列表
       : readdirSync(packagesDir).filter(dir => {
-          const stats = statSync(resolve(packagesDir, dir))
+          // 否则扫描目录获取所有符合条件的包
+          // 获取目录状态信息
+          const stats = statSync(join(packagesDir, dir))
+          // 只返回是目录、不以点或下划线开头的目录名
           return stats.isDirectory() && !dir.startsWith('.') && !dir.startsWith('_')
-        }) // 获取所有非隐藏目录作为包名
-  console.log(chalk.blue(`🚀 Start Building Packages: ${chalk.bold(packages.join(', '))}`))
+        })
+  // 记录开始构建的信息
+  log.info(`🚀 Start Building Packages: ${packages.join(', ')}`)
+
+  // 遍历所有包，逐个构建
   for (let i = 0; i < packages.length; i++) {
-    const pkg = packages[i]
-    const packagePath = resolve(packagesDir, pkg)
-    await buildPackage(packagePath, pkg, i, test)
+    const pkgDir = packages[i] // 当前包的目录名
+    const pkgPath = resolve(packagesDir, pkgDir) // 当前包的完整路径
+    // 构建单个包，传入包路径、目录名、索引和测试标志
+    await buildPackage(pkgPath, pkgDir, i, test)
   }
-  console.log(chalk.green(`✅  All packages built successfully!`))
+
+  // 记录所有包构建完成的信息
+  log.success(`✅  All packages built successfully!`)
 }
 
 buildAll().catch(err => {
