@@ -92,7 +92,7 @@ try {
 console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
 
 // 获取上一个 tag
-let lastTag = ''
+let lastTag
 try {
   lastTag = execSync(`git describe --tags --abbrev=0 ${packageName}@${currentVersion}`)
     .toString()
@@ -101,7 +101,7 @@ try {
   // 没有找到 tag，则从头生成
   lastTag = ''
 }
-let changelogCmd = `npx conventional-changelog -p angular -i ${changelogPath} -s --commit-path packages/${packageName}`
+let changelogCmd = `npx conventional-changelog -p angular -i ${changelogPath} -s --commit-path packages/${packageName} --lerna-package ${packageName}`
 if (lastTag) {
   changelogCmd += ` --tag-prefix ${packageName}@ --from ${lastTag}`
 }
