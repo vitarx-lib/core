@@ -33,7 +33,6 @@ if (!existsSync(packagePath)) {
   console.error(chalk.red(`Error: Package '${packageName}' not found`))
   process.exit(1)
 }
-
 const versionArg = args[1] // 可能是 patch / minor / major / prerelease / 1.2.3
 const preidArgIndex = args.indexOf('--preid')
 const preid = preidArgIndex !== -1 ? args[preidArgIndex + 1] : undefined
@@ -72,6 +71,21 @@ if (versionArg) {
     }
     versionCmd += ` ${versionArg}`
   }
+} else {
+  // 获取当前包版本
+  const currentVersion = JSON.parse(
+    readFileSync(resolve(packagePath, 'package.json'), 'utf-8')
+  ).version
+  // 没有传入 versionArg，自动判断
+  if (semver.prerelease(currentVersion)) {
+    // 当前版本是预发布版本
+    versionCmd += ' prerelease'
+    const preidFromVersion = semver.prerelease(currentVersion)?.[0] // beta/alpha/rc
+    if (preidFromVersion) versionCmd += ` --preid ${preidFromVersion}`
+  } else {
+    // 否则默认 patch
+    versionCmd += ' patch'
+  }
 }
 console.log(chalk.blue(`🔖 Updating version (${versionArg || 'patch'})...`))
 execSync(versionCmd, { stdio: 'inherit' })
@@ -82,20 +96,17 @@ const newVersion = pkgJson.version
 
 // Step 3: 生成 CHANGELOG.md
 console.log(chalk.blue(`📝 Generating CHANGELOG for ${packageName}...`))
-const changelogPath = resolve(packagePath, 'CHANGELOG.md')
-execSync(
-  `pnpm dlx conventional-changelog-cli -p angular -i ${changelogPath} -s -r 0 --commit-path ${packagePath}`,
-  { stdio: 'inherit' }
-)
-
+const changelogPath = resolve(process.cwd(), 'CHANGELOG.md')
+execSync(`npx conventional-changelog -p angular -i ${changelogPath} -s -r 0`, { stdio: 'inherit' })
 try {
   // Step 4: 提交 git
   console.log(chalk.blue('📤 Committing changes...'))
   execSync(`git add ${packagePath}/package.json ${changelogPath}`, { stdio: 'inherit' })
   execSync(`git commit -m "build(${packageName}): release v${newVersion}"`, { stdio: 'inherit' })
-
+  const tagName = `${packageName}@${newVersion}`
+  console.log(chalk.blue(`🏷  Tagging: ${tagName}`))
   // 打标签
-  execSync(`git tag v${newVersion}`, { stdio: 'inherit' })
+  execSync(`git tag ${tagName}`, { stdio: 'inherit' })
 
   // Step 5: 发布到 npm
   console.log(chalk.blue(`🚀 Publishing ${packageName}@${newVersion}...`))
