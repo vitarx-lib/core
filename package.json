@@ -5,6 +5,10 @@
   "workspaces": [
     "packages/*"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitarx-lib/core.git"
+  },
   "scripts": {
     "create": "tsx scripts/create-package.ts",
     "release": "tsx scripts/release.ts",
