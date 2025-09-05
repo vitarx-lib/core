@@ -1,24 +1,18 @@
-import {
-  createScope,
-  depSubscribe,
-  EffectScope,
-  getContext,
-  runInContext,
-  Subscriber
-} from '@vitarx/responsive'
+import { createScope, depSubscribe, EffectScope, Subscriber } from '@vitarx/responsive'
 import { nextTick } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
+import { LifecycleHooks } from '../../widget/constant.js'
 import { _createFnWidget } from '../../widget/fn-widget.js'
-import {
-  type ErrorSource,
-  type FunctionWidget,
-  type LifecycleHookParameter,
-  type LifecycleHookReturnType,
-  LifecycleHooks,
-  type LifecycleState,
-  Widget,
-  type WidgetInstance
+import type {
+  ErrorSource,
+  FunctionWidget,
+  LifecycleHookParameter,
+  LifecycleHookReturnType,
+  LifecycleState,
+  WidgetInstance
 } from '../../widget/index.js'
+import { Widget } from '../../widget/widget.js'
+import { getCurrentVNode, runInNodeContext } from '../context.js'
 import { proxyWidgetProps } from '../props.js'
 import { isRefEl } from '../ref.js'
 import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types/index.js'
@@ -33,7 +27,6 @@ declare global {
   }
 }
 
-const VNODE_CONTEXT_SYMBOL = Symbol('WidgetVNode Context Symbol')
 /**
  * WidgetVNode 类是一个扩展自 VNode<WidgetType> 的虚拟节点实现，专门用于表示和管理 Widget 类型的组件实例。
  *
@@ -194,15 +187,15 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
-   * 在指定上下文中执行函数
+   * 获取当前的虚拟节点对象
    *
-   * @template R - 函数返回值的类型
-   * @param {() => R} fn - 需要在特定上下文中执行的函数
-   * @returns {R} 函数执行后的返回值
+   * 该函数通过上下文符号从当前执行上下文中获取WidgetVNode实例，
+   * 用于在组件树中追踪当前正在处理的虚拟节点。
+   *
+   * @returns {WidgetVNode | undefined} 返回当前上下文中的WidgetVNode实例，如果不存在则返回undefined
    */
-  runInContext<R>(fn: () => R): R {
-    // 调用runInContext函数，传入虚拟节点上下文符号、当前对象和要执行的函数
-    return runInContext(VNODE_CONTEXT_SYMBOL, this, fn)
+  static getCurrentVNode(): WidgetVNode | undefined {
+    return getCurrentVNode()
   }
   /**
    * 获取当前实例的scope属性
@@ -224,16 +217,17 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 在虚拟 DOM 中，组件通常是一个函数或类
     return typeof val.type === 'function'
   }
+
   /**
-   * 获取当前的虚拟节点对象
+   * 在指定上下文中执行函数
    *
-   * 该函数通过上下文符号从当前执行上下文中获取WidgetVNode实例，
-   * 用于在组件树中追踪当前正在处理的虚拟节点。
-   *
-   * @returns {WidgetVNode | undefined} 返回当前上下文中的WidgetVNode实例，如果不存在则返回undefined
+   * @template R - 函数返回值的类型
+   * @param {() => R} fn - 需要在特定上下文中执行的函数
+   * @returns {R} 函数执行后的返回值
    */
-  static getCurrentVNode(): WidgetVNode | undefined {
-    return getContext<WidgetVNode>(VNODE_CONTEXT_SYMBOL)
+  runInContext<R>(fn: () => R): R {
+    // 调用runInContext函数，传入虚拟节点上下文符号、当前对象和要执行的函数
+    return runInNodeContext(this, fn)
   }
   /**
    * 获取提供（provide）的值
