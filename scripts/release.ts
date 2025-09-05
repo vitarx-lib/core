@@ -90,10 +90,23 @@ try {
 
 // Step 6: 生成根目录 CHANGELOG.md
 console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
-execSync(
-  `npx conventional-changelog -p angular -i ${changelogPath} -s -r 4 --commit-path ${packagePath} --lerna-package ${packageName}`,
-  { stdio: 'inherit' }
-)
+
+// 获取上一个 tag
+let lastTag = ''
+try {
+  lastTag = execSync(`git describe --tags --abbrev=0 ${packageName}@${currentVersion}`)
+    .toString()
+    .trim()
+} catch {
+  // 没有找到 tag，则从头生成
+  lastTag = ''
+}
+let changelogCmd = `npx conventional-changelog -p angular -i ${changelogPath} -s --commit-path packages/${packageName}`
+if (lastTag) {
+  changelogCmd += ` --tag-prefix ${packageName}@ --from ${lastTag}`
+}
+
+execSync(changelogCmd, { stdio: 'inherit' })
 // Step 7: 提交 package.json + CHANGELOG.md
 console.log(chalk.blue('📤 Committing changes...'))
 try {
