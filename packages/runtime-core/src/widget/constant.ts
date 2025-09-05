@@ -45,3 +45,8 @@ export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
   T,
   (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
 >
+
+/**
+ * 类小部件的标识符
+ */
+export const CLASS_WIDGET_BASE_SYMBOL = Symbol('CLASS_WIDGET_SYMBOL')
