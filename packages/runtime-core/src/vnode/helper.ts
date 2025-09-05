@@ -82,19 +82,6 @@ export function createVNode<T extends VNodeType>(
 export { createVNode as createElement }
 
 /**
- * 获取当前虚拟节点(WidgetVNode)的函数
- * 该函数通过调用WidgetVNode类的静态方法getCurrentVNode()来实现
- *
- * @alias useCurrentVNode
- * @returns {WidgetVNode | undefined} 如果有则返回当前活动的虚拟节点(VNode)实例
- */
-export function getCurrentVNode(): WidgetVNode | undefined {
-  return WidgetVNode.getCurrentVNode() // 调用WidgetVNode类的静态方法获取当前VNode
-}
-
-export { getCurrentVNode as useCurrentVNode }
-
-/**
  * 检查给定的值是否为VNode节点
  *
  * @param val - 需要检查的值
