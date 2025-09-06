@@ -1,6 +1,6 @@
 import { isReactive, ReactiveProxyHandler } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import { WidgetVNode } from './nodes/index.js'
+import { getCurrentVNode } from './context.js'
 
 const VNODE_PROPS_DEFAULT_DATA = Symbol('VNODE_PROPS_DEFAULT_DATA')
 const VNODE_PROPS_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
@@ -158,7 +158,7 @@ export function defineProps<D extends Record<string, any>, I extends Record<stri
 
   // 如果未提供inputProps，则尝试从当前VNode获取
   if (!inputProps) {
-    const currentVNode = WidgetVNode.getCurrentVNode()
+    const currentVNode = getCurrentVNode()
     if (!currentVNode) {
       throw new Error(
         '[Vitarx.defineProps][ERROR]：Unable to get the current VNode, defineProps must be called under the scope of the widget (initialization phase)'
