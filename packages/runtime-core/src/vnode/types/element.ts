@@ -1,6 +1,6 @@
 import type { RefSignal } from '@vitarx/responsive'
 import type { Comment as CommentType, Fragment, Text as TextType } from '../constant.js'
-import { FragmentVNode } from '../nodes/index.js'
+import type { FragmentVNode } from '../nodes/index.js'
 import type { ElementProperties } from './properties.js'
 import type { Child, VNodeType } from './vnode.js'
 
