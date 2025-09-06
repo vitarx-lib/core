@@ -1,5 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
-import { AnyPrimitive } from '@vitarx/utils'
+import type { AnyPrimitive } from '@vitarx/utils'
 import type { RefEl } from '../ref.js'
 import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event.js'
 import type { ClassProperties, StyleProperties } from './style.js'
