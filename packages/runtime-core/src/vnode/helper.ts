@@ -8,7 +8,7 @@ import {
   VNode,
   WidgetVNode
 } from './nodes/index.js'
-import { type Child, type VNodeInstance, type VNodeProps, VNodeType } from './types/vnode.js'
+import type { Child, VNodeInstance, VNodeProps, VNodeType } from './types/vnode.js'
 
 /**
  * 创建虚拟节点的工厂函数
