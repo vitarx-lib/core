@@ -1,9 +1,18 @@
-##  (2025-09-06)
+## vitarx@3.0.1 (2025-09-06)
+
+此版本修复了runtime-core循环依赖导致不兼容vite依赖优化问题。
+
+- 更新运行时核心版本为3.0.1
+- 新增类型判断辅助函数：
+  - isFragmentVNode
+  - isElementVNode
+  - isTextVNode
+  - isCommentVNode
+  - isContainerVNode
+  - isNotTagVNod
 
 
-
-
-## 发布vitarx@3.0.1-beta.0版本  (2025-09-06)
+## 发布vitarx@3.0.1-beta.0版本 (2025-09-06)
 
 - 尝试修复循环引用问题，兼容vite依赖优化。
 
