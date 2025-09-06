@@ -1,5 +1,10 @@
 ##  (2025-09-06)
 
+
+
+
+## 发布runtime-core@1.0.1-beta.0版本 (2025-09-06)
+
 * refactor(runtime-core): 为 CommentVNode 类添加文档注释 ([c79ac32](https://github.com/vitarx-lib/core/commit/c79ac32))
 * refactor(runtime-core): 优化 vnode 属性类型导入 ([6484015](https://github.com/vitarx-lib/core/commit/6484015))
 * refactor(runtime-core): 优化 widget 文件的导入声明，避免循环依赖 ([a5099cb](https://github.com/vitarx-lib/core/commit/a5099cb))
