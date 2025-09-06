@@ -2,15 +2,10 @@ import { isArrayEqual, isRecordObject, popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../guards.js'
 import { VNODE_SYMBOL } from '../node-symbol.js'
+import { addParentVNodeMapping, findParentVNode } from '../relations.js'
 import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types/index.js'
 
 export type Source = { fileName: string; lineNumber: number; columnNumber: number }
-/**
- * 父节点映射
- *
- * @private
- */
-const PARENT_NODE_MAPPING = new WeakMap<VNode, VNode>()
 const MEMO_STORE = new WeakMap<Array<any>, VNode>()
 /**
  * 虚拟节点（VNode）基类，用于构建虚拟DOM树结构。
@@ -248,7 +243,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param parent - 父节点
    */
   static addParentVNodeMapping(child: VNode, parent: VNode) {
-    PARENT_NODE_MAPPING.set(child, parent)
+    addParentVNodeMapping(child, parent)
   }
 
   /**
@@ -258,7 +253,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @return {VNode|undefined} - 如果存在父节点则返回父节点的VNode对象
    */
   static findParentVNode(vnode: VNode): VNode | undefined {
-    return PARENT_NODE_MAPPING.get(vnode)
+    return findParentVNode(vnode)
   }
 
   /**

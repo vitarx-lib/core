@@ -3,7 +3,7 @@ import { isRecordObject } from '@vitarx/utils'
 import { createVNode, VNode, WidgetPropsType, WidgetType } from '../../vnode/index.js'
 import { type ErrorHandler } from '../types/index.js'
 import { Widget } from '../widget.js'
-import { getSuspenseCounter } from './Suspense.js'
+import { getSuspenseCounter } from './suspense-counter.js'
 
 /**
  * 代码分块懒加载

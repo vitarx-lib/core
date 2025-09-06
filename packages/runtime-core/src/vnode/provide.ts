@@ -1,7 +1,8 @@
 import type { AnyFunction } from '@vitarx/utils'
 import { getCurrentVNode } from './context.js'
 import { isWidgetVNode } from './guards.js'
-import { VNode } from './nodes/vnode.js'
+import type { VNode } from './nodes/vnode.js'
+import { findParentVNode } from './relations.js'
 
 /**
  * 提供依赖数据，实现小部件间的依赖注入
@@ -113,7 +114,7 @@ export function inject<T>(
   }
 
   // 从当前 VNode 的父级开始查找
-  let vnode: VNode | undefined = VNode.findParentVNode(currentVNode)
+  let vnode: VNode | undefined = findParentVNode(currentVNode)
   // 缓存 App 实例
   let app = currentVNode.getProvide('App')
 
@@ -127,7 +128,7 @@ export function inject<T>(
       app = vnode.getProvide('App')
     }
     // 移动到父级 VNode
-    vnode = VNode.findParentVNode(vnode)
+    vnode = findParentVNode(vnode)
   }
   // 如果获取的是App实例，则返回App
   if (name === 'App') return app
