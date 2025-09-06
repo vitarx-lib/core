@@ -3,10 +3,10 @@ import { getCurrentVNode } from '../vnode/context.js'
 import {
   type AnyElement,
   type RuntimeElement,
-  VNode,
-  VNodeUpdate,
+  type VNode,
   type WidgetVNode
 } from '../vnode/index.js'
+import { VNodeUpdate } from '../vnode/update.js'
 import { CLASS_WIDGET_BASE_SYMBOL } from './constant.js'
 import { type ClassWidget, type ErrorInfo } from './types/index.js'
 
