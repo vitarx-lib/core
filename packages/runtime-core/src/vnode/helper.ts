@@ -1,5 +1,5 @@
 import { popProperty } from '@vitarx/utils'
-import { isSimpleWidget } from '../widget/index.js'
+import { isSimpleWidget } from '../widget/helper.js'
 import {
   CommentVNode,
   ElementVNode,
