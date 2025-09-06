@@ -1,6 +1,7 @@
 import { toRaw } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
+import { isContainerVNode } from '../guards.js'
 import type {
   Child,
   FragmentElement,
@@ -68,18 +69,12 @@ export abstract class ContainerVNode<
   }
 
   /**
-   * 判断给定的虚拟节点是否为容器类型的虚拟节点
-   * @param vnode - 需要检查的虚拟节点
+   * 判断给定的值是否为容器类型的虚拟节点
+   * @param val - 需要检查的虚拟节点
    * @returns {boolean} 如果是容器类型的虚拟节点则返回true，否则返回false
    */
-  static override is(vnode: VNode): vnode is ContainerVNode {
-    if (!super.is(vnode)) return false
-    // 检查vnode的类型是否为字符串，如果不是则直接返回false
-    if (typeof vnode.type !== 'string') return false
-    // 排除文本节点和注释节点
-    if ('text-node' === vnode.type || 'comment-node' === vnode.type) return false
-    // 通过以上检查后，确认是元素类型的虚拟节点，返回true
-    return true
+  static override is(val: any): val is ContainerVNode {
+    return isContainerVNode(val)
   }
 
   /**

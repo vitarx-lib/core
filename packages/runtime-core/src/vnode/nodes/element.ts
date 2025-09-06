@@ -1,9 +1,9 @@
 import { isRefSignal } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
+import { isElementVNode } from '../guards.js'
 import { isRefEl } from '../ref.js'
 import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types/index.js'
 import { ContainerVNode } from './container.js'
-import { VNode } from './vnode.js'
 
 const NAMESPACE_URI = {
   svg: 'http://www.w3.org/2000/svg',
@@ -34,7 +34,6 @@ const NAMESPACE_URI = {
  * - T: 泛型参数，限制元素名称必须是有效的HTML或SVG元素名
  * - type: 元素类型（如'div', 'span', 'svg'等）
  * - props: 元素属性对象
- * - children: 子节点数组
  *
  * 使用限制：
  * - 在非浏览器环境中使用可能会出错，因为依赖DOM API
@@ -101,19 +100,13 @@ export class ElementVNode<
     return false
   }
   /**
-   * 判断给定的虚拟节点是否为元素类型的虚拟节点
+   * 判断给定的值是否为元素类型的虚拟节点
    *
    * @param val - 要检测的变量
    * @returns {boolean} 如果是元素类型的虚拟节点则返回true，否则返回false
    */
   static override is(val: any): val is ElementVNode {
-    if (!VNode.is(val)) return false
-    // 检查vnode的类型是否为字符串，如果不是则直接返回false
-    if (typeof val.type !== 'string') return false
-    // 检查vnode的类型是否为特殊节点类型（片段节点、文本节点、注释节点），如果是则返回false
-    if (['fragment-node', 'text-node', 'comment-node'].includes(val.type)) return false
-    // 通过以上检查后，确认是元素类型的虚拟节点，返回true
-    return true
+    return isElementVNode(val)
   }
   /**
    * @inheritDoc

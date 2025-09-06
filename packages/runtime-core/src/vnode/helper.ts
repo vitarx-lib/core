@@ -80,25 +80,3 @@ export function createVNode<T extends VNodeType>(
 }
 
 export { createVNode as createElement }
-
-/**
- * 检查给定的值是否为VNode节点
- *
- * @param val - 需要检查的值
- * @returns {boolean} 如果值是VNode节点则返回true，否则返回false
- */
-export function isVNode(val: any): val is VNode {
-  return VNode.is(val) // 调用VNode类的静态is方法来判断传入的值是否为VNode实例
-}
-
-/**
- * 检查传入的值是否为WidgetVNode类型
- * 这是一个类型守卫函数，用于在运行时验证值的类型
- * @param val - 需要检查的值
- *
- * @returns {boolean} 如果值是WidgetVNode类型则返回true，否则返回false
- */
-export function isWidgetVNode(val: any): val is WidgetVNode {
-  // 使用类型谓语(val is WidgetVNode)来确保类型收窄
-  return WidgetVNode.is(val) // 调用WidgetVNode类的is方法进行类型检查
-}

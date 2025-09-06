@@ -1,6 +1,13 @@
 import { watchProperty } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
-import { createVNode, type UniqueKey, VNode, WidgetType, WidgetVNode } from '../../vnode/index.js'
+import { isVNode } from '../../vnode/guards.js'
+import {
+  createVNode,
+  type UniqueKey,
+  type VNode,
+  type WidgetType,
+  type WidgetVNode
+} from '../../vnode/index.js'
 import { Widget } from '../widget.js'
 
 /**
@@ -153,7 +160,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    * 生成子节点
    */
   protected makeChildVNode(): VNode<WidgetType> {
-    const isValidVNode = VNode.is(this.children)
+    const isValidVNode = isVNode(this.children)
     const type = isValidVNode ? this.children.type : this.children
     if (typeof type !== 'function') {
       const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${String(type)}`

@@ -1,4 +1,5 @@
-import { isVNode, VNode } from '../../vnode/index.js'
+import { isVNode } from '../../vnode/guards.js'
+import { type VNode } from '../../vnode/index.js'
 import { type Element, Widget } from '../widget.js'
 
 /**

@@ -1,7 +1,7 @@
 import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
-import { createVNode, isVNode } from '../vnode/helper.js'
-import type { VNode, WidgetType, WidgetVNode } from '../vnode/index.js'
+import { isVNode } from '../vnode/guards.js'
+import { type VNode, type WidgetType, WidgetVNode } from '../vnode/index.js'
 import { getSuspenseCounter } from './built/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__ } from './constant.js'
 import { HookCollector, type HookCollectResult } from './hook.js'
@@ -127,7 +127,7 @@ class FnWidget extends Widget<Record<string, any>> {
     if (build === null) return
     // 如果是module对象，则判断是否存在default导出
     if (typeof build === 'object' && 'default' in build! && typeof build.default === 'function') {
-      this.build = () => createVNode(build.default, this.props)
+      this.build = () => new WidgetVNode(build.default, this.props)
       return
     }
     // 如果不符合要求，则在build方法中抛出异常

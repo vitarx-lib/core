@@ -1,8 +1,9 @@
 import { isArrayEqual, isRecordObject, popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
+import { isVNode } from '../guards.js'
+import { VNODE_SYMBOL } from '../node-symbol.js'
 import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types/index.js'
 
-const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
 export type Source = { fileName: string; lineNumber: number; columnNumber: number }
 /**
  * 父节点映射
@@ -12,12 +13,28 @@ export type Source = { fileName: string; lineNumber: number; columnNumber: numbe
 const PARENT_NODE_MAPPING = new WeakMap<VNode, VNode>()
 const MEMO_STORE = new WeakMap<Array<any>, VNode>()
 /**
- * 虚拟节点抽象类
+ * 虚拟节点（VNode）基类，用于构建虚拟DOM树结构。
+ *
+ * 该类提供了虚拟节点的核心功能，包括节点类型管理、属性处理、缓存机制、
+ * 父子节点关系维护等。作为抽象类，它定义了虚拟节点的基本行为和接口，
+ * 具体的渲染和挂载逻辑由子类实现。
+ *
+ * 主要功能：
+ * - 节点类型和属性管理
+ * - 节点缓存和记忆功能（memo）
+ * - 父子节点关系维护
+ * - Shadow DOM元素处理
+ * - 节点生命周期管理（挂载、卸载、激活、停用）
  *
  * @template T - 节点类型
+ * @param type - 虚拟节点的类型，可以是标签名（如'div'）、组件（函数或类）或其他类型
+ * @param props - 虚拟节点的属性对象，包含节点的各种配置和属性
+ *
+ * @warning
+ * - 不应直接实例化此类，而应通过其子类使用
+ * - 使用activate/deactivate方法时需注意root参数的正确使用
  */
 export abstract class VNode<T extends VNodeType = VNodeType> {
-  readonly [VNODE_SYMBOL] = true
   /**
    * 源信息，仅在开发调试阶段存在
    */
@@ -57,6 +74,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param props 虚拟节点的属性对象
    */
   constructor(type: T, props: VNodeProps<T> | null = null) {
+    Object.defineProperty(this, VNODE_SYMBOL, { value: true })
     // 节点类型
     this.#type = type
     // 节点属性
@@ -244,13 +262,13 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   }
 
   /**
-   * 判断给定对象是否为VNode实例
+   * 判断给定值是否为VNode实例
    *
    * @param val - 需要判断的值
    * @returns {boolean} 如果对象是VNode实例则返回true，否则返回false
    */
   static is(val: any): val is VNode {
-    return val?.[VNODE_SYMBOL] === true
+    return isVNode(val)
   }
 
   /**

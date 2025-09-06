@@ -1,5 +1,6 @@
 export * from './types/index.js'
-export * from './constant.js'
+export { Fragment, Text, Comment } from './node-symbol.js'
+export * from './guards.js'
 export * from './context.js'
 export * from './nodes/index.js'
 export * from './ref.js'

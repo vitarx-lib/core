@@ -2,6 +2,11 @@ import type { RefSignal } from '@vitarx/responsive'
 import { VNode } from './nodes/index.js'
 import type { Child } from './types/index.js'
 
+/**
+ * VNode对象标识符
+ */
+export const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
+
 type FragmentType = ((props: { children?: Child | Child[] }) => VNode) & { __isFragment__: true }
 /**
  * 片段元素标识符

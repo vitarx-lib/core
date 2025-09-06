@@ -13,6 +13,7 @@ import type {
 } from '../../widget/index.js'
 import { Widget } from '../../widget/widget.js'
 import { getCurrentVNode, runInNodeContext } from '../context.js'
+import { isWidgetVNode } from '../guards.js'
 import { proxyWidgetProps } from '../props.js'
 import { isRefEl } from '../ref.js'
 import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types/index.js'
@@ -51,15 +52,11 @@ declare global {
  *
  * 构造函数参数：
  * - type: WidgetType - 指定要创建的 Widget 组件类型
- * - props: Record<string, any> - 传递给 Widget 组件的属性
- * - children: VNode[] - 子节点（可选）
- * - ref: Ref<Widget> - 用于引用 Widget 实例的响应式引用（可选）
+ * - props: Record<string, any> - 传递给 Widget 组件的属性，和固有的属性
  *
  * 注意事项：
- * - WidgetVNode 实例不能直接获取 DOM 元素，调用 element 属性会抛出错误
  * - 在开发环境中，会自动检查热模块替换(HMR)功能，确保组件使用最新的代码
  * - Widget 实例的创建是惰性的，只有在访问 instance 属性时才会创建
- * - 异步 Widget 组件的支持尚未完全实现
  */
 export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   /**
@@ -206,16 +203,13 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     return this.instance.$scope
   }
   /**
-   * 判断给定的虚拟节点是否为组件类型的虚拟节点
+   * 判断给定的值是否为组件类型的虚拟节点
    *
    * @param val - 要检查的虚拟节点
    * @returns {boolean} 如果虚拟节点是组件类型则返回 true，否则返回 false
    */
   static override is(val: any): val is WidgetVNode {
-    if (!super.is(val)) return false
-    // 检查虚拟节点的 type 属性是否为函数类型
-    // 在虚拟 DOM 中，组件通常是一个函数或类
-    return typeof val.type === 'function'
+    return isWidgetVNode(val)
   }
 
   /**

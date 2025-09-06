@@ -1,6 +1,6 @@
 import type { AnyFunction } from '@vitarx/utils'
 import { getCurrentVNode } from './context.js'
-import { isWidgetVNode } from './helper.js'
+import { isWidgetVNode } from './guards.js'
 import { VNode } from './nodes/vnode.js'
 
 /**

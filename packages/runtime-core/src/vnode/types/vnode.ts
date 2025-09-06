@@ -5,7 +5,7 @@ import type {
   Comment as CommentType,
   Fragment as FragmentType,
   Text as TextType
-} from '../constant.js'
+} from '../node-symbol.js'
 import type { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes/index.js'
 import type {
   AllNodeElementName,

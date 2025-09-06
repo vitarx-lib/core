@@ -1,4 +1,5 @@
-import { isVNode, VNode, WidgetVNode } from '../vnode/index.js'
+import { isVNode } from '../vnode/guards.js'
+import { type VNode } from '../vnode/index.js'
 import { CLASS_WIDGET_BASE_SYMBOL, SIMPLE_FUNCTION_WIDGET_SYMBOL } from './constant.js'
 import type {
   AnyProps,
@@ -8,21 +9,6 @@ import type {
   SimpleWidget,
   TsFunctionWidget
 } from './types/index.js'
-import type { Widget } from './widget.js'
-
-/**
- * 获取当前组件实例
- * 该函数用于获取当前活动的 Widget 实例
- * 通过 WidgetVNode 的 getCurrentVNode 方法获取当前虚拟节点，然后返回其关联的实例
- *
- * @alias useCurrentInstance
- * @returns 返回当前活动的 Widget 实例，如果没有则返回 undefined
- */
-export function getCurrentInstance(): Widget | undefined {
-  return WidgetVNode.getCurrentVNode()?.instance // 使用可选链操作符安全地获取当前虚拟节点关联的实例
-}
-
-export { getCurrentInstance as useCurrentInstance }
 
 /**
  * 标记一个简单的小部件
@@ -87,6 +73,19 @@ export function exportWidget<P extends AnyProps>(fn: FunctionWidget<P>): TsFunct
 }
 
 /**
+ * 检查一个值是否是ClassWidget类型的实例
+ * 这是一个类型谓词函数，用于类型收窄
+ *
+ * @param val 需要检查的值
+ * @returns {boolean} 如果值是类Widget构造函数类型返回true，否则返回false
+ */
+export function isClassWidget(val: any): val is ClassWidget {
+  // 使用可选链操作符安全地访问对象的CLASS_WIDGET_BASE_SYMBOL属性
+  // 并检查其值是否为true
+  return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
+}
+
+/**
  * ## 视图构建器。
  *
  * > 注意：在类小部件中不要使用`build`函数，类中的build方法就是构建器。
@@ -116,17 +115,4 @@ export function build<T extends BuildVNode>(element: T): T extends null ? null :
   if (typeof element === 'function') return element as any
   if (isVNode(element)) return element as any
   throw new TypeError('[Vitarx.build]：函数组件返回值只能是null、VNode、() => VNode | null')
-}
-
-/**
- * 检查一个值是否是ClassWidget类型的实例
- * 这是一个类型谓词函数，用于类型收窄
- *
- * @param val 需要检查的值
- * @returns {boolean} 如果值是类Widget构造函数类型返回true，否则返回false
- */
-export function isClassWidget(val: any): val is ClassWidget {
-  // 使用可选链操作符安全地访问对象的CLASS_WIDGET_BASE_SYMBOL属性
-  // 并检查其值是否为true
-  return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
 }

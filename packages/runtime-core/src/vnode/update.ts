@@ -1,7 +1,7 @@
 import { Observer, toRaw } from '@vitarx/responsive'
 import { isDeepEqual } from '@vitarx/utils'
 import { DomHelper } from '../dom/index.js'
-import { Fragment } from './constant.js'
+import { Fragment } from './node-symbol.js'
 import {
   CommentVNode,
   ContainerVNode,

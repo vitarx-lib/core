@@ -1,7 +1,7 @@
+import { isFragmentVNode } from '../guards.js'
 import type { Child, FragmentElement, FragmentNodeElementName } from '../types/index.js'
 import { CommentVNode } from './comment.js'
 import { ContainerVNode } from './container.js'
-import { VNode } from './vnode.js'
 
 /**
  * 片段节点类，继承自ContainerVNode
@@ -42,14 +42,13 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
     return this.#element
   }
   /**
-   * 判断给定的虚拟节点是否为片段节点(FragmentVNode)
+   * 判断给定的值是否为片段节点(FragmentVNode)
    *
    * @param val - 要检测的变量
    * @returns {boolean} 如果是片段节点则返回true，否则返回false
    */
   static override is(val: any): val is FragmentVNode {
-    if (!VNode.is(val)) return false
-    return val.type === 'fragment-node' // 通过检查节点的类型是否为text-node来判断
+    return isFragmentVNode(val)
   }
   /**
    * 受保护的方法重写，用于处理属性

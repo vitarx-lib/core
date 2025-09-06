@@ -1,10 +1,29 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { unref } from '@vitarx/responsive'
+import { isNotTagVNode } from '../guards.js'
 import type { NoTagNodeElementName } from '../types/index.js'
 import { VNode } from './vnode.js'
 
 /**
- * 纯文本节点抽象类
+ * 无标签虚拟节点抽象基类，用于表示没有HTML标签的节点，如文本节点和注释节点。
+ * 该类继承自VNode，提供了对无标签节点的基本操作和管理功能。
+ *
+ * 核心功能：
+ * - 管理节点的文本值
+ * - 提供节点的挂载、激活、停用和卸载功能
+ * - 支持静态节点的特殊处理
+ *
+ * @example
+ * // 创建文本节点
+ * const textNode = new TextNode('hello');
+ * textNode.mount(document.body);
+ *
+ * @param type - 节点类型，只能是'text-node'或'comment-node'
+ * @param value - 节点的文本值，可以是字符串或响应式字符串引用
+ *
+ * 使用限制：
+ * - 不支持任何属性设置
+ * - 只能用于文本节点和注释节点
  */
 export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T> {
   #value: string
@@ -25,10 +44,8 @@ export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T
    * @returns {boolean} 如果是NoTagVNode类型返回true，否则返回false
    */
   static override is(val: any): val is NoTagVNode<any> {
-    // 首先检查是否为VNode类型，如果不是则直接返回false
-    if (!VNode.is(val)) return false
     // 检查节点类型是否为文本节点或注释节点
-    return val.type === 'text-node' || val.type === 'comment-node'
+    return isNotTagVNode(val)
   }
 
   /**
