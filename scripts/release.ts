@@ -91,7 +91,7 @@ function askVersion(defaultVersion: string): Promise<string> {
     // 使用readline模块的question方法向用户提问
     rl.question(
       // 使用chalk黄色显示提示信息，包含默认版本号
-      chalk.yellow(`⚡ Suggested version is ${defaultVersion}. Use this version? (y/n/custom): `),
+      chalk.yellow(`⚡ Suggested version is ${defaultVersion} Use this version? (y/n/custom): `),
       answer => {
         if (answer.toLowerCase() === 'y' || answer.trim() === '') {
           resolve(defaultVersion)
@@ -128,24 +128,27 @@ try {
 }
 
 // Step 6: 生成根目录 CHANGELOG.md
-console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
+if (packageName !== 'vitarx') {
+  console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
 
-// 获取上一个 tag
-let lastTag
-try {
-  lastTag = execSync(`git describe --tags --abbrev=0 ${packageName}@${currentVersion}`)
-    .toString()
-    .trim()
-} catch {
-  // 没有找到 tag，则从头生成
-  lastTag = ''
-}
-let changelogCmd = `npx conventional-changelog -p angular -i ${changelogPath} -s --commit-path packages/${packageName} --lerna-package ${packageName}`
-if (lastTag) {
-  changelogCmd += ` --tag-prefix ${packageName}@ --from ${lastTag}`
+  // 获取上一个 tag
+  let lastTag
+  try {
+    lastTag = execSync(`git describe --tags --abbrev=0 ${packageName}@${currentVersion}`)
+      .toString()
+      .trim()
+  } catch {
+    // 没有找到 tag，则从头生成
+    lastTag = ''
+  }
+  let changelogCmd = `npx conventional-changelog -p angular -i ${changelogPath} -s --commit-path packages/${packageName} --lerna-package ${packageName}`
+  if (lastTag) {
+    changelogCmd += ` --tag-prefix ${packageName}@ --from ${lastTag}`
+  }
+
+  execSync(changelogCmd, { stdio: 'inherit' })
 }
 
-execSync(changelogCmd, { stdio: 'inherit' })
 // Step 7: 提交 package.json + CHANGELOG.md
 console.log(chalk.blue('📤 Committing changes...'))
 try {
