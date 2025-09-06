@@ -1,6 +1,7 @@
 import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
-import { createVNode, VNode, WidgetType, WidgetVNode } from '../vnode/index.js'
+import { createVNode, isVNode } from '../vnode/helper.js'
+import type { VNode, WidgetType, WidgetVNode } from '../vnode/index.js'
 import { getSuspenseCounter } from './built/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__ } from './constant.js'
 import { HookCollector, type HookCollectResult } from './hook.js'
@@ -119,7 +120,7 @@ class FnWidget extends Widget<Record<string, any>> {
       return
     }
     // 如果是vnode，则让build方法返回节点
-    if (VNode.is(build)) {
+    if (isVNode(build)) {
       this.build = () => build
       return
     }
