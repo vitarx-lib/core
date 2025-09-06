@@ -15,7 +15,7 @@ import type {
   NodeElement,
   TextNodeElementName
 } from './element.js'
-import type { IntrinsicProperties } from './properties'
+import type { IntrinsicProperties } from './properties.js'
 
 /**
  * 表示可以作为子节点的类型
