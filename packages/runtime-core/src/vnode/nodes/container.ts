@@ -1,7 +1,7 @@
 import { toRaw } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
-import { isContainerVNode } from '../guards.js'
+import { isContainerVNode, isWidgetVNode } from '../guards.js'
 import type {
   Child,
   FragmentElement,
@@ -13,7 +13,6 @@ import type {
 import { CommentVNode } from './comment.js'
 import { TextVNode } from './text.js'
 import { VNode } from './vnode.js'
-import { WidgetVNode } from './widget.js'
 
 type ContainerVNodeType = IntrinsicNodeElementName | FragmentNodeElementName
 /**
@@ -52,7 +51,7 @@ export abstract class ContainerVNode<
       for (const child of this.children) {
         const el = child.element // 获取当前子节点的DOM元素
         // 检查子节点是否是WidgetVNode类型
-        if (WidgetVNode.is(child)) {
+        if (isWidgetVNode(child)) {
           // 如果子节点有$teleport属性，将其附加到teleport目标
           if (child.teleport) {
             DomHelper.appendChild(child.teleport, child.shadowElement)
