@@ -1,16 +1,17 @@
 import { Observer, toRaw } from '@vitarx/responsive'
 import { isDeepEqual } from '@vitarx/utils'
 import { DomHelper } from '../dom/index.js'
-import { Fragment } from './node-symbol.js'
 import {
-  CommentVNode,
-  ContainerVNode,
-  FragmentVNode,
-  NoTagVNode,
-  TextVNode,
-  VNode,
-  WidgetVNode
-} from './nodes/index.js'
+  isCommentVNode,
+  isContainerVNode,
+  isFragmentVNode,
+  isNotTagVNode,
+  isTextVNode,
+  isVNode,
+  isWidgetVNode
+} from './guards.js'
+import { Fragment } from './node-symbol.js'
+import type { ContainerVNode, NoTagVNode, VNode } from './nodes/index.js'
 
 /**
  * VNodeUpdate 是一个用于虚拟DOM节点更新的工具类，提供了虚拟DOM节点的更新、替换等功能。
@@ -63,7 +64,7 @@ export class VNodeUpdate {
       // 更新节点的属性
       this.patchUpdateAttrs(oldVNode, newVNode)
       // 如果是容器节点，则更新其子节点
-      if (ContainerVNode.is(oldVNode)) {
+      if (isContainerVNode(oldVNode)) {
         // 递归更新子节点并获取更新后的子节点列表
         const newChildren = this.patchUpdateChildren(oldVNode, newVNode as ContainerVNode)
         // 更新当前节点的子节点列表
@@ -81,12 +82,12 @@ export class VNodeUpdate {
    */
   static patchUpdateAttrs<T extends VNode>(oldVNode: T, newVNode: T) {
     // 如果是特殊的无props节点，则不进行任何更新
-    if (NoTagVNode.is(oldVNode)) {
+    if (isNotTagVNode(oldVNode)) {
       oldVNode.value = (newVNode as unknown as NoTagVNode<any>).value
       return
     }
     if (oldVNode.type === Fragment) return
-    const isWidget = WidgetVNode.is(oldVNode) // 判断是否是Widget类型的节点
+    const isWidget = isWidgetVNode(oldVNode) // 判断是否是Widget类型的节点
     const el = oldVNode.element as HTMLElement // 获取DOM元素
     // 旧的属性
     const oldAttrs = toRaw(oldVNode.props) as Record<string, any>
@@ -131,7 +132,7 @@ export class VNodeUpdate {
     const oldChildren = oldVNode.children // 旧子节点列表
     const newChildren = newVNode.children // 新子节点列表
     /** 是否为片段节点 */
-    const isFragment = FragmentVNode.is(oldVNode)
+    const isFragment = isFragmentVNode(oldVNode)
 
     // 处理边缘情况：新增全部子节点
     if (newChildren.length && !oldChildren.length) {
@@ -165,7 +166,7 @@ export class VNodeUpdate {
       // 新子节点
       const newChild = newVNode.children[index]
       // 尝试复用具有相同key的节点
-      if (VNode.is(newChild) && oldKeyToVNode.has(newChild.key)) {
+      if (isVNode(newChild) && oldKeyToVNode.has(newChild.key)) {
         const oldSameKeyChild = oldKeyToVNode.get(newChild.key)!
         if (oldSameKeyChild.vnode.type === newChild.type) {
           // 避免复用节点被删除
@@ -214,7 +215,7 @@ export class VNodeUpdate {
         continue
       }
       // 更新虚拟节点
-      if (VNode.is(oldChild) && VNode.is(newChild)) {
+      if (isVNode(oldChild) && isVNode(newChild)) {
         const updatedNewChild = this.patchUpdate(oldChild, newChild, false)
         // 如果更新后的虚拟节点和旧虚拟节点相同，则取消将旧节点标记为删除
         if (updatedNewChild === oldChild) {
@@ -249,11 +250,11 @@ export class VNodeUpdate {
     const newElement = newVNode.element
     // 渲染新节点
     // 如果新节点是传送节点则特殊处理
-    if (WidgetVNode.is(newVNode) && newVNode.teleport) {
+    if (isWidgetVNode(newVNode) && newVNode.teleport) {
       // 新占位节点
       const newShadowElementEl = newVNode.shadowElement
       // 如果旧节点是传送节点
-      if (WidgetVNode.is(oldVNode) && oldVNode.teleport) {
+      if (isWidgetVNode(oldVNode) && oldVNode.teleport) {
         // 新节点的占位元素替换旧节点占位元素
         DomHelper.replace(newShadowElementEl, oldVNode.shadowElement)
       } else {
@@ -270,7 +271,7 @@ export class VNodeUpdate {
       return newVNode
     }
     // 替换文本节点
-    if (TextVNode.is(oldVNode) || CommentVNode.is(oldVNode)) {
+    if (isTextVNode(oldVNode) || isCommentVNode(oldVNode)) {
       const parent = DomHelper.getParentElement(oldVNode.element)
       if (!parent) {
         throw new Error(
@@ -281,7 +282,7 @@ export class VNodeUpdate {
       if (autoMount) newVNode.mount()
       return newVNode
     }
-    if (WidgetVNode.is(oldVNode)) {
+    if (isWidgetVNode(oldVNode)) {
       // 如果旧节点是传送节点
       if (oldVNode.teleport) {
         // 将新元素替换掉旧节点的传送占位元素
@@ -313,7 +314,7 @@ export class VNodeUpdate {
     const oldKeyToVNode = new Map<any, { index: number; vnode: VNode }>()
     for (let i = 0; i < oldChildren.length; i++) {
       const child = oldChildren[i]
-      if (VNode.is(child) && (child.key || child.key === 0)) {
+      if (isVNode(child) && (child.key || child.key === 0)) {
         oldKeyToVNode.set(child.key, { index: i, vnode: child })
       }
     }
