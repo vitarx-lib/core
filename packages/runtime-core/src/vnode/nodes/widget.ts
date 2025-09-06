@@ -1,11 +1,23 @@
-import { createScope, depSubscribe, EffectScope, Subscriber } from '@vitarx/responsive'
-import { nextTick } from '@vitarx/utils'
+import {
+  createScope,
+  depSubscribe,
+  EffectScope,
+  Subscriber,
+  withAsyncContext
+} from '@vitarx/responsive'
+import { isPromise, nextTick } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
-import { LifecycleHooks } from '../../widget/constant.js'
-import { _createFnWidget } from '../../widget/fn-widget.js'
+// noinspection ES6PreferShortImport
+import { getSuspenseCounter } from '../../widget/built/suspense-counter.js'
+import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from '../../widget/constant.js'
+import { isClassWidget } from '../../widget/helper.js'
+import { HookCollector } from '../../widget/hook.js'
 import type {
+  BuildVNode,
   ErrorSource,
   FunctionWidget,
+  HookCollectResult,
+  LifecycleHookMethods,
   LifecycleHookParameter,
   LifecycleHookReturnType,
   LifecycleState,
@@ -13,7 +25,7 @@ import type {
 } from '../../widget/index.js'
 import { Widget } from '../../widget/widget.js'
 import { getCurrentVNode, runInNodeContext } from '../context.js'
-import { isWidgetVNode } from '../guards.js'
+import { isVNode, isWidgetVNode } from '../guards.js'
 import { proxyWidgetProps } from '../props.js'
 import { isRefEl } from '../ref.js'
 import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types/index.js'
@@ -27,6 +39,11 @@ declare global {
     }
   }
 }
+
+/**
+ * 初始化函数组件的标识符
+ */
+const __INITIALIZE_FN_WIDGET__ = Symbol('__INITIALIZE_FN_WIDGET__')
 
 /**
  * WidgetVNode 类是一个扩展自 VNode<WidgetType> 的虚拟节点实现，专门用于表示和管理 Widget 类型的组件实例。
@@ -165,14 +182,14 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
           // 包装props为响应式对象
           this.props = proxyWidgetProps(this.props) as VNodeProps<T>
           // 异步实例
-          if (Widget.isClassWidget(this.type)) {
+          if (isClassWidget(this.type)) {
             this.#instance = new this.type(this.props) as WidgetInstance<T>
           } else {
-            const { instance, init } = _createFnWidget(
-              this as unknown as WidgetVNode<FunctionWidget>
-            )
+            const instance = new FnWidget(this.props)
             this.#instance = instance as unknown as WidgetInstance<T>
-            init().then()
+            instance[__INITIALIZE_FN_WIDGET__](
+              HookCollector.collect(this as WidgetVNode<FunctionWidget>, instance)
+            )
           }
           // 绑定ref
           if (isRefEl(this.ref)) this.ref.value = this.#instance
@@ -666,6 +683,158 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         this.#child = null
         this.#state = 'notRendered'
       }
+    }
+  }
+}
+
+/**
+ * FnWidget 是一个函数式组件小部件类，继承自 Widget 基类，用于支持函数式组件的渲染和生命周期管理。
+ *
+ * 该类提供了以下核心功能：
+ * - 支持异步初始化函数小部件
+ * - 支持生命周期钩子的注入和管理
+ * - 支持暴露属性和方法的注入
+ * - 支持多种构建函数类型（函数、VNode、Promise等）
+ *
+ * 使用示例：
+ * ```typescript
+ * const widget = new FnWidget();
+ * await widget[__INITIALIZE_FN_WIDGET__](data);
+ * ```
+ *
+ * 构造函数参数：
+ * - 无需直接实例化，通过调用 __INITIALIZE_FN_WIDGET__ 方法进行初始化
+ *
+ * @param data - 初始化数据对象，包含以下属性：
+ *   - exposed: 需要暴露到实例的属性和方法
+ *   - lifeCycleHooks: 生命周期钩子集合
+ *   - build: 构建函数，可以是函数、VNode、Promise或包含default导出的对象
+ *
+ * 注意事项：
+ * - build 属性支持多种类型，但必须是 VNode、返回 VNode 的函数、Promise<{ default: 函数组件/类组件 }> 或 null
+ * - 如果 build 是 Promise，会自动处理异步情况
+ * - 内部关键字（__WIDGET_INTRINSIC_KEYWORDS__）不会被注入到实例中
+ *
+ * @template T - 组件属性类型，继承自 Widget 基类
+ */
+class FnWidget extends Widget<Record<string, any>> {
+  #suspenseCounter = getSuspenseCounter()
+
+  /**
+   * 初始化函数小部件
+   *
+   * @param data
+   */
+  async [__INITIALIZE_FN_WIDGET__](data: HookCollectResult): Promise<FnWidget> {
+    // 注入暴露的属性和方法
+    this.#injectExposed(data.exposed)
+    const exposedCount = Object.keys(data.exposed).length
+    // 注入生命周期钩子到实例中
+    this.#injectLifeCycleHooks(data.lifeCycleHooks)
+    const hookCount = Object.keys(data.lifeCycleHooks).length
+    let build: BuildVNode | VNode | null | { default: WidgetType } = data.build as BuildVNode
+    if (isPromise(data.build)) {
+      // 如果有上级暂停计数器则让计数器+1
+      if (this.#suspenseCounter) this.#suspenseCounter.value++
+      try {
+        build = await withAsyncContext(data.build as Promise<BuildVNode>)
+      } catch (e) {
+        // 让build方法抛出异常
+        build = () => {
+          throw e
+        }
+      } finally {
+        this.#setBuild(build)
+        // 如果有新增钩子则重新注入生命周期钩子
+        if (hookCount !== Object.keys(data.lifeCycleHooks).length) {
+          this.#injectLifeCycleHooks(data.lifeCycleHooks)
+        }
+        // 如果组件有新增暴露的属性和方法，则重新注入到实例中
+        if (exposedCount !== Object.keys(data.exposed).length) {
+          this.#injectExposed(data.exposed)
+        }
+        this.#updateView()
+        // 如果有上级暂停计数器则让计数器-1
+        if (this.#suspenseCounter) this.#suspenseCounter.value--
+      }
+    } else {
+      this.#setBuild(build)
+      this.#updateView()
+    }
+    return this
+  }
+
+  /**
+   * @inheritDoc
+   */
+  override build(): VNode | null {
+    return null
+  }
+
+  /**
+   * 更新视图的方法
+   * 根据组件的状态决定是否执行更新操作
+   */
+  #updateView() {
+    // 检查组件状态是否为未挂载或激活状态
+    if (this.$vnode.state === 'notMounted' || this.$vnode.state === 'activated') {
+      // 如果条件满足，则执行更新操作
+      this.update()
+    }
+  }
+
+  /**
+   * 初始化函数小部件
+   *
+   * @param {BuildVNode} build - 构建函数
+   * @private
+   */
+  #setBuild(build: BuildVNode | VNode | null | { default: WidgetType }) {
+    // 如果是函数，则直接赋值给build方法
+    if (typeof build === 'function') {
+      this.build = build
+      return
+    }
+    // 如果是vnode，则让build方法返回节点
+    if (isVNode(build)) {
+      this.build = () => build
+      return
+    }
+    if (build === null) return
+    // 如果是module对象，则判断是否存在default导出
+    if (typeof build === 'object' && 'default' in build! && typeof build.default === 'function') {
+      this.build = () => new WidgetVNode(build.default, this.props)
+      return
+    }
+    // 如果不符合要求，则在build方法中抛出异常
+    this.build = () => {
+      throw new Error(
+        `[Vitarx.FnWidget]：函数组件的返回值必须是VNode、()=>VNode、Promise<{ default: 函数组件/类组件 }>、null，实际返回的却是${typeof build}`
+      )
+    }
+  }
+
+  /**
+   * 注入生命周期钩子到实例中
+   *
+   * @param lifeCycleHooks
+   */
+  #injectLifeCycleHooks(lifeCycleHooks: HookCollectResult['lifeCycleHooks']) {
+    for (const lifeCycleHook in lifeCycleHooks) {
+      const k = lifeCycleHook as LifecycleHookMethods
+      this[k] = lifeCycleHooks[k]
+    }
+  }
+
+  /**
+   * 将暴露的属性和方法注入到实例中
+   *
+   * @param exposed
+   */
+  #injectExposed(exposed: HookCollectResult['exposed']) {
+    for (const exposedKey in exposed || {}) {
+      if (__WIDGET_INTRINSIC_KEYWORDS__.includes(exposedKey as any)) continue
+      if (!(exposedKey in this)) (this as any)[exposedKey] = exposed[exposedKey]
     }
   }
 }
