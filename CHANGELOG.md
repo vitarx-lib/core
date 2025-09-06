@@ -33,6 +33,4 @@
 * test(runtime-core): 更新 getCurrentVNode 测试用例 ([634849d](https://github.com/vitarx-lib/core/commit/634849d))
 * fix(runtime-core): 解决循环导入 ([e57bc3d](https://github.com/vitarx-lib/core/commit/e57bc3d))
 
-
-
 ## [vitarx@3.0.0](https://github.com/vitarx-lib/core/compare/v2.0.2..vitarx@3.0.0)(2025-09-05)
