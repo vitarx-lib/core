@@ -6,7 +6,7 @@ import type {
   Fragment as FragmentType,
   Text as TextType
 } from '../constant.js'
-import { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes/index.js'
+import type { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes/index.js'
 import type {
   AllNodeElementName,
   CommentNodeElementName,
