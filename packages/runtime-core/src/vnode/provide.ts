@@ -1,5 +1,7 @@
 import type { AnyFunction } from '@vitarx/utils'
-import { VNode, WidgetVNode } from './nodes/index.js'
+import { getCurrentVNode } from './context.js'
+import { isWidgetVNode } from './helper.js'
+import { VNode } from './nodes/vnode.js'
 
 /**
  * 提供依赖数据，实现小部件间的依赖注入
@@ -34,7 +36,7 @@ export function provide(name: string | symbol, value: any): void {
   if (name === 'App') {
     throw new Error('App 是内部保留关键词，请勿使用！')
   }
-  const currentVNode = WidgetVNode.getCurrentVNode()
+  const currentVNode = getCurrentVNode()
   if (!currentVNode) throw new Error('provide must be called in widget')
   currentVNode.provide(name, value)
 }
@@ -103,7 +105,7 @@ export function inject<T>(
   treatDefaultAsFactory?: boolean
 ): T {
   // 获取当前 VNode
-  const currentVNode = WidgetVNode.getCurrentVNode()
+  const currentVNode = getCurrentVNode()
   if (!currentVNode) {
     throw new Error(
       `[Vitarx.inject] [ERROR]: inject can only be used during widget constructor/onCreate`
@@ -117,15 +119,13 @@ export function inject<T>(
 
   while (vnode) {
     // 如果是 WidgetVNode 且包含提供的数据，直接返回
-    if (WidgetVNode.is(vnode) && vnode.hasProvide(name)) {
-      return vnode.getProvide(name) as T
-    }
-
-    // 更新 App 实例（如果当前 VNode 有提供）
-    if (WidgetVNode.is(vnode)) {
+    if (isWidgetVNode(vnode)) {
+      if (vnode.hasProvide(name)) {
+        return vnode.getProvide(name) as T
+      }
+      // 更新 App 实例（如果当前 VNode 有提供）
       app = vnode.getProvide('App')
     }
-
     // 移动到父级 VNode
     vnode = VNode.findParentVNode(vnode)
   }
