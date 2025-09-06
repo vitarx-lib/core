@@ -1,7 +1,8 @@
-import { Ref, ref, Subscriber, watch } from '@vitarx/responsive'
-import { createVNode, defineProps, inject, provide, VNode } from '../../vnode/index.js'
+import { ref, Subscriber, watch } from '@vitarx/responsive'
+import { createVNode, defineProps, provide, VNode } from '../../vnode/index.js'
 import { type ErrorHandler } from '../types/index.js'
 import { Widget } from '../widget.js'
+import { SUSPENSE_SYMBOL } from './suspense-counter.js'
 
 /**
  * Suspense小部件的配置选项
@@ -35,8 +36,6 @@ interface SuspenseProps {
   onShow?: () => void
 }
 
-const provideSymbol = Symbol('SuspenseSymbol')
-
 /**
  * 同步等待加载子节点
  *
@@ -69,7 +68,7 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
         this.onError = props.onError
       }
     }
-    provide(provideSymbol, this.counter)
+    provide(SUSPENSE_SYMBOL, this.counter)
     // 监听计数器变化，手动管理视图更新，优化性能
     this.listener = watch(this.counter, () => {
       const newValue = this.counter.value
@@ -122,13 +121,4 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
       }
     }
   }
-}
-
-/**
- * 获取上级 `Suspense` 计数器
- *
- * @returns {Ref<number> | undefined} 如果存在则返回计数器Ref，不存在则返回undefined
- */
-export function getSuspenseCounter(): Ref<number> | undefined {
-  return inject<Ref<number> | undefined>(provideSymbol, undefined)
 }
