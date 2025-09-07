@@ -115,7 +115,11 @@ newVersion = await askVersion(newVersion)
 rl.close()
 
 pkg.version = newVersion
-writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2))
+const writeVersion = (v: string) => {
+  pkg.version = v
+  writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2))
+}
+writeVersion(newVersion)
 console.log(chalk.green(`✅ Using version ${newVersion}`))
 
 // Step 5: 构建包
@@ -127,26 +131,18 @@ try {
   process.exit(1)
 }
 
-// Step 6: 生成根目录 CHANGELOG.md
-if (packageName !== 'vitarx') {
-  console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
+// Step 6: 检查是否编写了changelog
+const logTitle = `## [${packageName}@${newVersion}]`
+const changelogContent = readFileSync(changelogPath, 'utf-8')
 
-  // 获取上一个 tag
-  let lastTag
-  try {
-    lastTag = execSync(`git describe --tags --abbrev=0 ${packageName}@${currentVersion}`)
-      .toString()
-      .trim()
-  } catch {
-    // 没有找到 tag，则从头生成
-    lastTag = ''
-  }
-  let changelogCmd = `npx conventional-changelog -p angular -i ${changelogPath} -s --commit-path packages/${packageName} --lerna-package ${packageName}`
-  if (lastTag) {
-    changelogCmd += ` --tag-prefix ${packageName}@ --from ${lastTag}`
-  }
+// 如果 changelog 没有包含本次版本的标题
+if (!changelogContent.includes(logTitle)) {
+  console.error(chalk.red(`❌ Error: Please write a changelog for ${packageName}@${newVersion}`))
 
-  execSync(changelogCmd, { stdio: 'inherit' })
+  // 回滚 package.json 的版本号
+  writeVersion(currentVersion)
+  console.log(chalk.yellow(`⚠️ Reverted ${packageName} version back to ${currentVersion}`))
+  process.exit(1)
 }
 
 // Step 7: 提交 package.json + CHANGELOG.md
@@ -175,6 +171,9 @@ try {
   try {
     execSync(`git reset --soft HEAD~1`, { stdio: 'inherit' })
     execSync(`git tag -d ${tagName}`, { stdio: 'inherit' })
+    // 恢复 package.json 版本
+    writeVersion(currentVersion)
+    console.log(chalk.yellow(`⚠️ Reverted ${packageName} version back to ${currentVersion}`))
   } catch {}
   process.exit(1)
 }
