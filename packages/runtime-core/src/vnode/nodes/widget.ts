@@ -118,7 +118,11 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @private
    */
   #teleport: Element | null = null
-
+  /**
+   * 作用域
+   * @private
+   */
+  #scope: EffectScope | null = null
   /**
    * 获取子元素的访问器属性
    * 返回存储在私有字段 #children 中的子元素数组
@@ -165,19 +169,8 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   get instance(): WidgetInstance<T> {
     // 检查实例是否已存在
     if (!this.#instance) {
-      // 创建作用域
-      const scope = createScope({
-        name: this.type.name,
-        // 错误处理函数
-        errorHandler: (e: unknown, source) => {
-          this.reportError(e, {
-            source: `effect.${source}`,
-            instance: this.instance
-          })
-        }
-      })
       // 在指定上下文中运行代码
-      return scope.run(() =>
+      return this.scope.run(() =>
         this.runInContext(() => {
           // 包装props为响应式对象
           this.props = proxyWidgetProps(this.props) as VNodeProps<T>
@@ -217,7 +210,19 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @returns {EffectScope} 返回内部实例的scope属性
    */
   get scope(): EffectScope {
-    return this.instance.$scope
+    if (!this.#scope) {
+      this.#scope = createScope({
+        name: this.type.name,
+        // 错误处理函数
+        errorHandler: (e: unknown, source) => {
+          this.reportError(e, {
+            source: `effect.${source}`,
+            instance: this.instance
+          })
+        }
+      })
+    }
+    return this.#scope
   }
   /**
    * 判断给定的值是否为组件类型的虚拟节点
@@ -674,7 +679,10 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (import.meta.env?.MODE === 'development') {
       // 设置当前实例的类型为传入的模块
       this.type = module
-      this.#instance?.$scope?.dispose()
+      if (this.#scope) {
+        this.#scope?.dispose()
+        this.#scope = null
+      }
       // 将实例变量重置为null，以便下次使用时重新创建
       this.#instance = null
       if (resetState) {
