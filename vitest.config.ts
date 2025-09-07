@@ -31,6 +31,9 @@ export default defineConfig({
 
     // 设置单个测试用例的超时时间为10秒
     // 如果测试执行时间超过这个值，测试将被标记为失败
-    testTimeout: 10000
+    testTimeout: 10000,
+
+    // 添加 globals 配置以支持全局测试函数
+    globals: true
   }
 })
