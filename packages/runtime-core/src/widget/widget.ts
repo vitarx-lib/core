@@ -1,4 +1,4 @@
-import { EffectScope, getCurrentScope } from '@vitarx/responsive'
+import { EffectScope } from '@vitarx/responsive'
 import { getCurrentVNode } from '../vnode/context.js'
 import {
   type AnyElement,
@@ -68,12 +68,6 @@ export abstract class Widget<
    */
   readonly #vnode: WidgetVNode
   /**
-   * 小部件的作用域
-   *
-   * @private
-   */
-  readonly #scope: EffectScope
-  /**
    * 存储小部件的传入属性
    *
    * @private
@@ -81,10 +75,11 @@ export abstract class Widget<
   readonly #props: InputProps
 
   constructor(props: InputProps) {
-    this.#props = props
-    this.#scope = getCurrentScope()!
     this.#vnode = getCurrentVNode()!
-    if (!this.#scope) throw new Error('Widget must be created in a EffectScope')
+    if (!this.#vnode) {
+      throw new Error('The Widget instance must be created in the context of the WidgetVNode')
+    }
+    this.#props = props
     if (import.meta.env?.MODE !== 'development' || !this.#vnode.__$HMR_STATE$__) {
       // 仅在非开发环境或开发环境不处于HMR模式下，才触发 create 生命周期钩子
       // 切记不能使用this.#vnode.triggerLifecycleHook触发钩子，会导致无限循环
@@ -116,7 +111,7 @@ export abstract class Widget<
    * @returns {EffectScope} 返回内部的作用域对象#scope
    */
   get $scope(): EffectScope {
-    return this.#scope
+    return this.$vnode.scope
   }
 
   /**
