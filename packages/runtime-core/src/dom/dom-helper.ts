@@ -352,6 +352,9 @@ export class DomHelper {
   static insertBefore(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
     const parent = this.getParentElement(anchor)
     if (!parent) throw new Error('The anchor element does not have a parent node')
+    if (child instanceof DocumentFragment) {
+      child = this.recoveryFragmentChildNodes(child)
+    }
     parent.insertBefore(child, anchor)
     return parent
   }
@@ -367,6 +370,9 @@ export class DomHelper {
   static insertAfter(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
     const parent = this.getParentElement(anchor)
     if (!parent) throw new Error('The anchor element does not have a parent node')
+    if (child instanceof DocumentFragment) {
+      child = this.recoveryFragmentChildNodes(child)
+    }
     const next = anchor.nextSibling
     if (next) {
       parent.insertBefore(child, next)
@@ -421,6 +427,9 @@ export class DomHelper {
    * @throws {Error} 如果要被替换的元素没有父节点，则抛出错误
    */
   static replace(newEl: RuntimeElement, oldEl: RuntimeElement): void {
+    if (newEl instanceof DocumentFragment) {
+      newEl = this.recoveryFragmentChildNodes(newEl)
+    }
     if (oldEl instanceof DocumentFragment) {
       const oldFirstEl = this.getFirstChildElement(oldEl)
       if (!oldFirstEl) throw new Error('empty fragment')
