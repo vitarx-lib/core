@@ -16,7 +16,7 @@ import type {
  * @returns {boolean} 如果值是VNode节点则返回true，否则返回false
  */
 export function isVNode(val: any): val is VNode {
-  return val && typeof val === 'object' && val[VNODE_SYMBOL] === true
+  return !!(val && typeof val === 'object' && val[VNODE_SYMBOL] === true)
 }
 
 /**
