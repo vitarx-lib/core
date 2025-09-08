@@ -41,21 +41,6 @@ function run(cmd: string, options: { cwd?: string } = {}) {
 }
 
 /**
- * 回滚包版本到指定旧版本
- * @param pkgJsonPath - package.json文件的路径
- * @param pkg - package.json的内容对象
- * @param oldVersion - 需要回滚到的旧版本号
- */
-function rollbackVersion(pkgJsonPath: string, pkg: any, oldVersion: string) {
-  // 将包的版本设置为指定的旧版本
-  pkg.version = oldVersion
-  // 将更新后的包内容写回package.json文件，使用2个空格缩进格式化
-  writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2))
-  // 在控制台输出回滚操作的黄色警告提示信息
-  console.log(chalk.yellow(`⚠️ Reverted ${packageName} version back to ${oldVersion}`))
-}
-
-/**
  * 回滚Git操作函数
  * @param tagName - 要删除的标签名称
  * @param hasCommitted - 是否已经提交了更改
@@ -65,6 +50,7 @@ function rollbackGit(tagName: string, hasCommitted: boolean) {
     // 如果已经提交了更改，则执行软重置到上一个提交
     // 但保持工作目录和暂存区不变
     if (hasCommitted) {
+      rollbackVersion()
       run('git reset --soft HEAD~1')
     }
     // 如果提供了标签名称，则删除该标签
@@ -108,8 +94,12 @@ if (!existsSync(packagePath)) {
   console.error(chalk.red(`Error: Package '${packageName}' not found in packages directory`))
   process.exit(1)
 }
-
-// -------------------- Step 1: 检查登录 --------------------
+// -------------------- Step 1: 检查登录和git状态 --------------------
+const gitStatus = execSync('git status --porcelain').toString().trim()
+if (gitStatus) {
+  console.error('❌ 请先提交或暂存当前更改再发布。')
+  process.exit(1)
+}
 try {
   run('pnpm whoami --registry https://registry.npmjs.org/')
 } catch {
@@ -126,6 +116,17 @@ const pkgJsonPath = resolve(packagePath, 'package.json')
 const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
 let currentVersion = pkg.version
 
+/**
+ * 回退版本
+ */
+function rollbackVersion() {
+  // 将包的版本设置为指定的旧版本
+  pkg.version = currentVersion
+  // 将更新后的包内容写回package.json文件，使用2个空格缩进格式化
+  writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2))
+  // 在控制台输出回滚操作的黄色警告提示信息
+  console.log(chalk.yellow(`⚠️ Reverted ${packageName} version back to ${currentVersion}`))
+}
 // -------------------- Step 3: 新版本 --------------------
 let newVersion: string
 if (versionArg) {
@@ -173,7 +174,7 @@ console.log(chalk.blue(`📦 Building package: ${packageName}...`))
 try {
   run(`pnpm tsx scripts/build.ts ${packageName}`)
 } catch {
-  rollbackVersion(pkgJsonPath, pkg, currentVersion)
+  rollbackVersion()
   process.exit(1)
 }
 
@@ -185,7 +186,7 @@ if (isReleaseMainPackage) {
       `conventional-changelog -p angular -i CHANGELOG.md -s -r 0 --tag-prefix v --from v3.0.0 --pkg ${pkgJsonPath}`
     )
   } catch {
-    rollbackVersion(pkgJsonPath, pkg, currentVersion)
+    rollbackVersion()
     process.exit(1)
   }
 }
