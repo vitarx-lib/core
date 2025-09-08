@@ -15,19 +15,69 @@ if (!args.length) {
 const packageName = args[0]
 const packagePath = resolve(process.cwd(), 'packages', packageName)
 const changelogPath = resolve(process.cwd(), 'CHANGELOG.md')
+const rootPkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf-8'))
+const mainPackageName = rootPkg.name
+const isReleaseMainPackage = packageName === mainPackageName
 let versionArg: string | undefined = args[1]
 let preid: string | undefined = args[2]
 
-// Step 0: 验证包是否存在
+// -------------------- Helpers --------------------
+/**
+ * 执行命令行指令的函数
+ * @param cmd 要执行的命令字符串
+ * @param options 可选配置参数
+ * @returns 返回命令执行结果
+ */
+function run(cmd: string, options: { cwd?: string } = {}) {
+  // 使用execSync执行命令，stdio: 'inherit'表示子进程的输入输出继承父进程
+  // 同时合并options参数，允许用户自定义配置
+  return execSync(cmd, { stdio: 'inherit', ...options })
+}
+
+/**
+ * 回滚包版本到指定旧版本
+ * @param pkgJsonPath - package.json文件的路径
+ * @param pkg - package.json的内容对象
+ * @param oldVersion - 需要回滚到的旧版本号
+ */
+function rollbackVersion(pkgJsonPath: string, pkg: any, oldVersion: string) {
+  // 将包的版本设置为指定的旧版本
+  pkg.version = oldVersion
+  // 将更新后的包内容写回package.json文件，使用2个空格缩进格式化
+  writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2))
+  // 在控制台输出回滚操作的黄色警告提示信息
+  console.log(chalk.yellow(`⚠️ Reverted ${packageName} version back to ${oldVersion}`))
+}
+
+/**
+ * 回滚Git操作函数
+ * @param tagName - 要删除的标签名称
+ * @param hasCommitted - 是否已经提交了更改
+ */
+function rollbackGit(tagName: string, hasCommitted: boolean) {
+  try {
+    // 如果已经提交了更改，则执行软重置到上一个提交
+    // 但保持工作目录和暂存区不变
+    if (hasCommitted) {
+      run('git reset --soft HEAD~1')
+    }
+    // 如果提供了标签名称，则删除该标签
+    if (tagName) {
+      run(`git tag -d ${tagName}`)
+    }
+  } catch {}
+}
+
+// -------------------- Step 0: 验证包 --------------------
 if (!existsSync(packagePath)) {
   console.error(chalk.red(`Error: Package '${packageName}' not found in packages directory`))
   process.exit(1)
 }
 
-// Step 1: 检查 npm 登录
+// -------------------- Step 1: 检查登录 --------------------
 try {
-  execSync('pnpm whoami --registry https://registry.npmjs.org/', { stdio: 'ignore' })
-} catch (e) {
+  run('pnpm whoami --registry https://registry.npmjs.org/')
+} catch {
   console.error(
     chalk.red(
       'Error: You are not logged in to npm. Please run `pnpm login --registry https://registry.npmjs.org/` first'
@@ -36,31 +86,22 @@ try {
   process.exit(1)
 }
 
-// Step 2: 读取当前版本号
+// -------------------- Step 2: 当前版本 --------------------
 const pkgJsonPath = resolve(packagePath, 'package.json')
 const pkg = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
 let currentVersion = pkg.version
 
-// Step 3: 确定新版本号
-let newVersion
+// -------------------- Step 3: 新版本 --------------------
+let newVersion: string
 if (versionArg) {
   if (
-    [
-      'major', // 1.2.3 → 2.0.0 更新主版本号，通常用于 破坏性更新/不兼容的改动
-      'premajor', // 1.2.3 → 2.0.0-0 可配合 --preid beta 生成自定义预发布标识，例如 2.0.0-beta.0
-      'minor', //  1.2.3 → 1.3.0 更新次版本号，通常用于 新增功能但向下兼容。
-      'preminor', //  1.2.3 → 1.3.0-0 为下一个次版本创建 预发布版本 可配合 --preid beta → 1.3.0-beta.0
-      'patch', // 1.2.3 → 1.2.4 更新补丁版本号，通常用于 修复 bug 或小改动
-      'prepatch', // 1.2.3 → 1.2.4-0 为下一个补丁版本创建 预发布版本 可配合 --preid beta → 1.2.4-beta.0
-      'prerelease', // 1.2.3 → 1.2.4-0 ，1.2.4-beta.0 → 1.2.4-beta.1 在 当前版本的基础上 创建 预发布版本。
-      'release' // 1.2.4-beta.3 → 1.2.4 从 预发布版本 转为 正式版本。
-    ].includes(versionArg)
+    ['major', 'minor', 'patch', 'prerelease', 'premajor', 'preminor', 'prepatch'].includes(
+      versionArg
+    )
   ) {
-    if (versionArg === 'prerelease') {
-      newVersion = semver.inc(currentVersion, 'prerelease', preid) as string
-    } else {
-      newVersion = semver.inc(currentVersion, versionArg as semver.ReleaseType) as string
-    }
+    newVersion = semver.inc(currentVersion, versionArg as semver.ReleaseType, preid) as string
+  } else if (versionArg === 'release') {
+    newVersion = semver.inc(currentVersion, 'patch') as string
   } else {
     if (!semver.valid(versionArg)) {
       console.error(chalk.red(`Error: Invalid version number '${versionArg}'`))
@@ -69,29 +110,24 @@ if (versionArg) {
     newVersion = versionArg
   }
 } else {
-  if (currentVersion.includes('-')) {
-    newVersion = semver.inc(currentVersion, 'prerelease', preid) as string
-  } else {
-    newVersion = semver.inc(currentVersion, 'patch') as string
-  }
+  newVersion = currentVersion.includes('-')
+    ? semver.inc(currentVersion, 'prerelease', preid)!
+    : semver.inc(currentVersion, 'patch')!
 }
-// Step 3.5: 询问用户是否接受这个版本号
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
 
+// -------------------- Step 3.5: 确认版本 --------------------
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
 /**
- * 询问用户使用哪个版本号的函数
- * @param {string} defaultVersion - 默认建议的版本号
- * @returns {Promise<string>} 返回一个Promise，解析为用户选择的版本号
+ * 询问用户版本号，并根据用户输入返回相应的版本号
+ * @param defaultVersion 默认建议的版本号
+ * @returns 返回一个Promise，解析为用户选择的版本号
  */
 function askVersion(defaultVersion: string): Promise<string> {
   return new Promise(resolve => {
-    // 使用readline模块的question方法向用户提问
+    // 使用readline模块向用户提问
     rl.question(
       // 使用chalk黄色显示提示信息，包含默认版本号
-      chalk.yellow(`⚡ Suggested version is ${defaultVersion} Use this version? (y/n/custom): `),
+      chalk.yellow(`⚡ Suggested version is ${defaultVersion}. Use this version? (y/n/custom): `),
       answer => {
         if (answer.toLowerCase() === 'y' || answer.trim() === '') {
           resolve(defaultVersion)
@@ -109,78 +145,91 @@ function askVersion(defaultVersion: string): Promise<string> {
     )
   })
 }
-
-// Step 4: 更新 package.json
 newVersion = await askVersion(newVersion)
 rl.close()
 
 pkg.version = newVersion
-const writeVersion = (v: string) => {
-  pkg.version = v
-  writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2))
-}
-writeVersion(newVersion)
+writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2))
 console.log(chalk.green(`✅ Using version ${newVersion}`))
 
-// Step 5: 构建包
+// -------------------- Step 4: 构建 --------------------
 console.log(chalk.blue(`📦 Building package: ${packageName}...`))
 try {
-  execSync(`pnpm tsx scripts/build.ts ${packageName}`, { stdio: 'inherit' })
-} catch (error) {
-  console.error(chalk.red(`❌ Build failed for ${packageName}`))
+  run(`pnpm tsx scripts/build.ts ${packageName}`)
+} catch {
+  rollbackVersion(pkgJsonPath, pkg, currentVersion)
   process.exit(1)
 }
 
-// Step 6: 检查是否编写了changelog
-const logTitle = `## [${packageName}@${newVersion}]`
-const changelogContent = readFileSync(changelogPath, 'utf-8')
+// -------------------- Step 5: 更新日志（仅主包） --------------------
+if (isReleaseMainPackage) {
+  const logTitle = `## [v${newVersion}]`
+  const changelogContent = readFileSync(changelogPath, 'utf-8')
 
-// 如果 changelog 没有包含本次版本的标题
-if (!changelogContent.includes(logTitle)) {
-  console.error(chalk.red(`❌ Error: Please write a changelog for ${packageName}@${newVersion}`))
+  if (!changelogContent.includes(logTitle)) {
+    let lastTag: string
+    try {
+      lastTag = execSync(`git describe --tags --abbrev=0 v${currentVersion}`).toString().trim()
+    } catch {
+      console.error(
+        chalk.red(`❌ Error: No previous tag found. Please write changelog for v${newVersion}`)
+      )
+      rollbackVersion(pkgJsonPath, pkg, currentVersion)
+      process.exit(1)
+    }
 
-  // 回滚 package.json 的版本号
-  writeVersion(currentVersion)
-  console.log(chalk.yellow(`⚠️ Reverted ${packageName} version back to ${currentVersion}`))
-  process.exit(1)
+    console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
+    try {
+      let cmd = `conventional-changelog -p angular -i CHANGELOG.md -s -r 0`
+      cmd += ` --tag-prefix v --from ${lastTag}`
+      run(cmd)
+    } catch {
+      rollbackVersion(pkgJsonPath, pkg, currentVersion)
+      process.exit(1)
+    }
+  }
 }
 
-// Step 7: 提交 package.json + CHANGELOG.md
+// -------------------- Step 6: 提交 --------------------
+let hasCommitted = false
 console.log(chalk.blue('📤 Committing changes...'))
 try {
-  execSync(`git add ${pkgJsonPath} ${changelogPath}`, { stdio: 'inherit' })
-  execSync(`git commit -m "build(${packageName}): release v${newVersion}"`, { stdio: 'inherit' })
+  run(`git add ${pkgJsonPath} ${isReleaseMainPackage ? changelogPath : ''}`)
+  run(`git commit -m "build(${packageName}): release ${packageName}@v${newVersion}"`)
+  hasCommitted = true
 } catch {
   console.log(chalk.yellow('⚠️  Nothing to commit'))
 }
 
-// Step 8: 打 tag
-const tagName = `${packageName}@${newVersion}`
-console.log(chalk.blue(`🏷  Tagging: ${tagName}`))
-execSync(`git tag ${tagName}`, { stdio: 'inherit' })
+// -------------------- Step 7: 打 tag（仅主包） --------------------
+const tagName = `v${newVersion}`
+if (isReleaseMainPackage) {
+  console.log(chalk.blue(`🏷  Tagging: ${tagName}`))
+  try {
+    run(`git tag ${tagName}`)
+  } catch {
+    rollbackGit(tagName, hasCommitted)
+    rollbackVersion(pkgJsonPath, pkg, currentVersion)
+    process.exit(1)
+  }
+}
 
-// Step 9: 发布到 npm
+// -------------------- Step 8: 发布 --------------------
 console.log(chalk.blue(`🚀 Publishing ${packageName}@${newVersion}...`))
 try {
-  execSync(`pnpm publish --access public --registry https://registry.npmjs.org/`, {
-    stdio: 'inherit',
-    cwd: packagePath
-  })
-} catch (error) {
-  console.error(chalk.red('❌ Publish failed, rolling back git commit and tag...'))
-  try {
-    execSync(`git reset --soft HEAD~1`, { stdio: 'inherit' })
-    execSync(`git tag -d ${tagName}`, { stdio: 'inherit' })
-    // 恢复 package.json 版本
-    writeVersion(currentVersion)
-    console.log(chalk.yellow(`⚠️ Reverted ${packageName} version back to ${currentVersion}`))
-  } catch {}
+  run(`pnpm publish --access public --registry https://registry.npmjs.org/`, { cwd: packagePath })
+} catch {
+  console.error(chalk.red('❌ Publish failed, rolling back...'))
+  rollbackGit(tagName, hasCommitted)
+  rollbackVersion(pkgJsonPath, pkg, currentVersion)
   process.exit(1)
 }
 
-// Step 10: 推送到远程
+// -------------------- Step 9: 推送 --------------------
 console.log(chalk.blue('⬆️  Pushing to remote...'))
-execSync('git push', { stdio: 'inherit' })
-execSync('git push --tags', { stdio: 'inherit' })
+run('git push')
+if (isReleaseMainPackage) {
+  run('git push --tags')
+}
 
 console.log(chalk.green(`\n✨ Successfully built and published ${packageName}@${newVersion}!`))
