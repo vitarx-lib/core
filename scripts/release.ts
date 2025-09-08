@@ -12,13 +12,19 @@ if (!args.length) {
   process.exit(1)
 }
 
+// 包名，不包含前缀
 const packageName = args[0]
+// 包路径
 const packagePath = resolve(process.cwd(), 'packages', packageName)
+// changelog路径
 const changelogPath = resolve(process.cwd(), 'CHANGELOG.md')
+// 根包的package.json内容对象
 const rootPkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf-8'))
-const mainPackageName = rootPkg.name
-const isReleaseMainPackage = packageName === mainPackageName
+// 是否是主包
+const isReleaseMainPackage = packageName === rootPkg.name
+// 版本参数
 let versionArg: string | undefined = args[1]
+// 预发布版本前缀参数
 let preid: string | undefined = args[2]
 
 // -------------------- Helpers --------------------
@@ -68,6 +74,35 @@ function rollbackGit(tagName: string, hasCommitted: boolean) {
   } catch {}
 }
 
+/**
+ * 询问用户版本号，并根据用户输入返回相应的版本号
+ * @param defaultVersion 默认建议的版本号
+ * @returns 返回一个Promise，解析为用户选择的版本号
+ */
+function askVersion(defaultVersion: string): Promise<string> {
+  return new Promise(resolve => {
+    // 使用readline模块向用户提问
+    rl.question(
+      // 使用chalk黄色显示提示信息，包含默认版本号
+      chalk.yellow(`⚡ Suggested version is ${defaultVersion} Use this version? (y/n/custom): `),
+      answer => {
+        if (answer.toLowerCase() === 'y' || answer.trim() === '') {
+          resolve(defaultVersion)
+        } else if (answer.toLowerCase() === 'n') {
+          console.log(chalk.red('❌ Aborted by user'))
+          process.exit(0)
+        } else {
+          if (!semver.valid(answer)) {
+            console.error(chalk.red(`Error: Invalid version number '${answer}'`))
+            process.exit(1)
+          }
+          resolve(answer)
+        }
+      }
+    )
+  })
+}
+
 // -------------------- Step 0: 验证包 --------------------
 if (!existsSync(packagePath)) {
   console.error(chalk.red(`Error: Package '${packageName}' not found in packages directory`))
@@ -95,16 +130,25 @@ let currentVersion = pkg.version
 let newVersion: string
 if (versionArg) {
   if (
-    ['major', 'minor', 'patch', 'prerelease', 'premajor', 'preminor', 'prepatch'].includes(
-      versionArg
-    )
+    [
+      'major',
+      'minor',
+      'patch',
+      'prerelease',
+      'premajor',
+      'preminor',
+      'prepatch',
+      'release'
+    ].includes(versionArg)
   ) {
     newVersion = semver.inc(currentVersion, versionArg as semver.ReleaseType, preid) as string
-  } else if (versionArg === 'release') {
-    newVersion = semver.inc(currentVersion, 'patch') as string
   } else {
     if (!semver.valid(versionArg)) {
-      console.error(chalk.red(`Error: Invalid version number '${versionArg}'`))
+      console.error(
+        chalk.red(
+          `Error: Invalid version number '${versionArg}'，valid release type (major, premajor, minor, preminor, patch, prepatch, or prerelease)`
+        )
+      )
       process.exit(1)
     }
     newVersion = versionArg
@@ -117,34 +161,6 @@ if (versionArg) {
 
 // -------------------- Step 3.5: 确认版本 --------------------
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-/**
- * 询问用户版本号，并根据用户输入返回相应的版本号
- * @param defaultVersion 默认建议的版本号
- * @returns 返回一个Promise，解析为用户选择的版本号
- */
-function askVersion(defaultVersion: string): Promise<string> {
-  return new Promise(resolve => {
-    // 使用readline模块向用户提问
-    rl.question(
-      // 使用chalk黄色显示提示信息，包含默认版本号
-      chalk.yellow(`⚡ Suggested version is ${defaultVersion}. Use this version? (y/n/custom): `),
-      answer => {
-        if (answer.toLowerCase() === 'y' || answer.trim() === '') {
-          resolve(defaultVersion)
-        } else if (answer.toLowerCase() === 'n') {
-          console.log(chalk.red('❌ Aborted by user'))
-          process.exit(0)
-        } else {
-          if (!semver.valid(answer)) {
-            console.error(chalk.red(`Error: Invalid version number '${answer}'`))
-            process.exit(1)
-          }
-          resolve(answer)
-        }
-      }
-    )
-  })
-}
 newVersion = await askVersion(newVersion)
 rl.close()
 
@@ -163,33 +179,16 @@ try {
 
 // -------------------- Step 5: 更新日志（仅主包） --------------------
 if (isReleaseMainPackage) {
-  const logTitle = `## [v${newVersion}]`
-  const changelogContent = readFileSync(changelogPath, 'utf-8')
-
-  if (!changelogContent.includes(logTitle)) {
-    let lastTag: string
-    try {
-      lastTag = execSync(`git describe --tags --abbrev=0 v${currentVersion}`).toString().trim()
-    } catch {
-      console.error(
-        chalk.red(`❌ Error: No previous tag found. Please write changelog for v${newVersion}`)
-      )
-      rollbackVersion(pkgJsonPath, pkg, currentVersion)
-      process.exit(1)
-    }
-
-    console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
-    try {
-      let cmd = `conventional-changelog -p angular -i CHANGELOG.md -s -r 0`
-      cmd += ` --tag-prefix v --from ${lastTag}`
-      run(cmd)
-    } catch {
-      rollbackVersion(pkgJsonPath, pkg, currentVersion)
-      process.exit(1)
-    }
+  console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
+  try {
+    run(
+      `conventional-changelog -p angular -i CHANGELOG.md -s -r 0 --tag-prefix v --from v3.0.0 --pkg ${pkgJsonPath}`
+    )
+  } catch {
+    rollbackVersion(pkgJsonPath, pkg, currentVersion)
+    process.exit(1)
   }
 }
-
 // -------------------- Step 6: 提交 --------------------
 let hasCommitted = false
 console.log(chalk.blue('📤 Committing changes...'))
@@ -200,16 +199,14 @@ try {
 } catch {
   console.log(chalk.yellow('⚠️  Nothing to commit'))
 }
-
 // -------------------- Step 7: 打 tag（仅主包） --------------------
 const tagName = `v${newVersion}`
 if (isReleaseMainPackage) {
   console.log(chalk.blue(`🏷  Tagging: ${tagName}`))
   try {
-    run(`git tag ${tagName}`)
+    run(`git tag -a ${tagName} -m "Release ${tagName}"`)
   } catch {
     rollbackGit(tagName, hasCommitted)
-    rollbackVersion(pkgJsonPath, pkg, currentVersion)
     process.exit(1)
   }
 }
@@ -221,15 +218,12 @@ try {
 } catch {
   console.error(chalk.red('❌ Publish failed, rolling back...'))
   rollbackGit(tagName, hasCommitted)
-  rollbackVersion(pkgJsonPath, pkg, currentVersion)
   process.exit(1)
 }
 
 // -------------------- Step 9: 推送 --------------------
 console.log(chalk.blue('⬆️  Pushing to remote...'))
 run('git push')
-if (isReleaseMainPackage) {
-  run('git push --tags')
-}
+if (isReleaseMainPackage) run('git push --tags')
 
 console.log(chalk.green(`\n✨ Successfully built and published ${packageName}@${newVersion}!`))
