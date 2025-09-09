@@ -195,7 +195,7 @@ let hasCommitted = false
 console.log(chalk.blue('📤 Committing changes...'))
 try {
   run(`git add ${pkgJsonPath} ${isReleaseMainPackage ? changelogPath : ''}`)
-  run(`git commit -m "build(${packageName}): release ${packageName}@v${newVersion}"`)
+  run(`git commit -m "build(${packageName}): release ${packageName}@${newVersion}"`)
   hasCommitted = true
 } catch {
   console.log(chalk.yellow('⚠️  Nothing to commit'))
