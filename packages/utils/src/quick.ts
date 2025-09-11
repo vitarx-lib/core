@@ -139,10 +139,11 @@ export function debounce<T extends AnyCallback>(func: T, delay: number): FnCallb
   return function (...args: Parameters<T>) {
     // 清除上次的定时器
     clearTimeout(timeout)
-
+    // @ts-ignore
+    const self = this
     // 设置新的定时器，延迟调用
     timeout = setTimeout(() => {
-      func(...args) // 执行回调
+      func.apply(self, args)
     }, delay)
   }
 }
@@ -161,11 +162,13 @@ export function throttle<T extends AnyCallback>(
   delay: number
 ): FnCallback<Parameters<T>> {
   let timeout: ReturnType<typeof setTimeout> | null = null
-  return (...args: Parameters<T>) => {
+  return function (...args: Parameters<T>) {
     if (timeout) return
+    // @ts-ignore
+    const self = this
     setTimeout(() => {
       timeout = null
-      callback(...args)
+      callback.apply(self, args)
     }, delay)
   }
 }
