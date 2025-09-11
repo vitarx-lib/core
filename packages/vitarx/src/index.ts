@@ -73,18 +73,27 @@ declare global {
     type Children = Child | Child[]
     /**
      * 鼠标点击事件处理函数
+     *
+     * @template T - 事件处理函数的this对象类型
      */
     type MouseEventHandler<T = unknown> = EventHandler<T, MouseEvent>
     /**
      * 拖拽事件处理函数
+     *
+     * @template T - 事件处理函数的this对象类型
      */
     type DragEventHandler<T = unknown> = EventHandler<T, DragEvent>
     /**
      * 触摸事件处理函数
+     *
+     * @template T - 事件处理函数的this对象类型
      */
     type TouchEventHandler<T = unknown> = EventHandler<T, TouchEvent>
     /**
      * 通用事件处理函数
+     *
+     * @template T - 事件处理函数的this对象类型
+     * @template E - 事件对象类型
      */
     type EventHandler<T, E extends Event | UIEvent> = (this: T, event: E) => void
   }
