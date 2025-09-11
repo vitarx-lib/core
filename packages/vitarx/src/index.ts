@@ -71,6 +71,25 @@ declare global {
     type ElementClass = Widget
     /** 子节点类型 */
     type Children = Child | Child[]
+    /**
+     * 鼠标点击事件处理函数
+     */
+    type MouseEventHandler<T extends HTMLElement = never> = EventHandler<T, MouseEvent>
+    /**
+     * 拖拽事件处理函数
+     */
+    type DragEventHandler<T extends HTMLElement = never> = EventHandler<T, DragEvent>
+    /**
+     * 触摸事件处理函数
+     */
+    type TouchEventHandler<T extends HTMLElement = never> = EventHandler<T, TouchEvent>
+    /**
+     * 通用事件处理函数
+     */
+    type EventHandler<T extends HTMLElement, E extends Event | UIEvent> = (
+      this: T,
+      event: E
+    ) => void
   }
   namespace JSX {
     /** 元素类型 */
