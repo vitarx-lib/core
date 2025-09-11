@@ -35,20 +35,17 @@ export interface EventOptions {
    */
   passive?: boolean
 }
-
-/**
- * 事件修饰符
- *
- * @type {EventModifier}
- * @description 定义了事件修饰符的联合类型，这些修饰符可以控制事件的捕获、触发次数和性能优化等特性
- */
-export type EventModifier = keyof EventOptions
 /**
  * 事件修饰符(大驼峰)
  */
 export type EventModifierHump = 'Capture' | 'Once' | 'Passive' | 'OnceCapture'
-// 事件处理器类型
-type EventHandler<T extends Element, E> = (this: T, event: E) => void
+/**
+ * 事件处理函数接口
+ *
+ * @template T - 元素
+ * @template E - 事件类型，可以是Event或UIEvent
+ */
+export type EventHandler<T extends Element, E extends Event | UIEvent> = (this: T, event: E) => void
 
 /**
  * 所有事件映射，小驼峰事件名
