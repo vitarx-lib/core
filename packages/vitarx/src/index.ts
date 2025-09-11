@@ -74,22 +74,19 @@ declare global {
     /**
      * 鼠标点击事件处理函数
      */
-    type MouseEventHandler<T extends HTMLElement = never> = EventHandler<T, MouseEvent>
+    type MouseEventHandler<T = unknown> = EventHandler<T, MouseEvent>
     /**
      * 拖拽事件处理函数
      */
-    type DragEventHandler<T extends HTMLElement = never> = EventHandler<T, DragEvent>
+    type DragEventHandler<T = unknown> = EventHandler<T, DragEvent>
     /**
      * 触摸事件处理函数
      */
-    type TouchEventHandler<T extends HTMLElement = never> = EventHandler<T, TouchEvent>
+    type TouchEventHandler<T = unknown> = EventHandler<T, TouchEvent>
     /**
      * 通用事件处理函数
      */
-    type EventHandler<T extends HTMLElement, E extends Event | UIEvent> = (
-      this: T,
-      event: E
-    ) => void
+    type EventHandler<T, E extends Event | UIEvent> = (this: T, event: E) => void
   }
   namespace JSX {
     /** 元素类型 */
