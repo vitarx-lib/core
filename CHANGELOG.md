@@ -1,3 +1,12 @@
+## <small>3.0.3 (2025-09-11)</small>
+
+* refactor(runtime-core): 优化事件相关类型定义 ([006f2a1](https://github.com/vitarx-lib/core/commit/006f2a1))
+* refactor(vitarx): 添加事件处理函数类型定义 ([12b5eb3](https://github.com/vitarx-lib/core/commit/12b5eb3))
+* build(runtime-core): release runtime-core@1.0.3 ([f2e1710](https://github.com/vitarx-lib/core/commit/f2e1710))
+* fix(release): 优化版本号显示 ([0aed9bc](https://github.com/vitarx-lib/core/commit/0aed9bc))
+
+
+
 ## <small>3.0.2 (2025-09-08)</small>
 
 * build: 更新项目配置 ([9ca2772](https://github.com/vitarx-lib/core/commit/9ca2772))
@@ -5,6 +14,7 @@
 * build(release): 优化 release脚本的标签创建过程 ([5ccf150](https://github.com/vitarx-lib/core/commit/5ccf150))
 * build(runtime-core): release runtime-core@v1.0.2 ([7ae5957](https://github.com/vitarx-lib/core/commit/7ae5957))
 * build(scripts): 重构发布脚本并添加回滚功能 ([27d311b](https://github.com/vitarx-lib/core/commit/27d311b))
+* build(vitarx): release vitarx@v3.0.2 ([4d41f7b](https://github.com/vitarx-lib/core/commit/4d41f7b))
 * fix(release): 优化回滚版本函数并添加 git 状态检查 ([4aa472c](https://github.com/vitarx-lib/core/commit/4aa472c))
 * fix(runtime-core): 修复 isVNode 函数bug ([ed0c921](https://github.com/vitarx-lib/core/commit/ed0c921))
 * fix(runtime-core): 修复 isVNode 访问属性异常BUG ([91745f3](https://github.com/vitarx-lib/core/commit/91745f3))
