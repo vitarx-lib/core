@@ -18,7 +18,7 @@ import type { BaseSignal, ProxySignal, RefSignal } from '../types/index.js'
  * console.log(isSignal(signal)); // true
  * console.log(isSignal(1)); // false
  * console.log(isSignal(proxySignal)); // true
- * console.log(isSignal({})); // true
+ * console.log(isSignal({})); // false
  * ```
  */
 export function isSignal(val: any): val is BaseSignal {
