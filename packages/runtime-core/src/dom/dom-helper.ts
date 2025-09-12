@@ -85,7 +85,7 @@ export class DomHelper {
     if (isString(style)) {
       const styleObj: Record<string, any> = {}
       style.split(';').forEach(styleRule => {
-        const [key, value] = styleRule.split(':').map(s => s.trim())
+        const [key, value] = styleRule.split(':').map(s => s?.trim())
         if (key && value) {
           styleObj[toCamelCase(key)] = value // 转为驼峰命名
         }
@@ -132,7 +132,7 @@ export class DomHelper {
     }
     if (Array.isArray(classInput)) {
       return classInput
-        .map(item => item.trim())
+        .map(item => item?.trim())
         .filter(Boolean)
         .join(' ')
     }
