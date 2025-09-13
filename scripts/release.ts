@@ -172,7 +172,7 @@ console.log(chalk.green(`✅ Using version ${newVersion}`))
 // -------------------- Step 4: 构建 --------------------
 console.log(chalk.blue(`📦 Building package: ${packageName}...`))
 try {
-  run(`pnpm tsx scripts/build.ts ${packageName}`)
+  run(`pnpm tsx scripts/build.ts ${packageName} --test`)
 } catch {
   rollbackVersion()
   process.exit(1)
