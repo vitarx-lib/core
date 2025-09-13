@@ -1,3 +1,4 @@
+import { unref } from '@vitarx/responsive'
 import { isArrayEqual, isRecordObject, popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../guards.js'
@@ -123,23 +124,22 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       exclude = vBind[1] || [] // 获取排除列表，如果不存在则为空数组
     }
     // 如果属性对象存在，则遍历合并属性
-    if (isRecordObject(attrs)) {
-      for (const key in attrs) {
-        // 如果排除列表中包含当前属性或属性是`children`，则跳过
-        if (exclude.includes(key) || key === 'children') continue
-        if (key in this.props) {
-          // 合并样式
-          if (key === 'style') {
-            this.props[key] = DomHelper.mergeCssStyle(this.props[key], attrs[key])
-            continue
-          }
-          if (key === 'class' || key === 'className' || key === 'classname') {
-            this.props[key] = DomHelper.mergeCssClass(this.props[key], attrs[key])
-            continue
-          }
+    if (!isRecordObject(attrs)) return
+    for (const key in attrs) {
+      // 如果排除列表中包含当前属性或属性是`children`，则跳过
+      if (exclude.includes(key) || key === 'children') continue
+      if (key in this.props) {
+        // 合并样式
+        if (key === 'style') {
+          this.props[key] = DomHelper.mergeCssStyle(unref(this.props[key]), unref(attrs[key]))
+          continue
         }
-        this.props[key] = attrs[key]
+        if (key === 'class' || key === 'className' || key === 'classname') {
+          this.props[key] = DomHelper.mergeCssClass(unref(this.props[key]), unref(attrs[key]))
+          continue
+        }
       }
+      this.props[key] = attrs[key]
     }
   }
   /**
