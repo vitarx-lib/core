@@ -14,8 +14,7 @@
     "create": "tsx scripts/create-package.ts",
     "release": "tsx scripts/release.ts",
     "build": "tsx scripts/build.ts --test",
-    "test": "tsx scripts/vitest.ts",
-    "prepare": "husky install"
+    "test": "tsx scripts/vitest.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
