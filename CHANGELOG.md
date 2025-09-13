@@ -1,8 +1,27 @@
+## <small>3.0.4 (2025-09-13)</small>
+
+* build: 移除 prepare脚本以简化构建流程 ([8de551a](https://github.com/vitarx-lib/core/commit/8de551a))
+* build(release): 在构建过程中添加测试标志 ([1cf56f5](https://github.com/vitarx-lib/core/commit/1cf56f5))
+* build(responsive): release responsive@1.0.1 ([34c4289](https://github.com/vitarx-lib/core/commit/34c4289))
+* build(runtime-core): release runtime-core@1.0.4 ([594beed](https://github.com/vitarx-lib/core/commit/594beed))
+* build(utils): release utils@1.0.1 ([f40f914](https://github.com/vitarx-lib/core/commit/f40f914))
+* fix(runtime-core): 修复元素功能性属性值为布尔时，预期功能不一致问题，例如disabled属性。 ([ff7c5cc](https://github.com/vitarx-lib/core/commit/ff7c5cc))
+* fix(utils): 修复防抖和节流函数中的 this 指针问题 ([4f46afd](https://github.com/vitarx-lib/core/commit/4f46afd))
+* fix(vnode): 修复静态节点标记逻辑BUG ([5bd61ca](https://github.com/vitarx-lib/core/commit/5bd61ca))
+* test(runtime-core): 添加对 'v-static' 指令的支持测试 ([d46d257](https://github.com/vitarx-lib/core/commit/d46d257))
+* refactor(runtime-core): 优化 DOM 辅助函数中的字符串处理 ([af895c3](https://github.com/vitarx-lib/core/commit/af895c3))
+* refactor(vitarx): 为事件处理函数类型添加模板参数 ([837ab3e](https://github.com/vitarx-lib/core/commit/837ab3e))
+* refactor(vitarx): 放宽事件处理函数类型定义 ([1126a59](https://github.com/vitarx-lib/core/commit/1126a59))
+* docs(signal): 修复 isSignal 函数的示例 ([3f3a3da](https://github.com/vitarx-lib/core/commit/3f3a3da))
+
+
+
 ## <small>3.0.3 (2025-09-11)</small>
 
+* build(runtime-core): release runtime-core@1.0.3 ([f2e1710](https://github.com/vitarx-lib/core/commit/f2e1710))
+* build(vitarx): release vitarx@3.0.3 ([6722b92](https://github.com/vitarx-lib/core/commit/6722b92))
 * refactor(runtime-core): 优化事件相关类型定义 ([006f2a1](https://github.com/vitarx-lib/core/commit/006f2a1))
 * refactor(vitarx): 添加事件处理函数类型定义 ([12b5eb3](https://github.com/vitarx-lib/core/commit/12b5eb3))
-* build(runtime-core): release runtime-core@1.0.3 ([f2e1710](https://github.com/vitarx-lib/core/commit/f2e1710))
 * fix(release): 优化版本号显示 ([0aed9bc](https://github.com/vitarx-lib/core/commit/0aed9bc))
 
 
