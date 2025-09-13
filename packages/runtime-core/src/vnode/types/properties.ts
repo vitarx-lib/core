@@ -685,7 +685,7 @@ interface CustomProperties {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
    */
-  class?: SupportRefSignal<ClassProperties> | ClassProperties
+  class?: ClassProperties | RefSignal<ClassProperties>
   /**
    * `v-html` 是框架的自定义属性，用于在元素中插入 HTML 代码。
    */
