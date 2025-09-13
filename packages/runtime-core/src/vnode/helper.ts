@@ -23,25 +23,34 @@ export function createVNode<T extends VNodeType>(
   props: VNodeProps<T> | null = null,
   ...children: Child[]
 ): VNodeInstance<T> {
+  // 处理props属性，检查是否存在v-if和v-memo等特殊属性
   if (props) {
+    // 检查v-if属性，如果存在则返回注释节点
     const vIf = popProperty(props, 'v-if')
     if (vIf) return new CommentVNode('v-if') as unknown as VNodeInstance<T>
+    // 检查v-memo属性，如果存在则检查缓存
     const vMemoValue = props['v-memo']
     if (Array.isArray(vMemoValue)) {
       const cached = VNode.getMemoNode(vMemoValue)
       if (cached) return cached as VNodeInstance<T>
     }
   } else {
+    // 如果props不存在，则初始化为空对象
     props = {} as VNodeProps<T>
   }
+  // 处理子节点
   if (children.length) {
+    // 如果props中已存在children属性
     if (props!.children) {
+      // 如果children是数组，则合并子节点
       if (Array.isArray(props!.children)) {
         props!.children.push(...children)
       } else {
+        // 如果children不是数组，则转换为数组并合并
         props!.children = [props!.children, ...children]
       }
     } else {
+      // 如果props中没有children属性，则直接赋值
       props!.children = children
     }
   }
