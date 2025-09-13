@@ -9,6 +9,7 @@ export default {
       ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'build', 'ci']
     ],
     'subject-empty': [RuleConfigSeverity.Error, 'never'],
-    'scope-empty': [0]
+    'scope-empty': [0],
+    'body-max-line-length': [RuleConfigSeverity.Error, 'always', 200]
   }
 }
