@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   CommentVNode,
   createElement,
+  DomHelper,
   Fragment,
   FragmentVNode,
   onUpdated,
@@ -68,6 +69,20 @@ describe('片段节点测试套件', () => {
         expect(update).toBeCalledTimes(1)
         expect(body.innerHTML).toBe('<div>test</div>')
       })
+    })
+    it('应该正常往片段节点之前插入元素', async () => {
+      const node1 = createElement(Fragment)
+      node1.mount(body)
+      const node2 = createElement(Fragment)
+      DomHelper.insertBefore(node2.element, node1.element)
+      expect(body.childNodes[0]).toBe(node2.children[0].element)
+    })
+    it('应该正常往片段节点之后插入元素', async () => {
+      const node1 = createElement(Fragment)
+      node1.mount(body)
+      const node2 = createElement('div')
+      DomHelper.insertAfter(node2.element, node1.element)
+      expect(body.childNodes[1]).toBe(node2.element)
     })
   })
 })

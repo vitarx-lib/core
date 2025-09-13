@@ -355,14 +355,19 @@ export class DomHelper {
     if (child instanceof DocumentFragment) {
       child = this.recoveryFragmentChildNodes(child)
     }
-    parent.insertBefore(child, anchor)
+    if (anchor instanceof DocumentFragment) {
+      const el = this.getFirstChildElement(anchor)
+      parent.insertBefore(child, el)
+      this.remove(anchor)
+    } else {
+      parent.insertBefore(child, anchor)
+    }
     return parent
   }
 
   /**
    * 在指定的锚点节点之后插入新的子元素
    *
-   * @description 在当前元素的指定子元素之前插入新元素。如果锚点节点不是当前元素的子元素，则此操作无效
    * @param child - 要插入的子元素
    * @param anchor - 锚点节点
    * @returns {ParentNode} - 父节点元素
@@ -372,6 +377,9 @@ export class DomHelper {
     if (!parent) throw new Error('The anchor element does not have a parent node')
     if (child instanceof DocumentFragment) {
       child = this.recoveryFragmentChildNodes(child)
+    }
+    if (anchor instanceof DocumentFragment) {
+      anchor = this.getLastChildElement(anchor)!
     }
     const next = anchor.nextSibling
     if (next) {
@@ -470,7 +478,7 @@ export class DomHelper {
     const children = target.$vnode.children
     if (children?.length) {
       children.forEach(child => child.element && this.remove(child.element))
-    } else {
+    } else if (target.$vnode.hasShadowElement()) {
       target.$vnode.shadowElement.remove()
     }
   }
@@ -484,19 +492,14 @@ export class DomHelper {
   static recoveryFragmentChildNodes(el: FragmentElement): FragmentElement {
     if (el.childNodes.length === 0) {
       const vnode = el.$vnode
-      if (vnode.children?.length) {
-        // 递归恢复片段节点
-        for (let i = 0; i < vnode.children.length; i++) {
-          const childVNode = vnode.children[i]
-          let childEl = childVNode.element
-          if (childVNode.type === 'fragment-node' && childEl instanceof DocumentFragment) {
-            childEl = this.recoveryFragmentChildNodes(childVNode.element as FragmentElement)
-          }
-          el.appendChild(childEl!)
+      // 递归恢复片段节点
+      for (let i = 0; i < vnode.children.length; i++) {
+        const childVNode = vnode.children[i]
+        let childEl = childVNode.element
+        if (childVNode.type === 'fragment-node' && childEl instanceof DocumentFragment) {
+          childEl = this.recoveryFragmentChildNodes(childVNode.element as FragmentElement)
         }
-      } else {
-        // 恢复空节点
-        el.appendChild(vnode.shadowElement)
+        el.appendChild(childEl!)
       }
     }
     return el
@@ -516,9 +519,8 @@ export class DomHelper {
     if (target instanceof DocumentFragment) {
       const fragmentVNode = target.$vnode
       const index = type === 'first' ? 0 : fragmentVNode.children.length - 1
-      // 获取最后一个子虚拟节点并递归处理
+      // 获取虚拟节点并递归处理
       const childVNode = fragmentVNode.children[index]
-      if (!childVNode.element) return null
       target = childVNode.element
       // 如果最后一个子节点仍然是DocumentFragment，递归调用
       return target instanceof DocumentFragment ? this.getChild(target, type) : target
