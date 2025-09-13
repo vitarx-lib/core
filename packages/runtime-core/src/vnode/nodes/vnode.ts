@@ -87,7 +87,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
         this.#memo = Array.from(memo)
         MEMO_STORE.set(memo, this)
       }
-      this.#isStatic = !!popProperty(props, 'static')
+      this.#isStatic = !!popProperty(props, 'v-static')
     }
     this.propsHandler()
   }
