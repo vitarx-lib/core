@@ -635,22 +635,19 @@ export class DomHelper {
    * @param value - 属性值
    * @returns 如果成功设置属性则返回true，否则返回false
    */
-  private static trySetDirectProperty(
-    el: HTMLElement | SVGElement,
+  private static trySetDirectProperty<T extends HTMLElement | SVGElement>(
+    el: T,
     name: string,
     value: any
   ): boolean {
     // 检查元素是否具有指定的属性
     if (!(name in el)) return false
-
-    // 获取属性的描述符，检查是否存在setter
-    const descriptor = Object.getOwnPropertyDescriptor(el, name)
-    if (descriptor?.set) {
-      ;(el as any)[name] = value
-      return true
+    try {
+      el[name as keyof T] = value
+    } catch {
+      return false
     }
-
-    return false
+    return true
   }
 
   /**
