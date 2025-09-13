@@ -91,6 +91,10 @@ describe('createVNode', () => {
     expect(vnode1).toBe(vnode2)
     expect(vnode1).not.toBe(vnode3)
   })
+  it('应该支持v-static指令', () => {
+    const node = createVNode('div', { 'v-static': true })
+    expect(node.isStatic).toBe(true)
+  })
 })
 
 describe('getCurrentVNode / useCurrentVNode', () => {
