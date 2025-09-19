@@ -13,8 +13,8 @@ import {
 } from '../../src'
 
 describe('createVNode', () => {
-  it('当props中v-if为true时应该创建CommentVNode', () => {
-    const vnode = createVNode('div', { 'v-if': true })
+  it('当props中v-if为false时应该创建CommentVNode', () => {
+    const vnode = createVNode('div', { 'v-if': false })
     expect(vnode).toBeInstanceOf(CommentVNode)
   })
 

@@ -34,7 +34,7 @@ describe('片段节点测试套件', () => {
       body.innerHTML = ''
     })
     it('应该正常更新片段节点内容', async () => {
-      const show = ref(false)
+      const show = ref(true)
       const update = vi.fn()
       const mockWidget = () => {
         onUpdated(update)
@@ -45,7 +45,7 @@ describe('片段节点测试套件', () => {
       expect(widgetNode.child).toBeInstanceOf(FragmentVNode)
       widgetNode.mount(body)
       expect(body.innerHTML).toBe('<div>test</div>')
-      show.value = true
+      show.value = false
       await vi.waitFor(() => {
         expect(update).toBeCalledTimes(1)
         expect(body.innerHTML).toBe('<!--v-if-->')
