@@ -25,9 +25,9 @@ export function createVNode<T extends VNodeType>(
 ): VNodeInstance<T> {
   // 处理props属性，检查是否存在v-if和v-memo等特殊属性
   if (props) {
-    // 检查v-if属性，如果存在则返回注释节点
-    const vIf = popProperty(props, 'v-if')
-    if (vIf) return new CommentVNode('v-if') as unknown as VNodeInstance<T>
+    if ('v-if' in props && !popProperty(props, 'v-if')) {
+      return new CommentVNode('v-if') as unknown as VNodeInstance<T>
+    }
     // 检查v-memo属性，如果存在则检查缓存
     const vMemoValue = props['v-memo']
     if (Array.isArray(vMemoValue)) {
