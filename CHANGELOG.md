@@ -1,3 +1,17 @@
+## 3.1.0 (2025-09-19)
+
+* build(commitlint): 添加提交信息 body 最大行长度规则 ([aadd0ad](https://github.com/vitarx-lib/core/commit/aadd0ad))
+* build(runtime-core): release runtime-core@1.1.0 ([2f2a904](https://github.com/vitarx-lib/core/commit/2f2a904))
+* test(runtime-core): 更新 v-if指令的测试用例 ([b176148](https://github.com/vitarx-lib/core/commit/b176148))
+* fix(runtime-core): 修复 DocumentFragment 节点插入逻辑 ([81aa12f](https://github.com/vitarx-lib/core/commit/81aa12f))
+* fix(runtime-core): 修复 v-if 属性处理逻辑 ([8fbb144](https://github.com/vitarx-lib/core/commit/8fbb144))
+* fix(runtime-core): 调整 class 属性类型定义，修复类型错误问题 ([9458304](https://github.com/vitarx-lib/core/commit/9458304))
+* refactor(runtime-core): 优化 PropsProxyHandler 类并添加详细注释 ([fad9456](https://github.com/vitarx-lib/core/commit/fad9456))
+* refactor(runtime-core): 优化 vnode 属性合并逻辑 ([89db763](https://github.com/vitarx-lib/core/commit/89db763))
+* docs(vnode): 为createVNode函数添加详细的注释 ([235ffdf](https://github.com/vitarx-lib/core/commit/235ffdf))
+
+
+
 ## <small>3.0.4 (2025-09-13)</small>
 
 * build: 移除 prepare脚本以简化构建流程 ([8de551a](https://github.com/vitarx-lib/core/commit/8de551a))
@@ -5,6 +19,7 @@
 * build(responsive): release responsive@1.0.1 ([34c4289](https://github.com/vitarx-lib/core/commit/34c4289))
 * build(runtime-core): release runtime-core@1.0.4 ([594beed](https://github.com/vitarx-lib/core/commit/594beed))
 * build(utils): release utils@1.0.1 ([f40f914](https://github.com/vitarx-lib/core/commit/f40f914))
+* build(vitarx): release vitarx@3.0.4 ([23f4208](https://github.com/vitarx-lib/core/commit/23f4208))
 * fix(runtime-core): 修复元素功能性属性值为布尔时，预期功能不一致问题，例如disabled属性。 ([ff7c5cc](https://github.com/vitarx-lib/core/commit/ff7c5cc))
 * fix(utils): 修复防抖和节流函数中的 this 指针问题 ([4f46afd](https://github.com/vitarx-lib/core/commit/4f46afd))
 * fix(vnode): 修复静态节点标记逻辑BUG ([5bd61ca](https://github.com/vitarx-lib/core/commit/5bd61ca))
