@@ -1,7 +1,17 @@
+## <small>3.1.1 (2025-09-21)</small>
+
+* build(runtime-core): release runtime-core@1.1.1 ([170d54a](https://github.com/vitarx-lib/core/commit/170d54a))
+* build(utils): release utils@1.0.2 ([b6b7756](https://github.com/vitarx-lib/core/commit/b6b7756))
+* feat(runtime-core): 优化 props 默认值合并逻辑并增强类型定义 ([275c82d](https://github.com/vitarx-lib/core/commit/275c82d))
+* refactor(utils): 宽松类型约束以提升类型兼容性 ([7e060a6](https://github.com/vitarx-lib/core/commit/7e060a6))
+
+
+
 ## 3.1.0 (2025-09-19)
 
 * build(commitlint): 添加提交信息 body 最大行长度规则 ([aadd0ad](https://github.com/vitarx-lib/core/commit/aadd0ad))
 * build(runtime-core): release runtime-core@1.1.0 ([2f2a904](https://github.com/vitarx-lib/core/commit/2f2a904))
+* build(vitarx): release vitarx@3.1.0 ([812b92f](https://github.com/vitarx-lib/core/commit/812b92f))
 * test(runtime-core): 更新 v-if指令的测试用例 ([b176148](https://github.com/vitarx-lib/core/commit/b176148))
 * fix(runtime-core): 修复 DocumentFragment 节点插入逻辑 ([81aa12f](https://github.com/vitarx-lib/core/commit/81aa12f))
 * fix(runtime-core): 修复 v-if 属性处理逻辑 ([8fbb144](https://github.com/vitarx-lib/core/commit/8fbb144))
