@@ -1,7 +1,12 @@
 import { isReactive, ReactiveProxyHandler } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
+import type { MakeRequired } from '@vitarx/utils/src/index.js'
 import { getCurrentVNode } from './context.js'
 
+type MergeProps<T extends {}, D extends {}> = D &
+  Omit<T, keyof D> & {
+    [P in Extract<keyof D, keyof T>]-?: Exclude<T[P], undefined> // 强制指定的属性 K 为必填
+  }
 const VNODE_PROPS_DEFAULT_DATA = Symbol('VNODE_PROPS_DEFAULT_DATA')
 const VNODE_PROPS_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
 const message = `[Vitarx.PropsProxyHandler][WARN]：The component's props should maintain a one-way data flow, and you shouldn't modify it directly. (This warning only exists during the development and debugging phase)`
@@ -111,7 +116,7 @@ export function proxyWidgetProps<T extends Record<string | symbol, any>>(props: 
 /**
  * 定义默认`Props` 属性
  *
- * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有合并到 props 对象中
+ * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有真实合并到 props 对象中
  *
  * @example
  * interface Props {
@@ -162,7 +167,7 @@ export function defineProps<D extends Record<string, any>>(defaultProps: D): Rea
 /**
  * 定义默认`Props` 属性
  *
- * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有合并到 props 对象中
+ * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有真实写入到 props 对象中
  *
  * @example
  * interface Props {
@@ -186,17 +191,17 @@ export function defineProps<D extends Record<string, any>>(defaultProps: D): Rea
  * @template D - 默认属性对象的类型
  * @param {D} defaultProps - 默认属性对象
  * @param {I} inputProps - 组件接收的props对象
- * @return {Readonly<Omit<I, keyof D> & D>} - 返回合并后的只读Props对象
+ * @return {Readonly<D & MakeRequired<I, keyof D>>} - 返回合并后的只读Props对象
  * @alias defineDefaultProps
  */
 export function defineProps<D extends Record<string, any>, I extends Record<string, any>>(
   defaultProps: D,
   inputProps: I
-): Readonly<Omit<I, keyof D> & D>
+): Readonly<MergeProps<I, D>>
 export function defineProps<D extends Record<string, any>, I extends Record<string, any> = {}>(
   defaultProps: D,
   inputProps?: I
-): Readonly<Omit<I, keyof D> & D> {
+): Readonly<MergeProps<I, D>> {
   // 验证defaultProps参数类型
   if (!isRecordObject(defaultProps)) {
     throw new TypeError(
@@ -230,7 +235,7 @@ export function defineProps<D extends Record<string, any>, I extends Record<stri
   }
 
   // 返回只读对象
-  return inputProps as Readonly<Omit<I, keyof D> & D>
+  return inputProps as unknown as Readonly<MergeProps<I, D>>
 }
 
 /**
