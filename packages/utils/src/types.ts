@@ -150,7 +150,7 @@ export type UnReadonly<T> = {
  * type RequiredUser = MakeRequired<User, 'id' | 'name'>;
  * // 结果等同于: { id: number; name: string; email?: string; }
  */
-export type MakeRequired<T extends object, K extends keyof T> = Omit<T, K> & {
+export type MakeRequired<T extends {}, K extends keyof T> = Omit<T, K> & {
   [P in K]-?: Exclude<T[P], undefined> // 强制指定的属性 K 为必填
 }
 /**
@@ -251,7 +251,7 @@ export type DeepPartial<T> = {
  * type PartialUser = MakePartial<User, 'name' | 'email'>;
  * // 结果等同于: { id: number; name?: string; email?: string; }
  */
-export type MakePartial<T extends object, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type MakePartial<T extends {}, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 /**
  * 提取对象类型中所有可选属性的键
  *
@@ -270,7 +270,7 @@ export type MakePartial<T extends object, K extends keyof T> = Omit<T, K> & Part
  * type UserOptionalKeys = OptionalKeys<User>;
  * // 结果为: 'name' | 'email'
  */
-export type OptionalKeys<T extends Object> = {
+export type OptionalKeys<T extends {}> = {
   [K in keyof T]: undefined extends T[K] ? K : never
 }[keyof T]
 /**
@@ -291,7 +291,7 @@ export type OptionalKeys<T extends Object> = {
  * type RequiredOptionalProps = PickOptional<User>;
  * // 结果为: { name: string; email: string | null; }
  */
-export type PickOptional<T extends Object> = {
+export type PickOptional<T extends {}> = {
   [K in OptionalKeys<T>]-?: Exclude<T[K], undefined>
 }
 /**
@@ -300,7 +300,7 @@ export type PickOptional<T extends Object> = {
  * @template T - 要被提取的对象类型
  * @returns {string} 一个联合类型，包含T中所有必填属性的键名
  */
-export type RequiredKeys<T extends Object> = {
+export type RequiredKeys<T extends {}> = {
   [K in keyof T]: undefined extends T[K] ? never : K
 }[keyof T]
 
@@ -322,6 +322,6 @@ export type RequiredKeys<T extends Object> = {
  * type RequiredPropsOnly = PickRequired<User>;
  * // 结果为: { id: number; age: number; }
  */
-export type PickRequired<T extends Object> = {
+export type PickRequired<T extends {}> = {
   [K in RequiredKeys<T>]: T[K]
 }
