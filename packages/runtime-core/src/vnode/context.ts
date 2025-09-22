@@ -1,6 +1,6 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import type { Widget } from '../widget/index.js'
-import type { WidgetVNode } from './nodes/index.js'
+import { type VNode, type WidgetVNode } from './nodes/index.js'
 
 const VNODE_CONTEXT_SYMBOL = Symbol('WidgetVNode Context Symbol')
 
@@ -41,3 +41,23 @@ export function getCurrentInstance(): Widget | undefined {
 }
 
 export { getCurrentInstance as useCurrentInstance }
+
+/**
+ * 获取视图强制更新器
+ *
+ * 此函数返回的是一个用于更新视图的函数，通常你不需要强制更新视图，响应式数据改变会自动更新视图。
+ *
+ * 如果函数式组件返回的虚拟元素节点是预构建的，系统无法在初次构建视图时捕获其依赖的响应式数据，
+ * 从而导致视图不会随着数据改变而更新。在这种特殊情况下你就可以使用该函数返回的视图更新器来更新视图。
+ *
+ * @returns {(newChildVNode?: VNode) => void} - 视图更新器
+ */
+export function useViewForceUpdating(): (newChildVNode?: VNode) => void {
+  const instance = getCurrentVNode()?.instance
+  if (!instance) {
+    throw new Error(
+      'The Vitarx.useViewForceUpdating API function can only be used in the top-level scope of the function component!'
+    )
+  }
+  return instance?.['update'] || (() => {})
+}
