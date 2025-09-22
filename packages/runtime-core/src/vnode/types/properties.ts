@@ -3,7 +3,7 @@ import type { AnyPrimitive } from '@vitarx/utils'
 import type { RefEl } from '../ref.js'
 import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event.js'
 import type { ClassProperties, StyleProperties } from './style.js'
-import type { Child } from './vnode.js'
+import type { AnyChildren } from './vnode.js'
 
 /**
  * 唯一键
@@ -699,7 +699,7 @@ interface CustomProperties {
    * </div>
    * ```
    */
-  children?: Child[] | Child
+  children?: AnyChildren
 
   /**
    * data-* 自定义数据属性

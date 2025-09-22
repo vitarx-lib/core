@@ -25,6 +25,12 @@ export type Child =
   | Exclude<AnyPrimitive, symbol>
   | RefSignal<VNode | Exclude<AnyPrimitive, symbol>>
   | Array<Child>
+
+/**
+ * 支持任意类型的子节点
+ */
+export type AnyChildren = Array<Child> | Child
+
 /**
  * 小部件类型
  */
