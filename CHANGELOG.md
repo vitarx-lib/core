@@ -1,7 +1,23 @@
+## <small>3.1.2 (2025-09-23)</small>
+
+* build(responsive): release responsive@1.0.2 ([340eb7f](https://github.com/vitarx-lib/core/commit/340eb7f))
+* build(runtime-core): release runtime-core@1.1.2 ([14f45e8](https://github.com/vitarx-lib/core/commit/14f45e8))
+* test(responsive): 为响应式数组方法添加测试用例 ([1f4b130](https://github.com/vitarx-lib/core/commit/1f4b130))
+* fix(responsive): 修复 watch 监听getter函数时回调参数类型定义不准确问题 ([1e5d600](https://github.com/vitarx-lib/core/commit/1e5d600))
+* fix(responsive): 修复数组长度更新时的响应式问题 ([9a4eba3](https://github.com/vitarx-lib/core/commit/9a4eba3))
+* feat(responsive): 添加 ExcludeSignalSymbol 类型以排除信号标识符 ([e584903](https://github.com/vitarx-lib/core/commit/e584903))
+* feat(responsive): 添加对指定属性和 getter 函数的监听支持 ([f52c71d](https://github.com/vitarx-lib/core/commit/f52c71d))
+* feat(runtime-core): 为 widget 节点添加依赖映射支持 ([faa0716](https://github.com/vitarx-lib/core/commit/faa0716))
+* feat(runtime-core): 支持任意类型的子节点类型定义 ([d2f3cc9](https://github.com/vitarx-lib/core/commit/d2f3cc9))
+* feat(runtime-core): 添加 useViewForceUpdating 函数以支持视图强制更新 ([cdb5d8d](https://github.com/vitarx-lib/core/commit/cdb5d8d))
+
+
+
 ## <small>3.1.1 (2025-09-21)</small>
 
 * build(runtime-core): release runtime-core@1.1.1 ([170d54a](https://github.com/vitarx-lib/core/commit/170d54a))
 * build(utils): release utils@1.0.2 ([b6b7756](https://github.com/vitarx-lib/core/commit/b6b7756))
+* build(vitarx): release vitarx@3.1.1 ([1472b34](https://github.com/vitarx-lib/core/commit/1472b34))
 * feat(runtime-core): 优化 props 默认值合并逻辑并增强类型定义 ([275c82d](https://github.com/vitarx-lib/core/commit/275c82d))
 * refactor(utils): 宽松类型约束以提升类型兼容性 ([7e060a6](https://github.com/vitarx-lib/core/commit/7e060a6))
 
