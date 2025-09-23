@@ -89,11 +89,11 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  *   console.log(newVal === oldVal) // false，因为新值和旧值并非同一个对象，它们已被深度克隆拷贝
  * }, { clone: true })
  */
-export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallback<T>>(
-  source: T,
-  callback: CB,
-  options?: WatchOptions
-): Subscriber<VoidCallback> {
+// 导出 watch 函数
+export function watch<
+  T extends AnyObject | AnyFunction, // 定义泛型 T，可以是对象或函数类型
+  CB extends WatchCallback<T extends AnyFunction ? ReturnType<T> : T> // 定义回调函数类型 CB
+>(source: T, callback: CB, options?: WatchOptions): Subscriber<VoidCallback> {
   if (!isFunction(callback)) throw new TypeError('callback is not a function')
   const { clone = false, immediate = false, ...subscriptionOptions } = options ?? {}
   // 监听目标
@@ -101,7 +101,7 @@ export function watch<T extends AnyObject | AnyFunction, CB extends WatchCallbac
   // 清理函数
   let cleanupFn: AnyFunction | undefined
   // 缓存值
-  let cacheValue: SignalToRaw<T> | undefined
+  let cacheValue: (T extends AnyFunction ? ReturnType<T> : SignalToRaw<T>) | undefined
   const onCleanup = (handler: VoidCallback) => {
     if (typeof handler !== 'function') {
       throw new TypeError('onCleanup handler it must be a function')
@@ -260,8 +260,10 @@ export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
  * // 监听单个属性
  * const obj = reactive({ name: 'John', age: 30 });
  * const sub = watchProperty(obj, 'name', (props, obj) => {
- *   console.log(`属性 ${props.join(', ')} 已变更`);
+ *   console.log(`属性 ${props.join(', ')} 已变更`); // 变化的属性列表长度始终为1，['name']
  * });
+ * // 取消订阅
+ * sub.dispose();
  *
  * // 监听多个属性
  * const sub2 = watchProperty(obj, ['name', 'age'], (props, obj) => {
@@ -273,9 +275,6 @@ export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
  * const sub3 = watchProperty(obj, propsToWatch, (props, obj) => {
  *   console.log(`属性 ${props.join(', ')} 已变更`);
  * });
- *
- * // 取消订阅
- * sub.dispose();
  */
 export function watchProperty<
   T extends AnyObject,
