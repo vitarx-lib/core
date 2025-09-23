@@ -95,6 +95,29 @@ describe('watch', () => {
         expect(fn).toHaveBeenCalledTimes(6)
       })
     })
+    it('应该支持监听指定属性的变化', () => {
+      const data = ref({ count: 0 })
+      const fn = vi.fn()
+      watchProperty(data, 'value', fn)
+      const fn2 = vi.fn()
+      watchProperty(data.value, 'count', fn2)
+      data.value.count++
+      Promise.resolve().then(() => {
+        expect(fn).toHaveBeenCalledWith(['value'], data)
+        expect(fn2).toHaveBeenCalledWith(['count'], data.value)
+      })
+    })
+    it('应该支持监听getter函数返回值变化', async () => {
+      const fn = vi.fn()
+      const count = ref(1)
+
+      watch(() => count.value * 2, fn)
+
+      count.value++
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledWith(4, 2, expect.any(Function))
+      })
+    })
   })
 
   describe('选项', () => {
@@ -163,21 +186,6 @@ describe('watch', () => {
       Promise.resolve().then(() => {
         expect(fn).toHaveBeenCalledWith(['value'], count1)
         expect(fn2).toHaveBeenCalledOnce()
-      })
-    })
-  })
-
-  describe('监听属性', () => {
-    it('应该支持监听属性', () => {
-      const data = ref({ count: 0 })
-      const fn = vi.fn()
-      watchProperty(data, 'value', fn)
-      const fn2 = vi.fn()
-      watchProperty(data.value, 'count', fn2)
-      data.value.count++
-      Promise.resolve().then(() => {
-        expect(fn).toHaveBeenCalledWith(['value'], data)
-        expect(fn2).toHaveBeenCalledWith(['count'], data.value)
       })
     })
   })
