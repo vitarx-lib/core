@@ -64,6 +64,49 @@ describe('reactive', () => {
     })
   })
 
+  describe('数组类型', () => {
+    it('应该支持数组push', () => {
+      const arr = reactive([1, 2, 3])
+      arr.push(4)
+      expect(arr[3]).toBe(4)
+      expect(arr.length).toBe(4)
+    })
+    it('应该支持数组unshift', () => {
+      const arr = reactive([1, 2, 3])
+      arr.unshift(0)
+      expect(arr[0]).toBe(0)
+      expect(arr.length).toBe(4)
+    })
+    it('应该支持数组pop', () => {
+      const arr = reactive([1, 2, 3])
+      arr.pop()
+      expect(arr[2]).toBe(undefined)
+      expect(arr.length).toBe(2)
+    })
+    it('应该支持数组shift', () => {
+      const arr = reactive([1, 2, 3])
+      arr.shift()
+      expect(arr[0]).toBe(2)
+      expect(arr.length).toBe(2)
+    })
+    it('应该支持数组splice', () => {
+      const arr = reactive([1, 2, 3])
+      arr.splice(1, 1, 4)
+      expect(arr[1]).toBe(4)
+      expect(arr.length).toBe(3)
+      arr.splice(0, 1)
+      expect(arr.length).toBe(2)
+    })
+    it('应该支持数组fill', () => {
+      const arr = reactive([1, 2, 3])
+      arr.fill(0)
+      expect(arr[0]).toBe(0)
+      expect(arr[1]).toBe(0)
+      expect(arr[2]).toBe(0)
+      expect(arr.length).toBe(3)
+    })
+  })
+
   describe('与ref的交互', () => {
     it('应该自动解包嵌套在reactive中的ref', () => {
       const count = ref(0)
