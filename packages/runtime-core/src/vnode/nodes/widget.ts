@@ -1,5 +1,6 @@
 import {
   createScope,
+  DependencyMap,
   depSubscribe,
   EffectScope,
   Subscriber,
@@ -123,6 +124,12 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @private
    */
   #scope: EffectScope | null = null
+  /**
+   * 依赖映射
+   *
+   * @private
+   */
+  #deps: DependencyMap | null = null
   /**
    * 获取子元素的访问器属性
    * 返回存储在私有字段 #children 中的子元素数组
@@ -537,6 +544,16 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     VNode.addParentVNodeMapping(vnode, this)
     return vnode // 返回构建的虚拟节点
   }
+
+  /**
+   * 获取当前组件视图的依赖关系
+   *
+   * 仅在开发模式下存在，帮助开发人员理解组件的依赖关系。
+   */
+  get deps(): DependencyMap | null {
+    return this.#deps
+  }
+
   /**
    * 构建子虚拟节点
    *
@@ -550,14 +567,17 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (this.#viewDepSubscriber) this.#viewDepSubscriber.dispose()
 
     // 订阅依赖并构建虚拟节点
-    const { result, subscriber } = depSubscribe(
+    const { result, subscriber, deps } = depSubscribe(
       this.#buildChild.bind(this),
       this.updateChild.bind(this),
       {
         scope: false
       }
     )
-
+    if (import.meta.env?.MODE === 'development') {
+      // 如果是开发模式，则记录依赖关系，用于调试
+      this.#deps = deps
+    }
     // 更新订阅器
     this.#viewDepSubscriber = subscriber
     // 添加到作用域中
