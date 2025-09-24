@@ -3,7 +3,10 @@ import type { SubscriptionOptions } from '../../observer/index.js'
 import type { ProxySignal, RefSignal, SignalToRaw } from '../core/index.js'
 
 /** 从类型中排除信号标识符 */
-export type ExcludeSignalSymbol<T> = Exclude<T, keyof ProxySignal | keyof RefSignal>
+export type ExcludeSignalSymbol<T> = Exclude<
+  T,
+  Extract<keyof ProxySignal | keyof RefSignal, symbol>
+>
 /**
  * 提取出监听目标可被监听的属性
  *
