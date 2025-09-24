@@ -10,6 +10,8 @@ import type {
   StyleRules
 } from '../vnode/index.js'
 
+const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
+const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
 /**
  * DOM操作类
  *
@@ -225,7 +227,10 @@ export class DomHelper {
     oldValue?: any
   ): void {
     value = unref(value)
-
+    if (value === undefined) {
+      this.removeAttribute(el, name, oldValue)
+      return
+    }
     // 处理特殊属性
     if (this.isSpecialAttribute(name)) {
       this.handleSpecialAttribute(el, name, value)
@@ -273,6 +278,9 @@ export class DomHelper {
       el.removeAttribute('class')
     } else if (typeof oldValue === 'function') {
       this.removeEventListener(el, name as EventNames, oldValue)
+    } else if (typeof (el as any)[name] === 'boolean') {
+      // 如果属实是布尔值，则设置为false
+      ;(el as any)[name] = false
     } else {
       el.removeAttribute(name)
     }
@@ -611,12 +619,12 @@ export class DomHelper {
     try {
       // 特殊处理xmlns:xlink
       if (name === 'xmlns:xlink') {
-        el.setAttributeNS('http://www.w3.org/2000/xmlns/', name, value)
+        el.setAttributeNS(XMLNS_NAMESPACE, name, String(value))
         return
       }
       // 处理 xlink 属性
       if (name.startsWith('xlink:')) {
-        el.setAttributeNS('http://www.w3.org/1999/xlink/', name, String(value))
+        el.setAttributeNS(XLINK_NAMESPACE, name, String(value))
         return
       }
       // 尝试直接设置属性
