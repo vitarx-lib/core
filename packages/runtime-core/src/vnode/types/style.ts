@@ -14,8 +14,9 @@ type BaseStyleRules = CssProperties<string | number> &
  */
 export type StyleRules = {
   [K in keyof BaseStyleRules]: BaseStyleRules[K] | RefSignal<NonNullable<BaseStyleRules[K]>>
+} & {
+  [key: `--${string}`]: number | string | RefSignal<number | string>
 }
-
 /**
  * CSS样式规则类型
  *
