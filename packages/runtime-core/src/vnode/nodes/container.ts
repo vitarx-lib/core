@@ -52,13 +52,8 @@ export abstract class ContainerVNode<
         const el = child.element // 获取当前子节点的DOM元素
         // 检查子节点是否是WidgetVNode类型
         if (isWidgetVNode(child)) {
-          // 如果子节点有$teleport属性，将其附加到teleport目标
-          if (child.teleport) {
-            DomHelper.appendChild(child.teleport, child.shadowElement)
-          } else {
-            // 否则直接附加到当前节点的元素上
-            DomHelper.appendChild(this.element, el)
-          }
+          // 如果子节点有teleport属性，则追加影子元素记录位置 否则直接附加到当前节点的元素上
+          DomHelper.appendChild(this.element, child.teleport ? child.shadowElement : el)
         } else {
           // 如果不是WidgetVNode类型，直接附加到当前节点的元素上
           DomHelper.appendChild(this.element, el)
