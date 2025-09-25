@@ -220,8 +220,8 @@ export class DomHelper {
    * @param [oldValue] - 旧属性值，仅用于更新事件时使用
    * @returns {void}
    */
-  static setAttribute(
-    el: HTMLElement | SVGElement,
+  static setAttribute<T extends HTMLElement | SVGElement>(
+    el: T,
     name: string,
     value: any,
     oldValue?: any
@@ -278,11 +278,24 @@ export class DomHelper {
       el.removeAttribute('class')
     } else if (typeof oldValue === 'function') {
       this.removeEventListener(el, name as EventNames, oldValue)
-    } else if (typeof (el as any)[name] === 'boolean') {
-      // 如果属实是布尔值，则设置为false
-      ;(el as any)[name] = false
     } else {
-      el.removeAttribute(name)
+      switch (typeof (el as any)[name]) {
+        case 'string':
+          ;(el as any) = '' as any
+          break
+        case 'boolean':
+          ;(el as any) = false as any
+          break
+        case 'number':
+          if (name === 'maxLength') {
+            ;(el as any) = -1 as any
+          } else if (name === 'tabIndex') {
+            ;(el as any) = 0 as any
+          }
+          break
+        default:
+          el.removeAttribute(name)
+      }
     }
   }
 
