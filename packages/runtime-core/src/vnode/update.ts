@@ -260,7 +260,7 @@ export class VNodeUpdate {
       } else {
         // 旧节点不是传送节点
         // 将新传送节点占位元素插入到旧节点之前
-        DomHelper.insertBefore(newElement, oldVNode.element)
+        DomHelper.insertBefore(newShadowElementEl, oldVNode.element)
       }
       if (autoMount) {
         // 卸载旧节点
