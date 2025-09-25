@@ -1,7 +1,19 @@
+## <small>3.1.3 (2025-09-25)</small>
+
+* build(responsive): release responsive@1.0.3 ([be2e781](https://github.com/vitarx-lib/core/commit/be2e781))
+* build(runtime-core): release runtime-core@1.1.3 ([c21f31d](https://github.com/vitarx-lib/core/commit/c21f31d))
+* feat(dom): 改进属性处理逻辑 ([c45dab6](https://github.com/vitarx-lib/core/commit/c45dab6))
+* feat(runtime-core): 支持CSS自定义属性样式规则 ([5c87af8](https://github.com/vitarx-lib/core/commit/5c87af8))
+* fix(dom): 修复属性设置与移除逻辑 ([2450e0d](https://github.com/vitarx-lib/core/commit/2450e0d))
+* fix(watch): 修复value属性被类型排除问题 ([38822c5](https://github.com/vitarx-lib/core/commit/38822c5))
+
+
+
 ## <small>3.1.2 (2025-09-23)</small>
 
 * build(responsive): release responsive@1.0.2 ([340eb7f](https://github.com/vitarx-lib/core/commit/340eb7f))
 * build(runtime-core): release runtime-core@1.1.2 ([14f45e8](https://github.com/vitarx-lib/core/commit/14f45e8))
+* build(vitarx): release vitarx@3.1.2 ([ea11288](https://github.com/vitarx-lib/core/commit/ea11288))
 * test(responsive): 为响应式数组方法添加测试用例 ([1f4b130](https://github.com/vitarx-lib/core/commit/1f4b130))
 * fix(responsive): 修复 watch 监听getter函数时回调参数类型定义不准确问题 ([1e5d600](https://github.com/vitarx-lib/core/commit/1e5d600))
 * fix(responsive): 修复数组长度更新时的响应式问题 ([9a4eba3](https://github.com/vitarx-lib/core/commit/9a4eba3))
