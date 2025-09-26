@@ -160,6 +160,16 @@ export abstract class Widget<
 
   /**
    * 挂载之前调用之前调用
+   *
+   * @example
+   * ```ts
+   * class MyWidget extends Widget {
+   *   onBeforeMount() {
+   *     // 挂载到指定的容器元素中
+   *     return document.querySelector('#container')! // 返回 #container 选择器是等效的
+   *   }
+   * }
+   * ```
    */
   onBeforeMount?(): void | string | ParentNode
 
