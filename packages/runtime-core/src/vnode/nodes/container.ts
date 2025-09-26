@@ -155,7 +155,7 @@ export abstract class ContainerVNode<
    * @inheritDoc
    */
   override activate(root: boolean = true): void {
-    if (root) this.toggleElement()
+    if (root) this.toggleElement(true)
     // 遍历所有子节点
     for (let i = 0; i < this.children.length; i++) {
       // 递归调用更新每个子节点的激活状态
@@ -170,6 +170,9 @@ export abstract class ContainerVNode<
     for (let i = 0; i < this.children.length; i++) {
       this.children[i].deactivate(false)
     }
-    if (root) this.toggleElement()
+    if (root) {
+      this.toggleElement(false)
+      DomHelper.remove(this.element)
+    }
   }
 }

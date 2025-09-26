@@ -73,20 +73,26 @@ export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T
    * @inheritDoc
    */
   override activate(root: boolean = true): void {
-    if (root) this.toggleElement()
+    if (root) this.toggleElement(true)
   }
 
   /**
    * @inheritDoc
    */
   override deactivate(root: boolean = true) {
-    if (root) this.toggleElement()
+    if (root) {
+      this.toggleElement(false)
+      this.element.remove()
+    }
   }
   /**
    * @inheritDoc
    */
   override unmount(root: boolean = true) {
-    if (root && this.element.parentNode) this.element.parentNode.removeChild(this.element)
+    if (root) {
+      this.element.remove()
+      this.removeShadowElement()
+    }
   }
 
   /**
