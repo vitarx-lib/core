@@ -114,12 +114,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    */
   #pendingUpdate: boolean = false
   /**
-   * 传送的目标元素
-   *
-   * @private
-   */
-  #teleport: Element | null = null
-  /**
    * 作用域
    * @private
    */
@@ -139,21 +133,24 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
-   * 获取 teleport 元素的 getter 方法
-   * @returns {Element | null} 返回 teleport 元素，如果不存在则返回 null
+   * 获取当前生命周期状态的getter方法
+   * @returns {LifecycleState} 返回当前的生命周期状态
    */
-  get teleport(): Element | null {
-    return this.#teleport
-  }
-
   get state(): LifecycleState {
     return this.#state
   }
 
+  /**
+   * 获取子虚拟节点(VNode)的getter方法
+   * 使用懒加载模式，仅在首次访问时构建子节点
+   * @returns {VNode} 返回构建后的子虚拟节点
+   */
   get child(): VNode {
+    // 如果子节点尚未构建，则调用构建方法创建子节点
     if (!this.#child) {
       this.#child = this.#build()
     }
+    // 返回已构建的子节点
     return this.#child
   }
 
@@ -296,16 +293,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (this.state !== 'notRendered') {
       return this.child.element as RuntimeElement<T>
     }
-    // 触发beforeMount生命周期钩子，获取可能的传送目标
-    const teleport = this.triggerLifecycleHook(LifecycleHooks.beforeMount)
-    // 处理传送目标，可以是选择器字符串或元素
-    if (typeof teleport === 'string') {
-      // 如果是字符串，则使用querySelector查找对应元素
-      this.#teleport = document.querySelector(teleport)
-    } else if (teleport instanceof Element) {
-      // 如果是元素实例，直接使用
-      this.#teleport = teleport
-    }
     let el: AnyElement
     try {
       // 尝试获取子组件的DOM元素
@@ -341,12 +328,16 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         '[Vitarx.WidgetRenderer.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
       )
     }
-    // 子节点挂载，挂载到传送目标/容器
-    this.child.mount(this.#teleport || container)
-    if (container && this.#teleport) {
-      // 如果指定了容器，则将影子元素挂载到容器
+    // 触发beforeMount生命周期钩子
+    const parent = this.triggerLifecycleHook(LifecycleHooks.beforeMount)
+    // 设置传送目标
+    if (parent) this.setTeleport(parent)
+    // 如果指定了容器，则将影子元素挂载到容器
+    if (container && this.teleport) {
       DomHelper.appendChild(container, this.shadowElement)
     }
+    // 子节点挂载，挂载到传送目标/容器
+    this.child.mount(this.teleport || container)
     // 更新状态并触发生命周期
     this.#state = 'activated'
     this.triggerLifecycleHook(LifecycleHooks.mounted)
@@ -379,7 +370,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     } catch (e) {
       if (isCallOnError) {
         console.error(
-          "[Vitarx.Widget.onError]：You can't keep throwing exceptions in the onError hook, this results in an infinite loop!",
+          `[Vitarx][ERROR]：Widget(${this.name}) You can't keep throwing exceptions in the onError hook, this results in an infinite loop!`,
           e
         )
       } else {
@@ -389,18 +380,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         }) as LifecycleHookReturnType<T>
       }
     }
-  }
-  /**
-   * 将元素追加的父元素，仅进行DOM操作，不触发 mounted生命周期钩子
-   *
-   * @param container - 父节点，用于挂载组件的容器
-   */
-  appendToContainer(container: ParentNode): void {
-    const parent = this.#teleport || container
-    // 将元素挂载到父元素
-    DomHelper.appendChild(parent, this.element)
-    // 如果指定了容器，则将影子元素挂载到容器
-    if (this.#teleport) DomHelper.appendChild(container, this.shadowElement)
   }
   /**
    * 用于组件的卸载过程
@@ -706,7 +685,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       // 将实例变量重置为null，以便下次使用时重新创建
       this.#instance = null
       if (resetState) {
-        this.#teleport = null
+        this.setTeleport(null)
         this.removeShadowElement()
         this.#child = null
         this.#state = 'notRendered'
