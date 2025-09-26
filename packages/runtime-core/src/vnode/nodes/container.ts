@@ -1,7 +1,7 @@
 import { toRaw } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
-import { isContainerVNode, isWidgetVNode } from '../guards.js'
+import { isContainerVNode } from '../guards.js'
 import type {
   Child,
   FragmentElement,
@@ -42,27 +42,6 @@ export abstract class ContainerVNode<
   }
 
   /**
-   * 渲染子节点的函数
-   */
-  protected renderChildren(): void {
-    // 检查是否存在子节点并且目标元素具有children属性
-    if (this.children.length && 'children' in this.element) {
-      // 遍历所有子节点
-      for (const child of this.children) {
-        const el = child.element // 获取当前子节点的DOM元素
-        // 检查子节点是否是WidgetVNode类型
-        if (isWidgetVNode(child)) {
-          // 如果子节点有teleport属性，则追加影子元素记录位置 否则直接附加到当前节点的元素上
-          DomHelper.appendChild(this.element, child.teleport ? child.shadowElement : el)
-        } else {
-          // 如果不是WidgetVNode类型，直接附加到当前节点的元素上
-          DomHelper.appendChild(this.element, el)
-        }
-      }
-    }
-  }
-
-  /**
    * 判断给定的值是否为容器类型的虚拟节点
    * @param val - 需要检查的虚拟节点
    * @returns {boolean} 如果是容器类型的虚拟节点则返回true，否则返回false
@@ -77,11 +56,16 @@ export abstract class ContainerVNode<
   override mount(container?: ParentNode | FragmentElement): void {
     // 获取片段节点元素
     const element = this.element
-    // 如果不是组件节点，将元素添加到容器中
-    if (container) DomHelper.appendChild(container, element)
+    const parent = this.teleport || container
+    if (parent) {
+      // 添加元素到容器中
+      DomHelper.appendChild(parent, element)
+      // 如果指定了容器，则将影子元素添加到容器中
+      if (this.teleport && container) DomHelper.appendChild(container, this.shadowElement)
+    }
     for (const child of this.children) {
-      // 遍历所有子组件
-      child.mount() // 递归挂载每个子组件
+      // 遍历所有子节点，挂载所有子节点
+      child.mount()
     }
   }
 
@@ -92,7 +76,25 @@ export abstract class ContainerVNode<
     for (const child of this.children) {
       child.unmount(false)
     }
-    if (root) DomHelper.remove(this.element)
+    if (root) {
+      DomHelper.remove(this.element)
+      this.removeShadowElement()
+    }
+  }
+
+  /**
+   * 渲染子节点的函数
+   */
+  protected renderChildren(): void {
+    // 检查是否存在子节点并且目标元素具有children属性
+    if (this.children.length && 'children' in this.element) {
+      // 遍历所有子节点
+      for (const child of this.children) {
+        const el = child.element // 获取当前子节点的DOM元素
+        // 如果子节点有teleport属性，则追加影子元素记录位置 否则直接附加到当前节点的元素上
+        DomHelper.appendChild(this.element, child.teleport ? child.shadowElement : el)
+      }
+    }
   }
 
   /**
