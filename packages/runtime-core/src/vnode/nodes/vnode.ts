@@ -135,6 +135,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       } else if (typeof parent === 'object' && parent instanceof Element) {
         this.#teleport = parent
       }
+      return
     }
     this.#teleport = null // 将传入的值赋给私有属性 #teleport
   }
