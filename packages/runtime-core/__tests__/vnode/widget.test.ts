@@ -196,6 +196,13 @@ describe('WidgetVNode 单元测试', () => {
           order.push('w2:onMounted')
         }
 
+        override onBeforeUnmount() {
+          order.push('w2:onBeforeUnmount')
+        }
+
+        override onUnmounted() {
+          order.push('w2:onUnmounted')
+        }
         override build() {
           return null
         }
@@ -209,16 +216,32 @@ describe('WidgetVNode 单元测试', () => {
           order.push('w1:onMounted')
         }
 
+        override onBeforeUnmount() {
+          order.push('w1:onBeforeUnmount')
+        }
+
+        override onUnmounted() {
+          order.push('w1:onUnmounted')
+        }
         override build() {
           return createElement(w2)
         }
       }
-      createElement(w1).mount(document.createElement('div'))
+      const vnode = createElement(w1)
+      vnode.mount(document.createElement('div'))
       expect(order).toEqual([
         'w1:onBeforeMount',
         'w2:onBeforeMount',
         'w2:onMounted',
         'w1:onMounted'
+      ])
+      order.length = 0
+      vnode.unmount()
+      expect(order).toEqual([
+        'w1:onBeforeUnmount',
+        'w2:onBeforeUnmount',
+        'w2:onUnmounted',
+        'w1:onUnmounted'
       ])
     })
   })
