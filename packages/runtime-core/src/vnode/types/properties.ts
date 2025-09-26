@@ -1,5 +1,4 @@
 import type { RefSignal } from '@vitarx/responsive'
-import type { AnyPrimitive } from '@vitarx/utils'
 import type { RefEl } from '../ref.js'
 import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event.js'
 import type { ClassProperties, StyleProperties } from './style.js'
@@ -57,6 +56,16 @@ export interface IntrinsicProperties {
    *
    * 该指令接收一个固定引用(在生命周期中保持引用不变)的数组，内部会将虚拟节点与该数组进行绑定。
    * 当重新创建该节点时会判断数组内容是否相同，如果相同则会复用缓存的节点，如果不同则会创建新的节点，并刷新缓存。
+   *
+   * 示例：
+   * ```tsx
+   * function App() {
+   *  const memo = [1, 2, 3]
+   *  return <div v-memo={memo}>
+   *    此div节点会被缓存，只到memo的数组内容改变时才会重新创建新的节点，这样做能够在重绘时减少不必要的新节点创建。
+   *  </div>
+   * }
+   * ```
    */
   'v-memo'?: any[]
   /**
@@ -66,6 +75,17 @@ export interface IntrinsicProperties {
    * 这可以用来优化更新时的性能
    */
   'v-static'?: boolean
+  /**
+   * 父元素 - 支持选择器或 `HTMLElement` 实例
+   *
+   * ```tsx
+   * // 在html元素中使用
+   * <div v-parent="#container">此div将会挂载到id为#container的容器中</div>
+   * // 在组件上使用，使组件的内容挂载到body中，如果组件内部通过`onBeforeMount`钩子指定了父元素，`v-parent`将无效
+   * <YourWidget v-parent={document.body}></YourWidget>
+   * ```
+   */
+  'v-parent'?: string | ParentNode
   [key: string]: any
 }
 
@@ -666,7 +686,7 @@ type CoverProperties = SupportRefSignal<GlobalProperties & PartProperties>
 type CoverPropertiesNames = keyof CoverProperties
 
 /**
- * 自定义全局属性
+ * 自定义全局HTML属性
  */
 interface CustomProperties {
   /**
@@ -700,21 +720,10 @@ interface CustomProperties {
    * ```
    */
   children?: AnyChildren
-
   /**
-   * data-* 自定义数据属性
-   */
-  [key: `data-${string}`]: AnyPrimitive | RefSignal<AnyPrimitive>
-
-  /**
-   * aria-* 无障碍相关属性
+   * 未知属性
    *
-   * @see https://developer.mozilla.org/zh-CN/docs/Web/Accessibility/ARIA/Attributes 详细文档
-   */
-  [key: `aria-${string}`]: AnyPrimitive | RefSignal<AnyPrimitive>
-
-  /**
-   * 允许其他未知属性
+   * 支持任意自定义属性
    */
   [key: string]: any
 }

@@ -55,6 +55,8 @@ export class VNodeUpdate {
    * @returns {VNode} 更新后的虚拟DOM节点
    */
   static patchUpdate(oldVNode: VNode, newVNode: VNode, autoMount = true): VNode {
+    // 如果两个节点相同，则返回旧节点
+    if (oldVNode === newVNode) return oldVNode
     // 如果新旧节点的类型或key不同，则替换整个节点
     if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
       // 替换旧节点为新节点
@@ -202,7 +204,7 @@ export class VNodeUpdate {
           const preEl = oldVNode.children[index - 1]?.element
           if (preEl) {
             // 往片段节点的最后一个元素之后插入新元素
-            DomHelper.insertAfter(el, preEl)
+            DomHelper.insertAfter(newChild.teleport ? newChild.shadowElement : el, preEl)
           } else {
             // 不存在前一个元素则代表着是空片段节点，直接用新元素替换掉占位元素
             DomHelper.replace(el, oldVNode.shadowElement)
@@ -250,11 +252,11 @@ export class VNodeUpdate {
     const newElement = newVNode.element
     // 渲染新节点
     // 如果新节点是传送节点则特殊处理
-    if (isWidgetVNode(newVNode) && newVNode.teleport) {
+    if (newVNode.teleport) {
       // 新占位节点
       const newShadowElementEl = newVNode.shadowElement
       // 如果旧节点是传送节点
-      if (isWidgetVNode(oldVNode) && oldVNode.teleport) {
+      if (oldVNode.teleport) {
         // 新节点的占位元素替换旧节点占位元素
         DomHelper.replace(newShadowElementEl, oldVNode.shadowElement)
       } else {
@@ -282,18 +284,17 @@ export class VNodeUpdate {
       if (autoMount) newVNode.mount()
       return newVNode
     }
-    if (isWidgetVNode(oldVNode)) {
-      // 如果旧节点是传送节点
-      if (oldVNode.teleport) {
-        // 将新元素替换掉旧节点的传送占位元素
-        DomHelper.replace(newElement, oldVNode.shadowElement)
-      } else {
-        // 不是占位节点
+    // 如果旧节点是传送节点
+    if (oldVNode.teleport) {
+      // 将新元素替换掉旧节点的传送占位元素
+      DomHelper.replace(newElement, oldVNode.shadowElement)
+    } else {
+      if (isWidgetVNode(oldVNode)) {
         // 将新元素插入到旧元素之前，兼容卸载动画
         DomHelper.insertBefore(newElement, oldVNode.element)
+      } else {
+        DomHelper.replace(newElement, oldVNode.element)
       }
-    } else {
-      DomHelper.replace(newElement, oldVNode.element)
     }
     if (autoMount) {
       // 卸载旧节点

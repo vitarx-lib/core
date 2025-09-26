@@ -416,15 +416,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   override activate(root: boolean = true): void {
     if (this.state === 'deactivated') {
       this.#state = 'activated'
-      if (root) {
-        if (this.teleport) {
-          // 将元素重新插入到传送目标
-          this.teleport.appendChild(this.element)
-        } else {
-          // 将元素重新插入到影子元素
-          DomHelper.replace(this.element, this.shadowElement)
-        }
-      }
+      if (root) this.toggleElement(true)
       // 恢复作用域
       this.scope.resume()
       // 更新视图
@@ -606,9 +598,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 递归停用子节点
     this.child.deactivate(false)
     // 如果是根节点，且不是传送节点，则将影子元素插入到元素之前
-    if (root && !this.teleport) {
-      DomHelper.insertBefore(this.shadowElement, this.element)
-    }
+    if (root) this.toggleElement(false)
     const post = () => {
       // 如果是根节点，则移除元素
       if (root) DomHelper.remove(this.element)

@@ -54,7 +54,17 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * 唯一标识符
    */
   readonly #key?: UniqueKey
+  /**
+   * 影子元素
+   * @private
+   */
   #shadowElement?: Comment
+  /**
+   * 传送的目标元素
+   *
+   * @private
+   */
+  #teleport: Element | null = null
   /**
    * 引用
    */
@@ -88,17 +98,45 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
         this.#memo = Array.from(memo)
         MEMO_STORE.set(memo, this)
       }
+      // 静态节点
       this.#isStatic = !!popProperty(props, 'v-static')
+      // 父元素
+      this.setTeleport(popProperty(props, 'parent') as Element | string | undefined)
     }
     this.propsHandler()
   }
 
   /**
-   * 获取一个布尔值，表示当前元素是否为静态定位
-   * @returns {boolean} 如果元素是静态定位则返回true，否则返回false
+   * 获取 teleport 元素的 getter 方法
+   * @returns {Element | null} 返回 teleport 元素，如果不存在则返回 null
+   */
+  get teleport(): Element | null {
+    return this.#teleport
+  }
+
+  /**
+   * 获取一个布尔值，表示当前元素是否为静态
+   * @returns {boolean} 如果元素是静态则返回true，否则返回false
    */
   get isStatic(): boolean {
     return this.#isStatic
+  }
+
+  /**
+   * 设置传送目标的属性方法
+   * 这是一个受保护的设置器，用于修改类的私有属性 #teleport
+   * @param parent - 可以是一个 DOM 元素或选择器或null
+   * 当设置为 null 时，表示清除传送目标
+   */
+  protected setTeleport(parent: ParentNode | string | null | undefined) {
+    if (parent && typeof Element !== 'undefined') {
+      if (typeof parent === 'string') {
+        this.#teleport = document.querySelector(parent)
+      } else if (typeof parent === 'object' && parent instanceof Element) {
+        this.#teleport = parent
+      }
+    }
+    this.#teleport = null // 将传入的值赋给私有属性 #teleport
   }
 
   /**
@@ -307,24 +345,28 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * 移除Shadow DOM元素并将其引用设置为undefined
    * 这个方法会检查shadowElement是否存在，如果存在则从DOM中移除它，然后将引用置为undefined
    */
-  removeShadowElement(): void {
+  protected removeShadowElement(): void {
     this.#shadowElement?.remove() // 使用可选链操作符，如果shadowElement存在则调用remove()方法
     this.#shadowElement = undefined // 将shadowElement的引用置为undefined，便于垃圾回收
   }
 
   /**
-   * 切换DOM元素与阴影DOM元素
-   * 此方法会根据当前元素的挂载状态，在真实DOM元素和阴影元素之间进行切换
+   * 切换元素
+   *
+   * @param {boolean} isActive - 是否激活元素
    */
-  toggleElement(): void {
-    // 检查当前元素是否已挂载到DOM树中
-    if (this.element.parentNode) {
-      // 如果已挂载，用shadowElement替换当前元素
-      this.element.parentNode.replaceChild(this.shadowElement, this.element)
-    } else {
-      // 如果未挂载（处于shadow状态），将元素恢复到DOM树中
-      this.shadowElement.parentNode?.replaceChild(this.element, this.shadowElement)
-      this.#shadowElement = undefined // 清除shadowElement引用，便于垃圾回收
+  protected toggleElement(isActive: boolean): void {
+    if (isActive) {
+      if (this.teleport) {
+        // 将元素重新插入到传送目标
+        this.teleport.appendChild(this.element)
+      } else {
+        // 将元素重新插入到影子元素
+        DomHelper.replace(this.element, this.shadowElement)
+      }
+    } else if (!this.teleport) {
+      // 插入占位元素
+      DomHelper.insertBefore(this.shadowElement, this.element)
     }
   }
 
