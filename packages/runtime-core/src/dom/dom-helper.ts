@@ -499,8 +499,6 @@ export class DomHelper {
     const children = target.$vnode.children
     if (children?.length) {
       children.forEach(child => child.element && this.remove(child.element))
-    } else if (target.$vnode.hasShadowElement()) {
-      target.$vnode.shadowElement.remove()
     }
   }
 
