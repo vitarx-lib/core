@@ -101,7 +101,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 静态节点
       this.#isStatic = !!popProperty(props, 'v-static')
       // 父元素
-      this.setTeleport(popProperty(props, 'parent') as Element | string | undefined)
+      this.setTeleport(popProperty(props, 'v-parent') as Element | string | undefined)
     }
     this.propsHandler()
   }
