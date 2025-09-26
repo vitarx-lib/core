@@ -95,6 +95,12 @@ describe('createVNode', () => {
     const node = createVNode('div', { 'v-static': true })
     expect(node.isStatic).toBe(true)
   })
+  it('应该支持v-parent指令', () => {
+    const div = document.createElement('div')
+    const node = createVNode('div', { 'v-parent': document.body })
+    node.mount(div)
+    expect(node.element.parentNode).toBe(document.body)
+  })
 })
 
 describe('getCurrentVNode / useCurrentVNode', () => {
