@@ -185,6 +185,42 @@ describe('WidgetVNode 单元测试', () => {
       })
       expect(widgetVNode.reportError).toHaveBeenCalled()
     })
+    it('生命周期触发顺序', () => {
+      const order: string[] = []
+      const w2 = class extends Widget {
+        override onBeforeMount() {
+          order.push('w2:onBeforeMount')
+        }
+
+        override onMounted() {
+          order.push('w2:onMounted')
+        }
+
+        override build() {
+          return null
+        }
+      }
+      const w1 = class extends Widget {
+        override onBeforeMount() {
+          order.push('w1:onBeforeMount')
+        }
+
+        override onMounted() {
+          order.push('w1:onMounted')
+        }
+
+        override build() {
+          return createElement(w2)
+        }
+      }
+      createElement(w1).mount(document.createElement('div'))
+      expect(order).toEqual([
+        'w1:onBeforeMount',
+        'w2:onBeforeMount',
+        'w2:onMounted',
+        'w1:onMounted'
+      ])
+    })
   })
 
   describe('unmount方法', () => {
