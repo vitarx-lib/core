@@ -1,7 +1,30 @@
+## 3.2.0 (2025-09-26)
+
+* build(runtime-core): release runtime-core@1.2.0 ([5814bb0](https://github.com/vitarx-lib/core/commit/5814bb0))
+* feat(runtime-core): 更新生命周期钩子返回值类型 ([b570793](https://github.com/vitarx-lib/core/commit/b570793))
+* feat(runtime-core): 添加对 v-parent 指令的支持 ([8825d32](https://github.com/vitarx-lib/core/commit/8825d32))
+* feat(vnode): 添加 v-parent 指令支持元素传送功能 ([c4234f6](https://github.com/vitarx-lib/core/commit/c4234f6))
+* feat(widget): 添加排除小部件内部关键字的类型工具 ([32dcde4](https://github.com/vitarx-lib/core/commit/32dcde4))
+* fix(runtime-core): 修复传送节点更新时的元素插入问题 ([42bdb87](https://github.com/vitarx-lib/core/commit/42bdb87))
+* fix(runtime-core): 修正容器节点的teleport附加逻辑 ([ef1dc30](https://github.com/vitarx-lib/core/commit/ef1dc30))
+* fix(runtime-core): 移除冗余的 shadow element 清理逻辑 ([370cf41](https://github.com/vitarx-lib/core/commit/370cf41))
+* fix(vnode): 修复teleport节点处理逻辑 ([56b00cd](https://github.com/vitarx-lib/core/commit/56b00cd))
+* fix(vnode): 修复容器和无标签节点的激活与停用逻辑 ([29ce6c7](https://github.com/vitarx-lib/core/commit/29ce6c7))
+* fix(vnode): 修正teleport属性名以匹配指令名称 ([f0f370c](https://github.com/vitarx-lib/core/commit/f0f370c))
+* refactor(container): 优化容器节点的挂载与渲染逻辑 ([ae74829](https://github.com/vitarx-lib/core/commit/ae74829))
+* refactor(widget): 更新元素类型定义与文档注释 ([34959c2](https://github.com/vitarx-lib/core/commit/34959c2))
+* refactor(widget): 重构 widget 节点的传送逻辑和生命周期管理 ([9270508](https://github.com/vitarx-lib/core/commit/9270508))
+* test(vnode): 添加组件卸载生命周期测试 ([a0781a7](https://github.com/vitarx-lib/core/commit/a0781a7))
+* test(widget): 添加生命周期触发顺序测试 ([45fa59c](https://github.com/vitarx-lib/core/commit/45fa59c))
+* docs(widget): 更新 onBeforeMount 钩子注释并添加使用示例 ([5e6d0bb](https://github.com/vitarx-lib/core/commit/5e6d0bb))
+
+
+
 ## <small>3.1.3 (2025-09-25)</small>
 
 * build(responsive): release responsive@1.0.3 ([be2e781](https://github.com/vitarx-lib/core/commit/be2e781))
 * build(runtime-core): release runtime-core@1.1.3 ([c21f31d](https://github.com/vitarx-lib/core/commit/c21f31d))
+* build(vitarx): release vitarx@3.1.3 ([0cf26a2](https://github.com/vitarx-lib/core/commit/0cf26a2))
 * feat(dom): 改进属性处理逻辑 ([c45dab6](https://github.com/vitarx-lib/core/commit/c45dab6))
 * feat(runtime-core): 支持CSS自定义属性样式规则 ([5c87af8](https://github.com/vitarx-lib/core/commit/5c87af8))
 * fix(dom): 修复属性设置与移除逻辑 ([2450e0d](https://github.com/vitarx-lib/core/commit/2450e0d))
