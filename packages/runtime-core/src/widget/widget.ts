@@ -14,6 +14,7 @@ import { type ClassWidget, type ErrorInfo } from './types/index.js'
  * VNode类型的别名
  */
 export type Element = VNode
+export type VitarxElement = VNode
 /**
  * 此类型用于推导出小部件的子节点类型。
  */
@@ -159,7 +160,7 @@ export abstract class Widget<
   onCreate?(): void
 
   /**
-   * 挂载之前调用之前调用
+   * 挂载渲染完成之后，元素挂载之前被调用。
    *
    * @example
    * ```ts
@@ -377,7 +378,7 @@ export abstract class Widget<
    *
    * 该方法会被多次调用，所以在方法内不应该存在任何副作用。
    *
-   * > **注意**：在类小部件的build方法中不要返回 `() => Element`，而是应返回`Element`。
+   * > **注意**：在类小部件的build方法中不要返回 `() => VitarxElement`，而是应返回`VitarxElement`。
    *
    * 示例：
    * ```ts
@@ -390,11 +391,10 @@ export abstract class Widget<
    *  return createVNode('div',{},'Hello World')
    * }
    * ```
-   * @note 该方法应由子类实现，且该方法是受保护的，仅供内部渲染逻辑使用。
-   * @protected
-   * @returns {Element} - 返回的是虚拟的VNode节点
+   * @remarks 该方法应由子类实现，且该方法仅供内部渲染逻辑使用。
+   * @returns {VitarxElement|null} - 返回VNode节点或null
    */
-  abstract build(): Element | null
+  abstract build(): VitarxElement | null
 
   /**
    * 对虚拟节点进行打补丁更新操作
