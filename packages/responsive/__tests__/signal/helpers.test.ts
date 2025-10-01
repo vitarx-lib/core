@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isReadonly, readonly, shallowReadonly } from '../../src'
+import { computed, isReadonly, reactive, readonly, ref, shallowReadonly, toRaw } from '../../src'
 
 describe('readonly', () => {
   it('应创建一个深度只读对象', () => {
@@ -85,5 +85,34 @@ describe('isReadonly', () => {
     expect(isReadonly(null)).toBe(false)
     expect(isReadonly(undefined)).toBe(false)
     expect(isReadonly({ foo: 1 })).toBe(false)
+  })
+})
+
+describe('toRaw', () => {
+  it('应返回reactive原始对象', () => {
+    const original = { foo: 1 }
+    const shallowReadonlyObj = reactive(original)
+
+    expect(toRaw(shallowReadonlyObj)).toBe(original)
+    expect(toRaw(original)).toBe(original)
+    expect(toRaw(null)).toBe(null)
+    expect(toRaw(undefined)).toBe(undefined)
+  })
+  it('应返回computed原始对象', () => {
+    const original = reactive({ foo: 1 })
+    const data = computed(() => {
+      original.foo++
+      return original
+    })
+
+    expect(toRaw(data)).toBe(original)
+    expect(toRaw(original)).toStrictEqual(original)
+  })
+  it('应返回ref原始对象', () => {
+    const original = 1
+    const data = ref(1)
+
+    expect(toRaw(data)).toBe(original)
+    expect(toRaw(original)).toStrictEqual(original)
   })
 })
