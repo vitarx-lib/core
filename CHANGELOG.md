@@ -1,6 +1,19 @@
+## <small>3.2.1 (2025-10-01)</small>
+
+* build(responsive): release responsive@1.0.4 ([d3c7e96](https://github.com/vitarx-lib/core/commit/d3c7e96))
+* build(runtime-core): release runtime-core@1.2.1 ([443baff](https://github.com/vitarx-lib/core/commit/443baff))
+* fix(responsive): 修复计算属性初始化逻辑 ([93827cd](https://github.com/vitarx-lib/core/commit/93827cd))
+* fix(signal): 修复 toRaw 函数对 signal 原始值的处理 ([d66ef19](https://github.com/vitarx-lib/core/commit/d66ef19))
+* test(signal): 添加 toRaw 方法的测试用例 ([b09b17f](https://github.com/vitarx-lib/core/commit/b09b17f))
+* refactor(computed): 优化计算属性初始化逻辑 ([8a9845c](https://github.com/vitarx-lib/core/commit/8a9845c))
+* refactor(reactive): 重命名静态符号常量 ([4e1aa1a](https://github.com/vitarx-lib/core/commit/4e1aa1a))
+
+
+
 ## 3.2.0 (2025-09-26)
 
 * build(runtime-core): release runtime-core@1.2.0 ([5814bb0](https://github.com/vitarx-lib/core/commit/5814bb0))
+* build(vitarx): release vitarx@3.2.0 ([8e6344b](https://github.com/vitarx-lib/core/commit/8e6344b))
 * feat(runtime-core): 更新生命周期钩子返回值类型 ([b570793](https://github.com/vitarx-lib/core/commit/b570793))
 * feat(runtime-core): 添加对 v-parent 指令的支持 ([8825d32](https://github.com/vitarx-lib/core/commit/8825d32))
 * feat(vnode): 添加 v-parent 指令支持元素传送功能 ([c4234f6](https://github.com/vitarx-lib/core/commit/c4234f6))
