@@ -186,6 +186,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
    * @override
    */
   toString(): string {
+    Depend.track(this, 'value')
     if (this._value?.toString) {
       return this._value.toString()
     } else {
