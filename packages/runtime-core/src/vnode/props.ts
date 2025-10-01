@@ -1,12 +1,8 @@
 import { isReactive, ReactiveProxyHandler } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import type { MakeRequired } from '@vitarx/utils/src/index.js'
 import { getCurrentVNode } from './context.js'
+import type { MergeProps } from './types/index.js'
 
-type MergeProps<T extends {}, D extends {}> = D &
-  Omit<T, keyof D> & {
-    [P in Extract<keyof D, keyof T>]-?: Exclude<T[P], undefined> // 强制指定的属性 K 为必填
-  }
 const VNODE_PROPS_DEFAULT_DATA = Symbol('VNODE_PROPS_DEFAULT_DATA')
 const VNODE_PROPS_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
 const message = `[Vitarx.PropsProxyHandler][WARN]：The component's props should maintain a one-way data flow, and you shouldn't modify it directly. (This warning only exists during the development and debugging phase)`
@@ -191,7 +187,7 @@ export function defineProps<D extends Record<string, any>>(defaultProps: D): Rea
  * @template D - 默认属性对象的类型
  * @param {D} defaultProps - 默认属性对象
  * @param {I} inputProps - 组件接收的props对象
- * @return {Readonly<D & MakeRequired<I, keyof D>>} - 返回合并后的只读Props对象
+ * @return {Readonly<D & MergeProps<I, keyof D>>} - 返回合并后的只读Props对象
  * @alias defineDefaultProps
  */
 export function defineProps<D extends Record<string, any>, I extends Record<string, any>>(
