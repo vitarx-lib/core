@@ -20,7 +20,7 @@ import type { Reactive } from './types.js'
  * 响应式代理对象标识符
  */
 export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
-const staticSymbol = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
+const STATIC_SYMBOL = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
 /**
  * # 响应式代理对象处理器
  *
@@ -107,7 +107,7 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
   get(target: T, prop: AnyKey, receiver: any): any {
     // 拦截内部标识符属性
     if (typeof prop === 'symbol') {
-      if (staticSymbol.includes(prop)) return true
+      if (STATIC_SYMBOL.includes(prop)) return true
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
       if (prop === Observer.TARGET_SYMBOL) return receiver
