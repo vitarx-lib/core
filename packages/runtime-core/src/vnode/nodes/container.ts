@@ -86,13 +86,19 @@ export abstract class ContainerVNode<
    * 渲染子节点的函数
    */
   protected renderChildren(): void {
+    const currentEl = this.element
     // 检查是否存在子节点并且目标元素具有children属性
-    if (this.children.length && 'children' in this.element) {
+    if (this.children.length && 'children' in currentEl) {
       // 遍历所有子节点
       for (const child of this.children) {
-        const el = child.element // 获取当前子节点的DOM元素
+        const childEl = child.element // 获取当前子节点的DOM元素
         // 如果子节点有teleport属性，则追加影子元素记录位置 否则直接附加到当前节点的元素上
-        DomHelper.appendChild(this.element, child.teleport ? child.shadowElement : el)
+        if (child.teleport) {
+          DomHelper.appendChild(currentEl, child.shadowElement)
+          DomHelper.appendChild(child.teleport, childEl)
+        } else {
+          DomHelper.appendChild(currentEl, childEl)
+        }
       }
     }
   }
