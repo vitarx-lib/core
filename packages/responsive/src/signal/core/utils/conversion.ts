@@ -1,5 +1,6 @@
 import { SIGNAL_RAW_VALUE_SYMBOL } from '../constants.js'
 import type { ProxySignal, RefSignal } from '../types/index.js'
+import { isSignal } from './verify.js'
 
 /**
  * 信号转换为原始对象的类型
@@ -30,11 +31,18 @@ export type SignalToRaw<T> =
  * const proxySignal = reactive({ count: 0 })
  * const rawValue = toRaw(proxySignal) // { count: 0 }
  *
+ * // 用于获取computed计算信号的原始值
+ * const computedSignal = computed(() => proxySignal.count)
+ * const rawValue = toRaw(computedSignal) // 0
+ *
  * // 对于非响应式值，直接返回原值
  * const plainValue = 'any'
  * console.log(toRaw(plainValue)) // 输出: any
  * ```
  */
 export function toRaw<T>(signal: T): SignalToRaw<T> {
-  return (signal as any)?.[SIGNAL_RAW_VALUE_SYMBOL] ?? (signal as SignalToRaw<T>)
+  if (isSignal(signal)) {
+    return (signal as any)[SIGNAL_RAW_VALUE_SYMBOL]
+  }
+  return signal as SignalToRaw<T>
 }

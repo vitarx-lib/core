@@ -99,14 +99,13 @@ describe('toRaw', () => {
     expect(toRaw(undefined)).toBe(undefined)
   })
   it('应返回computed原始对象', () => {
-    const original = reactive({ foo: 1 })
+    const counter = ref(1)
     const data = computed(() => {
-      original.foo++
-      return original
+      counter.value++
+      return null
     })
 
-    expect(toRaw(data)).toBe(original)
-    expect(toRaw(original)).toStrictEqual(original)
+    expect(toRaw(data)).toBe(null)
   })
   it('应返回ref原始对象', () => {
     const original = 1
