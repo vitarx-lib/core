@@ -325,7 +325,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.render()
     } else if (this.state !== 'notMounted') {
       throw new Error(
-        '[Vitarx.WidgetRenderer.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
+        '[Vitarx.WidgetVNode.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
       )
     }
     // 触发beforeMount生命周期钩子
