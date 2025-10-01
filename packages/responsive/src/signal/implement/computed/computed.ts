@@ -113,7 +113,7 @@ export class Computed<T> implements RefSignal<T> {
    * @returns {T} 计算结果的原始值
    */
   get [SIGNAL_RAW_VALUE_SYMBOL](): T {
-    return this._computedResult
+    return this.value
   }
 
   /**
@@ -126,9 +126,7 @@ export class Computed<T> implements RefSignal<T> {
    */
   get value(): T {
     // 如果尚未初始化，则先初始化
-    if (!this.initialize) {
-      this.init()
-    }
+    this.init()
     // 追踪对value属性的访问
     Depend.track(this, 'value')
     return this._computedResult
