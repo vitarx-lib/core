@@ -86,9 +86,7 @@ export class Computed<T> implements RefSignal<T> {
     this._options = options
 
     // 如果设置了立即计算，则在构造时就初始化
-    if (options.immediate) {
-      this.init()
-    }
+    if (options.immediate) this.init()
   }
 
   /**
@@ -178,6 +176,8 @@ export class Computed<T> implements RefSignal<T> {
     if (this._handler) {
       this._handler.dispose()
       this._handler = undefined
+    } else {
+      this._computedResult = this._getter(undefined)
     }
     return this._computedResult
   }
@@ -234,58 +234,57 @@ export class Computed<T> implements RefSignal<T> {
    * @returns {this} 当前实例，支持链式调用
    */
   init(): this {
-    if (!this._initialize) {
-      // 标记为已初始化
-      this._initialize = true
+    if (this._initialize) return this
+    // 标记为已初始化
+    this._initialize = true
 
-      // 收集依赖并获取初始计算结果
-      const { result, deps } = Depend.collect(() => this._getter(this._computedResult), 'exclusive')
+    // 收集依赖并获取初始计算结果
+    const { result, deps } = Depend.collect(() => this._getter(this._computedResult), 'exclusive')
 
-      // 缓存计算结果
-      this._computedResult = result
+    // 缓存计算结果
+    this._computedResult = result
 
-      // 如果有依赖，则创建订阅处理器
-      if (deps.size > 0) {
-        const handler = () => {
-          // 重新计算结果
-          const newResult = this._getter(this._computedResult)
+    // 如果有依赖，则创建订阅处理器
+    if (deps.size > 0) {
+      const handler = () => {
+        // 重新计算结果
+        const newResult = this._getter(this._computedResult)
 
-          // 只有当结果发生变化时才通知订阅者
-          if (newResult !== this._computedResult) {
-            this._computedResult = newResult
-            SignalManager.notifySubscribers(this, 'value')
-          }
+        // 只有当结果发生变化时才通知订阅者
+        if (newResult !== this._computedResult) {
+          this._computedResult = newResult
+          SignalManager.notifySubscribers(this, 'value')
         }
-        // 创建订阅处理器，使用微任务延迟执行以提高性能
-        this._handler = new Subscriber(
-          this._options.batch === false ? handler : microTaskDebouncedCallback(handler),
-          { scope: this._options.scope }
-        )
+      }
+      // 创建订阅处理器，使用微任务延迟执行以提高性能
+      this._handler = new Subscriber(
+        this._options.batch === false ? handler : microTaskDebouncedCallback(handler),
+        { scope: this._options.scope }
+      )
 
-        // 为每个依赖添加订阅
+      // 为每个依赖添加订阅
+      deps.forEach((props, signal) => {
+        for (const prop of props) {
+          Observer.addSubscriber(signal, prop, this._handler!, {
+            batch: false, // 禁用批处理，确保及时更新
+            autoRemove: false // 不自动移除，由onDispose处理
+          })
+        }
+      })
+
+      // 设置清理函数，在销毁时移除所有订阅
+      this._handler.onDispose(() => {
         deps.forEach((props, signal) => {
           for (const prop of props) {
-            Observer.addSubscriber(signal, prop, this._handler!, {
-              batch: false, // 禁用批处理，确保及时更新
-              autoRemove: false // 不自动移除，由onDispose处理
-            })
+            Observer.removeSubscriber(signal, prop, this._handler!, false)
           }
         })
-
-        // 设置清理函数，在销毁时移除所有订阅
-        this._handler.onDispose(() => {
-          deps.forEach((props, signal) => {
-            for (const prop of props) {
-              Observer.removeSubscriber(signal, prop, this._handler!, false)
-            }
-          })
-          this._handler = undefined
-        })
-      } else {
-        console.warn(
-          '[Computed]：No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
-        )
-      }
+        this._handler = undefined
+      })
+    } else {
+      console.warn(
+        '[Computed]：No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
+      )
     }
     return this
   }
