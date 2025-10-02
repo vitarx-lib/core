@@ -99,17 +99,30 @@ export class VNodeUpdate {
     const changedAttrs: string[] = [] // 发生变化的属性数组
     // 遍历 newAttrs，检查是否有新的属性或属性值需要更新
     for (const key in newAttrs) {
-      // 更新或新增属性
-      if (oldAttrs[key] !== newAttrs[key] || !isDeepEqual(oldAttrs[key], newAttrs[key])) {
-        if (isWidget) {
-          changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
-        } else {
-          DomHelper.setAttribute(el, key, newAttrs[key], oldAttrs[key]) // 设置DOM属性
-        }
-        oldAttrs[key] = newAttrs[key] // 更新旧属性值
-      }
+      const newValue = newAttrs[key]
+      const oldValue = oldAttrs[key]
       // 将存在于新Attrs的键从 keysToDelete 中删除
       keysToDelete.delete(key)
+      // 更新或新增属性
+      if (oldValue !== newValue || !isDeepEqual(oldValue, newValue)) {
+        if (isWidget) {
+          if (
+            key === 'children' && // 检查是否为children属性
+            isVNode(oldValue) && // 检查旧值是否为虚拟节点
+            isVNode(newValue) && // 检查新值是否为虚拟节点
+            oldValue.type === newValue.type && // 比较虚拟节点的类型是否相同
+            oldValue.key === newValue.key // 比较虚拟节点的键是否相同
+          ) {
+            // 直接更新，跳过通知组件children变化，减少重构次数，提升性能
+            this.patchUpdateAttrs(oldValue, newValue)
+            continue
+          }
+          changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
+        } else {
+          DomHelper.setAttribute(el, key, newValue, oldValue) // 设置DOM属性
+        }
+        oldAttrs[key] = newValue // 更新旧属性值
+      }
     }
     // 遍历要删除的键集合，并删除对应的属性
     for (const key of keysToDelete) {
