@@ -58,4 +58,14 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
   protected override propsHandler() {
     return // 直接返回，不执行任何操作
   }
+
+  /**
+   * @inheritDoc
+   */
+  override unmount(root: boolean = true): void {
+    for (const child of this.children) {
+      child.unmount(root)
+    }
+    if (root) this.removeShadowElement()
+  }
 }
