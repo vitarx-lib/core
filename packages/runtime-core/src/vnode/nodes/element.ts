@@ -76,6 +76,19 @@ export class ElementVNode<
   }
 
   /**
+   * @inheritDoc
+   */
+  override unmount(root: boolean = true): void {
+    for (const child of this.children) {
+      child.unmount(false)
+    }
+    if (root) {
+      DomHelper.remove(this.element)
+      this.removeShadowElement()
+    }
+  }
+
+  /**
    * 判断是否为svg节点
    * 该方法用于判断给定的虚拟节点是否属于SVG元素，通过检查节点类型和命名空间
 
