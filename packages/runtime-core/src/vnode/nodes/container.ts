@@ -70,19 +70,6 @@ export abstract class ContainerVNode<
   }
 
   /**
-   * @inheritDoc
-   */
-  override unmount(root: boolean = true): void {
-    for (const child of this.children) {
-      child.unmount(false)
-    }
-    if (root) {
-      DomHelper.remove(this.element)
-      this.removeShadowElement()
-    }
-  }
-
-  /**
    * 渲染子节点的函数
    */
   protected renderChildren(): void {
