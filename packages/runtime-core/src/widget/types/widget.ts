@@ -1,5 +1,5 @@
 import { VNode, type WidgetType } from '../../vnode/index.js'
-import type { __WIDGET_INTRINSIC_KEYWORDS__, SIMPLE_FUNCTION_WIDGET_SYMBOL } from '../constant.js'
+import type { ExcludeWidgetIntrinsicKeywords, SIMPLE_FUNCTION_WIDGET_SYMBOL } from '../constant.js'
 import { Widget } from '../widget.js'
 
 /**
@@ -96,28 +96,18 @@ export type TSWidget<T extends WidgetType> = TsFunctionWidget<
 >
 
 /**
- * 排除小部件内部关键字类型工具
- *
- * 此工具会排除实例中的固有属性和方法，只保留用户定义的属性。
- */
-export type ExcludeWidgetIntrinsicKeywords<T extends Widget> = {
-  [K in Exclude<keyof T, (typeof __WIDGET_INTRINSIC_KEYWORDS__)[number]>]: T[K]
-}
-
-/**
  * 引用小部件类型
  *
- * 此工具会排除实例中的固有属性和方法，只保留小部件自定义属性和方法。
+ * 此工具会排除实例中的固有方法。
  *
  * @example
  * ```ts
  * class Test extends Widget {
  *   name = 'Test'
  * }
- * const refTest = refEl<ImpostWidget<Test>>()!
- * refTest.value.name // ✅ TS 语法校验通过！
- * refTest.value.$vnode() // ❌ TS 语法校验不通过！
- * refTest.value.onMount() // ❌ TS 语法校验不通过！
+ * const refTest:ImpostWidget<Test> = {} as any
+ * refTest.name // ✅ TS 语法校验通过！
+ * refTest.onMount() // ❌ TS 语法校验不通过！
  * ```
  */
 export type ImpostWidget<T extends Widget> = ExcludeWidgetIntrinsicKeywords<T>
