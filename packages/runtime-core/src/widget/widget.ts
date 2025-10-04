@@ -94,7 +94,7 @@ export abstract class Widget<
    * @returns {Readonly<InputProps & Props>}
    */
   get props(): Readonly<MergeProps<InputProps, DefaultProps>> {
-    return this.#props as MergeProps<InputProps, DefaultProps>
+    return this.#props as unknown as MergeProps<InputProps, DefaultProps>
   }
 
   /**
