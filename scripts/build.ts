@@ -23,6 +23,48 @@ const log = {
 }
 
 /**
+ * 使用 madge 检查指定目录下的 TypeScript 文件是否存在循环依赖。
+ * 如果发现循环依赖，则记录错误并退出进程。
+ * @param distPath 要检查的目录路径，例如 './dist'。
+ */
+async function checkForCircularDependencies(distPath: string): Promise<void> {
+  log.warn(`\nChecking for circular dependencies in ${distPath}...`)
+  // 构建命令
+  const command = `madge --extensions js --circular ${distPath} --warning --exclude '.*\\.d\\.ts$'`
+
+  try {
+    // 执行命令
+    // 注意：madge 在发现循环依赖时，会将信息输出到 stdout，但退出码为 1
+    const { stdout } = await execAsync(command)
+
+    // 如果命令成功执行（退出码为0），说明没有循环依赖
+    if (stdout) {
+      // madge 在没有循环依赖时通常不输出任何内容，但以防万一
+      log.success('Circular dependency check passed.')
+      log.success(`Madge output: ${stdout.trim()}`)
+    }
+  } catch (error: any) {
+    // execAsync 在命令返回非零退出码时会抛出错误
+    // 我们需要检查错误对象，它通常包含 stdout, stderr 和 code 属性
+
+    // madge 在发现循环依赖时，会将路径信息输出到 stdout
+    if (error.stdout) {
+      const circularPaths = error.stdout.trim()
+      log.error(`Circular dependencies detected:\n${circularPaths}`)
+      // 在这里，你可以选择更详细的日志记录，或者发送通知等
+    } else {
+      // 如果是其他类型的错误（例如 madge 未安装）
+      log.error(`An error occurred while running madge: ${error.message}`)
+      if (error.stderr) {
+        log.error(`Stderr: ${error.stderr}`)
+      }
+    }
+    // logger.error 已经记录了，这里直接退出
+    process.exit(1)
+  }
+}
+
+/**
  * 清理指定的目录
  * @param dist - 需要清理的目录路径
  */
@@ -163,6 +205,7 @@ async function buildPackage(
   }
   await build(mergeConfig(defaultConfig, pkg.vite || {}))
   log.success(`✓ Bundle ${packageDirName} compilation completed`)
+  await checkForCircularDependencies(dist)
   log.info(separator + '\n')
 }
 
