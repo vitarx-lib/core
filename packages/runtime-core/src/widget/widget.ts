@@ -2,6 +2,7 @@ import { EffectScope } from '@vitarx/responsive'
 import { getCurrentVNode } from '../vnode/context.js'
 import {
   type AnyElement,
+  type MergeProps,
   type RuntimeElement,
   type VNode,
   type WidgetVNode
@@ -56,7 +57,7 @@ type WidgetChildren<P> = P extends { children: infer U }
  */
 export abstract class Widget<
   InputProps extends Record<string, any> = {},
-  Props extends InputProps = InputProps
+  DefaultProps extends InputProps = InputProps
 > {
   /**
    * 类小部件标识符符
@@ -92,8 +93,8 @@ export abstract class Widget<
    * 获取小部件的属性
    * @returns {Readonly<InputProps & Props>}
    */
-  get props(): Readonly<InputProps & Props> {
-    return this.#props as InputProps & Props
+  get props(): Readonly<MergeProps<InputProps, DefaultProps>> {
+    return this.#props as MergeProps<InputProps, DefaultProps>
   }
 
   /**
