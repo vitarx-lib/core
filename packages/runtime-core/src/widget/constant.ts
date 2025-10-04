@@ -40,7 +40,7 @@ export const __WIDGET_INTRINSIC_KEYWORDS__ = [
  * 简单函数组件的标识符
  */
 export const SIMPLE_FUNCTION_WIDGET_SYMBOL = Symbol('SIMPLE_FUNCTION_WIDGET_SYMBOL')
-/** 排除生命周期方法和保留属性 */
+/** 排除保留方法 */
 export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
   T,
   (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
