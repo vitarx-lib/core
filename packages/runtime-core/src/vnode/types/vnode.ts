@@ -71,10 +71,11 @@ export type VNodeInstance<T extends VNodeType> = T extends FragmentNodeElementNa
 /**
  * 合并Props类型
  *
- * @param T - 可选的属性对象，也就是组件可接收的属性类型
- * @param D - 必填的属性对象，也就是组件的默认属性类型
+ * @param Input - 可选的属性对象，也就是组件可接收的属性类型
+ * @param Default - 必填的属性对象，也就是组件的默认属性类型
  */
-export type MergeProps<T extends {}, D extends {}> = D &
-  Omit<T, keyof D> & {
-    [P in Extract<keyof D, keyof T>]-?: Exclude<T[P], undefined> // 强制指定的属性 K 为必填
-  }
+export type MergeProps<Input extends {}, Default extends {}> = Omit<Input, keyof Default> & {
+  [P in Extract<keyof Default, keyof Input>]-?: Default[P] extends Exclude<Input[P], undefined>
+    ? Exclude<Input[P], undefined>
+    : Exclude<Input[P], undefined> | Default[P] // 强制指定的属性 K 为必填
+} & Omit<Default, keyof Input>
