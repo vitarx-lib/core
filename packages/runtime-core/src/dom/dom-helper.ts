@@ -379,7 +379,6 @@ export class DomHelper {
     if (anchor instanceof DocumentFragment) {
       const el = this.getFirstChildElement(anchor)
       parent.insertBefore(child, el)
-      this.remove(anchor)
     } else {
       parent.insertBefore(child, anchor)
     }
