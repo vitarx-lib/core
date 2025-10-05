@@ -293,6 +293,10 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (this.state !== 'notRendered') {
       return this.child.element as RuntimeElement<T>
     }
+    // 触发beforeMount生命周期钩子
+    const parent = this.triggerLifecycleHook(LifecycleHooks.beforeMount)
+    // 设置传送目标
+    if (parent) this.setTeleport(parent)
     let el: AnyElement
     try {
       // 尝试获取子组件的DOM元素
@@ -328,10 +332,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
         '[Vitarx.WidgetVNode.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
       )
     }
-    // 触发beforeMount生命周期钩子
-    const parent = this.triggerLifecycleHook(LifecycleHooks.beforeMount)
-    // 设置传送目标
-    if (parent) this.setTeleport(parent)
     // 如果指定了容器，则将影子元素挂载到容器
     if (container && this.teleport) {
       DomHelper.appendChild(container, this.shadowElement)
