@@ -102,6 +102,7 @@ describe('ElementVNode 测试套件', () => {
 
     it('应该兼容props.children设置为0', () => {
       const vnode = new ElementVNode('div', { children: 0 })
+      vnode.mount()
       expect(vnode.element.textContent).toBe('0')
     })
   })
