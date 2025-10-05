@@ -95,6 +95,9 @@ export abstract class ContainerVNode<
    * @param nodes - 新的虚拟节点(VNode)数组，用于替换当前的子节点
    */
   replaceChildren(nodes: VNode[]) {
+    if (!Array.isArray(nodes)) {
+      throw new Error('[Vitarx.ContainerVNode][ERROR]：Children must be an array.')
+    }
     // 将传入的节点数组赋值给实例的私有属性 children
     this.#children = nodes
   }
