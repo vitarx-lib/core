@@ -68,9 +68,7 @@ export class VNodeUpdate {
       // 如果是容器节点，则更新其子节点
       if (isContainerVNode(oldVNode)) {
         // 递归更新子节点并获取更新后的子节点列表
-        const newChildren = this.patchUpdateChildren(oldVNode, newVNode as ContainerVNode)
-        // 更新当前节点的子节点列表
-        oldVNode.replaceChildren(newChildren)
+        this.patchUpdateChildren(oldVNode, newVNode as ContainerVNode)
       }
     }
     return oldVNode
@@ -115,6 +113,10 @@ export class VNodeUpdate {
           ) {
             // 直接更新，跳过通知组件children变化，减少重构次数，提升性能
             this.patchUpdateAttrs(oldValue, newValue)
+            if (isContainerVNode(oldValue)) {
+              // 递归更新子节点并获取更新后的子节点列表
+              this.patchUpdateChildren(oldValue, newValue as ContainerVNode)
+            }
             continue
           }
           changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
@@ -258,7 +260,7 @@ export class VNodeUpdate {
    * @param newVNode - 新的虚拟节点
    * @param oldVNode - 旧的虚拟节点
    * @param [autoMount=true] - 自动触发挂载钩子
-   * @protected
+   * @return {VNode} 替换后的虚拟节点
    */
   static replace(newVNode: VNode, oldVNode: VNode, autoMount: boolean = true): VNode {
     // 预先渲染节点
