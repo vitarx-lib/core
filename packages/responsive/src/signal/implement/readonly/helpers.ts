@@ -2,9 +2,6 @@ import { AnyObject, DeepReadonly } from '@vitarx/utils'
 import { ReadonlyHandler } from './readonly.js'
 import { ReadonlyOptions } from './types.js'
 
-/** 只读对象标识 */
-export const READONLY_OBJECT_SYMBOL = Symbol('READONLY_OBJECT_SYMBOL')
-
 /**
  * ## 深度只读对象
  *
@@ -67,29 +64,4 @@ export function shallowReadonly<T extends AnyObject>(
   options?: Omit<ReadonlyOptions, 'deep'>
 ): Readonly<T> {
   return ReadonlyHandler.create(target, { ...options, deep: false })
-}
-
-/**
- * ## 判断是否为只读对象
- *
- * 检查一个值是否是通过 `readonly()` 或 `shallowReadonly()` 创建的只读代理对象。
- * 注意：此函数仅检查对象是否为只读代理，不能用于判断对象是否为响应式对象。
- *
- * @template T - 要检查的对象类型
- * @param {T} obj - 要检查的对象
- * @returns {boolean} 如果对象是只读代理则返回true，否则返回false
- * @example
- * ```typescript
- * const original = { count: 0 }
- * const readonlyObj = readonly(original)
- * const shallowReadonlyObj = shallowReadonly(original)
- *
- * isReadonly(readonlyObj) // true
- * isReadonly(shallowReadonlyObj) // true
- * isReadonly(original) // false
- * isReadonly(null) // false
- * ```
- */
-export function isReadonly(obj: any): boolean {
-  return obj?.[READONLY_OBJECT_SYMBOL] === true
 }

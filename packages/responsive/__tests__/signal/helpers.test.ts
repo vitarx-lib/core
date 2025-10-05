@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { computed, isReadonly, reactive, readonly, ref, shallowReadonly, toRaw } from '../../src'
+import { computed, reactive, readonly, ref, shallowReadonly, toRaw } from '../../src'
+import { isReadonly } from '../../src/index.js'
 
 describe('readonly', () => {
   it('应创建一个深度只读对象', () => {

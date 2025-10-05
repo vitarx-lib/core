@@ -1,7 +1,6 @@
 import { getContext, runInContext } from '../context/index.js'
 import type { EffectCallbackErrorHandler, EffectInterface } from './effect-interface.js'
-import { Effect } from './effect.js'
-import { isEffect } from './helpers.js'
+import { Effect, isEffect } from './effect.js'
 
 /**
  * 作用域配置项接口，用于配置EffectScope实例的行为
