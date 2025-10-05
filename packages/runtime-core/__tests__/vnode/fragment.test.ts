@@ -23,9 +23,9 @@ describe('片段节点测试套件', () => {
         createElement('div'),
         createElement('span')
       ) as unknown as FragmentVNode
-      const el = node.element
-      expect(node.children[0].element.parentNode).toBe(el)
-      expect(node.children[1].element.parentNode).toBe(el)
+      node.mount()
+      expect(node.children[0].element.parentNode).toBe(node.element)
+      expect(node.children[1].element.parentNode).toBe(node.element)
     })
   })
   describe('片段节点的更新', () => {

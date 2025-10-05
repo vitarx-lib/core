@@ -134,76 +134,61 @@ export class VNodeUpdate {
   }
 
   /**
-   * 更新子节点的核心方法
-   * @param oldVNode - 旧的虚拟DOM节点
-   * @param newVNode - 新的虚拟DOM节点
-   * @returns {VNode[]} 更新后的子节点数组
+   * 更新容器子节点（精简优化版）
+   * @param oldVNode - 旧的容器虚拟节点
+   * @param newVNode - 新的容器虚拟节点
    */
   static patchUpdateChildren<T extends ContainerVNode>(oldVNode: T, newVNode: T): VNode[] {
-    const oldChildren = oldVNode.children // 旧子节点列表
-    const newChildren = newVNode.children // 新子节点列表
+    const oldChildren = oldVNode.children
+    const newChildren = newVNode.children
+    const parentEl = oldVNode.element
 
-    // 处理边缘情况：新增全部子节点
-    if (newChildren.length && !oldChildren.length) {
-      newChildren.forEach(child => {
-        child.mount(oldVNode.element) // 挂载所有新子节点
-      })
-      return newChildren // 返回新子节点列表
+    // === 边界情况 ===
+    if (!oldChildren.length) {
+      newChildren.forEach(c => c.mount(parentEl))
+      return newChildren
     }
-    // 删除全部子节点
-    if (!newChildren.length && oldChildren.length) {
-      oldChildren.forEach(child => {
-        child.unmount()
-      })
-      return newChildren // 返回空的新子节点列表
+    if (!newChildren.length) {
+      oldChildren.forEach(c => c.unmount())
+      return []
     }
 
-    // 创建旧节点的key映射表，用于快速查找具有相同key的节点
-    const oldKeyToVNode = this.#createOldKeyToVNodeMap(oldChildren)
-
-    // 被删除的节点集合
-    const removedNodes = new Set(oldVNode.children)
-    // 根据新列表长度开始遍历
-    for (let index = 0; index < newChildren.length; index++) {
-      // 旧子节点，可能没有旧子节点
-      const oldChild = oldVNode.children[index] as VNode | undefined
-      // 新子节点
-      const newChild = newVNode.children[index]
-      const oldSameKeyChild = oldKeyToVNode.get(newChild.key)
-      // 复用相同key节点
-      if (oldSameKeyChild && oldSameKeyChild.vnode.type === newChild.type) {
-        // 避免复用节点被卸载
-        removedNodes.delete(oldSameKeyChild.vnode)
-        // 删除映射，一个key只对应一个节点，避免重复的key造成遗漏节点
-        oldKeyToVNode.delete(newChild.key)
-        // 替换到新节点列表中，保持顺序
-        newChildren[index] = oldSameKeyChild.vnode
-        // 把新节点属性，更新到旧节点之上
-        this.patchUpdateAttrs(oldSameKeyChild.vnode, newChild)
-        continue
-      }
-      // 处理新增 / 替换
-      if (oldChild) {
-        // 替换节点
-        const updatedNewChild = this.patchUpdate(oldChild, newChild, false)
-        // 复用了旧节点，将旧节点替换到新节点列表中
-        if (updatedNewChild === oldChild) {
-          newChildren[index] = oldChild
-          removedNodes.delete(oldChild)
-        }
-      }
-    }
-
-    // 卸载所有被删除的节点
-    removedNodes.forEach(vnode => vnode.unmount())
-    // 重新遍历节点列表，重新进行挂载
-    newChildren.forEach(vnode => {
-      if (isWidgetVNode(vnode) && vnode.state !== 'notMounted') {
-        DomHelper.appendChild(oldVNode.element, vnode.element)
-      } else {
-        vnode.mount(oldVNode.element, 'appendChild')
+    // === 构建 key → vnode 映射（用于复用） ===
+    const keyed = new Map<any, { vnode: VNode; index: number }>()
+    oldChildren.forEach((c, i) => {
+      if (c.key || c.key === 0) {
+        keyed.set(c.key, { vnode: c, index: i })
       }
     })
+
+    // === 主循环：依次处理新子节点 ===
+    for (let i = 0; i < newChildren.length; i++) {
+      const newChild = newChildren[i]
+      const oldChild = oldChildren[i]
+      const match = keyed.get(newChild.key)
+
+      // --- 复用相同 key 节点 ---
+      if (match && match.vnode.type === newChild.type) {
+        const reused = match.vnode
+        this.patchUpdateAttrs(reused, newChild)
+        newChildren[i] = reused
+        keyed.delete(newChild.key)
+        continue
+      }
+
+      // --- 更新或替换节点 ---
+      if (oldChild) {
+        const updated = this.patchUpdate(oldChild, newChild)
+        if (updated === oldChild) {
+          newChildren[i] = oldChild
+        }
+        continue
+      }
+
+      // --- 新增节点 ---
+      const anchor = oldChildren[i + 1]?.element
+      newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
+    }
     return newChildren
   }
 
@@ -225,24 +210,12 @@ export class VNodeUpdate {
       oldVNode.unmount()
       // 挂载新节点
       newVNode.mount(shadowElement, 'replace')
+    } else {
+      const newElement = newVNode.teleport ? newVNode.shadowElement : newVNode.element
+      // 新节点的占位元素替换旧节点占位元素
+      DomHelper.replace(newElement, shadowElement)
     }
-    return newVNode
-  }
 
-  /**
-   * 创建旧节点的key映射表
-   *
-   * @param oldChildren - 旧子节点列表
-   * @returns - key到节点的映射表
-   */
-  static #createOldKeyToVNodeMap(oldChildren: VNode[]): Map<any, { index: number; vnode: VNode }> {
-    const oldKeyToVNode = new Map<any, { index: number; vnode: VNode }>()
-    for (let i = 0; i < oldChildren.length; i++) {
-      const child = oldChildren[i]
-      if (child.key || child.key === 0) {
-        oldKeyToVNode.set(child.key, { index: i, vnode: child })
-      }
-    }
-    return oldKeyToVNode
+    return newVNode
   }
 }
