@@ -43,16 +43,15 @@ export class VNodeUpdate {
    * 用于更新虚拟DOM节点的patch方法
    * @param oldVNode - 旧的虚拟DOM节点
    * @param newVNode - 新的虚拟DOM节点
-   * @param autoMount - 是否自动挂载，默认为true
    * @returns {VNode} 更新后的虚拟DOM节点
    */
-  static patchUpdate(oldVNode: VNode, newVNode: VNode, autoMount = true): VNode {
+  static patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
     // 如果两个节点相同，则返回旧节点
     if (oldVNode === newVNode) return oldVNode
     // 如果新旧节点的类型或key不同，则替换整个节点
     if (oldVNode.type !== newVNode.type || oldVNode.key !== newVNode.key) {
       // 替换旧节点为新节点
-      this.replace(newVNode, oldVNode, autoMount)
+      this.replace(newVNode, oldVNode)
       return newVNode
     } else if (!oldVNode.isStatic) {
       // 更新节点的属性
@@ -197,25 +196,17 @@ export class VNodeUpdate {
    *
    * @param newVNode - 新的虚拟节点
    * @param oldVNode - 旧的虚拟节点
-   * @param [autoMount=true] - 自动触发挂载钩子
    * @return {VNode} 替换后的虚拟节点
    */
-  static replace(newVNode: VNode, oldVNode: VNode, autoMount: boolean = true): VNode {
+  static replace(newVNode: VNode, oldVNode: VNode): VNode {
     const oldElement = oldVNode.teleport ? oldVNode.shadowElement : oldVNode.element
     const shadowElement = document.createTextNode('')
     // 插入影子元素到旧节点之前，兼容卸载动画
     DomHelper.insertBefore(shadowElement, oldElement)
-    if (autoMount) {
-      // 卸载旧节点
-      oldVNode.unmount()
-      // 挂载新节点
-      newVNode.mount(shadowElement, 'replace')
-    } else {
-      const newElement = newVNode.teleport ? newVNode.shadowElement : newVNode.element
-      // 新节点的占位元素替换旧节点占位元素
-      DomHelper.replace(newElement, shadowElement)
-    }
-
+    // 卸载旧节点
+    oldVNode.unmount()
+    // 挂载新节点
+    newVNode.mount(shadowElement, 'replace')
     return newVNode
   }
 }
