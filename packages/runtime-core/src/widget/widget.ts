@@ -161,7 +161,10 @@ export abstract class Widget<
   onCreate?(): void
 
   /**
-   * 挂载渲染完成之后，元素挂载之前被调用。
+   * 在组件被挂载之前调用。
+   *
+   * 在此钩子被调用时，还没有创建真实DOM元素，因此不能访问DOM元素，
+   * 此时访问实例中的$el属性会导致无限循环！
    *
    * @example
    * ```ts
@@ -369,6 +372,8 @@ export abstract class Widget<
    * 服务端预取钩子
    *
    * 在服务端渲染期间获取数据
+   *
+   * 此钩子功能暂未实现
    *
    * @returns {Promise<void>} - Promise解析后继续服务端渲染流程
    */
