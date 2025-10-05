@@ -477,11 +477,19 @@ export class DomHelper {
    *
    * @param container - 容器，可以是所有继承了ParentNode的元素实例
    * @param el - 要挂载的元素
-   * @returns 无返回值
+   * @returns {void} 无返回值
    */
   static appendChild(container: ParentNode, el: RuntimeElement): void {
     if (el instanceof DocumentFragment) {
       el = this.recoveryFragmentChildNodes(el)
+    }
+    // 如果父元素是一个片段节点元素，则判断其是否已挂载，如果已挂载则插入元素到片段节点最后一个元素之后
+    if (container instanceof DocumentFragment && '$vnode' in el) {
+      const lastChildElement = this.getLastChildElement(container as RuntimeElement)
+      if (lastChildElement?.parentNode) {
+        this.insertAfter(el, lastChildElement)
+        return
+      }
     }
     container.appendChild(el)
   }
