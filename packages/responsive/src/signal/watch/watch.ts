@@ -240,11 +240,11 @@ export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
  * 可以同时监听多个属性，当任意属性发生变化时触发回调。
  *
  * @template T 目标对象类型，必须是一个对象类型
- * @template PROPS 属性列表类型，可以是单个属性、属性数组或Set集合
+ * @template P 属性列表类型，可以是单个属性、属性数组或Set集合
  * @template CB 回调函数类型，默认为WatchPropertyCallback<T>
  *
  * @param {T} signal - 目标对象，被监听的信号源
- * @param {PROPS} properties - 属性列表，指定要监听的属性，集合类型只能监听size
+ * @param {P} properties - 属性列表，指定要监听的属性，集合类型只能监听size
  *   - 可以是单个属性名
  *   - 可以是属性名数组
  *   - 可以是属性名Set集合
@@ -278,23 +278,17 @@ export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
  */
 export function watchProperty<
   T extends AnyObject,
-  PROPS extends Array<CanWatchProperty<T>> | Set<CanWatchProperty<T>> | CanWatchProperty<T>,
-  CB extends AnyCallback = WatchPropertyCallback<T>
->(
-  signal: T,
-  properties: PROPS,
-  callback: CB,
-  options?: Omit<WatchOptions, 'clone'>
-): Subscriber<CB> {
+  P extends Array<CanWatchProperty<T>> | Set<CanWatchProperty<T>> | CanWatchProperty<T>,
+  CB extends AnyCallback = WatchPropertyCallback<T, P>
+>(signal: T, properties: P, callback: CB, options?: Omit<WatchOptions, 'clone'>): Subscriber<CB> {
   const { immediate = false, ...subscriptionOptions } = options ?? {}
   let props = properties as Array<keyof T>
   if (typeof properties === 'string') {
-    props = [properties as any]
+    props = [properties as keyof T]
   }
   const subscriber = Observer.subscribeProperties(signal, props, callback, subscriptionOptions)
   if (immediate) {
-    // @ts-ignore
-    subscriber.trigger(Array.from(props), signal)
+    ;(subscriber.trigger as AnyCallback)(Array.from(props), signal)
   }
   return subscriber
 }

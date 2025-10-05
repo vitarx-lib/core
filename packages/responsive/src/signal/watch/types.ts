@@ -71,11 +71,11 @@ export type WatchCallback<T> = (
   oldValue: SignalToRaw<T>,
   onCleanup: (handler: VoidCallback) => void
 ) => void
-
 /**
  * 监听属性变化的回调函数
  *
  * @template T 信号对象类型
+ * @template P 监听的属性
  * @param {CanWatchProperty<T>[]} props 变化的属性列表，根据不同信号类型会有不同的可监听属性
  * @param {T} signal 监听的信号对象，即原始被监听的对象
  * @returns {void}
@@ -86,4 +86,7 @@ export type WatchCallback<T> = (
  *   console.log('信号源:', signal);
  * }
  */
-export type WatchPropertyCallback<T> = (props: CanWatchProperty<T>[], signal: T) => void
+export type WatchPropertyCallback<T, P> = (
+  props: P extends Set<infer U> ? Array<U> : P extends Array<any> ? P : [P],
+  signal: T
+) => void
