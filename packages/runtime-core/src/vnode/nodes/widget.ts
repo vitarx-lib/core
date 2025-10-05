@@ -29,7 +29,13 @@ import { getCurrentVNode, runInNodeContext } from '../context.js'
 import { isVNode, isWidgetVNode } from '../guards.js'
 import { proxyWidgetProps } from '../props.js'
 import { isRefEl } from '../ref.js'
-import type { AnyElement, RuntimeElement, VNodeProps, WidgetType } from '../types/index.js'
+import type {
+  AnyElement,
+  MountType,
+  RuntimeElement,
+  VNodeProps,
+  WidgetType
+} from '../types/index.js'
 import { CommentVNode } from './comment.js'
 import { VNode } from './vnode.js'
 
@@ -152,16 +158,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     }
     // 返回已构建的子节点
     return this.#child
-  }
-
-  /**
-   * 获取当前实例的子元素
-   *
-   * @returns {AnyElement} 返回子元素对象
-   * @note 该方法会返回 this.instance.$child.element 的值
-   */
-  override get element(): RuntimeElement<T> {
-    return this.render()
   }
 
   /**
@@ -300,7 +296,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     let el: AnyElement
     try {
       // 尝试获取子组件的DOM元素
-      el = this.child.element
+      el = this.child.render()
     } catch (e) {
       // 触发onError生命周期
       const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
@@ -311,7 +307,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.#child = VNode.is(errVNode)
         ? errVNode
         : new CommentVNode(`${VNode.name} Widget render fail`)
-      el = this.#child.element
+      el = this.#child.render()
     }
     // 更新组件状态为未挂载
     this.#state = 'notMounted'
@@ -319,32 +315,45 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
   /**
    * 挂载组件到指定容器
-   * @param container - 可以是HTMLElement、SVGElement或FragmentElement类型的容器元素
+   * @param [target] - 挂载目标，任意 DOM.Element 对象
+   * @param [type] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    * @returns {this} 返回组件实例this，以便链式调用
    * @throws {Error} 如果组件非未挂载状态，则会抛出错误
    */
-  override mount(container?: ParentNode): this {
-    // 检查组件状态
+  override mount(target?: Node, type: MountType = 'appendChild'): this {
     if (this.state === 'notRendered') {
       this.render()
-    } else if (this.state !== 'notMounted') {
-      throw new Error(
-        '[Vitarx.WidgetVNode.mount]：The component is not in the state of waiting to be mounted and cannot be mounted!'
-      )
     }
-    // 如果指定了容器，则将影子元素挂载到容器
-    if (container && this.teleport) {
-      DomHelper.appendChild(container, this.shadowElement)
+    if (this.teleport) {
+      if (target) {
+        // 插入影子元素
+        switch (type) {
+          case 'insertBefore':
+            DomHelper.insertBefore(this.shadowElement, target)
+            break
+          case 'insertAfter':
+            DomHelper.insertAfter(this.shadowElement, target)
+            break
+          case 'replace':
+            DomHelper.replace(this.shadowElement, target)
+            break
+          default:
+            DomHelper.appendChild(target, this.shadowElement)
+        }
+      }
+      this.child.mount(this.teleport, 'appendChild')
+    } else {
+      this.child.mount(target, type)
     }
-    // 子节点挂载，挂载到传送目标/容器
-    this.child.mount(this.teleport || container)
-    // 更新状态并触发生命周期
-    this.#state = 'activated'
-    this.triggerLifecycleHook(LifecycleHooks.mounted)
-    this.triggerLifecycleHook(LifecycleHooks.activated)
-
+    if (this.state === 'notMounted') {
+      // 更新状态并触发生命周期
+      this.#state = 'activated'
+      this.triggerLifecycleHook(LifecycleHooks.mounted)
+      this.triggerLifecycleHook(LifecycleHooks.activated)
+    }
     return this
   }
+
   /**
    * 触发生命周期钩子
    *

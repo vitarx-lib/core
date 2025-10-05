@@ -4,9 +4,9 @@ import { DomHelper } from '../../dom/index.js'
 import { isContainerVNode } from '../guards.js'
 import type {
   Child,
-  FragmentElement,
   FragmentNodeElementName,
   IntrinsicNodeElementName,
+  MountType,
   UniqueKey,
   VNodeProps
 } from '../types/index.js'
@@ -53,19 +53,32 @@ export abstract class ContainerVNode<
   /**
    * @inheritDoc
    */
-  override mount(container?: ParentNode | FragmentElement): void {
+  override mount(target?: Node, type?: MountType): void {
     // 获取片段节点元素
-    const element = this.element
-    const parent = this.teleport || container
-    if (parent) {
-      // 添加元素到容器中
-      DomHelper.appendChild(parent, element)
-      // 如果指定了容器，则将影子元素添加到容器中
-      if (this.teleport && container) DomHelper.appendChild(container, this.shadowElement)
+    let element = this.element as Node
+    if (this.teleport) {
+      // 挂载到传送节点
+      DomHelper.appendChild(this.teleport, element)
+      element = this.shadowElement
     }
+    if (target) {
+      switch (type) {
+        case 'insertBefore':
+          DomHelper.insertBefore(element, target)
+          break
+        case 'insertAfter':
+          DomHelper.insertAfter(element, target)
+          break
+        case 'replace':
+          DomHelper.replace(element, target)
+          break
+        default:
+          DomHelper.appendChild(target, element)
+      }
+    }
+    // 遍历挂载所有子节点
     for (const child of this.children) {
-      // 遍历所有子节点，挂载所有子节点
-      child.mount()
+      child.mount(this.element, 'appendChild')
     }
   }
 
@@ -76,16 +89,9 @@ export abstract class ContainerVNode<
     const currentEl = this.element
     // 检查是否存在子节点并且目标元素具有children属性
     if (this.children.length && 'children' in currentEl) {
-      // 遍历所有子节点
+      // 渲染所有子节点
       for (const child of this.children) {
-        const childEl = child.element // 获取当前子节点的DOM元素
-        // 如果子节点有teleport属性，则追加影子元素记录位置 否则直接附加到当前节点的元素上
-        if (child.teleport) {
-          DomHelper.appendChild(currentEl, child.shadowElement)
-          DomHelper.appendChild(child.teleport, childEl)
-        } else {
-          DomHelper.appendChild(currentEl, childEl)
-        }
+        child.render()
       }
     }
   }

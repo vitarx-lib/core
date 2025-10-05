@@ -145,12 +145,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     if (newVNode.state === 'deactivated') {
       newVNode.activate()
     } else {
-      // 替换元素
-      DomHelper.replace(
-        newVNode.teleport ? newVNode.shadowElement : newVNode.element,
-        placeholderElement!
-      )
-      newVNode.mount()
+      newVNode.mount(placeholderElement!, 'replace')
     }
 
     return newVNode

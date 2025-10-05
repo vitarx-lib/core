@@ -370,13 +370,13 @@ export class DomHelper {
    * @returns {ParentNode} - 父节点元素
    * @throws {Error} - 如果锚点节点没有父节点，则抛出错误
    */
-  static insertBefore(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
+  static insertBefore(child: Node, anchor: Node): ParentNode {
     const parent = this.getParentElement(anchor)
     if (!parent) throw new Error('The anchor element does not have a parent node')
-    if (child instanceof DocumentFragment) {
-      child = this.recoveryFragmentChildNodes(child)
-    }
-    if (anchor instanceof DocumentFragment) {
+    // 兼容Fragment
+    child = this.recoveryFragmentChildNodes(child)
+    // 如果锚点元素是Fragment，则插入到第一个子元素
+    if (this.isFragmentElement(anchor)) {
       const el = this.getFirstChildElement(anchor)
       parent.insertBefore(child, el)
     } else {
@@ -392,13 +392,11 @@ export class DomHelper {
    * @param anchor - 锚点节点
    * @returns {ParentNode} - 父节点元素
    */
-  static insertAfter(child: RuntimeElement, anchor: RuntimeElement): ParentNode {
+  static insertAfter(child: Node, anchor: Node): ParentNode {
     const parent = this.getParentElement(anchor)
     if (!parent) throw new Error('The anchor element does not have a parent node')
-    if (child instanceof DocumentFragment) {
-      child = this.recoveryFragmentChildNodes(child)
-    }
-    if (anchor instanceof DocumentFragment) {
+    child = this.recoveryFragmentChildNodes(child)
+    if (this.isFragmentElement(anchor)) {
       anchor = this.getLastChildElement(anchor)!
     }
     const next = anchor.nextSibling
@@ -411,13 +409,13 @@ export class DomHelper {
   }
 
   /**
-   * 获取虚拟节点的父级真实DOM元素
+   * 获取元素的父级元素
    *
-   * @param {RuntimeElement} target - 目标元素
-   * @returns {RuntimeElement | null} 返回父级真实DOM元素，如果不存在则返回null
+   * @param {Node} target - 目标元素
+   * @returns {Node | null} 返回父级真实DOM元素，如果不存在则返回null
    */
-  static getParentElement(target: RuntimeElement): ParentNode | null {
-    if (target instanceof DocumentFragment) {
+  static getParentElement(target: Node): ParentNode | null {
+    if (this.isFragmentElement(target)) {
       return this.getFirstChildElement(target)?.parentNode ?? null
     }
     return target?.parentNode ?? null
@@ -426,20 +424,20 @@ export class DomHelper {
   /**
    * 获取元素的第一个子元素
    *
-   * @param {RuntimeElement} target - 目标元素
-   * @returns {RuntimeElement | null} 返回第一个子元素，如果不存在则返回null
+   * @param {Node} target - 目标元素
+   * @returns {Node | null} 返回第一个子元素，如果不存在则返回null
    */
-  static getFirstChildElement(target: RuntimeElement): RuntimeElement | null {
+  static getFirstChildElement(target: Node): Node | null {
     return this.getChild(target, 'first')
   }
 
   /**
    * 获取元素的最后一个子元素
    *
-   * @param {RuntimeElement} target - 目标元素
-   * @returns {RuntimeElement | null} 返回最后一个子元素，如果不存在则返回null
+   * @param {Node} target - 目标元素
+   * @returns {Node | null} 返回最后一个子元素，如果不存在则返回null
    */
-  static getLastChildElement(target: RuntimeElement): RuntimeElement | null {
+  static getLastChildElement(target: Node): Node | null {
     return this.getChild(target, 'last')
   }
 
@@ -454,13 +452,11 @@ export class DomHelper {
    * @throws {Error} 如果旧元素是DocumentFragment且没有子元素，则抛出错误
    * @throws {Error} 如果要被替换的元素没有父节点，则抛出错误
    */
-  static replace(newEl: RuntimeElement, oldEl: RuntimeElement): void {
-    if (newEl instanceof DocumentFragment) {
-      newEl = this.recoveryFragmentChildNodes(newEl)
-    }
-    if (oldEl instanceof DocumentFragment) {
+  static replace(newEl: Node, oldEl: Node): void {
+    newEl = this.recoveryFragmentChildNodes(newEl)
+    if (this.isFragmentElement(oldEl)) {
       const oldFirstEl = this.getFirstChildElement(oldEl)
-      if (!oldFirstEl) throw new Error('empty fragment')
+      if (!oldFirstEl) throw new Error('empty fragment elements cannot be replaced')
       // 插入新元素
       this.insertBefore(newEl, oldFirstEl)
       this.remove(oldEl)
@@ -479,13 +475,11 @@ export class DomHelper {
    * @param el - 要挂载的元素
    * @returns {void} 无返回值
    */
-  static appendChild(target: Node, el: RuntimeElement): void {
-    if (el instanceof DocumentFragment) {
-      el = this.recoveryFragmentChildNodes(el)
-    }
+  static appendChild(target: Node, el: Node): void {
+    el = this.recoveryFragmentChildNodes(el)
     // 如果父元素是一个片段节点元素，则判断其是否已挂载，如果已挂载则插入元素到片段节点最后一个元素之后
-    if (target instanceof DocumentFragment && '$vnode' in el) {
-      const lastChildElement = this.getLastChildElement(target as RuntimeElement)
+    if (this.isFragmentElement(target)) {
+      const lastChildElement = this.getLastChildElement(target)
       if (lastChildElement?.parentNode) {
         this.insertAfter(el, lastChildElement)
         return
@@ -497,10 +491,10 @@ export class DomHelper {
   /**
    * 从DOM中移除虚拟节点对应的真实元素
    *
-   * @param {RuntimeElement} target - 待移除的元素
+   * @param {Node} target - 待移除的元素
    */
   static remove(target: RuntimeElement): void {
-    if (!(target instanceof DocumentFragment)) {
+    if (!this.isFragmentElement(target)) {
       return target.remove()
     }
     const children = target.$vnode.children
@@ -512,23 +506,32 @@ export class DomHelper {
   /**
    * 恢复片段节点的子节点
    *
+   * @template T - 任意DOM元素实例
    * @param el - 片段节点
-   * @returns 返回恢复后的片段元素
+   * @returns {T} 返回恢复后的片段元素
    */
-  static recoveryFragmentChildNodes(el: FragmentElement): FragmentElement {
-    if (el.childNodes.length === 0) {
-      const vnode = el.$vnode
-      // 递归恢复片段节点
-      for (let i = 0; i < vnode.children.length; i++) {
-        const childVNode = vnode.children[i]
-        let childEl = childVNode.element
-        if (childVNode.type === 'fragment-node' && childEl instanceof DocumentFragment) {
-          childEl = this.recoveryFragmentChildNodes(childVNode.element as FragmentElement)
+  static recoveryFragmentChildNodes<T extends Node>(el: T): T {
+    if (this.isFragmentElement(el)) {
+      if (el.childNodes.length === 0) {
+        const vnode = el.$vnode
+        // 递归恢复片段节点
+        for (let i = 0; i < vnode.children.length; i++) {
+          const childVNode = vnode.children[i]
+          const childEl = childVNode.element
+          el.appendChild(this.recoveryFragmentChildNodes(childEl))
         }
-        el.appendChild(childEl!)
       }
     }
     return el
+  }
+
+  /**
+   * 判断是否为Vitarx特殊的片段元素
+   *
+   * @param el
+   */
+  static isFragmentElement(el: any): el is FragmentElement {
+    return el && typeof el === 'object' && el instanceof DocumentFragment && '$vnode' in el
   }
 
   /**
@@ -538,22 +541,22 @@ export class DomHelper {
    * @param type - 子元素类型（first 或 last）
    * @protected
    */
-  protected static getChild(target: RuntimeElement, type: 'first' | 'last'): RuntimeElement | null {
+  protected static getChild(target: Node, type: 'first' | 'last'): Node | null {
     // 检查元素是否具有children属性
     if (!('children' in target)) return null
     // 处理DocumentFragment类型的情况
-    if (target instanceof DocumentFragment) {
+    if (this.isFragmentElement(target)) {
       const fragmentVNode = target.$vnode
       const index = type === 'first' ? 0 : fragmentVNode.children.length - 1
       // 获取虚拟节点并递归处理
       const childVNode = fragmentVNode.children[index]
       target = childVNode.element
       // 如果最后一个子节点仍然是DocumentFragment，递归调用
-      return target instanceof DocumentFragment ? this.getChild(target, type) : target
+      return this.isFragmentElement(target) ? this.getChild(target, type) : target
     }
     const child = target[`${type}Child`]
     // 返回最后一个子元素，确保lastChild存在
-    return child ? (child as RuntimeElement) : null
+    return child ? (child as Node) : null
   }
 
   /**

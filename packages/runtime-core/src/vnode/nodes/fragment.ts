@@ -23,12 +23,9 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
   }
 
   /**
-   * 获取元素的运行时实例
-   * 这是一个重写的方法，用于获取或创建片段元素的实例
-   *
-   * @return {FragmentElement} 返回片段元素，这是一个文档片段对象，包含了虚拟DOM的节点信息
+   * @inheritDoc
    */
-  override get element(): FragmentElement {
+  override render(): FragmentElement {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
       this.#element = document.createDocumentFragment() as FragmentElement
@@ -36,7 +33,6 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
       Object.defineProperty(this.#element, '$vnode', {
         value: this
       })
-      // 渲染子节点
       this.renderChildren()
     }
     return this.#element

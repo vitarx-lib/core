@@ -4,7 +4,7 @@ import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../guards.js'
 import { VNODE_SYMBOL } from '../node-symbol.js'
 import { addParentVNodeMapping, findParentVNode } from '../relations.js'
-import type { RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types/index.js'
+import type { MountType, RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types/index.js'
 
 export type Source = { fileName: string; lineNumber: number; columnNumber: number }
 const MEMO_STORE = new WeakMap<Array<any>, VNode>()
@@ -64,11 +64,11 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    *
    * @private
    */
-  #teleport: Element | null = null
+  #teleport: Node | null = null
   /**
    * 引用
    */
-  #ref?: NonNullable<VNodeProps<T>>['ref']
+  readonly #ref?: NonNullable<VNodeProps<T>>['ref']
   /**
    * 静态节点
    * @private
@@ -108,9 +108,9 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
 
   /**
    * 获取 teleport 元素的 getter 方法
-   * @returns {Element | null} 返回 teleport 元素，如果不存在则返回 null
+   * @returns {Node | null} 返回 teleport 元素，如果不存在则返回 null
    */
-  get teleport(): Element | null {
+  get teleport(): Node | null {
     return this.#teleport
   }
 
@@ -148,6 +148,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   get key(): UniqueKey | undefined {
     return this.#key
   }
+
   /**
    * 处理属性的方法
    * 该方法负责处理和合并传递给组件的属性，包括样式、类名等特殊属性
@@ -181,12 +182,15 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       this.props[key] = attrs[key]
     }
   }
+
   /**
-   * 获取运行时元素实例
+   * 获取DOM元素
    *
-   * @returns {RuntimeElement<T>} 返回节点类型对应的运行时元素实例
+   * @returns {RuntimeElement<T>} 获取的元素
    */
-  abstract get element(): RuntimeElement<T>
+  get element(): RuntimeElement<T> {
+    return this.render()
+  }
 
   /**
    * 获取节点的引用属性
@@ -197,14 +201,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     return this.#ref
   }
 
-  /**
-   * 设置引用属性的方法
-   * @param value - 新的引用值，类型为 NonNullable<VNodeProps<T>>['ref'] 或 undefined
-   */
-  protected set ref(value: NonNullable<VNodeProps<T>>['ref'] | undefined) {
-    // 将传入的值赋给实例的私有属性 #ref
-    this.#ref = value
-  }
   /**
    * 获取存储在类中的备忘录数组
    * 这是一个getter方法，用于返回私有属性#memo的值
@@ -308,9 +304,17 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 挂载虚拟节点到指定的容器中
    *
-   * @param [container] - 可选的容器元素，可以是HTML元素、SVG元素或片段元素
+   * @param [target] - 挂载目标，任意 DOM.Element 对象，如果不指定，需自行挂载！兼容旧版本
+   * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    */
-  abstract mount(container?: ParentNode): void
+  abstract mount(target?: Node, type?: MountType): void
+
+  /**
+   * 渲染元素
+   *
+   * @returns {RuntimeElement<T>} 渲染后的元素
+   */
+  abstract render(): RuntimeElement<T>
   /**
    * 卸载元素或组件的方法
    *
@@ -319,7 +323,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param {boolean} [root] - 绝对是否做为根元素卸载
    */
   abstract unmount(root?: boolean): void
-
   /**
    * 获取 shadow 元素的访问器属性
    * 如果 shadow 元素不存在，则创建一个空的注释节点作为占位符
@@ -333,14 +336,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       ) // 如果未初始化，创建一个注释节点作为占位符
     }
     return this.#shadowElement // 返回 shadow 元素
-  }
-
-  /**
-   * 设置 shadow 元素
-   * @param el - Comment 类型的 DOM 节点，作为 shadow 元素
-   */
-  protected set shadowElement(el: Comment) {
-    this.#shadowElement = el // 设置 shadow 元素
   }
   /**
    * 移除Shadow DOM元素并将其引用设置为undefined

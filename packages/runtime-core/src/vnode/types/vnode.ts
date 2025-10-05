@@ -79,3 +79,8 @@ export type MergeProps<Input extends {}, Default extends {}> = Omit<Input, keyof
     ? Exclude<Input[P], undefined>
     : Exclude<Input[P], undefined> | Default[P] // 强制指定的属性 K 为必填
 } & Omit<Default, keyof Input>
+
+/**
+ * 挂载类型
+ */
+export type MountType = 'insertBefore' | 'insertAfter' | 'replace' | 'appendChild'

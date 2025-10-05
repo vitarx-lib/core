@@ -1,15 +1,7 @@
 import { Observer, toRaw } from '@vitarx/responsive'
 import { isDeepEqual } from '@vitarx/utils'
 import { DomHelper } from '../dom/index.js'
-import {
-  isCommentVNode,
-  isContainerVNode,
-  isFragmentVNode,
-  isNotTagVNode,
-  isTextVNode,
-  isVNode,
-  isWidgetVNode
-} from './guards.js'
+import { isContainerVNode, isNotTagVNode, isVNode, isWidgetVNode } from './guards.js'
 import { Fragment } from './node-symbol.js'
 import type { ContainerVNode, NoTagVNode, VNode } from './nodes/index.js'
 
@@ -68,7 +60,8 @@ export class VNodeUpdate {
       // 如果是容器节点，则更新其子节点
       if (isContainerVNode(oldVNode)) {
         // 递归更新子节点并获取更新后的子节点列表
-        this.patchUpdateChildren(oldVNode, newVNode as ContainerVNode)
+        const newChildren = this.patchUpdateChildren(oldVNode, newVNode as ContainerVNode)
+        oldVNode.replaceChildren(newChildren)
       }
     }
     return oldVNode
@@ -115,7 +108,8 @@ export class VNodeUpdate {
             this.patchUpdateAttrs(oldValue, newValue)
             if (isContainerVNode(oldValue)) {
               // 递归更新子节点并获取更新后的子节点列表
-              this.patchUpdateChildren(oldValue, newValue as ContainerVNode)
+              const newChildren = this.patchUpdateChildren(oldValue, newValue as ContainerVNode)
+              oldValue.replaceChildren(newChildren)
             }
             continue
           }
@@ -148,23 +142,19 @@ export class VNodeUpdate {
   static patchUpdateChildren<T extends ContainerVNode>(oldVNode: T, newVNode: T): VNode[] {
     const oldChildren = oldVNode.children // 旧子节点列表
     const newChildren = newVNode.children // 新子节点列表
-    /** 是否为片段节点 */
-    const isFragment = isFragmentVNode(oldVNode)
 
     // 处理边缘情况：新增全部子节点
     if (newChildren.length && !oldChildren.length) {
-      newVNode.children.forEach(child => {
+      newChildren.forEach(child => {
         child.mount(oldVNode.element) // 挂载所有新子节点
       })
       return newChildren // 返回新子节点列表
     }
     // 删除全部子节点
     if (!newChildren.length && oldChildren.length) {
-      if (isFragment) {
-        // 如果是片段节点，将第一个子节点插入到shadowElement之前
-        DomHelper.insertBefore(oldVNode.shadowElement, oldVNode.children[0].element)
-      }
-      oldVNode.unmount() // 卸载旧节点
+      oldChildren.forEach(child => {
+        child.unmount()
+      })
       return newChildren // 返回空的新子节点列表
     }
 
@@ -173,149 +163,68 @@ export class VNodeUpdate {
 
     // 被删除的节点集合
     const removedNodes = new Set(oldVNode.children)
-    // 新子节点列表，未挂载！
-    const newChildrenNotMounted: VNode[] = []
-
     // 根据新列表长度开始遍历
     for (let index = 0; index < newChildren.length; index++) {
       // 旧子节点，可能没有旧子节点
-      const oldChild = oldVNode.children[index]
+      const oldChild = oldVNode.children[index] as VNode | undefined
       // 新子节点
       const newChild = newVNode.children[index]
-      // 尝试复用具有相同key的节点
-      if (isVNode(newChild) && oldKeyToVNode.has(newChild.key)) {
-        const oldSameKeyChild = oldKeyToVNode.get(newChild.key)!
-        if (oldSameKeyChild.vnode.type === newChild.type) {
-          // 避免复用节点被删除
-          removedNodes.delete(oldSameKeyChild.vnode)
-          // 删除映射，一个key只对应一个节点，避免重复的key造成遗漏节点
-          oldKeyToVNode.delete(newChild.key)
-          // 替换到新节点列表中
-          newChildren[index] = oldSameKeyChild.vnode
-          // 只更新属性
-          this.patchUpdateAttrs(oldSameKeyChild.vnode, newChild)
-          const el = oldSameKeyChild.vnode.element
-          // 如果旧父节点是片段节点
-          if (isFragment) {
-            const preEl = oldVNode.children[index - 1]?.element
-            if (preEl) {
-              // 往片段节点的最后一个元素之后插入新元素
-              DomHelper.insertAfter(el, preEl)
-            } else {
-              // 不存在前一个元素则代表着是空片段节点，直接用新元素替换掉占位元素
-              DomHelper.replace(el, oldVNode.shadowElement)
-            }
-          } else {
-            DomHelper.appendChild(oldVNode.element, el)
-          }
-        }
+      const oldSameKeyChild = oldKeyToVNode.get(newChild.key)
+      // 复用相同key节点
+      if (oldSameKeyChild && oldSameKeyChild.vnode.type === newChild.type) {
+        // 避免复用节点被卸载
+        removedNodes.delete(oldSameKeyChild.vnode)
+        // 删除映射，一个key只对应一个节点，避免重复的key造成遗漏节点
+        oldKeyToVNode.delete(newChild.key)
+        // 替换到新节点列表中，保持顺序
+        newChildren[index] = oldSameKeyChild.vnode
+        // 把新节点属性，更新到旧节点之上
+        this.patchUpdateAttrs(oldSameKeyChild.vnode, newChild)
         continue
       }
-      // 处理新增节点
-      if (!oldChild) {
-        // 如果旧父节点是片段节点
-        if (isFragment) {
-          const el = newChild.element
-          const preEl = oldVNode.children[index - 1]?.element
-          if (preEl) {
-            // 往片段节点的最后一个元素之后插入新元素
-            DomHelper.insertAfter(newChild.teleport ? newChild.shadowElement : el, preEl)
-          } else {
-            // 不存在前一个元素则代表着是空片段节点，直接用新元素替换掉占位元素
-            DomHelper.replace(el, oldVNode.shadowElement)
-          }
-        } else {
-          // 其他容器父节点直接渲挂载到父节点
-          DomHelper.appendChild(oldVNode.element, newChild.element)
-        }
-        newChildrenNotMounted.push(newChild)
-        continue
-      }
-      // 更新虚拟节点
-      if (isVNode(oldChild) && isVNode(newChild)) {
+      // 处理新增 / 替换
+      if (oldChild) {
+        // 替换节点
         const updatedNewChild = this.patchUpdate(oldChild, newChild, false)
-        // 如果更新后的虚拟节点和旧虚拟节点相同，则取消将旧节点标记为删除
+        // 复用了旧节点，将旧节点替换到新节点列表中
         if (updatedNewChild === oldChild) {
           newChildren[index] = oldChild
           removedNodes.delete(oldChild)
-        } else {
-          newChildrenNotMounted.push(updatedNewChild)
         }
-        continue
       }
-
-      // 替换不同类型的节点
-      this.replace(newChild, oldChild, false)
-      newChildrenNotMounted.push(newChild)
     }
 
-    // 清理和挂载
+    // 卸载所有被删除的节点
     removedNodes.forEach(vnode => vnode.unmount())
-    newChildrenNotMounted.forEach(vnode => vnode.mount())
+    // 重新遍历节点列表，重新进行挂载
+    newChildren.forEach(vnode => {
+      if (isWidgetVNode(vnode) && vnode.state !== 'notMounted') {
+        DomHelper.appendChild(oldVNode.element, vnode.element)
+      } else {
+        vnode.mount(oldVNode.element, 'appendChild')
+      }
+    })
     return newChildren
   }
 
   /**
-   * 新节点替换旧节点
+   * 不同类型节点替换
+   *
    * @param newVNode - 新的虚拟节点
    * @param oldVNode - 旧的虚拟节点
    * @param [autoMount=true] - 自动触发挂载钩子
    * @return {VNode} 替换后的虚拟节点
    */
   static replace(newVNode: VNode, oldVNode: VNode, autoMount: boolean = true): VNode {
-    // 预先渲染节点
-    const newElement = newVNode.element
-    // 渲染新节点
-    // 如果新节点是传送节点则特殊处理
-    if (newVNode.teleport) {
-      // 新占位节点
-      const newShadowElementEl = newVNode.shadowElement
-      // 如果旧节点是传送节点
-      if (oldVNode.teleport) {
-        // 新节点的占位元素替换旧节点占位元素
-        DomHelper.replace(newShadowElementEl, oldVNode.shadowElement)
-      } else {
-        // 旧节点不是传送节点
-        // 将新传送节点占位元素插入到旧节点之前
-        DomHelper.insertBefore(newShadowElementEl, oldVNode.element)
-      }
-      if (autoMount) {
-        // 卸载旧节点
-        oldVNode.unmount()
-        // 挂载新节点
-        newVNode.mount()
-      }
-      return newVNode
-    }
-    // 替换文本节点
-    if (isTextVNode(oldVNode) || isCommentVNode(oldVNode)) {
-      const parent = DomHelper.getParentElement(oldVNode.element)
-      if (!parent) {
-        throw new Error(
-          'The old node that is replaced is not mounted, and the container element instance cannot be obtained, and the replacement operation cannot be completed.'
-        )
-      }
-      DomHelper.replace(newElement, oldVNode.element)
-      if (autoMount) newVNode.mount()
-      return newVNode
-    }
-    // 如果旧节点是传送节点
-    if (oldVNode.teleport) {
-      // 将新元素替换掉旧节点的传送占位元素
-      DomHelper.replace(newElement, oldVNode.shadowElement)
-    } else {
-      if (isWidgetVNode(oldVNode)) {
-        // 将新元素插入到旧元素之前，兼容卸载动画
-        DomHelper.insertBefore(newElement, oldVNode.element)
-      } else {
-        DomHelper.replace(newElement, oldVNode.element)
-      }
-    }
+    const oldElement = oldVNode.teleport ? oldVNode.shadowElement : oldVNode.element
+    const shadowElement = document.createTextNode('')
+    // 插入影子元素到旧节点之前，兼容卸载动画
+    DomHelper.insertBefore(shadowElement, oldElement)
     if (autoMount) {
       // 卸载旧节点
       oldVNode.unmount()
       // 挂载新节点
-      newVNode.mount()
+      newVNode.mount(shadowElement, 'replace')
     }
     return newVNode
   }
@@ -330,7 +239,7 @@ export class VNodeUpdate {
     const oldKeyToVNode = new Map<any, { index: number; vnode: VNode }>()
     for (let i = 0; i < oldChildren.length; i++) {
       const child = oldChildren[i]
-      if (isVNode(child) && (child.key || child.key === 0)) {
+      if (child.key || child.key === 0) {
         oldKeyToVNode.set(child.key, { index: i, vnode: child })
       }
     }

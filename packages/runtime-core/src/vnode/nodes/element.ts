@@ -49,12 +49,8 @@ export class ElementVNode<
    * 这是一个私有属性，用于存储DOM元素的引用
    */
   #element: RuntimeElement<T> | null = null
-  /**
-   * 获取运行时元素的getter方法
-   * 当访问此属性时，如果元素尚未创建，则会自动创建并初始化
-   * @returns {RuntimeElement<T>} 返回运行时元素实例
-   */
-  override get element(): RuntimeElement<T> {
+
+  override render(): RuntimeElement<T> {
     // 检查元素是否已创建，若未创建则进行创建
     if (!this.#element) {
       // 根据是否为SVG元素创建对应的DOM元素
@@ -69,7 +65,6 @@ export class ElementVNode<
       }
       // 绑定ref
       if (isRefEl(this.ref)) this.ref.value = this.#element
-      // 渲染子节点
       this.renderChildren()
     }
     return this.#element

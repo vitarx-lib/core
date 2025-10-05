@@ -35,7 +35,7 @@ export class TextVNode extends NoTagVNode<'text-node'> {
   /**
    * @inheritDoc
    */
-  override get element(): Text {
+  override render(): Text {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
       this.#element = document.createTextNode(this.value)

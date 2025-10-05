@@ -35,7 +35,7 @@ export class CommentVNode extends NoTagVNode<'comment-node'> {
   /**
    * @inheritDoc
    */
-  override get element(): Comment {
+  override render(): Comment {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
       this.#element = document.createComment(this.value)

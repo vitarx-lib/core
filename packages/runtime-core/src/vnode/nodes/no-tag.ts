@@ -1,7 +1,8 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { unref } from '@vitarx/responsive'
+import { DomHelper } from '../../dom/index.js'
 import { isNotTagVNode } from '../guards.js'
-import type { NoTagNodeElementName } from '../types/index.js'
+import type { MountType, NoTagNodeElementName } from '../types/index.js'
 import { VNode } from './vnode.js'
 
 /**
@@ -65,8 +66,22 @@ export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T
   /**
    * @inheritDoc
    */
-  override mount(container?: ParentNode) {
-    if (container) container.appendChild(this.element)
+  override mount(target?: Node, type?: MountType) {
+    if (!target) return
+    const element = this.element
+    switch (type) {
+      case 'insertBefore':
+        DomHelper.insertBefore(element, target)
+        break
+      case 'insertAfter':
+        DomHelper.insertAfter(element, target)
+        break
+      case 'replace':
+        DomHelper.replace(element, target)
+        break
+      default:
+        DomHelper.appendChild(target, element)
+    }
   }
 
   /**
