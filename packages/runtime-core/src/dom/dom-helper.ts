@@ -692,6 +692,6 @@ export class DomHelper {
     error: any,
     el: HTMLElement | SVGElement
   ): void {
-    console.error(`[Vitarx][ERROR]：设置属性 ${name} 时发生错误`, error, el)
+    console.error(`[@vitarx/runtime-core][ERROR]：设置属性 ${name} 时发生错误`, error, el)
   }
 }
