@@ -321,9 +321,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @throws {Error} 如果组件非未挂载状态，则会抛出错误
    */
   override mount(target?: Node, type: MountType = 'appendChild'): this {
-    if (this.state === 'notRendered') {
-      this.render()
-    }
     if (this.teleport) {
       if (target) {
         // 插入影子元素
@@ -354,6 +351,16 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     return this
   }
 
+  /**
+   * @inheritDoc
+   * @override
+   */
+  override get teleport() {
+    if (this.state === 'notRendered') {
+      this.render() // 渲染一次，避免遗漏onBeforeMount生命周期返回的teleport
+    }
+    return super.teleport
+  }
   /**
    * 触发生命周期钩子
    *
