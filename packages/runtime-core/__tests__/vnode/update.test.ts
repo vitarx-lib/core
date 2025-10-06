@@ -28,7 +28,7 @@ describe('update', () => {
     const callback = vi.fn()
     const arr = reactive([1, 2, 3], false)
     import.meta.env.MODE = 'development'
-    const node = createElement(() => {
+    const node1 = createElement(() => {
       onUpdated(callback)
       return () =>
         createElement(
@@ -37,13 +37,28 @@ describe('update', () => {
           arr.map(item => createElement('span', null, item))
         )
     })
-    node.mount(document.body)
-    expect(document.body.textContent).toBe('123')
-    expect(node.deps?.size).greaterThan(0)
+    const body1 = document.createElement('div')
+    node1.mount(body1)
+    const node2 = createElement(() => {
+      onUpdated(callback)
+      return () =>
+        createElement(
+          Fragment,
+          null,
+          arr.map(item => createElement('span', { key: item }, item))
+        )
+    })
+    const body2 = document.createElement('div')
+    node2.mount(body2)
+    expect(body1.textContent).toBe('123')
+    expect(body2.textContent).toBe('123')
+    expect(node1.deps?.size).greaterThan(0)
+    expect(node2.deps?.size).greaterThan(0)
     arr.reverse()
     await vi.waitFor(() => {
       expect(callback).toBeCalled()
-      expect(document.body.textContent).toBe('321')
+      expect(body1.textContent).toBe('321')
+      expect(body2.textContent).toBe('321')
     })
   })
   it('支持动态添加和删除', async () => {
