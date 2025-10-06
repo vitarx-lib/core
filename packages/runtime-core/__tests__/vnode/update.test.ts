@@ -46,4 +46,40 @@ describe('update', () => {
       expect(document.body.textContent).toBe('321')
     })
   })
+  it('支持动态添加和删除', async () => {
+    const callback = vi.fn()
+    const arr = reactive([1, 2, 3], false)
+    const node = createElement(() => {
+      onUpdated(callback)
+      return () =>
+        createElement(
+          Fragment,
+          null,
+          arr.map(item => createElement('span', null, item))
+        )
+    })
+    node.mount(document.body)
+    expect(document.body.textContent).toBe('123')
+    arr.push(4)
+    await vi.waitFor(() => {
+      expect(callback).toBeCalled()
+      expect(document.body.textContent).toBe('1234')
+    })
+    arr.shift()
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toBe('234')
+    })
+    arr.unshift(0)
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toBe('0234')
+    })
+    arr.pop()
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toBe('023')
+    })
+    arr.splice(1, 1)
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toBe('03')
+    })
+  })
 })
