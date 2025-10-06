@@ -97,4 +97,22 @@ describe('update', () => {
       expect(document.body.textContent).toBe('03')
     })
   })
+  it('支持随机插入', async () => {
+    const arr = reactive([1, 2, 3] as number[], false)
+    const node = createElement(() => {
+      return () =>
+        createElement(
+          'ul',
+          null,
+          arr.map(item => createElement('li', { key: item }, item))
+        )
+    })
+    node.mount(document.body)
+    for (let i = 1; i < 5; i++) {
+      arr.splice(Math.floor(Math.random() * arr.length), 0, arr.length + 1)
+      await vi.waitFor(() => {
+        expect(document.body.textContent.length).toBe(3 + i)
+      })
+    }
+  })
 })
