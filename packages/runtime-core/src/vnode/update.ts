@@ -64,7 +64,6 @@ export class VNodeUpdate {
     }
     return oldVNode
   }
-
   /**
    * 更新虚拟节点的属性
    * @param oldVNode - 旧的虚拟节点
@@ -141,6 +140,7 @@ export class VNodeUpdate {
     const oldChildren = oldVNode.children
     const newChildren = newVNode.children
     const parentEl = oldVNode.element
+    const removedNodes = new Set(oldChildren)
     // === 边界情况 ===
     if (!oldChildren.length) {
       newChildren.forEach(c => c.mount(parentEl))
@@ -150,56 +150,43 @@ export class VNodeUpdate {
       oldChildren.forEach(c => c.unmount())
       return newChildren
     }
-    const usedOldIndexes = new Set<number>()
     // === 创建新key映射 ===
     const keyed = new Map<any, VNode>()
-    newChildren.forEach(c => {
+    oldChildren.forEach(c => {
       if (c.key || c.key === 0) keyed.set(c.key, c)
     })
     // 要删除的索引
     const toRemove: number[] = []
-    // --- 复用相同 key 节点 ---
-    oldChildren.forEach((child, i) => {
-      const newed = keyed.get(child.key)
-      if (!newed) {
-        if (i > newChildren.length - 1) toRemove.push(i)
-        return
-      }
-      if (child.type === newed.type) {
-        // 标记该索引已被使用
-        usedOldIndexes.add(i)
-        // 使用旧节点替换新节点
-        keyed.set(newed.key, child)
-      } else {
-        // 删除key节点
-        keyed.delete(child.key)
-      }
-    })
     // === 主循环：依次处理新子节点 ===
     for (let i = 0; i < newChildren.length; i++) {
       const newChild = newChildren[i]
+      const keyedOldChild = keyed.get(newChild.key) || oldChildren[i]
       // 如果存在于key映射中，直接进行差异化更新
-      if (keyed.has(newChild.key)) {
-        // 获取旧节点
-        const old = keyed.get(newChild.key)!
+      if (keyedOldChild && keyedOldChild.type === newChild.type) {
+        const oldIndex = oldChildren.indexOf(keyedOldChild)
         // 将旧节点复用到新列表中
-        newChildren[i] = old
-        // 差异化更新
-        this.patchUpdate(old, newChild)
+        newChildren[i] = keyedOldChild
+        // 更新旧节点的索引
+        oldChildren.splice(oldIndex, 1)
+        oldChildren.splice(i, 0, keyedOldChild)
+        const anchor = oldChildren[i + 1]?.element
+        if (anchor) {
+          DomHelper.insertBefore(keyedOldChild.element, anchor)
+        } else {
+          DomHelper.appendChild(parentEl, keyedOldChild.element)
+        }
+        // 更新节点的属性
+        this.patchUpdate(keyedOldChild, newChild)
+        removedNodes.delete(keyedOldChild)
         continue
       }
-      // --- 获取旧子节点 ---
-      const oldChild = usedOldIndexes.has(i) ? undefined : oldChildren[i]
+      const oldChild = oldChildren[i]
       // --- 更新或替换节点 ---
       if (oldChild) {
         const updated = this.patchUpdate(oldChild, newChild)
         if (updated === oldChild) {
           newChildren[i] = oldChild
-          // 记录被复用的索引
-          usedOldIndexes.add(i)
-        } else {
-          // 没有被复用，直接标记为删除
-          toRemove.push(i)
+          removedNodes.delete(oldChild)
         }
         continue
       }
@@ -208,7 +195,7 @@ export class VNodeUpdate {
       newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
     }
     // === 卸载未复用节点 ===
-    toRemove.forEach(index => oldChildren[index]?.unmount())
+    removedNodes.forEach(child => child?.unmount())
     return newChildren
   }
 
