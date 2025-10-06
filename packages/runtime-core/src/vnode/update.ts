@@ -17,13 +17,13 @@ import type { ContainerVNode, NoTagVNode, VNode } from './nodes/index.js'
  * 使用示例：
  * ```typescript
  * // 更新虚拟节点
- * const updatedNode = VNodeHelper.patchUpdate(oldNode, newNode);
+ * const updatedNode = VNodeUpdate.patchUpdate(oldNode, newNode);
  *
  * // 更新节点属性
- * VNodeHelper.patchUpdateAttrs(oldNode, newNode);
+ * VNodeUpdate.patchUpdateAttrs(oldNode, newNode);
  *
  * // 更新子节点
- * const newChildren = VNodeHelper.patchUpdateChildren(containerNode, newContainerNode);
+ * const newChildren = VNodeUpdate.patchUpdateChildren(containerNode, newContainerNode);
  * ```
  *
  * 构造函数参数：
@@ -32,7 +32,6 @@ import type { ContainerVNode, NoTagVNode, VNode } from './nodes/index.js'
  * 使用限制：
  * - 需要确保传入的节点参数符合 VNode 类型规范
  * - 在处理节点替换时，需要确保节点已正确挂载到DOM树上
- * - 对于传送节点(teleport)有特殊的处理逻辑，需要特别注意其占位元素的处理
  *
  * 潜在副作用：
  * - 频繁的节点更新可能导致性能问题，建议合理使用节点的key属性以优化更新性能
@@ -134,14 +133,14 @@ export class VNodeUpdate {
 
   /**
    * 更新容器子节点（精简优化版）
-   * @param oldVNode - 旧的容器虚拟节点
-   * @param newVNode - 新的容器虚拟节点
+   *
+   * @param oldVNode - 旧的虚拟节点
+   * @param newVNode - 新的虚拟节点，必须和旧的节点类型相同！！！
    */
   static patchUpdateChildren<T extends ContainerVNode>(oldVNode: T, newVNode: T): VNode[] {
     const oldChildren = oldVNode.children
     const newChildren = newVNode.children
     const parentEl = oldVNode.element
-
     // === 边界情况 ===
     if (!oldChildren.length) {
       newChildren.forEach(c => c.mount(parentEl))
@@ -151,46 +150,65 @@ export class VNodeUpdate {
       oldChildren.forEach(c => c.unmount())
       return newChildren
     }
-
-    // === 构建 key → vnode 映射（用于复用） ===
-    const keyed = new Map<any, { vnode: VNode; index: number }>()
-    oldChildren.forEach((c, i) => {
-      if (c.key || c.key === 0) {
-        keyed.set(c.key, { vnode: c, index: i })
+    const usedOldIndexes = new Set<number>()
+    // === 创建新key映射 ===
+    const keyed = new Map<any, VNode>()
+    newChildren.forEach(c => {
+      if (c.key || c.key === 0) keyed.set(c.key, c)
+    })
+    // 要删除的索引
+    const toRemove: number[] = []
+    // --- 复用相同 key 节点 ---
+    oldChildren.forEach((child, i) => {
+      const newed = keyed.get(child.key)
+      if (!newed) {
+        if (i > newChildren.length - 1) toRemove.push(i)
+        return
+      }
+      if (child.type === newed.type) {
+        // 标记该索引已被使用
+        usedOldIndexes.add(i)
+        // 使用旧节点替换新节点
+        keyed.set(newed.key, child)
+      } else {
+        // 删除key节点
+        keyed.delete(child.key)
       }
     })
-
     // === 主循环：依次处理新子节点 ===
     for (let i = 0; i < newChildren.length; i++) {
       const newChild = newChildren[i]
-      const match = keyed.get(newChild.key)
-
-      // --- 复用相同 key 节点 ---
-      if (match && match.vnode.type === newChild.type) {
-        const reused = match.vnode
-        this.patchUpdateAttrs(reused, newChild)
-        newChildren[i] = reused
-        oldChildren[match.index] = null as unknown as VNode
-        keyed.delete(newChild.key)
+      // 如果存在于key映射中，直接进行差异化更新
+      if (keyed.has(newChild.key)) {
+        // 获取旧节点
+        const old = keyed.get(newChild.key)!
+        // 将旧节点复用到新列表中
+        newChildren[i] = old
+        // 差异化更新
+        this.patchUpdate(old, newChild)
         continue
       }
-
-      const oldChild = oldChildren[i]
+      // --- 获取旧子节点 ---
+      const oldChild = usedOldIndexes.has(i) ? undefined : oldChildren[i]
       // --- 更新或替换节点 ---
       if (oldChild) {
         const updated = this.patchUpdate(oldChild, newChild)
         if (updated === oldChild) {
           newChildren[i] = oldChild
+          // 记录被复用的索引
+          usedOldIndexes.add(i)
+        } else {
+          // 没有被复用，直接标记为删除
+          toRemove.push(i)
         }
-        oldChildren[i] = null as unknown as VNode
         continue
       }
       // --- 新增节点 ---
       const anchor = oldChildren[i + 1]?.element
       newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
     }
-    // === 卸载剩余未复用节点 ===
-    oldChildren.forEach(v => v?.unmount())
+    // === 卸载未复用节点 ===
+    toRemove.forEach(index => oldChildren[index]?.unmount())
     return newChildren
   }
 
