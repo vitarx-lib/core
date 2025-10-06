@@ -163,7 +163,6 @@ export class VNodeUpdate {
     // === 主循环：依次处理新子节点 ===
     for (let i = 0; i < newChildren.length; i++) {
       const newChild = newChildren[i]
-      const oldChild = oldChildren[i]
       const match = keyed.get(newChild.key)
 
       // --- 复用相同 key 节点 ---
@@ -171,23 +170,27 @@ export class VNodeUpdate {
         const reused = match.vnode
         this.patchUpdateAttrs(reused, newChild)
         newChildren[i] = reused
+        oldChildren[match.index] = null as unknown as VNode
         keyed.delete(newChild.key)
         continue
       }
 
+      const oldChild = oldChildren[i]
       // --- 更新或替换节点 ---
       if (oldChild) {
         const updated = this.patchUpdate(oldChild, newChild)
         if (updated === oldChild) {
           newChildren[i] = oldChild
         }
+        oldChildren[i] = null as unknown as VNode
         continue
       }
-
       // --- 新增节点 ---
       const anchor = oldChildren[i + 1]?.element
       newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
     }
+    // === 卸载剩余未复用节点 ===
+    oldChildren.forEach(v => v?.unmount())
     return newChildren
   }
 
