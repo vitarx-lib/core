@@ -1,6 +1,17 @@
+## 3.3.0-alpha.2 (2025-10-06)
+
+* build(runtime-core): release runtime-core@1.3.0-alpha.2 ([d333d56](https://github.com/vitarx-lib/core/commit/d333d56))
+* test(runtime-core): 更新vnode更新测试用例 ([ca3b708](https://github.com/vitarx-lib/core/commit/ca3b708))
+* test(runtime-core): 添加随机插入测试用例 ([96219bb](https://github.com/vitarx-lib/core/commit/96219bb))
+* fix(runtime-core): 修复子节点更新时的索引处理问题 ([c29b58e](https://github.com/vitarx-lib/core/commit/c29b58e))
+* fix(runtime-core): 修复虚拟节点更新逻辑 ([e18ad7e](https://github.com/vitarx-lib/core/commit/e18ad7e))
+
+
+
 ## 3.3.0-alpha.1 (2025-10-06)
 
 * build(runtime-core): release runtime-core@1.3.0-alpha.1 ([73ab8da](https://github.com/vitarx-lib/core/commit/73ab8da))
+* build(vitarx): release vitarx@3.3.0-alpha.1 ([fad6667](https://github.com/vitarx-lib/core/commit/fad6667))
 * test(runtime-core): 测试动态添加和删除节点 ([d2f7624](https://github.com/vitarx-lib/core/commit/d2f7624))
 * test(runtime-core): 测试支持 vnode 重新排序更新 ([16c68f1](https://github.com/vitarx-lib/core/commit/16c68f1))
 * refactor(runtime-core): 重构虚拟节点更新逻辑 ([c167a37](https://github.com/vitarx-lib/core/commit/c167a37))
