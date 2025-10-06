@@ -149,7 +149,7 @@ export class VNodeUpdate {
     }
     if (!newChildren.length) {
       oldChildren.forEach(c => c.unmount())
-      return []
+      return newChildren
     }
 
     // === 构建 key → vnode 映射（用于复用） ===
