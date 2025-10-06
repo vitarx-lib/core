@@ -1,7 +1,20 @@
+## 3.3.0-alpha.1 (2025-10-06)
+
+* build(runtime-core): release runtime-core@1.3.0-alpha.1 ([73ab8da](https://github.com/vitarx-lib/core/commit/73ab8da))
+* test(runtime-core): 测试动态添加和删除节点 ([d2f7624](https://github.com/vitarx-lib/core/commit/d2f7624))
+* test(runtime-core): 测试支持 vnode 重新排序更新 ([16c68f1](https://github.com/vitarx-lib/core/commit/16c68f1))
+* refactor(runtime-core): 重构虚拟节点更新逻辑 ([c167a37](https://github.com/vitarx-lib/core/commit/c167a37))
+* fix(runtime-core): 修复子节点为空时的卸载逻辑 ([5114544](https://github.com/vitarx-lib/core/commit/5114544))
+* fix(runtime-core): 修复子节点更新时的节点复用逻辑 ([947b504](https://github.com/vitarx-lib/core/commit/947b504))
+* fix(runtime-core): 调整容器节点子元素挂载顺序 ([85e5cb2](https://github.com/vitarx-lib/core/commit/85e5cb2))
+
+
+
 ## 3.3.0-alpha.0 (2025-10-06)
 
 * build(responsive): release responsive@1.0.5 ([c496816](https://github.com/vitarx-lib/core/commit/c496816))
 * build(runtime-core): release runtime-core@1.3.0-alpha.0 ([312f7ca](https://github.com/vitarx-lib/core/commit/312f7ca))
+* build(vitarx): release vitarx@3.3.0-alpha.0 ([eda1a80](https://github.com/vitarx-lib/core/commit/eda1a80))
 * fix(container): 验证子节点数组类型 ([fb64cdf](https://github.com/vitarx-lib/core/commit/fb64cdf))
 * fix(responsive): 解决循环依赖 ([2230d32](https://github.com/vitarx-lib/core/commit/2230d32))
 * fix(runtime-core): 为Fragment节点添加unmount方法，修复影子元素未被卸载问题 ([4802a3c](https://github.com/vitarx-lib/core/commit/4802a3c))
