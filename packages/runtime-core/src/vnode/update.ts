@@ -160,20 +160,25 @@ export class VNodeUpdate {
     // === 主循环：依次处理新子节点 ===
     for (let i = 0; i < newChildren.length; i++) {
       const newChild = newChildren[i]
-      const keyedOldChild = keyed.get(newChild.key) || oldChildren[i]
+      // 通过key获取旧子节点
+      const keyedOldChild = keyed.get(newChild.key)
       // 如果存在于key映射中，直接进行差异化更新
       if (keyedOldChild && keyedOldChild.type === newChild.type) {
+        // 从key映射中删除，避免多次复用
+        keyed.delete(keyedOldChild.type)
         const oldIndex = oldChildren.indexOf(keyedOldChild)
         // 将旧节点复用到新列表中
         newChildren[i] = keyedOldChild
-        // 更新旧节点的索引
-        oldChildren.splice(oldIndex, 1)
-        oldChildren.splice(i, 0, keyedOldChild)
-        const anchor = oldChildren[i + 1]?.element
-        if (anchor) {
-          DomHelper.insertBefore(keyedOldChild.element, anchor)
-        } else {
-          DomHelper.appendChild(parentEl, keyedOldChild.element)
+        if (oldIndex !== i) {
+          // 更新旧节点的索引
+          oldChildren.splice(oldIndex, 1)
+          oldChildren.splice(i, 0, keyedOldChild)
+          const anchor = oldChildren[i + 1]?.element
+          if (anchor) {
+            DomHelper.insertBefore(keyedOldChild.element, anchor)
+          } else {
+            DomHelper.appendChild(parentEl, keyedOldChild.element)
+          }
         }
         // 更新节点的属性
         this.patchUpdate(keyedOldChild, newChild)
@@ -186,8 +191,8 @@ export class VNodeUpdate {
         const updated = this.patchUpdate(oldChild, newChild)
         if (updated === oldChild) {
           newChildren[i] = oldChild
-          removedNodes.delete(oldChild)
         }
+        removedNodes.delete(oldChild)
         continue
       }
       // --- 新增节点 ---
