@@ -56,6 +56,10 @@ export abstract class ContainerVNode<
   override mount(target?: Node, type?: MountType): void {
     // 获取片段节点元素
     let element = this.element as Node
+    // 遍历挂载所有子节点
+    for (const child of this.children) {
+      child.mount(this.element, 'appendChild')
+    }
     if (this.teleport) {
       // 挂载到传送节点
       DomHelper.appendChild(this.teleport, element)
@@ -75,10 +79,6 @@ export abstract class ContainerVNode<
         default:
           DomHelper.appendChild(target, element)
       }
-    }
-    // 遍历挂载所有子节点
-    for (const child of this.children) {
-      child.mount(this.element, 'appendChild')
     }
   }
 
