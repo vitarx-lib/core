@@ -1,6 +1,17 @@
+## 3.3.0 (2025-10-07)
+
+* build(responsive): release responsive@1.0.6 ([f02f79c](https://github.com/vitarx-lib/core/commit/f02f79c))
+* build(runtime-core): release runtime-core@1.3.0 ([566d055](https://github.com/vitarx-lib/core/commit/566d055))
+* refactor(computed): 优化初始化状态访问器逻辑 ([8ed95fc](https://github.com/vitarx-lib/core/commit/8ed95fc))
+* refactor(vitarx): 重构版本号获取逻辑 ([26d4ba0](https://github.com/vitarx-lib/core/commit/26d4ba0))
+* fix(responsive): 修复计算属性的作用域管理与配置BUG ([68aa1ec](https://github.com/vitarx-lib/core/commit/68aa1ec))
+
+
+
 ## 3.3.0-alpha.2 (2025-10-06)
 
 * build(runtime-core): release runtime-core@1.3.0-alpha.2 ([d333d56](https://github.com/vitarx-lib/core/commit/d333d56))
+* build(vitarx): release vitarx@3.3.0-alpha.2 ([d49eb20](https://github.com/vitarx-lib/core/commit/d49eb20))
 * test(runtime-core): 更新vnode更新测试用例 ([ca3b708](https://github.com/vitarx-lib/core/commit/ca3b708))
 * test(runtime-core): 添加随机插入测试用例 ([96219bb](https://github.com/vitarx-lib/core/commit/96219bb))
 * fix(runtime-core): 修复子节点更新时的索引处理问题 ([c29b58e](https://github.com/vitarx-lib/core/commit/c29b58e))
