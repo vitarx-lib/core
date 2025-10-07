@@ -128,7 +128,11 @@ export abstract class ContainerVNode<
       let vnode: VNode
       const rawTarget = toRaw(target)
       if (rawTarget === false || rawTarget === undefined || rawTarget === null) {
-        vnode = new CommentVNode(String(rawTarget))
+        if (import.meta.env.DEV) {
+          vnode = new CommentVNode(String(rawTarget))
+        } else {
+          vnode = new TextVNode('')
+        }
       } else if (VNode.is(rawTarget)) {
         vnode = rawTarget
         // 检查key是否重复
