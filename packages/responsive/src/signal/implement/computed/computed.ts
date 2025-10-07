@@ -1,4 +1,5 @@
 import { isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
+import type { MakeRequired } from '@vitarx/utils/src/index.js'
 import { Depend } from '../../../depend/index.js'
 import { EffectScope } from '../../../effect/index.js'
 import { Observer, Subscriber } from '../../../observer/index.js'
@@ -63,14 +64,21 @@ export class Computed<T> implements RefSignal<T> {
    * 计算属性的配置选项
    * @private
    */
-  private readonly _options: ComputedOptions<T>
+  private readonly _options: MakeRequired<
+    ComputedOptions<T>,
+    Exclude<keyof ComputedOptions<T>, 'setter'>
+  >
 
   /**
    * 依赖变化的订阅处理器
    * @private
    */
-  private _handler: Subscriber<() => void> | undefined = undefined
-
+  private _handler: Subscriber | undefined = undefined
+  /**
+   * 作用域
+   * @private
+   */
+  private _scope: EffectScope | undefined = undefined
   /**
    * 构造一个计算属性对象
    *
@@ -83,8 +91,15 @@ export class Computed<T> implements RefSignal<T> {
    */
   constructor(getter: (oldValue: T | undefined) => T, options: ComputedOptions<T> = {}) {
     this._getter = getter
-    this._options = options
-
+    this._options = Object.assign(
+      {
+        immediate: false,
+        scope: true,
+        batch: true
+      },
+      options
+    )
+    if (this._options.scope) this._scope = EffectScope.getCurrentScope()
     // 如果设置了立即计算，则在构造时就初始化
     if (options.immediate) this.init()
   }
@@ -176,6 +191,7 @@ export class Computed<T> implements RefSignal<T> {
     if (this._handler) {
       this._handler.dispose()
       this._handler = undefined
+      this._scope = undefined
     } else {
       this._computedResult = this._getter(undefined)
     }
@@ -207,17 +223,17 @@ export class Computed<T> implements RefSignal<T> {
   /**
    * 设置作用域
    *
-   * 控制计算属性是否随作用域一起销毁。
-   * 如果设置为false，则计算属性不会随作用域销毁而停止观察依赖变化。
+   * 此方法仅在计算属性被初始化之前设置有效
    *
    * @param {boolean | EffectScope} scope - 作用域或boolean值，表示是否允许添加到作用域
    * @returns {this} 当前实例，支持链式调用
    */
   public scope(scope: boolean | EffectScope): this {
+    if (this._initialize) return this
     if (scope instanceof EffectScope) {
-      if (this._handler) scope.addEffect(this._handler)
-    } else {
-      this._options.scope = scope
+      this._scope = scope
+    } else if (scope) {
+      this._scope = EffectScope.getCurrentScope()
     }
     return this
   }
@@ -258,10 +274,11 @@ export class Computed<T> implements RefSignal<T> {
       }
       // 创建订阅处理器，使用微任务延迟执行以提高性能
       this._handler = new Subscriber(
-        this._options.batch === false ? handler : microTaskDebouncedCallback(handler),
-        { scope: this._options.scope }
+        !this._options.batch ? handler : microTaskDebouncedCallback(handler),
+        { scope: false }
       )
-
+      // 如果存在作用域，则添加到作用域中
+      if (this._scope) this._scope.addEffect(this._handler)
       // 为每个依赖添加订阅
       deps.forEach((props, signal) => {
         for (const prop of props) {
@@ -280,6 +297,7 @@ export class Computed<T> implements RefSignal<T> {
           }
         })
         this._handler = undefined
+        this._scope = undefined
       })
     } else {
       console.warn(
