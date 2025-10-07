@@ -6,6 +6,7 @@ import {
   type WidgetType,
   WidgetVNode
 } from '@vitarx/runtime-core'
+import { __VITARX_VERSION__ } from './constant.js'
 
 /** 应用配置 */
 export interface AppConfig {
@@ -114,8 +115,7 @@ export class App {
    * @returns {string} - 版本号
    */
   get version(): string {
-    // @ts-ignore
-    return __VERSION__
+    return __VITARX_VERSION__
   }
 
   /**

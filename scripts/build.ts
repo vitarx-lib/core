@@ -175,13 +175,13 @@ async function buildPackage(
 
   // vitarx 特殊版本替换处理
   if (packageDirName === 'vitarx') {
-    const distPath = join(dist, 'app.js')
+    const distPath = join(dist, 'constant.js')
     // 检查文件是否存在
     if (existsSync(distPath)) {
       // 读取文件内容
       const content = readFileSync(distPath, 'utf-8')
       // 替换版本号占位符
-      writeFileSync(distPath, content.replace(/__VERSION__/g, `"${pkg.version}"`), 'utf-8')
+      writeFileSync(distPath, content.replace(/'__VERSION__'/g, `"${pkg.version}"`), 'utf-8')
     }
   }
   log.success('  ✓ TypeScript compilation completed')
