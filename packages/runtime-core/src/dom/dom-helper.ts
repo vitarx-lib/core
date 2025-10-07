@@ -550,7 +550,8 @@ export class DomHelper {
       const index = type === 'first' ? 0 : fragmentVNode.children.length - 1
       // 获取虚拟节点并递归处理
       const childVNode = fragmentVNode.children[index]
-      target = childVNode.element
+      // 如果是传送节点则使用影子节点
+      target = childVNode.teleport ? childVNode.shadowElement : childVNode.element
       // 如果最后一个子节点仍然是DocumentFragment，递归调用
       return this.isFragmentElement(target) ? this.getChild(target, type) : target
     }
