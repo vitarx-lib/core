@@ -111,9 +111,9 @@ export class Computed<T> implements RefSignal<T> {
   private _initialize: boolean = false
 
   /**
-   * 获取计算属性是否已初始化
-   *
-   * @returns {boolean} 是否已初始化
+   * 获取初始化状态的访问器
+   * 返回一个布尔值，表示对象是否已初始化
+   * @returns {boolean} 返回内部的_initialize属性值
    */
   get initialize(): boolean {
     return this._initialize
@@ -229,7 +229,7 @@ export class Computed<T> implements RefSignal<T> {
    * @returns {this} 当前实例，支持链式调用
    */
   public scope(scope: boolean | EffectScope): this {
-    if (this._initialize) return this
+    if (this.initialize) return this
     if (scope instanceof EffectScope) {
       this._scope = scope
     } else if (scope) {
@@ -250,7 +250,7 @@ export class Computed<T> implements RefSignal<T> {
    * @returns {this} 当前实例，支持链式调用
    */
   init(): this {
-    if (this._initialize) return this
+    if (this.initialize) return this
     // 标记为已初始化
     this._initialize = true
 
