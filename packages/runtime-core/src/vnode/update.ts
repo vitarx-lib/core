@@ -155,8 +155,6 @@ export class VNodeUpdate {
     oldChildren.forEach(c => {
       if (c.key || c.key === 0) keyed.set(c.key, c)
     })
-    // 要删除的索引
-    const toRemove: number[] = []
     // === 主循环：依次处理新子节点 ===
     for (let i = 0; i < newChildren.length; i++) {
       const newChild = newChildren[i]
