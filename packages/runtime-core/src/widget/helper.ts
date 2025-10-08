@@ -1,12 +1,17 @@
 import {
   type BaseSignal,
   type CanWatchProperty,
+  isRefSignal,
   isSignal,
+  Ref,
+  shallowRef,
   type SignalToRaw,
   Subscriber,
   toRaw,
+  unref,
   useCurrentScope,
   watch,
+  type WatchCallback,
   type WatchOptions,
   watchProperty
 } from '@vitarx/responsive'
@@ -132,30 +137,25 @@ export function build<T extends BuildVNode>(element: T): T extends null ? null :
 /**
  * 属性变化监听函数
  *
- * 当给组件接收的属性值支持信号时，
- * 如果传入的是一个信号（例如ref,reactive创建的信号对象）直接监听watch(props,...)是无效的。
- * 因为props是一个浅层信号对象，监听不到深层次的变化,
- * 所以我们可以使用 `onPropChange` 来对属性进行监听，它内部自动处理了信号/非信号属性的监听逻辑。
+ * 使用 `onPropChange` 来对支持RefSinal的属性进行监听，它内部自动处理了信号/非信号属性的监听逻辑。
+ *
+ * 如果你无需在逻辑层依赖属性值进行特殊处理，请使用 `watchProperty` 来监听属性变化，它更加轻量高效。
  *
  * @example
  * ```tsx
  * interface Props {
- *   title: PropValue<string>
+ *   title: RefSignal<string> | string
  * }
  * function MyComponent(props: Props) {
- *   // 假设在App中修改了title.value的值，这里的回调函数是不会被执行的
+ *   // ❌ 假设在父组件中修改了title.value的值，这里的回调函数是不会被执行的
  *   watchProperty(props,'title', () => {})
- *   // 通过onPropChange就能够完美的监听属性变化
+ *   // ✅ 支持 title 从 ref <-> 非 ref 之间的转换，确保能够监听到变化
  *   onPropChange(props,'title', (newValue, oldValue) => {
  *     console.log('title changed:', newValue, oldValue)
  *   })
  *   return (
  *     <div>{props.title}</div>
  *   )
- * }
- * function App() {
- *   const title = ref('Hello World')
- *   return (<MyComponent>{title}</MyComponent>)
  * }
  * ```
  *
@@ -221,8 +221,8 @@ export function onPropChange<T extends {}, K extends keyof T>(
     propName as unknown as CanWatchProperty<T>,
     () => {
       const current = props[propName]
-      // 切换 signal 订阅（如果需要）
-      if (isSignal(current)) {
+      // 切换 refSignal 订阅（如果需要）
+      if (isRefSignal(current)) {
         attachSignalWatcher(current)
       } else {
         tryDispose('signal')
@@ -257,4 +257,57 @@ export function onPropChange<T extends {}, K extends keyof T>(
   scope.onDispose(dispose)
   // 返回 dispose 销毁函数
   return dispose
+}
+
+/**
+ * 使用属性&双向绑定
+ *
+ * 此工具函数会创建一个新的ref来引用属性，并与属性进行双向绑定。
+ *
+ * 只有在外部传入的属性值是一个`RefSignal`(ref创建的变量)时，才会将变化更新到外部传入的信号中。
+ *
+ * @example
+ * ```tsx
+ * interface Props {
+ *   value: RefSignal<number>,
+ *   onChange?: (newValue: number) => void
+ * }
+ * function Counter(props: Props) {
+ *   const count = useTwoWayBind(props, 'value',(newValue)=>{
+ *      // 如果计数变化，则触发 onChange 回调
+ *      if (props.onChange) props.onChange(newValue)
+ *   })
+ *   return (
+ *     <div onClick={()=>count.value++}>{count}</div>
+ *   )
+ * }
+ * ```
+ *
+ * @param props - 属性对象
+ * @param propName - 属性名称
+ * @param onChange - 属性变化回调函数
+ *
+ */
+export function useProperty<T extends {}, K extends keyof T>(
+  props: T,
+  propName: K,
+  onChange: WatchCallback<T[K]>
+): Ref<SignalToRaw<T[K]>, false> {
+  const value = shallowRef<SignalToRaw<T[K]>>(unref(props[propName]))
+  onPropChange(
+    props,
+    propName,
+    newValue => {
+      value.value = newValue
+    },
+    true
+  )
+  watch(value, (newValue, oldValue, onCleanup) => {
+    if (isRefSignal(props[propName]) && props[propName].value !== newValue) {
+      // 双向同步
+      props[propName].value = newValue
+    }
+    onChange(newValue, oldValue, onCleanup)
+  })
+  return value
 }
