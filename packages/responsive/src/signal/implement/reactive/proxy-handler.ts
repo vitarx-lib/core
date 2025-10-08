@@ -73,6 +73,27 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
     this.childSignalMap = this.options.deep ? new Map() : undefined
     this.target = target
     this.isArray = Array.isArray(target)
+    if (Array.isArray(target)) {
+      let oldLength = target.length
+      const generalSet = this.set
+      this.set = (target: T, prop: AnyKey, newValue: any, receiver: any): boolean => {
+        const arr = target as Array<any>
+        if (prop === 'length') {
+          if (newValue === oldLength) return true
+          arr.length = newValue
+          oldLength = newValue
+          this.notify(prop)
+          return true
+        }
+        const result = generalSet.call(this, target, prop, newValue, receiver)
+        if (!result) return false
+        if (arr.length !== oldLength) {
+          oldLength = arr.length
+          this.notify('length')
+        }
+        return result
+      }
+    }
   }
 
   /**
@@ -148,7 +169,6 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
     // 如果是值代理则返回被代理的值
     return this.options.deep && isRefSignal(value) ? value.value : value
   }
-
   /**
    * 删除属性的代理方法
    *
@@ -187,11 +207,6 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    */
   set(target: T, prop: AnyKey, newValue: any, receiver: any): boolean {
     const oldValue = Reflect.get(target, prop)
-    if (prop === 'length' && this.isArray) {
-      ;(target as []).length = newValue
-      this.notify(prop)
-      return true
-    }
     if (this.options.compare(oldValue, newValue)) return true
     // 删除子代理
     this.removeChildSignal(prop)
