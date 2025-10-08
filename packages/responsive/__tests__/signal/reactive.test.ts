@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import { isReactive, isSignal, reactive, ref, shallowReactive, watch } from '../../src'
+import {
+  isReactive,
+  isSignal,
+  reactive,
+  ref,
+  shallowReactive,
+  watch,
+  watchProperty
+} from '../../src'
 
 describe('reactive', () => {
   describe('基础功能', () => {
@@ -104,6 +112,13 @@ describe('reactive', () => {
       expect(arr[1]).toBe(0)
       expect(arr[2]).toBe(0)
       expect(arr.length).toBe(3)
+    })
+    it('应该触发length变化', () => {
+      const arr = reactive([] as number[])
+      const cb = vi.fn()
+      watchProperty(arr, 'length', cb, { batch: false })
+      arr[0] = 1
+      expect(cb).toHaveBeenCalledOnce()
     })
   })
 
