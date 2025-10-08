@@ -80,6 +80,8 @@ export class ElementVNode<
     if (root) {
       DomHelper.remove(this.element)
       this.removeShadowElement()
+    } else if (this.teleport) {
+      DomHelper.remove(this.element)
     }
   }
 
