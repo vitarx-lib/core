@@ -90,7 +90,9 @@ describe('watch', () => {
       await vi.waitFor(() => {
         expect(fn).toHaveBeenCalledTimes(5)
       })
-      data.value.splice(5)
+      expect(data.value.length).greaterThanOrEqual(0)
+      data.value.splice(0)
+      expect(data.value.length).toBe(0)
       await vi.waitFor(() => {
         expect(fn).toHaveBeenCalledTimes(6)
       })
