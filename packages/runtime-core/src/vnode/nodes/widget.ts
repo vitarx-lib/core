@@ -406,14 +406,16 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (this.state === 'uninstalling' || this.state === 'unloaded') {
       throw new Error(`[Vitarx.WidgetVNode.unmount]：The widget is already ${this.state}`)
     }
+    const oldState = this.state
     // 设置状态为卸载中
     this.#state = 'uninstalling'
     // 触发onBeforeUnmount生命周期
     this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
     // 异步卸载标志
     let isAsyncUnmount = false
+    root = root && oldState === 'activated'
     // 如果是根节点且是激活状态，则需要触发删除元素前的回调
-    if (root && this.state === 'activated') {
+    if (root) {
       const result = this.triggerLifecycleHook(LifecycleHooks.beforeRemove, this.element, 'unmount')
       // 兼容异步卸载
       if (result instanceof Promise) {
