@@ -178,6 +178,8 @@ export abstract class ContainerVNode<
     }
     if (root) {
       this.toggleElement(false)
+    } else if (this.teleport) {
+      // 不是根且是传送节点，也需要移除
       DomHelper.remove(this.element)
     }
   }
