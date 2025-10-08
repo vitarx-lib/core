@@ -320,7 +320,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    *
    * 此方法需实现元素/组件的卸载逻辑
    *
-   * @param {boolean} [root] - 绝对是否做为根元素卸载
+   * @param {boolean} [root] - 是否做为根元素卸载
    */
   abstract unmount(root?: boolean): void
   /**
@@ -357,10 +357,14 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
         // 将元素重新插入到传送目标
         this.teleport.appendChild(this.element)
       } else {
-        // 将元素重新插入到影子元素
+        // 将元素替换影子元素
         DomHelper.replace(this.element, this.shadowElement)
       }
-    } else if (!this.teleport) {
+      return
+    }
+    if (this.teleport) {
+      DomHelper.remove(this.element)
+    } else {
       // 插入占位元素
       DomHelper.insertBefore(this.shadowElement, this.element)
     }
