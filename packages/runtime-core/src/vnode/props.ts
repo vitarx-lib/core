@@ -5,7 +5,7 @@ import type { MergeProps } from './types/index.js'
 
 const VNODE_PROPS_DEFAULT_DATA = Symbol('VNODE_PROPS_DEFAULT_DATA')
 const VNODE_PROPS_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
-const message = `[Vitarx.PropsProxyHandler][WARN]：The component's props should maintain a one-way data flow, and you shouldn't modify it directly. (This warning only exists during the development and debugging phase)`
+const WARN_MESSAGE = `[Vitarx.PropsProxyHandler][WARN]：The component's props should maintain a one-way data flow, and you shouldn't modify it directly. (This warning only exists during the development and debugging phase)`
 
 /**
  * PropsProxyHandler 是一个属性代理处理器类，用于管理和代理对象的属性访问。
@@ -72,7 +72,7 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveProxyHand
     }
     // 在开发模式下，打印警告信息
     if (import.meta.env?.MODE === 'development') {
-      console.warn(message)
+      console.warn(WARN_MESSAGE)
     }
     // 调用父类的 set 方法进行默认处理
     return super.set(target, prop, value, receiver)
@@ -87,7 +87,7 @@ class PropsProxyHandler<T extends Record<string, any>> extends ReactiveProxyHand
   override deleteProperty(target: T, prop: any): boolean {
     // 在开发环境下，打印警告信息
     if (import.meta.env?.MODE === 'development') {
-      console.warn(message) // 输出预设的警告消息
+      console.warn(WARN_MESSAGE) // 输出预设的警告消息
     }
     // 调用父类的 deleteProperty 方法执行实际的删除操作
     return super.deleteProperty(target, prop)
