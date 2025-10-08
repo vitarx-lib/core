@@ -684,13 +684,13 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (import.meta.env?.MODE === 'development') {
       // 设置当前实例的类型为传入的模块
       this.type = module
-      if (this.#scope) {
-        this.#scope?.dispose()
-        this.#scope = null
-      }
       // 将实例变量重置为null，以便下次使用时重新创建
       this.#instance = null
       if (resetState) {
+        if (this.#scope) {
+          this.#scope?.dispose()
+          this.#scope = null
+        }
         this.setTeleport(null)
         this.removeShadowElement()
         this.#child = null
