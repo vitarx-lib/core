@@ -68,7 +68,7 @@ export class DomHelper {
       const value = toRaw(styleObj[key as any]!)
       const type = typeof value
       const isValid = type === 'number' || type === 'string'
-      if (isValid) {
+      if (isValid && (value || value === 0)) {
         styles.push(`${toKebabCase(key)}: ${value}`)
       }
     })
