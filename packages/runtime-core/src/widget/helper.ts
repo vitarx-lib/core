@@ -285,13 +285,13 @@ export function onPropChange<T extends {}, K extends keyof T>(
  *
  * @param props - 属性对象
  * @param propName - 属性名称
- * @param onChange - 属性变化回调函数
+ * @param [onChange] - 属性变化回调函数
  *
  */
 export function useProperty<T extends {}, K extends keyof T>(
   props: T,
   propName: K,
-  onChange: WatchCallback<T[K]>
+  onChange?: WatchCallback<T[K]>
 ): Ref<SignalToRaw<T[K]>, false> {
   const value = shallowRef<SignalToRaw<T[K]>>(unref(props[propName]))
   onPropChange(
@@ -307,7 +307,7 @@ export function useProperty<T extends {}, K extends keyof T>(
       // 双向同步
       props[propName].value = newValue
     }
-    onChange(newValue, oldValue, onCleanup)
+    if (typeof onChange === 'function') onChange(newValue, oldValue, onCleanup)
   })
   return value
 }
