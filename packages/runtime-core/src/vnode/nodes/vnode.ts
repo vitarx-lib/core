@@ -86,6 +86,8 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     // 节点属性
     this.#props = props ?? ({} as VNodeProps<T>)
     if (props) {
+      // 属性处理
+      this.propsHandler()
       // 提取key属性
       this.#key = popProperty(props, 'key')
       // 引用
@@ -103,7 +105,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 父元素
       this.setTeleport(popProperty(props, 'v-parent') as Element | string | undefined)
     }
-    this.propsHandler()
   }
 
   /**
