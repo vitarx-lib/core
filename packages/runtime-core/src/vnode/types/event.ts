@@ -449,3 +449,153 @@ export type EventNames =
   | EventLowerNames
   | keyof EventModifierMap<Element>
   | keyof EventHumpMap<Element>
+
+/**
+ * 全局HTML事件接口，包含可在全局范围内使用的事件
+ */
+export interface HTMLGlobalEvents<T extends Element> {
+  /**
+   * 在发生错误时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Window/error_event
+   */
+  onError?: EventHandler<T, ErrorEvent>
+
+  /**
+   * 当元素失去焦点时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/blur_event
+   */
+  onBlur?: EventHandler<T, FocusEvent>
+
+  /**
+   * 当右键点击元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/contextmenu_event
+   */
+  onContextMenu?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当元素获得焦点时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/focus_event
+   */
+  onFocus?: EventHandler<T, FocusEvent>
+
+  /**
+   * 当键盘按键被按下时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/keydown_event
+   */
+  onKeyDown?: EventHandler<T, KeyboardEvent>
+
+  /**
+   * 当键盘按键被按下并释放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/keypress_event
+   * @deprecated 建议使用keydown代替
+   */
+  onKeyPress?: EventHandler<T, KeyboardEvent>
+
+  /**
+   * 当键盘按键被释放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/keyup_event
+   */
+  onKeyUp?: EventHandler<T, KeyboardEvent>
+
+  /**
+   * 当元素被点击时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/click_event
+   */
+  onClick?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当元素被双击时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/dblclick_event
+   */
+  onDblClick?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当鼠标按钮在元素上按下时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mousedown_event
+   */
+  onMouseDown?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当鼠标指针在元素上移动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mousemove_event
+   */
+  onMouseMove?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当鼠标指针移出元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseout_event
+   */
+  onMouseOut?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当鼠标指针移入元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseover_event
+   */
+  onMouseOver?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当鼠标按钮在元素上释放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseup_event
+   */
+  onMouseUp?: EventHandler<T, MouseEvent>
+
+  /**
+   * 当鼠标滚轮在元素上滚动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/wheel_event
+   */
+  onWheel?: EventHandler<T, WheelEvent>
+
+  /**
+   * 当元素的滚动条被滚动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/scroll_event
+   */
+  onScroll?: EventHandler<T, Event>
+
+  /**
+   * 当用户复制元素内容时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/copy_event
+   */
+  onCopy?: EventHandler<T, ClipboardEvent>
+
+  /**
+   * 当用户剪切元素内容时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/cut_event
+   */
+  onCut?: EventHandler<T, ClipboardEvent>
+
+  /**
+   * 当用户粘贴内容到元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/paste_event
+   */
+  onPaste?: EventHandler<T, ClipboardEvent>
+
+  /**
+   * 当媒体加载终止时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/abort_event
+   */
+  onAbort?: EventHandler<T, Event>
+
+  /**
+   * 当触摸事件开始时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchstart_event
+   */
+  onTouchStart?: EventHandler<T, TouchEvent>
+
+  /**
+   * 当触摸事件结束时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchend_event
+   */
+  onTouchEnd?: EventHandler<T, TouchEvent>
+
+  /**
+   * 当触摸事件被取消时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchcancel_event
+   */
+  onTouchCancel?: EventHandler<T, TouchEvent>
+
+  /**
+   * 当触摸事件移动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchmove_event
+   */
+  onTouchMove?: EventHandler<T, TouchEvent>
+}
