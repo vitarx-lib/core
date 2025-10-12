@@ -566,7 +566,7 @@ export class DomHelper {
    * @returns {boolean} 如果是特殊属性则返回true，否则返回false
    */
   private static isSpecialAttribute(name: string): boolean {
-    return ['style', 'className', 'classname', 'class', 'v-html'].includes(name)
+    return ['style', 'className', 'classname', 'class', 'v-html', 'autoFocus'].includes(name)
   }
 
   /**
@@ -591,6 +591,9 @@ export class DomHelper {
         break
       case 'v-html':
         el.innerHTML = value
+        break
+      case 'autoFocus':
+        el.autofocus = value
         break
     }
   }
