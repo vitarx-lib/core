@@ -475,24 +475,7 @@ interface PartProperties {
 /**
  * 全局属性
  */
-export interface HTMLGlobalProperties {
-  /**
-   * 全局HTML属性`class`接受字符串、数组和`Record<string, boolean>`类型的对象。
-   *
-   * 当为对象时`Key`为类名，`Value` 应该为布尔值，决定是否为元素添加该类。
-   *
-   * ```jsx
-   * // 对象类型
-   * <div class={{ active: true, hidden: false,'my-class': true }}></div>
-   * // 数组类型
-   * <div class={['active', 'my-class']}></div>
-   * // `W3C`标准语法
-   * <div class="active my-class"></div>
-   * ```
-   *
-   * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
-   */
-  class?: ClassProperties
+interface GlobalProperties {
   /**
    * 全局属性 `style` 包含应用到元素的 CSS 样式声明。
    *
@@ -693,9 +676,15 @@ export interface HTMLGlobalProperties {
 }
 
 /**
+ * HTML全局属性接口
+ */
+export type HTMLGlobalProperties = SupportRefSignal<GlobalProperties & CustomProperties>
+
+/**
  * 要覆盖的HTML属性，并返回一个新对象接口。
  */
-type CoverProperties = SupportRefSignal<HTMLGlobalProperties & PartProperties>
+type CoverProperties = SupportRefSignal<GlobalProperties & PartProperties>
+
 /**
  * 要覆盖HTML属性的键
  */
@@ -705,6 +694,23 @@ type CoverPropertiesNames = keyof CoverProperties
  * 自定义全局HTML属性
  */
 interface CustomProperties {
+  /**
+   * 全局HTML属性`class`接受字符串、数组和`Record<string, boolean>`类型的对象。
+   *
+   * 当为对象时`Key`为类名，`Value` 应该为布尔值，决定是否为元素添加该类。
+   *
+   * ```jsx
+   * // 对象类型
+   * <div class={{ active: true, hidden: false,'my-class': true }}></div>
+   * // 数组类型
+   * <div class={['active', 'my-class']}></div>
+   * // `W3C`标准语法
+   * <div class="active my-class"></div>
+   * ```
+   *
+   * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
+   */
+  class?: ClassProperties
   /**
    * `v-html` 是框架的自定义属性，用于在元素中插入 HTML 代码。
    */
@@ -742,10 +748,30 @@ type ExtractElementProperties<T extends Element> = {
  * 生成HTML标签可选属性，包括事件和自定义数据属性
  *
  * @template T - 元素类型
- * @template Exclude - 排除的属性名
  */
 export type ElementProperties<T extends Element> = ExtractElementProperties<T> &
   EventHumpMap<T> &
   EventModifierMap<T> &
   CustomProperties &
   IntrinsicProperties
+
+/**
+ * 推导出HTML属性
+ *
+ * @example
+ * ```tsx
+ * // 继承HTML属性，可以使组件能够接收任意div元素的属性
+ * interface Props extends HTMLProperties<HTMLDivElement> {
+ *   children?: string
+ * }
+ *
+ * function MyComponent(props: Props) {
+ *  return <div v-bind={props}>{props.children}</div>
+ * }
+ *
+ * <MyComponent onClick={()=>console.log('hello')}>hello</MyComponent>
+ * ```
+ *
+ * @template T - 元素类型
+ */
+export type HTMLProperties<T extends Element> = Omit<ElementProperties<T>, 'children'>
