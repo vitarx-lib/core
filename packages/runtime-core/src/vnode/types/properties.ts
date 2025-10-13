@@ -86,7 +86,6 @@ export interface IntrinsicProperties {
    * ```
    */
   'v-parent'?: string | ParentNode
-  [key: string]: any
 }
 
 /**
