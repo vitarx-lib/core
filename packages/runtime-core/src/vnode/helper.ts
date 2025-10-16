@@ -1,7 +1,13 @@
+import { unref } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { isRecordObject } from '@vitarx/utils/src/index.js'
 import { isSimpleWidget } from '../widget/helper.js'
-import { COMMENT_NODE_TYPE, FRAGMENT_NODE_TYPE, TEXT_NODE_TYPE } from './node-symbol.js'
+import {
+  COMMENT_NODE_TYPE,
+  DYNAMIC_WIDGET_TYPE,
+  FRAGMENT_NODE_TYPE,
+  TEXT_NODE_TYPE
+} from './node-symbol.js'
 import {
   CommentVNode,
   ElementVNode,
@@ -79,6 +85,26 @@ export function createVNode<T extends VNodeType>(
       case FRAGMENT_NODE_TYPE:
         // 默认处理元素节点
         return new FragmentVNode(resolvedProps) as unknown as VNodeInstance<T>
+      case DYNAMIC_WIDGET_TYPE:
+        const {
+          is: dynamicWidget,
+          children: dynamicChildren,
+          'v-bind': dynamicBindProps
+        } = resolvedProps
+        const resolved = unref(dynamicWidget)
+        if (!resolved) {
+          if (import.meta.env.DEV) {
+            console.warn('[Vitarx.DynamicWidget][WARN]: "is" prop 为必填且不能为空。')
+          }
+          return new CommentVNode(
+            'DynamicWidget 构建失败，"is" prop 为必填且不能为空'
+          ) as unknown as VNodeInstance<T>
+        }
+        // v-bind 为 null 或 undefined 时跳过创建多余属性
+        const finalProps = isRecordObject(dynamicBindProps)
+          ? { 'v-bind': dynamicBindProps, children: dynamicChildren }
+          : { children: dynamicChildren }
+        return createVNode(resolved, finalProps) as unknown as VNodeInstance<T>
       default:
         return new ElementVNode(type, resolvedProps) as unknown as VNodeInstance<T>
     }

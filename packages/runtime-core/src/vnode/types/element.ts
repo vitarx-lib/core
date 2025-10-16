@@ -2,6 +2,8 @@ import type { RefSignal } from '@vitarx/responsive'
 import {
   type Comment as CommentType,
   type COMMENT_NODE_TYPE,
+  type DYNAMIC_WIDGET_TYPE,
+  type DynamicWidgetProps,
   type Fragment,
   type FRAGMENT_NODE_TYPE,
   type Text as TextType,
@@ -56,6 +58,8 @@ export type SpecialNodeElement = {
   [K in SpecialNodeElementName]: {
     children: K extends NoTagNodeElementName ? string | RefSignal<string> : AnyChildren
   }
+} & {
+  [K in DYNAMIC_WIDGET_TYPE]: DynamicWidgetProps
 }
 
 /**

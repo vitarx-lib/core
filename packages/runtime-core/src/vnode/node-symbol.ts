@@ -1,6 +1,6 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { VNode } from './nodes/index.js'
-import type { Child } from './types/index.js'
+import type { AnyChildren, Child, VNodeType } from './types/index.js'
 
 /**
  * VNode对象标识符
@@ -54,3 +54,56 @@ export const Comment = COMMENT_NODE_TYPE as unknown as {
   __isComment__: true
 }
 export type Comment = typeof Comment
+
+/**
+ * 动态组件类型常量
+ */
+export const DYNAMIC_WIDGET_TYPE = 'widget'
+export type DYNAMIC_WIDGET_TYPE = typeof DYNAMIC_WIDGET_TYPE
+/**
+ * 动态渲染组件或元素的属性接口
+ */
+export interface DynamicWidgetProps {
+  /**
+   * 指定要渲染的实际组件或元素标签，可以是响应式引用
+   */
+  is: VNodeType | RefSignal<VNodeType>
+  /**
+   * 子节点，可以通过属性或插槽方式传入
+   */
+  children?: AnyChildren
+}
+/**
+ * 动态虚拟节点组件
+ *
+ * 用于根据传入的 `is` 动态渲染组件或元素。
+ *
+ * @example
+ * ```tsx
+ * const current = ref('A')
+ * const widgets = { A: WidgetA, B: WidgetB, C: WidgetC }
+ * const currentWidget = computed(() => widgets[current.value])
+ *
+ * // 1️⃣ 基础用法
+ * <DynamicWidget :is="currentWidget" />
+ *
+ * // 2️⃣ 透传 props
+ * <DynamicWidget :is="currentWidget" :props="{ name: 'John' }" />
+ *
+ * // 3️⃣ 通过 children 属性传递
+ * <DynamicWidget :is="currentWidget" :children={<div>Hello</div>} />
+ *
+ * // 4️⃣ 通过插槽传递
+ * <DynamicWidget :is="currentWidget">
+ *   <div>Hello</div>
+ * </DynamicWidget>
+ *
+ * // 5️⃣ 做为 <widget> 特殊元素使用
+ * <widget :is="currentWidget" />
+ * ```
+ */
+export const DynamicWidget = DYNAMIC_WIDGET_TYPE as unknown as {
+  (props: DynamicWidgetProps): VNode
+  __isDynamicWidget__: true
+}
+export type DynamicWidget = typeof DynamicWidget
