@@ -91,8 +91,8 @@ export type AsyncFnWidget<P extends AnyProps = any> = (
  * <AsyncWidget />
  * ```
  */
-export type TSWidget<T extends WidgetType> = TsFunctionWidget<
-  T extends WidgetType<infer P> ? P : {}
+export type TSWidget<T extends WidgetType | LazyLoadWidget> = TsFunctionWidget<
+  T extends WidgetType<infer P> ? P : T extends LazyLoadWidget<infer P> ? P : {}
 >
 
 /**
