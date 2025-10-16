@@ -39,7 +39,7 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
     if (this.#options.write === 'error') {
       throw new Error(this.createMessage(prop, 'ERROR'))
     }
-    console.warn(this.createMessage(prop, 'WARN'))
+    if (import.meta.env.DEV) console.warn(this.createMessage(prop, 'WARN'))
     if (this.#options.write === 'warningAndWrite') {
       return Reflect.set(target, prop, value)
     }
@@ -50,7 +50,7 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
     if (this.#options.write === 'error') {
       throw new Error(this.createMessage(prop, 'ERROR'))
     }
-    console.warn(this.createMessage(prop, 'WARN'))
+    if (import.meta.env.DEV) console.warn(this.createMessage(prop, 'WARN'))
     if (this.#options.write === 'warningAndWrite') {
       return Reflect.deleteProperty(target, prop)
     }

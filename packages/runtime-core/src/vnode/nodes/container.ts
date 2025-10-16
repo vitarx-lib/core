@@ -138,9 +138,11 @@ export abstract class ContainerVNode<
         // 检查key是否重复
         if ('key' in rawTarget && rawTarget.key) {
           if (keySet.has(rawTarget.key)) {
-            console.warn(
-              `[Vitarx.VNode][WARN]：Duplicate key: ${String(rawTarget.key)} detected, which can cause rendering errors or performance issues。`
-            )
+            if (import.meta.env.DEV) {
+              console.warn(
+                `[Vitarx.VNode][WARN]：Duplicate key: ${String(rawTarget.key)} detected, which can cause rendering errors or performance issues。`
+              )
+            }
           } else {
             keySet.add(rawTarget.key)
           }

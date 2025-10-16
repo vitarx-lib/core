@@ -219,11 +219,13 @@ export const onServerPrefetch = createLifecycleHook(LifecycleHooks.serverPrefetc
  * @param {Record<string, any>} exposed 键值对形式的对象，其中键为暴露的名称，值为要暴露的值。
  */
 export function defineExpose(exposed: Record<string, any>): void {
-  for (const exposedKey in exposed) {
-    if (__WIDGET_INTRINSIC_KEYWORDS__.includes(exposedKey as any)) {
-      console.warn(
-        `[Vitarx.defineExpose]：${exposedKey} is an internal reserved keyword in the Widget class, please modify.`
-      )
+  if (import.meta.env.DEV) {
+    for (const exposedKey in exposed) {
+      if (__WIDGET_INTRINSIC_KEYWORDS__.includes(exposedKey as any)) {
+        console.warn(
+          `[Vitarx.defineExpose]：${exposedKey} is an internal reserved keyword in the Widget class, please modify.`
+        )
+      }
     }
   }
   HookCollector.addExposed(exposed)
