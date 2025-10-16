@@ -156,7 +156,7 @@ export class Computed<T> implements RefSignal<T> {
   set value(newValue: T) {
     if (typeof this._options.setter === 'function') {
       this._options.setter(newValue)
-    } else {
+    } else if (import.meta.env.DEV) {
       console.warn(
         '[Computed]：Computed properties should not be modified directly unless a setter function is defined。'
       )
@@ -299,7 +299,7 @@ export class Computed<T> implements RefSignal<T> {
         this._handler = undefined
         this._scope = undefined
       })
-    } else {
+    } else if (import.meta.env.DEV) {
       console.warn(
         '[Computed]：No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
       )
