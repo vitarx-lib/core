@@ -1,5 +1,5 @@
+import type { MakeRequired } from '@vitarx/utils'
 import { isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
-import type { MakeRequired } from '@vitarx/utils/src/index.js'
 import { Depend } from '../../../depend/index.js'
 import { EffectScope } from '../../../effect/index.js'
 import { Observer, Subscriber } from '../../../observer/index.js'
