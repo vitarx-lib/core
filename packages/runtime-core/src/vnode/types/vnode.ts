@@ -1,6 +1,11 @@
 import type { RefSignal } from '@vitarx/responsive'
 import type { AnyPrimitive } from '@vitarx/utils'
-import { type ClassWidget, type FunctionWidget } from '../../widget/index.js'
+import {
+  type AsyncFnWidget,
+  type ClassWidget,
+  type FunctionWidget,
+  type LazyLoadWidget
+} from '../../widget/index.js'
 import type {
   Comment as CommentType,
   Fragment as FragmentType,
@@ -34,10 +39,27 @@ export type AnyChildren = Array<Child> | Child
 
 /**
  * 小部件类型
+ *
+ * - ClassWidget - 类小部件
+ * - FunctionWidget - 函数小部件
+ * - AsyncFnWidget - 异步函数小部件
+ * - LazyLoadWidget - 懒加载小部件
+ *
+ * @template P - 组件的属性类型
  */
-export type WidgetType<P extends Record<string, any> = any> = ClassWidget<P> | FunctionWidget<P>
+export type WidgetType<P extends Record<string, any> = any> =
+  | ClassWidget<P>
+  | FunctionWidget<P>
+  | LazyLoadWidget<P>
+  | AsyncFnWidget<P>
+
 /**
  * 虚拟节点类型
+ *
+ * - AllNodeElementName - 所有节点元素名称
+ * - WidgetType - 小部件类型
+ * - TextType - 文本类型
+ * - CommentType - 注释类型
  */
 export type VNodeType = AllNodeElementName | WidgetType | FragmentType | TextType | CommentType
 /**
