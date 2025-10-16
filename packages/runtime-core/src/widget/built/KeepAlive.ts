@@ -1,13 +1,16 @@
-import { watchProperty } from '@vitarx/responsive'
+import type { RefSignal } from '@vitarx/responsive'
+import { unref } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../../vnode/guards.js'
 import {
   createVNode,
   type UniqueKey,
   type VNode,
+  type VNodeType,
   type WidgetType,
   type WidgetVNode
 } from '../../vnode/index.js'
+import { onPropChange } from '../helper.js'
 import { Widget } from '../widget.js'
 
 /**
@@ -15,24 +18,32 @@ import { Widget } from '../widget.js'
  */
 export interface KeepAliveProps {
   /**
-   * 当前展示的小部件
-   *
-   * 可以直接传入小部件，也可以传入一个`VNode`对象，
-   * 如果传入VNode对象需确保其是组件节点，而不是普通的元素节点或片段节点！
+   * 当前展示的小部件或元素
+   * @example
+   * ```tsx
+   * import { shallowRef,type VNodeType } from 'vitarx'
+   * import User from './User.js'
+   * import Home from './Home.js'
+   * const showChild = shallowRef<VNodeType>(User)
+   * // 使用 KeepAlive 组件
+   * <KeepAlive children={showChild}/>
+   * // 更改显示的组件，User组件会触发onDeactivate钩子
+   * showChild.value = Home
+   * ```
    */
-  children: WidgetType | VNode
+  children: VNodeType | VNode | RefSignal<VNodeType | VNode>
   /**
-   * 需要保留状态的小部件列表
+   * 需要缓存的节点类型
    *
-   * 当为空时，将缓存所有小部件
+   * 当为空时，将缓存所有类型的节点
    */
-  include?: WidgetType[]
+  include?: VNodeType[]
   /**
-   * 需要销毁状态的小部件列表
+   * 需要销毁状态的节点类型列表
    *
    * 优先级高于 include
    */
-  exclude?: WidgetType[]
+  exclude?: VNodeType[]
   /**
    * 最大缓存数量
    *
@@ -52,17 +63,22 @@ export interface KeepAliveProps {
  */
 export class KeepAlive extends Widget<KeepAliveProps> {
   /**
-   * 缓存
+   * 缓存的节点实例
    */
-  public readonly cache: Map<WidgetType, Map<UniqueKey | undefined, VNode<WidgetType>>> = new Map()
-  protected currentChild: VNode<WidgetType>
+  public readonly cached: Map<VNodeType, Map<UniqueKey | undefined, VNode>> = new Map()
+  /**
+   * 当前展示的小部件
+   * @protected
+   */
+  protected currentChild: VNode
 
   constructor(props: KeepAliveProps) {
     super(props)
+    if (!this.props.children) throw new Error('[KeepAlive]: children is required')
     // 缓存当前展示的小部件
-    this.currentChild = this.makeChildVNode()
+    this.currentChild = this.makeChildVNode(unref(props.children))
     // 开始监听 props.children
-    watchProperty(this.props, 'children', this.handleChildChange.bind(this))
+    onPropChange(this.props, 'children', this.handleChildChange.bind(this))
   }
 
   /**
@@ -93,7 +109,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @param type
    */
-  isKeep(type: WidgetType): boolean {
+  isKeep(type: VNodeType): boolean {
     if (this.exclude.includes(type)) return false
     return this.include.length === 0 || this.include.includes(type)
   }
@@ -113,11 +129,12 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    */
   override onBeforeUnmount(): void {
     // 遍历缓存中的所有 VNode 并卸载其实例
-    this.cache.forEach(typeCache => {
-      typeCache.forEach(vnode => vnode.unmount())
+    this.cached.forEach(typeCache => {
+      // 遍历每个 VNode 卸载实例
+      typeCache.forEach(vnode => vnode !== this.currentChild && vnode.unmount())
     })
     // 清空缓存
-    this.cache.clear()
+    this.cached.clear()
   }
 
   /**
@@ -154,17 +171,12 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 生成子节点
    */
-  protected makeChildVNode(): VNode<WidgetType> {
-    const isValidVNode = isVNode(this.children)
-    const type = isValidVNode ? this.children.type : this.children
-    if (typeof type !== 'function') {
-      const message = `[Vitarx.KeepAlive]：KeepAlive children 必须是函数式小部件或类小部件，给定${String(type)}`
-      throw new Error(message)
-    }
+  protected makeChildVNode(children: VNodeType | VNode): VNode {
+    const isValidVNode = isVNode(children)
     if (isValidVNode) {
-      return this.children as VNode<WidgetType>
+      return children as VNode<WidgetType>
     } else {
-      return createVNode(this.children)
+      return createVNode(children)
     }
   }
 
@@ -173,8 +185,8 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @protected
    */
-  protected handleChildChange() {
-    const newVNode = this.makeChildVNode()
+  protected handleChildChange(child: VNodeType | VNode) {
+    const newVNode = this.makeChildVNode(child)
     const newType = newVNode.type // 新的组件类型
     const newKey = newVNode.key // 新的组件唯一键
     const currentType = this.currentChild.type // 当前组件类型
@@ -185,7 +197,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       this.addCache(this.currentChild)
 
       // 查找缓存中是否存在新组件实例
-      const typeCache = this.cache.get(newType)
+      const typeCache = this.cached.get(newType)
       const cacheVNode = typeCache?.get(newKey)
 
       if (cacheVNode) {
@@ -206,16 +218,16 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @param vnode
    */
-  protected addCache(vnode: VNode<WidgetType>) {
+  protected addCache(vnode: VNode) {
     const type = vnode.type
     const key = vnode.key
     if (this.isKeep(type)) {
       // 确保缓存存在对应的类型映射
-      if (!this.cache.has(type)) {
-        this.cache.set(type, new Map())
+      if (!this.cached.has(type)) {
+        this.cached.set(type, new Map())
       }
 
-      const typeCache = this.cache.get(type)!
+      const typeCache = this.cached.get(type)!
 
       // 如果同 key 已存在，先移除旧缓存
       if (typeCache.has(key)) {
@@ -228,21 +240,21 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       // 检查缓存总大小
       if (this.max > 0) {
         let totalSize = 0
-        for (const typeMap of this.cache.values()) {
+        for (const typeMap of this.cached.values()) {
           totalSize += typeMap.size
         }
 
         if (totalSize > this.max) {
           // 超出限制，移除第一个缓存（按插入顺序）
-          const firstType = this.cache.keys().next().value!
-          const firstTypeMap = this.cache.get(firstType)!
+          const firstType = this.cached.keys().next().value!
+          const firstTypeMap = this.cached.get(firstType)!
           const firstKey = firstTypeMap.keys().next().value!
           firstTypeMap.get(firstKey)?.unmount()
           firstTypeMap.delete(firstKey)
 
           // 如果该类型的缓存已空，移除类型
           if (firstTypeMap.size === 0) {
-            this.cache.delete(firstType)
+            this.cached.delete(firstType)
           }
         }
       }
