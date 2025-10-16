@@ -59,6 +59,19 @@ export type SpecialNodeElement = {
     children: K extends NoTagNodeElementName ? string | RefSignal<string> : AnyChildren
   }
 } & {
+  /**
+   * 动态渲染组件/元素
+   *
+   * 用于根据传入的 `is` 动态渲染组件或元素。
+   *
+   * @example
+   * ```tsx
+   * const current = ref('A')
+   * const widgets = { A: WidgetA, B: WidgetB, C: WidgetC }
+   * const currentWidget = computed(() => widgets[current.value])
+   * <widget is={currentWidget} />
+   * ```
+   */
   [K in DYNAMIC_WIDGET_TYPE]: DynamicWidgetProps
 }
 
