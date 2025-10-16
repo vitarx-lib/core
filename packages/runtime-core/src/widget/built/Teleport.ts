@@ -39,6 +39,8 @@ export interface TeleportProps {
  * `Teleport`是一个内置组件，它可以将一个小部件内部的一部分内容`传送`到该小部件的`DOM`结构外层的位置去。
  *
  * 实现原理：在`onBeforeMount`生命周期钩子中返回`props.to`元素实例，来指定传送的目标位置。
+ *
+ * @deprecated Teleport组件已弃用，从 `@3.2.0` 版本开始支持 `v-parent` 属性指定传送的目标位置
  */
 export class Teleport extends Widget<TeleportProps> {
   protected target?: ParentNode
