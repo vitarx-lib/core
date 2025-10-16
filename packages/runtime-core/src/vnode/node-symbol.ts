@@ -85,21 +85,21 @@ export interface DynamicWidgetProps {
  * const currentWidget = computed(() => widgets[current.value])
  *
  * // 1️⃣ 基础用法
- * <DynamicWidget :is="currentWidget" />
+ * <DynamicWidget is={currentWidget} />
  *
  * // 2️⃣ 透传 props
- * <DynamicWidget :is="currentWidget" :props="{ name: 'John' }" />
+ * <DynamicWidget is={currentWidget} v-bind={ name: 'John' } />
  *
- * // 3️⃣ 通过 children 属性传递
- * <DynamicWidget :is="currentWidget" :children={<div>Hello</div>} />
+ * // 3️⃣ 通过 children 属性传递子元素
+ * <DynamicWidget is={currentWidget} children={<div>Hello</div>} />
  *
- * // 4️⃣ 通过插槽传递
- * <DynamicWidget :is="currentWidget">
+ * // 4️⃣ 通过插槽传递子元素
+ * <DynamicWidget is={currentWidget}>
  *   <div>Hello</div>
  * </DynamicWidget>
  *
  * // 5️⃣ 做为 <widget> 特殊元素使用
- * <widget :is="currentWidget" />
+ * <widget is={currentWidget} />
  * ```
  */
 export const DynamicWidget = DYNAMIC_WIDGET_TYPE as unknown as {
