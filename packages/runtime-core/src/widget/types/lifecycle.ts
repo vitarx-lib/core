@@ -1,4 +1,4 @@
-import { type RuntimeElement, VNode } from '../../vnode/index.js'
+import { type RuntimeElement, VNode, type VParent } from '../../vnode/index.js'
 import type { LifecycleHooks } from '../constant.js'
 import type { Widget } from '../widget.js'
 
@@ -46,7 +46,7 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  * 生命周期钩子返回值类型
  */
 export type LifecycleHookReturnType<T> = T extends LifecycleHooks.beforeMount
-  ? void | string | ParentNode
+  ? void | VParent
   : T extends LifecycleHooks.error
     ? VNode | void
     : T extends LifecycleHooks.beforeRemove

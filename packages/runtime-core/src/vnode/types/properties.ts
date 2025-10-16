@@ -17,6 +17,16 @@ export type UniqueKey = string | number | bigint | symbol
  *   - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，第二个元素可以指定哪些属性不需要绑定。
  */
 export type VBind = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
+/**
+ * 父元素
+ */
+export type VParent =
+  | string
+  | ParentNode
+  | Element
+  | null
+  | undefined
+  | (() => string | ParentNode | Element | null | undefined)
 
 /**
  * 全局固有属性
@@ -83,9 +93,11 @@ export interface IntrinsicProperties {
    * <div v-parent="#container">此div将会挂载到id为#container的容器中</div>
    * // 在组件上使用，使组件的内容挂载到body中，如果组件内部通过`onBeforeMount`钩子指定了父元素，`v-parent`将无效
    * <YourWidget v-parent={document.body}></YourWidget>
+   * // 使用getter做为查询器
+   * <div v-parent={() => document.querySelector('#container')}></div>
    * ```
    */
-  'v-parent'?: string | ParentNode
+  'v-parent'?: VParent
   /**
    * 透传属性
    */

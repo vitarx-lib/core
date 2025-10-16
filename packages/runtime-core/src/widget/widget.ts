@@ -5,6 +5,7 @@ import {
   type MergeProps,
   type RuntimeElement,
   type VNode,
+  type VParent,
   type WidgetVNode
 } from '../vnode/index.js'
 import { VNodeUpdate } from '../vnode/update.js'
@@ -176,7 +177,7 @@ export abstract class Widget<
    * }
    * ```
    */
-  onBeforeMount?(): void | string | ParentNode
+  onBeforeMount?(): void | VParent
 
   /**
    * 小部件挂载后调用

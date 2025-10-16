@@ -4,7 +4,14 @@ import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../guards.js'
 import { VNODE_SYMBOL } from '../node-symbol.js'
 import { addParentVNodeMapping, findParentVNode } from '../relations.js'
-import type { MountType, RuntimeElement, UniqueKey, VNodeProps, VNodeType } from '../types/index.js'
+import type {
+  MountType,
+  RuntimeElement,
+  UniqueKey,
+  VNodeProps,
+  VNodeType,
+  VParent
+} from '../types/index.js'
 
 export type Source = { fileName: string; lineNumber: number; columnNumber: number }
 const MEMO_STORE = new WeakMap<Array<any>, VNode>()
@@ -103,7 +110,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 静态节点
       this.#isStatic = !!popProperty(props, 'v-static')
       // 父元素
-      this.setTeleport(popProperty(props, 'v-parent') as Element | string | undefined)
+      this.setTeleport(popProperty(props, 'v-parent') as Element)
     }
   }
 
@@ -129,16 +136,18 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param parent - 可以是一个 DOM 元素或选择器或null
    * 当设置为 null 时，表示清除传送目标
    */
-  protected setTeleport(parent: ParentNode | string | null | undefined) {
-    if (parent && typeof Element !== 'undefined') {
-      if (typeof parent === 'string') {
-        this.#teleport = document.querySelector(parent)
-      } else if (typeof parent === 'object' && parent instanceof Element) {
-        this.#teleport = parent
-      }
-      return
+  protected setTeleport(parent: VParent) {
+    if (typeof Element === 'undefined' || !parent) return
+    if (typeof parent === 'function') {
+      parent = parent()
     }
-    this.#teleport = null // 将传入的值赋给私有属性 #teleport
+    if (typeof parent === 'string') {
+      this.#teleport = document.querySelector(parent)
+    } else if (typeof parent === 'object' && parent instanceof Element) {
+      this.#teleport = parent
+    } else {
+      this.#teleport = null
+    }
   }
 
   /**
