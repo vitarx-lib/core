@@ -105,8 +105,8 @@ export abstract class Widget<
    *
    * @returns {WidgetChildren<InputProps>} 返回子节点列表
    */
-  get children(): WidgetChildren<InputProps> {
-    return this.#vnode.children as WidgetChildren<InputProps> // 将vnode的children转换为WidgetChildren类型并返回
+  get children(): WidgetChildren<MergeProps<InputProps, DefaultProps>> {
+    return this.#vnode.children as WidgetChildren<MergeProps<InputProps, DefaultProps>> // 将vnode的children转换为WidgetChildren类型并返回
   }
 
   /**
