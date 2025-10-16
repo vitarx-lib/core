@@ -81,6 +81,17 @@ export function isSimpleWidget(fn: any): fn is SimpleWidget {
  *
  * 只是一个语法糖，重载了类型，实际上并不会对小部件进行任何处理，编译时会被编译器自动移除。
  *
+ * @example
+ * ```tsx
+ * // 懒加载组合
+ * const MyLazyLoadWidget = exportWidget(() => import('WidgetA.js'))
+ *
+ * // 异步组件
+ * const AsyncWidget = exportWidget(async () => {
+ *  const data = await loadData()
+ *  return <div>{data.info}</data>
+ * })
+ * ```
  * @template P - 小部件的属性类型
  * @param {FunctionWidget<P>} fn - 小部件
  * @returns {TsFunctionWidget<P>} - 导出的小部件
