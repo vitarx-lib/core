@@ -1,5 +1,6 @@
-import { isReactive, ReactiveProxyHandler } from '@vitarx/responsive'
-import { isRecordObject } from '@vitarx/utils'
+import { isReactive, ReactiveProxyHandler, unref } from '@vitarx/responsive'
+import { isRecordObject, popProperty } from '@vitarx/utils'
+import { DomHelper } from '../dom/index.js'
 import { getCurrentVNode } from './context.js'
 import type { MergeProps } from './types/index.js'
 
@@ -240,3 +241,52 @@ export function defineProps<D extends Record<string, any>, I extends Record<stri
  * @see defineProps
  */
 export { defineProps as defineDefaultProps }
+
+/**
+ * 处理绑定属性
+ * 从props中提取v-bind属性，并处理与已有属性的合并逻辑
+ * @param props - 需要处理的属性对象
+ */
+export function _handleBindProps(props: Record<string, any>) {
+  // 从props中提取v-bind属性，并返回剩余的props
+  const vBind = popProperty(props, 'v-bind')
+  let attrs: Record<string, any> = vBind // 初始化属性对象
+  let exclude: string[] = [] // 初始化排除列表
+  // 如果vBind是数组，则分别获取属性对象和排除列表
+  if (Array.isArray(vBind)) {
+    attrs = vBind[0] // 获取属性对象
+    exclude = vBind[1] || [] // 获取排除列表，如果不存在则为空数组
+  }
+  // 如果属性对象存在，则遍历合并属性
+  if (!isRecordObject(attrs)) return
+  for (const key in attrs) {
+    // 如果排除列表中包含当前属性或属性是`children`，则跳过
+    if (exclude.includes(key) || key === 'children') continue
+    if (key in props) {
+      // 合并样式
+      if (key === 'style') {
+        const type = typeof props[key]
+        const style = DomHelper.mergeCssStyle(unref(props[key]), unref(attrs[key]))
+        if (type === 'string') {
+          props[key] = DomHelper.cssStyleValueToString(style)
+        } else {
+          props[key] = DomHelper.cssStyleValueToObject(style)
+        }
+        continue
+      }
+      // 合并类名
+      if (key === 'class' || key === 'className' || key === 'classname') {
+        const type = typeof props[key]
+        const className = DomHelper.mergeCssClass(unref(props[key]), unref(attrs[key]))
+        if (type === 'string') {
+          props[key] = DomHelper.cssClassValueToString(className)
+        } else {
+          props[key] = DomHelper.cssClassValueToArray(className)
+        }
+        continue
+      }
+    }
+    // 将属性添加到props中
+    props[key] = attrs[key]
+  }
+}

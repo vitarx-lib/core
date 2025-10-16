@@ -8,6 +8,7 @@ import {
   VNode,
   WidgetVNode
 } from './nodes/index.js'
+import { _handleBindProps } from './props.js'
 import type { Child, VNodeInstance, VNodeProps, VNodeType } from './types/vnode.js'
 
 /**
@@ -81,6 +82,8 @@ export function createVNode<T extends VNodeType>(
     }
   }
   if (isSimpleWidget(type)) {
+    // 如果有属性，则合并绑定的属性
+    if (props) _handleBindProps(props)
     const vnode = type(props)
     if (!VNode.is(vnode)) throw new Error('simple widget must return a VNode')
     return vnode as unknown as VNodeInstance<T>
