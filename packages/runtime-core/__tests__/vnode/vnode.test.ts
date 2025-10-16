@@ -11,6 +11,11 @@ import {
   useCurrentVNode,
   WidgetVNode
 } from '../../src'
+import {
+  COMMENT_NODE_TYPE,
+  FRAGMENT_NODE_TYPE,
+  TEXT_NODE_TYPE
+} from '../../src/vnode/node-symbol.js'
 
 describe('createVNode', () => {
   it('当props中v-if为false时应该创建CommentVNode', () => {
@@ -19,25 +24,25 @@ describe('createVNode', () => {
   })
 
   it('应该创建具有正确值的TextVNode', () => {
-    const vnode = createVNode('text-node', { children: 'hello' })
+    const vnode = createVNode(TEXT_NODE_TYPE, { children: 'hello' })
     expect(vnode).toBeInstanceOf(TextVNode)
     expect((vnode as TextVNode).value).toBe('hello')
   })
 
   it('应该创建带有children数组的TextVNode', () => {
-    const vnode = createVNode('text-node', { children: 'hello' })
+    const vnode = createVNode(TEXT_NODE_TYPE, { children: 'hello' })
     expect(vnode).toBeInstanceOf(TextVNode)
     expect((vnode as TextVNode).value).toBe('hello')
   })
 
   it('应该创建具有默认值的CommentVNode', () => {
-    const vnode = createVNode('comment-node')
+    const vnode = createVNode(COMMENT_NODE_TYPE)
     expect(vnode).toBeInstanceOf(CommentVNode)
     expect((vnode as CommentVNode).value).toBe('')
   })
 
   it('应该创建FragmentVNode', () => {
-    const vnode = createVNode('fragment-node', { children: ['hello'] })
+    const vnode = createVNode(FRAGMENT_NODE_TYPE, { children: ['hello'] })
     expect(vnode).toBeInstanceOf(FragmentVNode)
   })
 

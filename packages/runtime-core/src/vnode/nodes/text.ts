@@ -1,5 +1,6 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { isTextVNode } from '../guards.js'
+import type { TextNodeElementName } from '../types/index.js'
 import { NoTagVNode } from './no-tag.js'
 
 /**
@@ -22,7 +23,7 @@ import { NoTagVNode } from './no-tag.js'
  *
  * @extends NoTagVNode<'text-node'>
  */
-export class TextVNode extends NoTagVNode<'text-node'> {
+export class TextVNode extends NoTagVNode<TextNodeElementName> {
   /**
    * 运行时元素实例
    */

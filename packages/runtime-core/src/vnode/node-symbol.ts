@@ -7,32 +7,50 @@ import type { Child } from './types/index.js'
  */
 export const VNODE_SYMBOL = Symbol('VNODE_SYMBOL')
 
-type FragmentType = ((props: { children?: Child | Child[] }) => VNode) & { __isFragment__: true }
 /**
- * 片段元素标识符
+ * 片段节点类型常量
  */
-export const Fragment = 'fragment-node' as unknown as FragmentType
-
+export const FRAGMENT_NODE_TYPE = 'fragment-node'
+export type FRAGMENT_NODE_TYPE = typeof FRAGMENT_NODE_TYPE
+/**
+ * 片段元素组件
+ *
+ * 等价用法 `<Fragment>` 或 `<fragment-node>` 或 `<>`
+ */
+export const Fragment = FRAGMENT_NODE_TYPE as unknown as {
+  (props: { children?: Child | Child[] }): VNode
+  __isFragment__: true
+}
 export type Fragment = typeof Fragment
 
-type TextType = ((props: { children: string | RefSignal<string> }) => VNode) & {
-  __isText__: true
-}
 /**
- * 文本元素标识符
+ * 文本节点类型常量
+ */
+export const TEXT_NODE_TYPE = 'text-node'
+export type TEXT_NODE_TYPE = typeof TEXT_NODE_TYPE
+/**
+ * 文本元素组件
  *
  * 通常你无需使用此标识符创建VNode，而是直接使用字符串作为子节点
  */
-export const Text = 'text-node' as unknown as TextType
+export const Text = TEXT_NODE_TYPE as unknown as {
+  (props: { children: string | RefSignal<string> }): VNode
+  __isText__: true
+}
 export type Text = typeof Text
 
-type CommentType = ((props: { children: string | RefSignal<string> }) => VNode) & {
+/**
+ * 注释节点类型常量
+ */
+export const COMMENT_NODE_TYPE = 'comment-node'
+export type COMMENT_NODE_TYPE = typeof COMMENT_NODE_TYPE
+/**
+ * 注释元素组件
+ *
+ * 等价用法 `<Comment>`或`<comment-node>`
+ */
+export const Comment = COMMENT_NODE_TYPE as unknown as {
+  (props: { children: string | RefSignal<string> }): VNode
   __isComment__: true
 }
-/**
- * 注释元素标识符
- *
- * 由于jsx特性，需要将注释展示到DOM树中，则需要使用<Comment>/<comment-node>标识符做为元素
- */
-export const Comment = 'comment-node' as unknown as CommentType
 export type Comment = typeof Comment

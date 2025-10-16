@@ -2,7 +2,7 @@ import { isRefSignal } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
 import { isElementVNode } from '../guards.js'
 import { isRefEl } from '../ref.js'
-import { type ClassProperties, IntrinsicNodeElementName, RuntimeElement } from '../types/index.js'
+import { type ClassProperties, HTMLNodeElementName, RuntimeElement } from '../types/index.js'
 import { ContainerVNode } from './container.js'
 
 const NAMESPACE_URI = {
@@ -42,7 +42,7 @@ const NAMESPACE_URI = {
  * @template T - 元素名称类型，必须是有效的HTML或SVG元素名
  */
 export class ElementVNode<
-  T extends IntrinsicNodeElementName = IntrinsicNodeElementName
+  T extends HTMLNodeElementName = HTMLNodeElementName
 > extends ContainerVNode<T> {
   /**
    * 运行时元素实例

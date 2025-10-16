@@ -13,11 +13,11 @@ import type {
 } from '../node-symbol.js'
 import type { ElementVNode, FragmentVNode, NoTagVNode, VNode, WidgetVNode } from '../nodes/index.js'
 import type {
-  AllNodeElementName,
   CommentNodeElementName,
   FragmentNodeElementName,
+  HTMLNodeElementName,
+  IntrinsicNodeElement,
   IntrinsicNodeElementName,
-  NodeElement,
   TextNodeElementName
 } from './element.js'
 import type { IntrinsicProperties } from './properties.js'
@@ -61,7 +61,12 @@ export type WidgetType<P extends Record<string, any> = any> =
  * - TextType - 文本类型
  * - CommentType - 注释类型
  */
-export type VNodeType = AllNodeElementName | WidgetType | FragmentType | TextType | CommentType
+export type VNodeType =
+  | IntrinsicNodeElementName
+  | WidgetType
+  | FragmentType
+  | TextType
+  | CommentType
 /**
  * Widget节点Props类型重载
  */
@@ -70,8 +75,8 @@ export type WidgetPropsType<T extends WidgetType> = (T extends WidgetType<infer 
 /**
  * 节点Props类型重载
  */
-export type VNodeProps<T extends VNodeType> = T extends AllNodeElementName
-  ? NodeElement<T>
+export type VNodeProps<T extends VNodeType> = T extends IntrinsicNodeElementName
+  ? IntrinsicNodeElement[T]
   : T extends WidgetType
     ? WidgetPropsType<T>
     : never
@@ -87,7 +92,7 @@ export type VNodeInstance<T extends VNodeType> = T extends FragmentNodeElementNa
       ? NoTagVNode<CommentNodeElementName>
       : T extends WidgetType
         ? WidgetVNode<T>
-        : T extends IntrinsicNodeElementName
+        : T extends HTMLNodeElementName
           ? ElementVNode<T>
           : VNode<T>
 

@@ -1,5 +1,6 @@
 import { popProperty } from '@vitarx/utils'
 import { isSimpleWidget } from '../widget/helper.js'
+import { COMMENT_NODE_TYPE, FRAGMENT_NODE_TYPE, TEXT_NODE_TYPE } from './node-symbol.js'
 import {
   CommentVNode,
   ElementVNode,
@@ -59,8 +60,8 @@ export function createVNode<T extends VNodeType>(
   if (typeof type === 'string') {
     switch (type) {
       // 处理文本节点和注释节点
-      case 'text-node':
-      case 'comment-node':
+      case TEXT_NODE_TYPE:
+      case COMMENT_NODE_TYPE:
         let value: string = ''
         if (props && 'children' in props) {
           if (typeof props.children === 'string') {
@@ -71,10 +72,10 @@ export function createVNode<T extends VNodeType>(
         }
         // 根据类型创建文本节点或注释节点
         // 处理片段节点
-        return new (type === 'text-node' ? TextVNode : CommentVNode)(
+        return new (type === TEXT_NODE_TYPE ? TextVNode : CommentVNode)(
           value
         ) as unknown as VNodeInstance<T>
-      case 'fragment-node':
+      case FRAGMENT_NODE_TYPE:
         // 默认处理元素节点
         return new FragmentVNode(props) as unknown as VNodeInstance<T>
       default:

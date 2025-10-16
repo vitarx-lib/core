@@ -1,5 +1,6 @@
 import { ref, Subscriber, watch } from '@vitarx/responsive'
 import { createVNode, defineProps, provide, VNode } from '../../vnode/index.js'
+import { COMMENT_NODE_TYPE } from '../../vnode/node-symbol.js'
 import { type ErrorHandler } from '../types/index.js'
 import { Widget } from '../widget.js'
 import { SUSPENSE_SYMBOL } from './suspense-counter.js'
@@ -58,7 +59,10 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
         `[Vitarx.Suspense]：fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`
       )
     }
-    defineProps({ fallback: createVNode('comment-node', { children: '异步节点加载失败' }) }, props)
+    defineProps(
+      { fallback: createVNode(COMMENT_NODE_TYPE, { children: '异步节点加载失败' }) },
+      props
+    )
     if (props.onError) {
       if (typeof props.onError !== 'function') {
         throw new TypeError(

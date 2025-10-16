@@ -1,5 +1,6 @@
 import { RefSignal } from '@vitarx/responsive'
 import { isCommentVNode } from '../guards.js'
+import { COMMENT_NODE_TYPE } from '../node-symbol.js'
 import { NoTagVNode } from './no-tag.js'
 
 /**
@@ -20,9 +21,9 @@ import { NoTagVNode } from './no-tag.js'
  *
  * @param value - 注释内容，可以是静态字符串或响应式字符串(RefSignal<string>)
  *
- * @extends NoTagVNode<'comment-node'>
+ * @extends NoTagVNode<COMMENT_NODE_TYPE>
  */
-export class CommentVNode extends NoTagVNode<'comment-node'> {
+export class CommentVNode extends NoTagVNode<COMMENT_NODE_TYPE> {
   /**
    * 运行时元素实例
    */

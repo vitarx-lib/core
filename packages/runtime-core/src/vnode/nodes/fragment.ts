@@ -1,4 +1,5 @@
 import { isFragmentVNode } from '../guards.js'
+import { FRAGMENT_NODE_TYPE } from '../node-symbol.js'
 import type { Child, FragmentElement, FragmentNodeElementName } from '../types/index.js'
 import { CommentVNode } from './comment.js'
 import { ContainerVNode } from './container.js'
@@ -15,7 +16,7 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
   #element: FragmentElement | null = null
 
   constructor(props: { children: Child[] } | null = null) {
-    super('fragment-node', props)
+    super(FRAGMENT_NODE_TYPE, props)
     // 如果没有子节点，则创建一个默认的注释节点元素
     if (this.children.length === 0) {
       this.children.push(new CommentVNode('empty fragment shadow element'))

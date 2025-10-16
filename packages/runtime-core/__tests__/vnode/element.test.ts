@@ -1,6 +1,7 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
 import { CommentVNode, ElementVNode, FragmentVNode, refEl, TextVNode } from '../../src'
+import { FRAGMENT_NODE_TYPE } from '../../src/vnode/node-symbol.js'
 
 describe('ElementVNode 测试套件', () => {
   describe('element getter 测试', () => {
@@ -192,7 +193,7 @@ describe('ElementVNode 测试套件', () => {
 
     it('应该拒绝特殊节点类型', () => {
       // 执行和断言
-      expect(ElementVNode.is(new FragmentVNode({ children: ['fragment-node'] }))).toBe(false)
+      expect(ElementVNode.is(new FragmentVNode({ children: [FRAGMENT_NODE_TYPE] }))).toBe(false)
       expect(ElementVNode.is(new TextVNode('text-node'))).toBe(false)
       expect(ElementVNode.is(new CommentVNode('comment-node'))).toBe(false)
     })

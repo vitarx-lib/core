@@ -5,7 +5,7 @@ import { isContainerVNode } from '../guards.js'
 import type {
   Child,
   FragmentNodeElementName,
-  IntrinsicNodeElementName,
+  HTMLNodeElementName,
   MountType,
   UniqueKey,
   VNodeProps
@@ -14,7 +14,7 @@ import { CommentVNode } from './comment.js'
 import { TextVNode } from './text.js'
 import { VNode } from './vnode.js'
 
-type ContainerVNodeType = IntrinsicNodeElementName | FragmentNodeElementName
+type ContainerVNodeType = HTMLNodeElementName | FragmentNodeElementName
 /**
  * ContainerElementVNode 类是一个抽象类，继承自 VNode 类
  * 用于表示可以包含子节点的虚拟节点，支持 HTML 元素、SVG 元素或片段节点
