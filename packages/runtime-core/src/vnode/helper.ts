@@ -101,7 +101,7 @@ export function createVNode<T extends VNodeType>(
         }
         // v-bind 为 null 或 undefined 时跳过创建多余属性
         const finalProps = isRecordObject(dynamicBindProps)
-          ? { 'v-bind': dynamicBindProps, children: dynamicChildren }
+          ? { 'v-bind': dynamicBindProps, key: resolvedProps.key, children: dynamicChildren }
           : { children: dynamicChildren }
         return createVNode(resolved, finalProps) as unknown as VNodeInstance<T>
       default:
