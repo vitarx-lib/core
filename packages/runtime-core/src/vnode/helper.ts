@@ -1,6 +1,5 @@
 import { unref } from '@vitarx/responsive'
-import { popProperty } from '@vitarx/utils'
-import { isRecordObject } from '@vitarx/utils/src/index.js'
+import { isRecordObject, popProperty } from '@vitarx/utils'
 import { isSimpleWidget } from '../widget/helper.js'
 import {
   COMMENT_NODE_TYPE,
