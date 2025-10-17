@@ -256,8 +256,10 @@ export const INTRINSIC_PROPERTIES = [
 /**
  * 处理绑定属性
  * 从props中提取v-bind属性，并处理与已有属性的合并逻辑
+ *
+ * @internal 仅供内部使用
  * @param props - 需要处理的属性对象
- * @param excludeIntrinsicProperty - 是否排除内置属性
+ * @param [excludeIntrinsicProperty=true] - 是否排除内置属性
  */
 export function _handleBindProps(
   props: Record<string, any>,
