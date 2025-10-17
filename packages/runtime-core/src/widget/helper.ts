@@ -36,16 +36,18 @@ import type {
  * 它只能做简单的视图构建工作，没有生命周期，不要在其内部存在任何副作用，包括但不限于：生命周期钩子，定时器，监听器，计算属性。
  *
  * ```tsx
- * interface Props {
+ * interface Props extends GlobalProperties {
  *   title: string,
  *   color?: string
  * }
  * // 构建一个简单的小部件，它内部不包含任何副作用代码，也没有生命周期钩子
- * const Title = markSimpleWidget(({title,color}:Props) => {
+ * const Title = markSimpleWidget(({title,color,...globalProps}:Props) => {
  *   // 对属性参数做一些处理
- *   color = color || 'black'
+ *   color ??= 'black'
  *   // 返回需要渲染的元素
- *   return <h1 style={{color}}>{title}</div>
+ *   return <h1 style={{color}} {...globalProps}>{title}</div>
+ *   // {...globalProps} 语法支持将外部传入的所有vitarx框架级别的全局属性传递给子组件，v-if除外
+ *   // 如果用 v-bind={globalProps} 则无法绑定外部指定的全局属性，例如key，ref等
  * })
  * export default function App() {
  *   return <Title title="Hello Vitarx" color="red" />

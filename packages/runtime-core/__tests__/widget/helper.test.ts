@@ -51,6 +51,14 @@ describe('简单小部件标记相关函数测试', () => {
       // 验证别名
       expect(defineSimpleWidget).toBe(markSimpleWidget)
     })
+    it('应该支持透传属性', () => {
+      const SimpleWidget = defineSimpleWidget((props: any) =>
+        createVNode('div', { 'v-bind': props })
+      )
+      const node = createVNode(SimpleWidget, { 'v-bind': { id: 'test' }, name: 'test' })
+      expect(node.props.name).toBe('test')
+      expect(node.props.id).toBe('test')
+    })
   })
 
   describe('isSimpleWidget', () => {

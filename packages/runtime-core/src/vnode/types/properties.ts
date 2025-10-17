@@ -40,8 +40,20 @@ export type VParent =
 
 /**
  * 全局固有属性
+ *
+ * 提供给 JSX.IntrinsicAttributes使用
  */
-export interface IntrinsicProperties {
+export interface IntrinsicProperties extends GlobalProperties {
+  /**
+   * 额外的任意属性
+   */
+  [key: string]: any
+}
+
+/**
+ * Vitarx框架全局属性
+ */
+export interface GlobalProperties {
   /**
    * 控制一个 `Widget` 如何替换树中的另一个 `Widget`。
    *
@@ -61,7 +73,7 @@ export interface IntrinsicProperties {
    *
    * 注意：不能通过 `v-bind` 指令绑定内部固有属性，
    * 例如 ref、key、children、v-if、v-static等内部固有属性。
-   * 仅`<widget>`、`<DynamicWidget>`或具有`SIMPLE_FUNCTION_WIDGET_SYMBOL`标记的函数组件支持绑定固有属性。
+   * 仅`<widget>`、`<DynamicWidget>`支持绑定固有属性。
    *
    * 可选值：
    *  - Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
@@ -112,10 +124,6 @@ export interface IntrinsicProperties {
    * ```
    */
   'v-parent'?: VParent
-  /**
-   * 透传属性
-   */
-  [key: string]: any
 }
 
 /**
@@ -505,7 +513,7 @@ interface PartProperties {
 /**
  * 全局属性
  */
-interface GlobalProperties {
+interface GlobalHTMLProperties {
   /**
    * 全局属性 `style` 包含应用到元素的 CSS 样式声明。
    *
@@ -708,12 +716,12 @@ interface GlobalProperties {
 /**
  * HTML全局属性接口
  */
-export type HTMLGlobalProperties = SupportRefSignal<GlobalProperties & CustomProperties>
+export type HTMLGlobalProperties = SupportRefSignal<GlobalHTMLProperties & CustomHTMLProperties>
 
 /**
  * 要覆盖的HTML属性，并返回一个新对象接口。
  */
-type CoverProperties = SupportRefSignal<GlobalProperties & PartProperties>
+type CoverProperties = SupportRefSignal<GlobalHTMLProperties & PartProperties>
 
 /**
  * 要覆盖HTML属性的键
@@ -723,7 +731,7 @@ type CoverPropertiesNames = keyof CoverProperties
 /**
  * 自定义全局HTML属性
  */
-interface CustomProperties {
+interface CustomHTMLProperties {
   /**
    * 全局HTML属性`class`接受字符串、数组和`Record<string, boolean>`类型的对象。
    *
@@ -782,7 +790,7 @@ type ExtractElementProperties<T extends Element> = {
 export type ElementProperties<T extends Element> = ExtractElementProperties<T> &
   EventHumpMap<T> &
   EventModifierMap<T> &
-  CustomProperties &
+  CustomHTMLProperties &
   IntrinsicProperties
 
 /**
