@@ -1,3 +1,4 @@
+import { markRaw } from '@vitarx/responsive'
 import { isFragmentVNode } from '../guards.js'
 import { FRAGMENT_NODE_TYPE } from '../node-symbol.js'
 import type { Child, FragmentElement, FragmentNodeElementName } from '../types/index.js'
@@ -29,7 +30,8 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
   override render(): FragmentElement {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
-      this.#element = document.createDocumentFragment() as FragmentElement
+      this.#element = markRaw(document.createDocumentFragment() as FragmentElement)
+
       // 设置虚拟节点属性
       Object.defineProperty(this.#element, '$vnode', {
         value: this

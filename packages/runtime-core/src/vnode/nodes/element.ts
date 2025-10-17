@@ -1,4 +1,4 @@
-import { isRefSignal } from '@vitarx/responsive'
+import { isRefSignal, markRaw } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
 import { isElementVNode } from '../guards.js'
 import { isRefEl } from '../ref.js'
@@ -54,11 +54,13 @@ export class ElementVNode<
     // 检查元素是否已创建，若未创建则进行创建
     if (!this.#element) {
       // 根据是否为SVG元素创建对应的DOM元素
-      this.#element = // 判断是否为SVG虚拟节点，如果是则使用SVG命名空间创建元素
+      const element = // 判断是否为SVG虚拟节点，如果是则使用SVG命名空间创建元素
         document.createElementNS(
           ElementVNode.isSvgVNode(this) ? NAMESPACE_URI.svg : NAMESPACE_URI.html,
           this.type
         ) as RuntimeElement<T>
+      // 将元素标记为不可代理
+      this.#element = markRaw(element)
       // 如果元素能够设置属性，则设置属性
       if (Object.keys(this.props).length) {
         DomHelper.setAttributes(this.#element, this.props)

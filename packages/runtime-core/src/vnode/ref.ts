@@ -1,3 +1,4 @@
+import { isRefSignal, Ref, shallowRef } from '@vitarx/responsive'
 import type { ExcludeWidgetIntrinsicKeywords } from '../widget/index.js'
 import type { HTMLNodeElementName, RuntimeElement } from './types/index.js'
 
@@ -7,15 +8,8 @@ import type { HTMLNodeElementName, RuntimeElement } from './types/index.js'
 type ComputedRefElType<T> = T extends HTMLNodeElementName
   ? RuntimeElement<T>
   : ExcludeWidgetIntrinsicKeywords<T>
-/**
- * 引用元素标识符
- */
-const RefElSymbol = Symbol('RefEl')
 /** 引用元素类型 */
-export type RefEl<T> = {
-  value: ComputedRefElType<T> | null
-  readonly [RefElSymbol]: true
-}
+export type RefEl<T> = Ref<ComputedRefElType<T> | null, false>
 
 /**
  * 引用节点元素
@@ -27,6 +21,7 @@ export type RefEl<T> = {
  * @example
  * ```tsx
  * function App() {
+ *  // vitarx@3.4.1 版本后使用 ref / shallowRef / refEl 都有效
  *  const refDiv = refEl<HTMLDivElement>()
  *  onMounted(() => {
  *    console.log(refDiv?.textContent === '测试') // true
@@ -36,16 +31,16 @@ export type RefEl<T> = {
  * ```
  */
 export function refEl<T>(): RefEl<T> {
-  const obj = { value: null } as RefEl<T>
-  Object.defineProperty(obj, RefElSymbol, { value: true })
-  return obj
+  return shallowRef(null) as unknown as RefEl<T>
 }
 
 /**
  * 判断是否为引用元素
  *
+ * vitarx@3.4.1 以上版本后等同于 `isRefSignal`
+ *
  * @param obj
  */
 export function isRefEl(obj: any): obj is RefEl<any> {
-  return obj?.[RefElSymbol] === true
+  return isRefSignal(obj)
 }

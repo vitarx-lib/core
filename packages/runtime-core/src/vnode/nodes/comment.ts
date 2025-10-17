@@ -1,4 +1,4 @@
-import { RefSignal } from '@vitarx/responsive'
+import { markRaw, type RefSignal } from '@vitarx/responsive'
 import { isCommentVNode } from '../guards.js'
 import { COMMENT_NODE_TYPE } from '../node-symbol.js'
 import { NoTagVNode } from './no-tag.js'
@@ -39,7 +39,7 @@ export class CommentVNode extends NoTagVNode<COMMENT_NODE_TYPE> {
   override render(): Comment {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
-      this.#element = document.createComment(this.value)
+      this.#element = markRaw(document.createComment(this.value))
     }
     return this.#element
   }

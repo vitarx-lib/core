@@ -1,4 +1,4 @@
-import { EffectScope } from '@vitarx/responsive'
+import { EffectScope, NOT_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { getCurrentVNode } from '../vnode/context.js'
 import {
   type AnyElement,
@@ -60,6 +60,12 @@ export abstract class Widget<
   InputProps extends Record<string, any> = {},
   DefaultProps extends InputProps = InputProps
 > {
+  /**
+   * 禁止代理小部件实例
+   */
+  get [NOT_SIGNAL_SYMBOL]() {
+    return true
+  }
   /**
    * 类小部件标识符符
    */

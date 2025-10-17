@@ -1,4 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
+import { markRaw } from '@vitarx/responsive'
 import { isTextVNode } from '../guards.js'
 import type { TextNodeElementName } from '../types/index.js'
 import { NoTagVNode } from './no-tag.js'
@@ -39,7 +40,7 @@ export class TextVNode extends NoTagVNode<TextNodeElementName> {
   override render(): Text {
     // 如果元素尚未渲染，则先进行渲染
     if (!this.#element) {
-      this.#element = document.createTextNode(this.value)
+      this.#element = markRaw(document.createTextNode(this.value))
     }
     return this.#element
   }

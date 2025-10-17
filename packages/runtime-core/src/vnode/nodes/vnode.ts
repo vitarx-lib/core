@@ -1,3 +1,4 @@
+import { NOT_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { isArrayEqual, popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../guards.js'
@@ -38,6 +39,14 @@ const MEMO_STORE = new WeakMap<Array<any>, VNode>()
  * - 使用activate/deactivate方法时需注意root参数的正确使用
  */
 export abstract class VNode<T extends VNodeType = VNodeType> {
+  /**
+   * 标记为非信号状态的属性
+   * 这个getter方法返回一个布尔值，用于标识当前对象是否处于非信号状态
+   * @returns {true} 返回true表示处于非信号状态
+   */
+  get [NOT_SIGNAL_SYMBOL](): true {
+    return true
+  }
   /**
    * 源信息，仅在开发调试阶段存在
    */
