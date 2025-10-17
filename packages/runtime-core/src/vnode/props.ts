@@ -7,7 +7,6 @@ import type { MergeProps } from './types/index.js'
 const VNODE_PROPS_DEFAULT_DATA = Symbol('VNODE_PROPS_DEFAULT_DATA')
 const VNODE_PROPS_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
 const WARN_MESSAGE = `[Vitarx.PropsProxyHandler][WARN]：The component's props should maintain a one-way data flow, and you shouldn't modify it directly. (This warning only exists during the development and debugging phase)`
-
 /**
  * PropsProxyHandler 是一个属性代理处理器类，用于管理和代理对象的属性访问。
  * 该类继承自 ReactiveProxyHandler，主要用于处理 VNode 属性的特殊访问和设置逻辑。
@@ -243,33 +242,56 @@ export function defineProps<D extends Record<string, any>, I extends Record<stri
 export { defineProps as defineDefaultProps }
 
 /**
+ * 内置全局特殊属性
+ */
+export const INTRINSIC_PROPERTIES = [
+  'children',
+  'ref',
+  'v-bind',
+  'v-if',
+  'v-memo',
+  'v-static',
+  'v-parent'
+] as const
+/**
  * 处理绑定属性
  * 从props中提取v-bind属性，并处理与已有属性的合并逻辑
  * @param props - 需要处理的属性对象
+ * @param excludeIntrinsicProperty - 是否排除内置属性
  */
-export function _handleBindProps(props: Record<string, any>) {
+export function _handleBindProps(
+  props: Record<string, any>,
+  excludeIntrinsicProperty: boolean = true
+) {
   // 从props中提取v-bind属性，并返回剩余的props
-  const vBind = popProperty(props, 'v-bind')
-  let attrs: Record<string, any> = vBind // 初始化属性对象
-  let exclude: string[] = [] // 初始化排除列表
-  // 如果vBind是数组，则分别获取属性对象和排除列表
-  if (Array.isArray(vBind)) {
-    attrs = vBind[0] // 获取属性对象
-    exclude = vBind[1] || [] // 获取排除列表，如果不存在则为空数组
+  const bind = popProperty(props, 'v-bind')
+  if (!bind) return
+  let resolvedProps: Record<string, any> = bind // 初始化属性对象
+  // 定义排除内置属性的排除列表
+  const baseExclude: ReadonlyArray<string> = excludeIntrinsicProperty ? INTRINSIC_PROPERTIES : []
+  // 定义排除列表
+  let exclude: ReadonlySet<string>
+  // 如果bind是数组，则分别获取属性对象和排除列表
+  if (Array.isArray(bind)) {
+    resolvedProps = bind[0] // 获取属性对象
+    // 如果不是键值对对象，则结束函数
+    if (!isRecordObject(resolvedProps)) return
+    if (Array.isArray(bind[1])) {
+      exclude = new Set(bind[1].concat(baseExclude))
+    }
   }
-  // 如果属性对象存在，则遍历合并属性
-  if (!isRecordObject(attrs)) return
-  for (const key in attrs) {
-    const newValue = attrs[key]
-    // 如果属性值为undefined，则跳过
-    if (newValue === undefined) continue
-    // 如果排除列表中包含当前属性或属性是`children`，则跳过
-    if (exclude.includes(key) || key === 'children') continue
+  // 如果没有排除列表，则创建一个
+  exclude ??= new Set(baseExclude)
+  for (const key in resolvedProps) {
+    const newValue = unref(resolvedProps[key])
+    // 如果属性值为undefined或被排除则跳过
+    if (newValue === undefined || exclude.has(key)) continue
     if (key in props) {
+      const oldValue = unref(props[key])
+      const type = typeof oldValue
       // 合并样式
       if (key === 'style') {
-        const type = typeof props[key]
-        const style = DomHelper.mergeCssStyle(unref(props[key]), unref(newValue))
+        const style = DomHelper.mergeCssStyle(oldValue, unref(newValue))
         if (type === 'string') {
           props[key] = DomHelper.cssStyleValueToString(style)
         } else {
@@ -280,7 +302,7 @@ export function _handleBindProps(props: Record<string, any>) {
       // 合并类名
       if (key === 'class' || key === 'className' || key === 'classname') {
         const type = typeof props[key]
-        const className = DomHelper.mergeCssClass(unref(props[key]), unref(newValue))
+        const className = DomHelper.mergeCssClass(oldValue, unref(newValue))
         if (type === 'string') {
           props[key] = DomHelper.cssClassValueToString(className)
         } else {
