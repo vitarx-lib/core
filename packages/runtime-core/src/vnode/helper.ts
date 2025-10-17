@@ -106,6 +106,9 @@ export function createVNode<T extends VNodeType>(
     // 如果有属性，则合并绑定的属性
     if (isValidProps) _handleBindProps(resolvedProps, false)
     const vnode = type(resolvedProps)
+    if (vnode === null) {
+      return new CommentVNode('simple widget return null') as unknown as VNodeInstance<T>
+    }
     if (!VNode.is(vnode)) throw new Error('simple widget must return a VNode')
     return vnode as unknown as VNodeInstance<T>
   }
