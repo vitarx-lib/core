@@ -102,12 +102,10 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     // 节点属性
     this.#props = props ?? ({} as VNodeProps<T>)
     if (props) {
-      // 属性处理
-      this.propsHandler()
-      // 提取key属性
-      this.#key = popProperty(props, 'key')
       // 引用
       this.#ref = popProperty(props, 'ref')
+      // 提取key属性
+      this.#key = popProperty(props, 'key')
       // 缓存
       const memo = popProperty(props, 'v-memo')
       // 初始化缓存
@@ -120,6 +118,8 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       this.#isStatic = !!popProperty(props, 'v-static')
       // 父元素
       this.setTeleport(popProperty(props, 'v-parent') as Element)
+      // 属性处理
+      this.propsHandler()
     }
   }
 
@@ -162,7 +162,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 获取节点的唯一标识符
    *
-   * @returns {UniqueKey | null} 返回节点的key值，如果未设置则返回null
+   * @returns {UniqueKey|undefined} 返回节点的key值，如果未设置则返回undefined
    */
   get key(): UniqueKey | undefined {
     return this.#key
