@@ -8,6 +8,7 @@ import {
 } from '../../widget/index.js'
 import type {
   Comment as CommentType,
+  DynamicWidget,
   Fragment as FragmentType,
   Text as TextType
 } from '../node-symbol.js'
@@ -67,6 +68,7 @@ export type VNodeType =
   | FragmentType
   | TextType
   | CommentType
+  | DynamicWidget
 /**
  * Widget节点Props类型重载
  */

@@ -2,6 +2,7 @@ import type { RefSignal } from '@vitarx/responsive'
 import {
   type Comment as CommentType,
   type COMMENT_NODE_TYPE,
+  type DYNAMIC_WIDGET_TYPE,
   type DynamicWidgetProps,
   type Fragment,
   type FRAGMENT_NODE_TYPE,
@@ -48,7 +49,10 @@ export type SpecialNodeElementName = NoTagNodeElementName | FragmentNodeElementN
  *
  * 包含了所有元素，如div、span、a等元素，以及特殊元素如注释节点、文本节点、片段节点等
  */
-export type IntrinsicNodeElementName = HTMLNodeElementName | SpecialNodeElementName
+export type IntrinsicNodeElementName =
+  | HTMLNodeElementName
+  | SpecialNodeElementName
+  | DYNAMIC_WIDGET_TYPE
 
 /**
  * 特殊元素节点映射
