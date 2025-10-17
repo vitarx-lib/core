@@ -71,9 +71,8 @@ export interface GlobalProperties {
   /**
    * 绑定属性
    *
-   * 注意：不能通过 `v-bind` 指令绑定内部固有属性，
-   * 例如 ref、key、children、v-if、v-static等内部固有属性。
-   * 仅`<widget>`、`<DynamicWidget>`支持绑定固有属性。
+   * 注意：不能通过 `v-bind` 指令绑定内部固有属性(ref、key、children...)。
+   * 如需支持绑定内部属性，需使用 `v-bind-all`。以上限制对 动态组件和简单组件无效。
    *
    * 可选值：
    *  - Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
@@ -81,6 +80,24 @@ export interface GlobalProperties {
    *  第二个元素可以指定哪些属性不需要绑定。
    */
   'v-bind'?: VBind
+  /**
+   * 绑定所有属性
+   *
+   * `v-bind-all` 绑定所有属性到节点（包含 ref、key 等属性），
+   * 同时也支持排除不需要绑定的属性，在创建节点之前完成绑定。
+   *
+   * 大部分场景我们应该使用 `v-bind` ，`v-bind-all` 的存在是为了将外部传入的属性都绑定给元素/组件时使用。
+   *
+   * 下面是简单组件将ref/key等属性完整的绑定给元素的使用场景示例：
+   * @example
+   * ```tsx
+   * const SimpleWidget = defineSimpleWidget((props) => {
+   *    // 这样外部传入的 ref 会被作用到 div
+   *    return <div v-bind-all={props}></div>
+   * })
+   * ```
+   */
+  'v-bind-all'?: VBind
   /**
    * 条件渲染指令
    * 如果是v-if为false，则会使用 CommonVNode 代替原始节点，

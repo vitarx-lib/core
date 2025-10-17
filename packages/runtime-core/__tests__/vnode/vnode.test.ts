@@ -7,6 +7,7 @@ import {
   getCurrentVNode,
   isVNode,
   markSimpleWidget,
+  refEl,
   TextVNode,
   useCurrentVNode,
   WidgetVNode
@@ -105,6 +106,17 @@ describe('createVNode', () => {
     const node = createVNode('div', { 'v-parent': document.body })
     node.mount(div)
     expect(node.element.parentNode).toBe(document.body)
+  })
+  it('应该支持v-bind指令', () => {
+    const node = createVNode('div', { 'v-bind': { test: 2, ref: refEl() } })
+    expect(node.props.test).toBe(2)
+    expect(node.ref).toBe(undefined)
+  })
+  it('应该支持v-bind-all指令', () => {
+    const r = refEl()
+    const node = createVNode('div', { 'v-bind-all': { test: 2, ref: r } })
+    expect(node.props.test).toBe(2)
+    expect(node.ref).toBe(r)
   })
 })
 
