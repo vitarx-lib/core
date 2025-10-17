@@ -59,11 +59,13 @@ export interface IntrinsicProperties {
   /**
    * 绑定属性
    *
-   * 注意：所有内部固有属性都不能通过 `v-bind` 指令进行绑定，例如 ref、key、children、v-if、v-static等内部固有属性。
+   * 注意：不能通过 `v-bind` 指令绑定内部固有属性，
+   * 例如 ref、key、children、v-if、v-static等内部固有属性。
+   * 仅`<widget>`、`<DynamicWidget>`或具有`SIMPLE_FUNCTION_WIDGET_SYMBOL`标记的函数组件支持绑定固有属性。
    *
    * 可选值：
-   *  - 对象Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
-   *  - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
+   *  - Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
+   *  - [props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
    *  第二个元素可以指定哪些属性不需要绑定。
    */
   'v-bind'?: VBind

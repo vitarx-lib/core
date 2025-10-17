@@ -85,7 +85,7 @@ export function createVNode<T extends VNodeType>(
         // 默认处理元素节点
         return new FragmentVNode(resolvedProps) as unknown as VNodeInstance<T>
       case DYNAMIC_WIDGET_TYPE:
-        const { is: dynamicWidget, children: dynamicChildren, ...dynamicProps } = resolvedProps
+        const { is: dynamicWidget, ...dynamicProps } = resolvedProps
         const resolved = unref(dynamicWidget)
         if (!resolved) {
           if (import.meta.env.DEV) {
@@ -96,21 +96,15 @@ export function createVNode<T extends VNodeType>(
           ) as unknown as VNodeInstance<T>
         }
         // 如果有属性，则合并绑定的属性
-        if (!isEmpty(dynamicProps)) _handleBindProps(dynamicProps)
-        const finalProps = {
-          'v-bind': dynamicProps,
-          ref: resolvedProps.ref,
-          key: resolvedProps.key,
-          children: dynamicChildren
-        }
-        return createVNode(resolved, finalProps) as unknown as VNodeInstance<T>
+        if (!isEmpty(dynamicProps)) _handleBindProps(dynamicProps, false)
+        return createVNode(resolved, dynamicProps) as unknown as VNodeInstance<T>
       default:
         return new ElementVNode(type, resolvedProps) as unknown as VNodeInstance<T>
     }
   }
   if (isSimpleWidget(type)) {
     // 如果有属性，则合并绑定的属性
-    if (isValidProps) _handleBindProps(resolvedProps)
+    if (isValidProps) _handleBindProps(resolvedProps, false)
     const vnode = type(resolvedProps)
     if (!VNode.is(vnode)) throw new Error('simple widget must return a VNode')
     return vnode as unknown as VNodeInstance<T>
