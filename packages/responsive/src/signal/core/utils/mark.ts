@@ -49,7 +49,7 @@ export { markNotSignal as markRaw }
  * ```
  */
 export function isMarkNotSignal(obj: AnyObject): boolean {
-  return !!(obj as any)[NOT_SIGNAL_SYMBOL]
+  return obj && !!(obj as any)?.[NOT_SIGNAL_SYMBOL]
 }
 
 export { isMarkNotSignal as isMarkRaw }
