@@ -110,7 +110,7 @@ describe('createVNode', () => {
   it('应该支持v-bind指令', () => {
     const node = createVNode('div', { 'v-bind': { test: 2, ref: refEl() } })
     expect(node.props.test).toBe(2)
-    expect(node.ref).toBe(undefined)
+    expect(node.ref).toBe(null)
   })
   it('应该支持v-bind-all指令', () => {
     const r = refEl()
