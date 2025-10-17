@@ -1,5 +1,5 @@
 import { unref } from '@vitarx/responsive'
-import { isRecordObject, popProperty } from '@vitarx/utils'
+import { isEmpty, isRecordObject, popProperty } from '@vitarx/utils'
 import { isSimpleWidget } from '../widget/helper.js'
 import {
   COMMENT_NODE_TYPE,
@@ -85,11 +85,7 @@ export function createVNode<T extends VNodeType>(
         // 默认处理元素节点
         return new FragmentVNode(resolvedProps) as unknown as VNodeInstance<T>
       case DYNAMIC_WIDGET_TYPE:
-        const {
-          is: dynamicWidget,
-          children: dynamicChildren,
-          'v-bind': dynamicBindProps
-        } = resolvedProps
+        const { is: dynamicWidget, children: dynamicChildren, ...dynamicProps } = resolvedProps
         const resolved = unref(dynamicWidget)
         if (!resolved) {
           if (import.meta.env.DEV) {
@@ -99,10 +95,13 @@ export function createVNode<T extends VNodeType>(
             'DynamicWidget 构建失败，"is" prop 为必填且不能为空'
           ) as unknown as VNodeInstance<T>
         }
-        // v-bind 为 null 或 undefined 时跳过创建多余属性
-        const finalProps = isRecordObject(dynamicBindProps)
-          ? { 'v-bind': dynamicBindProps, key: resolvedProps.key, children: dynamicChildren }
-          : { children: dynamicChildren }
+        // 如果有属性，则合并绑定的属性
+        if (!isEmpty(dynamicProps)) _handleBindProps(dynamicProps)
+        const finalProps = {
+          'v-bind': dynamicProps,
+          key: resolvedProps.key,
+          children: dynamicChildren
+        }
         return createVNode(resolved, finalProps) as unknown as VNodeInstance<T>
       default:
         return new ElementVNode(type, resolvedProps) as unknown as VNodeInstance<T>

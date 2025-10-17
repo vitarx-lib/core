@@ -72,6 +72,10 @@ export interface DynamicWidgetProps {
    * 子节点，可以通过属性或插槽方式传入
    */
   children?: AnyChildren
+  /**
+   * 除了is属性外，其他属性将作为组件的属性传入
+   */
+  [key: string]: any
 }
 /**
  * 动态虚拟节点组件
@@ -88,7 +92,7 @@ export interface DynamicWidgetProps {
  * <DynamicWidget is={currentWidget} />
  *
  * // 2️⃣ 透传 props
- * <DynamicWidget is={currentWidget} v-bind={ name: 'John' } />
+ * <DynamicWidget is={currentWidget} v-bind={ name: 'John' } style={{background:'red'}}/>
  *
  * // 3️⃣ 通过 children 属性传递子元素
  * <DynamicWidget is={currentWidget} children={<div>Hello</div>} />
