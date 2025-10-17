@@ -246,6 +246,7 @@ export { defineProps as defineDefaultProps }
  */
 export const INTRINSIC_PROPERTIES = [
   'children',
+  'key',
   'ref',
   'v-bind',
   'v-if',
@@ -270,7 +271,9 @@ export function _handleBindProps(
   if (!bind) return
   let resolvedProps: Record<string, any> = bind // 初始化属性对象
   // 定义排除内置属性的排除列表
-  const baseExclude: ReadonlyArray<string> = excludeIntrinsicProperty ? INTRINSIC_PROPERTIES : []
+  const baseExclude: ReadonlyArray<string> = excludeIntrinsicProperty
+    ? INTRINSIC_PROPERTIES
+    : ['v-if']
   // 定义排除列表
   let exclude: ReadonlySet<string>
   // 如果bind是数组，则分别获取属性对象和排除列表
