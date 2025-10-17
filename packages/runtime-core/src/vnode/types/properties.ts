@@ -7,7 +7,7 @@ import type { AnyChildren } from './vnode.js'
 /**
  * 唯一键
  */
-export type UniqueKey = string | number | bigint | symbol
+export type UniqueKey = any
 
 /**
  * 绑定属性
