@@ -99,6 +99,7 @@ export function createVNode<T extends VNodeType>(
         if (!isEmpty(dynamicProps)) _handleBindProps(dynamicProps)
         const finalProps = {
           'v-bind': dynamicProps,
+          ref: resolvedProps.ref,
           key: resolvedProps.key,
           children: dynamicChildren
         }

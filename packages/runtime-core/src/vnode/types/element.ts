@@ -2,7 +2,6 @@ import type { RefSignal } from '@vitarx/responsive'
 import {
   type Comment as CommentType,
   type COMMENT_NODE_TYPE,
-  type DYNAMIC_WIDGET_TYPE,
   type DynamicWidgetProps,
   type Fragment,
   type FRAGMENT_NODE_TYPE,
@@ -70,9 +69,11 @@ export type SpecialNodeElement = {
    * const widgets = { A: WidgetA, B: WidgetB, C: WidgetC }
    * const currentWidget = computed(() => widgets[current.value])
    * <widget is={currentWidget} />
+   * // 支持透传属性
+   * <widget is={currentWidget} id="1" v-bind={{is:'如果组件也接收is属性，则可以通过v-bind来透传'}}/>
    * ```
    */
-  [K in DYNAMIC_WIDGET_TYPE]: DynamicWidgetProps
+  widget: DynamicWidgetProps
 }
 
 /**
