@@ -4,6 +4,7 @@ import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../guards.js'
 import { VNODE_SYMBOL } from '../node-symbol.js'
 import { _handleBindProps } from '../props.js'
+import { isRefEl, type RefEl } from '../ref.js'
 import { addParentVNodeMapping, findParentVNode } from '../relations.js'
 import type {
   MountType,
@@ -69,7 +70,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 唯一标识符
    */
-  readonly #key?: UniqueKey
+  readonly #key: UniqueKey
   /**
    * 影子元素
    * @private
@@ -84,7 +85,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 引用
    */
-  readonly #ref?: NonNullable<VNodeProps<T>>['ref']
+  readonly #ref: RefEl<any> | null = null
   /**
    * 静态节点
    * @private
@@ -102,10 +103,11 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     // 节点属性
     this.#props = props ?? ({} as VNodeProps<T>)
     if (props) {
+      const ref = popProperty(props, 'ref')
       // 引用
-      this.#ref = popProperty(props, 'ref')
+      this.#ref = isRefEl(ref) ? ref : null
       // 提取key属性
-      this.#key = popProperty(props, 'key')
+      this.#key = popProperty(props, 'key') || null
       // 缓存
       const memo = popProperty(props, 'v-memo')
       // 初始化缓存
@@ -188,9 +190,9 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 获取节点的引用属性
    *
-   * @returns {NonNullable<VNodeProps<T>>['ref'] | null} 返回节点的ref值，如果未设置则返回null
+   * @returns {RefEl<any> | null} 返回节点的ref值，如果未设置则返回null
    */
-  get ref(): NonNullable<VNodeProps<T>>['ref'] | undefined {
+  get ref(): RefEl<any> | null {
     return this.#ref
   }
 

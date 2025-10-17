@@ -28,7 +28,6 @@ import { Widget } from '../../widget/widget.js'
 import { getCurrentVNode, runInNodeContext } from '../context.js'
 import { isVNode, isWidgetVNode } from '../guards.js'
 import { proxyWidgetProps } from '../props.js'
-import { isRefEl } from '../ref.js'
 import type {
   AnyElement,
   MountType,
@@ -185,7 +184,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
             )
           }
           // 绑定ref
-          if (isRefEl(this.ref)) this.ref.value = this.#instance
+          if (this.ref) this.ref.value = this.#instance
           return this.#instance!
         })
       )

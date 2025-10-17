@@ -1,7 +1,6 @@
 import { isRefSignal, markRaw } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
 import { isElementVNode } from '../guards.js'
-import { isRefEl } from '../ref.js'
 import { type ClassProperties, HTMLNodeElementName, RuntimeElement } from '../types/index.js'
 import { ContainerVNode } from './container.js'
 
@@ -66,7 +65,7 @@ export class ElementVNode<
         DomHelper.setAttributes(this.#element, this.props)
       }
       // 绑定ref
-      if (isRefEl(this.ref)) this.ref.value = this.#element
+      if (this.ref) this.ref.value = this.#element
       this.renderChildren()
     }
     return this.#element
