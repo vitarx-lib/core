@@ -260,13 +260,16 @@ export function _handleBindProps(props: Record<string, any>) {
   // 如果属性对象存在，则遍历合并属性
   if (!isRecordObject(attrs)) return
   for (const key in attrs) {
+    const newValue = attrs[key]
+    // 如果属性值为undefined，则跳过
+    if (newValue === undefined) continue
     // 如果排除列表中包含当前属性或属性是`children`，则跳过
     if (exclude.includes(key) || key === 'children') continue
     if (key in props) {
       // 合并样式
       if (key === 'style') {
         const type = typeof props[key]
-        const style = DomHelper.mergeCssStyle(unref(props[key]), unref(attrs[key]))
+        const style = DomHelper.mergeCssStyle(unref(props[key]), unref(newValue))
         if (type === 'string') {
           props[key] = DomHelper.cssStyleValueToString(style)
         } else {
@@ -277,7 +280,7 @@ export function _handleBindProps(props: Record<string, any>) {
       // 合并类名
       if (key === 'class' || key === 'className' || key === 'classname') {
         const type = typeof props[key]
-        const className = DomHelper.mergeCssClass(unref(props[key]), unref(attrs[key]))
+        const className = DomHelper.mergeCssClass(unref(props[key]), unref(newValue))
         if (type === 'string') {
           props[key] = DomHelper.cssClassValueToString(className)
         } else {
@@ -287,6 +290,6 @@ export function _handleBindProps(props: Record<string, any>) {
       }
     }
     // 将属性添加到props中
-    props[key] = attrs[key]
+    props[key] = newValue
   }
 }
