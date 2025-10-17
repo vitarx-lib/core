@@ -9,7 +9,7 @@ type ComputedRefElType<T> = T extends HTMLNodeElementName
   ? RuntimeElement<T>
   : ExcludeWidgetIntrinsicKeywords<T>
 /** 引用元素类型 */
-export type RefEl<T> = Ref<ComputedRefElType<T> | null, false>
+export type RefEl<T> = Ref<ComputedRefElType<T> | null>
 
 /**
  * 引用节点元素
