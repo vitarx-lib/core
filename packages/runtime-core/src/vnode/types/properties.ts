@@ -17,6 +17,16 @@ export type UniqueKey = any
  *   - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，第二个元素可以指定哪些属性不需要绑定。
  */
 export type VBind = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
+
+/**
+ * PropValue是一个属性值类型工具
+ *
+ * 通过泛型T指定属性值的类型，返回一个联合类型，使其支持传入ref创建的引用信号类型
+ *
+ * @template T - 属性值的类型
+ */
+export type PropValue<T> = T extends RefSignal ? T : T | RefSignal<T>
+
 /**
  * 父元素
  */
@@ -48,6 +58,8 @@ export interface IntrinsicProperties {
   ref?: RefEl<any>
   /**
    * 绑定属性
+   *
+   * 注意：所有内部固有属性都不能通过 `v-bind` 指令进行绑定，例如 ref、key、children、v-if、v-static等内部固有属性。
    *
    * 可选值：
    *  - 对象Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
@@ -301,7 +313,7 @@ type IsW3CHtmlProperties<P extends string> = Lowercase<P> extends PropertyNames 
  * 转换后的每个属性可以是原始类型，也可以是 `RefSignal` 类型。
  */
 type SupportRefSignal<T extends {}> = {
-  [key in keyof T]: T[key] | RefSignal<T[key]>
+  [key in keyof T]: PropValue<T[key]>
 }
 
 type BoolType = 'true' | 'false' | boolean
@@ -730,7 +742,7 @@ interface CustomProperties {
   /**
    * `v-html` 是框架的自定义属性，用于在元素中插入 HTML 代码。
    */
-  'v-html'?: RefSignal<string> | string
+  'v-html'?: string
   /**
    * 子元素
    *
