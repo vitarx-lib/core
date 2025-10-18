@@ -121,7 +121,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 提取key属性
       this.#key = popProperty(props, 'key') || null
       // 提取显示属性
-      this.#show = popProperty(props, 'v-show')
+      this.#show = !!unref(popProperty(props, 'v-show'))
       // 缓存
       const memo = popProperty(props, 'v-memo')
       // 初始化缓存
@@ -165,7 +165,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   }
 
   /**
-   * 设置是否显示的属性值
+   * 设置v-show的属性值
    * @param value - 传入的显示状态值，可以是响应式引用或普通值
    */
   set isShow(value: PropValue<boolean>) {
