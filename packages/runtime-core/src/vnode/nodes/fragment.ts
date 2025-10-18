@@ -19,10 +19,6 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
       child.isShow = show
     }
   }
-  /**
-   * 运行时元素实例
-   */
-  #element: FragmentElement | null = null
 
   constructor(props: { children: Child[] } | null = null) {
     super(FRAGMENT_NODE_TYPE, props)
@@ -38,7 +34,7 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
   override render(): FragmentElement {
     const element = markRaw(document.createDocumentFragment() as FragmentElement)
     // 设置虚拟节点属性
-    Object.defineProperty(this.#element, '$vnode', {
+    Object.defineProperty(element, '$vnode', {
       value: this
     })
     this.renderChildren(element)
