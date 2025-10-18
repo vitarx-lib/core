@@ -1,6 +1,6 @@
 import { reactive, ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import { createElement, Fragment, onMounted, onUpdated, WidgetVNode } from '../../src'
+import { createElement, Fragment, onMounted, onUpdated, VNodeUpdate, WidgetVNode } from '../../src'
 
 describe('update', () => {
   beforeEach(() => {
@@ -197,14 +197,68 @@ describe('update', () => {
     arr.splice(1, 0, 4) // [ 3, 4, 2, 1 ]
     await vi.waitFor(() => {
       expect(container.textContent).toBe('31')
-      expect(target.textContent).toBe('24')
+      expect(target.textContent).toBe('42') // 4 会复用 2，所以4跑到了2的前面
     })
 
     // 删除节点
     arr.splice(0, 1) // [4,2,1]
     await vi.waitFor(() => {
       expect(container.textContent).toBe('1')
-      expect(target.textContent).toBe('24')
+      expect(target.textContent).toBe('24') // 4 重新插入了，它呈现在 2 之后
     })
+  })
+  it('应该正确复用有 key 和无 key 的节点', async () => {
+    document.body.innerHTML = ''
+    const body = document.body
+
+    const count = ref(0)
+    const n0 = createElement('li', null, `no-key-1: ${count.value}`)
+    const renderList = () => {
+      // 列表中有 key / 无 key 混合节点
+      return createElement(
+        'ul',
+        null,
+        createElement('li', { key: 'A' }, `A`),
+        n0,
+        createElement('li', { key: 'B' }, `B`),
+        createElement('li', null, `no-key-2`)
+      )
+    }
+
+    // 初次渲染
+    const vnode1 = renderList() as any
+    vnode1.mount(body)
+    expect(body.innerHTML).toContain('A')
+    expect(body.innerHTML).toContain('no-key-1: 0')
+    expect(body.innerHTML).toContain('B')
+    expect(body.innerHTML).toContain('no-key-2')
+
+    // 模拟更新：重排 key 节点，修改 count
+    count.value++
+    const vnode2 = createElement(
+      'ul',
+      null,
+      // key 顺序调换 + 插入新节点 + 修改文本
+      createElement('li', { key: 'B' }, `B updated`),
+      createElement('li', null, `no-key-1: ${count.value}`),
+      createElement('li', { key: 'A' }, `A`),
+      createElement('li', null, `no-key-3-new`)
+    ) as any
+
+    // 执行更新
+    VNodeUpdate.patchUpdateChildren(vnode1, vnode2)
+    console.log(body.innerHTML)
+    // --- 验证 DOM ---
+    const lis = [...body.querySelectorAll('li')]
+    expect(lis.length).toBe(4)
+    expect(lis[0].textContent).toBe('B updated') // B 重排 + 更新
+    expect(lis[1].textContent).toBe('no-key-1: 1') // 无 key 复用 + 文本更新
+    expect(lis[2].textContent).toBe('A') // A 移动至后方
+    expect(lis[3].textContent).toBe('no-key-3-new') // 新增节点
+
+    // 验证复用性 —— 第二个 <li> 应该是同一个 DOM 节点（未被替换）
+    const oldLi = vnode1.children[1].element
+    const newLi = vnode2.children[1].element
+    expect(oldLi).toBe(newLi)
   })
 })
