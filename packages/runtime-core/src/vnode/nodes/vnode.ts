@@ -67,16 +67,16 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    *
    * 请勿外部修改此属性！
    */
-  readonly #memo?: Array<any>
+  readonly #memo: Array<any> | null = null
   /**
    * 唯一标识符
    */
-  readonly #key: UniqueKey
+  readonly #key: UniqueKey = null
   /**
    * 影子元素
    * @private
    */
-  #shadowElement?: Comment
+  #shadowElement: Comment | null = null
   /**
    * 传送的目标元素
    *
@@ -119,7 +119,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 引用
       this.#ref = isRefEl(ref) ? ref : null
       // 提取key属性
-      this.#key = popProperty(props, 'key') || null
+      this.#key = popProperty(props, 'key') ?? null
       // 提取显示属性
       this.#show = 'v-show' in props ? !!unref(popProperty(props, 'v-show')) : true
       // 缓存
@@ -207,9 +207,9 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 获取节点的唯一标识符
    *
-   * @returns {UniqueKey|undefined} 返回节点的key值，如果未设置则返回undefined
+   * @returns {UniqueKey|null} 返回节点的key值，如果未设置则返回null
    */
-  get key(): UniqueKey | undefined {
+  get key(): UniqueKey | null {
     return this.#key
   }
 
@@ -245,9 +245,9 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 获取存储在类中的备忘录数组
    * 这是一个getter方法，用于返回私有属性#memo的值
-   * @returns {Array<any> | undefined} 返回存储的备忘录数组，如果未设置则返回undefined
+   * @returns {Array<any> | null} 返回存储的备忘录数组，如果未设置则返回undefined
    */
-  get memo(): Array<any> | undefined {
+  get memo(): Array<any> | null {
     return this.#memo
   }
 
@@ -388,7 +388,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   protected removeShadowElement(): void {
     this.#shadowElement?.remove() // 使用可选链操作符，如果shadowElement存在则调用remove()方法
-    this.#shadowElement = undefined // 将shadowElement的引用置为undefined，便于垃圾回收
+    this.#shadowElement = null // 将shadowElement的引用置为null，便于垃圾回收
   }
 
   /**

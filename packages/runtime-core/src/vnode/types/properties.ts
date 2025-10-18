@@ -6,8 +6,10 @@ import type { AnyChildren } from './vnode.js'
 
 /**
  * 唯一键
+ *
+ * null 和 undefined 会被忽略
  */
-export type UniqueKey = any
+export type UniqueKey = string | symbol | number | boolean | bigint | object | null | undefined
 
 /**
  * 绑定属性
@@ -55,13 +57,15 @@ export interface IntrinsicProperties extends GlobalProperties {
  */
 export interface GlobalProperties {
   /**
-   * 控制一个 `Widget` 如何替换树中的另一个 `Widget`。
+   * 控制一个 `VNode` 如何替换树中的另一个 `VNode`。
    *
-   * 在运行时，如果两个Widget的`key`相同，则会更新已渲染的Widget，否则会移除旧Widget，然后插入新Widget。
+   * 在运行时，如果两个`VNode`的`key`相同，则会更新已渲染的`VNode`，否则会移除旧`VNode`，然后插入新`VNode`。
    *
    * 这在某些情况下很有用，例如，当您想重新排序列表时。
    *
-   * 通常，作为另一个 Widget 的唯一子项的 Widget 不需要显式键。
+   * 通常，作为另一个 `VNode` 的唯一子项不需要显式键。
+   *
+   * 除了 undefined 和 null，其他值都会被视为有效的唯一键。
    */
   key?: UniqueKey
   /**
