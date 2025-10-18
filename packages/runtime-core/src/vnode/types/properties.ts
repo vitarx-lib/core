@@ -100,10 +100,20 @@ export interface GlobalProperties {
   'v-bind-all'?: VBind
   /**
    * 条件渲染指令
-   * 如果是v-if为false，则会使用 CommonVNode 代替原始节点，
-   * CommonVNode节点的开销非常小，视觉效果上也看不见该节点。
+   *
+   * 如果是`v-if`的`value`==`false`，则会使用 CommonVNode 代替原始节点，
+   * CommonVNode节点的开销非常小，通过开发者工具可以看见 `<!--v-if-->` 注释。
+   *
+   * 我们更推荐使用 jsx 语法的条件渲染，如：
+   * ```tsx
+   * const show = ref(false)
+   * // v-if 语法
+   * <div v-if={show}>要显示的元素</div>
+   * // jsx 条件判断语法
+   * { show.value && <div>要显示的元素</div> }
+   * ```
    */
-  'v-if'?: boolean
+  'v-if'?: PropValue<boolean>
   /**
    * 缓存节点的指令
    *

@@ -34,7 +34,7 @@ export function createVNode<T extends VNodeType>(
 
   // ---------- v-if / v-bind-all / v-memo ----------
   if (isValidProps) {
-    if ('v-if' in resolvedProps && !popProperty(resolvedProps, 'v-if')) {
+    if ('v-if' in resolvedProps && !unref(popProperty(resolvedProps, 'v-if'))) {
       return new CommentVNode('v-if') as unknown as VNodeInstance<T>
     }
 
