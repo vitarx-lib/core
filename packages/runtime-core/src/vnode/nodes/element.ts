@@ -61,31 +61,27 @@ export class ElementVNode<
   }
 
   /**
-   * 运行时元素实例
-   * 这是一个私有属性，用于存储DOM元素的引用
+   * @inheritDoc
    */
-  #element: RuntimeElement<T> | null = null
-
   override render(): RuntimeElement<T> {
     // 检查元素是否已创建，若未创建则进行创建
-    if (!this.#element) {
-      // 根据是否为SVG元素创建对应的DOM元素
-      const element = // 判断是否为SVG虚拟节点，如果是则使用SVG命名空间创建元素
-        document.createElementNS(
-          ElementVNode.isSvgVNode(this) ? NAMESPACE_URI.svg : NAMESPACE_URI.html,
-          this.type
-        ) as RuntimeElement<T>
-      // 将元素标记为不可代理
-      this.#element = markRaw(element)
-      // 如果元素能够设置属性，则设置属性
-      if (Object.keys(this.props).length) {
-        DomHelper.setAttributes(this.#element, this.props)
-      }
-      // 绑定ref
-      if (this.ref) this.ref.value = this.#element
-      this.renderChildren()
+    // 根据是否为SVG元素创建对应的DOM元素
+    const domElement = document.createElementNS(
+      ElementVNode.isSvgVNode(this) ? NAMESPACE_URI.svg : NAMESPACE_URI.html,
+      this.type
+    ) as RuntimeElement<T>
+    // 将元素标记为不可代理
+    const element = markRaw(domElement)
+    // 如果元素能够设置属性，则设置属性
+    if (Object.keys(this.props).length) {
+      DomHelper.setAttributes(element, this.props)
     }
-    return this.#element
+    // 如果元素不可见，则设置样式为隐藏
+    if (!this.isShow) element.style.display = 'none'
+    // 绑定ref
+    if (this.ref) this.ref.value = element
+    this.renderChildren(element)
+    return element
   }
 
   /**
@@ -101,6 +97,7 @@ export class ElementVNode<
     } else if (this.teleport) {
       DomHelper.remove(this.element)
     }
+    this._cachedElement = null
   }
 
   /**
@@ -127,6 +124,7 @@ export class ElementVNode<
     // 如果没有找到任何SVG命名空间或svg标签，返回false
     return false
   }
+
   /**
    * 判断给定的值是否为元素类型的虚拟节点
    *

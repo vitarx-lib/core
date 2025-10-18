@@ -7,6 +7,7 @@ import type {
   FragmentNodeElementName,
   HTMLNodeElementName,
   MountType,
+  RuntimeElement,
   UniqueKey,
   VNodeProps
 } from '../types/index.js'
@@ -85,8 +86,7 @@ export abstract class ContainerVNode<
   /**
    * 渲染子节点的函数
    */
-  protected renderChildren(): void {
-    const currentEl = this.element
+  protected renderChildren(currentEl: RuntimeElement<T>): void {
     // 检查是否存在子节点并且目标元素具有children属性
     if (this.children.length && 'children' in currentEl) {
       // 渲染所有子节点

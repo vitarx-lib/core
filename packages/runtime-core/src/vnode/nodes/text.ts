@@ -25,11 +25,6 @@ import { NoTagVNode } from './no-tag.js'
  * @extends NoTagVNode<'text-node'>
  */
 export class TextVNode extends NoTagVNode<TextNodeElementName> {
-  /**
-   * 运行时元素实例
-   */
-  #element: Text | null = null
-
   constructor(value: string | RefSignal<string>) {
     super('text-node', value)
   }
@@ -38,11 +33,7 @@ export class TextVNode extends NoTagVNode<TextNodeElementName> {
    * @inheritDoc
    */
   override render(): Text {
-    // 如果元素尚未渲染，则先进行渲染
-    if (!this.#element) {
-      this.#element = markRaw(document.createTextNode(this.value))
-    }
-    return this.#element
+    return markRaw(document.createTextNode(this.value))
   }
 
   /**

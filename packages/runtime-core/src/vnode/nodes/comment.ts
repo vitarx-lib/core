@@ -24,11 +24,6 @@ import { NoTagVNode } from './no-tag.js'
  * @extends NoTagVNode<COMMENT_NODE_TYPE>
  */
 export class CommentVNode extends NoTagVNode<COMMENT_NODE_TYPE> {
-  /**
-   * 运行时元素实例
-   */
-  #element: Comment | null = null
-
   constructor(value: string | RefSignal<string>) {
     super('comment-node', value)
   }
@@ -38,10 +33,7 @@ export class CommentVNode extends NoTagVNode<COMMENT_NODE_TYPE> {
    */
   override render(): Comment {
     // 如果元素尚未渲染，则先进行渲染
-    if (!this.#element) {
-      this.#element = markRaw(document.createComment(this.value))
-    }
-    return this.#element
+    return markRaw(document.createComment(this.value))
   }
   /**
    * 判断给定的值是否为注释节点

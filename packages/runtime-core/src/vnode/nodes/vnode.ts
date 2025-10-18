@@ -52,7 +52,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 源信息，仅在开发调试阶段存在
    */
-  source?: Source
+  public source?: Source
   /**
    * 虚拟节点类型
    * 可以是标签名（如 'div'）、组件（函数或类）或特殊符号
@@ -98,6 +98,12 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   #show: boolean = true
   /**
+   * 缓存的元素
+   *
+   * @protected
+   */
+  protected _cachedElement: RuntimeElement<T> | null = null
+  /**
    * 创建一个虚拟节点实例
    * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
    * @param props 虚拟节点的属性对象
@@ -115,7 +121,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 提取key属性
       this.#key = popProperty(props, 'key') || null
       // 提取显示属性
-      this.isShow = popProperty(props, 'v-show')
+      this.#show = popProperty(props, 'v-show')
       // 缓存
       const memo = popProperty(props, 'v-memo')
       // 初始化缓存
@@ -221,7 +227,10 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @returns {RuntimeElement<T>} 获取的元素
    */
   get element(): RuntimeElement<T> {
-    return this.render()
+    if (!this._cachedElement) {
+      this._cachedElement = this.render()
+    }
+    return this._cachedElement
   }
 
   /**
@@ -344,9 +353,12 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 渲染元素
    *
+   * 此函数每次调用都会返回一个新的元素
+   *
    * @returns {RuntimeElement<T>} 渲染后的元素
    */
   abstract render(): RuntimeElement<T>
+
   /**
    * 卸载元素或组件的方法
    *
@@ -355,6 +367,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * @param {boolean} [root] - 是否做为根元素卸载
    */
   abstract unmount(root?: boolean): void
+
   /**
    * 获取 shadow 元素的访问器属性
    * 如果 shadow 元素不存在，则创建一个空的注释节点作为占位符

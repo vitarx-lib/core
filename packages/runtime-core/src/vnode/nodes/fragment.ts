@@ -36,17 +36,13 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
    * @inheritDoc
    */
   override render(): FragmentElement {
-    // 如果元素尚未渲染，则先进行渲染
-    if (!this.#element) {
-      this.#element = markRaw(document.createDocumentFragment() as FragmentElement)
-
-      // 设置虚拟节点属性
-      Object.defineProperty(this.#element, '$vnode', {
-        value: this
-      })
-      this.renderChildren()
-    }
-    return this.#element
+    const element = markRaw(document.createDocumentFragment() as FragmentElement)
+    // 设置虚拟节点属性
+    Object.defineProperty(this.#element, '$vnode', {
+      value: this
+    })
+    this.renderChildren()
+    return element
   }
   /**
    * 判断给定的值是否为片段节点(FragmentVNode)
@@ -74,5 +70,6 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
       child.unmount(root)
     }
     if (root) this.removeShadowElement()
+    this._cachedElement = null
   }
 }

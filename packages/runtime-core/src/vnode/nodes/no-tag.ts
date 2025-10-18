@@ -28,7 +28,6 @@ import { VNode } from './vnode.js'
  */
 export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T> {
   #value: string
-
   protected constructor(type: T, value: string | RefSignal<string>) {
     super(type, null)
     this.#value = unref(value)
@@ -108,6 +107,7 @@ export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T
       this.element.remove()
       this.removeShadowElement()
     }
+    this._cachedElement = null
   }
   /**
    * @inheritDoc

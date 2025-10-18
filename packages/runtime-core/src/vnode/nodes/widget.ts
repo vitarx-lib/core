@@ -319,6 +319,14 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     return el as RuntimeElement<T>
   }
   /**
+   * 获取运行时元素的属性覆盖方法
+   *
+   * @returns {RuntimeElement} 返回通过render()方法创建的运行时元素实例
+   */
+  override get element(): RuntimeElement<T> {
+    return this.render() // 调用render()方法并返回其结果
+  }
+  /**
    * 挂载组件到指定容器
    * @param [target] - 挂载目标，任意 DOM.Element 对象
    * @param [type] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
