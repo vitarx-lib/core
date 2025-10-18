@@ -369,10 +369,15 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @override
    */
   override get teleport() {
-    if (this.state === 'notRendered') {
-      this.render() // 渲染一次，避免遗漏onBeforeMount生命周期返回的teleport
-    }
+    if (this.state === 'notRendered') this.render() // 渲染一次，避免遗漏onBeforeMount生命周期返回的teleport
     return super.teleport
+  }
+  /**
+   * @inheritDoc
+   * @override
+   */
+  protected override set teleport(parent: ParentNode | null) {
+    super.teleport = parent
   }
   /**
    * 触发生命周期钩子
