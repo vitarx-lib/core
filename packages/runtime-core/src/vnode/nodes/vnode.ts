@@ -121,7 +121,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 提取key属性
       this.#key = popProperty(props, 'key') || null
       // 提取显示属性
-      this.#show = !!unref(popProperty(props, 'v-show'))
+      this.#show = 'v-show' in props ? !!unref(popProperty(props, 'v-show')) : true
       // 缓存
       const memo = popProperty(props, 'v-memo')
       // 初始化缓存
