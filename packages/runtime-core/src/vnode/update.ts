@@ -154,16 +154,13 @@ export class VNodeUpdate {
    * @param oldVNode - 旧的虚拟节点
    * @param newVNode - 新的虚拟节点，必须和旧的节点类型相同！！！
    */
-  /**
-   * 更新容器子节点（LIS 最小移动优化版）
-   */
   static patchUpdateChildren<T extends ContainerVNode>(oldVNode: T, newVNode: T): VNode[] {
     const oldChildren = oldVNode.children
     const newChildren = newVNode.children
     const parentEl = oldVNode.element
-    const removedNodes = new Set(oldChildren)
+    const removedNodes = new Set<VNode>()
 
-    // 边界情况
+    // --- 边界情况 ---
     if (!oldChildren.length) {
       newChildren.forEach(c => c.mount(parentEl))
       return newChildren
@@ -173,35 +170,44 @@ export class VNodeUpdate {
       return newChildren
     }
 
-    // 创建 key 映射
+    // --- 创建 key 映射 ---
     const newKeyed = new Map<any, { vnode: VNode; index: number }>()
     newChildren.forEach((n, i) => {
-      if (n.key || n.key === 0) newKeyed.set(n.key, { vnode: n, index: i })
+      if (n.key !== null) newKeyed.set(n.key, { vnode: n, index: i })
     })
 
-    // 找到可复用旧节点并标记
-    const oldKeyed = new Map<any, VNode>()
-    const newIndexToOldIndex = new Array(newChildren.length).fill(-1) // 保存旧节点在新数组中的位置
-    oldChildren.forEach((n, oldIndex) => {
-      const entry = newKeyed.get(n.key)
-      if (entry && n.type === entry.vnode.type) {
-        oldKeyed.set(n.key, n)
+    // 保存旧节点在新数组中的位置
+    const newIndexToOldIndex = new Array(newChildren.length).fill(-1)
+
+    for (let oldIndex = 0; oldIndex < oldChildren.length; oldIndex++) {
+      const oldChild = oldChildren[oldIndex]
+      const entry = newKeyed.get(oldChild.key)
+      // 按新节点key和旧节点key匹配，找到可复用的旧节点
+      if (entry && entry.vnode.type === oldChild.type) {
         newIndexToOldIndex[entry.index] = oldIndex
-        removedNodes.delete(n)
+        removedNodes.delete(oldChild)
+        continue
       }
-    })
+      const newChild = newChildren[oldIndex]
+      // 按位置匹配，找到可复用的旧节点
+      if (newChild && newVNode.type === oldVNode.type && newChild.key === oldChild.key) {
+        newIndexToOldIndex[oldIndex] = oldIndex
+        continue
+      }
+      removedNodes.add(oldChild)
+    }
 
-    // --- 计算 LIS，只保留顺序正确的节点不移动 ---
+    // --- 计算 LIS，只保留顺序正确的节点不移动（仅 key 节点） ---
     const seq = this.getLIS(newIndexToOldIndex)
-
-    // seq 是 LIS 在 newChildren 的索引列表
     let seqIndex = seq.length - 1
 
-    // 从后向前处理新节点，避免插入影响未处理节点索引
+    // --- 从后向前处理新节点，避免插入影响未处理节点索引 ---
     for (let i = newChildren.length - 1; i >= 0; i--) {
+      const oldIndex = newIndexToOldIndex[i]
       const newChild = newChildren[i]
-      const keyedOldChild = oldKeyed.get(newChild.key)
+      const reuseChild = oldIndex !== -1 ? oldChildren[oldIndex] : null
 
+      // 下一个元素，用于 insertBefore 或 appendChild
       const nextChild = newChildren[i + 1]
       const anchor = nextChild
         ? nextChild.teleport
@@ -209,32 +215,28 @@ export class VNodeUpdate {
           : nextChild.element
         : null
 
-      if (keyedOldChild) {
-        // 更新节点属性
-        this.patchUpdate(keyedOldChild, newChild)
-        newChildren[i] = keyedOldChild
-        // 判断是否在 LIS 中
+      if (reuseChild) {
+        // --- 节点复用 ---
+        this.patchUpdate(reuseChild, newChild)
+        newChildren[i] = reuseChild
+        // 判断是否在 LIS 中，不在则移动
         if (seqIndex >= 0 && seq[seqIndex] === i) {
-          seqIndex-- // 节点顺序正确，不移动
+          seqIndex-- // 顺序正确，不移动
         } else {
-          // 特殊处理传送节点
-          const element = keyedOldChild.teleport
-            ? keyedOldChild.shadowElement
-            : keyedOldChild.element
-          // 不在 LIS 中，需要移动
+          const element = reuseChild.teleport ? reuseChild.shadowElement : reuseChild.element
           if (anchor) {
             DomHelper.insertBefore(element, anchor)
           } else {
             DomHelper.appendChild(parentEl, element)
           }
         }
-      } else {
-        // 新增节点，如果存在锚点，则插入到锚点之前，否则追加到父元素中
-        newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
+        continue
       }
+      // --- 新增节点 ---
+      newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
     }
 
-    // 卸载未复用节点
+    // --- 卸载未复用节点 ---
     removedNodes.forEach(c => c?.unmount())
 
     return newChildren
@@ -255,7 +257,6 @@ export class VNodeUpdate {
     for (let i = 0; i < arr.length; i++) {
       const arrI = arr[i]
       if (arrI === -1) continue // -1 表示不存在旧节点，跳过
-
       // 如果 result 为空，或者当前元素比 LIS 最后一个元素大，直接加入 LIS
       if (result.length === 0 || arr[result[result.length - 1]] < arrI) {
         // 记录当前元素的前驱索引，用于后续回溯
