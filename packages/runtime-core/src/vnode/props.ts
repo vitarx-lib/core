@@ -18,6 +18,7 @@ export const INTRINSIC_PROPERTIES = [
   'v-bind',
   'v-bind-all',
   'v-if',
+  'v-show',
   'v-memo',
   'v-static',
   'v-parent'
