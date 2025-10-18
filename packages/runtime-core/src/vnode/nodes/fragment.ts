@@ -41,7 +41,7 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
     Object.defineProperty(this.#element, '$vnode', {
       value: this
     })
-    this.renderChildren()
+    this.renderChildren(element)
     return element
   }
   /**
