@@ -1,7 +1,12 @@
 import { isRefSignal, markRaw } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
 import { isElementVNode } from '../guards.js'
-import { type ClassProperties, HTMLNodeElementName, RuntimeElement } from '../types/index.js'
+import {
+  type ClassProperties,
+  HTMLNodeElementName,
+  RuntimeElement,
+  type StyleProperties
+} from '../types/index.js'
 import { ContainerVNode } from './container.js'
 
 const NAMESPACE_URI = {
@@ -43,6 +48,18 @@ const NAMESPACE_URI = {
 export class ElementVNode<
   T extends HTMLNodeElementName = HTMLNodeElementName
 > extends ContainerVNode<T> {
+  /**
+   * @inheritDoc
+   */
+  protected override showHandler(show: boolean): void {
+    if (show) {
+      // 重新更新样式
+      DomHelper.setStyle(this.element, this.props.style as StyleProperties)
+    } else {
+      this.element.style.display = 'none'
+    }
+  }
+
   /**
    * 运行时元素实例
    * 这是一个私有属性，用于存储DOM元素的引用

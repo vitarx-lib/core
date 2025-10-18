@@ -83,6 +83,12 @@ const __INITIALIZE_FN_WIDGET__ = Symbol('__INITIALIZE_FN_WIDGET__')
  */
 export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   /**
+   * @inheritDoc
+   */
+  protected override showHandler(show: boolean): void {
+    this.child.isShow = show
+  }
+  /**
    * HMR热更新状态，仅在开发时由编译器注入
    */
   __$HMR_STATE$__?: Record<string, any>

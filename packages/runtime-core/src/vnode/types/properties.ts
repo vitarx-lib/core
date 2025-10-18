@@ -115,6 +115,21 @@ export interface GlobalProperties {
    */
   'v-if'?: PropValue<boolean>
   /**
+   * 显示/隐藏节点
+   *
+   * 此属性会给元素添加上 `display: none` 样式，它可能会和元素原有的样式冲突，请自行处理。
+   *
+   * @example
+   * ```tsx
+   * const show = ref(false)
+   * // v-show 语法的使用 可以忽略.value
+   * <div v-show={show}></div>
+   * // 渲染结果
+   * <div style="display: none;"></div>
+   * ```
+   */
+  'v-show'?: PropValue<boolean>
+  /**
    * 缓存节点的指令
    *
    * 该指令接收一个固定引用(在生命周期中保持引用不变)的数组，内部会将虚拟节点与该数组进行绑定。
@@ -134,10 +149,9 @@ export interface GlobalProperties {
   /**
    * 静态节点的指令
    *
-   * 该指令将节点标记为静态节点，只会被渲染一次，并跳过之后的更新。
-   * 这可以用来优化更新时的性能
+   * 该指令将节点标记为静态节点，只会被渲染一次，并跳过之后的更新（包括子节点更新）。
    */
-  'v-static'?: boolean
+  'v-static'?: PropValue<boolean>
   /**
    * 父元素 - 支持选择器或 `HTMLElement` 实例
    *

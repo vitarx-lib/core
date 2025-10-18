@@ -55,6 +55,8 @@ export class VNodeUpdate {
     } else if (!oldVNode.isStatic) {
       // 更新节点的属性
       this.patchUpdateAttrs(oldVNode, newVNode)
+      // 更新节点的显示状态
+      oldVNode.isShow = newVNode.isShow
       // 如果是容器节点，则更新其子节点
       if (isContainerVNode(oldVNode)) {
         // 递归更新子节点并获取更新后的子节点列表

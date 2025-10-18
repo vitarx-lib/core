@@ -1,4 +1,4 @@
-import { NOT_SIGNAL_SYMBOL } from '@vitarx/responsive'
+import { NOT_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { isArrayEqual, popProperty } from '@vitarx/utils'
 import { DomHelper } from '../../dom/index.js'
 import { isVNode } from '../guards.js'
@@ -8,6 +8,7 @@ import { isRefEl, type RefEl } from '../ref.js'
 import { addParentVNodeMapping, findParentVNode } from '../relations.js'
 import type {
   MountType,
+  PropValue,
   RuntimeElement,
   UniqueKey,
   VNodeProps,
@@ -92,6 +93,11 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    */
   readonly #isStatic: boolean = false
   /**
+   * 显示状态
+   * @private
+   */
+  #show: boolean = true
+  /**
    * 创建一个虚拟节点实例
    * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
    * @param props 虚拟节点的属性对象
@@ -108,6 +114,8 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       this.#ref = isRefEl(ref) ? ref : null
       // 提取key属性
       this.#key = popProperty(props, 'key') || null
+      // 提取显示属性
+      this.isShow = popProperty(props, 'v-show')
       // 缓存
       const memo = popProperty(props, 'v-memo')
       // 初始化缓存
@@ -117,7 +125,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
         MEMO_STORE.set(memo, this)
       }
       // 静态节点
-      this.#isStatic = !!popProperty(props, 'v-static')
+      this.#isStatic = !!unref(popProperty(props, 'v-static'))
       // 父元素
       this.setTeleport(popProperty(props, 'v-parent') as Element)
       // 属性处理
@@ -141,6 +149,35 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     return this.#isStatic
   }
 
+  /**
+   * 获取是否显示的属性值
+   * 这是一个getter方法，用于返回内部私有属性#show的值
+   * @returns {boolean} 返回一个布尔值，表示是否显示的状态
+   */
+  get isShow(): boolean {
+    return this.#show
+  }
+
+  /**
+   * 设置是否显示的属性值
+   * @param value - 传入的显示状态值，可以是响应式引用或普通值
+   */
+  set isShow(value: PropValue<boolean>) {
+    value = unref(value) // 使用 unref 解包可能的 ref 值，确保获取到实际的布尔值
+    if (value !== this.#show) {
+      // 比较新值与当前值，只在不同时更新
+      this.#show = value // 更新内部显示状态
+      this.showHandler(value)
+    }
+  }
+
+  /**
+   * 显示状态处理器
+   *
+   * @param show - true表示显示，false表示隐藏
+   * @protected
+   */
+  protected abstract showHandler(show: boolean): void
   /**
    * 设置传送目标的属性方法
    * 这是一个受保护的设置器，用于修改类的私有属性 #teleport

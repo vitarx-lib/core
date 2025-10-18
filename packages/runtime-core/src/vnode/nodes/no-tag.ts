@@ -109,7 +109,13 @@ export abstract class NoTagVNode<T extends NoTagNodeElementName> extends VNode<T
       this.removeShadowElement()
     }
   }
-
+  /**
+   * @inheritDoc
+   */
+  protected override showHandler(show: boolean) {
+    // 如果value为true，则清空元素的节点值
+    this.element.nodeValue = show ? this.value : ''
+  }
   /**
    * 无标签节点不支持任何属性
    * @protected

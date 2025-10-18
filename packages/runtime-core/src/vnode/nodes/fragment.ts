@@ -12,6 +12,14 @@ import { ContainerVNode } from './container.js'
  */
 export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
   /**
+   * @inheritDoc
+   */
+  protected override showHandler(show: boolean): void {
+    for (const child of this.children) {
+      child.isShow = show
+    }
+  }
+  /**
    * 运行时元素实例
    */
   #element: FragmentElement | null = null
