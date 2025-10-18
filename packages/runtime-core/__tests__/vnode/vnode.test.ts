@@ -118,6 +118,18 @@ describe('createVNode', () => {
     expect(node.props.test).toBe(2)
     expect(node.ref).toBe(r)
   })
+  it('应该支持v-show指令', () => {
+    const node = createVNode('div', { 'v-show': false })
+    expect(node.element.style.display).toBe('none')
+    node.isShow = true
+    expect(node.element.style.display).toBe('')
+  })
+  it('v-show兼容元素display属性', () => {
+    const node = createVNode('div', { 'v-show': false, style: { display: 'flex' } })
+    expect(node.element.style.display).toBe('none')
+    node.isShow = true
+    expect(node.element.style.display).toBe('flex')
+  })
 })
 
 describe('getCurrentVNode / useCurrentVNode', () => {
