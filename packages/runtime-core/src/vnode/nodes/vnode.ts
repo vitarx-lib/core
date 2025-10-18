@@ -82,7 +82,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    *
    * @private
    */
-  #teleport: Node | null = null
+  #teleport: ParentNode | null = null
   /**
    * 引用
    */
@@ -143,8 +143,17 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * 获取 teleport 元素的 getter 方法
    * @returns {Node | null} 返回 teleport 元素，如果不存在则返回 null
    */
-  get teleport(): Node | null {
+  get teleport(): ParentNode | null {
     return this.#teleport
+  }
+  /**
+   * 设置传送的目标父节点
+   *
+   * @internal 内部逻辑调用
+   * @param parent - 父节点，可以是任何实现了 ParentNode 接口的 DOM 元素，也可以为 null
+   */
+  protected set teleport(parent: ParentNode | null) {
+    this.#teleport = parent // 将传入的父节点赋值给私有属性 #teleport
   }
 
   /**
@@ -188,19 +197,21 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
    * 设置传送目标的属性方法
    * 这是一个受保护的设置器，用于修改类的私有属性 #teleport
    * @param parent - 可以是一个 DOM 元素或选择器或null
-   * 当设置为 null 时，表示清除传送目标
    */
   protected setTeleport(parent: VParent) {
-    if (typeof Element === 'undefined' || !parent) return
+    if (typeof Element === 'undefined' || !parent) {
+      this.teleport = null
+      return
+    }
     if (typeof parent === 'function') {
       parent = parent()
     }
     if (typeof parent === 'string') {
-      this.#teleport = document.querySelector(parent)
+      this.teleport = document.querySelector(parent)
     } else if (typeof parent === 'object' && parent instanceof Element) {
-      this.#teleport = parent
+      this.teleport = parent
     } else {
-      this.#teleport = null
+      this.teleport = null
     }
   }
 
@@ -382,9 +393,13 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
     }
     return this.#shadowElement // 返回 shadow 元素
   }
+
   /**
-   * 移除Shadow DOM元素并将其引用设置为undefined
-   * 这个方法会检查shadowElement是否存在，如果存在则从DOM中移除它，然后将引用置为undefined
+   * 卸载 Shadow DOM 元素
+   *
+   * 这个方法会检查shadowElement是否存在，如果存在则从DOM中移除它，然后将引用置为null
+   *
+   * @internal 仅供内部核心逻辑使用，请勿随意调用
    */
   protected removeShadowElement(): void {
     this.#shadowElement?.remove() // 使用可选链操作符，如果shadowElement存在则调用remove()方法
@@ -413,14 +428,6 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
       // 插入占位元素
       DomHelper.insertBefore(this.shadowElement, this.element)
     }
-  }
-
-  /**
-   * 检查是否存在阴影元素
-   * @returns {boolean} 如果存在阴影元素则返回true，否则返回false
-   */
-  hasShadowElement(): boolean {
-    return !!this.#shadowElement // 使用双重非运算符将shadowElement转换为布尔值
   }
 
   /**
