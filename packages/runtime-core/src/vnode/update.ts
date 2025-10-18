@@ -52,7 +52,23 @@ export class VNodeUpdate {
       // 替换旧节点为新节点
       this.replace(newVNode, oldVNode)
       return newVNode
-    } else if (!oldVNode.isStatic) {
+    }
+    if (oldVNode.teleport !== newVNode.teleport) {
+      if (oldVNode.teleport && !newVNode.teleport) {
+        // 将真实元素从传送位置归位到正常位置
+        DomHelper.replace(oldVNode.element, oldVNode.shadowElement)
+        // 删除占位的影子元素
+        oldVNode['removeShadowElement']()
+      } else if (newVNode.teleport && !oldVNode.teleport) {
+        // 将真实元素替换为影子元素
+        DomHelper.replace(oldVNode.shadowElement, oldVNode.element)
+        // 将真实元素从正常位置移动到传送位置
+        DomHelper.appendChild(newVNode.teleport, oldVNode.element)
+      }
+      // 重新设置传送位置
+      oldVNode['teleport'] = newVNode.teleport
+    }
+    if (!oldVNode.isStatic) {
       // 更新节点的属性
       this.patchUpdateAttrs(oldVNode, newVNode)
       // 更新节点的显示状态
@@ -133,17 +149,21 @@ export class VNodeUpdate {
   }
 
   /**
-   * 更新容器子节点（精简优化版）
+   * 更新容器子节点
    *
    * @param oldVNode - 旧的虚拟节点
    * @param newVNode - 新的虚拟节点，必须和旧的节点类型相同！！！
+   */
+  /**
+   * 更新容器子节点（LIS 最小移动优化版）
    */
   static patchUpdateChildren<T extends ContainerVNode>(oldVNode: T, newVNode: T): VNode[] {
     const oldChildren = oldVNode.children
     const newChildren = newVNode.children
     const parentEl = oldVNode.element
     const removedNodes = new Set(oldChildren)
-    // === 边界情况 ===
+
+    // 边界情况
     if (!oldChildren.length) {
       newChildren.forEach(c => c.mount(parentEl))
       return newChildren
@@ -152,56 +172,124 @@ export class VNodeUpdate {
       oldChildren.forEach(c => c.unmount())
       return newChildren
     }
-    // === 创建新key映射 ===
-    const keyed = new Map<any, VNode>()
-    oldChildren.forEach(c => {
-      if (c.key || c.key === 0) keyed.set(c.key, c)
+
+    // 创建 key 映射
+    const newKeyed = new Map<any, { vnode: VNode; index: number }>()
+    newChildren.forEach((n, i) => {
+      if (n.key || n.key === 0) newKeyed.set(n.key, { vnode: n, index: i })
     })
-    // === 主循环：依次处理新子节点 ===
-    for (let i = 0; i < newChildren.length; i++) {
+
+    // 找到可复用旧节点并标记
+    const oldKeyed = new Map<any, VNode>()
+    const newIndexToOldIndex = new Array(newChildren.length).fill(-1) // 保存旧节点在新数组中的位置
+    oldChildren.forEach((n, oldIndex) => {
+      const entry = newKeyed.get(n.key)
+      if (entry && n.type === entry.vnode.type) {
+        oldKeyed.set(n.key, n)
+        newIndexToOldIndex[entry.index] = oldIndex
+        removedNodes.delete(n)
+      }
+    })
+
+    // --- 计算 LIS，只保留顺序正确的节点不移动 ---
+    const seq = this.getLIS(newIndexToOldIndex)
+
+    // seq 是 LIS 在 newChildren 的索引列表
+    let seqIndex = seq.length - 1
+
+    // 从后向前处理新节点，避免插入影响未处理节点索引
+    for (let i = newChildren.length - 1; i >= 0; i--) {
       const newChild = newChildren[i]
-      // 通过key获取旧子节点
-      const keyedOldChild = keyed.get(newChild.key)
-      // 如果存在于key映射中，直接进行差异化更新
-      if (keyedOldChild && keyedOldChild.type === newChild.type) {
-        // 从key映射中删除，避免多次复用
-        keyed.delete(keyedOldChild.type)
-        const oldIndex = oldChildren.indexOf(keyedOldChild)
-        // 将旧节点复用到新列表中
+      const keyedOldChild = oldKeyed.get(newChild.key)
+
+      const nextChild = newChildren[i + 1]
+      const anchor = nextChild
+        ? nextChild.teleport
+          ? nextChild.shadowElement
+          : nextChild.element
+        : null
+
+      if (keyedOldChild) {
+        // 更新节点属性
+        this.patchUpdate(keyedOldChild, newChild)
         newChildren[i] = keyedOldChild
-        if (oldIndex !== i) {
-          // 更新旧节点的索引
-          oldChildren.splice(oldIndex, 1)
-          oldChildren.splice(i, 0, keyedOldChild)
-          const anchor = oldChildren[i + 1]?.element
+        // 判断是否在 LIS 中
+        if (seqIndex >= 0 && seq[seqIndex] === i) {
+          seqIndex-- // 节点顺序正确，不移动
+        } else {
+          // 特殊处理传送节点
+          const element = keyedOldChild.teleport
+            ? keyedOldChild.shadowElement
+            : keyedOldChild.element
+          // 不在 LIS 中，需要移动
           if (anchor) {
-            DomHelper.insertBefore(keyedOldChild.element, anchor)
+            DomHelper.insertBefore(element, anchor)
           } else {
-            DomHelper.appendChild(parentEl, keyedOldChild.element)
+            DomHelper.appendChild(parentEl, element)
           }
         }
-        // 更新节点的属性
-        this.patchUpdate(keyedOldChild, newChild)
-        removedNodes.delete(keyedOldChild)
-        continue
+      } else {
+        // 新增节点，如果存在锚点，则插入到锚点之前，否则追加到父元素中
+        newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
       }
-      const oldChild = oldChildren[i]
-      // --- 更新或替换节点 ---
-      if (oldChild) {
-        const updated = this.patchUpdate(oldChild, newChild)
-        if (updated === oldChild) {
-          newChildren[i] = oldChild
-        }
-        removedNodes.delete(oldChild)
-        continue
-      }
-      // --- 新增节点 ---
-      const anchor = oldChildren[i + 1]?.element
-      newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
     }
-    // === 卸载未复用节点 ===
-    removedNodes.forEach(child => child?.unmount())
+
+    // 卸载未复用节点
+    removedNodes.forEach(c => c?.unmount())
+
     return newChildren
+  }
+
+  /**
+   * 获取最长递增子序列（LIS）
+   *
+   * @param arr 数组，其中 -1 表示该位置没有旧节点，其余数字表示旧节点在旧数组中的索引
+   * @returns {number[]} 返回 LIS 的索引列表（基于 arr 的下标）
+   */
+  private static getLIS(arr: number[]): number[] {
+    const p = arr.slice() // 用于回溯每个元素前一个元素在 LIS 中的位置
+    const result: number[] = [] // 存放 LIS 的索引（基于 arr 的下标）
+    let u: number, v: number, c: number
+
+    // 遍历 arr 中的每一个元素，构建 result
+    for (let i = 0; i < arr.length; i++) {
+      const arrI = arr[i]
+      if (arrI === -1) continue // -1 表示不存在旧节点，跳过
+
+      // 如果 result 为空，或者当前元素比 LIS 最后一个元素大，直接加入 LIS
+      if (result.length === 0 || arr[result[result.length - 1]] < arrI) {
+        // 记录当前元素的前驱索引，用于后续回溯
+        p[i] = result.length > 0 ? result[result.length - 1] : -1
+        result.push(i) // 将当前索引加入 LIS
+        continue
+      }
+
+      // 否则，当前元素需要在 result 中找到合适位置，用二分法替换
+      u = 0
+      v = result.length - 1
+      while (u < v) {
+        c = ((u + v) / 2) | 0 // 取中间索引
+        if (arr[result[c]] < arrI) u = c + 1
+        else v = c
+      }
+
+      // 替换 LIS 中的元素，使 LIS 保持最小尾元素特性
+      if (arrI < arr[result[u]]) {
+        if (u > 0) p[i] = result[u - 1] // 记录前驱元素索引
+        result[u] = i // 替换 LIS 中的元素索引
+      }
+    }
+
+    // 回溯 LIS，生成最终的索引序列
+    u = result.length
+    v = result[u - 1] // LIS 最后一个元素的索引
+    const seq: number[] = new Array(u) // 存放最终 LIS 的下标
+    while (u-- > 0) {
+      seq[u] = v
+      v = p[v] // 回溯到前一个元素
+    }
+
+    return seq
   }
 
   /**
