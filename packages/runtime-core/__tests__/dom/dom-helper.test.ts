@@ -1,6 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DomHelper, type StyleRules } from '../../src'
+import { createElement, DomHelper, Fragment, type StyleRules } from '../../src'
 
 describe('DomHelper', () => {
   beforeEach(() => {
@@ -384,6 +384,41 @@ describe('DomHelper', () => {
 
         expect(parent.children[1]).toBe(newElement)
         expect(parent.children[2]).toBe(child2)
+      })
+    })
+    describe('getParentElement', () => {
+      it('应该返回元素的父元素', () => {
+        expect(DomHelper.getParentElement(child1)).toBe(parent)
+      })
+    })
+    describe('getFirstChildElement', () => {
+      it('应该返回元素的第一个子元素', () => {
+        expect(DomHelper.getFirstChildElement(parent)).toBe(child1)
+      })
+    })
+    describe('getLastChildElement', () => {
+      it('应该返回元素的最后一个子元素', () => {
+        expect(DomHelper.getLastChildElement(parent)).toBe(child2)
+      })
+    })
+    describe('appendChild', () => {
+      it('应该在元素末尾添加子元素', () => {
+        const newElement = document.createElement('div')
+        DomHelper.appendChild(parent, newElement)
+
+        expect(parent.children[2]).toBe(newElement)
+      })
+      it('支持片段元素追加到片段元素', () => {
+        const fragment1 = createElement(() => {
+          return createElement(Fragment)
+        }).element
+        const fragment2 = createElement(() => {
+          return createElement(Fragment, null, createElement('text-node', { children: 'test' }))
+        }).element
+        const body = document.createElement('div')
+        DomHelper.appendChild(body, fragment1)
+        DomHelper.appendChild(fragment1, fragment2)
+        expect(body.textContent).toBe('test')
       })
     })
   })
