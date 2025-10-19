@@ -3,8 +3,11 @@ import { nextTick } from '@vitarx/utils'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   createElement,
+  createVNode,
   FragmentVNode,
   LifecycleHooks,
+  onMounted,
+  refEl,
   TextVNode,
   VNode,
   Widget,
@@ -243,6 +246,20 @@ describe('WidgetVNode 单元测试', () => {
         'w2:onUnmounted',
         'w1:onUnmounted'
       ])
+    })
+    it('onMounted钩子中当前元素已经挂载至body', () => {
+      const widgetRef = refEl()
+      const cb = vi.fn(() => {
+        expect(document.body.contains(widgetRef.value!.$el)).toBe(true)
+      })
+      const widgetVNode = createVNode(
+        () => {
+          onMounted(cb)
+          return createElement('span', null, 1)
+        },
+        { ref: widgetRef }
+      )
+      widgetVNode.mount(document.body)
     })
   })
 
