@@ -1,4 +1,4 @@
-import { reactive, ref } from '@vitarx/responsive'
+import { depTrack, reactive, ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
 import { createElement, Fragment, onMounted, onUpdated, VNodeUpdate, WidgetVNode } from '../../src'
 
@@ -207,7 +207,7 @@ describe('update', () => {
       expect(target.textContent).toBe('24') // 4 重新插入了，它呈现在 2 之后
     })
   })
-  it('应该正确复用有 key 和无 key 的节点', async () => {
+  it('支持 key 和无 key 混合节点列表更新', async () => {
     document.body.innerHTML = ''
     const body = document.body
 
@@ -259,5 +259,27 @@ describe('update', () => {
     const oldLi = vnode1.children[1].element
     const newLi = vnode2.children[1].element
     expect(oldLi).toBe(newLi)
+  })
+  it('支持多层嵌套组件更新', async () => {
+    const data = ref(0)
+    const compA = function () {
+      return () => createElement(Fragment, null, data.value)
+    }
+    const compB = function () {
+      return createElement(Fragment, null, createElement(compA))
+    }
+    const compC = function () {
+      depTrack(data, 'value')
+      return createElement('span', null, createElement(compB))
+    }
+    const vnode = createElement(compC)
+    vnode.mount(document.body)
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toBe('0')
+    })
+    data.value++
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toBe(data.value + '')
+    })
   })
 })
