@@ -40,7 +40,7 @@ export type StyleProperties = string | StyleRules
  * @remarks
  * 该类型支持多种形式的class定义：
  * - 字符串：单个或多个以空格分隔的类名
- * - 字符串数组：多个类名的数组
+ * - 数组：数组的每个字符串元素都会被视为一个类名,会过滤掉==false的元素
  * - 对象：键为类名，值为布尔值，表示是否应用该类
  *
  * @example
@@ -59,4 +59,4 @@ export type StyleProperties = string | StyleRules
  * }
  * ```
  */
-export type ClassProperties = string | string[] | Record<string, boolean>
+export type ClassProperties = string | Array<any> | Record<string, boolean>

@@ -111,7 +111,15 @@ export class DomHelper {
     }
 
     if (Array.isArray(classInput)) {
-      return classInput
+      const classArray: string[] = []
+      for (let i = 0; i < classInput.length; i++) {
+        const item = toRaw(classInput[i])
+        if (typeof item === 'string') {
+          const text = item.trim()
+          if (text) classArray.push(text)
+        }
+      }
+      return classArray
     }
 
     if (typeof classInput === 'object' && classInput !== null) {
@@ -133,10 +141,15 @@ export class DomHelper {
       return classInput.trim()
     }
     if (Array.isArray(classInput)) {
-      return classInput
-        .map(item => item?.trim())
-        .filter(Boolean)
-        .join(' ')
+      let classText = ''
+      for (let i = 0; i < classInput.length; i++) {
+        const item = toRaw(classInput[i])
+        if (typeof item === 'string') {
+          const text = item.trim()
+          if (text) classText += item.trim() + ' '
+        }
+      }
+      return classText.trim()
     }
     if (typeof classInput === 'object' && classInput !== null) {
       // 如果是对象类型，返回键名数组
