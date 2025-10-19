@@ -9,7 +9,7 @@ import {
   type Text as TextType,
   type TEXT_NODE_TYPE
 } from '../node-symbol.js'
-import type { FragmentVNode } from '../nodes/index.js'
+import type { VNode } from '../nodes/index.js'
 import type { ElementProperties } from './properties.js'
 import type { AnyChildren, VNodeType } from './vnode.js'
 
@@ -99,17 +99,18 @@ export type IntrinsicNodeElement = {
  * 片段元素接口
  */
 export interface FragmentElement extends DocumentFragment {
-  readonly $vnode: FragmentVNode
+  readonly $startAnchor: Comment
+  readonly $endAnchor: Comment
+  readonly $children: VNode[]
 }
-
 /**
  * 所有可能的运行时元素
  */
 export type AnyElement =
   | HTMLElementTagMap[keyof HTMLElementTagMap]
   | FragmentElement
-  | Comment
   | Text
+  | Comment
 
 /**
  * 运行时元素接口
