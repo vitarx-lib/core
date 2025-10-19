@@ -2,7 +2,6 @@ import { markRaw } from '@vitarx/responsive'
 import { isFragmentVNode } from '../guards.js'
 import { FRAGMENT_NODE_TYPE } from '../node-symbol.js'
 import type { Child, FragmentElement, FragmentNodeElementName } from '../types/index.js'
-import { CommentVNode } from './comment.js'
 import { ContainerVNode } from './container.js'
 
 /**
@@ -11,6 +10,9 @@ import { ContainerVNode } from './container.js'
  * @extends ContainerVNode<FragmentNodeElementName>
  */
 export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
+  constructor(props: { children: Child[] } | null = null) {
+    super(FRAGMENT_NODE_TYPE, props)
+  }
   /**
    * @inheritDoc
    */
@@ -19,25 +21,28 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
       child.isShow = show
     }
   }
-
-  constructor(props: { children: Child[] } | null = null) {
-    super(FRAGMENT_NODE_TYPE, props)
-    // 如果没有子节点，则创建一个默认的注释节点元素
-    if (this.children.length === 0) {
-      this.children.push(new CommentVNode('empty fragment shadow element'))
-    }
-  }
-
   /**
    * @inheritDoc
    */
   override render(): FragmentElement {
     const element = markRaw(document.createDocumentFragment() as FragmentElement)
     // 设置虚拟节点属性
-    Object.defineProperty(element, '$vnode', {
-      value: this
+    Object.defineProperties(element, {
+      $startAnchor: {
+        value: document.createComment('start fragment tag element')
+      },
+      $endAnchor: {
+        value: document.createComment('end fragment tag element')
+      },
+      $children: {
+        value: () => {
+          return this.children
+        }
+      }
     })
+    element.appendChild(element.$startAnchor)
     this.renderChildren(element)
+    element.appendChild(element.$endAnchor)
     return element
   }
   /**
