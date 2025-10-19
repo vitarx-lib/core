@@ -1,5 +1,5 @@
 import { isRefSignal, markRaw } from '@vitarx/responsive'
-import { DomHelper } from '../../dom/index.js'
+import { DomHelper, StyleHandler } from '../../dom/index.js'
 import { isElementVNode } from '../guards.js'
 import {
   type ClassProperties,
@@ -150,15 +150,15 @@ export class ElementVNode<
     // 处理 class 属性
     let cssClass: ClassProperties =
       'class' in this.props
-        ? DomHelper.cssClassValueToArray(this.props.class as ClassProperties)
+        ? StyleHandler.cssClassValueToArray(this.props.class as ClassProperties)
         : []
     if ('className' in this.props) {
-      cssClass = DomHelper.mergeCssClass(cssClass, this.props.className as ClassProperties)
+      cssClass = StyleHandler.mergeCssClass(cssClass, this.props.className as ClassProperties)
       // @ts-ignore
       delete this.props.className
     }
     if ('classname' in this.props) {
-      cssClass = DomHelper.mergeCssClass(cssClass, this.props.classname)
+      cssClass = StyleHandler.mergeCssClass(cssClass, this.props.classname)
       delete this.props.classname
     }
     // 如果合并后的 class 存在，赋值给 newProps.class
