@@ -1,5 +1,4 @@
-import { toRaw, unref } from '@vitarx/responsive'
-import { isRecordObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
+import { unref } from '@vitarx/responsive'
 import type {
   ClassProperties,
   EventNames,
@@ -9,13 +8,45 @@ import type {
   StyleProperties,
   StyleRules
 } from '../vnode/index.js'
+import { StyleHandler } from './style-handler.js'
 
 const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
 const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
+
 /**
- * DOM操作类
+ * DomHelper 类提供了一系列用于操作 DOM 元素的静态方法。
+ * 该类主要用于处理元素的属性、样式、类名、事件监听以及 DOM 操作等常见任务。
  *
- * 包含一些常用的DOM操作方法
+ * 核心功能包括：
+ * - 样式和类名的处理（合并、转换）
+ * - 属性的设置、获取和移除
+ * - 事件监听器的添加和移除
+ * - DOM 元素的插入、替换、移除等操作
+ * - 片段元素的特殊处理
+ *
+ * 使用示例：
+ * ```typescript
+ * // 设置元素的样式
+ * DomHelper.setStyle(element, { color: 'red', fontSize: '14px' });
+ *
+ * // 设置元素的类名
+ * DomHelper.setClass(element, 'active');
+ *
+ * // 设置元素的属性
+ * DomHelper.setAttribute(element, 'data-id', '123');
+ *
+ * // 添加事件监听
+ * DomHelper.addEventListener(element, 'click', handleClick);
+ *
+ * // 插入元素
+ * DomHelper.insertBefore(newElement, targetElement);
+ * ```
+ *
+ * 注意事项：
+ * - 类中的样式处理方法已被标记为 deprecated，建议使用 StyleHandler 类中的对应方法替代
+ * - 在处理片段元素时，需要特别注意其特殊性，确保正确处理锚点节点
+ * - 某些 DOM 操作可能会抛出错误，建议在使用时添加适当的错误处理
+ * - 通常DOM操作是由框架内部调用的，谨慎操作真实DOM，可能会导致布局错乱等非预期错误
  */
 export class DomHelper {
   /**
@@ -23,56 +54,36 @@ export class DomHelper {
    *
    * 返回值类型和第一个参数类型一致
    *
+   * @deprecated 请使用 `StyleHandler.mergeCssClass`
    * @param {ClassProperties} c1 - class1
    * @param {ClassProperties} c2 - class2
    * @returns {string[]} 合并后的数组，数组元素为类名
    */
   static mergeCssClass(c1: ClassProperties, c2: ClassProperties): string[] {
-    // 将 c1 和 c2 转换为数组
-    const arr1 = this.cssClassValueToArray(c1)
-    const arr2 = this.cssClassValueToArray(c2)
-
-    // 合并并去重
-    return Array.from(new Set([...arr1, ...arr2]))
+    return StyleHandler.mergeCssClass(c1, c2)
   }
 
   /**
    * 合并两个style
    *
+   * @deprecated 请使用 `StyleHandler.mergeCssStyle`
    * @param {StyleProperties} style1 - 第一个样式对象或字符串
    * @param {StyleProperties} style2 - 第二个样式对象或字符串
    * @returns {StyleRules} 合并后的style对象
    */
   static mergeCssStyle(style1: StyleProperties, style2: StyleProperties): StyleRules {
-    // 如果style1是字符串，先转换为对象
-    const obj1 = this.cssStyleValueToObject(style1)
-    // 如果style2是字符串，先转换为对象
-    const obj2 = this.cssStyleValueToObject(style2)
-
-    // 合并对象，后者覆盖前者
-    return { ...obj1, ...obj2 }
+    return StyleHandler.mergeCssStyle(style1, style2)
   }
 
   /**
    * 将style对象转换为字符串
    *
+   * @deprecated 请使用 `StyleHandler.cssStyleValueToString`
    * @param {StyleProperties} styleObj - style对象
    * @returns {string} 转换后的style字符串
    */
   static cssStyleValueToString(styleObj: StyleProperties): string {
-    if (!styleObj) return ''
-    if (isString(styleObj)) return styleObj
-    if (!isRecordObject(styleObj)) return ''
-    const styles: Array<string> = []
-    Object.keys(styleObj).forEach(key => {
-      const value = toRaw(styleObj[key as any]!)
-      const type = typeof value
-      const isValid = type === 'number' || type === 'string'
-      if (isValid && (value || value === 0)) {
-        styles.push(`${toKebabCase(key)}: ${value}`)
-      }
-    })
-    return styles.join('; ')
+    return StyleHandler.cssStyleValueToString(styleObj)
   }
 
   /**
@@ -80,84 +91,34 @@ export class DomHelper {
    *
    * 如果是对象，则会直接返回
    *
+   * @deprecated 请使用 `StyleHandler.cssStyleValueToObject`
    * @param {StyleProperties} style - style字符串
    * @returns {StyleRules}  转换后的style对象
    */
   static cssStyleValueToObject(style: StyleProperties): StyleRules {
-    if (isString(style)) {
-      const styleObj: Record<string, any> = {}
-      style.split(';').forEach(styleRule => {
-        const [key, value] = styleRule.split(':').map(s => s?.trim())
-        if (key && value) {
-          styleObj[toCamelCase(key)] = value // 转为驼峰命名
-        }
-      })
-      return styleObj as StyleRules
-    } else if (isRecordObject(style)) {
-      return style
-    }
-    return {}
+    return StyleHandler.cssStyleValueToObject(style)
   }
 
   /**
    * 将 class 属性转换为数组
    *
+   * @deprecated 请使用 `StyleHandler.cssClassValueToArray`
    * @param {ClassProperties} classInput - 可以是 string, string[] 或对象类型
    * @returns {string[]} 返回一个数组，数组元素为类名
    */
   static cssClassValueToArray(classInput: ClassProperties): string[] {
-    if (typeof classInput === 'string') {
-      return classInput.split(' ').filter(Boolean)
-    }
-
-    if (Array.isArray(classInput)) {
-      const classArray: string[] = []
-      for (let i = 0; i < classInput.length; i++) {
-        const item = toRaw(classInput[i])
-        if (typeof item === 'string') {
-          const text = item.trim()
-          if (text) classArray.push(text)
-        }
-      }
-      return classArray
-    }
-
-    if (typeof classInput === 'object' && classInput !== null) {
-      // 如果是对象类型，返回键名数组
-      return Object.keys(classInput).filter(key => classInput[key])
-    }
-
-    return []
+    return StyleHandler.cssClassValueToArray(classInput)
   }
 
   /**
    * 将 class 属性转换为字符串
    *
+   * @deprecated 请使用 `StyleHandler.cssClassValueToString`
    * @param {ClassProperties} classInput - 可以是 string, string[] 或对象类型
    * @returns {string} 返回一个字符串，字符串元素为类名
    */
   static cssClassValueToString(classInput: ClassProperties): string {
-    if (typeof classInput === 'string') {
-      return classInput.trim()
-    }
-    if (Array.isArray(classInput)) {
-      let classText = ''
-      for (let i = 0; i < classInput.length; i++) {
-        const item = toRaw(classInput[i])
-        if (typeof item === 'string') {
-          const text = item.trim()
-          if (text) classText += item.trim() + ' '
-        }
-      }
-      return classText.trim()
-    }
-    if (typeof classInput === 'object' && classInput !== null) {
-      // 如果是对象类型，返回键名数组
-      return Object.keys(classInput)
-        .filter(key => classInput[key])
-        .join(' ')
-    }
-    return ''
+    return StyleHandler.cssClassValueToString(classInput)
   }
 
   /**
@@ -199,7 +160,7 @@ export class DomHelper {
    * @returns {void}
    */
   static setStyle(el: HTMLElement | SVGElement, style: StyleProperties): void {
-    const cssText = this.cssStyleValueToString(style)
+    const cssText = StyleHandler.cssStyleValueToString(style)
     if (el.style.cssText !== cssText) {
       el.style.cssText = cssText
     }
@@ -216,7 +177,7 @@ export class DomHelper {
    * @returns {void}
    */
   static setClass(el: HTMLElement | SVGElement, classValue: ClassProperties): void {
-    const className = this.cssClassValueToString(classValue)
+    const className = StyleHandler.cssClassValueToString(classValue)
     if (el.className !== className) {
       el.setAttribute('class', className)
     }
@@ -264,7 +225,6 @@ export class DomHelper {
     // 处理普通属性
     this.handleRegularAttribute(el, name, value)
   }
-
   /**
    * 为元素设置多个属性
    *
@@ -277,7 +237,6 @@ export class DomHelper {
       this.setAttribute(el, key, props[key])
     })
   }
-
   /**
    * 移除元素的指定属性
    *
@@ -311,7 +270,6 @@ export class DomHelper {
       }
     }
   }
-
   /**
    * 获取元素的属性值
    *
@@ -323,7 +281,6 @@ export class DomHelper {
   static getAttribute(el: HTMLElement | SVGElement, name: string): any {
     return el.getAttribute(name)
   }
-
   /**
    * 为元素添加事件监听器
    *
@@ -350,7 +307,6 @@ export class DomHelper {
     Object.assign(eventOptions, options)
     el.addEventListener(event, handler as any, eventOptions)
   }
-
   /**
    * 移除元素的事件监听器
    *
@@ -384,20 +340,22 @@ export class DomHelper {
    * @throws {Error} - 如果锚点节点没有父节点，则抛出错误
    */
   static insertBefore(child: Node, anchor: Node): ParentNode {
-    const parent = this.getParentElement(anchor)
-    if (!parent) throw new Error('The anchor element does not have a parent node')
     // 兼容Fragment
     child = this.recoveryFragmentChildNodes(child)
     // 如果锚点元素是Fragment，则插入到第一个子元素
     if (this.isFragmentElement(anchor)) {
-      const el = this.getFirstChildElement(anchor)
-      parent.insertBefore(child, el)
-    } else {
-      parent.insertBefore(child, anchor)
+      anchor = anchor.$startAnchor
     }
+    // 获取锚点元素的父级元素
+    const parent = anchor.parentNode
+    if (!parent) {
+      throw new Error(
+        '[Vitarx.DomHelper.insertBefore][ERROR]: The anchor element does not have a parent node'
+      )
+    }
+    parent.insertBefore(child, anchor)
     return parent
   }
-
   /**
    * 在指定的锚点节点之后插入新的子元素
    *
@@ -406,11 +364,15 @@ export class DomHelper {
    * @returns {ParentNode} - 父节点元素
    */
   static insertAfter(child: Node, anchor: Node): ParentNode {
-    const parent = this.getParentElement(anchor)
-    if (!parent) throw new Error('The anchor element does not have a parent node')
     child = this.recoveryFragmentChildNodes(child)
     if (this.isFragmentElement(anchor)) {
-      anchor = this.getLastChildElement(anchor)!
+      anchor = anchor.$endAnchor
+    }
+    const parent = anchor.parentNode
+    if (!parent) {
+      throw new Error(
+        '[Vitarx.DomHelper.insertAfter][ERROR]: The anchor element does not have a parent node'
+      )
     }
     const next = anchor.nextSibling
     if (next) {
@@ -420,40 +382,78 @@ export class DomHelper {
     }
     return parent
   }
-
   /**
    * 获取元素的父级元素
    *
-   * @param {Node} target - 目标元素
+   * @param {Node} target - 目标DOM节点
    * @returns {Node | null} 返回父级真实DOM元素，如果不存在则返回null
    */
   static getParentElement(target: Node): ParentNode | null {
     if (this.isFragmentElement(target)) {
-      return this.getFirstChildElement(target)?.parentNode ?? null
+      return target.$startAnchor.parentNode
     }
     return target?.parentNode ?? null
   }
-
   /**
-   * 获取元素的第一个子元素
+   * 获取目标节点的下一个兄弟节点
    *
-   * @param {Node} target - 目标元素
-   * @returns {Node | null} 返回第一个子元素，如果不存在则返回null
+   * 兼容片段节点
+   *
+   * @param target - 目标DOM节点
+   * @returns 返回下一个兄弟节点，如果不存在则返回null
    */
-  static getFirstChildElement(target: Node): Node | null {
-    return this.getChild(target, 'first')
+  static getNextElement(target: Node): Node | null {
+    // 如果目标是片段元素，则返回其结束锚点的下一个兄弟节点
+    if (this.isFragmentElement(target)) {
+      return target.$endAnchor.nextSibling
+    }
+    // 否则返回目标节点的下一个兄弟节点，如果不存在则返回null
+    return target?.nextSibling ?? null
   }
-
   /**
-   * 获取元素的最后一个子元素
+   * 获取目标DOM节点的前一个兄弟节点
    *
-   * @param {Node} target - 目标元素
-   * @returns {Node | null} 返回最后一个子元素，如果不存在则返回null
+   * 兼容片段节点
+   *
+   * @param target - 目标DOM节点
+   * @returns {Node|null} 返回前一个兄弟节点，如果不存在则返回null
+   */
+  static getPrevElement(target: Node): Node | null {
+    // 如果目标是片段元素，则返回片段起始锚点的前一个兄弟节点
+    if (this.isFragmentElement(target)) {
+      return target.$startAnchor.previousSibling
+    }
+    // 否则返回目标节点的前一个兄弟节点，如果不存在则返回null
+    return target?.previousSibling ?? null
+  }
+  /**
+   * 获取目标DOM节点的最后一个子元素
+   *
+   * 兼容片段节点
+   *
+   * @param target - 目标节点
+   * @returns {Node|null} 获取目标DOM节点的最后一个子元素，如果目标节点没有子元素则返回null
    */
   static getLastChildElement(target: Node): Node | null {
-    return this.getChild(target, 'last')
+    if (this.isFragmentElement(target)) {
+      return target.$endAnchor.previousSibling
+    }
+    return target.lastChild
   }
-
+  /**
+   * 获取目标DOM节点的第一个子元素
+   *
+   * 兼容片段节点
+   *
+   * @param target - 目标节点
+   * @returns {Node|null} 返回第一个子节点，如果不存在则返回null
+   */
+  static getFirstChildElement(target: Node): Node | null {
+    if (this.isFragmentElement(target)) {
+      return target.$startAnchor.nextSibling
+    }
+    return target.firstChild
+  }
   /**
    * 替换元素方法
    *
@@ -468,19 +468,31 @@ export class DomHelper {
   static replace(newEl: Node, oldEl: Node): void {
     newEl = this.recoveryFragmentChildNodes(newEl)
     if (this.isFragmentElement(oldEl)) {
-      const oldFirstEl = this.getFirstChildElement(oldEl)
-      if (!oldFirstEl) throw new Error('empty fragment elements cannot be replaced')
-      // 插入新元素
-      this.insertBefore(newEl, oldFirstEl)
-      this.remove(oldEl)
+      const startAnchor = oldEl.$startAnchor
+      const parent = startAnchor.parentNode
+      if (!parent) {
+        throw new Error(
+          '[Vitarx.DomHelper.replace][ERROR]: The old element does not have a parent element'
+        )
+      }
+      parent.insertBefore(newEl, startAnchor)
+      // 移除旧元素
+      oldEl.$children.forEach(child => this.remove(child.element))
+      // 移除旧元素开始锚点
+      startAnchor.remove()
+      // 移除旧元素结束锚点
+      oldEl.$endAnchor.remove()
     } else {
-      const parent = this.getParentElement(oldEl)
-      if (!parent) throw new Error('The old element does not have a parent element')
+      const parent = oldEl.parentNode
+      if (!parent) {
+        throw new Error(
+          '[Vitarx.DomHelper.replace][ERROR]: The old element does not have a parent element'
+        )
+      }
       // 替换新元素
       parent.replaceChild(newEl, oldEl)
     }
   }
-
   /**
    * 给指定容器元素附加子元素
    *
@@ -490,17 +502,14 @@ export class DomHelper {
    */
   static appendChild(target: Node, el: Node): void {
     el = this.recoveryFragmentChildNodes(el)
-    // 如果父元素是一个片段节点元素，则判断其是否已挂载，如果已挂载则插入元素到片段节点最后一个元素之后
-    if (this.isFragmentElement(target)) {
-      const lastChildElement = this.getLastChildElement(target)
-      if (lastChildElement?.parentNode) {
-        this.insertAfter(el, lastChildElement)
-        return
-      }
+    // 如果是插入到片段节点中，则判断是否已挂载
+    if (this.isFragmentElement(target) && target.$endAnchor.parentNode) {
+      const endAnchor = target.$endAnchor
+      endAnchor.parentNode!.insertBefore(el, endAnchor)
+    } else {
+      target.appendChild(el)
     }
-    target.appendChild(el)
   }
-
   /**
    * 从DOM中移除虚拟节点对应的真实元素
    *
@@ -510,12 +519,11 @@ export class DomHelper {
     if (!this.isFragmentElement(target)) {
       return target.remove()
     }
-    const children = target.$vnode.children
+    const children = target.$children
     if (children?.length) {
-      children.forEach(child => child.element && this.remove(child.element))
+      children.forEach(child => this.remove(child.element))
     }
   }
-
   /**
    * 恢复片段节点的子节点
    *
@@ -526,18 +534,18 @@ export class DomHelper {
   static recoveryFragmentChildNodes<T extends Node>(el: T): T {
     if (this.isFragmentElement(el)) {
       if (el.childNodes.length === 0) {
-        const vnode = el.$vnode
+        el.appendChild(el.$startAnchor)
         // 递归恢复片段节点
-        for (let i = 0; i < vnode.children.length; i++) {
-          const childVNode = vnode.children[i]
+        for (let i = 0; i < el.$children.length; i++) {
+          const childVNode = el.$children[i]
           const childEl = childVNode.teleport ? childVNode.shadowElement : childVNode.element
           el.appendChild(this.recoveryFragmentChildNodes(childEl))
         }
+        el.appendChild(el.$endAnchor)
       }
     }
     return el
   }
-
   /**
    * 判断是否为Vitarx特殊的片段元素
    *
@@ -548,32 +556,6 @@ export class DomHelper {
   }
 
   /**
-   * 获取元素的子元素
-   *
-   * @param target - 目标元素
-   * @param type - 子元素类型（first 或 last）
-   * @protected
-   */
-  protected static getChild(target: Node, type: 'first' | 'last'): Node | null {
-    // 检查元素是否具有children属性
-    if (!('children' in target)) return null
-    // 处理DocumentFragment类型的情况
-    if (this.isFragmentElement(target)) {
-      const fragmentVNode = target.$vnode
-      const index = type === 'first' ? 0 : fragmentVNode.children.length - 1
-      // 获取虚拟节点并递归处理
-      const childVNode = fragmentVNode.children[index]
-      // 如果是传送节点则使用影子节点
-      target = childVNode.teleport ? childVNode.shadowElement : childVNode.element
-      // 如果最后一个子节点仍然是DocumentFragment，递归调用
-      return this.isFragmentElement(target) ? this.getChild(target, type) : target
-    }
-    const child = target[`${type}Child`]
-    // 返回最后一个子元素，确保lastChild存在
-    return child ? (child as Node) : null
-  }
-
-  /**
    * 判断是否为特殊属性
    * @param name - 属性名
    * @returns {boolean} 如果是特殊属性则返回true，否则返回false
@@ -581,7 +563,6 @@ export class DomHelper {
   private static isSpecialAttribute(name: string): boolean {
     return ['style', 'className', 'classname', 'class', 'v-html', 'autoFocus'].includes(name)
   }
-
   /**
    * 处理特殊属性
    * @param el - 元素实例
@@ -610,7 +591,6 @@ export class DomHelper {
         break
     }
   }
-
   /**
    * 处理事件属性
    * @param el - 元素实例
@@ -632,7 +612,6 @@ export class DomHelper {
     // 绑定新事件
     this.addEventListener(el, name, value)
   }
-
   /**
    * 处理 data 属性
    * @param el - 元素实例
@@ -642,7 +621,6 @@ export class DomHelper {
   private static handleDataAttribute(el: HTMLElement | SVGElement, name: string, value: any): void {
     el.dataset[name.slice(5)] = value
   }
-
   /**
    * 处理普通属性
    * @param el - 元素实例
@@ -675,7 +653,6 @@ export class DomHelper {
       this.handleAttributeError(name, error, el)
     }
   }
-
   /**
    * 尝试直接设置属性
    * @param el - 要设置属性的元素对象
@@ -697,7 +674,6 @@ export class DomHelper {
     }
     return true
   }
-
   /**
    * 处理属性设置错误
    * @param name - 属性名
@@ -709,6 +685,6 @@ export class DomHelper {
     error: any,
     el: HTMLElement | SVGElement
   ): void {
-    console.error(`[@vitarx/runtime-core][ERROR]：设置属性 ${name} 时发生错误`, error, el)
+    console.error(`[Vitarx.DomHelper.setAttribute][ERROR]：设置属性 ${name} 时发生错误`, error, el)
   }
 }
