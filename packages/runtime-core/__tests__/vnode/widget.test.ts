@@ -247,19 +247,30 @@ describe('WidgetVNode 单元测试', () => {
         'w1:onUnmounted'
       ])
     })
-    it('onMounted钩子中当前元素已经挂载至body', () => {
+    it('onMounted钩子中当前元素已经挂载至body', async () => {
       const widgetRef = refEl()
+      let mounted = false
       const cb = vi.fn(() => {
         expect(document.body.contains(widgetRef.value!.$el)).toBe(true)
+        mounted = true
       })
-      const widgetVNode = createVNode(
-        () => {
-          onMounted(cb)
-          return createElement('span', null, 1)
-        },
-        { ref: widgetRef }
-      )
+      const widgetVNode = createVNode(() => {
+        return createElement(
+          'div',
+          null,
+          createElement(
+            () => {
+              onMounted(cb)
+              return null
+            },
+            { ref: widgetRef }
+          )
+        )
+      })
       widgetVNode.mount(document.body)
+      await vi.waitFor(() => {
+        expect(mounted).toBe(true)
+      })
     })
   })
 
