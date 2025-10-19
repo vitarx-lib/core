@@ -7,7 +7,9 @@ import type { HTMLNodeElementName, RuntimeElement } from './types/index.js'
  */
 type ComputedRefElType<T> = T extends HTMLNodeElementName
   ? RuntimeElement<T>
-  : ExcludeWidgetIntrinsicKeywords<T>
+  : T extends Node
+    ? T
+    : ExcludeWidgetIntrinsicKeywords<T> & { $el: RuntimeElement }
 /** 引用元素类型 */
 export type RefEl<T> = Ref<ComputedRefElType<T> | null>
 
