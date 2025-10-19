@@ -552,7 +552,7 @@ export class DomHelper {
    * @param el
    */
   static isFragmentElement(el: any): el is FragmentElement {
-    return el && typeof el === 'object' && el instanceof DocumentFragment && '$vnode' in el
+    return el && el instanceof DocumentFragment && '$startAnchor' in el
   }
 
   /**
