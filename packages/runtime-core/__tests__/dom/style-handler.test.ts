@@ -58,7 +58,7 @@ describe('StyleHandler', () => {
     })
 
     it('应该合并字符串和对象类型的样式', () => {
-      const result = StyleHandler.mergeCssStyle('color: red; font-size: 14px', {
+      const result = StyleHandler.mergeCssStyle('color: red; font-size: 14px;', {
         background: 'blue',
         color: 'green'
       })
@@ -92,19 +92,19 @@ describe('StyleHandler', () => {
     it('应该将对象转换为样式字符串', () => {
       const styleObj = { color: 'red', fontSize: '14px', backgroundColor: 'blue' }
       const result = StyleHandler.cssStyleValueToString(styleObj)
-      expect(result).toBe('color: red; font-size: 14px; background-color: blue')
+      expect(result).toBe('color: red; font-size: 14px; background-color: blue;')
     })
 
     it('应该忽略对象中的无效值', () => {
       const styleObj = { color: 'red', fontSize: null, backgroundColor: 'blue', invalid: undefined }
       const result = StyleHandler.cssStyleValueToString(styleObj as any)
-      expect(result).toBe('color: red; background-color: blue')
+      expect(result).toBe('color: red; background-color: blue;')
     })
 
     it('应该处理数字值', () => {
       const styleObj: StyleRules = { fontSize: '14', opacity: 0.5 }
       const result = StyleHandler.cssStyleValueToString(styleObj)
-      expect(result).toBe('font-size: 14; opacity: 0.5')
+      expect(result).toBe('font-size: 14; opacity: 0.5;')
     })
 
     it('应该使用toRaw来解包值', () => {
@@ -112,7 +112,7 @@ describe('StyleHandler', () => {
 
       const styleObj = { color: mockValue }
       const result = StyleHandler.cssStyleValueToString(styleObj)
-      expect(result).toBe('color: red')
+      expect(result).toBe('color: red;')
     })
   })
 

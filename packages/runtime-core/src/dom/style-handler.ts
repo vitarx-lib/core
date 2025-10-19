@@ -84,7 +84,7 @@ export class StyleHandler {
         styles.push(`${toKebabCase(key)}: ${value}`)
       }
     })
-    return styles.join('; ')
+    return styles.length > 0 ? styles.join('; ') + ';' : ''
   }
 
   /**
