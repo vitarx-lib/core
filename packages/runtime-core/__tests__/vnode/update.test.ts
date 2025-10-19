@@ -247,7 +247,6 @@ describe('update', () => {
 
     // 执行更新
     VNodeUpdate.patchUpdateChildren(vnode1, vnode2)
-    console.log(body.innerHTML)
     // --- 验证 DOM ---
     const lis = [...body.querySelectorAll('li')]
     expect(lis.length).toBe(4)
