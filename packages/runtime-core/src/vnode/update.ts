@@ -190,7 +190,7 @@ export class VNodeUpdate {
       }
       const newChild = newChildren[oldIndex]
       // 按位置匹配，找到可复用的旧节点
-      if (newChild && newVNode.type === oldVNode.type && newChild.key === oldChild.key) {
+      if (newChild && newChild.type === oldChild.type && newChild.key === oldChild.key) {
         newIndexToOldIndex[oldIndex] = oldIndex
         continue
       }
