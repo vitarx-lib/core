@@ -530,7 +530,7 @@ export class DomHelper {
         // 递归恢复片段节点
         for (let i = 0; i < vnode.children.length; i++) {
           const childVNode = vnode.children[i]
-          const childEl = childVNode.element
+          const childEl = childVNode.teleport ? childVNode.shadowElement : childVNode.element
           el.appendChild(this.recoveryFragmentChildNodes(childEl))
         }
       }
