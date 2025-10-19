@@ -356,7 +356,7 @@ export abstract class VNode<T extends VNodeType = VNodeType> {
   /**
    * 挂载虚拟节点到指定的容器中
    *
-   * @param [target] - 挂载目标，任意 DOM.Element 对象，如果不指定，需自行挂载！兼容旧版本
+   * @param [target] - 挂载目标，仅根节点需要提供，其他节点在渲染时就已经形成真实的挂载关系，所以不需要提供
    * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    */
   abstract mount(target?: Node, type?: MountType): void

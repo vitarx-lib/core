@@ -55,17 +55,13 @@ export abstract class ContainerVNode<
    * @inheritDoc
    */
   override mount(target?: Node, type?: MountType): void {
-    // 获取片段节点元素
-    let element = this.element as Node
-    // 遍历挂载所有子节点
-    for (const child of this.children) {
-      child.mount(this.element, 'appendChild')
-    }
     if (this.teleport) {
       // 挂载到传送节点
-      DomHelper.appendChild(this.teleport, element)
-      element = this.shadowElement
+      DomHelper.appendChild(this.teleport, this.element)
     }
+    // 获取片段节点元素
+    const element = this.teleport ? this.shadowElement : this.element
+    // 挂载到指定目标
     if (target) {
       switch (type) {
         case 'insertBefore':
@@ -81,6 +77,10 @@ export abstract class ContainerVNode<
           DomHelper.appendChild(target, element)
       }
     }
+    // 遍历挂载所有子节点
+    for (const child of this.children) {
+      child.mount(undefined)
+    }
   }
 
   /**
@@ -91,7 +91,9 @@ export abstract class ContainerVNode<
     if (this.children.length && 'children' in currentEl) {
       // 渲染所有子节点
       for (const child of this.children) {
-        child.render()
+        // 如果是传送节点，则将影子元素添加到当前元素中
+        const childElement = child.teleport ? child.shadowElement : child.element
+        DomHelper.appendChild(currentEl, childElement)
       }
     }
   }

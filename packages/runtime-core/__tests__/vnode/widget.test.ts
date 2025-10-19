@@ -251,7 +251,10 @@ describe('WidgetVNode 单元测试', () => {
       const widgetRef = refEl()
       let mounted = false
       const cb = vi.fn(() => {
-        expect(document.body.contains(widgetRef.value!.$el)).toBe(true)
+        expect(widgetRef.value!.$el).toBeDefined()
+        expect(widgetRef.value!.$el.parentNode).toBeDefined()
+        expect(widgetRef.value!.$el.parentNode?.parentNode).toBe(document.body)
+        expect(document.body.textContent).toBe('1')
         mounted = true
       })
       const widgetVNode = createVNode(() => {
@@ -261,7 +264,7 @@ describe('WidgetVNode 单元测试', () => {
           createElement(
             () => {
               onMounted(cb)
-              return null
+              return createElement('div', null, '1')
             },
             { ref: widgetRef }
           )
