@@ -1,4 +1,5 @@
 import { markRaw } from '@vitarx/responsive'
+import { DomHelper } from '../../dom/index.js'
 import { isFragmentVNode } from '../guards.js'
 import { FRAGMENT_NODE_TYPE } from '../node-symbol.js'
 import type { Child, FragmentElement, FragmentNodeElementName } from '../types/index.js'
@@ -71,7 +72,10 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
     for (const child of this.children) {
       child.unmount(root)
     }
-    if (root) this.removeShadowElement()
+    if (root) {
+      this.removeShadowElement()
+      DomHelper.remove(this.element)
+    }
     this._cachedElement = null
   }
 }
