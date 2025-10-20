@@ -91,9 +91,11 @@ export abstract class ContainerVNode<
     if (this.children.length && 'children' in currentEl) {
       // 渲染所有子节点
       for (const child of this.children) {
+        // 预先渲染元素
+        const element = child.element
         // 如果是传送节点，则将影子元素添加到当前元素中
-        const childElement = child.teleport ? child.shadowElement : child.element
-        DomHelper.appendChild(currentEl, childElement)
+        const mountElement = child.teleport ? child.shadowElement : element
+        DomHelper.appendChild(currentEl, mountElement)
       }
     }
   }
