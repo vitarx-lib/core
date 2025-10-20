@@ -10,7 +10,7 @@ import {
   type WidgetType,
   type WidgetVNode
 } from '../../vnode/index.js'
-import { onPropChange } from '../helper.js'
+import { onPropChange } from '../property.js'
 import { Widget } from '../widget.js'
 
 /**
