@@ -71,8 +71,6 @@ export class VNodeUpdate {
     if (!oldVNode.isStatic) {
       // 更新节点的属性
       this.patchUpdateAttrs(oldVNode, newVNode)
-      // 更新节点的显示状态
-      oldVNode.isShow = newVNode.isShow
       // 如果是容器节点，则更新其子节点
       if (isContainerVNode(oldVNode)) {
         // 递归更新子节点并获取更新后的子节点列表
@@ -89,6 +87,8 @@ export class VNodeUpdate {
    * @template T - 继承自VNode的泛型类型
    */
   static patchUpdateAttrs<T extends VNode>(oldVNode: T, newVNode: T) {
+    // 更新节点的显示状态
+    oldVNode.isShow = newVNode.isShow
     // 如果是特殊的无props节点，则不进行任何更新
     if (isNotTagVNode(oldVNode)) {
       oldVNode.value = (newVNode as unknown as NoTagVNode<any>).value
