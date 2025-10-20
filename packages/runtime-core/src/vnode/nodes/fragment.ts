@@ -26,6 +26,7 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
    */
   override render(): FragmentElement {
     const element = markRaw(document.createDocumentFragment() as FragmentElement)
+    const node = this
     // 设置虚拟节点属性
     Object.defineProperties(element, {
       $startAnchor: {
@@ -35,8 +36,8 @@ export class FragmentVNode extends ContainerVNode<FragmentNodeElementName> {
         value: document.createComment('end fragment tag element')
       },
       $children: {
-        value: () => {
-          return this.children
+        get value() {
+          return node.children
         }
       }
     })
