@@ -238,7 +238,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
   static override is(val: any): val is WidgetVNode {
     return isWidgetVNode(val)
   }
-
   /**
    * 在指定上下文中执行函数
    *
@@ -301,7 +300,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
     let el: AnyElement
     try {
       // 尝试获取子组件的DOM元素
-      el = this.child.render()
+      el = this.child.element
     } catch (e) {
       // 触发onError生命周期
       const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
@@ -312,7 +311,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.#child = VNode.is(errVNode)
         ? errVNode
         : new CommentVNode(`${VNode.name} Widget render fail`)
-      el = this.#child.render()
+      el = this.#child.element
     }
     // 更新组件状态为未挂载
     this.#state = 'notMounted'
@@ -334,6 +333,7 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @throws {Error} 如果组件非未挂载状态，则会抛出错误
    */
   override mount(target?: Node, type: MountType = 'appendChild'): this {
+    if (this.state === 'notRendered') this.render()
     if (this.teleport) {
       if (target) {
         // 插入影子元素
@@ -362,22 +362,6 @@ export class WidgetVNode<T extends WidgetType = WidgetType> extends VNode<T> {
       this.triggerLifecycleHook(LifecycleHooks.activated)
     }
     return this
-  }
-
-  /**
-   * @inheritDoc
-   * @override
-   */
-  override get teleport() {
-    if (this.state === 'notRendered') this.render() // 渲染一次，避免遗漏onBeforeMount生命周期返回的teleport
-    return super.teleport
-  }
-  /**
-   * @inheritDoc
-   * @override
-   */
-  protected override set teleport(parent: ParentNode | null) {
-    super.teleport = parent
   }
   /**
    * 触发生命周期钩子

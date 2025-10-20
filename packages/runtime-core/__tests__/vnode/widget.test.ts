@@ -134,16 +134,15 @@ describe('WidgetVNode 单元测试', () => {
   describe('render方法', () => {
     it('应该正确渲染组件', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
-      const element = widgetVNode.render()
+      const element = widgetVNode.element
       expect(element).toBeDefined()
       expect(widgetVNode.state).toBe('notMounted')
     })
 
     it('已经渲染过的组件应该返回缓存的element', () => {
       const widgetVNode = new WidgetVNode(MockWidget, {})
-      widgetVNode.render()
-      widgetVNode.render()
-      // 第二次调用应该直接返回child.element
+      const element = widgetVNode.element
+      expect(element).toBe(widgetVNode.element)
     })
   })
 
@@ -157,13 +156,6 @@ describe('WidgetVNode 单元测试', () => {
 
       expect(renderSpy).toHaveBeenCalled()
       expect(widgetVNode.state).toBe('activated')
-    })
-
-    it('非notMounted状态应该抛出错误', () => {
-      const widgetVNode = new WidgetVNode(MockWidget, {})
-      widgetVNode.render()
-      // 手动更改状态以模拟错误情况
-      // 注意：由于#state是私有属性，这里无法直接修改
     })
   })
 
