@@ -1,202 +1,75 @@
 import { ref } from '@vitarx/responsive'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createElement, DomHelper, Fragment, type StyleRules } from '../../src'
+import { createElement, DomHelper, Fragment, type FragmentElement } from '../../src'
 
 describe('DomHelper', () => {
   beforeEach(() => {
     // Clear all mocks before each test
     vi.clearAllMocks()
+    document.body.innerHTML = ''
   })
 
-  describe('mergeCssClass', () => {
-    it('应该合并两个字符串类型的class', () => {
-      const result = DomHelper.mergeCssClass('class1 class2', 'class3 class4')
-      expect(result).toEqual(['class1', 'class2', 'class3', 'class4'])
+  describe('已弃用的方法', () => {
+    let element: HTMLElement
+
+    beforeEach(() => {
+      element = document.createElement('div')
     })
 
-    it('应该合并字符串和数组类型的class', () => {
-      const result = DomHelper.mergeCssClass('class1 class2', ['class3', 'class4'])
-      expect(result).toEqual(['class1', 'class2', 'class3', 'class4'])
-    })
+    describe('mergeCssClass', () => {
+      it('应该调用StyleHandler.mergeCssClass', () => {
+        const c1 = 'class1'
+        const c2 = 'class2'
+        const result = DomHelper.mergeCssClass(c1, c2)
 
-    it('应该合并字符串和对象类型的class', () => {
-      const result = DomHelper.mergeCssClass('class1 class2', {
-        class3: true,
-        class4: false,
-        class5: true
+        expect(result).toEqual([c1, c2])
       })
-      expect(result).toEqual(['class1', 'class2', 'class3', 'class5'])
     })
 
-    it('应该合并数组和对象类型的class', () => {
-      const result = DomHelper.mergeCssClass(['class1', 'class2'], {
-        class3: true,
-        class4: false,
-        class5: true
+    describe('mergeCssStyle', () => {
+      it('应该调用StyleHandler.mergeCssStyle', () => {
+        const style1 = { color: 'red' }
+        const style2 = { fontSize: '14px' }
+        const result = DomHelper.mergeCssStyle(style1, style2)
+
+        expect(result).toEqual({ color: 'red', fontSize: '14px' })
       })
-      expect(result).toEqual(['class1', 'class2', 'class3', 'class5'])
     })
 
-    it('应该合并两个数组并去重', () => {
-      const result = DomHelper.mergeCssClass(['class1', 'class2', 'class1'], ['class2', 'class3'])
-      expect(result).toEqual(['class1', 'class2', 'class3'])
-    })
+    describe('cssStyleValueToString', () => {
+      it('应该调用StyleHandler.cssStyleValueToString', () => {
+        const style = { color: 'red', fontSize: '14px' }
+        const result = DomHelper.cssStyleValueToString(style)
 
-    it('应该合并两个对象并去重', () => {
-      const result = DomHelper.mergeCssClass(
-        { class1: true, class2: true, class3: false },
-        { class2: false, class3: true, class4: true }
-      )
-      expect(result).toEqual(['class1', 'class2', 'class3', 'class4'])
-    })
-  })
-
-  describe('mergeCssStyle', () => {
-    it('应该合并两个字符串类型的样式', () => {
-      const result = DomHelper.mergeCssStyle(
-        'color: red; font-size: 14px',
-        'background: blue; color: green'
-      )
-      expect(result).toEqual({ color: 'green', fontSize: '14px', background: 'blue' })
-    })
-
-    it('应该合并字符串和对象类型的样式', () => {
-      const result = DomHelper.mergeCssStyle('color: red; font-size: 14px', {
-        background: 'blue',
-        color: 'green'
+        expect(result).toBe('color: red; font-size: 14px;')
       })
-      expect(result).toEqual({ color: 'green', fontSize: '14px', background: 'blue' })
     })
 
-    it('应该合并两个对象，后面的值覆盖前面的值', () => {
-      const result = DomHelper.mergeCssStyle(
-        { color: 'red', fontSize: '14px' },
-        { background: 'blue', color: 'green' }
-      )
-      expect(result).toEqual({ color: 'green', fontSize: '14px', background: 'blue' })
-    })
-  })
+    describe('cssStyleValueToObject', () => {
+      it('应该调用StyleHandler.cssStyleValueToObject', () => {
+        const style = { color: 'red', fontSize: '14px' }
+        const result = DomHelper.cssStyleValueToObject(style)
 
-  describe('cssStyleValueToString', () => {
-    it('对于null或undefined应该返回空字符串', () => {
-      expect(DomHelper.cssStyleValueToString(null as any)).toBe('')
-      expect(DomHelper.cssStyleValueToString(undefined as any)).toBe('')
+        expect(result).toEqual(style)
+      })
     })
 
-    it('对于字符串应该原样返回', () => {
-      expect(DomHelper.cssStyleValueToString('color: red')).toBe('color: red')
+    describe('cssClassValueToArray', () => {
+      it('应该调用StyleHandler.cssClassValueToArray', () => {
+        const classInput = 'class1 class2'
+        const result = DomHelper.cssClassValueToArray(classInput)
+
+        expect(result).toEqual(['class1', 'class2'])
+      })
     })
 
-    it('对于非对象值应该返回空字符串', () => {
-      expect(DomHelper.cssStyleValueToString(123 as any)).toBe('')
-      expect(DomHelper.cssStyleValueToString(true as any)).toBe('')
-    })
+    describe('cssClassValueToString', () => {
+      it('应该调用StyleHandler.cssClassValueToString', () => {
+        const classInput = ['class1', 'class2']
+        const result = DomHelper.cssClassValueToString(classInput)
 
-    it('应该将对象转换为样式字符串', () => {
-      const styleObj = { color: 'red', fontSize: '14px', backgroundColor: 'blue' }
-      const result = DomHelper.cssStyleValueToString(styleObj)
-      expect(result).toBe('color: red; font-size: 14px; background-color: blue')
-    })
-
-    it('应该忽略对象中的无效值', () => {
-      const styleObj = { color: 'red', fontSize: null, backgroundColor: 'blue', invalid: undefined }
-      const result = DomHelper.cssStyleValueToString(styleObj as any)
-      expect(result).toBe('color: red; background-color: blue')
-    })
-
-    it('应该处理数字值', () => {
-      const styleObj: StyleRules = { fontSize: '14', opacity: 0.5 }
-      const result = DomHelper.cssStyleValueToString(styleObj)
-      expect(result).toBe('font-size: 14; opacity: 0.5')
-    })
-
-    it('应该使用toRaw来解包值', () => {
-      const mockValue = ref('red')
-
-      const styleObj = { color: mockValue }
-      const result = DomHelper.cssStyleValueToString(styleObj)
-      expect(result).toBe('color: red')
-    })
-  })
-
-  describe('cssStyleValueToObject', () => {
-    it('应该将字符串样式解析为对象', () => {
-      const result = DomHelper.cssStyleValueToObject(
-        'color: red; font-size: 14px; background-color: blue'
-      )
-      expect(result).toEqual({ color: 'red', fontSize: '14px', backgroundColor: 'blue' })
-    })
-
-    it('应该原样返回对象', () => {
-      const styleObj = { color: 'red', fontSize: '14px' }
-      const result = DomHelper.cssStyleValueToObject(styleObj)
-      expect(result).toBe(styleObj)
-    })
-
-    it('对于非字符串和非对象值应该返回空对象', () => {
-      expect(DomHelper.cssStyleValueToObject(123 as any)).toEqual({})
-      expect(DomHelper.cssStyleValueToObject(true as any)).toEqual({})
-      expect(DomHelper.cssStyleValueToObject(null as any)).toEqual({})
-    })
-
-    it('应该处理空字符串', () => {
-      expect(DomHelper.cssStyleValueToObject('')).toEqual({})
-    })
-
-    it('应该忽略格式错误的样式规则', () => {
-      const result = DomHelper.cssStyleValueToObject('color: red; invalid; background-color: blue')
-      expect(result).toEqual({ color: 'red', backgroundColor: 'blue' })
-    })
-
-    it('应该使用toCamelCase处理属性名', () => {
-      const result = DomHelper.cssStyleValueToObject('font-size: 14px; background-color: blue')
-      expect(result).toEqual({ fontSize: '14px', backgroundColor: 'blue' })
-    })
-  })
-
-  describe('cssClassValueToArray', () => {
-    it('应该将字符串分割为数组', () => {
-      const result = DomHelper.cssClassValueToArray('class1 class2  class3')
-      expect(result).toEqual(['class1', 'class2', 'class3'])
-    })
-
-    it('应该原样返回数组', () => {
-      const result = DomHelper.cssClassValueToArray(['class1', 'class2'])
-      expect(result).toEqual(['class1', 'class2'])
-    })
-
-    it('应该将对象转换为truthy键名数组', () => {
-      const result = DomHelper.cssClassValueToArray({ class1: true, class2: false, class3: true })
-      expect(result).toEqual(['class1', 'class3'])
-    })
-
-    it('对于其他类型应该返回空数组', () => {
-      expect(DomHelper.cssClassValueToArray(123 as any)).toEqual([])
-      expect(DomHelper.cssClassValueToArray(true as any)).toEqual([])
-      expect(DomHelper.cssClassValueToArray(null as any)).toEqual([])
-    })
-  })
-
-  describe('cssClassValueToString', () => {
-    it('应该去除字符串输入的首尾空格', () => {
-      const result = DomHelper.cssClassValueToString('  class1 class2  ')
-      expect(result).toBe('class1 class2')
-    })
-
-    it('应该连接数组元素并过滤空值', () => {
-      const result = DomHelper.cssClassValueToString(['class1', ' ', 'class2', ''])
-      expect(result).toBe('class1 class2')
-    })
-
-    it('应该连接对象的truthy键名', () => {
-      const result = DomHelper.cssClassValueToString({ class1: true, class2: false, class3: true })
-      expect(result).toBe('class1 class3')
-    })
-
-    it('对于其他类型应该返回空字符串', () => {
-      expect(DomHelper.cssClassValueToString(123 as any)).toBe('')
-      expect(DomHelper.cssClassValueToString(true as any)).toBe('')
-      expect(DomHelper.cssClassValueToString(null as any)).toBe('')
+        expect(result).toBe('class1 class2')
+      })
     })
   })
 
@@ -229,6 +102,14 @@ describe('DomHelper', () => {
     it('应该处理多个选项', () => {
       const result = DomHelper.extractEventOptions('onClickCaptureOnce')
       expect(result).toEqual({ event: 'click', options: { capture: true, once: true } })
+    })
+
+    it('应该处理所有选项组合', () => {
+      const result = DomHelper.extractEventOptions('onMouseDownCaptureOncePassive')
+      expect(result).toEqual({
+        event: 'mousedown',
+        options: { capture: true, once: true, passive: true }
+      })
     })
   })
 
@@ -296,6 +177,53 @@ describe('DomHelper', () => {
         DomHelper.setAttribute(element, 'id', refValue)
         expect(element.id).toBe('test')
       })
+
+      it('应该移除undefined值的属性', () => {
+        element.setAttribute('id', 'test')
+        DomHelper.setAttribute(element, 'id', undefined)
+        expect(element.getAttribute('id')).toBe('')
+      })
+
+      it('应该处理v-html属性', () => {
+        DomHelper.setAttribute(element, 'v-html', '<p>test</p>')
+        expect(element.innerHTML).toBe('<p>test</p>')
+      })
+
+      it('应该处理autoFocus属性', () => {
+        DomHelper.setAttribute(element, 'autoFocus', true)
+        expect(element.autofocus).toBe(true)
+      })
+
+      it('应该处理xmlns:xlink属性', () => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        DomHelper.setAttribute(svg, 'xmlns:xlink', 'http://www.w3.org/1999/xlink')
+        expect(svg.getAttribute('xmlns:xlink')).toBe('http://www.w3.org/1999/xlink')
+      })
+
+      it('应该处理xlink属性', () => {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use')
+        svg.appendChild(use)
+        DomHelper.setAttribute(use, 'xlink:href', '#test')
+        expect(use.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('#test')
+      })
+
+      it('应该直接设置元素属性', () => {
+        DomHelper.setAttribute(element, 'title', 'test title')
+        expect(element.title).toBe('test title')
+      })
+
+      it('应该处理属性设置错误', () => {
+        // 创建一个会导致错误的属性设置场景
+        Object.defineProperty(element, 'testProp', {
+          set: () => {
+            throw new Error('Test error')
+          }
+        })
+
+        DomHelper.setAttribute(element, 'testProp', 'value')
+        expect(DomHelper.getAttribute(element, 'testProp')).toBe('value')
+      })
     })
 
     describe('setAttributes', () => {
@@ -321,35 +249,103 @@ describe('DomHelper', () => {
 
       it('应该移除事件监听器', () => {
         const handler = vi.fn()
-        element.addEventListener = vi.fn()
-        element.removeEventListener = vi.fn()
+        const addEventListenerSpy = vi.spyOn(element, 'addEventListener')
+        const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener')
 
         DomHelper.setAttribute(element, 'onclick', handler)
         DomHelper.removeAttribute(element, 'onclick', handler)
 
-        expect(element.removeEventListener).toHaveBeenCalled()
+        expect(addEventListenerSpy).toHaveBeenCalledWith('click', handler, {})
+        expect(removeEventListenerSpy).toHaveBeenCalledWith('click', handler, false)
+        addEventListenerSpy.mockRestore()
+        removeEventListenerSpy.mockRestore()
+      })
+
+      it('应该处理字符串属性', () => {
+        element.setAttribute('id', 'test')
+        DomHelper.removeAttribute(element, 'id')
+        expect(element.id).toBe('')
+      })
+
+      it('应该处理布尔属性', () => {
+        const input = document.createElement('input')
+        input.disabled = true
+        DomHelper.removeAttribute(input, 'disabled')
+        expect(input.disabled).toBe(false)
+      })
+
+      it('应该处理数字属性', () => {
+        const input = document.createElement('input')
+        input.maxLength = 10
+        DomHelper.removeAttribute(input, 'maxLength')
+        expect(input.maxLength).toBe(-1)
+      })
+
+      it('应该处理tabIndex属性', () => {
+        element.tabIndex = 1
+        DomHelper.removeAttribute(element, 'tabIndex')
+        expect(element.tabIndex).toBe(-1)
+      })
+
+      it('应该移除普通属性', () => {
+        element.setAttribute('custom-attr', 'value')
+        DomHelper.removeAttribute(element, 'custom-attr')
+        expect(element.getAttribute('custom-attr')).toBeNull()
+      })
+    })
+
+    describe('getAttribute', () => {
+      it('应该获取元素的属性值', () => {
+        element.setAttribute('id', 'test')
+        expect(DomHelper.getAttribute(element, 'id')).toBe('test')
+      })
+
+      it('应该在属性不存在时返回null', () => {
+        expect(DomHelper.getAttribute(element, 'nonexistent')).toBeNull()
       })
     })
 
     describe('addEventListener', () => {
       it('应该添加带选项的事件监听器', () => {
         const handler = vi.fn()
-        element.addEventListener = vi.fn()
+        const addEventListenerSpy = vi.spyOn(element, 'addEventListener')
 
         DomHelper.addEventListener(element, 'onClickCapture', handler)
 
-        expect(element.addEventListener).toHaveBeenCalledWith('click', handler, { capture: true })
+        expect(addEventListenerSpy).toHaveBeenCalledWith('click', handler, { capture: true })
+        addEventListenerSpy.mockRestore()
+      })
+
+      it('应该合并选项', () => {
+        const handler = vi.fn()
+        const addEventListenerSpy = vi.spyOn(element, 'addEventListener')
+
+        DomHelper.addEventListener(element, 'onClick', handler, { once: true })
+
+        expect(addEventListenerSpy).toHaveBeenCalledWith('click', handler, { once: true })
+        addEventListenerSpy.mockRestore()
       })
     })
 
     describe('removeEventListener', () => {
       it('应该移除带选项的事件监听器', () => {
         const handler = vi.fn()
-        element.removeEventListener = vi.fn()
+        const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener')
 
         DomHelper.removeEventListener(element, 'onClickCapture', handler)
 
-        expect(element.removeEventListener).toHaveBeenCalledWith('click', handler, true)
+        expect(removeEventListenerSpy).toHaveBeenCalledWith('click', handler, true)
+        removeEventListenerSpy.mockRestore()
+      })
+
+      it('应该使用useCapture参数', () => {
+        const handler = vi.fn()
+        const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener')
+
+        DomHelper.removeEventListener(element, 'onClick', handler, true)
+
+        expect(removeEventListenerSpy).toHaveBeenCalledWith('click', handler, true)
+        removeEventListenerSpy.mockRestore()
       })
     })
   })
@@ -375,6 +371,37 @@ describe('DomHelper', () => {
         expect(parent.children[1]).toBe(newElement)
         expect(parent.children[2]).toBe(child2)
       })
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(
+            Fragment,
+            null,
+            createElement('span', { children: 'fragment content' })
+          )
+        }).element
+        const newElement = document.createElement('div')
+        newElement.textContent = 'new element'
+
+        document.body.appendChild(fragment)
+        DomHelper.insertBefore(newElement, fragment)
+
+        expect(document.body.children[0]).toBe(newElement)
+        expect(document.body.childNodes.length).toBe(4)
+        expect(document.body.childNodes[2]).instanceOf(HTMLSpanElement)
+        expect(document.body.children[1]).instanceOf(HTMLSpanElement)
+      })
+
+      it('应该在锚点元素没有父节点时抛出错误', () => {
+        const newElement = document.createElement('div')
+        const orphanElement = document.createElement('div')
+
+        expect(() => {
+          DomHelper.insertBefore(newElement, orphanElement)
+        }).toThrow(
+          '[Vitarx.DomHelper.insertBefore][ERROR]: The anchor element does not have a parent node'
+        )
+      })
     })
 
     describe('insertAfter', () => {
@@ -385,22 +412,167 @@ describe('DomHelper', () => {
         expect(parent.children[1]).toBe(newElement)
         expect(parent.children[2]).toBe(child2)
       })
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(
+            Fragment,
+            null,
+            createElement('span', { children: 'fragment content' })
+          )
+        }).element
+
+        const newElement = document.createElement('div')
+        newElement.textContent = 'new element'
+
+        document.body.appendChild(fragment)
+        DomHelper.insertAfter(newElement, fragment)
+
+        expect(document.body.children[0]).instanceOf(HTMLSpanElement)
+        expect(document.body.children[1]).toBe(newElement)
+      })
+
+      it('应该在锚点元素没有父节点时抛出错误', () => {
+        const newElement = document.createElement('div')
+        const orphanElement = document.createElement('div')
+
+        expect(() => {
+          DomHelper.insertAfter(newElement, orphanElement)
+        }).toThrow(
+          '[Vitarx.DomHelper.insertAfter][ERROR]: The anchor element does not have a parent node'
+        )
+      })
     })
+
     describe('getParentElement', () => {
       it('应该返回元素的父元素', () => {
         expect(DomHelper.getParentElement(child1)).toBe(parent)
       })
-    })
-    describe('getFirstChildElement', () => {
-      it('应该返回元素的第一个子元素', () => {
-        expect(DomHelper.getFirstChildElement(parent)).toBe(child1)
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, createElement('span'))
+        }).element
+
+        document.body.appendChild(fragment)
+        expect(DomHelper.getParentElement(fragment)).toBe(document.body)
+      })
+
+      it('应该在没有父元素时返回null', () => {
+        const orphanElement = document.createElement('div')
+        expect(DomHelper.getParentElement(orphanElement)).toBeNull()
       })
     })
+
+    describe('getNextElement', () => {
+      it('应该返回下一个兄弟节点', () => {
+        expect(DomHelper.getNextElement(child1)).toBe(child2)
+      })
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, createElement('span'))
+        }).element
+
+        parent.appendChild(fragment)
+        const lastElement = document.createElement('div')
+        parent.appendChild(lastElement)
+
+        expect(DomHelper.getNextElement(fragment)).toBe(lastElement)
+      })
+
+      it('应该在没有下一个兄弟节点时返回null', () => {
+        expect(DomHelper.getNextElement(child2)).toBeNull()
+      })
+    })
+
+    describe('getPrevElement', () => {
+      it('应该返回前一个兄弟节点', () => {
+        expect(DomHelper.getPrevElement(child2)).toBe(child1)
+      })
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, createElement('span'))
+        }).element as FragmentElement
+
+        parent.insertBefore(fragment, child2)
+        expect(DomHelper.getPrevElement(child2)).toBe(fragment.$endAnchor)
+      })
+
+      it('应该在没有前一个兄弟节点时返回null', () => {
+        expect(DomHelper.getPrevElement(child1)).toBeNull()
+      })
+    })
+
     describe('getLastChildElement', () => {
-      it('应该返回元素的最后一个子元素', () => {
+      it('应该返回最后一个子元素', () => {
         expect(DomHelper.getLastChildElement(parent)).toBe(child2)
       })
+
+      it('应该处理Fragment元素', () => {
+        const lastChild = createElement('span')
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, lastChild)
+        }).element
+
+        expect(DomHelper.getLastChildElement(fragment)).toBe(lastChild.element)
+      })
     })
+
+    describe('getFirstChildElement', () => {
+      it('应该返回第一个子元素', () => {
+        expect(DomHelper.getFirstChildElement(parent)).toBe(child1)
+      })
+
+      it('应该处理Fragment元素', () => {
+        const firstChild = createElement('span')
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, firstChild)
+        }).element as FragmentElement
+
+        expect(DomHelper.getFirstChildElement(fragment)).toBe(firstChild.element)
+      })
+    })
+
+    describe('replace', () => {
+      it('应该替换元素', () => {
+        const newElement = document.createElement('section')
+        newElement.textContent = 'new element'
+        DomHelper.replace(newElement, child1)
+
+        expect(parent.children[0]).toBe(newElement)
+        expect(parent.children[1]).toBe(child2)
+        expect(parent.children.length).toBe(2)
+      })
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, createElement('span', { children: 'fragment' }))
+        }).element
+
+        const newElement = document.createElement('div')
+        newElement.textContent = 'new element'
+
+        document.body.appendChild(fragment)
+        DomHelper.replace(newElement, fragment)
+
+        expect(document.body.children[0]).toBe(newElement)
+        expect(document.body.children.length).toBe(1)
+      })
+
+      it('应该在旧元素没有父节点时抛出错误', () => {
+        const newElement = document.createElement('div')
+        const orphanElement = document.createElement('div')
+
+        expect(() => {
+          DomHelper.replace(newElement, orphanElement)
+        }).toThrow(
+          '[Vitarx.DomHelper.replace][ERROR]: The old element does not have a parent element'
+        )
+      })
+    })
+
     describe('appendChild', () => {
       it('应该在元素末尾添加子元素', () => {
         const newElement = document.createElement('div')
@@ -408,6 +580,7 @@ describe('DomHelper', () => {
 
         expect(parent.children[2]).toBe(newElement)
       })
+
       it('支持片段元素追加到片段元素', () => {
         const fragment1 = createElement(() => {
           return createElement(Fragment)
@@ -419,6 +592,88 @@ describe('DomHelper', () => {
         DomHelper.appendChild(body, fragment1)
         DomHelper.appendChild(fragment1, fragment2)
         expect(body.textContent).toBe('test')
+      })
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment)
+        }).element
+
+        const childElement = document.createElement('div')
+        childElement.textContent = 'child'
+
+        DomHelper.appendChild(fragment, childElement)
+        DomHelper.appendChild(parent, fragment)
+
+        expect(parent.children.length).toBe(3)
+        expect(parent.textContent).toBe('child')
+      })
+    })
+
+    describe('remove', () => {
+      it('应该移除元素', () => {
+        DomHelper.remove(child1 as any)
+        expect(parent.children.length).toBe(1)
+        expect(parent.children[0]).toBe(child2)
+      })
+
+      it('应该处理Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, createElement('span', { children: 'fragment' }))
+        }).element
+
+        parent.appendChild(fragment)
+        expect(parent.childNodes.length).toBe(5)
+
+        DomHelper.remove(fragment)
+        expect(parent.childNodes.length).toBe(2)
+      })
+    })
+
+    describe('recoveryFragmentChildNodes', () => {
+      it('应该恢复Fragment子节点', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment, null, createElement('span', { children: 'test' }))
+        }).element
+
+        // 清空Fragment的子节点来模拟需要恢复的情况
+        while (fragment.firstChild) {
+          fragment.removeChild(fragment.firstChild)
+        }
+
+        expect(fragment.childNodes.length).toBe(0)
+        DomHelper.recoveryFragmentChildNodes(fragment)
+        expect(fragment.childNodes.length).toBe(3) // startAnchor, span, endAnchor
+        expect(fragment.textContent).toBe('test')
+      })
+
+      it('应该处理非Fragment元素', () => {
+        const element = document.createElement('div')
+        element.textContent = 'test'
+
+        const result = DomHelper.recoveryFragmentChildNodes(element)
+        expect(result).toBe(element)
+        expect(element.textContent).toBe('test')
+      })
+    })
+
+    describe('isFragmentElement', () => {
+      it('应该识别Fragment元素', () => {
+        const fragment = createElement(() => {
+          return createElement(Fragment)
+        }).element
+
+        expect(DomHelper.isFragmentElement(fragment)).toBe(true)
+      })
+
+      it('应该识别非Fragment元素', () => {
+        const element = document.createElement('div')
+        expect(DomHelper.isFragmentElement(element)).toBe(false)
+      })
+
+      it('应该处理null和undefined', () => {
+        expect(DomHelper.isFragmentElement(null)).toBe(false)
+        expect(DomHelper.isFragmentElement(undefined)).toBe(false)
       })
     })
   })

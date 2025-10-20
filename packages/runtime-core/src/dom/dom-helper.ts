@@ -13,6 +13,7 @@ import { StyleHandler } from './style-handler.js'
 const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
 const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
 
+const DEFAULT_PROPERTIES_CACHE = new Map<string, Record<string, any>>()
 /**
  * DomHelper 类提供了一系列用于操作 DOM 元素的静态方法。
  * 该类主要用于处理元素的属性、样式、类名、事件监听以及 DOM 操作等常见任务。
@@ -237,39 +238,74 @@ export class DomHelper {
       this.setAttribute(el, key, props[key])
     })
   }
+
   /**
-   * 移除元素的指定属性
+   * 移除元素的指定属性（兼容事件、特殊属性、默认值恢复）
    *
    * @param el - 元素实例
-   * @param {string} name - 要移除的属性名
-   * @param {any} oldValue - 如果是事件属性则必须传入事件处理器函数
-   * @returns {void}
+   * @param name - 要移除的属性名
+   * @param oldValue - 如果是事件属性则必须传入事件处理器函数
    */
   static removeAttribute(el: HTMLElement | SVGElement, name: string, oldValue?: any): void {
-    if (name === 'className' || name === 'classname' || name === 'class') {
+    if (!el || !name) return
+
+    // --- 1. class 特殊处理 ---
+    if (name === 'class' || name === 'className' || name === 'classname') {
       el.removeAttribute('class')
-    } else if (typeof oldValue === 'function') {
+      return
+    }
+
+    // --- 2. 事件属性 ---
+    if (typeof oldValue === 'function' && name.startsWith('on')) {
       this.removeEventListener(el, name as EventNames, oldValue)
-    } else {
-      switch (typeof (el as any)[name]) {
-        case 'string':
-          ;(el as any) = '' as any
-          break
-        case 'boolean':
-          ;(el as any) = false as any
-          break
-        case 'number':
-          if (name === 'maxLength') {
-            ;(el as any) = -1 as any
-          } else if (name === 'tabIndex') {
-            ;(el as any) = 0 as any
-          }
-          break
-        default:
-          el.removeAttribute(name)
+      return
+    }
+
+    // --- 3. 还原属性到默认值 ---
+    const tag = el.tagName.toLowerCase()
+    const defaultValue = this.getDefaultValueForProperty(tag, name)
+
+    // 判断是否是有效的 JS property
+    if (name in el) {
+      try {
+        const currentValue = (el as any)[name]
+        const type = typeof currentValue
+
+        if (type === 'string') {
+          ;(el as any)[name] = defaultValue ?? ''
+        } else if (type === 'boolean') {
+          ;(el as any)[name] = defaultValue ?? false
+        } else if (type === 'number') {
+          ;(el as any)[name] = defaultValue ?? 0
+        } else {
+          // 兜底设置 undefined
+          ;(el as any)[name] = defaultValue ?? undefined
+        }
+      } catch {
+        // 一些只读属性（如 innerHTML）会抛异常，退回到 removeAttribute
+        el.removeAttribute(name)
       }
+    } else {
+      // --- 4. 普通 attribute ---
+      el.removeAttribute(name)
     }
   }
+
+  /**
+   * 获取目标DOM节点的第一个子元素
+   *
+   * 兼容片段节点
+   *
+   * @param target - 目标节点
+   * @returns {Node|null} 返回第一个子节点，如果不存在则返回null
+   */
+  static getFirstChildElement(target: Node): Node | null {
+    if (this.isFragmentElement(target)) {
+      return target.$children[0].element
+    }
+    return target.firstChild
+  }
+
   /**
    * 获取元素的属性值
    *
@@ -436,23 +472,18 @@ export class DomHelper {
    */
   static getLastChildElement(target: Node): Node | null {
     if (this.isFragmentElement(target)) {
-      return target.$endAnchor.previousSibling
+      return target.$children[target.$children.length - 1]?.element ?? null
     }
     return target.lastChild
   }
+
   /**
-   * 获取目标DOM节点的第一个子元素
+   * 判断是否为Vitarx特殊的片段元素
    *
-   * 兼容片段节点
-   *
-   * @param target - 目标节点
-   * @returns {Node|null} 返回第一个子节点，如果不存在则返回null
+   * @param el
    */
-  static getFirstChildElement(target: Node): Node | null {
-    if (this.isFragmentElement(target)) {
-      return target.$startAnchor.nextSibling
-    }
-    return target.firstChild
+  static isFragmentElement(el: any): el is FragmentElement {
+    return !!(el && el instanceof DocumentFragment && '$startAnchor' in el)
   }
   /**
    * 替换元素方法
@@ -519,10 +550,12 @@ export class DomHelper {
     if (!this.isFragmentElement(target)) {
       return target.remove()
     }
+    target.$startAnchor.remove()
     const children = target.$children
     if (children?.length) {
       children.forEach(child => this.remove(child.element))
     }
+    target.$endAnchor.remove()
   }
   /**
    * 恢复片段节点的子节点
@@ -546,13 +579,30 @@ export class DomHelper {
     }
     return el
   }
+
   /**
-   * 判断是否为Vitarx特殊的片段元素
-   *
-   * @param el
+   * 获取指定标签的属性默认值（带缓存）
    */
-  static isFragmentElement(el: any): el is FragmentElement {
-    return el && el instanceof DocumentFragment && '$startAnchor' in el
+  private static getDefaultValueForProperty(tag: string, prop: string): any {
+    tag = tag.toLowerCase()
+
+    // 获取标签缓存
+    let tagCache = DEFAULT_PROPERTIES_CACHE.get(tag)
+    if (!tagCache) {
+      tagCache = DEFAULT_PROPERTIES_CACHE.set(tag, Object.create(null))
+    }
+
+    // 缓存命中
+    if (prop in tagCache) {
+      return tagCache[prop]
+    }
+
+    // 未命中 → 创建元素获取默认值
+    const el = document.createElement(tag)
+    const value = (el as any)[prop]
+    tagCache[prop] = value
+
+    return value
   }
 
   /**
@@ -653,12 +703,13 @@ export class DomHelper {
       this.handleAttributeError(name, error, el)
     }
   }
+
   /**
    * 尝试直接设置属性
    * @param el - 要设置属性的元素对象
    * @param name - 属性名称
    * @param value - 属性值
-   * @returns 如果成功设置属性则返回true，否则返回false
+   * @returns {boolean} 如果成功设置属性则返回true，否则返回false
    */
   private static trySetDirectProperty<T extends HTMLElement | SVGElement>(
     el: T,
