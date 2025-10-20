@@ -9,5 +9,6 @@ export {
 export * from './widget.js'
 export * from './types/index.js'
 export * from './hook.js'
+export * from './property.js'
 export * from './helper.js'
 export * from './built/index.js'
