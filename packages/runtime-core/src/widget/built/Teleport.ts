@@ -40,7 +40,7 @@ export interface TeleportProps {
  *
  * 实现原理：在`onBeforeMount`生命周期钩子中返回`props.to`元素实例，来指定传送的目标位置。
  *
- * @deprecated Teleport组件已弃用，从 `@3.2.0` 版本开始支持 `v-parent` 属性指定传送的目标位置
+ * @deprecated Teleport组件已弃用，从 `vitarx@3.2.0 | @vitarx/runtime-core@1.2.0` 版本开始支持 `v-parent` 属性指定传送的目标位置
  */
 export class Teleport extends Widget<TeleportProps> {
   protected target?: ParentNode
