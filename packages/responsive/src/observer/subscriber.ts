@@ -204,7 +204,7 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
    * @param params - 回调函数所需的参数，类型由回调函数的参数类型决定
    * @returns void
    */
-  private _runCallback(...params: Parameters<CB>): void {
+  private _runCallback = (...params: Parameters<CB>): void => {
     // 如果已销毁或没有回调函数，返回false
     if (this.isDeprecated || !this._callback) return
 
