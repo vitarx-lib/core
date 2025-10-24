@@ -1,4 +1,4 @@
-import type { SubscriptionOptions } from '../observer/index.js'
+import type { SubscriberOptions } from '../observer/index.js'
 import { type CollectionResult, Depend, type DependSubscribeResult } from './depend.js'
 
 /**
@@ -80,7 +80,7 @@ export function depCollect<T>(
  * @template R - tracker函数的返回值类型
  * @param {() => R} tracker - 任意函数，用于收集依赖。函数执行过程中访问的响应式信号对象属性都会被追踪
  * @param {() => void} [callback] - 依赖变化时的回调函数。如果不提供，则默认使用tracker函数作为回调
- * @param {SubscriptionOptions} [options] - 订阅选项
+ * @param {SubscriberOptions} [options] - 订阅选项
  * @returns {DependSubscribeResult<R>} 包含订阅结果的对象
  * @returns {R} returns.result - effect函数的执行结果
  * @returns {DependencyMap} returns.deps - 收集到的依赖映射
@@ -103,7 +103,7 @@ export function depCollect<T>(
 export function depSubscribe<R>(
   tracker: () => R,
   callback?: () => void,
-  options?: SubscriptionOptions
+  options?: Omit<SubscriberOptions, 'paramsHandler'>
 ): DependSubscribeResult<R> {
   return Depend.subscribe(tracker, callback, options)
 }

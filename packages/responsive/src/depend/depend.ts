@@ -1,11 +1,5 @@
-import {
-  type AnyKey,
-  type AnyObject,
-  isFunction,
-  microTaskDebouncedCallback,
-  type VoidCallback
-} from '@vitarx/utils'
-import { Observer, Subscriber, type SubscriptionOptions } from '../observer/index.js'
+import { type AnyKey, type AnyObject, isFunction, type VoidCallback } from '@vitarx/utils'
+import { SubManager, Subscriber, type SubscriberOptions } from '../observer/index.js'
 
 /**
  * 依赖映射集合
@@ -146,7 +140,7 @@ export class Depend {
    * @template R - tracker函数的返回值类型
    * @param {() => R} tracker - 副作用函数，用于收集依赖。函数执行过程中访问的响应式对象属性都会被追踪
    * @param {() => void} [callback] - 依赖变化时的回调函数。如果不提供，则默认使用tracker函数作为回调
-   * @param {SubscriptionOptions} [options] - 订阅选项
+   * @param {SubscriberOptions} [options] - 订阅选项
    * @returns {DependSubscribeResult<R>} 包含订阅结果的对象
    * @returns {R} returns.result - tracker函数的执行结果
    * @returns {DependencyMap} returns.deps - 收集到的依赖映射
@@ -167,7 +161,7 @@ export class Depend {
   static subscribe<R>(
     tracker: () => R,
     callback?: () => void,
-    options?: SubscriptionOptions
+    options?: Omit<SubscriberOptions, 'paramsHandler'>
   ): DependSubscribeResult<R> {
     if (!isFunction(tracker)) {
       throw new TypeError('effect argument must be a callable function')
@@ -179,14 +173,9 @@ export class Depend {
       if (typeof callback !== 'function') {
         throw new TypeError('callback argument must be a callable function')
       }
-      subscriber = new Subscriber(
-        options?.batch === false
-          ? () => callback!()
-          : microTaskDebouncedCallback(() => callback!()),
-        options
-      )
+      subscriber = new Subscriber(() => callback!(), options)
       for (const [proxy, props] of deps) {
-        Observer.subscribeProperties(proxy, props, subscriber, { batch: false })
+        SubManager.subscribeProperties(proxy, props, subscriber, { flush: 'sync' })
       }
     }
     return { subscriber, result, deps }
