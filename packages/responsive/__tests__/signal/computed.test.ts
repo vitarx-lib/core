@@ -41,6 +41,20 @@ describe('computed', () => {
       expect(double.value).toBe(4)
       expect(fn).toHaveBeenCalledTimes(2)
     })
+    it('支持批处理', async () => {
+      const count = ref(0)
+      const fn = vi.fn(() => count.value * 2)
+      const double = computed(fn)
+      expect(double.value).toBe(0)
+      expect(fn).toHaveBeenCalledTimes(1)
+      for (let i = 0; i < 10; i++) {
+        count.value = i
+      }
+      await vi.waitFor(() => {
+        expect(fn).toHaveBeenCalledTimes(2)
+        expect(double.value).toBe(count.value * 2)
+      })
+    })
   })
 
   describe('setter功能', () => {

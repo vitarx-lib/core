@@ -1,8 +1,9 @@
 import type { MakeRequired } from '@vitarx/utils'
-import { isFunction, microTaskDebouncedCallback } from '@vitarx/utils'
+import { isFunction } from '@vitarx/utils'
+import type { AnyKey } from '@vitarx/utils/src/index.js'
 import { Depend } from '../../../depend/index.js'
 import { EffectScope } from '../../../effect/index.js'
-import { Observer, Subscriber } from '../../../observer/index.js'
+import { microTaskDebouncedCallback, SubManager, Subscriber } from '../../../observer/index.js'
 import {
   DEEP_SIGNAL_SYMBOL,
   REF_SIGNAL_SYMBOL,
@@ -11,8 +12,79 @@ import {
   SIGNAL_SYMBOL,
   SignalManager
 } from '../../core/index.js'
-import type { ComputedOptions } from './types.js'
 
+/**
+ * 计算属性的值获取函数
+ *
+ * @template T - 计算结果值的类型
+ * @param {T | undefined} oldValue - 上一次的计算结果，第一次计算时为undefined
+ * @returns {T} - 计算结果
+ */
+export type ComputedGetter<T> = (oldValue: T | undefined) => T
+/**
+ * 计算属性的setter处理函数
+ *
+ * @template T - 同计算结果的类型
+ */
+export type ComputedSetter<T> = (newValue: T) => void
+
+/**
+ * 计算属性的选项
+ *
+ * @template T - 计算结果的类型
+ */
+export interface ComputedOptions<T> {
+  /**
+   * 计算属性的setter处理函数
+   *
+   * 计算属性一般是不允许修改的，如果你需要处理修改计算属性值，可以传入setter参数，
+   *
+   * setter参数是一个函数，接受一个参数，就是新的值，你可以在这里进行一些操作，比如修改依赖的值，但是不能修改计算属性的值。
+   *
+   * @example
+   *
+   * ```ts
+   * const count = ref(0)
+   * const double = computed(() => count.value * 2, {
+   *   setter: (newValue) => {
+   *     count.value = newValue / 2
+   *   }
+   * })
+   * double.value = 10
+   * console.log(double.value) // 5
+   * ```
+   *
+   * @param newValue - 新的值
+   */
+  setter?: ComputedSetter<T>
+  /**
+   * 立即计算
+   *
+   * 如果设置为true，则立即计算结果。
+   * 默认为false，在第一次访问value时，才进行计算。
+   *
+   * @default false
+   */
+  immediate?: boolean
+  /**
+   * 作用域
+   *
+   * 默认为true，表示添加到当前作用域。
+   *
+   * 如果设置为false，则不会添加到当前作用域。
+   *
+   * @default true
+   */
+  scope?: boolean
+  /**
+   * 批处理模式
+   *
+   * 默认为true，表示多个连续的变更会合并为一次计算。
+   *
+   * @default true
+   */
+  batch?: boolean
+}
 /**
  * # 计算属性
  *
@@ -89,7 +161,7 @@ export class Computed<T> implements RefSignal<T> {
    * @param {boolean} [options.scope=true] - 是否添加到当前作用域，默认为true，作用域销毁时自动清理
    * @param {boolean} [options.batch=true] - 是否使用批处理模式，默认为true，多个连续的变更会合并为一次计算
    */
-  constructor(getter: (oldValue: T | undefined) => T, options: ComputedOptions<T> = {}) {
+  constructor(getter: ComputedGetter<T>, options: ComputedOptions<T> = {}) {
     this._getter = getter
     this._options = Object.assign(
       {
@@ -274,34 +346,34 @@ export class Computed<T> implements RefSignal<T> {
       }
       // 创建订阅处理器，使用微任务延迟执行以提高性能
       this._handler = new Subscriber(
-        !this._options.batch ? handler : microTaskDebouncedCallback(handler),
-        { scope: false }
+        this._options.batch ? microTaskDebouncedCallback(handler) : handler,
+        {
+          scope: false,
+          flush: 'sync'
+        }
       )
       // 如果存在作用域，则添加到作用域中
       if (this._scope) this._scope.addEffect(this._handler)
+      const clean: [{}, AnyKey][] = []
       // 为每个依赖添加订阅
       deps.forEach((props, signal) => {
         for (const prop of props) {
-          Observer.addSubscriber(signal, prop, this._handler!, {
-            batch: false, // 禁用批处理，确保及时更新
-            autoRemove: false // 不自动移除，由onDispose处理
-          })
+          SubManager.addSubscriber(signal, prop, this._handler!, false)
+          clean.push([signal, prop])
         }
       })
 
       // 设置清理函数，在销毁时移除所有订阅
       this._handler.onDispose(() => {
-        deps.forEach((props, signal) => {
-          for (const prop of props) {
-            Observer.removeSubscriber(signal, prop, this._handler!, false)
-          }
+        clean.forEach(([signal, prop]) => {
+          SubManager.removeSubscriber(signal, prop, this._handler!)
         })
         this._handler = undefined
         this._scope = undefined
       })
     } else if (import.meta.env.DEV) {
       console.warn(
-        '[Computed]：No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
+        '[Vitarx.Computed][WARN]：No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
       )
     }
     return this
