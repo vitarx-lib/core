@@ -1,3 +1,4 @@
-export * from './manager.js'
+export * from './subManager.js'
 export * from './subscriber.js'
 export * from './helpers.js'
+export * from './scheduler.js'

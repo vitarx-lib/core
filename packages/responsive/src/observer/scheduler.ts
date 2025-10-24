@@ -21,13 +21,14 @@
 type Job = (...args: any[]) => void
 
 /**
- * 参数处理函数类型
+ * 队列参数处理函数
+ *
  * @template T 任务参数数组类型
  * @param newParams 新传入的参数数组
  * @param oldParams 已存储在队列中的旧参数数组
  * @returns {T} 合并后的参数数组，用于最终执行
  */
-export type ParamHandler<T> = (newParams: T, oldParams: T) => T
+export type QueueParamHandler<T> = (newParams: T, oldParams: T) => T
 
 /**
  * 队列类型定义
@@ -90,7 +91,7 @@ export class Scheduler {
   public static queuePreFlushJob<T extends Job>(
     job: T,
     params?: Parameters<T>,
-    handleParams?: ParamHandler<Parameters<T>>
+    handleParams?: QueueParamHandler<Parameters<T>>
   ): void {
     this.addJobToQueue(this.preFlushQueue, job, params, handleParams)
   }
@@ -104,7 +105,7 @@ export class Scheduler {
   public static queueJob<T extends Job>(
     job: T,
     params?: Parameters<T>,
-    handleParams?: ParamHandler<Parameters<T>>
+    handleParams?: QueueParamHandler<Parameters<T>>
   ): void {
     this.addJobToQueue(this.mainQueue, job, params, handleParams)
   }
@@ -119,7 +120,7 @@ export class Scheduler {
   public static queuePostFlushJob<T extends Job>(
     job: T,
     params?: Parameters<T>,
-    handleParams?: ParamHandler<Parameters<T>>
+    handleParams?: QueueParamHandler<Parameters<T>>
   ): void {
     this.addJobToQueue(this.postFlushQueue, job, params, handleParams)
   }
@@ -182,7 +183,7 @@ export class Scheduler {
     queue: QueueMap,
     job: T,
     params?: Parameters<T>,
-    handleParams?: ParamHandler<Parameters<T>>
+    handleParams?: QueueParamHandler<Parameters<T>>
   ): void {
     if (queue.has(job)) {
       // 任务已存在，尝试合并参数

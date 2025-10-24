@@ -1,7 +1,7 @@
 import { AnyCallback } from '@vitarx/utils'
 import type { MakeRequired } from '@vitarx/utils/src/index.js'
 import { Effect, EffectScope } from '../effect/index.js'
-import { type ParamHandler, Scheduler } from './scheduler.js'
+import { type QueueParamHandler, Scheduler } from './scheduler.js'
 
 /**
  * 触发时机
@@ -54,7 +54,7 @@ export interface SubscriberOptions<CB extends AnyCallback = AnyCallback> {
    * @param newParams 新传入的参数数组
    * @param oldParams 已存储在队列中的旧参数数组
    */
-  paramsHandler?: ParamHandler<Parameters<CB>>
+  paramsHandler?: QueueParamHandler<Parameters<CB>>
 }
 
 /**
@@ -87,7 +87,7 @@ export interface SubscriberOptions<CB extends AnyCallback = AnyCallback> {
  * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
  * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域
  * @param {Flush} [options.flush='default'] - 触发时机（'default'|'pre'|'post'|'sync'）
- * @param {ParamHandler<CB>} [options.paramsHandler] - 参数处理器，用于在批处理中合并多次触发的参数等进阶操作。
+ * @param {QueueParamHandler<CB>} [options.paramsHandler] - 参数处理器，用于在批处理中合并多次触发的参数等进阶操作。
  *
  * @warning
  * - 当达到限制次数后，订阅者会自动销毁
@@ -120,7 +120,7 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
   /**
    * 参数处理函数
    */
-  private readonly _paramsHandler?: ParamHandler<Parameters<CB>>
+  private readonly _paramsHandler?: QueueParamHandler<Parameters<CB>>
   /**
    * 创建订阅者
    *
@@ -129,7 +129,7 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
    * @param {number} [options.limit=0] - 限制触发次数，默认为0（不限制）
    * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域，默认为true
    * @param {Flush} [options.flush='default'] - 触发时机，默认为 'default'
-   * @param {ParamHandler<CB>} [options.paramsHandler] - 参数处理函数
+   * @param {QueueParamHandler<CB>} [options.paramsHandler] - 参数处理函数
    */
   constructor(callback: CB, options: SubscriberOptions<CB> = {}) {
     super()
