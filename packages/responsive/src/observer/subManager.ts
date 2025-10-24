@@ -195,9 +195,13 @@ export class SubManager {
     const subscriber = this.createSubscriber(callback, options)
 
     for (const property of properties) {
-      this.addSubscriber(target, property, subscriber)
+      this.addSubscriber(target, property, subscriber, false)
     }
-
+    subscriber.onDispose(() => {
+      for (const property of properties) {
+        this.removeSubscriber(target, property, subscriber)
+      }
+    })
     return subscriber
   }
 
@@ -262,8 +266,13 @@ export class SubManager {
         targets.delete(target)
         continue
       }
-      this.addSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber)
+      this.addSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber, false)
     }
+    subscriber.onDispose(() => {
+      for (const target of targets) {
+        this.removeSubscriber(target, this.ALL_PROPERTIES_SYMBOL, subscriber)
+      }
+    })
     return subscriber
   }
 
