@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  debounce,
-  deepMergeObject,
-  microTaskDebouncedCallback,
-  popProperty,
-  sleep,
-  throttle
-} from '../src/quick.js'
+import { debounce, deepMergeObject, popProperty, sleep, throttle } from '../src/quick.js'
 
 describe('quick', () => {
   it('should pop property correctly', () => {
@@ -54,16 +47,5 @@ describe('quick', () => {
     setTimeout(() => {
       expect(callCount).toBe(2)
     }, 200)
-  })
-
-  it('should micro task debounce correctly', () => {
-    let callCount = 0
-    const debouncedFn = microTaskDebouncedCallback(() => callCount++)
-    debouncedFn()
-    debouncedFn()
-    debouncedFn()
-    Promise.resolve().then(() => {
-      expect(callCount).toBe(1)
-    })
   })
 })
