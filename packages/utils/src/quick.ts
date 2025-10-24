@@ -191,7 +191,7 @@ export function microTaskDebouncedCallback<
   Params extends any[] = Parameters<T>
 >(callback: T, handleParams?: (last: Parameters<T>, prev: Params | null) => Params): T {
   let taskParams: Params | null = null
-
+  const handler = typeof handleParams === 'function'
   return ((...args: Parameters<T>) => {
     if (taskParams === null) {
       Promise.resolve().then(() => {
@@ -200,9 +200,7 @@ export function microTaskDebouncedCallback<
         callback.apply(null, requestParams)
       })
     }
-    taskParams = (
-      typeof handleParams === 'function' ? handleParams(args, taskParams) : args
-    ) as Params
+    taskParams = (handler ? handleParams(args, taskParams) : args) as Params
   }) as T
 }
 
