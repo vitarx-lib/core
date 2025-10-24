@@ -4,7 +4,7 @@ import { Observer } from '../../../observer/index.js'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
-  isMarkNotSignal,
+  isMarkNonSignal,
   isProxySignal,
   isRefSignal,
   isSignal,
@@ -141,7 +141,7 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
       return value
     }
     // 惰性深度代理
-    if (this.childSignalMap && isObject(value) && !isMarkNotSignal(value)) {
+    if (this.childSignalMap && isObject(value) && !isMarkNonSignal(value)) {
       // 已经创建过子代理则直接返回
       if (this.childSignalMap.has(prop)) {
         return this.childSignalMap.get(prop)

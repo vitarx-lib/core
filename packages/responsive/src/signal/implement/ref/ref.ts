@@ -3,7 +3,7 @@ import { Depend } from '../../../depend/index.js'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
-  isMarkNotSignal,
+  isMarkNonSignal,
   isRefSignal,
   isSignal,
   REF_SIGNAL_SYMBOL,
@@ -208,7 +208,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
     this._shouldProxyValue =
       this._options.deep &&
       isObject(this._value) &&
-      !isMarkNotSignal(this._value) &&
+      !isMarkNonSignal(this._value) &&
       !isSignal(!this._value)
   }
 

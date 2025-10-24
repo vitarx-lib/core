@@ -9,7 +9,7 @@ export const DEEP_SIGNAL_SYMBOL = Symbol('VITARX_DEEP_SIGNAL_SYMBOL')
 /**
  * 非响应式信号标识符
  */
-export const NOT_SIGNAL_SYMBOL = Symbol('VITARX_NOT_SIGNAL_SYMBOL')
+export const NON_SIGNAL_SYMBOL = Symbol('VITARX_NOT_SIGNAL_SYMBOL')
 /**
  * 值引用信号标识符
  */

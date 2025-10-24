@@ -1,7 +1,7 @@
 import type { AnyObject } from '@vitarx/utils'
 import {
   DEEP_SIGNAL_SYMBOL,
-  NOT_SIGNAL_SYMBOL,
+  NON_SIGNAL_SYMBOL,
   SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL
 } from '../constants.js'
@@ -65,6 +65,6 @@ export interface BaseSignal<Raw = any, Deep extends boolean = boolean> {
  *
  * @template T - 对象的类型
  */
-export type NotSignal<T extends AnyObject = AnyObject> = T & {
-  readonly [NOT_SIGNAL_SYMBOL]: true
+export type NonSignal<T extends AnyObject = AnyObject> = T & {
+  readonly [NON_SIGNAL_SYMBOL]: true
 }
