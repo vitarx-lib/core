@@ -179,3 +179,56 @@ export function subscribeProperties<T extends AnyObject, C extends ChangeCallbac
 export function nextTick(fn?: () => void): Promise<void> {
   return Scheduler.nextTick(fn)
 }
+
+/**
+ * 创建一个在微任务中防抖执行的函数。
+ * 连续多次调用将在当前微任务结束时仅执行一次。
+ *
+ * @template T - 函数类型。
+ * @param callback - 目标回调函数。
+ * @param handleParams - 可选参数合并函数，接收新参数和旧参数，返回合并后的参数。
+ * @returns {T} 微任务防抖函数。
+ *
+ * 示例：
+ * ```ts
+ * const log = microTaskDebouncedCallback((msg) => console.log(msg))
+ * log('A')
+ * log('B')
+ * // 输出：B
+ *
+ * const sum = microTaskDebouncedCallback(
+ *   (a, b) => console.log(a + b),
+ *   (next, prev) => prev ? [next[0] + prev[0], next[1] + prev[1]] : next
+ * )
+ * sum(1, 2)
+ * sum(3, 4)
+ * // 输出：10
+ * ```
+ */
+export function microTaskDebouncedCallback<T extends (...args: any[]) => void>(
+  callback: T,
+  handleParams?: (next: Parameters<T>, prev: Parameters<T> | null) => Parameters<T>
+): T {
+  let queued = false
+  let params: Parameters<T> | null = null
+
+  const fn = function (this: unknown, ...args: Parameters<T>) {
+    params = handleParams ? handleParams(args, params) : args
+
+    if (!queued) {
+      queued = true
+      nextTick(() => {
+        queued = false
+        const currentParams = params!
+        params = null
+        try {
+          callback.apply(this, currentParams)
+        } finally {
+          params = null // 确保异常也会重置
+        }
+      }).then()
+    }
+  }
+
+  return fn as T
+}
