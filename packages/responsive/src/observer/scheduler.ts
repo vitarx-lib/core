@@ -27,7 +27,7 @@ type Job = (...args: any[]) => void
  * @param oldParams 已存储在队列中的旧参数数组
  * @returns {T} 合并后的参数数组，用于最终执行
  */
-type ParamHandler<T> = (newParams: T, oldParams: T) => T
+export type ParamHandler<T> = (newParams: T, oldParams: T) => T
 
 /**
  * 队列类型定义
