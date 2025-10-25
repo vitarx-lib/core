@@ -3,10 +3,10 @@ import {
   isProxySignal,
   isRefSignal,
   isSignal,
-  Observer,
   reactive,
   ref,
-  SignalManager
+  SignalManager,
+  SubManager
 } from '../../src'
 
 describe('Signal Core', () => {
@@ -58,7 +58,7 @@ describe('Signal Core', () => {
     const key = 'testKey'
 
     // 模拟Observer.notify方法
-    const notifySpy = vi.spyOn(Observer, 'notify')
+    const notifySpy = vi.spyOn(SubManager, 'notify')
 
     // 建立父子关系
     SignalManager.bindParent(childSignal, parentSignal, key)
@@ -78,7 +78,7 @@ describe('Signal Core', () => {
     const property = 'value'
 
     // 模拟Observer.notify和SignalManager.notifyParent方法
-    const observerNotifySpy = vi.spyOn(Observer, 'notify')
+    const observerNotifySpy = vi.spyOn(SubManager, 'notify')
     const notifyParentSpy = vi.spyOn(SignalManager, 'notifyParent')
 
     // 触发通知
@@ -98,7 +98,7 @@ describe('Signal Core', () => {
     const property = 'value'
 
     // 模拟Observer.notify和SignalManager.notifyParent方法
-    const observerNotifySpy = vi.spyOn(Observer, 'notify')
+    const observerNotifySpy = vi.spyOn(SubManager, 'notify')
     const notifyParentSpy = vi.spyOn(SignalManager, 'notifyParent')
 
     // 触发通知，但不通知父级
