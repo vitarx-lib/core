@@ -8,7 +8,12 @@ import {
   VoidCallback
 } from '@vitarx/utils'
 import { Depend } from '../../depend/index.js'
-import { type ChangeCallback, Observer, Subscriber } from '../../observer/index.js'
+import {
+  type ChangeCallback,
+  SubManager,
+  Subscriber,
+  type SubscriberOptions
+} from '../../observer/index.js'
 import { isRefSignal, isSignal, SignalManager, type SignalToRaw } from '../core/index.js'
 import type {
   CanWatchProperty,
@@ -38,21 +43,21 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  * 并在值发生变化时执行回调。支持自动清理资源和依赖追踪。
  *
  * @template T - 监听源类型，可以是对象或函数
- * @template CB - 回调函数类型
+ * @template C - 回调函数类型
  * @param {T} source - 监听源对象或函数
  *   - 当传入信号对象时：直接监听该信号的变化
  *   - 当传入函数时：优先监听函数内部依赖的信号变化，若无依赖则监听函数返回值
- * @param {CB} callback - 变化时触发的回调函数
+ * @param {C} callback - 变化时触发的回调函数
  *   - 接收新值、旧值作为参数
  *   - 通过第三个参数可注册清理函数，用于释放资源
- * @param {WatchOptions} [options] - 监听器配置选项
- * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
- * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域（自动销毁）
- * @param {boolean} [options.batch=true] - 是否使用批处理模式（合并同一周期内的多次更新）
- * @param {boolean} [options.clone=false] - 是否深度克隆新旧值（解决对象引用无法辨别差异问题）
- * @param {boolean} [options.immediate=false] - 立即执行一次回调
- * @returns {Subscriber<VoidCallback>} - 返回订阅者实例，可用于手动取消监听
- * @throws {TypeError} - 当参数类型不正确或监听源无效时抛出类型错误
+ * @param { WatchOptions } [options] - 监听器配置选项
+ * @param { string } [options.flush='default'] - 执行模式，可选值有 'default' | 'pre' | 'post' | 'sync'
+ * @param { number } [options.limit=0] - 触发次数限制，0表示无限制
+ * @param { boolean } [options.scope=true] - 是否自动添加到当前作用域
+ * @param { boolean } [options.clone=false] - 是否深度克隆新旧值（解决对象引用无法辨别差异问题）
+ * @param { boolean } [options.immediate=false] - 立即执行一次回调
+ * @returns { Subscriber<VoidCallback> } - 返回订阅者实例，可用于手动取消监听
+ * @throws { TypeError } - 当参数类型不正确或监听源无效时抛出类型错误
  *
  * @example
  * // 监听ref信号
@@ -72,7 +77,7 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  *   console.log(`count or obj changed`)
  * })
  *
- * // 监听计算函数
+ * // 监听函数返回值变化，函数内部必须具有响应式信号的使用，且不能是异步的
  * watch(() => count.value * 2, (newVal) => {
  *   console.log(`Doubled count is now: ${newVal}`)
  * })
@@ -83,17 +88,16 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  *   onCleanup(() => clearTimeout(timer)) // 在下次触发前或取消监听时调用
  * })
  *
- * // 克隆新旧值，需注意性能开销，建议使用 `watchProperty` 监听变化的属性性能更佳
+ * // 克隆新旧值，需注意性能开销
  * watch(obj, (newVal, oldVal) => {
  *   // 解决监听源是对象时新旧值引用地址相同，无法辨别新旧对象差异的问题
  *   console.log(newVal === oldVal) // false，因为新值和旧值并非同一个对象，它们已被深度克隆拷贝
  * }, { clone: true })
  */
-// 导出 watch 函数
 export function watch<
   T extends AnyObject | AnyFunction, // 定义泛型 T，可以是对象或函数类型
-  CB extends WatchCallback<T extends AnyFunction ? ReturnType<T> : T> // 定义回调函数类型 CB
->(source: T, callback: CB, options?: WatchOptions): Subscriber<VoidCallback> {
+  C extends WatchCallback<T extends AnyFunction ? ReturnType<T> : T> // 定义回调函数类型 CB
+>(source: T, callback: C, options?: WatchOptions): Subscriber<VoidCallback> {
   if (!isFunction(callback)) throw new TypeError('callback is not a function')
   const { clone = false, immediate = false, ...subscriptionOptions } = options ?? {}
   // 监听目标
@@ -154,7 +158,7 @@ export function watch<
       callback(newValue, oldValue, onCleanup)
     }, subscriptionOptions)
     if (immediate) subscriber.trigger()
-    return Observer.subscribe(target, subscriber, subscriptionOptions).onDispose(clean)
+    return SubManager.subscribe(target, subscriber, subscriptionOptions).onDispose(clean)
   }
   // 处理多数组监听源
   if (isArray(target)) {
@@ -185,9 +189,7 @@ export function watch<
         SignalManager.unbindParent(targets[index], targets as any, index)
       }
     })
-    Observer.addSubscriber(targets, Observer.ALL_PROPERTIES_SYMBOL, subscriber, {
-      batch: subscriptionOptions.batch
-    })
+    SubManager.addSubscriber(targets, SubManager.ALL_PROPERTIES_SYMBOL, subscriber)
     if (immediate) subscriber.trigger()
     return subscriber
   }
@@ -197,96 +199,130 @@ export function watch<
 }
 
 /**
- * ## 监听多个信号变化
+ * 监听多个信号变化
  *
- * @param targets
- * @param {function} callback - 回调函数
- * @param {WatchOptions} [options] - 监听器配置选项
- * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
- * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域（自动销毁）
- * @param {boolean} [options.batch=true] - 是否使用批处理模式（合并同一周期内的多次更新）
- * @returns {object} - 监听器实例
+ * `watchChanges` 是 `SubManager.subscribes` 方法的一个函数门面封装。
+ * 它可以同时监听多个响应式对象的变化，并在变化时执行回调函数。
+ *
+ * @template T - 目标对象的类型，必须继承自 AnyObject
+ * @template C - 回调函数的类型，必须继承自 ChangeCallback<T>
+ *
+ * @param { T[] } targets - 要监听的目标数组
+ * @param { function } callback - 回调函数，接收两个参数：
+ *   - props: 被修改的属性名数组
+ *   - target: 最后一次被修改的信号对象
+ * @param { WatchOptions } [options] - 监听器配置选项
+ * @param { string } [options.flush='default'] - 执行模式，可选值：
+ *   - 'default': 默认模式，按顺序触发，合并多次触发
+ *   - 'pre': 在组件更新前执行
+ *   - 'post': 在组件更新后执行
+ *   - 'sync': 同步执行，每次变化都会立即触发
+ * @param { number } [options.limit=0] - 触发次数限制，0表示无限制
+ * @param { boolean } [options.scope=true] - 是否自动添加到当前作用域
+ *
+ * @returns {object} 监听器实例，包含以下方法：
+ *   - destroy(): 销毁监听器
+ *   - pause(): 暂停监听
+ *   - resume(): 恢复监听
+ *
  * @example
- * import { watchChanges,reactive,ref,microTaskDebouncedCallback } from 'vitarx'
+ * import { watchChanges,reactive,ref } from 'vitarx'
  * const reactiveObj = reactive({a:1})
  * const refObj = ref({a:1})
- * watchChanges([reactiveObj,refObj],(props,target)=>{
- *    // 其中任意一个对象变化都会触发此回调
- *    console.log(`被修改的属性名：${props.join('，')}，是refObj：${target === refObj}`)
- * })
- * reactiveObj.a++ // 被修改的属性名：a,是refObj：false
- * refObj.value.a++
- * refObj.value.a++ // 被修改的属性名：value,是refObj：true
  *
- * // 合并回调
- * watchChanges([reactiveObj,refObj],microTaskDebouncedCallback((props,target)=>{
- *   console.log(`被修改的属性名：${props.join('，')}，是refObj：${target === refObj}`)
- * }))
- * reactiveObj.a++
- * refObj.value.a++ // 被修改的属性名：value,是refObj：true
+ * // 基本使用
+ * watchChanges([reactiveObj,refObj],(props,target)=>{
+ *    // target是最后一次被修改的信号对象，props则是被修改的属性值数组
+ *    console.log(`被修改的属性名：${props.join('，')}，isRefObj：${target === refObj}`)
+ * })
+ *
+ * // 同步调度
+ * watchChanges([reactiveObj,refObj],(props,target)=>{
+ *   // 数组中的任意对象被修改都会触发，连续修改会连续触发，而不是只在最后一次后触发
+ * },{
+ *   flush:'sync'
+ * })
+ *
+ * @see SubManager.subscribes
  */
-export function watchChanges<T extends AnyObject, CB extends ChangeCallback<T>>(
+export function watchChanges<T extends AnyObject, C extends ChangeCallback<T>>(
   targets: Array<T> | Set<T>,
-  callback: CB,
-  options?: Omit<WatchOptions, 'clone' | 'immediate'>
-): Subscriber<CB> {
-  return Observer.subscribes(targets, callback, options)
+  callback: C,
+  options?: SubscriberOptions<C>
+): Subscriber<C> {
+  return SubManager.subscribes(targets, callback, options)
 }
 
 /**
- * ## 监听属性变化（支持多个属性）
+ * 监听属性变化（支持多个属性）
+ *
+ * `watchProperties` 是 `SubManager.subscribeProperties` 和 `SubManager.subscribeProperty` 方法的一个函数门面封装。
  *
  * 它和 `watch` 存在不同之处，它不会记录新值和旧值，只关注哪些属性发生了变化。
  * 可以同时监听多个属性，当任意属性发生变化时触发回调。
  *
  * @template T 目标对象类型，必须是一个对象类型
  * @template P 属性列表类型，可以是单个属性、属性数组或Set集合
- * @template CB 回调函数类型，默认为WatchPropertyCallback<T>
+ * @template C 回调函数类型，默认为WatchPropertyCallback<T>
  *
  * @param {T} signal - 目标对象，被监听的信号源
  * @param {P} properties - 属性列表，指定要监听的属性，集合类型只能监听size
  *   - 可以是单个属性名
  *   - 可以是属性名数组
  *   - 可以是属性名Set集合
- * @param {CB} callback - 回调函数，当指定的属性发生变化时被调用
+ * @param {C} callback - 回调函数，当指定的属性发生变化时被调用
  * @param {WatchOptions} [options] - 监听器配置选项
  * @param {number} [options.limit=0] - 限制触发次数，0表示不限制
  * @param {boolean} [options.scope=true] - 是否自动添加到当前作用域（自动销毁）
- * @param {boolean} [options.batch=true] - 是否使用批处理模式（合并同一周期内的多次更新）
  * @param {boolean} [options.immediate=false] - 立即执行一次回调
- * @returns {Subscriber<CB>} - 返回订阅者实例，可用于管理订阅生命周期
- *
+ * @returns {Subscriber<C>} - 返回订阅者实例，可用于管理订阅生命周期
  * @example
  * // 监听单个属性
  * const obj = reactive({ name: 'John', age: 30 });
  * const sub = watchProperty(obj, 'name', (props, obj) => {
- *   console.log(`属性 ${props.join(', ')} 已变更`); // 变化的属性列表长度始终为1，['name']
+ *   console.log(`属性 ${props[0]} 已变更`); // 变化的属性列表长度始终为1，['name']
  * });
  * // 取消订阅
  * sub.dispose();
  *
  * // 监听多个属性
  * const sub2 = watchProperty(obj, ['name', 'age'], (props, obj) => {
- *   console.log(`属性 ${props.join(', ')} 已变更`);
+ *   console.log(`属性 ${props[0]} 已变更`); // 变化的属性列表长度始终为1，['name'|'age']
  * });
  *
  * // 使用Set集合监听属性
  * const propsToWatch = new Set(['name', 'age']);
  * const sub3 = watchProperty(obj, propsToWatch, (props, obj) => {
- *   console.log(`属性 ${props.join(', ')} 已变更`);
+ *   console.log(`属性 ${props[0]} 已变更`); // 变化的属性列表长度始终为1，['name'|'age']
  * });
+ *
+ * // 如果需要回调的props能记录同一事件循环内被改变的所有属性，可使用paramsHandler选项
+ * watchProperty(obj, ['name', 'age'], (props, obj) => {
+ *    console.log(`属性 ${props.join(',')} 已变更`);
+ * },{
+ *   paramsHandler: (newParams, oldParams) => {
+ *     return Array.from(new Set([...oldParams,...newParams]))
+ *   }
+ * })
+ *
+ * @see SubManager.subscribeProperties
  */
 export function watchProperty<
   T extends AnyObject,
   P extends Array<CanWatchProperty<T>> | Set<CanWatchProperty<T>> | CanWatchProperty<T>,
-  CB extends AnyCallback = WatchPropertyCallback<T, P>
->(signal: T, properties: P, callback: CB, options?: Omit<WatchOptions, 'clone'>): Subscriber<CB> {
-  const { immediate = false, ...subscriptionOptions } = options ?? {}
+  C extends AnyCallback = WatchPropertyCallback<T, P>
+>(
+  signal: T,
+  properties: P,
+  callback: C,
+  options: SubscriberOptions<C> & { immediate?: boolean } = {}
+): Subscriber<C> {
+  const { immediate = false, ...subscriptionOptions } = options
   let props = properties as Array<keyof T>
   if (typeof properties === 'string') {
     props = [properties as keyof T]
   }
-  const subscriber = Observer.subscribeProperties(signal, props, callback, subscriptionOptions)
+  const subscriber = SubManager.subscribeProperties(signal, props, callback, subscriptionOptions)
   if (immediate) {
     ;(subscriber.trigger as AnyCallback)(Array.from(props), signal)
   }
