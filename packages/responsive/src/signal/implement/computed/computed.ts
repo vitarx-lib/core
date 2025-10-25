@@ -1,9 +1,8 @@
-import type { MakeRequired } from '@vitarx/utils'
-import { isFunction } from '@vitarx/utils'
-import type { AnyKey } from '@vitarx/utils/src/index.js'
+import type { AnyKey } from '@vitarx/utils'
+import { isFunction, logger } from '@vitarx/utils'
 import { Depend } from '../../../depend/index.js'
 import { EffectScope } from '../../../effect/index.js'
-import { microTaskDebouncedCallback, SubManager, Subscriber } from '../../../observer/index.js'
+import { SubManager, Subscriber, type SubscriberOptions } from '../../../observer/index.js'
 import {
   DEEP_SIGNAL_SYMBOL,
   REF_SIGNAL_SYMBOL,
@@ -33,7 +32,7 @@ export type ComputedSetter<T> = (newValue: T) => void
  *
  * @template T - 计算结果的类型
  */
-export interface ComputedOptions<T> {
+export interface ComputedOptions<T> extends Omit<SubscriberOptions, 'paramsHandler'> {
   /**
    * 计算属性的setter处理函数
    *
@@ -66,25 +65,8 @@ export interface ComputedOptions<T> {
    * @default false
    */
   immediate?: boolean
-  /**
-   * 作用域
-   *
-   * 默认为true，表示添加到当前作用域。
-   *
-   * 如果设置为false，则不会添加到当前作用域。
-   *
-   * @default true
-   */
-  scope?: boolean
-  /**
-   * 批处理模式
-   *
-   * 默认为true，表示多个连续的变更会合并为一次计算。
-   *
-   * @default true
-   */
-  batch?: boolean
 }
+
 /**
  * # 计算属性
  *
@@ -136,10 +118,12 @@ export class Computed<T> implements RefSignal<T> {
    * 计算属性的配置选项
    * @private
    */
-  private readonly _options: MakeRequired<
-    ComputedOptions<T>,
-    Exclude<keyof ComputedOptions<T>, 'setter'>
-  >
+  private readonly _options: Pick<ComputedOptions<T>, 'setter' | 'immediate' | 'scope'>
+  /**
+   * 订阅者配置选项
+   * @private
+   */
+  private readonly _subOptions: Omit<SubscriberOptions, 'paramsHandler'>
 
   /**
    * 依赖变化的订阅处理器
@@ -151,6 +135,7 @@ export class Computed<T> implements RefSignal<T> {
    * @private
    */
   private _scope: EffectScope | undefined = undefined
+
   /**
    * 构造一个计算属性对象
    *
@@ -163,14 +148,16 @@ export class Computed<T> implements RefSignal<T> {
    */
   constructor(getter: ComputedGetter<T>, options: ComputedOptions<T> = {}) {
     this._getter = getter
-    this._options = Object.assign(
-      {
-        immediate: false,
-        scope: true,
-        batch: true
-      },
-      options
-    )
+    const { immediate = true, scope = true, setter, ...subOptions } = options
+    this._options = {
+      immediate,
+      scope,
+      setter
+    }
+    this._subOptions = {
+      ...subOptions,
+      scope: false
+    }
     if (this._options.scope) this._scope = EffectScope.getCurrentScope()
     // 如果设置了立即计算，则在构造时就初始化
     if (options.immediate) this.init()
@@ -228,9 +215,9 @@ export class Computed<T> implements RefSignal<T> {
   set value(newValue: T) {
     if (typeof this._options.setter === 'function') {
       this._options.setter(newValue)
-    } else if (import.meta.env.DEV) {
-      console.warn(
-        '[Computed]：Computed properties should not be modified directly unless a setter function is defined。'
+    } else {
+      logger.warn(
+        'Computed properties should not be modified directly unless a setter function is defined。'
       )
     }
   }
@@ -328,7 +315,6 @@ export class Computed<T> implements RefSignal<T> {
 
     // 收集依赖并获取初始计算结果
     const { result, deps } = Depend.collect(() => this._getter(this._computedResult), 'exclusive')
-
     // 缓存计算结果
     this._computedResult = result
 
@@ -345,13 +331,7 @@ export class Computed<T> implements RefSignal<T> {
         }
       }
       // 创建订阅处理器，使用微任务延迟执行以提高性能
-      this._handler = new Subscriber(
-        this._options.batch ? microTaskDebouncedCallback(handler) : handler,
-        {
-          scope: false,
-          flush: 'sync'
-        }
-      )
+      this._handler = new Subscriber(handler, this._subOptions)
       // 如果存在作用域，则添加到作用域中
       if (this._scope) this._scope.addEffect(this._handler)
       const clean: [{}, AnyKey][] = []
@@ -362,12 +342,12 @@ export class Computed<T> implements RefSignal<T> {
           clean.push([signal, prop])
         }
       })
-
       // 设置清理函数，在销毁时移除所有订阅
       this._handler.onDispose(() => {
-        clean.forEach(([signal, prop]) => {
+        for (const [signal, prop] of clean) {
           SubManager.removeSubscriber(signal, prop, this._handler!)
-        })
+        }
+        clean.length = 0
         this._handler = undefined
         this._scope = undefined
       })
