@@ -1,5 +1,5 @@
 import { DeepReadonly, isObject } from '@vitarx/utils'
-import { Observer } from '../../../observer/index.js'
+import { SubManager } from '../../../observer/index.js'
 import type { ReadonlyOptions } from './types.js'
 
 /** 只读对象标识 */
@@ -72,7 +72,7 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
     // 只读标识
     if (prop === READONLY_OBJECT_SYMBOL) return true
     // 返回监听目标
-    if (prop === Observer.TARGET_SYMBOL) return target
+    if (prop === SubManager.TARGET_SYMBOL) return target
     const data = Reflect.get(target, prop, receiver)
     if (this.#options.deep && isObject(data) && !isReadonly(data)) {
       return ReadonlyHandler.create(data, this.#options)

@@ -1,6 +1,6 @@
 import { AnyKey, AnyObject, isObject } from '@vitarx/utils'
 import { Depend } from '../../../depend/index.js'
-import { Observer } from '../../../observer/index.js'
+import { SubManager } from '../../../observer/index.js'
 import {
   type BaseSignal,
   DEEP_SIGNAL_SYMBOL,
@@ -131,7 +131,7 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
       if (STATIC_SYMBOL.includes(prop)) return true
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
-      if (prop === Observer.TARGET_SYMBOL) return receiver
+      if (prop === SubManager.TARGET_SYMBOL) return receiver
     }
     // 获取值
     const value = Reflect.get(target, prop, receiver)
@@ -277,7 +277,7 @@ function createCollectionProxy(target: any, type: 'set' | 'map') {
         return true
       if (prop === DEEP_SIGNAL_SYMBOL) return false
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
-      if (prop === Observer.TARGET_SYMBOL) return proxy
+      if (prop === SubManager.TARGET_SYMBOL) return proxy
       if (typeof prop === 'string') {
         if (prop === 'clear' || prop === 'delete') {
           return triggerSizeChange(prop)
