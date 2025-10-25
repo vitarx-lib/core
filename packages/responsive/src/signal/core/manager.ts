@@ -1,5 +1,5 @@
 import { AnyKey, AnyObject } from '@vitarx/utils'
-import { Observer } from '../../observer/index.js'
+import { SubManager } from '../../observer/index.js'
 import type { BaseSignal } from './types/index.js'
 
 /**
@@ -98,7 +98,7 @@ export class SignalManager {
     if (!parentMap) return
     // 遍历父级映射，通知每个父级信号进行更新
     for (const [parent, keys] of parentMap) {
-      Observer.notify(parent, Array.from(keys) as any)
+      SubManager.notify(parent, Array.from(keys) as any)
       this.notifyParent(parent) // 递归通知父级信号
     }
   }
@@ -117,7 +117,7 @@ export class SignalManager {
     property: keyof T | Array<keyof T>,
     notifyParent: boolean = true
   ): void {
-    Observer.notify(signal, property)
+    SubManager.notify(signal, property)
     if (notifyParent) SignalManager.notifyParent(signal)
   }
 }
