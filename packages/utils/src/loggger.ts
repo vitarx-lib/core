@@ -58,14 +58,23 @@ const DEFAULT_CONFIG: LoggerConfig = {
  */
 export class Logger {
   private config: LoggerConfig = { ...DEFAULT_CONFIG }
-
+  /**
+   * 构造函数，用于创建Logger实例
+   * @param [config] 可选的Logger配置对象，可以是Partial<LoggerConfig>类型
+   * 如果提供了config参数，则调用setConfig方法应用配置
+   */
+  constructor(config?: Partial<LoggerConfig>) {
+    if (config) this.setConfig(config) // 如果存在config参数，则调用setConfig方法设置配置
+  }
   /**
    * 设置日志配置
    *
    * @param config 新的日志配置，会与现有配置合并
+   * @returns {this} 当前实例
    */
-  setConfig(config: Partial<LoggerConfig>): void {
+  setConfig(config: Partial<LoggerConfig>): this {
     this.config = { ...this.config, ...config }
+    return this
   }
 
   /**
@@ -207,7 +216,7 @@ export class Logger {
     if (source && this.config.includeSourceInfo) {
       const { fileName, lineNumber, columnNumber } = source
       const shortFileName = fileName.split('/').pop() || fileName
-      return `${prefix}${message} (${shortFileName}:${lineNumber}:${columnNumber})`
+      return `${prefix}: ${message} (${shortFileName}:${lineNumber}:${columnNumber})`
     }
 
     return `${prefix}: ${message}`
@@ -217,4 +226,4 @@ export class Logger {
 /**
  * vitarx框架共享的日志助手实例
  */
-export const logger = new Logger()
+export const logger = new Logger({ prefix: '[VITARX]' })
