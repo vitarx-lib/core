@@ -351,9 +351,9 @@ export class Computed<T> implements RefSignal<T> {
         this._handler = undefined
         this._scope = undefined
       })
-    } else if (import.meta.env.DEV) {
-      console.warn(
-        '[Vitarx.Computed][WARN]：No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
+    } else {
+      logger.warn(
+        'No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
       )
     }
     return this

@@ -1,4 +1,4 @@
-import { DeepReadonly, isObject } from '@vitarx/utils'
+import { DeepReadonly, isObject, logger } from '@vitarx/utils'
 import { SubManager } from '../../observer/index.js'
 
 export type WriteHandleMode = 'error' | 'warning' | 'warningAndWrite'
@@ -66,9 +66,9 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
 
   set(target: any, prop: any, value: any): boolean {
     if (this.#options.write === 'error') {
-      throw new Error(this.createMessage(prop, 'ERROR'))
+      throw new Error(this.createMessage(prop))
     }
-    if (import.meta.env.DEV) console.warn(this.createMessage(prop, 'WARN'))
+    logger.warn(this.createMessage(prop))
     if (this.#options.write === 'warningAndWrite') {
       return Reflect.set(target, prop, value)
     }
@@ -77,9 +77,9 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
 
   deleteProperty(target: any, prop: any): boolean {
     if (this.#options.write === 'error') {
-      throw new Error(this.createMessage(prop, 'ERROR'))
+      throw new Error(this.createMessage(prop))
     }
-    if (import.meta.env.DEV) console.warn(this.createMessage(prop, 'WARN'))
+    logger.warn(this.createMessage(prop))
     if (this.#options.write === 'warningAndWrite') {
       return Reflect.deleteProperty(target, prop)
     }
@@ -90,11 +90,10 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
    * 创建提示信息
    *
    * @param prop
-   * @param type
    * @private
    */
-  private createMessage(prop: any, type: 'ERROR' | 'WARN') {
-    return `[Readonly][${type}]：` + this.#options.message!.replace('${prop}', String(prop))
+  private createMessage(prop: any) {
+    return this.#options.message!.replace('${prop}', String(prop))
   }
 
   get(target: T, prop: any, receiver: any): any {

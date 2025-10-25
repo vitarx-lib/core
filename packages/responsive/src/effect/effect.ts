@@ -1,4 +1,4 @@
-import { AnyCallback, VoidCallback } from '@vitarx/utils'
+import { AnyCallback, logger, VoidCallback } from '@vitarx/utils'
 import type {
   EffectCallbackErrorHandler,
   EffectInterface,
@@ -188,11 +188,11 @@ export class Effect<ErrorSource extends string = string>
         try {
           callback(e, source)
         } catch (innerError) {
-          console.error(`Error handler for "${source}" threw an error:`, innerError)
+          logger.error(`Error handler for "${source}" threw an error:`, innerError)
         }
       })
     } else {
-      console.error(`Unhandled error in effect callback (${source}):`, e)
+      logger.error(`Unhandled error in effect callback (${source}):`, e)
     }
   }
 
