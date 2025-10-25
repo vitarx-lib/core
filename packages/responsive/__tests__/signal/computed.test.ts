@@ -12,7 +12,7 @@ describe('computed', () => {
 
     it('应该根据依赖的变化更新计算值', () => {
       const count = ref(0)
-      const double = computed(() => count.value * 2, { batch: false })
+      const double = computed(() => count.value * 2, { flush: 'sync' })
 
       count.value = 2
       expect(double.value).toBe(4)
@@ -26,7 +26,7 @@ describe('computed', () => {
     it('应该缓存计算结果', () => {
       const count = ref(0)
       const fn = vi.fn(() => count.value * 2)
-      const double = computed(fn, { batch: false })
+      const double = computed(fn, { flush: 'sync' })
 
       // 首次访问会计算
       expect(double.value).toBe(0)
@@ -64,7 +64,7 @@ describe('computed', () => {
         setter: val => {
           count.value = val / 2
         },
-        batch: false
+        flush: 'sync'
       })
 
       expect(double.value).toBe(0)
@@ -78,7 +78,7 @@ describe('computed', () => {
   describe('与reactive的交互', () => {
     it('应该支持reactive对象作为依赖', () => {
       const state = reactive({ count: 0 })
-      const double = computed(() => state.count * 2, { batch: false })
+      const double = computed(() => state.count * 2, { flush: 'sync' })
 
       expect(double.value).toBe(0)
 
@@ -90,8 +90,8 @@ describe('computed', () => {
   describe('嵌套computed', () => {
     it('应该支持嵌套的computed', () => {
       const count = ref(0)
-      const double = computed(() => count.value * 2, { batch: false })
-      const quadruple = computed(() => double.value * 2, { batch: false })
+      const double = computed(() => count.value * 2, { flush: 'sync' })
+      const quadruple = computed(() => double.value * 2, { flush: 'sync' })
 
       expect(quadruple.value).toBe(0)
 

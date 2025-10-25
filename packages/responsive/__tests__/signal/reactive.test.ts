@@ -43,7 +43,7 @@ describe('reactive', () => {
       const obj = reactive({ nested: { count: 0 } })
       expect(obj.nested.count).toBe(0)
       const fn = vi.fn()
-      watch(obj.nested, fn, { batch: false })
+      watch(obj.nested, fn, { flush: 'sync' })
       obj.nested.count = 1
       expect(fn).toHaveBeenCalledOnce()
     })
@@ -116,7 +116,7 @@ describe('reactive', () => {
     it('应该触发length变化', () => {
       const arr = reactive([] as number[])
       const cb = vi.fn()
-      watchProperty(arr, 'length', cb, { batch: false })
+      watchProperty(arr, 'length', cb, { flush: 'sync' })
       arr[0] = 1
       expect(cb).toHaveBeenCalledOnce()
     })

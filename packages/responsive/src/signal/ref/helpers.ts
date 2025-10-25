@@ -1,4 +1,5 @@
-import { type SignalOptions, type SignalToRaw, toRaw } from '../../core/index.js'
+import type { SignalOptions } from '../types/index.js'
+import { type SignalToRaw, toRaw } from '../utils/index.js'
 import { Ref } from './ref.js'
 
 /**

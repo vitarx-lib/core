@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { EffectScope, Subscriber } from '../../../src'
+import { EffectScope, Scheduler, Subscriber } from '../../../src'
 
 describe('Subscriber', () => {
   let callback: ReturnType<typeof vi.fn>
@@ -42,8 +42,9 @@ describe('Subscriber', () => {
     it('trigger方法应该执行回调函数', () => {
       const subscriber = new Subscriber(callback)
       const args = ['arg1', 'arg2']
-      subscriber.trigger(args, {})
-      expect(callback).toHaveBeenCalledWith(args, {})
+      subscriber.trigger(args)
+      Scheduler.flushSync()
+      expect(callback).toHaveBeenCalledWith(args)
       expect(subscriber.count).toBe(1)
     })
 
@@ -57,10 +58,12 @@ describe('Subscriber', () => {
 
     it('销毁状态下不应执行回调', () => {
       const subscriber = new Subscriber(callback)
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       subscriber.dispose()
-      const result = subscriber.trigger('test', {})
+      subscriber.trigger('test')
       expect(callback).not.toHaveBeenCalled()
-      expect(result).toBe(false)
+      expect(consoleWarnSpy).toHaveBeenCalled()
+      consoleWarnSpy.mockRestore()
     })
 
     it('回调抛出错误时应该捕获并继续执行', () => {
@@ -68,10 +71,9 @@ describe('Subscriber', () => {
         throw new Error('Test error')
       })
       const errorHandler = vi.fn()
-      const subscriber = new Subscriber(errorCallback)
+      const subscriber = new Subscriber(errorCallback).setFlush('sync')
       subscriber.onError(errorHandler)
-
-      subscriber.trigger('test', {})
+      subscriber.trigger('test')
       expect(errorCallback).toHaveBeenCalled()
       expect(errorHandler).toHaveBeenCalled()
       expect(subscriber.count).toBe(1)
@@ -80,39 +82,40 @@ describe('Subscriber', () => {
 
   describe('计数限制', () => {
     it('达到限制次数后应该自动销毁', () => {
-      const subscriber = new Subscriber(callback, { limit: 2 })
+      const subscriber = new Subscriber(callback, { limit: 2 }).setFlush('sync')
 
-      subscriber.trigger('test1', {})
+      subscriber.trigger('test1')
       expect(subscriber.count).toBe(1)
       expect(subscriber.isActive).toBe(true)
 
-      subscriber.trigger('test2', {})
+      subscriber.trigger('test2')
       expect(subscriber.count).toBe(2)
       expect(subscriber.isDeprecated).toBe(true)
-
-      const result = subscriber.trigger('test3', {})
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      subscriber.trigger('test3')
       expect(callback).toHaveBeenCalledTimes(2) // 只应该被调用两次
-      expect(result).toBe(false)
+      expect(consoleWarnSpy).toHaveBeenCalled()
+      consoleWarnSpy.mockRestore()
     })
 
     it('resetCount方法应该重置计数', () => {
-      const subscriber = new Subscriber(callback, { limit: 2 })
+      const subscriber = new Subscriber(callback, { limit: 2 }).setFlush('sync')
 
-      subscriber.trigger('test', {})
+      subscriber.trigger('test')
       expect(subscriber.count).toBe(1)
 
       subscriber.resetCount()
       expect(subscriber.count).toBe(0)
 
       // 重置后应该可以再次触发
-      subscriber.trigger('test', {})
-      subscriber.trigger('test', {})
+      subscriber.trigger('test')
+      subscriber.trigger('test')
       expect(callback).toHaveBeenCalledTimes(3)
     })
 
     it('销毁状态下不应重置计数', () => {
-      const subscriber = new Subscriber(callback)
-      subscriber.trigger('test', {})
+      const subscriber = new Subscriber(callback).setFlush('sync')
+      subscriber.trigger('test')
       subscriber.dispose()
 
       const result = subscriber.resetCount()
@@ -126,9 +129,12 @@ describe('Subscriber', () => {
       const subscriber = new Subscriber(callback)
       subscriber.dispose()
 
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       // 验证回调被清理
-      subscriber.trigger('test', {})
+      subscriber.trigger('test')
       expect(callback).not.toHaveBeenCalled()
+      expect(consoleWarnSpy).toHaveBeenCalled()
+      consoleWarnSpy.mockRestore()
     })
 
     it('onCleanup方法应该注册清理回调', () => {

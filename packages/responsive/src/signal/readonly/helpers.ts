@@ -1,6 +1,5 @@
 import { AnyObject, DeepReadonly } from '@vitarx/utils'
-import { ReadonlyHandler } from './readonly.js'
-import { ReadonlyOptions } from './types.js'
+import { ReadonlyHandler, type ReadonlyOptions } from './readonly.js'
 
 /**
  * ## 深度只读对象

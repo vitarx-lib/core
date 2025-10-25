@@ -45,7 +45,7 @@ describe('ref', () => {
     it('默认应该是深度响应式的', () => {
       const obj = ref({ nested: { count: 0 } })
       const fn = vi.fn()
-      watch(obj, fn, { batch: false })
+      watch(obj, fn, { flush: 'sync' })
       obj.value.nested.count++
       expect(fn).toHaveBeenCalledOnce()
     })
@@ -53,7 +53,7 @@ describe('ref', () => {
     it('应该支持关闭深度响应式', () => {
       const obj = ref({ nested: { count: 0 } }, { deep: false })
       const fn = vi.fn()
-      watch(obj, fn, { batch: false })
+      watch(obj, fn, { flush: 'sync' })
       obj.value.nested.count = 1
       expect(fn).not.toHaveBeenCalled()
     })

@@ -7,7 +7,7 @@ describe('watch', () => {
       const count = ref(0)
       const fn = vi.fn()
 
-      const subscriber = watch(count, fn, { batch: false })
+      const subscriber = watch(count, fn, { flush: 'sync' })
 
       count.value = 1
       expect(fn).toHaveBeenCalledWith(1, 0, expect.any(Function))
@@ -21,17 +21,17 @@ describe('watch', () => {
       const state = reactive({ count: 0 })
       const fn = vi.fn()
 
-      watch(() => state.count, fn, { batch: false })
+      watch(() => state.count, fn, { flush: 'sync' })
 
       state.count = 1
       expect(fn).toHaveBeenCalledWith(1, 0, expect.any(Function))
     })
     it('应该监听computed的变化', () => {
       const count = ref(0)
-      const double = computed(() => count.value * 2, { batch: false })
+      const double = computed(() => count.value * 2, { flush: 'sync' })
       const fn = vi.fn()
 
-      watch(double, fn, { batch: false })
+      watch(double, fn, { flush: 'sync' })
 
       count.value = 1
       expect(fn).toHaveBeenCalledWith(2, 0, expect.any(Function))
@@ -39,28 +39,28 @@ describe('watch', () => {
     it('应该能监听到深度变化监听', () => {
       const state = reactive({ nested: { count: 0 } })
       const fn = vi.fn()
-      watch(state, fn, { batch: false })
+      watch(state, fn, { flush: 'sync' })
       state.nested.count = 1
       expect(fn).toHaveBeenCalledOnce()
     })
     it('应该支持immediate选项立即执行', () => {
       const state = reactive({ count: 0 })
       const fn = vi.fn()
-      watch(state, fn, { immediate: true, batch: false })
+      watch(state, fn, { immediate: true, flush: 'sync' })
       expect(fn).toHaveBeenCalledOnce()
       const fn2 = vi.fn()
-      watchProperty(state, 'count', fn2, { immediate: true, batch: false })
+      watchProperty(state, 'count', fn2, { immediate: true, flush: 'sync' })
       expect(fn2).toHaveBeenCalledWith(['count'], state)
     })
     it('应该支持监听集合', () => {
       const map = reactive(new Map())
       const fn = vi.fn()
-      watch(map, fn, { batch: false })
+      watch(map, fn, { flush: 'sync' })
       map.set('key', 'value')
       expect(fn).toHaveBeenCalledOnce()
       const set = ref(new Set())
       const fn2 = vi.fn()
-      watch(set, fn2, { batch: false })
+      watch(set, fn2, { flush: 'sync' })
       set.value.add('key')
       expect(fn2).toHaveBeenCalledOnce()
     })
@@ -134,7 +134,7 @@ describe('watch', () => {
           fn(newVal, oldVal)
           oldValue = oldVal
         },
-        { clone: true, batch: false }
+        { clone: true, flush: 'sync' }
       )
 
       state.nested.count = 1
@@ -165,7 +165,7 @@ describe('watch', () => {
         (_newVal, _oldVal, onCleanup) => {
           onCleanup(cleanup)
         },
-        { batch: false }
+        { flush: 'sync' }
       )
 
       count.value = 1

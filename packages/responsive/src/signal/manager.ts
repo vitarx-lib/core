@@ -1,5 +1,5 @@
 import { AnyKey, AnyObject } from '@vitarx/utils'
-import { SubManager } from '../../observer/index.js'
+import { SubManager } from '../observer/index.js'
 import type { BaseSignal } from './types/index.js'
 
 /**

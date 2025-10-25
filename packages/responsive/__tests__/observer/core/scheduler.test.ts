@@ -11,8 +11,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { Subscriber } from '../../../src/index.js'
-import { Scheduler } from '../../../src/observer/scheduler.js'
+import { Scheduler, Subscriber } from '../../../src/index.js'
 
 describe('Scheduler', () => {
   // 在每个测试前清空所有队列
@@ -210,20 +209,27 @@ describe('Scheduler', () => {
 
     it('应该能够处理订阅者的限制次数', () => {
       const callback = vi.fn()
+      // 监视 console.warn
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
       // 创建限制触发次数为2的订阅者
-      const subscriber = new Subscriber(callback, { limit: 2 })
+      const subscriber = new Subscriber(callback, { limit: 2, flush: 'sync' })
 
       // 调度订阅者的触发3次
-      Scheduler.queueJob(() => subscriber.trigger('test1'))
-      Scheduler.queueJob(() => subscriber.trigger('test2'))
-      Scheduler.queueJob(() => subscriber.trigger('test3'))
-
-      Scheduler.flushSync()
+      subscriber.trigger('test1')
+      subscriber.trigger('test2')
+      subscriber.trigger('test3')
 
       // 回调应该只被调用2次
       expect(callback).toHaveBeenCalledTimes(2)
       expect(callback).toHaveBeenNthCalledWith(1, 'test1')
       expect(callback).toHaveBeenNthCalledWith(2, 'test2')
+
+      // 验证 console.warn 是否被调用过
+      expect(consoleWarnSpy).toHaveBeenCalled()
+
+      // 恢复 console.warn 的原始实现
+      consoleWarnSpy.mockRestore()
     })
   })
 

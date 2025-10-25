@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ObserverManager } from '../../../src/observer'
+import { SubManager } from '../../../src/index.js'
 
 describe('依赖触发器', () => {
   describe('基础触发', () => {
@@ -9,8 +9,8 @@ describe('依赖触发器', () => {
       const callback = () => {
         notified = true
       }
-      ObserverManager.subscribeProperty(target, 'value', callback, { batch: false })
-      ObserverManager.notify(target, 'value')
+      SubManager.subscribeProperty(target, 'value', callback, { flush: 'sync' })
+      SubManager.notify(target, 'value')
       expect(notified).toBe(true)
     })
 
@@ -20,9 +20,9 @@ describe('依赖触发器', () => {
       const callback = () => {
         notifyCount++
       }
-      ObserverManager.subscribeProperty(target, 'count', callback, { batch: false })
-      ObserverManager.notify(target, 'count')
-      ObserverManager.notify(target, 'count')
+      SubManager.subscribeProperty(target, 'count', callback, { flush: 'sync' })
+      SubManager.notify(target, 'count')
+      SubManager.notify(target, 'count')
       expect(notifyCount).toBe(2)
     })
   })
@@ -34,25 +34,22 @@ describe('依赖触发器', () => {
       const callback = () => {
         updateCount++
       }
-      ObserverManager.subscribeProperty(target, 'x', callback, { batch: true })
-      ObserverManager.subscribeProperty(target, 'y', callback, { batch: true })
-      ObserverManager.notify(target, ['x', 'y'])
+      SubManager.subscribeProperty(target, 'x', callback)
+      SubManager.notify(target, 'x')
+      SubManager.notify(target, 'x')
       expect(updateCount).toBe(0)
       await Promise.resolve()
-      expect(updateCount).toBe(2)
+      expect(updateCount).toBe(1)
     })
 
     it('应该在下一个微任务执行回调', async () => {
       const target = { value: 0 }
-      let executed = false
-      const callback = () => {
-        executed = true
-      }
-      ObserverManager.subscribeProperty(target, 'value', callback, { batch: true })
-      ObserverManager.notify(target, 'value')
-      expect(executed).toBe(false)
+      const callback = vi.fn()
+      SubManager.subscribeProperty(target, 'value', callback)
+      SubManager.notify(target, 'value')
+      expect(callback).toHaveBeenCalledTimes(0)
       await Promise.resolve()
-      expect(executed).toBe(true)
+      expect(callback).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -63,8 +60,8 @@ describe('依赖触发器', () => {
       const callback = () => {
         executed = true
       }
-      ObserverManager.subscribeProperty(target, 'value', callback, { batch: false })
-      ObserverManager.notify(target, 'value')
+      SubManager.subscribeProperty(target, 'value', callback, { flush: 'sync' })
+      SubManager.notify(target, 'value')
       expect(executed).toBe(true)
     })
 
@@ -74,9 +71,9 @@ describe('依赖触发器', () => {
       const callback = () => {
         notifyCount++
       }
-      ObserverManager.subscribeProperty(target, 'value', callback, { batch: false })
-      ObserverManager.notify(target, 'value')
-      ObserverManager.notify(target, 'value')
+      SubManager.subscribeProperty(target, 'value', callback, { flush: 'sync' })
+      SubManager.notify(target, 'value')
+      SubManager.notify(target, 'value')
       expect(notifyCount).toBe(2)
     })
   })
@@ -84,16 +81,16 @@ describe('依赖触发器', () => {
   describe('多属性触发', () => {
     it('应该支持触发多个属性', () => {
       const target = { x: 0, y: 0 }
-      const notifyed = new Set()
+      const keys = new Set()
       const callback = (prop: string[]) => {
-        notifyed.add(prop[0])
+        keys.add(prop[0])
       }
-      ObserverManager.subscribeProperty(target, 'x', callback, { batch: false })
-      ObserverManager.subscribeProperty(target, 'y', callback, { batch: false })
-      ObserverManager.notify(target, 'x')
-      ObserverManager.notify(target, 'y')
-      expect(notifyed.has('x')).toBe(true)
-      expect(notifyed.has('y')).toBe(true)
+      SubManager.subscribeProperty(target, 'x', callback, { flush: 'sync' })
+      SubManager.subscribeProperty(target, 'y', callback, { flush: 'sync' })
+      SubManager.notify(target, 'x')
+      SubManager.notify(target, 'y')
+      expect(keys.has('x')).toBe(true)
+      expect(keys.has('y')).toBe(true)
     })
 
     it('应该正确处理相同回调的多属性触发', async () => {
@@ -102,8 +99,8 @@ describe('依赖触发器', () => {
       const callback = () => {
         callCount++
       }
-      ObserverManager.subscribeProperties(target, ['a', 'b'], callback, { batch: true })
-      ObserverManager.notify(target, ['a', 'b'])
+      SubManager.subscribeProperties(target, ['a', 'b'], callback)
+      SubManager.notify(target, ['a', 'b'])
       expect(callCount).toBe(0)
       await Promise.resolve()
       expect(callCount).toBe(1)

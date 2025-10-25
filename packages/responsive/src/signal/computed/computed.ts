@@ -1,16 +1,16 @@
 import type { AnyKey } from '@vitarx/utils'
 import { isFunction, logger } from '@vitarx/utils'
-import { Depend } from '../../../depend/index.js'
-import { EffectScope } from '../../../effect/index.js'
-import { SubManager, Subscriber, type SubscriberOptions } from '../../../observer/index.js'
+import { Depend } from '../../depend/index.js'
+import { EffectScope } from '../../effect/index.js'
+import { SubManager, Subscriber, type SubscriberOptions } from '../../observer/index.js'
 import {
   DEEP_SIGNAL_SYMBOL,
   REF_SIGNAL_SYMBOL,
-  type RefSignal,
   SIGNAL_RAW_VALUE_SYMBOL,
-  SIGNAL_SYMBOL,
-  SignalManager
-} from '../../core/index.js'
+  SIGNAL_SYMBOL
+} from '../constants.js'
+import { SignalManager } from '../manager.js'
+import type { RefSignal } from '../types/index.js'
 
 /**
  * 计算属性的值获取函数
