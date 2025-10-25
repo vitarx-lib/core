@@ -168,7 +168,10 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
    *
    * @param {Parameters<CB>} params - 传递给回调函数的参数
    */
-  trigger(...params: Parameters<CB>) {
+  trigger(...params: Parameters<CB>): void {
+    if (this.isDeprecated) {
+      throw new Error('[Vitarx.Subscriber]: The subscriber has been destroyed')
+    }
     switch (this.flush) {
       default:
       case 'default':
@@ -185,7 +188,16 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
         break
     }
   }
-
+  /**
+   * 设置flush方法
+   *
+   * @param flush - flush方法，用于处理数据刷新逻辑
+   * @returns { this } 返回当前实例，支持链式调用
+   */
+  setFlush(flush: Flush): this {
+    this.flush = flush // 将传入的flush方法赋值给实例的flush属性
+    return this // 返回当前实例以支持链式调用
+  }
   /**
    * 重置通知计数
    *
