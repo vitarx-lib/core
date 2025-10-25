@@ -1,5 +1,4 @@
-import { AnyCallback } from '@vitarx/utils'
-import type { MakeRequired } from '@vitarx/utils/src/index.js'
+import { AnyCallback, logger, type MakeRequired } from '@vitarx/utils'
 import { Effect, EffectScope } from '../effect/index.js'
 import { type QueueParamHandler, Scheduler } from './scheduler.js'
 
@@ -170,7 +169,8 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
    */
   trigger(...params: Parameters<CB>): void {
     if (this.isDeprecated) {
-      throw new Error('[Vitarx.Subscriber]: The subscriber has been destroyed')
+      logger.warn(`the subscriber has been destroyed`)
+      return
     }
     switch (this.flush) {
       default:
