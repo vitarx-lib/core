@@ -151,16 +151,16 @@ export function subscribeProperty<T extends AnyObject, C extends ChangeCallback<
  * ```
  *
  * @template T - 目标对象的类型
- * @template CB - 回调函数的类型
+ * @template C - 回调函数的类型
  * @param {T} target - 目标对象，要监听其属性变更的对象
  * @param {Array<keyof T>|Set<keyof T>} properties - 属性名集合
- * @param {CB|Subscriber<CB>} callback - 回调函数或已存在的订阅者实例
+ * @param {C|Subscriber<C>} callback - 回调函数或已存在的订阅者实例
  * @param { SubscriberOptions } [options] - 订阅器选项
  * @param { string } [options.flush='default'] - 执行模式，可选值有 'default' | 'pre' | 'post' | 'sync'
  * @param { number } [options.limit=0] - 触发次数限制，0表示无限制
  * @param { boolean } [options.scope=true] - 是否自动添加到当前作用域
  * @param { function } [options.paramsHandler] - 参数处理器
- * @returns {Subscriber<CB>} 返回订阅者实例，可用于手动取消订阅
+ * @returns {Subscriber<C>} 返回订阅者实例，可用于手动取消订阅
  */
 export function subscribeProperties<T extends AnyObject, C extends ChangeCallback<T>>(
   target: T,
@@ -178,57 +178,4 @@ export function subscribeProperties<T extends AnyObject, C extends ChangeCallbac
  */
 export function nextTick(fn?: () => void): Promise<void> {
   return Scheduler.nextTick(fn)
-}
-
-/**
- * 创建一个在微任务中防抖执行的函数。
- * 连续多次调用将在当前微任务结束时仅执行一次。
- *
- * @template T - 函数类型。
- * @param callback - 目标回调函数。
- * @param handleParams - 可选参数合并函数，接收新参数和旧参数，返回合并后的参数。
- * @returns {T} 微任务防抖函数。
- *
- * 示例：
- * ```ts
- * const log = microTaskDebouncedCallback((msg) => console.log(msg))
- * log('A')
- * log('B')
- * // 输出：B
- *
- * const sum = microTaskDebouncedCallback(
- *   (a, b) => console.log(a + b),
- *   (next, prev) => prev ? [next[0] + prev[0], next[1] + prev[1]] : next
- * )
- * sum(1, 2)
- * sum(3, 4)
- * // 输出：10
- * ```
- */
-export function microTaskDebouncedCallback<T extends (...args: any[]) => void>(
-  callback: T,
-  handleParams?: (next: Parameters<T>, prev: Parameters<T> | null) => Parameters<T>
-): T {
-  let queued = false
-  let params: Parameters<T> | null = null
-
-  const fn = function (this: unknown, ...args: Parameters<T>) {
-    params = handleParams ? handleParams(args, params) : args
-
-    if (!queued) {
-      queued = true
-      nextTick(() => {
-        queued = false
-        const currentParams = params!
-        params = null
-        try {
-          callback.apply(this, currentParams)
-        } finally {
-          params = null // 确保异常也会重置
-        }
-      }).then()
-    }
-  }
-
-  return fn as T
 }
