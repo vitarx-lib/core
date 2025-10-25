@@ -10,7 +10,7 @@ const max = 1000
 let changeCount = 0
 for (let i = 0; i < max; i++) {
   const c = computed(() => data.value + 100).init()
-  watch(c, () => changeCount++, { batch: false })
+  watch(c, () => changeCount++)
 }
 
 // 修改响应式变量
