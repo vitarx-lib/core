@@ -31,7 +31,7 @@ export interface LoggerConfig {
  * 默认日志配置
  */
 const DEFAULT_CONFIG: LoggerConfig = {
-  level: import.meta.env?.DEV ? LogLevel.DEBUG : LogLevel.WARN,
+  level: import.meta.env?.DEV ? LogLevel.DEBUG : LogLevel.ERROR,
   includeSourceInfo: import.meta.env?.DEV,
   prefix: ''
 }
@@ -213,3 +213,8 @@ export class Logger {
     return `${prefix}: ${message}`
   }
 }
+
+/**
+ * vitarx框架共享的日志助手实例
+ */
+export const logger = new Logger()
