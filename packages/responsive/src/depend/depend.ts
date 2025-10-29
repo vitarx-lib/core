@@ -36,10 +36,16 @@ export interface DependSubscribeResult<T> extends CollectionResult<T> {
  * 当响应式对象的属性被访问时，会自动记录依赖关系。
  */
 export class Depend {
+  /**
+   * 禁用依赖跟踪
+   *
+   * 如果将此属性修改为true，则依赖跟踪将被禁用。
+   */
+  public static disableTracking = false
   // 全局收集器映射表
-  static #collectorRegistry = new Map<symbol, DependencyMap>()
+  private static _collectorRegistry = new Map<symbol, DependencyMap>()
   // 当前活跃的收集器
-  static #activeCollector: undefined | DependencyMap
+  private static _activeCollector: undefined | DependencyMap
 
   /**
    * ## 跟踪依赖关系
@@ -52,14 +58,16 @@ export class Depend {
    * @param {keyof T} property - 被访问的属性
    */
   static track<T extends object>(target: T, property: keyof T): void {
+    // 如果禁用跟踪直接返回
+    if (this.disableTracking) return
     // 如果有活跃的收集器，优先使用活跃收集器
-    if (this.#activeCollector) {
-      this.#recordDependency(this.#activeCollector, target, property)
+    if (this._activeCollector) {
+      this._recordDependency(this._activeCollector, target, property)
     }
     // 否则使用注册的所有收集器
-    else if (this.#collectorRegistry.size) {
-      this.#collectorRegistry.forEach(collector => {
-        this.#recordDependency(collector, target, property)
+    else if (this._collectorRegistry.size) {
+      this._collectorRegistry.forEach(collector => {
+        this._recordDependency(collector, target, property)
       })
     }
   }
@@ -77,7 +85,7 @@ export class Depend {
   static collect<T>(fn: () => T, mode: 'shared' | 'exclusive' = 'shared'): CollectionResult<T> {
     // 独占模式直接使用专用收集器
     if (mode === 'exclusive') {
-      return this.#collectExclusive(fn)
+      return this._collectExclusive(fn)
     }
 
     // 共享模式使用注册表
@@ -85,14 +93,14 @@ export class Depend {
     const dependencies: DependencyMap = new Map()
 
     // 注册新收集器
-    this.#collectorRegistry.set(collectorId, dependencies)
+    this._collectorRegistry.set(collectorId, dependencies)
 
     try {
       const result = fn()
       return { result, deps: dependencies }
     } finally {
       // 清理收集器
-      this.#collectorRegistry.delete(collectorId)
+      this._collectorRegistry.delete(collectorId)
     }
   }
 
@@ -101,7 +109,11 @@ export class Depend {
    *
    * @private
    */
-  static #recordDependency(collector: DependencyMap, target: AnyObject, property: AnyKey): void {
+  private static _recordDependency(
+    collector: DependencyMap,
+    target: AnyObject,
+    property: AnyKey
+  ): void {
     if (collector.has(target)) {
       // 如果已经收集了该对象，则添加新属性
       collector.get(target)!.add(property as keyof typeof target)
@@ -118,16 +130,16 @@ export class Depend {
    *
    * @private
    */
-  static #collectExclusive<T>(fn: () => T): CollectionResult<T> {
-    const previousCollector = this.#activeCollector
-    this.#activeCollector = new Map()
+  private static _collectExclusive<T>(fn: () => T): CollectionResult<T> {
+    const previousCollector = this._activeCollector
+    this._activeCollector = new Map()
 
     try {
       const result = fn()
-      return { result, deps: this.#activeCollector }
+      return { result, deps: this._activeCollector }
     } finally {
       // 恢复之前的收集器
-      this.#activeCollector = previousCollector
+      this._activeCollector = previousCollector
     }
   }
 
