@@ -54,9 +54,9 @@ export type RefValue<T, Deep extends boolean = true> = Deep extends false
     : T
 
 /**
- * # `Ref`值代理对象，用于代理一个值，使其成为响应式变量。
+ * `Ref` 值引用对象，用于引用一个值，使其成为响应式变量。
  *
- * @template T - 任意类型
+ * @template T - 值类型
  * @template Deep - 是否深度代理
  * @remarks
  * 该对象的`value`属性是响应式的，当其值发生变化时，会触发监听器的回调函数。
@@ -204,8 +204,6 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
    */
   [Symbol.toPrimitive](hint: string): any {
     switch (hint) {
-      case 'number':
-        return this.value
       case 'string':
         return this.toString()
       case 'default':
@@ -253,7 +251,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
    * 手动触发value值的更新事件
    *
    * 即使值没有发生变化，也会强制触发更新通知。
-   * 这在一些特殊场景下很有用，比如更新了浅层Ref的深层值且希望触发监听器。
+   * 这在一些特殊场景下很有用，比如更新了浅引用对象的深层属性，希望触发监听器。
    */
   public forceUpdate(): void {
     SignalManager.notifySubscribers(this, 'value')
