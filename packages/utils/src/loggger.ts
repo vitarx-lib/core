@@ -226,4 +226,4 @@ export class Logger {
 /**
  * vitarx框架共享的日志助手实例
  */
-export const logger = new Logger({ prefix: '[VITARX]' })
+export const logger = new Logger({ prefix: '[Vitarx]' })
