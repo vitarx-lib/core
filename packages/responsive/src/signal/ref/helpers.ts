@@ -1,6 +1,11 @@
-import type { SignalOptions } from '../types/index.js'
+import { logger } from '@vitarx/utils/src/index.js'
+import { REF_SIGNAL_SYMBOL, SIGNAL_SYMBOL } from '../constants.js'
+import { isReactive } from '../reactive/index.js'
+import type { RefSignal, SignalOptions } from '../types/index.js'
 import { isRefSignal, type SignalToRaw } from '../utils/index.js'
 import { Ref } from './ref.js'
+
+export type ToRef<T> = T extends RefSignal ? T : Ref<T>
 
 /**
  * 创建一个响应式引用信号
@@ -198,4 +203,168 @@ export function isRef(val: any): val is Ref {
  */
 export function unref<T>(ref: T): SignalToRaw<T> {
   return isRefSignal(ref) ? ref.value : (ref as SignalToRaw<T>)
+}
+
+/**
+ * 创建一个基于源的 Ref
+ *
+ * 根据传入参数的不同，该函数有多种行为模式：
+ * 1. 当传入函数时，返回一个只读 Ref，其值通过 getter 访问源的返回值
+ * 2. 当传入已有的 Ref 时，直接返回原 Ref
+ * 3. 当传入任意普通值时，包装为可写的 Ref
+ * 4. 当传入对象与键时，返回一个与该属性双向绑定的 Ref
+ *
+ * @overload
+ * 当传入函数时，返回一个只读 Ref，Ref.value 通过 getter 访问源的返回值。
+ * @template T - 值的类型
+ * @param {() => T} source - 一个返回值的函数
+ * @returns {Readonly<Ref<T>>} 只读的 Ref 对象
+ * @example
+ * const getCount = () => 42
+ * const countRef = toRef(getCount)
+ * console.log(countRef.value) // 42
+ */
+
+export function toRef<T>(source: () => T): Readonly<Ref<T>>
+
+/**
+ * 当传入已有的 Ref 时，直接返回原 Ref
+ *
+ * @template T
+ * @param {T} source - 已有的 Ref 对象
+ * @returns {T} 原 Ref 对象
+ * @example
+ * const count = ref(0)
+ * const countRef = toRef(count)
+ * console.log(countRef === count) // true
+ */
+export function toRef<T extends RefSignal>(source: T): T
+
+/**
+ * 当传入任意普通值时，包装为可写的 Ref
+ * @template T - 值的类型
+ * @param {T} value - 普通值
+ * @returns {Ref<T>} 包装后的 Ref 对象
+ * @example
+ * const countRef = toRef(42)
+ * console.log(countRef.value) // 42
+ * countRef.value = 43
+ * console.log(countRef.value) // 43
+ */
+export function toRef<T>(value: T): Ref<T>
+
+/**
+ * 当传入对象与键时，返回一个与该属性双向绑定的 Ref。
+ * 如果属性不存在且传入 defaultValue，则在访问时使用默认值。
+ * @template T - 对象类型
+ * @template K - 键的类型
+ * @param {T} object - 源对象
+ * @param {K} key - 对象的键
+ * @param {T[K]} [defaultValue] - 默认值（可选）
+ * @returns {ToRef<T[K]>} 与对象属性绑定的 Ref 对象
+ * @example
+ * const state = reactive({ count: 0 })
+ * const countRef = toRef(state, 'count')
+ * console.log(countRef.value) // 0
+ * countRef.value++
+ * console.log(state.count) // 1
+ *
+ * // 使用默认值
+ * const nameRef = toRef(state, 'name', 'default')
+ * console.log(nameRef.value) // 'default'
+ */
+export function toRef<T extends object, K extends keyof T>(
+  object: T,
+  key: K,
+  defaultValue?: T[K]
+): ToRef<T[K]>
+
+export function toRef(arg1: any, arg2?: any, arg3?: any): any {
+  // 对象属性重载：toRef(obj, key, defaultValue?)
+  if (arguments.length >= 2) {
+    const object = arg1
+    const key = arg2
+    const defaultValue = arg3
+
+    const val = object[key]
+    if (isRef(val)) return val
+
+    class PropertyRef implements RefSignal {
+      readonly [REF_SIGNAL_SYMBOL] = true
+      readonly [SIGNAL_SYMBOL] = true
+      constructor(
+        private readonly target: any,
+        private readonly key: any,
+        private readonly defaultValue: any
+      ) {}
+      get value() {
+        const v = this.target[this.key]
+        return v === undefined ? this.defaultValue : v
+      }
+      set value(newVal) {
+        this.target[this.key] = newVal
+      }
+    }
+
+    return new PropertyRef(object, key, defaultValue)
+  }
+
+  const value = arg1
+
+  // 如果传入的是 ref，则直接返回
+  if (isRef(value)) return value
+
+  // 如果传入函数，则生成只读 ref
+  if (typeof value === 'function') {
+    class GetterRef implements RefSignal {
+      readonly [REF_SIGNAL_SYMBOL] = true
+      readonly [SIGNAL_SYMBOL] = true
+      get value() {
+        return value()
+      }
+    }
+    return new GetterRef()
+  }
+
+  // 否则包装为普通 ref
+  return ref(value)
+}
+
+/**
+ * 将 reactive 对象的每个属性转换为 ref
+ * 每个 ref 与原对象属性保持双向绑定
+ *
+ * 该函数主要用于解构 reactive 对象，同时保持响应式特性。
+ * 如果传入的是普通对象而非 reactive 对象，会给出警告并仍然创建 ref。
+ *
+ * @template T - 对象类型
+ * @param {T} object - reactive 对象
+ * @returns {{ [K in keyof T]: ToRef<T[K]> }} - 属性到 Ref 的映射
+ * @example
+ * const state = reactive({ count: 0, user: { name: 'Li' } })
+ * const { count, user } = toRefs(state)
+ * count.value++ // state.count === 1
+ * state.user.name = 'Zhang' // user.value.name === 'Zhang'
+ *
+ * // 对于普通对象
+ * const plain = { count: 0 }
+ * const { count: countRef } = toRefs(plain)
+ * // 会给出警告，但仍然创建 ref
+ */
+export function toRefs<T extends object>(object: T): { [K in keyof T]: ToRef<T[K]> } {
+  if (!isReactive(object)) {
+    logger.warn(`toRefs() expects a reactive object but received a plain one.`)
+    const result: any = {}
+    for (const key in object) {
+      const val = (object as any)[key]
+      result[key] = isRef(val) ? val : ref(val)
+    }
+    return result
+  }
+  const ret: any = {}
+  for (const key in object) {
+    const val = (object as any)[key]
+    ret[key] = isRef(val) ? val : toRef(object, key)
+  }
+  return ret
 }
