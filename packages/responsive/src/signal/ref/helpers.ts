@@ -205,6 +205,32 @@ export function unref<T>(ref: T): SignalToRaw<T> {
   return isRefSignal(ref) ? ref.value : (ref as SignalToRaw<T>)
 }
 
+class PropertyRef implements RefSignal {
+  readonly [REF_SIGNAL_SYMBOL] = true
+  readonly [SIGNAL_SYMBOL] = true
+  constructor(
+    private readonly target: any,
+    private readonly key: any,
+    private readonly defaultValue: any
+  ) {}
+  get value() {
+    const v = this.target[this.key]
+    return v === undefined ? this.defaultValue : v
+  }
+  set value(newVal) {
+    this.target[this.key] = newVal
+  }
+}
+
+class GetterRef implements RefSignal {
+  readonly [REF_SIGNAL_SYMBOL] = true
+  readonly [SIGNAL_SYMBOL] = true
+  constructor(private readonly getter: () => any) {}
+  get value() {
+    return this.getter()
+  }
+}
+
 /**
  * 创建一个基于源的 Ref
  *
@@ -224,7 +250,6 @@ export function unref<T>(ref: T): SignalToRaw<T> {
  * const countRef = toRef(getCount)
  * console.log(countRef.value) // 42
  */
-
 export function toRef<T>(source: () => T): Readonly<Ref<T>>
 
 /**
@@ -289,23 +314,6 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
     const val = object[key]
     if (isRef(val)) return val
 
-    class PropertyRef implements RefSignal {
-      readonly [REF_SIGNAL_SYMBOL] = true
-      readonly [SIGNAL_SYMBOL] = true
-      constructor(
-        private readonly target: any,
-        private readonly key: any,
-        private readonly defaultValue: any
-      ) {}
-      get value() {
-        const v = this.target[this.key]
-        return v === undefined ? this.defaultValue : v
-      }
-      set value(newVal) {
-        this.target[this.key] = newVal
-      }
-    }
-
     return new PropertyRef(object, key, defaultValue)
   }
 
@@ -315,17 +323,7 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
   if (isRef(value)) return value
 
   // 如果传入函数，则生成只读 ref
-  if (typeof value === 'function') {
-    class GetterRef implements RefSignal {
-      readonly [REF_SIGNAL_SYMBOL] = true
-      readonly [SIGNAL_SYMBOL] = true
-      constructor(private readonly getter: () => any) {}
-      get value() {
-        return this.getter()
-      }
-    }
-    return new GetterRef(value)
-  }
+  if (typeof value === 'function') return new GetterRef(value)
 
   // 否则包装为普通 ref
   return ref(value)
