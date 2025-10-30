@@ -20,8 +20,6 @@ export const INTRINSIC_ATTRIBUTES = new Set<string>([
   'key',
   'ref',
   'v-if',
-  'v-else',
-  'v-else-if',
   'v-bind',
   'v-show',
   'v-memo',
