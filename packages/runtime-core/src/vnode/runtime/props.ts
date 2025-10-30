@@ -42,7 +42,9 @@ class PropsProxyHandler<T extends Record<string, any>> implements ProxyHandler<T
   public [VNODE_PROPS_DEFAULT_DATA_SYMBOL]?: Partial<T>
   constructor(target: T, defaultProps?: Partial<T>) {
     this.proxy = new Proxy(target, this)
-    if (defaultProps) this[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
+    if (defaultProps && typeof defaultProps === 'object') {
+      this[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
+    }
   }
   get(target: T, prop: string | symbol) {
     if (typeof prop === 'symbol') {
@@ -111,15 +113,22 @@ class PropsProxyHandler<T extends Record<string, any>> implements ProxyHandler<T
  * 创建props代理
  *
  * @internal 内部使用，请勿外部调用。
- * @param {Record<string, any>} props
- * @returns {Reactive<Record<string, any>>}
+ * @param {object} props
+ * @param {object} defaultProps - 默认属性对象
+ * @returns {Readonly<Record<string, any>>} - 只读属性对象
  */
-export function proxyWidgetProps<T extends Record<string | symbol, any>>(props: T): Readonly<T> {
+export function proxyWidgetProps<T extends Record<string | symbol, any>>(
+  props: T,
+  defaultProps?: Partial<T>
+): Readonly<T> {
   // 避免重复代理
   if (props[VNODE_PROPS_PROXY_SYMBOL]) {
+    if (!isRecordObject(defaultProps)) {
+      props[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
+    }
     return props as Readonly<T>
   }
-  return new PropsProxyHandler<T>(props).proxy as Readonly<T>
+  return new PropsProxyHandler<T>(props, defaultProps).proxy as Readonly<T>
 }
 
 /**
