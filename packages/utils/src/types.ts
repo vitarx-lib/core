@@ -37,7 +37,6 @@ export type AnyPrimitive = null | undefined | boolean | number | string | bigint
  * 此类型工具会递归地将对象及其嵌套对象中所有属性设为只读（readonly）
  *
  * @template T - 要处理的对象类型
- * @returns {Object} 一个新类型，其中所有属性及嵌套属性都变为只读
  *
  * @example
  * interface User {
@@ -86,7 +85,6 @@ export type DeepReadonly<T> = {
  * 此类型工具会递归地移除对象及其嵌套对象中所有属性的只读（readonly）修饰符
  *
  * @template T - 要处理的对象类型
- * @returns {Object} 一个新类型，其中所有属性及嵌套属性都不再是只读的
  *
  * @example
  * interface ReadonlyUser {
@@ -137,7 +135,6 @@ export type UnReadonly<T> = {
  *
  * @template T - 要处理的对象类型
  * @template K - 需要设为必填的属性键
- * @returns {Object} 一个新类型，其中K指定的属性变为必填，其他属性保持不变
  *
  * @example
  * interface User {
@@ -159,7 +156,6 @@ export type MakeRequired<T extends {}, K extends keyof T> = Omit<T, K> & {
  * 将对象类型的所有属性及其嵌套属性都变为必填，并移除 undefined 类型
  *
  * @template T - 要处理的对象类型
- * @returns {Object} 一个新类型，其中所有属性及嵌套属性都变为必填
  *
  * @example
  * interface User {
@@ -200,7 +196,6 @@ export type DeepRequired<T> = {
  * 将对象类型的所有属性及其嵌套属性都变为可选
  *
  * @template T - 要处理的对象类型
- * @returns {Object} 一个新类型，其中所有属性及嵌套属性都变为可选
  *
  * @example
  * interface User {
@@ -238,7 +233,6 @@ export type DeepPartial<T> = {
  *
  * @template T - 要处理的对象类型
  * @template K - 需要设为可选的属性键
- * @returns {Object} 一个新类型，其中K指定的属性变为可选，其他属性保持不变
  *
  * @example
  * interface User {
@@ -256,7 +250,6 @@ export type MakePartial<T extends {}, K extends keyof T> = Omit<T, K> & Partial<
  * 提取对象类型中所有可选属性的键
  *
  * @template T - 要被提取的对象类型
- * @returns {string} 一个联合类型，包含T中所有可选属性的键名
  *
  * @example
  * interface User {
@@ -277,7 +270,6 @@ export type OptionalKeys<T extends {}> = {
  * 挑选出对象类型中所有可选属性，并将它们转换为必选属性
  *
  * @template T - 键值对对象类型
- * @returns {Object} 一个新类型，仅包含原类型中的可选属性，但这些属性变为必选且不允许undefined值
  *
  * @example
  * interface User {
@@ -298,7 +290,6 @@ export type PickOptional<T extends {}> = {
  * 提取对象类型中所有必填属性的键
  *
  * @template T - 要被提取的对象类型
- * @returns {string} 一个联合类型，包含T中所有必填属性的键名
  */
 export type RequiredKeys<T extends {}> = {
   [K in keyof T]: undefined extends T[K] ? never : K
@@ -308,7 +299,6 @@ export type RequiredKeys<T extends {}> = {
  * 挑选出必填属性，去除所有可选属性
  *
  * @template T - 键值对对象类型
- * @returns {Object} 一个新类型，仅包含原类型中的必填属性
  *
  * @example
  * interface User {
