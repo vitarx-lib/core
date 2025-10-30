@@ -1,56 +1,44 @@
-/**
- * 事件监听器配置选项接口
- *
- * @interface
- * @description 定义了事件监听器的行为配置选项。这些选项可以控制事件的捕获方式、触发次数和性能优化等特性
- * @example
- * // 配置一个只触发一次的点击事件监听器
- * element.addEventListener("click", handler, { once: true });
- */
-export interface EventOptions {
-  /**
-   * 是否在捕获阶段触发事件监听器
-   *
-   * @type {boolean}
-   * @default false
-   * @description 当设置为true时，事件监听器会在事件捕获阶段被触发，而不是在冒泡阶段
-   */
-  capture?: boolean
-
-  /**
-   * 是否只触发一次事件监听器
-   *
-   * @type {boolean}
-   * @default false
-   * @description 当设置为true时，事件监听器在被触发一次后会自动移除
-   */
-  once?: boolean
-
-  /**
-   * 是否使用被动模式注册事件监听器
-   *
-   * @type {boolean}
-   * @default false
-   * @description 当设置为true时，表示事件监听器永远不会调用preventDefault()，这可以提高滚动性能
-   */
-  passive?: boolean
-}
+type GlobalEventNames =
+  | 'onError'
+  | 'onBlur'
+  | 'onContextMenu'
+  | 'onFocus'
+  | 'onKeyDown'
+  | 'onKeyPress'
+  | 'onKeyUp'
+  | 'onClick'
+  | 'onDblClick'
+  | 'onMouseDown'
+  | 'onMouseMove'
+  | 'onMouseOut'
+  | 'onMouseOver'
+  | 'onMouseUp'
+  | 'onWheel'
+  | 'onScroll'
+  | 'onCopy'
+  | 'onCut'
+  | 'onPaste'
+  | 'onAbort'
+  | 'onTouchStart'
+  | 'onTouchEnd'
+  | 'onTouchCancel'
+  | 'onTouchMove'
 /**
  * 事件修饰符(大驼峰)
  */
-export type EventModifierHump = 'Capture' | 'Once' | 'Passive' | 'OnceCapture'
+type EventModifier = 'Capture' | 'Once' | 'Passive' | 'OnceCapture'
 /**
  * 事件处理函数接口
  *
  * @template T - 元素
  * @template E - 事件类型，可以是Event或UIEvent
  */
-export type EventHandler<T extends Element, E extends Event | UIEvent> = (this: T, event: E) => void
+type EventHandler<T extends Element, E extends Event | UIEvent> = (this: T, event: E) => void
 
 /**
  * 所有事件映射，小驼峰事件名
  */
-export interface EventHumpMap<T extends Element> {
+interface HumpNameEventMap<T extends Element> {
   /**
    * 在发生错误时触发
    * @see https://developer.mozilla.org/docs/Web/API/Window/error_event
@@ -425,177 +413,149 @@ export interface EventHumpMap<T extends Element> {
    */
   onTouchMove?: EventHandler<T, TouchEvent>
 }
-
 /**
  * 所有事件映射，小写事件名
  */
-export type EventLowerMap<T extends Element> = {
-  [K in keyof EventHumpMap<T> as Lowercase<K>]: EventHumpMap<T>[K]
+type LowerNameEventMap<T extends Element> = {
+  [K in keyof HumpNameEventMap<T> as Lowercase<K>]: HumpNameEventMap<T>[K]
 }
+
+/**
+ * 所有事件映射，驼峰事件名
+ */
+type EventNameMap = {
+  onerror: 'onError'
+  onload: 'onLoad'
+  onblur: 'onBlur'
+  onchange: 'onChange'
+  oncontextmenu: 'onContextMenu'
+  onfocus: 'onFocus'
+  oninput: 'onInput'
+  oninvalid: 'onInvalid'
+  onreset: 'onReset'
+  onsearch: 'onSearch'
+  onselect: 'onSelect'
+  onsubmit: 'onSubmit'
+  onkeydown: 'onKeyDown'
+  onkeypress: 'onKeyPress'
+  onkeyup: 'onKeyUp'
+  onclick: 'onClick'
+  ondblclick: 'onDblClick'
+  onmousedown: 'onMouseDown'
+  onmousemove: 'onMouseMove'
+  onmouseout: 'onMouseOut'
+  onmouseover: 'onMouseOver'
+  onmouseup: 'onMouseUp'
+  onwheel: 'onWheel'
+  ondrag: 'onDrag'
+  ondragend: 'onDragEnd'
+  ondragenter: 'onDragEnter'
+  ondragleave: 'onDragLeave'
+  ondragover: 'onDragOver'
+  ondragstart: 'onDragStart'
+  ondrop: 'onDrop'
+  onscroll: 'onScroll'
+  oncopy: 'onCopy'
+  oncut: 'onCut'
+  onpaste: 'onPaste'
+  onabort: 'onAbort'
+  oncanplay: 'onCanPlay'
+  oncanplaythrough: 'onCanPlayThrough'
+  oncuechange: 'onCueChange'
+  ondurationchange: 'onDurationChange'
+  onemptied: 'onEmptied'
+  onended: 'onEnded'
+  onloadeddata: 'onLoadedData'
+  onloadedmetadata: 'onLoadedMetadata'
+  onloadstart: 'onLoadStart'
+  onpause: 'onPause'
+  onplay: 'onPlay'
+  onplaying: 'onPlaying'
+  onprogress: 'onProgress'
+  onratechange: 'onRateChange'
+  onseeked: 'onSeeked'
+  onseeking: 'onSeeking'
+  onstalled: 'onStalled'
+  onsuspend: 'onSuspend'
+  ontimeupdate: 'onTimeUpdate'
+  onvolumechange: 'onVolumeChange'
+  onwaiting: 'onWaiting'
+  ontoggle: 'onToggle'
+  ontouchstart: 'onTouchStart'
+  ontouchend: 'onTouchEnd'
+  ontouchcancel: 'onTouchCancel'
+  ontouchmove: 'onTouchMove'
+}
+
 /**
  * 所有事件映射，小驼峰支持修饰符
  */
-export type EventModifierMap<T extends Element> = {
-  [K in keyof EventHumpMap<T> as `${K}${EventModifierHump}`]: EventHumpMap<T>[K]
+type EventModifierMap<T extends Element> = {
+  [K in keyof HumpNameEventMap<T> as `${K}${EventModifier}`]: HumpNameEventMap<T>[K]
 }
+
 /**
  * 所有事件名，小写
  */
-export type EventLowerNames = keyof EventLowerMap<Element>
-/**
- * 所有事件名，全小写、小驼峰、修饰符
- */
-export type EventNames =
-  | EventLowerNames
-  | keyof EventModifierMap<Element>
-  | keyof EventHumpMap<Element>
-
+type EventLowerNames = keyof LowerNameEventMap<Element>
 /**
  * 全局HTML事件接口，包含可在全局范围内使用的事件
  */
-export interface HTMLGlobalEvents<T extends Element> {
-  /**
-   * 在发生错误时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Window/error_event
-   */
-  onError?: EventHandler<T, ErrorEvent>
-
-  /**
-   * 当元素失去焦点时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/blur_event
-   */
-  onBlur?: EventHandler<T, FocusEvent>
-
-  /**
-   * 当右键点击元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/contextmenu_event
-   */
-  onContextMenu?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当元素获得焦点时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/focus_event
-   */
-  onFocus?: EventHandler<T, FocusEvent>
-
-  /**
-   * 当键盘按键被按下时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/keydown_event
-   */
-  onKeyDown?: EventHandler<T, KeyboardEvent>
-
-  /**
-   * 当键盘按键被按下并释放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/keypress_event
-   * @deprecated 建议使用keydown代替
-   */
-  onKeyPress?: EventHandler<T, KeyboardEvent>
-
-  /**
-   * 当键盘按键被释放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/keyup_event
-   */
-  onKeyUp?: EventHandler<T, KeyboardEvent>
-
-  /**
-   * 当元素被点击时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/click_event
-   */
-  onClick?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当元素被双击时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/dblclick_event
-   */
-  onDblClick?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当鼠标按钮在元素上按下时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mousedown_event
-   */
-  onMouseDown?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当鼠标指针在元素上移动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mousemove_event
-   */
-  onMouseMove?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当鼠标指针移出元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseout_event
-   */
-  onMouseOut?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当鼠标指针移入元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseover_event
-   */
-  onMouseOver?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当鼠标按钮在元素上释放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseup_event
-   */
-  onMouseUp?: EventHandler<T, MouseEvent>
-
-  /**
-   * 当鼠标滚轮在元素上滚动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/wheel_event
-   */
-  onWheel?: EventHandler<T, WheelEvent>
-
-  /**
-   * 当元素的滚动条被滚动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/scroll_event
-   */
-  onScroll?: EventHandler<T, Event>
-
-  /**
-   * 当用户复制元素内容时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/copy_event
-   */
-  onCopy?: EventHandler<T, ClipboardEvent>
-
-  /**
-   * 当用户剪切元素内容时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/cut_event
-   */
-  onCut?: EventHandler<T, ClipboardEvent>
-
-  /**
-   * 当用户粘贴内容到元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/paste_event
-   */
-  onPaste?: EventHandler<T, ClipboardEvent>
-
-  /**
-   * 当媒体加载终止时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/abort_event
-   */
-  onAbort?: EventHandler<T, Event>
-
-  /**
-   * 当触摸事件开始时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchstart_event
-   */
-  onTouchStart?: EventHandler<T, TouchEvent>
-
-  /**
-   * 当触摸事件结束时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchend_event
-   */
-  onTouchEnd?: EventHandler<T, TouchEvent>
-
-  /**
-   * 当触摸事件被取消时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchcancel_event
-   */
-  onTouchCancel?: EventHandler<T, TouchEvent>
-
-  /**
-   * 当触摸事件移动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchmove_event
-   */
-  onTouchMove?: EventHandler<T, TouchEvent>
+type HTMLGlobalEvents<T extends Element> = {
+  [K in GlobalEventNames]: HumpNameEventMap<T>[K]
+} & {
+  [K in GlobalEventNames as `${K}${EventModifier}`]: HumpNameEventMap<T>[K]
 }
+type SupportHumpNameEvents<T extends Element> = {
+  [K in keyof T as K extends EventLowerNames ? EventNameMap[K] : never]?: K extends EventLowerNames
+    ? HumpNameEventMap<T>[EventNameMap[K]]
+    : never
+} & {
+  [K in keyof T as K extends EventLowerNames
+    ? `${EventNameMap[K]}${EventModifier}`
+    : never]?: K extends EventLowerNames
+    ? EventModifierMap<T>[`${EventNameMap[K]}${EventModifier}`]
+    : never
+}
+/**
+ * 事件监听器配置选项接口
+ *
+ * @interface
+ * @description 定义了事件监听器的行为配置选项。这些选项可以控制事件的捕获方式、触发次数和性能优化等特性
+ * @example
+ * // 配置一个只触发一次的点击事件监听器
+ * element.addEventListener("click", handler, { once: true });
+ */
+export interface HTMLEventOptions {
+  /**
+   * 是否在捕获阶段触发事件监听器
+   *
+   * @type {boolean}
+   * @default false
+   * @description 当设置为true时，事件监听器会在事件捕获阶段被触发，而不是在冒泡阶段
+   */
+  capture?: boolean
+
+  /**
+   * 是否只触发一次事件监听器
+   *
+   * @type {boolean}
+   * @default false
+   * @description 当设置为true时，事件监听器会被触发一次后会自动移除
+   */
+  once?: boolean
+
+  /**
+   * 是否使用被动模式注册事件监听器
+   *
+   * @type {boolean}
+   * @default false
+   * @description 当设置为true时，表示事件监听器永远不会调用preventDefault()，这可以提高滚动性能
+   */
+  passive?: boolean
+}
+/**
+ * HTML元素事件接口
+ */
+export type HTMLElementEvents<T extends Element> = SupportHumpNameEvents<T> &
+  Omit<HTMLGlobalEvents<T>, keyof SupportHumpNameEvents<T>>

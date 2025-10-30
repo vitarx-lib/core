@@ -1,175 +1,6 @@
-import type { RefSignal } from '@vitarx/responsive'
-import type { RefEl } from '../ref.js'
-import type { EventHumpMap, EventLowerMap, EventLowerNames, EventModifierMap } from './event.js'
-import type { ClassProperties, StyleProperties } from './style.js'
-import type { AnyChildren } from './vnode.js'
-
-/**
- * 唯一键
- *
- * null 和 undefined 会被忽略
- */
-export type UniqueKey = string | symbol | number | boolean | bigint | object | null | undefined
-
-/**
- * 绑定属性
- *
- * 可选值：
- *   - 对象Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
- *   - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，第二个元素可以指定哪些属性不需要绑定。
- */
-export type VBind = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
-
-/**
- * PropValue是一个属性值类型工具
- *
- * 通过泛型T指定属性值的类型，返回一个联合类型，使其支持传入ref创建的引用信号类型
- *
- * @template T - 属性值的类型
- */
-export type PropValue<T> = T extends RefSignal ? T : T | RefSignal<T>
-
-/**
- * 父元素
- */
-export type VParent =
-  | string
-  | ParentNode
-  | Element
-  | null
-  | undefined
-  | (() => string | ParentNode | Element | null | undefined)
-
-/**
- * 全局固有属性
- *
- * 提供给 JSX.IntrinsicAttributes使用
- */
-export interface IntrinsicProperties extends GlobalProperties {
-  /**
-   * 额外的任意属性
-   */
-  [key: string]: any
-}
-
-/**
- * Vitarx框架全局属性
- */
-export interface GlobalProperties {
-  /**
-   * 控制一个 `VNode` 如何替换树中的另一个 `VNode`。
-   *
-   * 在运行时，如果两个`VNode`的`key`相同，则会更新已渲染的`VNode`，否则会移除旧`VNode`，然后插入新`VNode`。
-   *
-   * 这在某些情况下很有用，例如，当您想重新排序列表时。
-   *
-   * 通常，作为另一个 `VNode` 的唯一子项不需要显式键。
-   *
-   * 除了 undefined 和 null，其他值都会被视为有效的唯一键。
-   */
-  key?: UniqueKey
-  /**
-   * 引用组件/元素实例
-   */
-  ref?: RefEl<any>
-  /**
-   * 绑定属性
-   *
-   * 注意：不能通过 `v-bind` 指令绑定内部固有属性(ref、key、children...)。
-   * 如需支持绑定内部属性，需使用 `v-bind-all`。以上限制对 动态组件和简单组件无效。
-   *
-   * 可选值：
-   *  - Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
-   *  - [props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
-   *  第二个元素可以指定哪些属性不需要绑定。
-   */
-  'v-bind'?: VBind
-  /**
-   * 绑定所有属性
-   *
-   * `v-bind-all` 绑定所有属性到节点（包含 ref、key 等属性），
-   * 同时也支持排除不需要绑定的属性，在创建节点之前完成绑定。
-   *
-   * 大部分场景我们应该使用 `v-bind` ，`v-bind-all` 的存在是为了将外部传入的属性都绑定给元素/组件时使用。
-   *
-   * 下面是简单组件将ref/key等属性完整的绑定给元素的使用场景示例：
-   * @example
-   * ```tsx
-   * const SimpleWidget = defineSimpleWidget((props) => {
-   *    // 这样外部传入的 ref 会被作用到 div
-   *    return <div v-bind-all={props}></div>
-   * })
-   * ```
-   */
-  'v-bind-all'?: VBind
-  /**
-   * 条件渲染指令
-   *
-   * 如果是`v-if`的`value`==`false`，则会使用 CommonVNode 代替原始节点，
-   * CommonVNode节点的开销非常小，通过开发者工具可以看见 `<!--v-if-->` 注释。
-   *
-   * 我们更推荐使用 jsx 语法的条件渲染，如：
-   * ```tsx
-   * const show = ref(false)
-   * // v-if 语法
-   * <div v-if={show}>要显示的元素</div>
-   * // jsx 条件判断语法
-   * { show.value && <div>要显示的元素</div> }
-   * ```
-   */
-  'v-if'?: PropValue<boolean>
-  /**
-   * 显示/隐藏节点
-   *
-   * 此属性会给元素添加上 `display: none` 样式，它可能会和元素原有的样式冲突，请自行处理。
-   *
-   * @example
-   * ```tsx
-   * const show = ref(false)
-   * // v-show 语法的使用 可以忽略.value
-   * <div v-show={show}></div>
-   * // 渲染结果
-   * <div style="display: none;"></div>
-   * ```
-   */
-  'v-show'?: PropValue<boolean>
-  /**
-   * 缓存节点的指令
-   *
-   * 该指令接收一个固定引用(在生命周期中保持引用不变)的数组，内部会将虚拟节点与该数组进行绑定。
-   * 当重新创建该节点时会判断数组内容是否相同，如果相同则会复用缓存的节点，如果不同则会创建新的节点，并刷新缓存。
-   *
-   * 示例：
-   * ```tsx
-   * function App() {
-   *  const memo = [1, 2, 3]
-   *  return <div v-memo={memo}>
-   *    此div节点会被缓存，只到memo的数组内容改变时才会重新创建新的节点，这样做能够在重绘时减少不必要的新节点创建。
-   *  </div>
-   * }
-   * ```
-   */
-  'v-memo'?: any[]
-  /**
-   * 静态节点的指令
-   *
-   * 该指令将节点标记为静态节点，只会被渲染一次，并跳过之后的更新（包括子节点更新）。
-   */
-  'v-static'?: PropValue<boolean>
-  /**
-   * 父元素 - 支持选择器或 `HTMLElement` 实例
-   *
-   * ```tsx
-   * // 在html元素中使用
-   * <div v-parent="#container">此div将会挂载到id为#container的容器中</div>
-   * // 在组件上使用，使组件的内容挂载到body中，如果组件内部通过`onBeforeMount`钩子指定了父元素，`v-parent`将无效
-   * <YourWidget v-parent={document.body}></YourWidget>
-   * // 使用getter做为查询器
-   * <div v-parent={() => document.querySelector('#container')}></div>
-   * ```
-   */
-  'v-parent'?: VParent
-}
+import type { Child } from '@vitarx/runtime-core'
+import type { Properties as CssProperties } from 'csstype'
+import { type HTMLElementEvents } from './event.js'
 
 /**
  * 从W3C文档中提取到的合法标签属性，用于生成类型
@@ -180,7 +11,7 @@ export interface GlobalProperties {
  *
  * @see https://www.w3schools.com/tags/ref_standardattributes.asp
  */
-type PropertyNames =
+type AttributeNames =
   | 'classname'
   | 'accept'
   | 'acceptcharset'
@@ -358,25 +189,17 @@ type PropertyNames =
 /**
  * 判断一个属性P是否存在于W3C标准属性中
  */
-type IsW3CHtmlProperties<P extends string> = Lowercase<P> extends PropertyNames ? P : never
-/**
- * 将对象的所有属性转换为可选的响应式信号类型
- *
- * @template T - 目标对象类型，必须是一个对象类型
- * @remarks
- * 该类型用于将对象的所有属性转换为可选的响应式信号类型。
- * 转换后的每个属性可以是原始类型，也可以是 `RefSignal` 类型。
- */
-type SupportRefSignal<T extends {}> = {
-  [key in keyof T]: PropValue<T[key]>
-}
+type IsW3CHtmlProperties<P extends string> = Lowercase<P> extends AttributeNames ? P : never
 
 type BoolType = 'true' | 'false' | boolean
-
 /**
  * 局部属性
  */
-interface PartProperties {
+interface PartAttributes {
+  /**
+   * 子元素
+   */
+  children?: Child | Child[]
   /**
    * 表单控件的类型
    *
@@ -554,11 +377,18 @@ interface PartProperties {
    */
   step?: number | string
 }
-
+/**
+ * CSS 样式规则类型
+ */
+export type HTMLStyleRules = {
+  [K in keyof CssProperties]: CssProperties[K]
+} & {
+  [key: `--${string}`]: string | 0
+}
 /**
  * 全局属性
  */
-interface GlobalHTMLProperties {
+interface GlobalAttributes {
   /**
    * 全局属性 `style` 包含应用到元素的 CSS 样式声明。
    *
@@ -569,13 +399,13 @@ interface GlobalHTMLProperties {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/style 完整文档
    */
-  style?: string | StyleProperties
+  style?: string | HTMLStyleRules
   /**
    * 全局HTML属性`className`接受字符串、数组和`Record<string, boolean>`类型的对象。
    *
    * 和`class`作用相同
    */
-  className?: ClassProperties
+  className?: string | string[] | Record<string, boolean>
   /**
    * 定义元素宽度。
    */
@@ -759,24 +589,19 @@ interface GlobalHTMLProperties {
 }
 
 /**
- * HTML全局属性接口
- */
-export type HTMLGlobalProperties = SupportRefSignal<GlobalHTMLProperties & CustomHTMLProperties>
-
-/**
  * 要覆盖的HTML属性，并返回一个新对象接口。
  */
-type CoverProperties = SupportRefSignal<GlobalHTMLProperties & PartProperties>
+type CoverAttributes = GlobalAttributes & PartAttributes
 
 /**
  * 要覆盖HTML属性的键
  */
-type CoverPropertiesNames = keyof CoverProperties
+type CoverPropertiesNames = keyof CoverAttributes
 
 /**
  * 自定义全局HTML属性
  */
-interface CustomHTMLProperties {
+interface CustomHTMLAttributes {
   /**
    * 全局HTML属性`class`接受字符串、数组和`Record<string, boolean>`类型的对象。
    *
@@ -793,21 +618,11 @@ interface CustomHTMLProperties {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
    */
-  class?: ClassProperties
+  class?: string | string[] | Record<string, boolean>
   /**
    * `v-html` 是框架的自定义属性，用于在元素中插入 HTML 代码。
    */
   'v-html'?: string
-  /**
-   * 子元素
-   *
-   * ```jsx
-   * <div>
-   *   <span>hello</span>
-   * </div>
-   * ```
-   */
-  children?: AnyChildren
   /**
    * 未知属性
    *
@@ -819,42 +634,16 @@ interface CustomHTMLProperties {
 /**
  * 从对象接口中提取出符合W3C标准的属性，并返回一个新对象接口。
  */
-type ExtractElementProperties<T extends Element> = {
-  [K in keyof T as K extends string ? IsW3CHtmlProperties<K> : never]?: K extends EventLowerNames
-    ? EventLowerMap<T>[K]
-    : K extends CoverPropertiesNames
-      ? CoverProperties[K]
-      : RefSignal<T[K]> | T[K]
-}
+type ExtractElementAttributes<T extends Element> = {
+  [K in keyof T as K extends string
+    ? IsW3CHtmlProperties<K>
+    : never]?: K extends CoverPropertiesNames ? CoverAttributes[K] : T[K]
+} & HTMLElementEvents<T> &
+  GlobalAttributes
 
 /**
  * 生成HTML标签可选属性，包括事件和自定义数据属性
  *
  * @template T - 元素类型
  */
-export type ElementProperties<T extends Element> = ExtractElementProperties<T> &
-  EventHumpMap<T> &
-  EventModifierMap<T> &
-  CustomHTMLProperties &
-  IntrinsicProperties
-
-/**
- * 推导出HTML属性
- *
- * @example
- * ```tsx
- * // 继承HTML属性，可以使组件能够接收任意div元素的属性
- * interface Props extends HTMLProperties<HTMLDivElement> {
- *   children?: string
- * }
- *
- * function MyComponent(props: Props) {
- *  return <div v-bind={props}>{props.children}</div>
- * }
- *
- * <MyComponent onClick={()=>console.log('hello')}>hello</MyComponent>
- * ```
- *
- * @template T - 元素类型
- */
-export type HTMLProperties<T extends Element> = Omit<ElementProperties<T>, 'children'>
+export type HTMLElementProps<T extends Element> = ExtractElementAttributes<T> & CustomHTMLAttributes

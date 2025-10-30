@@ -1,0 +1,42 @@
+{
+  "name": "@vitarx/runtime-dom",
+  "version": "0.0.1",
+  "description": "Vitarx runtime-dom package",
+  "author": "ZhuChongLin <8210856@qq.com>",
+  "license": "MIT",
+  "keywords": [
+    "vitarx",
+    "runtime-dom"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitarx-lib/core",
+    "directory": "packages/runtime-dom"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.iife.js",
+  "jsdelivr": "dist/index.iife.js",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./unpkg": "./dist/index.iife.js",
+    "./jsdelivr": "./dist/index.iife.js"
+  },
+  "dependencies": {
+    "@vitarx/runtime-core": "workspace:^",
+    "@vitarx/utils": "workspace:^",
+    "csstype": "^3.1.3"
+  }
+}
