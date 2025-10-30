@@ -63,7 +63,7 @@ export type Unreactive<T> = T extends Reactive<infer U> ? U : T
  * 响应式代理对象标识符
  */
 export const REACTIVE_PROXY_SYMBOL = Symbol('REACTIVE_PROXY_SYMBOL')
-const STATIC_SYMBOL = [SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL]
+const STATIC_SYMBOL = new Set([SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROXY_SYMBOL])
 /**
  * # 响应式代理对象处理器
  *
@@ -99,7 +99,7 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
   /**
    * 代理对象
    */
-  #proxy: Reactive<T, Deep> | null = null
+  private _proxy: Reactive<T, Deep> | null = null
 
   /**
    * 创建响应式代理对象处理器实例
@@ -146,13 +146,13 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
    */
   get proxy(): Reactive<T, Deep> {
     // 如果代理对象不存在，则创建一个新的代理对象
-    if (!this.#proxy) {
+    if (!this._proxy) {
       // 使用Proxy构造函数创建代理，将this作为handler处理器
       // 并将结果断言为Reactive<T, Deep>类型
-      this.#proxy = new Proxy(this.target, this) as Reactive<T, Deep>
+      this._proxy = new Proxy(this.target, this) as Reactive<T, Deep>
     }
     // 返回已经创建的代理对象
-    return this.#proxy
+    return this._proxy
   }
 
   /**
@@ -171,7 +171,7 @@ export class ReactiveProxyHandler<T extends AnyObject, Deep extends boolean = tr
   get(target: T, prop: AnyKey, receiver: any): any {
     // 拦截内部标识符属性
     if (typeof prop === 'symbol') {
-      if (STATIC_SYMBOL.includes(prop)) return true
+      if (STATIC_SYMBOL.has(prop)) return true
       if (prop === DEEP_SIGNAL_SYMBOL) return this.options.deep
       if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
       if (prop === SubManager.TARGET_SYMBOL) return receiver
@@ -316,11 +316,12 @@ function createCollectionProxy(target: any, type: 'set' | 'map') {
   }
   const proxy = new Proxy(target, {
     get(target: any, prop: string | symbol, receiver: any): any {
-      if (prop === SIGNAL_SYMBOL || prop === PROXY_SIGNAL_SYMBOL || prop === REACTIVE_PROXY_SYMBOL)
-        return true
-      if (prop === DEEP_SIGNAL_SYMBOL) return false
-      if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
-      if (prop === SubManager.TARGET_SYMBOL) return proxy
+      if (typeof prop === 'symbol') {
+        if (STATIC_SYMBOL.has(prop)) return true
+        if (prop === DEEP_SIGNAL_SYMBOL) return false
+        if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
+        if (prop === SubManager.TARGET_SYMBOL) return proxy
+      }
       if (typeof prop === 'string') {
         if (prop === 'clear' || prop === 'delete') {
           return triggerSizeChange(prop)
@@ -334,9 +335,7 @@ function createCollectionProxy(target: any, type: 'set' | 'map') {
       }
       Depend.track(proxy, 'size')
       const value = Reflect.get(target, prop, receiver)
-      if (typeof value === 'function') {
-        return value.bind(target)
-      }
+      if (typeof value === 'function') return value.bind(target)
       return value
     }
   })
@@ -357,6 +356,7 @@ function getObjectType(target: AnyObject): 'object' | 'set' | 'map' {
   // 如果既不是 Set 也不是 Map，则返回普通对象类型
   return 'object'
 }
+
 /**
  * ## 创建响应式代理信号
  *
