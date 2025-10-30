@@ -1,0 +1,48 @@
+import { getDomAdapter } from '../../host-adapter/index.js'
+import type { NonElementNodeType } from '../../types/index.js'
+import { HostNode } from './HostNode.js'
+
+/**
+ * 无标签虚拟节点抽象基类，用于表示没有标签的节点，如文本节点和注释节点。
+ * 该类继承自VNode，提供了对无标签节点的基本操作和管理功能。
+ *
+ * 核心功能：
+ * - 管理节点的文本值
+ * - 提供节点的挂载、激活、停用和卸载功能
+ * - 支持静态节点的特殊处理
+ *
+ * @example
+ * // 创建文本节点
+ * const textNode = new TextNode('hello');
+ * textNode.mount(document.body);
+ *
+ * 使用限制：
+ * - 不支持任何属性设置
+ * - 只能用于纯文本节点和注释节点
+ */
+export abstract class NonElementNode<T extends NonElementNodeType> extends HostNode<T> {
+  get value(): string {
+    return this.props.value
+  }
+  /**
+   * 设置值的setter方法
+   * @param {string} value - 要设置的值
+   */
+  set value(value: string) {
+    // 如果不是静态值且新值与当前值不同
+    if (!this.isStatic && value !== this.value) {
+      // 更新私有属性#value
+      this.props.value = value
+      // 更新DOM元素的节点值
+      getDomAdapter().setText(this.element, value)
+    }
+  }
+  /**
+   * @inheritDoc
+   */
+  protected override handleShowState(is: boolean): void {
+    // 设置元素的文本内容
+    // 如果is为true，则显示this.value；否则显示空字符串
+    this.dom.setText(this.element, is ? this.value : '')
+  }
+}

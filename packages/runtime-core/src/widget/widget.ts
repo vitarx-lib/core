@@ -1,30 +1,13 @@
-import { EffectScope, NOT_SIGNAL_SYMBOL } from '@vitarx/responsive'
-import { getCurrentVNode } from '../vnode/context.js'
-import {
-  type AnyElement,
-  type MergeProps,
-  type RuntimeElement,
-  type VNode,
-  type VParent,
-  type WidgetVNode
-} from '../vnode/index.js'
-import { VNodeUpdate } from '../vnode/update.js'
+import { EffectScope, NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
+import type {
+  Child,
+  ErrorInfo,
+  ExtractChildrenPropType,
+  HostElementInstance,
+  MergeProps
+} from '../types/index.js'
+import { getCurrentVNode, VNode, VNodeUpdate, type WidgetNode } from '../vnode/index.js'
 import { CLASS_WIDGET_BASE_SYMBOL } from './constant.js'
-import { type ClassWidget, type ErrorInfo } from './types/index.js'
-
-/**
- * VNode类型的别名
- */
-export type Element = VNode
-export type VitarxElement = VNode
-/**
- * 此类型用于推导出小部件的子节点类型。
- */
-type WidgetChildren<P> = P extends { children: infer U }
-  ? U
-  : P extends { children?: infer U }
-    ? U | undefined
-    : never
 
 /**
  * 所有小部件的基类
@@ -61,27 +44,21 @@ export abstract class Widget<
   DefaultProps extends InputProps = InputProps
 > {
   /**
-   * 禁止代理小部件实例
-   */
-  get [NOT_SIGNAL_SYMBOL]() {
-    return true
-  }
-  /**
    * 类小部件标识符符
    */
   static [CLASS_WIDGET_BASE_SYMBOL] = true
-  /**
-   * 小部件关联的虚拟节点
-   *
-   * @private
-   */
-  readonly #vnode: WidgetVNode
   /**
    * 存储小部件的传入属性
    *
    * @private
    */
   readonly #props: InputProps
+  /**
+   * 小部件关联的虚拟节点
+   *
+   * @private
+   */
+  readonly #vnode: WidgetNode
 
   constructor(props: InputProps) {
     this.#vnode = getCurrentVNode()!
@@ -89,11 +66,14 @@ export abstract class Widget<
       throw new Error('The Widget instance must be created in the context of the WidgetVNode')
     }
     this.#props = props
-    if (import.meta.env?.MODE !== 'development' || !this.#vnode.__$HMR_STATE$__) {
-      // 仅在非开发环境或开发环境不处于HMR模式下，才触发 create 生命周期钩子
-      // 切记不能使用this.#vnode.triggerLifecycleHook触发钩子，会导致无限循环
-      this.onCreate?.call(this)
-    }
+    this.onCreate?.call(this)
+  }
+
+  /**
+   * 禁止代理小部件实例
+   */
+  get [NON_SIGNAL_SYMBOL]() {
+    return true
   }
 
   /**
@@ -109,10 +89,12 @@ export abstract class Widget<
    *
    * 这是一个getter方法，用于返回当前小部件的子节点列表
    *
-   * @returns {WidgetChildren<InputProps>} 返回子节点列表
+   * @returns {ExtractChildrenPropType<InputProps>} 返回子节点列表
    */
-  get children(): WidgetChildren<MergeProps<InputProps, DefaultProps>> {
-    return this.#vnode.children as WidgetChildren<MergeProps<InputProps, DefaultProps>> // 将vnode的children转换为WidgetChildren类型并返回
+  get children(): ExtractChildrenPropType<MergeProps<InputProps, DefaultProps>> {
+    return (this.props as unknown as Record<'children', any>).children as ExtractChildrenPropType<
+      MergeProps<InputProps, DefaultProps>
+    >
   }
 
   /**
@@ -126,38 +108,18 @@ export abstract class Widget<
   /**
    * 获取当前虚拟节点对应的 DOM 元素
    * 这是一个 getter 属性，用于返回小部件或虚拟节点挂载后的真实 DOM 元素
-   * @returns {AnyElement} 返回虚拟节点对应的 DOM 元素实例
+   * @returns { HostElementInstance } 返回虚拟节点对应的 DOM 元素实例
    */
-  get $el(): AnyElement {
+  get $el(): HostElementInstance {
     return this.#vnode.element
   }
 
   /**
    * 获取小部件的虚拟DOM节点
-   * @returns {WidgetVNode} 返回小部件的虚拟DOM节点
+   * @returns {WidgetNode} 返回小部件的虚拟DOM节点
    */
-  get $vnode(): WidgetVNode {
+  get $vnode(): WidgetNode {
     return this.#vnode
-  }
-
-  /**
-   * 判断给定的值是否为 ClassWidget 类型的实例
-   *
-   * @param val - 需要检查的值
-   * @returns {val is ClassWidget} - 如果值是 ClassWidget 类型返回 true，否则返回 false
-   *
-   * @remarks
-   * 该方法通过检查对象上是否存在特定的符号属性 CLASS_WIDGET_BASE_SYMBOL，
-   * 并且该属性的值为 true 来判断对象是否为 ClassWidget 类型。
-   *
-   * @example
-   * ```typescript
-   * const widget = new SomeWidget();
-   * console.log(isClassWidget(widget)); // 取决于 widget 是否实现了 ClassWidget 接口
-   * ```
-   */
-  static isClassWidget(val: any): val is ClassWidget {
-    return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
   }
 
   /**
@@ -183,7 +145,7 @@ export abstract class Widget<
    * }
    * ```
    */
-  onBeforeMount?(): void | VParent
+  onBeforeMount?(): void
 
   /**
    * 小部件挂载后调用
@@ -357,7 +319,7 @@ export abstract class Widget<
    * }
    * ```
    */
-  onError?(error: unknown, info: ErrorInfo): Element | void
+  onError?(error: unknown, info: ErrorInfo): VNode | void
 
   /**
    * 移除元素前调用
@@ -373,7 +335,10 @@ export abstract class Widget<
    *   setTimeout(resolve, 300) // 延迟300ms后移除元素
    * })
    */
-  onBeforeRemove?<T extends RuntimeElement>(el: T, type: 'unmount' | 'deactivate'): Promise<void>
+  onBeforeRemove?<T extends HostElementInstance>(
+    el: HostElementInstance,
+    type: 'unmount' | 'deactivate'
+  ): Promise<void>
 
   /**
    * 服务端预取钩子
@@ -405,9 +370,9 @@ export abstract class Widget<
    * }
    * ```
    * @remarks 该方法应由子类实现，且该方法仅供内部渲染逻辑使用。
-   * @returns {VitarxElement|null} - 返回VNode节点或null
+   * @returns { Child } - 返回VNode节点或null
    */
-  abstract build(): VitarxElement | null
+  abstract build(): Child
 
   /**
    * 对虚拟节点进行打补丁更新操作
@@ -418,7 +383,7 @@ export abstract class Widget<
    * @param newVNode - 新的虚拟节点，表示更新后的DOM状态
    * @returns {VNode} 返回更新后的虚拟节点
    */
-  $patchUpdate(oldVNode: Element, newVNode: Element): Element {
+  $patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
     return VNodeUpdate.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
   }
 
@@ -428,8 +393,8 @@ export abstract class Widget<
    *
    * @param {VNode} newChildVNode 可选参数，新的子节点虚拟节点
    */
-  update(newChildVNode?: Element): void {
+  forceUpdate(newChildVNode?: Child): void {
     // 调用当前虚拟节点的updateChild方法，传入新的子节点VNode进行更新
-    this.$vnode.updateChild(newChildVNode)
+    // this.$vnode.updateChild(newChildVNode)
   }
 }

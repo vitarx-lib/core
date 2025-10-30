@@ -18,34 +18,31 @@ export enum LifecycleHooks {
  */
 export const __WIDGET_INTRINSIC_METHOD_KEYWORDS__ = [
   'build',
-  'update',
+  'forceUpdate',
   '$patchUpdate',
   ...Object.values(LifecycleHooks)
 ] as const
-
 /**
  * 组件内部保留属性
  */
 export const __WIDGET_INTRINSIC_PROPERTY_KEYWORDS__ = ['$scope', '$el', '$vnode'] as const
-
 /**
  * 组件内部保留关键字
  */
-export const __WIDGET_INTRINSIC_KEYWORDS__ = [
+export const __WIDGET_INTRINSIC_KEYWORDS__: ReadonlySet<string> = new Set([
   ...__WIDGET_INTRINSIC_PROPERTY_KEYWORDS__,
   ...__WIDGET_INTRINSIC_METHOD_KEYWORDS__
-] as const
+])
 
 /**
  * 简单函数组件的标识符
  */
 export const SIMPLE_FUNCTION_WIDGET_SYMBOL = Symbol('SIMPLE_FUNCTION_WIDGET_SYMBOL')
-/** 排除保留方法 */
-export type ExcludeWidgetIntrinsicKeywords<T> = Omit<
+/** 排除组件内部保留的方法 */
+export type ExcludeWidgetIntrinsicMethods<T> = Omit<
   T,
   (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
 >
-
 /**
  * 类小部件的标识符
  */

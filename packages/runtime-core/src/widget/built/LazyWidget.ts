@@ -113,7 +113,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   }
 
   override onMounted() {
-    if (this.toBeUpdated) this.update()
+    if (this.toBeUpdated) this.forceUpdate()
   }
 
   build(): VNode | null {
@@ -135,7 +135,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     if (this.$vnode.state === 'notMounted') {
       this.toBeUpdated = true
     } else if (this.$vnode.state === 'activated') {
-      this.update()
+      this.forceUpdate()
     }
   }
 

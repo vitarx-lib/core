@@ -119,7 +119,7 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
       this.listener?.dispose()
       this.showFallback = false
       this.listener = undefined
-      this.update()
+      this.forceUpdate()
       if (typeof this.props.onShow === 'function') {
         this.onShow = this.props.onShow
       }

@@ -1,13 +1,13 @@
 import { getContext, runInContext } from '@vitarx/responsive'
-import { AnyCallback } from '@vitarx/utils'
-import { WidgetVNode } from '../vnode/index.js'
+import { AnyCallback, logger } from '@vitarx/utils'
+import type {
+  FunctionWidget,
+  LifecycleHookParameter,
+  LifecycleHookReturnType,
+  ValidBuildElement
+} from '../types/index.js'
+import { WidgetNode } from '../vnode/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from './constant.js'
-import {
-  type FunctionWidget,
-  type LifecycleHookParameter,
-  type LifecycleHookReturnType,
-  type ValidFunctionWidgetReturnValue
-} from './types/index.js'
 import type { Widget } from './widget.js'
 
 interface CollectContext {
@@ -19,7 +19,7 @@ interface CollectContext {
  * 收集结果
  */
 export interface HookCollectResult extends CollectContext {
-  build: ValidFunctionWidgetReturnValue
+  build: ValidBuildElement
 }
 
 const HOOK_COLLECTOR_CONTEXT = Symbol('HookCollectorContext')
@@ -71,7 +71,7 @@ export class HookCollector {
    * @param instance - 实例
    * @returns {HookCollectResult} - 同步收集结果
    */
-  static collect(vnode: WidgetVNode<FunctionWidget>, instance: Widget): HookCollectResult {
+  static collect(vnode: WidgetNode<FunctionWidget>, instance: Widget): HookCollectResult {
     // 创建新的上下文
     const context: HookCollectResult = {
       exposed: {},
@@ -99,7 +99,9 @@ function createLifecycleHook<T extends LifecycleHooks>(
 ): (cb: LifecycleHookCallback<T>) => void {
   return (cb: LifecycleHookCallback<T>) => {
     if (typeof cb !== 'function') {
-      throw new TypeError(`[Vitarx.LifeCycle]：${hook}钩子必须是回调函数，给定${typeof cb}`)
+      throw new TypeError(
+        `[Vitarx.LifeCycleHook][ERROR]：${hook}钩子必须是回调函数，给定${typeof cb}`
+      )
     }
     HookCollector.addLifeCycle(hook, cb)
   }
@@ -201,7 +203,7 @@ export const onServerPrefetch = createLifecycleHook(LifecycleHooks.serverPrefetc
  * 它们会被注入到`FnWidget`实例中，注意`this`指向！
  *
  * @example
- * ```ts
+ * ```tsx
  * import { defineExpose,ref } from 'vitarx'
  *
  * function Foo() {
@@ -219,13 +221,13 @@ export const onServerPrefetch = createLifecycleHook(LifecycleHooks.serverPrefetc
  * @param {Record<string, any>} exposed 键值对形式的对象，其中键为暴露的名称，值为要暴露的值。
  */
 export function defineExpose(exposed: Record<string, any>): void {
-  if (import.meta.env.DEV) {
-    for (const exposedKey in exposed) {
-      if (__WIDGET_INTRINSIC_KEYWORDS__.includes(exposedKey as any)) {
-        console.warn(
-          `[Vitarx.defineExpose]：${exposedKey} is an internal reserved keyword in the Widget class, please modify.`
-        )
-      }
+  for (const exposedKey in exposed) {
+    if (__WIDGET_INTRINSIC_KEYWORDS__.has(exposedKey)) {
+      logger.warn(
+        `${exposedKey} is an internal reserved keyword in the Widget class, please modify.`
+      )
+      // 删除
+      delete exposed[exposedKey]
     }
   }
   HookCollector.addExposed(exposed)

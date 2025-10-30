@@ -1,5 +1,0 @@
-export type * from './element.js'
-export type * from './style.js'
-export type * from './properties.js'
-export type * from './event.js'
-export type * from './vnode.js'

@@ -2,7 +2,7 @@ import {
   type AnyChildren,
   createElement,
   Fragment,
-  FragmentVNode,
+  FragmentNode,
   isVNode
 } from '../../vnode/index.js'
 import { markSimpleWidget } from '../helper.js'
@@ -28,9 +28,9 @@ interface PropBindProps {
  * ```
  *
  * @param props - 组件的属性对象
- * @returns {FragmentVNode} 返回一个 Fragment 元素，包含处理后的子组件
+ * @returns {FragmentNode} 返回一个 Fragment 元素，包含处理后的子组件
  */
-function PropBind({ children, ...bindProps }: PropBindProps): FragmentVNode {
+function PropBind({ children, ...bindProps }: PropBindProps): FragmentNode {
   // 将 children 转换为数组格式，确保可以统一处理
   const childrenList = Array.isArray(children) ? children : [children]
   // 遍历子组件列表，为每个子组件绑定属性

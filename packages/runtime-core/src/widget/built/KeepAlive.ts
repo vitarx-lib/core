@@ -1,15 +1,15 @@
 import type { RefSignal } from '@vitarx/responsive'
 import { unref } from '@vitarx/responsive'
 import { DomHelper } from '../../dom/index.js'
-import { isVNode } from '../../vnode/guards.js'
 import {
   createVNode,
   type UniqueKey,
   type VNode,
   type VNodeType,
-  type WidgetType,
-  type WidgetVNode
+  type WidgetNode,
+  type WidgetType
 } from '../../vnode/index.js'
+import { isVNode } from '../../vnode/is.js'
 import { onPropChange } from '../property.js'
 import { Widget } from '../widget.js'
 
@@ -21,7 +21,7 @@ export interface KeepAliveProps {
    * 当前展示的小部件或元素
    * @example
    * ```tsx
-   * import { shallowRef,type VNodeType } from 'vitarx'
+   * import { shallowRef,types VNodeType } from 'vitarx'
    * import User from './User.js'
    * import Home from './Home.js'
    * const showChild = shallowRef<VNodeType>(User)
@@ -140,14 +140,14 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * @inheritDoc
    */
-  override $patchUpdate(oldVNode: WidgetVNode, newVNode: WidgetVNode): VNode {
+  override $patchUpdate(oldVNode: WidgetNode, newVNode: WidgetNode): VNode {
     // 提前检查是否需要创建占位符
     let placeholderElement: Text | null = null
     if (newVNode.state !== 'deactivated') {
       placeholderElement = document.createTextNode('')
       DomHelper.insertBefore(
         placeholderElement,
-        oldVNode.teleport ? oldVNode.shadowElement : oldVNode.element
+        oldVNode._teleport ? oldVNode.shadowElement : oldVNode.element
       )
     }
 
@@ -209,7 +209,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       }
 
       // 更新组件
-      this.update()
+      this.forceUpdate()
     }
   }
 
