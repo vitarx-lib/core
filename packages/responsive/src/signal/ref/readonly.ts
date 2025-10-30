@@ -83,3 +83,12 @@ export class ReadonlyRef<T> implements RefSignal {
 export function readonlyRef<T>(target: (() => T) | RefSignal<T> | T): ReadonlyRef<T> {
   return new ReadonlyRef(target)
 }
+
+/**
+ * 检查给定的值是否为 ReadonlyRef 类型
+ * @param val 需要检查的值
+ * @returns 如果是 ReadonlyRef 类型返回 true，否则返回 false
+ */
+export function isReadonlyRef(val: any): val is ReadonlyRef<any> {
+  return val && val instanceof ReadonlyRef // 检查值是否存在并且是 ReadonlyRef 的实例
+}
