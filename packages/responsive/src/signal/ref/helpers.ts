@@ -1,5 +1,5 @@
 import type { SignalOptions } from '../types/index.js'
-import { type SignalToRaw, toRaw } from '../utils/index.js'
+import { isRefSignal, type SignalToRaw } from '../utils/index.js'
 import { Ref } from './ref.js'
 
 /**
@@ -197,5 +197,5 @@ export function isRef(val: any): val is Ref {
  * console.log(unref(100)) // 100
  */
 export function unref<T>(ref: T): SignalToRaw<T> {
-  return toRaw(ref)
+  return isRefSignal(ref) ? ref.value : (ref as SignalToRaw<T>)
 }
