@@ -41,6 +41,7 @@ import {
 } from '../runtime/index.js'
 import { isVNode } from '../utils/index.js'
 import { CommentNode } from './CommentNode.js'
+import { TextNode } from './TextNode.js'
 
 declare global {
   interface Window {
@@ -187,7 +188,10 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       // 在特定上下文中运行实例创建逻辑
       this.runInContext(() => {
         // 包装props为响应式对象
-        this.props = proxyWidgetProps(this.props) as NodeNormalizedProps<T>
+        this.props = proxyWidgetProps(
+          this.props,
+          this.type['defaultProps']
+        ) as NodeNormalizedProps<T>
         // 判断是否为类组件
         if (isClassWidget(this.type)) {
           // 创建类组件实例
@@ -393,9 +397,9 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
    *
    * @param hook - 生命周期钩子名称
    * @param args - 参数列表
-   * @protected
+   * @private
    */
-  triggerLifecycleHook<T extends LifecycleHooks>(
+  private triggerLifecycleHook<T extends LifecycleHooks>(
     hook: T,
     ...args: LifecycleHookParameter<T>
   ): LifecycleHookReturnType<T> | void {
@@ -412,9 +416,10 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       return typeof method === 'function' ? method.apply(this.instance, args) : undefined
     } catch (e) {
       if (isCallOnError) {
-        console.error(
-          `[Vitarx][ERROR]：Widget(${this.name}) You can't keep throwing exceptions in the onError hook, this results in an infinite loop!`,
-          e
+        logger.error(
+          `Widget(${this.name}) You can't keep throwing exceptions in the onError hook, this results in an infinite loop!`,
+          e,
+          this.devInfo
         )
       } else {
         return this.reportError(e, {
@@ -567,17 +572,16 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
     try {
       // 执行构建逻辑
       const buildNode = this.instance.build() // 调用实例的build方法
-      if (buildNode === null) {
-        // 如果构建结果为null，则创建注释节点
-        vnode = new CommentNode({ value: `Widget(${this.name}) build null` })
-      } else if (isVNode(buildNode)) {
+      if (isVNode(buildNode)) {
         // 如果构建结果是VNode实例，则直接使用
         vnode = buildNode
       } else {
+        const t = typeof buildNode
+        if (t === 'string' || t === 'number') {
+          vnode = new TextNode({ value: String(buildNode) })
+        }
         // 如果构建结果不是VNode，则创建错误注释节点
-        vnode = new CommentNode({
-          value: `The return value of the Widget(${this.name}) build is not a VNode`
-        })
+        vnode = new CommentNode({ value: `${this.name} widget build ${String(t)}` })
       }
     } catch (e) {
       // 处理构建过程中的异常
