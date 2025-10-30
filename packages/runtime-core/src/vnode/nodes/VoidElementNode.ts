@@ -4,12 +4,17 @@ import type {
   NodeNormalizedProps
 } from '../../types/index.js'
 import { HostNode } from '../base/HostNode.js'
+import { NodeShapeFlags } from '../constants/index.js'
 import { normalizeStyle } from '../utils/normalizeProps.js'
 
 export type VoidElementNodeType = HostVoidElementNames
 export class VoidElementVNode<
   T extends VoidElementNodeType = VoidElementNodeType
 > extends HostNode<T> {
+  public override shapeFlags = NodeShapeFlags.VOID_ELEMENT
+  protected override handleShowState(is: boolean): void {
+    throw new Error('Method not implemented.')
+  }
   protected override normalizeProps(props: Record<string, any>): NodeNormalizedProps<T> {
     return normalizeStyle(super.normalizeProps(props))
   }

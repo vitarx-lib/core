@@ -1,8 +1,10 @@
 import type {
+  AllHostElementNames,
   HostElementInstance,
   HostElementNames,
   HostParentElement,
-  HostVoidElementNames
+  HostVoidElementNames,
+  SpecialElementNames
 } from './element.js'
 import type { StyleRules } from './props.js'
 import type {
@@ -25,7 +27,7 @@ export interface HostAdapter {
    * @param initAttributes - 初始属性对象
    * @returns { HostElementInstance<T> } 返回创建的元素实例
    */
-  createElement<T extends HostElementNames>(
+  createElement<T extends Omit<AllHostElementNames, SpecialElementNames>>(
     type: T,
     initAttributes?: Record<string, any>
   ): HostElementInstance<T>

@@ -394,7 +394,7 @@ export abstract class Widget<
    * @param {VNode} newChildVNode 可选参数，新的子节点虚拟节点
    */
   forceUpdate(newChildVNode?: Child): void {
-    // 调用当前虚拟节点的updateChild方法，传入新的子节点VNode进行更新
+    // TODO 强制更新视图
     // this.$vnode.updateChild(newChildVNode)
   }
 }

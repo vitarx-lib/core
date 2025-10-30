@@ -1,4 +1,4 @@
-import { VNode } from '../vnode/base/index.js'
+import { VNode } from '../vnode/index.js'
 import { LifecycleHooks, Widget } from '../widget/index.js'
 import type { HostElementInstance } from './element.js'
 

@@ -5,7 +5,8 @@ import type {
   MountType,
   NodeNormalizedProps
 } from '../../types/index.js'
-import { NodeState, VNode } from './VNode.js'
+import { NodeState } from '../constants/index.js'
+import { VNode } from './VNode.js'
 
 /**
  * @template T - 运行时元素名称

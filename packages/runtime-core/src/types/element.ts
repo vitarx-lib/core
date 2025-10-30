@@ -53,7 +53,7 @@ export type SpecialElementNames = keyof IntrinsicSpecialElements
  */
 export type AllHostElementInstanceMap = Vitarx.HostElementInstanceMap
 /**
- * 运行时DOM元素名称
+ * 全部宿主平台元素名称（特殊 plain-text、comment 、fragment 除外）
  *
  * 表示除了render之外的所有普通元素/特殊元素名称。
  */

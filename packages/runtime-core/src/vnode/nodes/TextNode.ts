@@ -1,6 +1,6 @@
 import type { HostElementInstance, TextNodeType, VNodeInputProps } from '../../types/index.js'
 import { NonElementNode } from '../base/index.js'
-import { TEXT_NODE_TYPE } from '../runtime/index.js'
+import { NodeShapeFlags, TEXT_NODE_TYPE } from '../constants/index.js'
 
 /**
  * TextNode 是一个用于表示纯文本节点的虚拟节点类，继承自 NonElementNode。
@@ -28,6 +28,7 @@ import { TEXT_NODE_TYPE } from '../runtime/index.js'
  * @extends NonElementNode<TextNodeType>
  */
 export class TextNode extends NonElementNode<TextNodeType> {
+  public override shapeFlags = NodeShapeFlags.TEXT
   constructor(props: VNodeInputProps<TextNodeType>) {
     super(TEXT_NODE_TYPE, props)
   }

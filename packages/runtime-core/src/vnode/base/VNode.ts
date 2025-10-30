@@ -17,30 +17,13 @@ import type {
 } from '../../types/index.js'
 import {
   INTRINSIC_ATTRIBUTES,
+  NodeShapeFlags,
+  NodeState,
   VIRTUAL_NODE_SYMBOL,
   VNODE_PROPS_DEV_INFO_KEY_SYMBOL
 } from '../constants/index.js'
 import { isRefEl, type RefEl } from '../runtime/ref.js'
 import { StyleUtils } from '../utils/index.js'
-
-/**
- * 节点生命周期状态枚举
- *
- * - 创建（created）: 节点创建完成，但尚未渲染真实DOM
- * - 渲染（rendered）: 节点已经渲染真实DOM，但可能尚未挂载到容器中
- * - 激活（activated）: 节点已经激活，已挂载到容器中
- * - 停用（deactivated）: 节点已经停用，但可能仍然挂载在容器中，除非它被显式地停用
- * - 卸载（unmounted）: 节点已经从DOM中移除
- *
- * @enum {string}
- */
-export const enum NodeState {
-  Created = 'created',
-  Rendered = 'rendered',
-  Activated = 'activated',
-  Deactivated = 'deactivated',
-  Unmounted = 'unmounted'
-}
 
 /**
  * 待规范化的属性类型
@@ -82,6 +65,10 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * 标记为虚拟节点的 getter 方法
    */
   readonly [VIRTUAL_NODE_SYMBOL]: true = true
+  /**
+   * 节点标志位
+   */
+  public abstract readonly shapeFlags: NodeShapeFlags
   /**
    * 虚拟节点的调试信息
    *

@@ -9,7 +9,7 @@
  *
  * @enum {string}
  */
-export const enum VNodeState {
+export const enum NodeState {
   Created = 'created',
   Rendered = 'rendered',
   Activated = 'activated',

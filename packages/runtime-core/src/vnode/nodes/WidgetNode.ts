@@ -32,7 +32,8 @@ import {
   isClassWidget
 } from '../../widget/index.js'
 import { Widget } from '../../widget/widget.js'
-import { NodeState, VNode, type WaitNormalizedProps } from '../base/index.js'
+import { VNode, type WaitNormalizedProps } from '../base/index.js'
+import { NodeShapeFlags, NodeState } from '../constants/index.js'
 import {
   findParentNode,
   linkParentNode,
@@ -87,6 +88,7 @@ const __INITIALIZE_FN_WIDGET_METHOD__ = Symbol('__INITIALIZE_FN_WIDGET_METHOD__'
  * - Widget 实例的创建是惰性的，只有在访问 instance 属性时才会创建
  */
 export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
+  public override shapeFlags = NodeShapeFlags.WIDGET
   /**
    * HMR热更新状态，仅在开发时由编译器注入
    */

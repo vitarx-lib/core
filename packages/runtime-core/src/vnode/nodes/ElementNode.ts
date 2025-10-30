@@ -4,6 +4,7 @@ import type {
   NodeNormalizedProps
 } from '../../types/index.js'
 import { ContainerNode } from '../base/index.js'
+import { NodeShapeFlags } from '../constants/index.js'
 import { normalizeStyle } from '../utils/normalizeProps.js'
 
 /**
@@ -26,6 +27,7 @@ import { normalizeStyle } from '../utils/normalizeProps.js'
  * @extends ContainerNode<T>
  */
 export class ElementVNode<T extends ElementNodeType = ElementNodeType> extends ContainerNode<T> {
+  public override shapeFlags = NodeShapeFlags.ELEMENT
   /**
    * @inheritDoc
    */

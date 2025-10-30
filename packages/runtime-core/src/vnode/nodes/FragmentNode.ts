@@ -1,5 +1,6 @@
 import type { FragmentNodeType, HostElementInstance } from '../../types/index.js'
 import { ContainerNode } from '../base/index.js'
+import { NodeShapeFlags } from '../constants/index.js'
 
 /**
  * FragmentNode是一个容器节点类，用于管理文档片段(Fragment)的子节点。
@@ -14,6 +15,7 @@ import { ContainerNode } from '../base/index.js'
  * - 创建的文档片段不会直接显示在DOM中，需要通过父节点插入
  */
 export class FragmentNode extends ContainerNode<FragmentNodeType> {
+  public override shapeFlags = NodeShapeFlags.FRAGMENT
   /**
    * @inheritDoc
    */

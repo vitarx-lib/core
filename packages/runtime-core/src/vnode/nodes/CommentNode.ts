@@ -1,6 +1,6 @@
 import type { CommentNodeType, HostElementInstance, VNodeInputProps } from '../../types/index.js'
 import { NonElementNode } from '../base/index.js'
-import { COMMENT_NODE_TYPE } from '../constants/index.js'
+import { COMMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
 
 /**
  * 表示一个注释节点的虚拟节点类，用于在DOM中创建和管理注释节点。
@@ -23,6 +23,7 @@ import { COMMENT_NODE_TYPE } from '../constants/index.js'
  * @extends NonElementNode<COMMENT_NODE_TYPE>
  */
 export class CommentNode extends NonElementNode<CommentNodeType> {
+  public override shapeFlags = NodeShapeFlags.COMMENT
   constructor(props: VNodeInputProps<CommentNodeType>) {
     super(COMMENT_NODE_TYPE, props)
   }
