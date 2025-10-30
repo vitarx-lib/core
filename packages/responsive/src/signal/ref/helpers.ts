@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils/src/index.js'
+import { logger } from '@vitarx/utils'
 import { REF_SIGNAL_SYMBOL, SIGNAL_SYMBOL } from '../constants.js'
 import { isReactive } from '../reactive/index.js'
 import type { RefSignal, SignalOptions } from '../types/index.js'
