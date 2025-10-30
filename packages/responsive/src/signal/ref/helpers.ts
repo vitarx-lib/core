@@ -319,11 +319,12 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
     class GetterRef implements RefSignal {
       readonly [REF_SIGNAL_SYMBOL] = true
       readonly [SIGNAL_SYMBOL] = true
+      constructor(private readonly getter: () => any) {}
       get value() {
-        return value()
+        return this.getter()
       }
     }
-    return new GetterRef()
+    return new GetterRef(value)
   }
 
   // 否则包装为普通 ref
