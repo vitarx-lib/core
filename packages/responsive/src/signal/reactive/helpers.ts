@@ -1,8 +1,12 @@
 import { AnyObject } from '@vitarx/utils'
 import { SIGNAL_RAW_VALUE_SYMBOL } from '../constants.js'
 import type { SignalOptions } from '../types/index.js'
-import { createReactiveProxySignal, REACTIVE_PROXY_SYMBOL } from './proxy-handler.js'
-import type { Reactive, Unreactive } from './types.js'
+import {
+  createReactiveProxySignal,
+  type Reactive,
+  REACTIVE_PROXY_SYMBOL,
+  type Unreactive
+} from './proxy-handler.js'
 
 /**
  * ## 创建响应式代理对象
@@ -102,5 +106,5 @@ export function isReactive(val: any): boolean {
  * ```
  */
 export function unreactive<T extends object>(proxy: T | Reactive<T>): Unreactive<T> {
-  return (Reflect.get(proxy, SIGNAL_RAW_VALUE_SYMBOL) ?? proxy) as Unreactive<T>
+  return (isReactive(proxy) ? Reflect.get(proxy, SIGNAL_RAW_VALUE_SYMBOL) : proxy) as Unreactive<T>
 }
