@@ -182,7 +182,7 @@ export function shallowRef<Value = any>(
  * console.log(isRefSignal(customRef)) // true，因为 CustomRef 符合RefSignal的特征
  */
 export function isRef(val: any): val is Ref {
-  return val instanceof Ref
+  return !!(val && val instanceof Ref)
 }
 
 /**

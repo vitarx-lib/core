@@ -1,5 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
-import { Depend, isDeepSignal, isRef, isSignal, ref, watch } from '../../src'
+import {
+  Depend,
+  isDeepSignal,
+  isRef,
+  isRefSignal,
+  isSignal,
+  reactive,
+  ref,
+  toRef,
+  toRefs,
+  watch
+} from '../../src'
 
 describe('ref', () => {
   describe('基础功能', () => {
@@ -77,6 +88,100 @@ describe('ref', () => {
       const count4 = ref(0, { deep: false })
       expect(count4.value).toBe(0)
       expect(isDeepSignal(count4)).toBe(false)
+    })
+  })
+
+  describe('toRef功能', () => {
+    it('应该能将普通值转换为ref', () => {
+      const countRef = toRef(1)
+      expect(isRef(countRef)).toBe(true)
+      expect(countRef.value).toBe(1)
+
+      countRef.value = 2
+      expect(countRef.value).toBe(2)
+    })
+
+    it('应该能直接返回已有的ref', () => {
+      const originalRef = ref(1)
+      const newRef = toRef(originalRef)
+      expect(newRef).toBe(originalRef)
+    })
+
+    it('应该能将getter函数转换为只读ref', () => {
+      let count = 1
+      const getCount = () => count
+      const countRef = toRef(getCount)
+
+      expect(isRefSignal(countRef)).toBe(true)
+      expect(countRef.value).toBe(1)
+
+      count = 2
+      expect(countRef.value).toBe(2)
+    })
+
+    it('应该能创建与对象属性绑定的ref', () => {
+      const state = reactive({ count: 1 })
+      const countRef = toRef(state, 'count')
+
+      // 初始值检查
+      expect(countRef.value).toBe(1)
+
+      // 从ref修改影响原始对象
+      countRef.value = 2
+      expect(state.count).toBe(2)
+
+      // 从原始对象修改影响ref
+      state.count = 3
+      expect(countRef.value).toBe(3)
+    })
+
+    it('应该支持对象属性的默认值', () => {
+      const state: any = reactive({ count: 1 })
+      const nameRef = toRef(state, 'name', 'defaultName')
+
+      expect(nameRef.value).toBe('defaultName')
+
+      state.name = 'newName'
+      expect(nameRef.value).toBe('newName')
+
+      nameRef.value = 'anotherName'
+      expect(state.name).toBe('anotherName')
+    })
+  })
+
+  describe('toRefs功能', () => {
+    it('应该能将reactive对象的所有属性转换为refs', () => {
+      const state = reactive({ count: 1, name: 'test' })
+      const refs = toRefs(state)
+
+      expect(isRefSignal(refs.count)).toBe(true)
+      expect(isRefSignal(refs.name)).toBe(true)
+      expect(refs.count.value).toBe(1)
+      expect(refs.name.value).toBe('test')
+
+      // 测试双向绑定
+      refs.count.value = 2
+      expect(state.count).toBe(2)
+
+      state.name = 'updated'
+      expect(refs.name.value).toBe('updated')
+    })
+
+    it('应该对普通对象给出警告但仍能工作', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      const plainState = { count: 1, name: 'test' }
+      const refs = toRefs(plainState)
+
+      expect(isRefSignal(refs.count)).toBe(true)
+      expect(isRefSignal(refs.name)).toBe(true)
+      expect(refs.count.value).toBe(1)
+      expect(refs.name.value).toBe('test')
+
+      // 验证警告已被发出
+      expect(warnSpy).toBeCalled()
+
+      warnSpy.mockRestore()
     })
   })
 })
