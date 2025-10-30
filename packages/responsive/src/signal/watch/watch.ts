@@ -8,17 +8,16 @@ import {
   isFunction,
   VoidCallback
 } from '@vitarx/utils'
-import { Depend } from '../depend/index.js'
+import { Depend } from '../../depend/index.js'
 import {
-  isRefSignal,
-  isSignal,
-  type ProxySignal,
-  type RefSignal,
-  SignalManager,
-  type SignalToRaw
-} from '../signal/index.js'
-import { type ChangeCallback, SubManager } from './subManager.js'
-import { Subscriber, type SubscriberOptions } from './subscriber.js'
+  type ChangeCallback,
+  SubManager,
+  Subscriber,
+  type SubscriberOptions
+} from '../../observer/index.js'
+import { SignalManager } from '../manager.js'
+import type { ProxySignal, RefSignal } from '../types/index.js'
+import { isRefSignal, isSignal, type SignalToRaw } from '../utils/index.js'
 
 /** 从类型中排除信号标识符 */
 export type ExcludeSignalSymbol<T> = Exclude<
