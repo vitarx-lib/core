@@ -34,6 +34,7 @@ export type WaitNormalizedProps<T extends NodeTypes> = Omit<
   VNodeInputProps<T>,
   keyof VNodeIntrinsicAttributes
 >
+
 /**
  * 虚拟节点（VNode）基类，用于构建虚拟DOM树结构。
  *
@@ -45,7 +46,7 @@ export type WaitNormalizedProps<T extends NodeTypes> = Omit<
  * - 节点类型和属性管理
  * - 节点缓存和记忆功能（memo）
  * - 父子节点关系维护
- * - Shadow DOM元素处理
+ * - anchor 元素处理
  * - 节点生命周期管理（挂载、卸载、激活、停用）
  *
  * @template T - 节点类型

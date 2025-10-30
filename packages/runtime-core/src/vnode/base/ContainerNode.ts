@@ -15,9 +15,22 @@ import { HostNode } from './HostNode.js'
 import { VNode } from './VNode.js'
 
 /**
- * ContainerNode 类是一个抽象类，继承自 VNode 类
- * 用于表示可以包含子节点的虚拟节点，所有支持children属性的节点都可以继承该类
- * @template T - 节点type的类型
+ * ContainerNode 类是一个抽象类，继承自 VNode 类，用于表示可以包含子节点的虚拟节点。
+ * 所有支持children属性的节点都可以继承该类。
+ *
+ * 核心功能：
+ * - 管理子节点的生命周期（挂载、激活、卸载等）
+ * - 处理子节点的渲染和格式化
+ * - 提供子节点的key重复检查机制
+ *
+ * 构造函数参数：
+ * @param type - 节点类型
+ * @param props - 节点属性，可以包含children属性
+ *
+ * 特殊说明：
+ * - 这是一个抽象类，子类必须实现createElement方法
+ * - 子节点的key重复会触发警告，但不会阻止渲染
+ * - 支持嵌套数组节点的扁平化处理
  */
 export abstract class ContainerNode<
   T extends ContainerNodeType = ContainerNodeType

@@ -9,6 +9,34 @@ import { NodeState } from '../constants/index.js'
 import { VNode } from './VNode.js'
 
 /**
+ * HostNode是一个抽象基类，用于表示宿主环境中的DOM节点。它继承自VNode，并提供了节点挂载、卸载、激活和停用等核心功能。
+ *
+ * 核心功能：
+ * - 节点的挂载和卸载
+ * - 节点的激活和停用
+ * - 子节点的生命周期管理
+ * - 属性规范化处理
+ *
+ * 使用示例：
+ * ```typescript
+ * class CustomHostNode extends HostNode<'div'> {
+ *   protected mountChildren(): void {
+ *     // 实现子节点挂载逻辑
+ *   }
+ * }
+ *
+ * const node = new CustomHostNode();
+ * node.mount(targetElement);
+ * ```
+ *
+ * 构造函数参数：
+ * - 无直接构造函数参数，通过泛型T指定节点类型
+ *
+ * 特殊限制：
+ * - 这是一个抽象类，不能直接实例化
+ * - 子类需要根据需要实现可选的生命周期方法
+ * - 使用teleport功能时需要额外注意节点位置的维护
+ *
  * @template T - 运行时元素名称
  */
 export abstract class HostNode<

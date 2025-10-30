@@ -11,13 +11,8 @@ import { HostNode } from './HostNode.js'
  * - 提供节点的挂载、激活、停用和卸载功能
  * - 支持静态节点的特殊处理
  *
- * @example
- * // 创建文本节点
- * const textNode = new TextNode('hello');
- * textNode.mount(document.body);
- *
  * 使用限制：
- * - 不支持任何属性设置
+ * - 不支持除value以外的任何属性设置
  * - 只能用于纯文本节点和注释节点
  */
 export abstract class NonElementNode<T extends NonElementNodeType> extends HostNode<T> {

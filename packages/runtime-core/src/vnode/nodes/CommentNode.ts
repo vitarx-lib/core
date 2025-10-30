@@ -4,7 +4,7 @@ import { COMMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
 
 /**
  * 表示一个注释节点的虚拟节点类，用于在DOM中创建和管理注释节点。
- * 该类继承自NoTagVNode，专门处理HTML注释节点的创建和渲染。
+ * 该类继承自NonElementNode，专门处理注释/锚点节点的创建和渲染。
  *
  * 主要功能：
  * - 创建和管理DOM注释节点
