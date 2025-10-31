@@ -1,4 +1,4 @@
-import { markNonSignal, NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
+import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { isObject, isRecordObject, popProperty } from '@vitarx/utils'
 import { getDomAdapter } from '../../host-adapter/index.js'
 import type {
@@ -105,12 +105,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @readonly - 外部只读，请勿修改！
    */
   public props: NodeNormalizedProps<T>
-  /**
-   * 缓存的元素
-   *
-   * @protected
-   */
-  private _cachedElement: HostElementInstance<T> | null = null
 
   /**
    * 创建一个虚拟节点实例
@@ -193,8 +187,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     if (state === this._state) return
     // 如果设置的状态为未挂载(Unmounted)状态
     if (state === NodeState.Unmounted || state === NodeState.Created) {
-      // 清除缓存的DOM元素引用
-      this._cachedElement = null
       // 清除锚点引用
       this._anchor = null
     }
@@ -249,24 +241,11 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   }
 
   /**
-   * 获取或创建运行时元素实例的访问器属性
+   * 返回节点的元素实例
    *
-   * 使用惰性初始化模式，只在第一次访问时创建元素实例
-   * 并将创建的实例缓存起来，后续访问直接返回缓存的实例
-   *
-   * @returns {HostElementInstance<T>} 返回运行时元素实例
+   * 如果是组件类型节点则返回组件的根元素实例
    */
-  get element(): HostElementInstance<T> {
-    // 检查是否已经缓存了元素实例
-    if (!this._cachedElement) {
-      this.state = NodeState.Rendered
-      // 如果没有缓存，则创建新的元素实例并缓存
-      return (this._cachedElement = markNonSignal(this.render()))
-    }
-    // 如果已经缓存，则直接返回缓存的实例
-    return this._cachedElement
-  }
-
+  abstract readonly element: HostElementInstance<T>
   /**
    * 获取 Dom 适配器实例
    */
@@ -433,13 +412,4 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       this._anchor = null
     }
   }
-
-  /**
-   * 渲染元素
-   *
-   * 此函数每次调用都会返回一个新的元素
-   *
-   * @returns {HostElementInstance<T>} 渲染后的元素
-   */
-  protected abstract render(): HostElementInstance<T>
 }
