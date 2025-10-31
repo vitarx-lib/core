@@ -1,6 +1,7 @@
 import { markNonSignal } from '@vitarx/responsive'
 import type {
   AllHostElementNames,
+  BindParentElement,
   HostElementInstance,
   HostParentElement,
   MountType,
@@ -109,6 +110,25 @@ export abstract class HostNode<
     }
     this._cachedElement = null
     this.state = NodeState.Unmounted
+  }
+  /**
+   * @inheritDoc
+   */
+  override setTeleport(teleport: BindParentElement): void {
+    const oldTeleport = this.teleport
+    super.setTeleport(teleport)
+    const newTeleport = this.teleport // 获取更新后的teleport元素
+    // 如果不是活跃状态则直接返回
+    if (this.state !== NodeState.Activated) return
+    // 如果清空teleport元素，则用当前元素替换占位锚点
+    if (oldTeleport && !newTeleport) {
+      this.dom.replace(this.element, this.anchor)
+    } else if (newTeleport && !oldTeleport) {
+      // 占位锚点替换当前元素
+      this.dom.replace(this.anchor, this.element)
+      // 当前元素插入到新的锚点中
+      this.dom.appendChild(newTeleport, this.element)
+    }
   }
   /**
    * 渲染元素
