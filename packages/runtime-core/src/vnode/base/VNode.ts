@@ -217,29 +217,14 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   }
 
   /**
-   * 设置teleport属性
+   * 获取当前节点在 DOM 操作中的目标元素
    *
-   * @param value - 绑定的父元素，类型为BindParentElement
+   * 如果节点启用了传送 (teleport) 或被停用 (deactivated)，
+   * 返回锚点；否则返回实际的元素实例。
    */
-  set teleport(value: BindParentElement) {
-    const oldTeleport = this.teleport // 保存当前的teleport元素
-    this._teleport = value || null // 更新teleport元素，如果value为undefined或null则设为null
-    const newTeleport = this.teleport // 获取更新后的teleport元素
-    // 如果是活跃状态，则
-    if (this._state !== NodeState.Activated) return
-    // 如果清空teleport元素，则用当前元素替换占位锚点
-    if (oldTeleport && !newTeleport) {
-      this.dom.replace(this.element, this.anchor)
-    }
-    // 如果设置teleport元素
-    if (newTeleport && !oldTeleport) {
-      // 占位锚点替换当前元素
-      this.dom.replace(this.anchor, this.element)
-      // 当前元素插入到新的锚点中
-      this.dom.appendChild(newTeleport, this.element)
-    }
+  public get operationTarget(): HostAnchorElement | HostElementInstance<T> {
+    return this.teleport || this.state === NodeState.Deactivated ? this.anchor : this.element
   }
-
   /**
    * 返回节点的元素实例
    *
@@ -279,8 +264,9 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   private _anchor: HostAnchorElement | null = null
 
   /**
-   * 获取或创建当前组件的锚点元素
+   * 获取或创建当前节点的锚点元素
    * 这是一个受保护属性，用于在DOM中标记组件的位置
+   *
    * @returns {HostAnchorElement} 返回一个注释节点作为锚点，用于在DOM中标记组件的位置
    */
   public get anchor(): HostAnchorElement {
@@ -293,7 +279,17 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     // 如果锚点元素已存在，直接返回它
     return this._anchor
   }
-
+  /**
+   * 设置传送目标
+   *
+   * 仅对 this.teleport 进项了赋值，派生类可重写此方法以处理传送目标的变化
+   *
+   * @param {BindParentElement} teleport - 传送目标
+   * @returns {void}
+   */
+  public setTeleport(teleport: BindParentElement): void {
+    this._teleport = teleport || null
+  }
   /**
    * 处理属性绑定
    * @param props - 需要处理的属性对象
