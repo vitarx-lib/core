@@ -54,8 +54,8 @@ export type SignalOptions<Deep extends boolean = boolean> = {
  */
 export interface BaseSignal<Raw = any, Deep extends boolean = boolean> {
   readonly [SIGNAL_SYMBOL]: true
+  readonly [SIGNAL_RAW_VALUE_SYMBOL]: Raw
   readonly [DEEP_SIGNAL_SYMBOL]?: Deep
-  readonly [SIGNAL_RAW_VALUE_SYMBOL]?: Raw
 }
 
 /**
