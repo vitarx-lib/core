@@ -105,9 +105,11 @@ export abstract class HostNode<
   override unmount(root: boolean = true): void {
     this.unmountChildren?.()
     if (root) {
-      this.removeAnchor()
+      this.dom.remove(this.element)
+    } else if (this.teleport) {
       this.dom.remove(this.element)
     }
+    this.removeAnchor()
     this._cachedElement = null
     this.state = NodeState.Unmounted
   }
