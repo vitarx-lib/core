@@ -1,4 +1,4 @@
-import { toRaw } from '@vitarx/responsive'
+import { unref } from '@vitarx/responsive'
 import { logger, popProperty } from '@vitarx/utils'
 import type {
   Child,
@@ -41,7 +41,7 @@ export abstract class ContainerNode<
   public children: RuntimeChildren
 
   protected constructor(type: T, props: VNodeInputProps<T>) {
-    const children = popProperty(props, 'children')
+    const children = unref(popProperty(props, 'children'))
     super(type, props)
     // 如果存在children属性，则格式化子节点
     this.children = Array.isArray(children) ? this.formatChildren(children) : []
@@ -124,14 +124,14 @@ export abstract class ContainerNode<
   private formatChildren(target: Child): RuntimeChildren {
     const keySet = new Set<UniqueKey>()
     const childList: VNode[] = []
-    const stack: Child[] = [toRaw(target)]
+    const stack: Child[] = [unref(target)]
 
     while (stack.length > 0) {
       const current = stack.pop()!
       if (Array.isArray(current)) {
         // 逆序压栈以保持顺序
         for (let i = current.length - 1; i >= 0; i--) {
-          stack.push(toRaw(current[i]))
+          stack.push(unref(current[i]))
         }
       } else {
         const vnode = this.normalizeChild(current, keySet)
