@@ -388,13 +388,9 @@ export abstract class Widget<
   }
 
   /**
-   * 更新子节点VNode的方法
-   * 本方法主要用于手动强制更新视图
-   *
-   * @param {VNode} newChildVNode 可选参数，新的子节点虚拟节点
+   * 强制更新小部件
    */
-  forceUpdate(newChildVNode?: Child): void {
-    // TODO 强制更新视图
-    // this.$vnode.updateChild(newChildVNode)
+  $forceUpdate(): void {
+    this.$vnode.updateChild()
   }
 }
