@@ -1,4 +1,3 @@
-import { toRaw } from '@vitarx/responsive'
 import type {
   AllHostElementNames,
   HostParentElement,
@@ -6,6 +5,7 @@ import type {
   NodeNormalizedProps
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
+import { unwrapRefProps } from '../utils/unwrapRefProps.js'
 import { VNode } from './VNode.js'
 
 /**
@@ -137,14 +137,7 @@ export abstract class HostNode<
    * @returns {NodeNormalizedProps<T>} 返回规范化的有效节点属性对象
    */
   protected override normalizeProps(props: Record<string, any>): NodeNormalizedProps<T> {
-    // 如果属性对象不为空（即存在属性键）
-    if (Object.keys(props).length) {
-      // 解包ref
-      for (const prop in props) {
-        props[prop] = toRaw(props[prop])
-      }
-    }
-    return props as NodeNormalizedProps<T>
+    return unwrapRefProps(props) as NodeNormalizedProps<T>
   }
   /**
    * 切换元素
