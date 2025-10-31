@@ -358,29 +358,25 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   /**
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
-   * @param {boolean} root - 如果root为true，则需要重新挂载元素，false则不需要
+   * @param {boolean} [root=true] - 如果root为true，则需要重新挂载元素，false则不需要
    * @returns {void}
    */
-  abstract activate(root: boolean): void
-
+  abstract activate(root?: boolean): void
+  /**
+   * 让小部件停用，将元素从父元素中移除。
+   *
+   * @param {boolean} [root=true] - 如果root为true，则需要重新挂载元素，false则不需要
+   * @returns {void}
+   */
+  abstract deactivate(root?: boolean): void
   /**
    * 卸载元素或组件的方法
    *
    * 此方法需实现元素/组件的卸载逻辑
    *
-   * @param {boolean} [root] - 是否做为根元素卸载
+   * @param {boolean} [root=true] - 是否做为根元素卸载
    */
   abstract unmount(root?: boolean): void
-
-  /**
-   * 停用小部件
-   *
-   * 此方法用于停用当前节点及其子节点，处理相关的生命周期钩子，
-   * 并根据是否为根节点执行不同的移除逻辑。
-   *
-   * @param root - 如果为true，则需要移除元素，false则不需要
-   */
-  abstract deactivate(root: boolean): void
 
   /**
    * 抽象方法，用于处理显示状态的变更
@@ -407,5 +403,35 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       // 将锚点引用置为null
       this._anchor = null
     }
+  }
+  /**
+   * 更新小部件的挂载状态（激活或停用）
+   *
+   * @param active - true 表示激活，false 表示停用
+   * @param root - 如果为 true，则操作根节点，false 则非根
+   * @param beforeStateChange - 可选函数，在更新 state 前执行
+   */
+  protected updateActiveState(
+    active: boolean,
+    root: boolean,
+    beforeStateChange?: () => void
+  ): void {
+    const { teleport, element: el, anchor } = this
+
+    // 判断是否使用 teleport
+    const useTeleport = !!teleport && (active || !root)
+
+    if (useTeleport) {
+      // teleport 节点处理
+      active ? this.dom.appendChild(teleport, el) : this.dom.remove(el)
+    } else if (root) {
+      // 根节点且无 teleport，用 anchor 替换
+      this.dom.replace(el, anchor)
+    }
+    // 非 root 且无 teleport 不操作 DOM
+    // 执行钩子
+    if (beforeStateChange) beforeStateChange()
+    // 更新状态
+    this.state = active ? NodeState.Activated : NodeState.Deactivated
   }
 }
