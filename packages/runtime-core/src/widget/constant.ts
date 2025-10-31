@@ -18,14 +18,19 @@ export enum LifecycleHooks {
  */
 export const __WIDGET_INTRINSIC_METHOD_KEYWORDS__ = [
   'build',
-  'forceUpdate',
+  '$forceUpdate',
   '$patchUpdate',
   ...Object.values(LifecycleHooks)
 ] as const
 /**
  * 组件内部保留属性
  */
-export const __WIDGET_INTRINSIC_PROPERTY_KEYWORDS__ = ['$scope', '$el', '$vnode'] as const
+export const __WIDGET_INTRINSIC_PROPERTY_KEYWORDS__ = [
+  '$scope',
+  '$el',
+  '$vnode',
+  'children'
+] as const
 /**
  * 组件内部保留关键字
  */
