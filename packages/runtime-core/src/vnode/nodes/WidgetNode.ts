@@ -9,6 +9,7 @@ import {
 import { isPromise } from '@vitarx/utils'
 import { logger } from '@vitarx/utils/src/index.js'
 import type {
+  BindParentElement,
   Child,
   ErrorSource,
   FunctionWidget,
@@ -122,20 +123,20 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
    *
    * @private
    */
-  private _child: VNode | null = null
+  private _rootNode: VNode | null = null
 
   /**
    * 获取子虚拟节点(VNode)的getter方法
    * 使用懒加载模式，仅在首次访问时构建子节点
    * @returns {VNode} 返回构建后的子虚拟节点
    */
-  get child(): VNode {
+  get rootNode(): VNode {
     // 如果子节点尚未构建，则调用构建方法创建子节点
-    if (!this._child) {
-      this._child = this.build()
+    if (!this._rootNode) {
+      this._rootNode = this.rebuild()
     }
     // 返回已构建的子节点
-    return this._child
+    return this._rootNode
   }
 
   /**
@@ -258,39 +259,34 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 使用可选链操作符和 hasOwnProperty 方法检查属性是否存在
     return this._provide?.has(name) ?? false
   }
+
   /**
    * @inheritDoc
    */
-  override mount(target?: HostParentElement, type?: MountType): this {
-    if (this.state === NodeState.Created) this.render()
-    if (this.teleport) {
-      if (target) {
-        // 插入影子元素
-        switch (type) {
-          case 'insertBefore':
-            this.dom.insertBefore(this.anchor, target)
-            break
-          case 'insertAfter':
-            this.dom.insertAfter(this.anchor, target)
-            break
-          case 'replace':
-            this.dom.replace(this.anchor, target)
-            break
-          default:
-            this.dom.appendChild(target, this.anchor)
-        }
-      }
-      this.child.mount(this.teleport, 'appendChild')
-    } else {
-      this.child.mount(target, type)
+  override get element(): HostElementInstance<T> {
+    // 检查组件状态，如果已经渲染过则抛出错误
+    if (this.state !== NodeState.Created) {
+      return this.rootNode.element as HostElementInstance<T>
     }
-    if (this.state === NodeState.Rendered) {
-      // 更新状态并触发生命周期
-      this.state = NodeState.Activated
-      this.triggerLifecycleHook(LifecycleHooks.mounted)
-      this.triggerLifecycleHook(LifecycleHooks.activated)
+    // 触发beforeMount生命周期钩子
+    this.triggerLifecycleHook(LifecycleHooks.beforeMount)
+    let el: HostElementInstance
+    try {
+      // 尝试获取子组件的DOM元素
+      el = this.rootNode.element
+    } catch (e) {
+      // 触发onError生命周期
+      const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
+        source: 'render',
+        instance: this.instance
+      })
+      // 如果渲染失败，则使用错误视图替换原视图
+      this._rootNode = isVNode(errVNode)
+        ? errVNode
+        : new CommentNode({ value: `${VNode.name} Widget render fail` })
+      el = this.rootNode.element
     }
-    return this
+    return el as HostElementInstance<T>
   }
   /**
    * 负责触发错误处理器钩子函数
@@ -332,7 +328,7 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       // 触发onActivated生命周期
       this.triggerLifecycleHook(LifecycleHooks.activated)
       // 激活子节点
-      this.child.activate(false)
+      this.rootNode.activate(false)
     }
   }
 
@@ -358,7 +354,7 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       }
     }
     // 递归卸载子节点
-    this.child.unmount(root && !isAsyncUnmount)
+    this.rootNode.unmount(root && !isAsyncUnmount)
     // 如果不是异步卸载直接执行卸载逻辑
     if (!isAsyncUnmount) this.completeUnmount()
   }
@@ -369,7 +365,7 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
     // 如果当前状态不是已激活，则直接返回
     if (this.state !== NodeState.Activated) return
     // 递归停用子节点
-    this.child.deactivate(false)
+    this.rootNode.deactivate(false)
     // 如果是根节点，且不是传送节点，则将影子元素插入到元素之前
     if (root) {
       const teleport = this.teleport
@@ -433,6 +429,104 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
+   * @inheritDoc
+   */
+  override mount(target?: HostParentElement, type?: MountType): this {
+    // 未渲染调用this.element渲染一次元素
+    if (this.state === NodeState.Created) this.element
+    if (this.teleport) {
+      if (target) {
+        // 插入影子元素
+        switch (type) {
+          case 'insertBefore':
+            this.dom.insertBefore(this.anchor, target)
+            break
+          case 'insertAfter':
+            this.dom.insertAfter(this.anchor, target)
+            break
+          case 'replace':
+            this.dom.replace(this.anchor, target)
+            break
+          default:
+            this.dom.appendChild(target, this.anchor)
+        }
+      }
+      this.rootNode.mount(this.teleport, 'appendChild')
+    } else {
+      this.rootNode.mount(target, type)
+    }
+    // 更新状态并触发生命周期
+    this.state = NodeState.Activated
+    this.triggerLifecycleHook(LifecycleHooks.mounted)
+    this.triggerLifecycleHook(LifecycleHooks.activated)
+    return this
+  }
+
+  /**
+   * @inheritDoc
+   */
+  override setTeleport(teleport: BindParentElement) {
+    const prevTeleport = this.teleport
+    super.setTeleport(teleport)
+    const nextTeleport = this.teleport
+
+    // 仅在已激活状态下处理 DOM 迁移
+    if (this.state !== NodeState.Activated) return
+
+    const rootElement = this.rootNode.operationTarget
+    if (!rootElement) return
+
+    // 如果传送目标没有变化，则不需要任何操作
+    if (prevTeleport === nextTeleport) return
+
+    // --- 1️⃣ 清空 teleport：恢复到原始位置 ---
+    if (prevTeleport && !nextTeleport) {
+      this.dom.replace(rootElement, this.anchor)
+      return
+    }
+
+    // --- 2️⃣ 新增 teleport：从原位置传送到新容器 ---
+    if (!prevTeleport && nextTeleport) {
+      this.dom.replace(this.anchor, rootElement)
+      this.dom.appendChild(nextTeleport, rootElement)
+      return
+    }
+
+    // --- 3️⃣ 切换 teleport：从旧容器迁移到新容器 ---
+    if (prevTeleport && nextTeleport) {
+      this.dom.appendChild(nextTeleport, rootElement)
+      return
+    }
+  }
+
+  /**
+   * 更新模块的方法
+   *
+   * 仅提供给HMR使用
+   *
+   * @param module - 需要更新的模块对象，类型为泛型T
+   * @param resetState - 是否重置状态
+   */
+  public updateWidgetModule(module: T, resetState: boolean = false) {
+    if (import.meta.env?.DEV) {
+      // 设置当前实例的类型为传入的模块
+      this.type = module
+      // 将实例变量重置为null，以便下次使用时重新创建
+      this._instance = null
+      if (resetState) {
+        if (this._scope) {
+          this._scope?.dispose()
+          this._scope = null
+        }
+        this._rootNode = null
+        this._viewDepSubscriber = undefined
+        this._provide = null
+        this.state = NodeState.Created
+      }
+    }
+  }
+
+  /**
    * 更新视图
    *
    * 更新视图不是同步的，会延迟更新，合并多个微任务。
@@ -440,7 +534,7 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @param {VNode} newChildVNode - 新子节点，没有则使用`build`方法构建。
    * @return {void}
    */
-  updateChild(newChildVNode?: VNode): void {
+  readonly updateChild = (newChildVNode?: VNode): void => {
     if (this.state === NodeState.Unmounted) {
       this.triggerLifecycleHook(
         LifecycleHooks.error,
@@ -471,9 +565,9 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
         this._pendingUpdate = false
         // 如果组件已卸载，则不进行更新
         if (this.state === NodeState.Unmounted) return
-        const oldVNode = this.child
-        const newVNode = newChildVNode || this.build()
-        this._child = this.instance.$patchUpdate(oldVNode, newVNode)
+        const oldVNode = this.rootNode
+        const newVNode = newChildVNode || this.rebuild()
+        this._rootNode = this.instance.$patchUpdate(oldVNode, newVNode)
         // 触发更新后生命周期
         this.triggerLifecycleHook(LifecycleHooks.updated)
       })
@@ -484,35 +578,10 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
-   * 更新模块的方法
-   *
-   * 仅提供给HMR使用
-   *
-   * @param module - 需要更新的模块对象，类型为泛型T
-   * @param resetState - 是否重置状态
-   */
-  public updateWidgetModule(module: T, resetState: boolean = false) {
-    if (import.meta.env?.DEV) {
-      // 设置当前实例的类型为传入的模块
-      this.type = module
-      // 将实例变量重置为null，以便下次使用时重新创建
-      this._instance = null
-      if (resetState) {
-        if (this._scope) {
-          this._scope?.dispose()
-          this._scope = null
-        }
-        this._child = null
-        this.state = NodeState.Created
-      }
-    }
-  }
-
-  /**
    * @inheritDoc
    */
   protected override handleShowState(is: boolean): void {
-    this.child.show = is
+    this.rootNode.show = is
   }
 
   /**
@@ -520,36 +589,6 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
    */
   protected override normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     return props as NodeNormalizedProps<T>
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected override render(): HostElementInstance<T> {
-    // 检查组件状态，如果已经渲染过则抛出错误
-    if (this.state !== NodeState.Created) {
-      return this.child.element as HostElementInstance<T>
-    }
-    // 触发beforeMount生命周期钩子
-    this.triggerLifecycleHook(LifecycleHooks.beforeMount)
-    let el: HostElementInstance
-    try {
-      // 尝试获取子组件的DOM元素
-      el = this.child.element
-    } catch (e) {
-      // 触发onError生命周期
-      const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
-        source: 'render',
-        instance: this.instance
-      })
-      // 如果渲染失败，则使用错误视图替换原视图
-      this._child = isVNode(errVNode)
-        ? errVNode
-        : new CommentNode({ value: `${VNode.name} Widget render fail` })
-      el = this.child.element
-    }
-    this.state = NodeState.Rendered
-    return el as HostElementInstance<T>
   }
 
   /**
@@ -565,11 +604,11 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
-   * 构建子虚拟节点的方法
+   * 构建子视图节点
    *
    * @returns {VNode} 返回构建的虚拟节点
    */
-  private buildChild(): VNode {
+  private readonly buildViewNode = (): VNode => {
     let vnode: VNode // 声明虚拟节点变量
     try {
       // 执行构建逻辑
@@ -604,25 +643,21 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
   }
 
   /**
-   * 构建子虚拟节点
+   * 重新构建子节点
    *
    * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
    * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
    *
    * @returns {VNode} 返回构建好的虚拟节点
    */
-  private build(): VNode {
+  private rebuild(): VNode {
     // 如果已存在视图依赖订阅器，则先释放旧的订阅器
     if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
 
     // 订阅依赖并构建虚拟节点
-    const { result, subscriber, deps } = depSubscribe(
-      this.buildChild.bind(this),
-      this.updateChild.bind(this),
-      {
-        scope: false
-      }
-    )
+    const { result, subscriber, deps } = depSubscribe(this.buildViewNode, this.updateChild, {
+      scope: false
+    })
     if (import.meta.env?.DEV) {
       // 如果是开发模式，则记录依赖关系，用于调试
       this.deps = deps
@@ -755,7 +790,7 @@ class FnWidget extends Widget<Record<string, any>> {
     // 检查组件状态是否为未挂载或激活状态
     if (this.$vnode.state === NodeState.Rendered || this.$vnode.state === NodeState.Activated) {
       // 如果条件满足，则执行更新操作
-      this.forceUpdate()
+      this.$forceUpdate()
     }
   }
 
