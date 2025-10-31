@@ -142,17 +142,14 @@ export abstract class HostNode<
    * @inheritDoc
    */
   override activate(root: boolean = true): void {
-    if (root) this.toggleElement(true)
-    this.activateChildren?.()
-    this.state = NodeState.Activated
+    this.updateActiveState(true, root, this.activateChildren)
   }
   /**
    * @inheritDoc
    */
   override deactivate(root: boolean = true): void {
+    this.updateActiveState(false, root)
     this.deactivateChildren?.()
-    if (root) this.toggleElement(false)
-    this.state = NodeState.Deactivated
   }
   /**
    * 挂载子节点
@@ -193,20 +190,5 @@ export abstract class HostNode<
    */
   protected override normalizeProps(props: Record<string, any>): NodeNormalizedProps<T> {
     return unwrapRefProps(props) as NodeNormalizedProps<T>
-  }
-  /**
-   * 切换元素
-   *
-   * @param {boolean} isActive - 是否激活元素
-   */
-  private toggleElement(isActive: boolean): void {
-    const teleport = this.teleport
-    if (isActive) {
-      teleport
-        ? this.dom.appendChild(teleport, this.element)
-        : this.dom.replace(this.element, this.anchor)
-    } else {
-      this.teleport ? this.dom.remove(this.element) : this.dom.replace(this.element, this.anchor)
-    }
   }
 }
