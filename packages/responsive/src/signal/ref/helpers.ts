@@ -1,7 +1,7 @@
 import { logger } from '@vitarx/utils'
 import { isReactive } from '../reactive/index.js'
 import type { RefSignal } from '../types/index.js'
-import { isRefSignal, type SignalToRaw } from '../utils/index.js'
+import { isRefSignal, type SignalToRaw, toRaw } from '../utils/index.js'
 import { PropertyRef } from './property.js'
 import { ReadonlyRef } from './readonly.js'
 import { Ref } from './ref.js'
@@ -9,14 +9,14 @@ import { Ref } from './ref.js'
 export type ToRef<T> = T extends RefSignal ? T : Ref<T>
 
 /**
- * 解除Ref对象的包装，返回其原始值
+ * 解除 `RefSignal` 对象的包装，返回其原始值
  *
- * 在响应式系统中，该函数用于获取Ref对象包装的原始值。如果传入的是普通值，则直接返回该值。
- * 这个函数在处理可能是Ref对象或普通值的参数时特别有用，可以统一处理两种情况。
+ * 在响应式系统中，该函数用于获取RefSignal对象包装的原始值。如果传入的是普通值，则直接返回该值。
+ * 这个函数在处理可能是实现了RefSignal接口的对象或普通值的参数时特别有用，可以统一处理两种情况。
  *
  * @template T - 值的类型
- * @param {T | Ref<T>} ref - 需要解包的值，可以是Ref对象或普通值
- * @returns {T} 如果输入是Ref对象，返回其.value值；如果是普通值，则原样返回
+ * @param {T | Ref<T>} ref - 需要解包的值，可以是RefSignal对象或普通值
+ * @returns {T} 如果输入是RefSignal对象，返回其 `toRaw` 原始值；如果是普通值，则原样返回
  * @example
  * // 处理Ref对象
  * const count = ref(0)
@@ -24,10 +24,9 @@ export type ToRef<T> = T extends RefSignal ? T : Ref<T>
  * // 处理普通值
  * console.log(unref(100)) // 100
  */
-export function unref<T>(ref: T): SignalToRaw<T> {
-  return isRefSignal(ref) ? ref.value : (ref as SignalToRaw<T>)
+export function unref<T>(ref: T): T extends RefSignal ? SignalToRaw<T> : T {
+  return isRefSignal(ref) ? toRaw(ref) : (ref as any)
 }
-
 /**
  * 创建一个基于源的 RefSignal
  *
