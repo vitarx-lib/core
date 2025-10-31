@@ -316,47 +316,16 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
    * @inheritDoc
    */
   override activate(root: boolean): void {
-    if (this.state === NodeState.Deactivated) {
-      this.state = NodeState.Activated
-      if (root) {
-        this.teleport ? this.dom.remove(this.element) : this.dom.replace(this.element, this.anchor)
-      }
-      // 恢复作用域
-      this.scope.resume()
-      // 更新视图
-      this.updateChild()
-      // 触发onActivated生命周期
-      this.triggerLifecycleHook(LifecycleHooks.activated)
+    super.updateActiveState(true, root, () =>
       // 激活子节点
       this.rootNode.activate(false)
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  override unmount(root?: boolean): void {
-    // 检查当前状态是否允许卸载
-    if (this.state === NodeState.Unmounted) {
-      throw new Error(`[Vitarx.WidgetVNode.unmount]：The widget is already ${this.state}`)
-    }
-    // 触发onBeforeUnmount生命周期
-    this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
-    // 异步卸载标志
-    let isAsyncUnmount = false
-    // 如果是根节点且是激活状态，则需要触发删除元素前的回调
-    if (root) {
-      const result = this.triggerLifecycleHook(LifecycleHooks.beforeRemove, this.element, 'unmount')
-      // 兼容异步卸载
-      if (result instanceof Promise) {
-        isAsyncUnmount = true
-        result.finally(this.completeUnmount.bind(this))
-      }
-    }
-    // 递归卸载子节点
-    this.rootNode.unmount(root && !isAsyncUnmount)
-    // 如果不是异步卸载直接执行卸载逻辑
-    if (!isAsyncUnmount) this.completeUnmount()
+    )
+    // 恢复作用域
+    this.scope.resume()
+    // 更新视图
+    this.updateChild()
+    // 触发onActivated生命周期
+    this.triggerLifecycleHook(LifecycleHooks.activated)
   }
   /**
    * @inheritDoc
@@ -364,32 +333,38 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
   override deactivate(root: boolean): void {
     // 如果当前状态不是已激活，则直接返回
     if (this.state !== NodeState.Activated) return
+    // 停用作用域
+    this.scope.pause()
+    // 触发onDeactivated生命周期
+    this.triggerLifecycleHook(LifecycleHooks.deactivated)
     // 递归停用子节点
     this.rootNode.deactivate(false)
-    // 如果是根节点，且不是传送节点，则将影子元素插入到元素之前
-    if (root) {
-      const teleport = this.teleport
-      this.teleport
-        ? this.dom.remove(this.element)
-        : this.dom.insertBefore(this.anchor, this.element)
-    }
-    const post = () => {
-      // 如果是根节点，则移除元素
-      if (root) this.dom.remove(this.element)
-      this.scope.pause()
-      this.state = NodeState.Deactivated
-      // 触发onDeactivated生命周期
-      this.triggerLifecycleHook(LifecycleHooks.deactivated)
-    }
-    // 触发beforeRemove生命周期钩子，获取返回值
-    const result = this.triggerLifecycleHook(
-      LifecycleHooks.beforeRemove,
-      this.element,
-      'deactivate'
-    )
-    result instanceof Promise ? result.finally(post) : post()
+    // 更新激活状态
+    this.updateActiveState(false, root)
   }
-
+  /**
+   * @inheritDoc
+   */
+  override unmount(root?: boolean): void {
+    // 检查当前状态是否允许卸载
+    if (this.state === NodeState.Unmounted) {
+      throw new Error(`the node is already ${this.state}`)
+    }
+    // 触发onDeactivated生命周期
+    this.triggerLifecycleHook(LifecycleHooks.deactivated)
+    // 修改状态为已停用
+    this.state = NodeState.Deactivated
+    // 触发onBeforeUnmount生命周期
+    this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
+    // 递归卸载子节点
+    this.rootNode.unmount(root)
+    // 停止作用域
+    this.scope.dispose()
+    // 修改状态为已卸载
+    this.state = NodeState.Unmounted
+    // 触发onUnmounted生命周期
+    this.triggerLifecycleHook(LifecycleHooks.unmounted)
+  }
   /**
    * 触发生命周期钩子
    *
@@ -427,7 +402,6 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       }
     }
   }
-
   /**
    * @inheritDoc
    */
@@ -461,7 +435,6 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
     this.triggerLifecycleHook(LifecycleHooks.activated)
     return this
   }
-
   /**
    * @inheritDoc
    */
@@ -498,7 +471,6 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       return
     }
   }
-
   /**
    * 更新模块的方法
    *
@@ -525,7 +497,6 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       }
     }
   }
-
   /**
    * 更新视图
    *
@@ -576,31 +547,17 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
       throw e
     }
   }
-
   /**
    * @inheritDoc
    */
   protected override handleShowState(is: boolean): void {
     this.rootNode.show = is
   }
-
   /**
    * @inheritDoc
    */
   protected override normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     return props as NodeNormalizedProps<T>
-  }
-
-  /**
-   * 完成卸载流程的辅助方法
-   */
-  private completeUnmount(): void {
-    // 执行卸载后续操作
-    this.scope.dispose()
-    // 移除元素
-    this.dom.remove(this.element)
-    this.state = NodeState.Unmounted
-    this.triggerLifecycleHook(LifecycleHooks.unmounted)
   }
 
   /**
