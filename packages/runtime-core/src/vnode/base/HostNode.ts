@@ -1,5 +1,7 @@
+import { markNonSignal } from '@vitarx/responsive'
 import type {
   AllHostElementNames,
+  HostElementInstance,
   HostParentElement,
   MountType,
   NodeNormalizedProps
@@ -43,6 +45,12 @@ export abstract class HostNode<
   T extends AllHostElementNames = AllHostElementNames
 > extends VNode<T> {
   /**
+   * 缓存的元素
+   *
+   * @protected
+   */
+  private _cachedElement: HostElementInstance<T> | null = null
+  /**
    * @inheritDoc
    */
   override mount(target?: HostParentElement, type?: MountType): void {
@@ -73,6 +81,24 @@ export abstract class HostNode<
     this.state = NodeState.Activated
   }
   /**
+   * 获取或创建运行时元素实例的访问器属性
+   *
+   * 使用惰性初始化模式，只在第一次访问时创建元素实例
+   * 并将创建的实例缓存起来，后续访问直接返回缓存的实例
+   *
+   * @returns {HostElementInstance<T>} 返回运行时元素实例
+   */
+  get element(): HostElementInstance<T> {
+    // 检查是否已经缓存了元素实例
+    if (!this._cachedElement) {
+      if (this.state === NodeState.Created) this.state = NodeState.Rendered
+      // 如果没有缓存，则创建新的元素实例并缓存
+      return (this._cachedElement = markNonSignal(this.render()))
+    }
+    // 如果已经缓存，则直接返回缓存的实例
+    return this._cachedElement
+  }
+  /**
    * @inheritDoc
    */
   override unmount(root: boolean = true): void {
@@ -81,8 +107,17 @@ export abstract class HostNode<
       this.removeAnchor()
       this.dom.remove(this.element)
     }
+    this._cachedElement = null
     this.state = NodeState.Unmounted
   }
+  /**
+   * 渲染元素
+   *
+   * 此函数每次调用都会返回一个新的元素
+   *
+   * @returns {HostElementInstance<T>} 渲染后的元素
+   */
+  protected abstract render(): HostElementInstance<T>
   /**
    * @inheritDoc
    */
