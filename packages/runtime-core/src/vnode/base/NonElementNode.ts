@@ -16,6 +16,10 @@ import { HostNode } from './HostNode.js'
  * - 只能用于纯文本节点和注释节点
  */
 export abstract class NonElementNode<T extends NonElementNodeType> extends HostNode<T> {
+  /**
+   * 获取属性值的getter方法
+   * 返回this.props.value的值
+   */
   get value(): string {
     return this.props.value
   }
