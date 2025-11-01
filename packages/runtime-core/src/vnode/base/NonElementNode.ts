@@ -1,4 +1,4 @@
-import { getDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../host-adapter/index.js'
 import type { NonElementNodeType } from '../../types/index.js'
 import { HostNode } from './HostNode.js'
 
@@ -33,15 +33,7 @@ export abstract class NonElementNode<T extends NonElementNodeType> extends HostN
       // 更新私有属性#value
       this.props.value = value
       // 更新DOM元素的节点值
-      getDomAdapter().setText(this.element, value)
+      useDomAdapter().setText(this.element, value)
     }
-  }
-  /**
-   * @inheritDoc
-   */
-  protected override handleShowState(is: boolean): void {
-    // 设置元素的文本内容
-    // 如果is为true，则显示this.value；否则显示空字符串
-    this.dom.setText(this.element, is ? this.value : '')
   }
 }
