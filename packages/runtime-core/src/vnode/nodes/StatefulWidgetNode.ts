@@ -9,7 +9,6 @@ import {
 import { isPromise } from '@vitarx/utils'
 import { logger } from '@vitarx/utils/src/index.js'
 import type {
-  Child,
   ErrorSource,
   FunctionWidget,
   HostElementInstance,
@@ -18,9 +17,10 @@ import type {
   LifecycleHookParameter,
   LifecycleHookReturnType,
   MountType,
-  NodeBuilder,
   NodeNormalizedProps,
-  SimpleWidget,
+  StatelessWidget,
+  VNodeBuilder,
+  VNodeChild,
   WidgetInstanceType,
   WidgetType
 } from '../../types/index.js'
@@ -49,7 +49,7 @@ import { TextNode } from './TextNode.js'
  */
 const __INITIALIZE_FN_WIDGET_METHOD__ = Symbol('__INITIALIZE_FN_WIDGET_METHOD__')
 
-export type StatefulWidgetNodeType = Exclude<WidgetType, SimpleWidget>
+export type StatefulWidgetNodeType = Exclude<WidgetType, StatelessWidget>
 
 /**
  * StatefulWidgetNode 是一个有状态组件节点类，继承自 WidgetNode。
@@ -575,12 +575,12 @@ class FnWidget extends Widget<Record<string, any>> {
     // 注入生命周期钩子到实例中
     this.#injectLifeCycleHooks(data.lifeCycleHooks)
     const hookCount = Object.keys(data.lifeCycleHooks).length
-    let build: NodeBuilder | VNode | null | LazyWidgetModule = data.build as NodeBuilder
+    let build: VNodeBuilder | VNode | null | LazyWidgetModule = data.build as VNodeBuilder
     if (isPromise(data.build)) {
       // 如果有上级暂停计数器则让计数器+1
       if (this.#suspenseCounter) this.#suspenseCounter.value++
       try {
-        build = await withAsyncContext(data.build as Promise<NodeBuilder>)
+        build = await withAsyncContext(data.build as Promise<VNodeBuilder>)
       } catch (e) {
         // 让build方法抛出异常
         build = () => {
@@ -607,7 +607,7 @@ class FnWidget extends Widget<Record<string, any>> {
     return this
   }
 
-  override build(): Child {
+  override build(): VNodeChild {
     return undefined
   }
 
@@ -626,10 +626,10 @@ class FnWidget extends Widget<Record<string, any>> {
   /**
    * 初始化函数小部件
    *
-   * @param {NodeBuilder} build - 构建函数
+   * @param {VNodeBuilder} build - 构建函数
    * @private
    */
-  #setBuild(build: NodeBuilder | VNode | null | LazyWidgetModule) {
+  #setBuild(build: VNodeBuilder | VNode | null | LazyWidgetModule) {
     // 如果是函数，则直接赋值给build方法
     if (typeof build === 'function') {
       this.build = build
