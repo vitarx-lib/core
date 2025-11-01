@@ -13,7 +13,6 @@ import type {
   ErrorSource,
   FunctionWidget,
   HostElementInstance,
-  HostParentElement,
   LazyWidgetModule,
   LifecycleHookMethods,
   LifecycleHookParameter,
@@ -51,6 +50,31 @@ import { TextNode } from './TextNode.js'
 const __INITIALIZE_FN_WIDGET_METHOD__ = Symbol('__INITIALIZE_FN_WIDGET_METHOD__')
 
 export type StatefulWidgetNodeType = Exclude<WidgetType, SimpleWidget>
+
+/**
+ * StatefulWidgetNode 是一个有状态组件节点类，继承自 WidgetNode。
+ * 它管理着组件的生命周期、状态更新、依赖注入等核心功能。
+ *
+ * 主要功能：
+ * - 管理组件实例的生命周期（创建、挂载、更新、卸载等）
+ * - 处理组件的状态更新和视图渲染
+ * - 提供依赖注入机制（provide/inject）
+ * - 管理组件的作用域和错误处理
+ * - 支持组件的激活和停用
+ *
+ * @example
+ * ```typescript
+ * // 创建一个有状态组件节点
+ * const node = new StatefulWidgetNode(MyComponent, {
+ *   props: { message: 'Hello' }
+ * });
+ *
+ * // 挂载到DOM
+ * node.mount(document.body);
+ * ```
+ *
+ * @template T 组件类型，默认为 StatefulWidgetNodeType
+ */
 export class StatefulWidgetNode<
   T extends StatefulWidgetNodeType = StatefulWidgetNodeType
 > extends WidgetNode<T> {
@@ -234,7 +258,7 @@ export class StatefulWidgetNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: HostParentElement, type?: MountType): this {
+  override mount(target?: HostElementInstance, type?: MountType): this {
     // 未渲染调用this.element渲染一次元素
     if (this.state === NodeState.Created) this.element
     super.mount(target, type)
@@ -395,6 +419,7 @@ export class StatefulWidgetNode<
         if (this.state === NodeState.Unmounted) return
         const oldVNode = this.rootNode
         const newVNode = this.rebuild()
+        if (!this.show) newVNode.show = false
         this._rootNode = this.instance.$patchUpdate(oldVNode, newVNode)
         // 触发更新后生命周期
         this.triggerLifecycleHook(LifecycleHooks.updated)
