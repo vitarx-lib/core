@@ -1,6 +1,6 @@
 import type { AnyFunction } from '@vitarx/utils'
 import { VNode } from '../base/index.js'
-import { isWidgetNode } from '../utils/index.js'
+import { isStatefulWidgetNode } from '../utils/index.js'
 import { getCurrentVNode } from './context.js'
 import { findParentNode } from './relations.js'
 
@@ -108,9 +108,7 @@ export function inject<T>(
   // 获取当前 VNode
   const currentVNode = getCurrentVNode()
   if (!currentVNode) {
-    throw new Error(
-      `[Vitarx.inject] [ERROR]: inject can only be used during widget constructor/onCreate`
-    )
+    throw new Error(`inject can only be used during widget constructor/onCreate`)
   }
 
   // 从当前 VNode 的父级开始查找
@@ -120,7 +118,7 @@ export function inject<T>(
 
   while (vnode) {
     // 如果是 WidgetVNode 且包含提供的数据，直接返回
-    if (isWidgetNode(vnode)) {
+    if (isStatefulWidgetNode(vnode)) {
       if (vnode.hasProvide(name)) {
         return vnode.getProvide(name) as T
       }
