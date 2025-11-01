@@ -50,6 +50,10 @@ export type FunctionWidget<P extends AnyProps = any> = {
 
 /**
  * 小部件结构类型
+ *
+ * - ClassWidget：类小部件
+ * - FunctionWidget：函数小部件
+ * - SimpleWidget：简单小部件
  */
 export type WidgetType<P extends AnyProps = any> =
   | ClassWidget<P>
@@ -61,7 +65,7 @@ export type WidgetType<P extends AnyProps = any> =
  *
  * 通过小部件构造函数推导出小部件的实例类型
  */
-export type WidgetInstanceType<T extends WidgetType> =
+export type WidgetInstanceType<T extends ClassWidget | FunctionWidget> =
   T extends ClassWidget<any, infer I> ? I : T extends FunctionWidget<infer P> ? Widget<P> : Widget
 
 /**
