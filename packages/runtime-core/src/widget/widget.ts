@@ -6,7 +6,7 @@ import type {
   HostElementInstance,
   MergeProps
 } from '../types/index.js'
-import { getCurrentVNode, VNode, VNodeUpdate, type WidgetNode } from '../vnode/index.js'
+import { getCurrentVNode, type StatefulWidgetNode, VNode, VNodeUpdate } from '../vnode/index.js'
 import { CLASS_WIDGET_BASE_SYMBOL } from './constant.js'
 
 /**
@@ -58,7 +58,7 @@ export abstract class Widget<
    *
    * @private
    */
-  readonly #vnode: WidgetNode
+  readonly #vnode: StatefulWidgetNode
 
   constructor(props: InputProps) {
     this.#vnode = getCurrentVNode()!
@@ -116,9 +116,9 @@ export abstract class Widget<
 
   /**
    * 获取小部件的虚拟DOM节点
-   * @returns {WidgetNode} 返回小部件的虚拟DOM节点
+   * @returns {StatefulWidgetNode} 返回小部件的虚拟DOM节点
    */
-  get $vnode(): WidgetNode {
+  get $vnode(): StatefulWidgetNode {
     return this.#vnode
   }
 
@@ -322,25 +322,6 @@ export abstract class Widget<
   onError?(error: unknown, info: ErrorInfo): VNode | void
 
   /**
-   * 移除元素前调用
-   *
-   * 在小部件的视图元素被即将被移除时触发，可用于执行离开动画等，需注意元素布局冲突！
-   *
-   * @param el - 将要被移除的HTML元素
-   * @param type - 移除的类型，可能是卸载或停用
-   * @returns {Promise<void>} - Promise解析后根元素才会被移除
-   * @example
-   * return new Promise((resolve) => {
-   *   this.el.style.opacity = 0 // 设置元素透明度
-   *   setTimeout(resolve, 300) // 延迟300ms后移除元素
-   * })
-   */
-  onBeforeRemove?<T extends HostElementInstance>(
-    el: HostElementInstance,
-    type: 'unmount' | 'deactivate'
-  ): Promise<void>
-
-  /**
    * 服务端预取钩子
    *
    * 在服务端渲染期间获取数据
@@ -375,12 +356,13 @@ export abstract class Widget<
   abstract build(): Child
 
   /**
-   * 对虚拟节点进行打补丁更新操作
+   * 对组件渲染的节点进行打补丁更新操作
    *
-   * 默认使用VNodeUpdate.patchUpdate进行更新节点，如需特殊处理更新逻辑，可自行实现此方法！
+   * 如需特殊处理更新逻辑，可重写此方法，但需谨慎！默认使用VNodeUpdate.patchUpdate方法进行更新
    *
-   * @param oldVNode - 旧的虚拟节点，表示更新前的DOM状态
-   * @param newVNode - 新的虚拟节点，表示更新后的DOM状态
+   *
+   * @param oldVNode - 旧的节点，表示更新前的组件根节点
+   * @param newVNode - 新的节点，表示更新后的组件根节点
    * @returns {VNode} 返回更新后的虚拟节点
    */
   $patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
@@ -391,6 +373,6 @@ export abstract class Widget<
    * 强制更新小部件
    */
   $forceUpdate(): void {
-    this.$vnode.updateChild()
+    this.$vnode.update()
   }
 }
