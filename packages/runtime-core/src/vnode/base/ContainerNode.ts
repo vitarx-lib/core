@@ -40,7 +40,7 @@ export abstract class ContainerNode<
    */
   public children: RuntimeVNodeChildren
 
-  protected constructor(type: T, props: VNodeInputProps<T>) {
+  constructor(type: T, props: VNodeInputProps<T>) {
     const children = unref(popProperty(props, 'children'))
     super(type, props)
     // 如果存在children属性，则格式化子节点
