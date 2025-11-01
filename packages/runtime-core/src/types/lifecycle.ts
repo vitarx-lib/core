@@ -1,6 +1,5 @@
 import { VNode } from '../vnode/index.js'
 import { LifecycleHooks, Widget } from '../widget/index.js'
-import type { HostElementInstance } from './element.js'
 
 /**
  * 错误来源联合类型
@@ -90,9 +89,7 @@ export type LifecycleHookMethods = `${LifecycleHooks}`
  */
 export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
   ? [error: unknown, info: ErrorInfo]
-  : T extends LifecycleHooks.beforeRemove
-    ? [el: HostElementInstance, type: 'unmount' | 'deactivate']
-    : []
+  : []
 /**
  * 生命周期钩子返回值类型
  *
@@ -106,11 +103,7 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  *
  * @template T 生命周期钩子类型
  */
-export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error
-  ? VNode | void
-  : T extends LifecycleHooks.beforeRemove
-    ? Promise<void> | void
-    : void
+export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error ? VNode | void : void
 
 /**
  * 错误处理器类型
