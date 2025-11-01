@@ -1,5 +1,5 @@
 import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
-import { isObject, isRecordObject, popProperty } from '@vitarx/utils'
+import { isObject, isRecordObject, logger, popProperty } from '@vitarx/utils'
 import { useDomAdapter } from '../../host-adapter/index.js'
 import type {
   BindParentElement,
@@ -128,8 +128,13 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       const memo = popProperty(props, 'v-memo')
       // 传送目标
       this._teleport = popProperty(props, 'v-parent') || null
-      // 开发模式下的调试信息
-      this.devInfo = popProperty(props, VNODE_PROPS_DEV_INFO_KEY_SYMBOL)
+      if (import.meta.env?.DEV) {
+        // 开发模式下的调试信息
+        this.devInfo = popProperty(props, VNODE_PROPS_DEV_INFO_KEY_SYMBOL)
+        if (this.devInfo?.isStatic && !this.isStatic) {
+          logger.warn(`node is static, but not set v-static`, this.devInfo.source)
+        }
+      }
       /**
        * 处理绑定属性
        */
