@@ -17,7 +17,7 @@ export function setDomAdapter(adapter: HostAdapter) {
  * @returns {HostAdapter} 返回已注册的DomAdapter实例
  * @throws {Error} 当DomAdapter未注册时抛出错误，错误信息为'[vitarx][ERROR] DomAdapter has not been registered.'
  */
-export function getDomAdapter(): HostAdapter {
+export function useDomAdapter(): HostAdapter {
   // 检查_domAdapter是否已定义
   if (!_domAdapter) {
     // 如果_domAdapter未定义，抛出错误
