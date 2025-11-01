@@ -1,8 +1,10 @@
+import { logger } from '@vitarx/utils/src/index.js'
 import type {
   HostElementInstance,
   MountType,
   NodeNormalizedProps,
-  SimpleWidget
+  StatelessWidget,
+  VNodeInputProps
 } from '../../types/index.js'
 import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, NodeState } from '../constants/index.js'
@@ -24,7 +26,18 @@ import { TextNode } from './TextNode.js'
  *
  * @template T - 继承自 SimpleWidget 的组件类型
  */
-export class StatelessWidgetNode<T extends SimpleWidget = SimpleWidget> extends WidgetNode<T> {
+export class StatelessWidgetNode<
+  T extends StatelessWidget = StatelessWidget
+> extends WidgetNode<T> {
+  constructor(type: T, props: VNodeInputProps<T>) {
+    super(type, props)
+    if (this.ref) {
+      logger.warn(
+        `StatelessWidget(${this.name}) not supported ref attributes`,
+        this.devInfo?.source
+      )
+    }
+  }
   public override shapeFlags = NodeShapeFlags.STATELESS_WIDGET
   /**
    * @inheritDoc
