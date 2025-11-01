@@ -128,8 +128,4 @@ export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error ? VNode 
  * // 页面会显示 "Something went wrong"
  * ```
  */
-export type ErrorHandler<T extends Widget = Widget> = (
-  this: T,
-  error: unknown,
-  info: ErrorInfo
-) => void | VNode
+export type ErrorHandler = (error: unknown, info: ErrorInfo) => void | VNode
