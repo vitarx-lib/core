@@ -187,8 +187,13 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     if (state === this._state) return
     // 如果设置的状态为未挂载(Unmounted)状态
     if (state === NodeState.Unmounted || state === NodeState.Created) {
-      // 清除锚点引用
-      this._anchor = null
+      // 检查是否存在锚点元素
+      if (this._anchor) {
+        // 从DOM中移除锚点元素
+        this.dom.remove(this._anchor)
+        // 将锚点引用置为null
+        this._anchor = null
+      }
     }
     this._state = state
   }
@@ -354,7 +359,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    */
   abstract mount(target?: HostParentElement, type?: MountType): void
-
   /**
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
@@ -390,20 +394,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @param props - 需要规范化的组件属性对象，类型为排除全局属性后的有效创建属性
    */
   protected abstract normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T>
-
-  /**
-   * 移除锚点元素的方法
-   * 如果存在锚点元素(_anchor)，则从DOM中移除该元素，并将锚点引用置为null
-   */
-  protected removeAnchor() {
-    // 检查是否存在锚点元素
-    if (this._anchor) {
-      // 从DOM中移除锚点元素
-      this.dom.remove(this._anchor)
-      // 将锚点引用置为null
-      this._anchor = null
-    }
-  }
   /**
    * 更新小部件的挂载状态（激活或停用）
    *
