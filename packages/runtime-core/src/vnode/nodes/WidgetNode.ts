@@ -315,37 +315,34 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
   /**
    * @inheritDoc
    */
-  override activate(root: boolean): void {
-    super.updateActiveState(true, root, () =>
-      // 激活子节点
-      this.rootNode.activate(false)
-    )
-    // 恢复作用域
+  override activate(root: boolean = true): void {
+    // 如果当前状态不是已激活，则直接返回
+    if (this.state !== NodeState.Deactivated) return
+    // 1️⃣ 先调用父节点自己的激活逻辑
+    this.updateActiveState(true, root)
     this.scope.resume()
-    // 更新视图
-    this.updateChild()
-    // 触发onActivated生命周期
     this.triggerLifecycleHook(LifecycleHooks.activated)
+    // 2️⃣ 再激活子节点（父 → 子顺序）
+    this.rootNode.activate(false)
+    // 3️⃣ 更新视图
+    this.updateView()
   }
   /**
    * @inheritDoc
    */
-  override deactivate(root: boolean): void {
+  override deactivate(root: boolean = true): void {
     // 如果当前状态不是已激活，则直接返回
     if (this.state !== NodeState.Activated) return
-    // 停用作用域
-    this.scope.pause()
-    // 触发onDeactivated生命周期
-    this.triggerLifecycleHook(LifecycleHooks.deactivated)
-    // 递归停用子节点
     this.rootNode.deactivate(false)
-    // 更新激活状态
+    // 1️⃣ 更新挂载状态（先移除 DOM）
     this.updateActiveState(false, root)
+    this.scope.pause()
+    this.triggerLifecycleHook(LifecycleHooks.deactivated)
   }
   /**
    * @inheritDoc
    */
-  override unmount(root?: boolean): void {
+  override unmount(root: boolean = true): void {
     // 检查当前状态是否允许卸载
     if (this.state === NodeState.Unmounted) {
       throw new Error(`the node is already ${this.state}`)
@@ -358,6 +355,8 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
     this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
     // 递归卸载子节点
     this.rootNode.unmount(root)
+    // 移除锚点
+    this.removeAnchor()
     // 停止作用域
     this.scope.dispose()
     // 修改状态为已卸载
@@ -502,25 +501,23 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
    *
    * 更新视图不是同步的，会延迟更新，合并多个微任务。
    *
-   * @param {VNode} newChildVNode - 新子节点，没有则使用`build`方法构建。
+   * @param {VNode} newRootVNode - 新子节点，没有则使用`build`方法构建。
    * @return {void}
    */
-  readonly updateChild = (newChildVNode?: VNode): void => {
+  readonly updateView = (newRootVNode?: VNode): void => {
     if (this.state === NodeState.Unmounted) {
       this.triggerLifecycleHook(
         LifecycleHooks.error,
-        new Error(
-          '[Vitarx.Widget.update]：The widget is destroyed and the view can no longer be updated！'
-        ),
+        new Error('The widget is destroyed and the view can no longer be updated！'),
         {
           source: 'update',
           instance: this.instance
         }
       )
     }
-    if (newChildVNode && !isVNode(newChildVNode)) {
+    if (newRootVNode && !isVNode(newRootVNode)) {
       throw new TypeError(
-        `The new child node must be a valid VNode object, given: ${typeof newChildVNode}`
+        `The new child node must be a valid VNode object, given: ${typeof newRootVNode}`
       )
     }
     // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
@@ -537,7 +534,7 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
         // 如果组件已卸载，则不进行更新
         if (this.state === NodeState.Unmounted) return
         const oldVNode = this.rootNode
-        const newVNode = newChildVNode || this.rebuild()
+        const newVNode = newRootVNode || this.rebuild()
         this._rootNode = this.instance.$patchUpdate(oldVNode, newVNode)
         // 触发更新后生命周期
         this.triggerLifecycleHook(LifecycleHooks.updated)
@@ -565,7 +562,7 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
    *
    * @returns {VNode} 返回构建的虚拟节点
    */
-  private readonly buildViewNode = (): VNode => {
+  private readonly buildRootNode = (): VNode => {
     let vnode: VNode // 声明虚拟节点变量
     try {
       // 执行构建逻辑
@@ -612,7 +609,7 @@ export class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
     if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
 
     // 订阅依赖并构建虚拟节点
-    const { result, subscriber, deps } = depSubscribe(this.buildViewNode, this.updateChild, {
+    const { result, subscriber, deps } = depSubscribe(this.buildRootNode, this.updateView, {
       scope: false
     })
     if (import.meta.env?.DEV) {
