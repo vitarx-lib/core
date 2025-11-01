@@ -1,5 +1,6 @@
-import { DYNAMIC_RENDER_TYPE, type Render } from '../vnode/constants/index.js'
+import { DYNAMIC_RENDER_TYPE, type Render } from '../vnode/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
+import type { ErrorHandler } from './lifecycle.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
   WithDefaultProps,
@@ -102,6 +103,18 @@ declare global {
      * Vitarx 框架内置固有属性
      */
     interface IntrinsicAttributes extends GlobalIntrinsicAttributes {}
+    interface AppConfig {
+      /**
+       * 错误处理函数
+       *
+       * @param error - 捕获到的异常
+       * @param info - 具体的错误信息
+       * @default (error, info) => {
+       *   logger.error('uncaught exceptions',error,info)
+       * }
+       */
+      errorHandler?: ErrorHandler
+    }
   }
   namespace JSX {
     /**
