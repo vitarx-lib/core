@@ -1,14 +1,13 @@
 import { ContainerNode, VNode } from '../base/index.js'
 import { NodeShapeFlags, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
-import type { ElementVNode } from '../nodes/ElementNode.js'
+import type { ElementVNode, StatelessWidgetNode } from '../nodes/index.js'
 import {
   CommentNode,
   FragmentNode,
+  StatefulWidgetNode,
   TextNode,
-  VoidElementVNode,
-  WidgetNode
+  VoidElementVNode
 } from '../nodes/index.js'
-import type { SimpleWidgetNode } from '../nodes/SimpleWidgetNode.js'
 
 /**
  * 检查给定的值是否为虚拟节点(VNode)
@@ -26,18 +25,18 @@ export function isVNode(val: any): val is VNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是WidgetNode类型则返回true，否则返回false
  */
-export function isWidgetNode(val: any): val is WidgetNode {
-  return isVNode(val) && val.shapeFlags === NodeShapeFlags.WIDGET
+export function isStatefulWidgetNode(val: any): val is StatefulWidgetNode {
+  return isVNode(val) && val.shapeFlags === NodeShapeFlags.STATEFUL_WIDGET
 }
 
 /**
- * 检查给定的值是否为简单组件节点(SimpleWidgetNode)
+ * 检查给定的值是否为简单组件节点(StatelessWidgetNode)
  *
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是SimpleWidgetNode类型则返回true，否则返回false
  */
-export function isSimpleWidgetNode(val: any): val is SimpleWidgetNode {
-  return isVNode(val) && val.shapeFlags === NodeShapeFlags.SIMPLE_WIDGET
+export function isStatelessWidgetNode(val: any): val is StatelessWidgetNode {
+  return isVNode(val) && val.shapeFlags === NodeShapeFlags.STATELESS_WIDGET
 }
 
 /**
