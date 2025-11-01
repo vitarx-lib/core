@@ -1,10 +1,10 @@
 import { EffectScope, NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import type {
-  Child,
   ErrorInfo,
   ExtractChildrenPropType,
   HostElementInstance,
-  MergeProps
+  MergeProps,
+  VNodeChild
 } from '../types/index.js'
 import { getCurrentVNode, type StatefulWidgetNode, VNode, VNodeUpdate } from '../vnode/index.js'
 import { CLASS_WIDGET_BASE_SYMBOL } from './constant.js'
@@ -337,7 +337,7 @@ export abstract class Widget<
    *
    * 该方法会被多次调用，所以在方法内不应该存在任何副作用。
    *
-   * > **注意**：在类小部件的build方法中不要返回 `() => VitarxElement`，而是应返回`VitarxElement`。
+   * > **注意**：在类小部件的build方法中不要返回 `() => VNodeChild`，而是应返回直接 `VNodeChild`。
    *
    * 示例：
    * ```ts
@@ -345,28 +345,31 @@ export abstract class Widget<
    * build() {
    *   return <div>Hello World</div>
    * }
-   * // 使用`createVNode`或`createElement` API函数创建元素
+   * // 使用 `createVNode` API函数创建虚拟节点/元素
    * build() {
    *  return createVNode('div',{},'Hello World')
    * }
    * ```
    * @remarks 该方法应由子类实现，且该方法仅供内部渲染逻辑使用。
-   * @returns { Child } - 返回VNode节点或null
+   * @returns { VNodeChild } - 返回VNode节点或null
    */
-  abstract build(): Child
+  abstract build(): VNodeChild
 
   /**
-   * 对组件渲染的节点进行打补丁更新操作
+   * 对组件渲染的根节点执行打补丁（Patch）更新操作。
    *
-   * 如需特殊处理更新逻辑，可重写此方法，但需谨慎！默认使用VNodeUpdate.patchUpdate方法进行更新
+   * 框架内部会根据 `currentVNode` 与 `nextVNode` 的差异，
+   * 选择性地执行复用、更新或销毁并替换节点。
    *
+   * 如需自定义特殊更新逻辑，可重写此方法，但需谨慎！
+   * 默认使用 VNodeUpdate.patchUpdate 进行差异计算和更新。
    *
-   * @param oldVNode - 旧的节点，表示更新前的组件根节点
-   * @param newVNode - 新的节点，表示更新后的组件根节点
-   * @returns {VNode} 返回更新后的虚拟节点
+   * @param currentVNode - 当前已渲染的虚拟节点
+   * @param nextVNode - 目标虚拟节点描述，将被用于对比更新
+   * @returns {VNode} 更新后的虚拟节点（可能是原节点或新节点）
    */
-  $patchUpdate(oldVNode: VNode, newVNode: VNode): VNode {
-    return VNodeUpdate.patchUpdate(oldVNode, newVNode) // 调用VNodeHelper的patchUpdate方法执行具体的更新逻辑
+  $patchUpdate(currentVNode: VNode, nextVNode: VNode): VNode {
+    return VNodeUpdate.patchUpdate(currentVNode, nextVNode)
   }
 
   /**
