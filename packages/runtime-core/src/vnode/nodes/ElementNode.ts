@@ -35,9 +35,9 @@ export class ElementVNode<T extends ElementNodeType = ElementNodeType> extends C
   /**
    * @inheritDoc
    */
-  protected override handleShowState(is: boolean): void {
+  protected override handleShowState(visible: boolean): void {
     // 如果显示，则恢复style样式，如果没有则恢复为空
-    this.dom.setDisplay(this.element, is)
+    this.dom.setDisplay(this.element, visible)
   }
   /**
    * @inheritDoc
@@ -49,6 +49,8 @@ export class ElementVNode<T extends ElementNodeType = ElementNodeType> extends C
    * @inheritDoc
    */
   protected createElement(): HostElementInstance<T> {
-    return this.dom.createElement(this.type, this.props)
+    const element = this.dom.createElement(this.type, this.props)
+    if (!this.show) this.dom.setDisplay(element, false)
+    return element
   }
 }
