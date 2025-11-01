@@ -19,14 +19,6 @@ export class FragmentNode extends ContainerNode<FragmentNodeType> {
   /**
    * @inheritDoc
    */
-  protected override handleShowState(is: boolean): void {
-    for (const child of this.children) {
-      child.show = is
-    }
-  }
-  /**
-   * @inheritDoc
-   */
   protected override createElement(): HostElementInstance<FragmentNodeType> {
     return this.dom.createFragment() // 调用dom对象的createFragment方法创建文档片段
   }
