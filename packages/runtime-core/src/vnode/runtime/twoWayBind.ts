@@ -4,6 +4,7 @@ import {
   REF_SIGNAL_SYMBOL,
   type RefSignal,
   shallowRef,
+  SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL,
   SubManager,
   toRaw,
@@ -34,7 +35,7 @@ import {
  * - 会自动处理原始值是否为 RefSignal 的情况
  * - 当属性值未改变时，不会触发更新
  */
-export class TwoWayBindProp<T extends {}, K extends keyof T> implements RefSignal {
+export class TwoWayBindProp<T extends {}, K extends keyof T> implements RefSignal<T[K]> {
   readonly [REF_SIGNAL_SYMBOL] = true
   readonly [SIGNAL_SYMBOL] = true
   private readonly _ref: RefSignal
@@ -52,6 +53,9 @@ export class TwoWayBindProp<T extends {}, K extends keyof T> implements RefSigna
     })
     // 为了解决父组件传入的是 ref() , 所以初始化默认值通过 this.value 来使传入的ref更新
     if (defaultValue !== undefined) this.value = defaultValue
+  }
+  get [SIGNAL_RAW_VALUE_SYMBOL]() {
+    return this._ref.value
   }
   /**
    * 获取属性的当前值
