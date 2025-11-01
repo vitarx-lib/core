@@ -1,6 +1,6 @@
-import type { FragmentNodeType, HostElementInstance } from '../../types/index.js'
+import type { FragmentNodeType, HostElementInstance, VNodeInputProps } from '../../types/index.js'
 import { ContainerNode } from '../base/index.js'
-import { NodeShapeFlags } from '../constants/index.js'
+import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
 
 /**
  * FragmentNode是一个容器节点类，用于管理文档片段(Fragment)的子节点。
@@ -16,6 +16,10 @@ import { NodeShapeFlags } from '../constants/index.js'
  */
 export class FragmentNode extends ContainerNode<FragmentNodeType> {
   public override shapeFlags = NodeShapeFlags.FRAGMENT
+
+  constructor(props: VNodeInputProps<FragmentNodeType>) {
+    super(FRAGMENT_NODE_TYPE, props)
+  }
   /**
    * @inheritDoc
    */
