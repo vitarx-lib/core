@@ -7,13 +7,20 @@
 
 import {
   COMMENT_NODE_TYPE,
+  CommentNode,
+  type DynamicRenderType,
+  ElementNode,
   type Fragment,
   FRAGMENT_NODE_TYPE,
+  FragmentNode,
   type Render,
+  StatefulWidgetNode,
+  StatelessWidgetNode,
   TEXT_NODE_TYPE,
+  TextNode,
+  VNode,
   VNODE_PROPS_DEV_INFO_KEY_SYMBOL
-} from '../vnode/constants/index.js'
-import { VNode } from '../vnode/index.js'
+} from '../vnode/index.js'
 import type { HostElementNames, HostVoidElementNames, ValidElementNames } from './element.js'
 import type {
   IntrinsicAttributes,
@@ -22,7 +29,13 @@ import type {
   WithDefaultProps,
   WithRefProps
 } from './props.js'
-import type { ClassWidget, FunctionWidget, WidgetPropsType, WidgetType } from './widget.js'
+import type {
+  ClassWidget,
+  FunctionWidget,
+  StatelessWidget,
+  WidgetPropsType,
+  WidgetType
+} from './widget.js'
 
 export type CodeSourceInfo = {
   /** 源文件名 */
@@ -84,23 +97,27 @@ export type NodeNormalizedProps<T extends NodeTypes> = T extends FragmentNodeTyp
         : {}
 
 /**
- * createVNode 支持的子节点类型定义
+ * 支持渲染的元素类型定义
  *
- * `Child` 仅代表 `createVNode` 时支持的子节点类型
+ * `VNodeChild` 表示框架可渲染的最小单元节点类型：
+ * - null / undefined / boolean：条件渲染占位（注释节点）
+ * - string / number / bigint：文本节点
+ * - VNode：虚拟节点
  */
-export type Child = null | undefined | boolean | number | string | bigint | VNode
+export type VNodeChild = null | undefined | boolean | number | string | bigint | VNode
 /**
- * createVNode 支持的子节点列表类型
+ * 支持渲染的子节点列表类型
  *
- * `Children` 仅代表 `createVNode` 时支持的子节点列表类型，在内部会将递归扁平化处理。
+ * `VNodeChildren` 表示 createVNode 可接受的子节点输入，
+ * 可以是单个 VNodeChild 或可迭代的 VNodeChild 集合。
  */
-export type Children = Child | Iterable<Child>
+export type VNodeChildren = VNodeChild | Iterable<VNodeChild>
 /**
  * 运行时子节点列表类型
  *
- * `RuntimeChildren` 仅代表节点内部规范化后的子节点列表类型
+ * `RuntimeVNodeChildren` 仅代表节点内部规范化后的子节点列表类型
  */
-export type RuntimeChildren = Array<VNode>
+export type RuntimeVNodeChildren = Array<VNode>
 
 /**
  * createVNode支持的节点类型
@@ -142,16 +159,18 @@ export type MountType = 'insertBefore' | 'insertAfter' | 'replace' | 'appendChil
 /**
  * 节点实例类型重载
  */
-// export type VNodeInstance<T extends ValidCreatedNodeType> = T extends Render | DynamicRenderType
-//   ? VNode
-//   : T extends Fragment | FragmentNodeType
-//     ? FragmentNode
-//     : T extends PlainTextNodeType
-//       ? TextNode
-//       : T extends CommentNodeType
-//         ? CommentNode
-//         : T extends BaseElementNodeType
-//           ? BaseElementNode<T>
-//           : T extends WidgetType
-//             ? WidgetNode<T>
-//             : VNode
+export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | DynamicRenderType
+  ? VNode
+  : T extends Fragment | FragmentNodeType
+    ? FragmentNode
+    : T extends TextNodeType
+      ? TextNode
+      : T extends CommentNodeType
+        ? CommentNode
+        : T extends ElementNodeType
+          ? ElementNode<T>
+          : T extends StatelessWidget
+            ? StatelessWidgetNode
+            : T extends WidgetType
+              ? StatefulWidgetNode
+              : VNode
