@@ -8,7 +8,7 @@ import {
 } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
 import { logger } from '@vitarx/utils/src/index.js'
-import { type App, getAppContext } from '../../app/index.js'
+import { type App } from '../../app/index.js'
 import type {
   ErrorSource,
   FunctionWidget,
@@ -80,10 +80,6 @@ export type StatefulWidgetNodeType = Exclude<WidgetType, StatelessWidget>
 export class StatefulWidgetNode<
   T extends StatefulWidgetNodeType = StatefulWidgetNodeType
 > extends WidgetNode<T> {
-  /**
-   * app上下文
-   */
-  public appContext?: App
   public override shapeFlags = NodeShapeFlags.STATEFUL_WIDGET
   /**
    * 依赖映射
@@ -117,7 +113,6 @@ export class StatefulWidgetNode<
   private _instance: WidgetInstanceType<T> | null = null
   constructor(type: T, props: VNodeInputProps<T>) {
     super(type, props)
-    this.appContext = getAppContext()
     if (this.appContext) this.provide('App', this.appContext)
   }
 

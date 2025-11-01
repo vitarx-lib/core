@@ -1,8 +1,10 @@
+import { type App, getAppContext } from '../../app/index.js'
 import type {
   BindParentElement,
   HostElementInstance,
   HostParentElement,
   MountType,
+  VNodeInputProps,
   WidgetType
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
@@ -10,6 +12,14 @@ import { VNode } from './VNode.js'
 
 export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
   protected _rootNode: VNode | null = null
+  /**
+   * app上下文
+   */
+  public appContext?: App
+  constructor(type: T, props: VNodeInputProps<T>) {
+    super(type, props)
+    this.appContext = getAppContext()
+  }
   /**
    * 获取根节点
    * @returns {VNode} 返回虚拟根节点

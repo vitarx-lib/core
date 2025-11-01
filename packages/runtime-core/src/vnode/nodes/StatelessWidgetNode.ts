@@ -95,7 +95,9 @@ export class StatelessWidgetNode<
   protected override rebuild(): VNode {
     // 调用组件类型方法并传入props，获取构建结果
     // 如果构建结果是字符串或数字，创建文本节点并返回
-    const buildResult = this.type.call(null, this.props)
+    const buildResult = this.appContext
+      ? this.appContext.runInContext(() => this.type.call(null, this.props))
+      : this.type.call(null, this.props)
     // 如果构建结果是VNode节点，直接返回
     if (isVNode(buildResult)) return buildResult
     // 获取构建结果的类型
