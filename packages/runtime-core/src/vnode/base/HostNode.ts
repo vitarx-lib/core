@@ -56,12 +56,13 @@ export abstract class HostNode<
    */
   override mount(target?: HostParentElement, type?: MountType): void {
     const teleport = this.teleport
+    let element: HostElementInstance = this.element
     if (teleport) {
-      // 挂载到传送节点
+      // 挂载真实元素到 teleport 目标
       this.dom.appendChild(teleport, this.element)
+      // 在原文档位置保留 anchor 作为占位
+      element = this.anchor
     }
-    // 获取片段节点元素
-    const element = teleport ? this.anchor : this.element
     // 挂载到指定目标
     if (target) {
       switch (type) {
@@ -144,14 +145,15 @@ export abstract class HostNode<
    * @inheritDoc
    */
   override activate(root: boolean = true): void {
-    this.updateActiveState(true, root, this.activateChildren)
+    this.updateActiveState(true, root)
+    this.activateChildren?.()
   }
   /**
    * @inheritDoc
    */
   override deactivate(root: boolean = true): void {
-    this.updateActiveState(false, root)
     this.deactivateChildren?.()
+    this.updateActiveState(false, root)
   }
   /**
    * 挂载子节点
