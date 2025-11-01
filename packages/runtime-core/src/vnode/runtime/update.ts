@@ -1,9 +1,15 @@
-import { Observer, toRaw } from '@vitarx/responsive'
-import { isDeepEqual } from '@vitarx/utils'
-import { DomHelper } from '../dom/index.js'
-import { isContainerNode, isNonElementNode, isVNode, isWidgetNode } from './is.js'
-import { Fragment } from './node-symbol.js'
-import type { NonElementNode, ParentNode, VNode } from './nodes/index.js'
+import { SubManager, toRaw } from '@vitarx/responsive'
+import { useDomAdapter } from '../../host-adapter/index.js'
+import type { AnyProps } from '../../types/index.js'
+import { ContainerNode, NonElementNode, VNode } from '../base/index.js'
+import { StatelessWidgetNode } from '../nodes/index.js'
+import {
+  isContainerNode,
+  isFragmentNode,
+  isNonElementNode,
+  isStatefulWidgetNode,
+  isStatelessWidgetNode
+} from '../utils/index.js'
 
 /**
  * VNodeUpdate 是一个用于虚拟DOM节点更新的工具类，提供了虚拟DOM节点的更新、替换等功能。
@@ -53,29 +59,13 @@ export class VNodeUpdate {
       this.replace(newVNode, oldVNode)
       return newVNode
     }
-    if (oldVNode._teleport !== newVNode._teleport) {
-      if (oldVNode._teleport && !newVNode._teleport) {
-        // 将真实元素从传送位置归位到正常位置
-        DomHelper.replace(oldVNode.element, oldVNode.shadowElement)
-        // 删除占位的影子元素
-        oldVNode['removeShadowElement']()
-      } else if (newVNode._teleport && !oldVNode._teleport) {
-        // 将真实元素替换为影子元素
-        DomHelper.replace(oldVNode.shadowElement, oldVNode.element)
-        // 将真实元素从正常位置移动到传送位置
-        DomHelper.appendChild(newVNode._teleport, oldVNode.element)
-      }
-      // 重新设置传送位置
-      oldVNode['_teleport'] = newVNode._teleport
-    }
     if (!oldVNode.isStatic) {
       // 更新节点的属性
-      this.patchUpdateAttrs(oldVNode, newVNode)
+      this.patchUpdateProps(oldVNode, newVNode)
       // 如果是容器节点，则更新其子节点
       if (isContainerNode(oldVNode)) {
         // 递归更新子节点并获取更新后的子节点列表
-        const newChildren = this.patchUpdateChildren(oldVNode, newVNode as ParentNode)
-        oldVNode.replaceChildren(newChildren)
+        oldVNode.children = this.patchUpdateChildren(oldVNode, newVNode as ContainerNode)
       }
     }
     return oldVNode
@@ -86,23 +76,37 @@ export class VNodeUpdate {
    * @param newVNode - 新的虚拟节点，必须和旧节点是同类型！！！
    * @template T - 继承自VNode的泛型类型
    */
-  static patchUpdateAttrs<T extends VNode>(oldVNode: T, newVNode: T) {
+  static patchUpdateProps<T extends VNode>(oldVNode: T, newVNode: T) {
+    // 更新节点的挂载目标
+    oldVNode.setTeleport(newVNode.teleport)
     // 更新节点的显示状态
-    oldVNode.isShow = newVNode.isShow
+    oldVNode.show = newVNode.show
+    // 片段节点不更新
+    if (isFragmentNode(oldVNode)) return
     // 如果是特殊的无props节点，则不进行任何更新
     if (isNonElementNode(oldVNode)) {
       oldVNode.value = (newVNode as unknown as NonElementNode<any>).value
       return
     }
-    if (oldVNode.type === Fragment) return
-    const isWidget = isWidgetNode(oldVNode) // 判断是否是Widget类型的节点
-    const el = oldVNode.element as HTMLElement // 获取DOM元素
+    // 有状态组件节点更新属性处理
+    if (isStatefulWidgetNode(oldVNode)) {
+      this.updateStatefulWidgetNodeProps(oldVNode.props, newVNode.props)
+      return
+    }
+    // 无状态组件节点更新属性处理
+    if (isStatelessWidgetNode(oldVNode)) {
+      this.updateStatelessWidgetNodeProps(oldVNode, newVNode as unknown as StatelessWidgetNode)
+      return
+    }
+    // 普通的元素节点更新属性处理
+    const dom = useDomAdapter()
+    // 获取元素节点
+    const el = oldVNode.element
     // 旧的属性
     const oldAttrs = toRaw(oldVNode.props) as Record<string, any>
     // 新的属性
     const newAttrs = newVNode.props as Record<string, any>
     const keysToDelete = new Set(Object.keys(oldAttrs)) // 需要删除的属性键集合
-    const changedAttrs: string[] = [] // 发生变化的属性数组
     // 遍历 newAttrs，检查是否有新的属性或属性值需要更新
     for (const key in newAttrs) {
       const newValue = newAttrs[key]
@@ -110,51 +114,44 @@ export class VNodeUpdate {
       // 将存在于新Attrs的键从 keysToDelete 中删除
       keysToDelete.delete(key)
       // 更新或新增属性
-      if (oldValue !== newValue || !isDeepEqual(oldValue, newValue)) {
-        if (isWidget) {
-          if (
-            key === 'children' && // 检查是否为children属性
-            isVNode(oldValue) && // 检查旧值是否为虚拟节点
-            isVNode(newValue) && // 检查新值是否为虚拟节点
-            oldValue.type === newValue.type && // 比较虚拟节点的类型是否相同
-            oldValue.key === newValue.key // 比较虚拟节点的键是否相同
-          ) {
-            // 直接更新，跳过通知组件children变化，减少重构次数，提升性能
-            this.patchUpdateAttrs(oldValue, newValue)
-            if (isContainerNode(oldValue)) {
-              // 递归更新子节点并获取更新后的子节点列表
-              const newChildren = this.patchUpdateChildren(oldValue, newValue as ParentNode)
-              oldValue.replaceChildren(newChildren)
-            }
-            continue
-          }
-          changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
-        } else {
-          DomHelper.setAttribute(el, key, newValue, oldValue) // 设置DOM属性
-        }
+      if (oldValue !== newValue) {
+        dom.setAttribute(el, key, newValue, oldValue) // 设置DOM属性
         oldAttrs[key] = newValue // 更新旧属性值
       }
     }
     // 遍历要删除的键集合，并删除对应的属性
     for (const key of keysToDelete) {
-      if (isWidget) {
-        changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
-      } else {
-        DomHelper.removeAttribute(el, key, oldAttrs[key]) // 移除DOM属性
-      }
+      dom.removeAttribute(el, key, oldAttrs[key]) // 移除DOM属性
       delete oldAttrs[key] // 删除旧属性
     }
-    // 如果有属性值改变，触发属性监听器
-    if (changedAttrs.length > 0) Observer.notify(oldVNode.props, changedAttrs)
   }
-
+  /**
+   * 不同类型节点替换
+   *
+   * @param newVNode - 新的虚拟节点
+   * @param oldVNode - 旧的虚拟节点
+   * @return {VNode} 替换后的虚拟节点
+   */
+  static replace(newVNode: VNode, oldVNode: VNode): VNode {
+    const dom = useDomAdapter()
+    const oldElement = oldVNode.operationTarget
+    const anchorElement = dom.createText('')
+    // 插入一个新的锚点元素
+    dom.insertBefore(anchorElement, oldElement)
+    // 卸载旧节点
+    oldVNode.unmount()
+    // 新节点执行挂载，使用锚点元素进行替换
+    newVNode.mount(anchorElement, 'replace')
+    return newVNode
+  }
   /**
    * 更新容器子节点
    *
    * @param oldVNode - 旧的虚拟节点
    * @param newVNode - 新的虚拟节点，必须和旧的节点类型相同！！！
    */
-  static patchUpdateChildren<T extends ParentNode>(oldVNode: T, newVNode: T): VNode[] {
+  static patchUpdateChildren<T extends ContainerNode>(oldVNode: T, newVNode: T): VNode[] {
+    const dom = useDomAdapter()
     const oldChildren = oldVNode.children
     const newChildren = newVNode.children
     const parentEl = oldVNode.element
@@ -162,11 +159,15 @@ export class VNodeUpdate {
 
     // --- 边界情况 ---
     if (!oldChildren.length) {
-      newChildren.forEach(c => c.mount(parentEl))
+      for (const newChild of newChildren) {
+        newChild.mount(parentEl)
+      }
       return newChildren
     }
     if (!newChildren.length) {
-      oldChildren.forEach(c => c.unmount())
+      for (const oldChild of oldChildren) {
+        oldChild.unmount()
+      }
       return newChildren
     }
 
@@ -209,11 +210,7 @@ export class VNodeUpdate {
 
       // 下一个元素，用于 insertBefore 或 appendChild
       const nextChild = newChildren[i + 1]
-      const anchor = nextChild
-        ? nextChild._teleport
-          ? nextChild.shadowElement
-          : nextChild.element
-        : null
+      const anchor = nextChild ? nextChild.operationTarget : null
 
       if (reuseChild) {
         // --- 节点复用 ---
@@ -223,11 +220,11 @@ export class VNodeUpdate {
         if (seqIndex >= 0 && seq[seqIndex] === i) {
           seqIndex-- // 顺序正确，不移动
         } else {
-          const element = reuseChild.teleport ? reuseChild.shadowElement : reuseChild.element
+          const element = reuseChild.operationTarget
           if (anchor) {
-            DomHelper.insertBefore(element, anchor)
+            dom.insertBefore(element, anchor)
           } else {
-            DomHelper.appendChild(parentEl, element)
+            dom.appendChild(parentEl, element)
           }
         }
         continue
@@ -241,7 +238,68 @@ export class VNodeUpdate {
 
     return newChildren
   }
+  /**
+   * 更新有状态组件节点的属性
+   * @param oldProps - 旧的属性对象
+   * @param newProps - 新的属性对象
+   */
+  private static updateStatefulWidgetNodeProps(oldProps: AnyProps, newProps: AnyProps) {
+    // 旧的属性
+    const oldAttrs = toRaw(oldProps) as Record<string, any>
+    // 新的属性
+    const newAttrs = newProps as Record<string, any>
+    const keysToDelete = new Set(Object.keys(oldAttrs)) // 需要删除的属性键集合
+    const changedAttrs: string[] = [] // 发生变化的属性数组
+    // 遍历 newAttrs，检查是否有新的属性或属性值需要更新
+    for (const key in newAttrs) {
+      const newValue = newAttrs[key]
+      const oldValue = oldAttrs[key]
+      // 将存在于新Attrs的键从 keysToDelete 中删除
+      keysToDelete.delete(key)
+      // 更新或新增属性
+      if (oldValue !== newValue) {
+        changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
+        oldAttrs[key] = newValue // 更新旧属性值
+      }
+    }
+    // 遍历要删除的键集合，并删除对应的属性
+    for (const key of keysToDelete) {
+      changedAttrs.push(key) // 如果是Widget类型的节点，记录变化的属性
+      delete oldAttrs[key] // 删除旧属性
+    }
+    // 如果有属性值改变，触发属性监听器
+    if (changedAttrs.length > 0) {
+      SubManager.notify(oldProps as Record<string, any>, changedAttrs)
+    }
+  }
+  /**
+   * 更新无状态组件节点属性的静态方法
+   * @param oldNode - 旧的StatelessWidgetNode节点
+   * @param newNode - 新的StatelessWidgetNode节点
+   */
+  private static updateStatelessWidgetNodeProps(
+    oldNode: StatelessWidgetNode,
+    newNode: StatelessWidgetNode
+  ) {
+    // 获取旧节点和新节点的属性
+    const oldAttrs = oldNode.props
+    const newAttrs = newNode.props
+    // 获取所有键的并集
+    const allKeys = new Set([...Object.keys(oldAttrs), ...Object.keys(newAttrs)])
 
+    // 使用 Array.some 进行短路求值，找到第一个不同的属性就返回
+    const isSomeDifferentProps = Array.from(allKeys).some(key => {
+      const newValue = newAttrs[key]
+      const oldValue = oldAttrs[key]
+      // 处理 undefined 和不存在的键的情况
+      const newHasProp = key in newAttrs
+      const oldHasProp = key in oldAttrs
+      // 如果存在性不同，或者值不同，则认为有变化
+      return newHasProp !== oldHasProp || newValue !== oldValue
+    })
+    // 如果有属性值改变，更新属性
+    if (isSomeDifferentProps) oldNode.updateProps(newAttrs)
+  }
   /**
    * 获取最长递增子序列（LIS）
    *
@@ -291,24 +349,5 @@ export class VNodeUpdate {
     }
 
     return seq
-  }
-
-  /**
-   * 不同类型节点替换
-   *
-   * @param newVNode - 新的虚拟节点
-   * @param oldVNode - 旧的虚拟节点
-   * @return {VNode} 替换后的虚拟节点
-   */
-  static replace(newVNode: VNode, oldVNode: VNode): VNode {
-    const oldElement = oldVNode._teleport ? oldVNode.shadowElement : oldVNode.element
-    const shadowElement = document.createTextNode('')
-    // 插入影子元素到旧节点之前，兼容卸载动画
-    DomHelper.insertBefore(shadowElement, oldElement)
-    // 卸载旧节点
-    oldVNode.unmount()
-    // 挂载新节点
-    newVNode.mount(shadowElement, 'replace')
-    return newVNode
   }
 }
