@@ -1,5 +1,5 @@
 import type { SIMPLE_FUNCTION_WIDGET_SYMBOL, Widget } from '../widget/index.js'
-import type { Child } from './vnode.js'
+import type { VNodeChild } from './vnode.js'
 
 /**
  * 任意组件属性类型
@@ -8,7 +8,7 @@ export type AnyProps = Record<string | symbol, any>
 /**
  * 视图构建器类型
  */
-export type NodeBuilder = Widget['build']
+export type VNodeBuilder = Widget['build']
 /**
  * 类小部件构造器类型
  *
@@ -28,17 +28,17 @@ export interface LazyWidgetModule {
 /**
  * 函数小部件有效地返回值，会提供给 `JSX.Element` 使用，让 tsx 能够兼容 vitarx 特有的函数组件返回值类型
  *
- * - `null | false | undefined`：不渲染任何内容
+ * - `null | false | undefined`：不渲染任何内容（但存在注释节点做为定位的锚点）
  * - `string | number`：渲染为文本节点
- * - `BuildVNode`：视图节点构建器
- * - `Promise<ValidCreatedChild>`：异步返回任意节点
- * - `Promise<BuildVNode>`：异步返回视图节点构建器
+ * - `NodeBuilder`：视图节点构建器
+ * - `Promise<VNodeChild>`：异步返回受支持的VNodeChild，如字符串，元素节点等
+ * - `Promise<VNodeBuilder>`：异步返回视图节点构建器
  * - `Promise<{ default: WidgetConstructorType }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
  */
 export type ValidBuildElement =
-  | Child
-  | NodeBuilder
-  | Promise<Child | LazyWidgetModule | NodeBuilder>
+  | VNodeChild
+  | VNodeBuilder
+  | Promise<VNodeChild | LazyWidgetModule | VNodeBuilder>
 
 /**
  * 函数小部件类型
@@ -58,7 +58,7 @@ export type FunctionWidget<P extends AnyProps = any> = {
 export type WidgetType<P extends AnyProps = any> =
   | ClassWidget<P>
   | FunctionWidget<P>
-  | SimpleWidget<P>
+  | StatelessWidget<P>
 
 /**
  * 小部件实例推导
@@ -83,14 +83,14 @@ export type LazyWidget<P extends AnyProps = any> = () => Promise<{
 /**
  * 异步函数小部件类型
  */
-export type AsyncWidget<P extends AnyProps = any> = (props: P) => Promise<Child>
+export type AsyncWidget<P extends AnyProps = any> = (props: P) => Promise<VNodeChild>
 
 /**
- * 简单小部件类型
+ * 无状态小部件
  */
-export type SimpleWidget<
+export type StatelessWidget<
   P extends AnyProps = any,
-  R extends Child = Child,
+  R extends VNodeChild = VNodeChild,
   DP extends Partial<P> = Partial<P>
 > = {
   readonly [SIMPLE_FUNCTION_WIDGET_SYMBOL]: true
