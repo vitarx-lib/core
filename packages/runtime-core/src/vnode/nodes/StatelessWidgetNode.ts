@@ -1,15 +1,14 @@
 import type {
-  AnyProps,
   HostElementInstance,
-  HostParentElement,
   MountType,
   NodeNormalizedProps,
   SimpleWidget
 } from '../../types/index.js'
-import { VNode, WidgetNode } from '../base/index.js'
+import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, NodeState } from '../constants/index.js'
+import { VNodeUpdate } from '../runtime/index.js'
 import { isVNode } from '../utils/index.js'
-import { unwrapRefProps } from '../utils/unwrapRefProps.js'
+import { unwrapRefProps } from '../utils/normalizeProps.js'
 import { CommentNode } from './CommentNode.js'
 import { TextNode } from './TextNode.js'
 
@@ -40,7 +39,7 @@ export class StatelessWidgetNode<T extends SimpleWidget = SimpleWidget> extends 
   /**
    * @inheritDoc
    */
-  override mount(target?: HostParentElement, type?: MountType): void {
+  override mount(target?: HostElementInstance, type?: MountType): void {
     if (this.state === NodeState.Created) this.element
     super.mount(target, type)
   }
@@ -96,9 +95,26 @@ export class StatelessWidgetNode<T extends SimpleWidget = SimpleWidget> extends 
   }
 
   /**
+   * 更新组件属性的方法
+   *
+   * @param newProps - 新的规范化属性对象，类型为NodeNormalizedProps<T>
+   */
+  public updateProps(newProps: NodeNormalizedProps<T>) {
+    // 将传入的新属性赋值给当前实例的props属性
+    this.props = newProps
+    // 重新构建节点，生成新的虚拟DOM节点
+    const newNode = this.rebuild()
+    // 如果节点不显示，则同步给新的节点
+    if (!newNode.show) newNode.show = false
+    // 使用patchUpdate方法对比并更新实际的DOM节点
+    // 将当前根节点与新构建的节点进行差异更新，并将结果赋值给_rootNode
+    this._rootNode = VNodeUpdate.patchUpdate(this.rootNode, newNode)
+  }
+
+  /**
    * @inheritDoc
    */
-  protected override normalizeProps(props: AnyProps): NodeNormalizedProps<T> {
+  protected override normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     return unwrapRefProps(props) as NodeNormalizedProps<T>
   }
 }
