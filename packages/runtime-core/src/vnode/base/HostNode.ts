@@ -64,6 +64,7 @@ export abstract class HostNode<
     if (!this._cachedElement) {
       // 如果没有缓存，则创建新的元素实例并缓存
       this._cachedElement = markNonSignal(this.render())
+      if (this.ref) this.ref.value = this.element
       if (this.state === NodeState.Created) this.state = NodeState.Rendered
     }
     // 如果已经缓存，则直接返回缓存的实例
