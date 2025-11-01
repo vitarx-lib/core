@@ -4,7 +4,7 @@ import {
   type Fragment,
   FRAGMENT_NODE_TYPE,
   TEXT_NODE_TYPE
-} from '../vnode/constants/index.js'
+} from '../vnode/index.js'
 import type { MaybeRef } from './props.js'
 import type { CommentNodeType, NodeTypes } from './vnode.js'
 import type { WidgetPropsType } from './widget.js'
