@@ -1,6 +1,7 @@
 export * from './context.js'
 export * from './props.js'
 export * from './ref.js'
+export * from './provide.js'
 export * from './relations.js'
 export * from './update.js'
 export * from './twoWayBind.js'
