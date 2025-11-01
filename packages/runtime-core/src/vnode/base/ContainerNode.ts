@@ -1,11 +1,11 @@
 import { unref } from '@vitarx/responsive'
 import { logger, popProperty } from '@vitarx/utils'
 import type {
-  Child,
   ContainerNodeType,
   HostElementInstance,
-  RuntimeChildren,
+  RuntimeVNodeChildren,
   UniqueKey,
+  VNodeChild,
   VNodeInputProps
 } from '../../types/index.js'
 import { CommentNode, TextNode } from '../nodes/index.js'
@@ -38,7 +38,7 @@ export abstract class ContainerNode<
   /**
    * 子节点列表
    */
-  public children: RuntimeChildren
+  public children: RuntimeVNodeChildren
 
   protected constructor(type: T, props: VNodeInputProps<T>) {
     const children = unref(popProperty(props, 'children'))
@@ -121,10 +121,10 @@ export abstract class ContainerNode<
    * @param target
    * @returns {VNode[]} 返回一个包含所有子节点的数组
    */
-  private formatChildren(target: Child): RuntimeChildren {
+  private formatChildren(target: VNodeChild): RuntimeVNodeChildren {
     const keySet = new Set<UniqueKey>()
     const childList: VNode[] = []
-    const stack: Child[] = [unref(target)]
+    const stack: VNodeChild[] = [unref(target)]
 
     while (stack.length > 0) {
       const current = stack.pop()!
