@@ -375,8 +375,7 @@ export class StatefulWidgetNode<
       if (isCallOnError) {
         logger.error(
           `Widget(${this.name}) You can't keep throwing exceptions in the onError hook, this results in an infinite loop!`,
-          e,
-          this.devInfo
+          e
         )
       } else {
         return this.reportError(e, {
