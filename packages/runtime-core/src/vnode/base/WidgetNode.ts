@@ -1,5 +1,6 @@
 import type {
   BindParentElement,
+  HostElementInstance,
   HostParentElement,
   MountType,
   WidgetType
@@ -34,22 +35,23 @@ export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
     const newTeleport = this.teleport // 获取更新后的teleport元素
     // 如果不是活跃状态则直接返回
     if (this.state !== NodeState.Activated || oldTeleport === newTeleport) return
+    const element = this.rootNode.operationTarget
     // 情况 1️⃣：从 teleport 恢复到原位置
     if (oldTeleport && !newTeleport) {
-      this.dom.replace(this.element, this.anchor)
+      this.dom.replace(element, this.anchor)
       return
     }
     // 情况 2️⃣：从普通位置移动到 teleport
     if (!oldTeleport && newTeleport) {
       // 占位锚点替换当前元素
-      this.dom.replace(this.anchor, this.element)
+      this.dom.replace(this.anchor, element)
       // 当前元素插入到新的锚点中
-      this.dom.appendChild(newTeleport, this.element)
+      this.dom.appendChild(newTeleport, element)
       return
     }
     // 情况 3️⃣：teleport 容器之间切换
     if (newTeleport && oldTeleport) {
-      this.dom.appendChild(newTeleport, this.element)
+      this.dom.appendChild(newTeleport, element)
     }
     // 情况 4️⃣：目标未变化，无需操作
   }
@@ -57,7 +59,7 @@ export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
   /**
    * @inheritDoc
    */
-  override mount(target?: HostParentElement, type?: MountType): void {
+  override mount(target?: HostElementInstance, type?: MountType): void {
     if (this.teleport) {
       if (target) {
         // 插入影子元素
@@ -72,7 +74,7 @@ export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
             this.dom.replace(this.anchor, target)
             break
           default:
-            this.dom.appendChild(target, this.anchor)
+            this.dom.appendChild(target as HostParentElement, this.anchor)
         }
       }
       this.rootNode.mount(this.teleport, 'appendChild')
