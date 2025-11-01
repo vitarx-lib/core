@@ -62,7 +62,7 @@ export interface HostAdapter {
    * @param tag - 标签名
    * @returns {boolean} - 如果是 void 元素则返回 true，否则返回 false
    */
-  isVoidElement(tag: string): boolean
+  isVoidElement(tag: string): tag is HostVoidElementNames
   /**
    * 从DOM中移除元素
    * @param el - 要移除的元素实例
