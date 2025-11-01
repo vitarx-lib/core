@@ -52,6 +52,38 @@ export abstract class HostNode<
    */
   private _cachedElement: HostElementInstance<T> | null = null
   /**
+   * 获取或创建运行时元素实例的访问器属性
+   *
+   * 使用惰性初始化模式，只在第一次访问时创建元素实例
+   * 并将创建的实例缓存起来，后续访问直接返回缓存的实例
+   *
+   * @returns {HostElementInstance<T>} 返回运行时元素实例
+   */
+  get element(): HostElementInstance<T> {
+    // 检查是否已经缓存了元素实例
+    if (!this._cachedElement) {
+      if (this.state === NodeState.Created) this.state = NodeState.Rendered
+      // 如果没有缓存，则创建新的元素实例并缓存
+      return (this._cachedElement = markNonSignal(this.render()))
+    }
+    // 如果已经缓存，则直接返回缓存的实例
+    return this._cachedElement
+  }
+  /**
+   * @inheritDoc
+   */
+  override activate(root: boolean = true): void {
+    this.updateActiveState(true, root)
+    this.activateChildren?.()
+  }
+  /**
+   * @inheritDoc
+   */
+  override deactivate(root: boolean = true): void {
+    this.deactivateChildren?.()
+    this.updateActiveState(false, root)
+  }
+  /**
    * @inheritDoc
    */
   override mount(target?: HostParentElement, type?: MountType): void {
@@ -83,24 +115,6 @@ export abstract class HostNode<
     this.state = NodeState.Activated
   }
   /**
-   * 获取或创建运行时元素实例的访问器属性
-   *
-   * 使用惰性初始化模式，只在第一次访问时创建元素实例
-   * 并将创建的实例缓存起来，后续访问直接返回缓存的实例
-   *
-   * @returns {HostElementInstance<T>} 返回运行时元素实例
-   */
-  get element(): HostElementInstance<T> {
-    // 检查是否已经缓存了元素实例
-    if (!this._cachedElement) {
-      if (this.state === NodeState.Created) this.state = NodeState.Rendered
-      // 如果没有缓存，则创建新的元素实例并缓存
-      return (this._cachedElement = markNonSignal(this.render()))
-    }
-    // 如果已经缓存，则直接返回缓存的实例
-    return this._cachedElement
-  }
-  /**
    * @inheritDoc
    */
   override unmount(root: boolean = true): void {
@@ -110,7 +124,6 @@ export abstract class HostNode<
     } else if (this.teleport) {
       this.dom.remove(this.element)
     }
-    this.removeAnchor()
     this._cachedElement = null
     this.state = NodeState.Unmounted
   }
@@ -122,16 +135,25 @@ export abstract class HostNode<
     super.setTeleport(teleport)
     const newTeleport = this.teleport // 获取更新后的teleport元素
     // 如果不是活跃状态则直接返回
-    if (this.state !== NodeState.Activated) return
-    // 如果清空teleport元素，则用当前元素替换占位锚点
+    if (this.state !== NodeState.Activated || oldTeleport === newTeleport) return
+    // 情况 1️⃣：从 teleport 恢复到原位置
     if (oldTeleport && !newTeleport) {
       this.dom.replace(this.element, this.anchor)
-    } else if (newTeleport && !oldTeleport) {
+      return
+    }
+    // 情况 2️⃣：从普通位置移动到 teleport
+    if (!oldTeleport && newTeleport) {
       // 占位锚点替换当前元素
       this.dom.replace(this.anchor, this.element)
       // 当前元素插入到新的锚点中
       this.dom.appendChild(newTeleport, this.element)
+      return
     }
+    // 情况 3️⃣：teleport 容器之间切换
+    if (newTeleport && oldTeleport) {
+      this.dom.appendChild(newTeleport, this.element)
+    }
+    // 情况 4️⃣：目标未变化，无需操作
   }
   /**
    * 渲染元素
@@ -141,20 +163,6 @@ export abstract class HostNode<
    * @returns {HostElementInstance<T>} 渲染后的元素
    */
   protected abstract render(): HostElementInstance<T>
-  /**
-   * @inheritDoc
-   */
-  override activate(root: boolean = true): void {
-    this.updateActiveState(true, root)
-    this.activateChildren?.()
-  }
-  /**
-   * @inheritDoc
-   */
-  override deactivate(root: boolean = true): void {
-    this.deactivateChildren?.()
-    this.updateActiveState(false, root)
-  }
   /**
    * 挂载子节点
    *
