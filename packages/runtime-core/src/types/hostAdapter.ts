@@ -27,7 +27,7 @@ export interface HostAdapter {
    * @param initAttributes - 初始属性对象
    * @returns { HostElementInstance<T> } 返回创建的元素实例
    */
-  createElement<T extends Omit<AllHostElementNames, SpecialElementNames>>(
+  createElement<T extends Exclude<AllHostElementNames, SpecialElementNames>>(
     type: T,
     initAttributes?: Record<string, any>
   ): HostElementInstance<T>
@@ -108,9 +108,12 @@ export interface HostAdapter {
    * 设置元素显示模式
    *
    * @param el - 元素实例
-   * @param show - 是否显示元素
+   * @param visible - 是否显示元素
    */
-  setDisplay(el: HostElementInstance<HostElementNames | HostVoidElementNames>, show: boolean): void
+  setDisplay(
+    el: HostElementInstance<HostElementNames | HostVoidElementNames>,
+    visible: boolean
+  ): void
   /**
    * 设置元素的属性
    * @param el - 元素实例
@@ -119,6 +122,13 @@ export interface HostAdapter {
    * @param prevValue - 旧属性值（可选）
    */
   setAttribute(el: HostElementInstance, key: string, nextValue: any, prevValue?: any): void
+  /**
+   * 移除元素的属性
+   * @param el - 元素实例
+   * @param key - 属性名
+   * @param prevValue - 旧属性值（可选）
+   */
+  removeAttribute(el: HostElementInstance, key: string, prevValue?: any): void
   /**
    * 设置元素的属性
    * @param el - 元素实例
