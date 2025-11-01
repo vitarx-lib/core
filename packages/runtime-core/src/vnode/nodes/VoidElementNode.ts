@@ -33,13 +33,26 @@ export class VoidElementVNode<
   T extends VoidElementNodeType = VoidElementNodeType
 > extends HostNode<T> {
   public override shapeFlags = NodeShapeFlags.VOID_ELEMENT
-  protected override handleShowState(is: boolean): void {
-    this.dom.setDisplay(this.element, is)
+  /**
+   * @inheritDoc
+   */
+  protected override handleShowState(visible: boolean): void {
+    this.dom.setDisplay(this.element, visible)
   }
+  /**
+   * @inheritDoc
+   */
   protected override normalizeProps(props: Record<string, any>): NodeNormalizedProps<T> {
     return normalizeStyle(super.normalizeProps(props))
   }
+
+  /**
+   * @inheritDoc
+   */
   protected render(): HostElementInstance<T> {
-    return this.dom.createElement(this.type, this.props)
+    // 使用DOM操作创建指定类型和属性的元素
+    const element = this.dom.createElement(this.type, this.props)
+    if (!this.show) this.dom.setDisplay(element, false)
+    return element
   }
 }
