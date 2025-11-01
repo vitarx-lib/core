@@ -1,4 +1,4 @@
-export * from './WidgetNode.js'
+export * from './StatefulWidgetNode.js'
 export * from './FragmentNode.js'
 export * from './CommentNode.js'
 export * from './TextNode.js'
