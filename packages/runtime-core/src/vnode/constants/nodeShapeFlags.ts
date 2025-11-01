@@ -4,6 +4,6 @@ export const enum NodeShapeFlags {
   FRAGMENT = 1 << 2,
   TEXT = 1 << 3,
   COMMENT = 1 << 4,
-  WIDGET = 1 << 5,
-  SIMPLE_WIDGET = 1 << 6
+  STATEFUL_WIDGET = 1 << 5,
+  STATELESS_WIDGET = 1 << 6
 }
