@@ -1,4 +1,4 @@
-import type { SIMPLE_FUNCTION_WIDGET_SYMBOL, Widget } from '../widget/index.js'
+import type { STATELESS_FUNCTION_WIDGET_SYMBOL, Widget } from '../widget/index.js'
 import type { VNodeChild } from './vnode.js'
 
 /**
@@ -93,11 +93,11 @@ export type StatelessWidget<
   R extends VNodeChild = VNodeChild,
   DP extends Partial<P> = Partial<P>
 > = {
-  readonly [SIMPLE_FUNCTION_WIDGET_SYMBOL]: true
+  readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
   defaultProps?: DP
   (props: P): R
 }
 
-export interface SimpleWidgetSymbol {
-  readonly [SIMPLE_FUNCTION_WIDGET_SYMBOL]: true
+export interface StatelessWidgetSymbol {
+  readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
 }
