@@ -4,11 +4,11 @@ import type { Child } from './vnode.js'
 /**
  * 任意组件属性类型
  */
-export type AnyProps = Record<string, any>
+export type AnyProps = Record<string | symbol, any>
 /**
  * 视图构建器类型
  */
-export type ViewBuilder = Widget['build']
+export type NodeBuilder = Widget['build']
 /**
  * 类小部件构造器类型
  *
@@ -16,7 +16,7 @@ export type ViewBuilder = Widget['build']
  * @template I - 小部件实例类型
  */
 export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget> = {
-  defaultProps?: Record<string, any>
+  defaultProps?: Partial<P>
   new (props: P): I
 }
 /**
@@ -37,8 +37,8 @@ export interface LazyWidgetModule {
  */
 export type ValidBuildElement =
   | Child
-  | ViewBuilder
-  | Promise<Child | LazyWidgetModule | ViewBuilder>
+  | NodeBuilder
+  | Promise<Child | LazyWidgetModule | NodeBuilder>
 
 /**
  * 函数小部件类型
@@ -84,11 +84,11 @@ export type AsyncWidget<P extends AnyProps = any> = (props: P) => Promise<Child>
 /**
  * 简单小部件类型
  */
-export interface SimpleWidget<
+export type SimpleWidget<
   P extends AnyProps = any,
   R extends Child = Child,
   DP extends Partial<P> = Partial<P>
-> {
+> = {
   readonly [SIMPLE_FUNCTION_WIDGET_SYMBOL]: true
   defaultProps?: DP
   (props: P): R
