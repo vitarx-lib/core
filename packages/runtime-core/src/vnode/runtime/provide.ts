@@ -34,9 +34,7 @@ import { findParentNode } from './relations.js'
  * @throws {Error} 当名称为'App'时会抛出错误，因为这是内部保留关键词
  */
 export function provide(name: string | symbol, value: any): void {
-  if (name === 'App') {
-    throw new Error('App 是内部保留关键词，请勿使用！')
-  }
+  if (name === 'App') throw new Error('App is an internal reserved keyword, please do not use it!')
   const currentVNode = getCurrentVNode()
   if (!currentVNode) throw new Error('provide must be called in widget')
   currentVNode.provide(name, value)
