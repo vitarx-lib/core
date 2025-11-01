@@ -1,5 +1,7 @@
 export * from './StatefulWidgetNode.js'
+export * from './StatelessWidgetNode.js'
 export * from './FragmentNode.js'
 export * from './CommentNode.js'
 export * from './TextNode.js'
 export * from './VoidElementNode.js'
+export * from './ElementNode.js'
