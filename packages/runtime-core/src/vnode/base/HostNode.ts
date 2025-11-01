@@ -8,7 +8,7 @@ import type {
   NodeNormalizedProps
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
-import { unwrapRefProps } from '../utils/unwrapRefProps.js'
+import { unwrapRefProps } from '../utils/normalizeProps.js'
 import { VNode } from './VNode.js'
 
 /**
@@ -62,9 +62,9 @@ export abstract class HostNode<
   get element(): HostElementInstance<T> {
     // 检查是否已经缓存了元素实例
     if (!this._cachedElement) {
-      if (this.state === NodeState.Created) this.state = NodeState.Rendered
       // 如果没有缓存，则创建新的元素实例并缓存
-      return (this._cachedElement = markNonSignal(this.render()))
+      this._cachedElement = markNonSignal(this.render())
+      if (this.state === NodeState.Created) this.state = NodeState.Rendered
     }
     // 如果已经缓存，则直接返回缓存的实例
     return this._cachedElement
@@ -86,7 +86,7 @@ export abstract class HostNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: HostParentElement, type?: MountType): void {
+  override mount(target?: HostElementInstance, type?: MountType): void {
     const teleport = this.teleport
     let element: HostElementInstance = this.element
     if (teleport) {
@@ -108,12 +108,13 @@ export abstract class HostNode<
           this.dom.replace(element, target)
           break
         default:
-          this.dom.appendChild(target, element)
+          this.dom.appendChild(target as HostParentElement, element)
       }
     }
     this.mountChildren?.()
     this.state = NodeState.Activated
   }
+
   /**
    * @inheritDoc
    */
