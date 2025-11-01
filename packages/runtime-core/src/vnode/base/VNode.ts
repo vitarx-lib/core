@@ -150,13 +150,13 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   }
   /**
    * 设置v-show的属性值
-   * @param value - 传入的显示状态值，可以是响应式引用或普通值
+   * @param visible - 传入的显示状态值，可以是响应式引用或普通值
    */
-  set show(value: boolean) {
-    if (value !== this.show) {
+  set show(visible: boolean) {
+    if (visible !== this.show) {
       // 比较新值与当前值，只在不同时更新
-      this._show = value // 更新内部显示状态
-      this.handleShowState(value)
+      this._show = visible // 更新内部显示状态
+      this.handleShowState(visible)
     }
   }
 
@@ -380,9 +380,9 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
 
   /**
    * 抽象方法，用于处理显示状态的变更
-   * @param is 布尔值，表示新的显示状态
+   * @param visible 布尔值，表示新的显示状态
    */
-  protected abstract handleShowState(is: boolean): void
+  protected abstract handleShowState(visible: boolean): void
 
   /**
    * 规范化组件属性的抽象方法
@@ -409,15 +409,9 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    *
    * @param active - true 表示激活，false 表示停用
    * @param root - 如果为 true，则操作根节点，false 则非根
-   * @param beforeStateChange - 可选函数，在更新 state 前执行
    */
-  protected updateActiveState(
-    active: boolean,
-    root: boolean,
-    beforeStateChange?: () => void
-  ): void {
+  protected updateActiveState(active: boolean, root: boolean): void {
     const { teleport, element: el, anchor } = this
-
     // 判断是否使用 teleport
     const useTeleport = !!teleport && (active || !root)
 
@@ -429,8 +423,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       this.dom.replace(el, anchor)
     }
     // 非 root 且无 teleport 不操作 DOM
-    // 执行钩子
-    if (beforeStateChange) beforeStateChange()
     // 更新状态
     this.state = active ? NodeState.Activated : NodeState.Deactivated
   }
