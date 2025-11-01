@@ -10,7 +10,6 @@ export enum LifecycleHooks {
   error = 'onError',
   unmounted = 'onUnmounted',
   beforeUnmount = 'onBeforeUnmount',
-  beforeRemove = 'onBeforeRemove',
   serverPrefetch = 'onServerPrefetch'
 }
 /**
@@ -40,9 +39,9 @@ export const __WIDGET_INTRINSIC_KEYWORDS__: ReadonlySet<string> = new Set([
 ])
 
 /**
- * 简单函数组件的标识符
+ * 无状态函数组件的标识符
  */
-export const SIMPLE_FUNCTION_WIDGET_SYMBOL = Symbol('SIMPLE_FUNCTION_WIDGET_SYMBOL')
+export const STATELESS_FUNCTION_WIDGET_SYMBOL = Symbol('STATELESS_FUNCTION_WIDGET_SYMBOL')
 /** 排除组件内部保留的方法 */
 export type ExcludeWidgetIntrinsicMethods<T> = Omit<
   T,
