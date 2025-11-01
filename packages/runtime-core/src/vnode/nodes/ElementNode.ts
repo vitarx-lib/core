@@ -30,7 +30,7 @@ import { normalizeStyle } from '../utils/normalizeProps.js'
  * - 不应直接实例化，而是通过框架的创建函数来使用
  * - 元素的属性会被自动规范化处理
  */
-export class ElementVNode<T extends ElementNodeType = ElementNodeType> extends ContainerNode<T> {
+export class ElementNode<T extends ElementNodeType = ElementNodeType> extends ContainerNode<T> {
   public override shapeFlags = NodeShapeFlags.ELEMENT
   /**
    * @inheritDoc
