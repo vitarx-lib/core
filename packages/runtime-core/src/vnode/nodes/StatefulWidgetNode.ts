@@ -8,6 +8,7 @@ import {
 } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
 import { logger } from '@vitarx/utils/src/index.js'
+import { type App, getAppContext } from '../../app/index.js'
 import type {
   ErrorSource,
   FunctionWidget,
@@ -21,6 +22,7 @@ import type {
   StatelessWidget,
   VNodeBuilder,
   VNodeChild,
+  VNodeInputProps,
   WidgetInstanceType,
   WidgetType
 } from '../../types/index.js'
@@ -78,6 +80,10 @@ export type StatefulWidgetNodeType = Exclude<WidgetType, StatelessWidget>
 export class StatefulWidgetNode<
   T extends StatefulWidgetNodeType = StatefulWidgetNodeType
 > extends WidgetNode<T> {
+  /**
+   * app上下文
+   */
+  public appContext?: App
   public override shapeFlags = NodeShapeFlags.STATEFUL_WIDGET
   /**
    * 依赖映射
@@ -103,13 +109,17 @@ export class StatefulWidgetNode<
    * @private
    */
   private _pendingUpdate: boolean = false
-
   /**
    * 存储组件实例的私有对象
    *
    * @protected
    */
   private _instance: WidgetInstanceType<T> | null = null
+  constructor(type: T, props: VNodeInputProps<T>) {
+    super(type, props)
+    this.appContext = getAppContext()
+    if (this.appContext) this.provide('App', this.appContext)
+  }
 
   get instance(): WidgetInstanceType<T> {
     if (!this._instance) this.createInstance().then()
@@ -443,7 +453,9 @@ export class StatefulWidgetNode<
     let vnode: VNode // 声明虚拟节点变量
     try {
       // 执行构建逻辑
-      const buildNode = this.instance.build() // 调用实例的build方法
+      const buildNode = this.appContext
+        ? this.appContext.runInContext(() => this.instance.build()) // 在应用上下文中运行构建逻辑
+        : this.instance.build() // 调用实例的build方法
       if (isVNode(buildNode)) {
         // 如果构建结果是VNode实例，则直接使用
         vnode = buildNode
@@ -503,28 +515,12 @@ export class StatefulWidgetNode<
    *
    * @param args - 错误处理函数的参数数组
    */
-  private handleRootError(args: any[]): void {
+  private handleRootError(args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
     // 首先尝试获取当前 App 实例
-    let app = this.getProvide('App')
-
-    // 如果没有 App 实例，则查找根节点并获取 App 实例
-    if (!app) {
-      // 获取根节点
-      let root: VNode = this
-      while (true) {
-        const parent = findParentNode(root)
-        if (!parent) break
-        root = parent
-      }
-      // 如果根节点是 WidgetVNode，获取其 App 实例
-      if (root instanceof StatefulWidgetNode) {
-        app = root.getProvide('App')
-      }
-    }
-
+    const app = this.appContext
     // 处理错误
     if (app?.config?.errorHandler) {
-      app.config.errorHandler(...args)
+      return app.config.errorHandler.apply(null, args)
     } else {
       logger.error('there are unhandled exceptions', ...args)
     }
