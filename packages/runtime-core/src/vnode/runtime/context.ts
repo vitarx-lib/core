@@ -2,7 +2,7 @@ import { getContext, runInContext } from '@vitarx/responsive'
 import { Widget } from '../../widget/index.js'
 import { StatefulWidgetNode } from '../nodes/index.js'
 
-const VNODE_CONTEXT_SYMBOL = Symbol('WidgetVNode Context Symbol')
+const VNODE_CONTEXT_SYMBOL = Symbol('VNODE_CONTEXT_SYMBOL')
 
 /**
  * 在指定上下文中执行函数
