@@ -1,6 +1,6 @@
 import { ContainerNode, VNode } from '../base/index.js'
 import { NodeShapeFlags, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
-import type { ElementVNode, StatelessWidgetNode } from '../nodes/index.js'
+import type { ElementNode, StatelessWidgetNode } from '../nodes/index.js'
 import {
   CommentNode,
   FragmentNode,
@@ -55,7 +55,7 @@ export function isFragmentNode(val: any): val is FragmentNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果是元素虚拟节点返回true，否则返回false
  */
-export function isElementNode(val: any): val is ElementVNode {
+export function isElementNode(val: any): val is ElementNode {
   return isVNode(val) && typeof val.type === 'string' && val.shapeFlags === NodeShapeFlags.ELEMENT
 }
 
