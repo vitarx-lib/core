@@ -21,7 +21,7 @@ export abstract class NonElementNode<T extends NonElementNodeType> extends HostN
    * 返回this.props.value的值
    */
   get value(): string {
-    return this.props.value
+    return this.props.value ?? ''
   }
   /**
    * 设置值的setter方法
