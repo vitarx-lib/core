@@ -1,6 +1,6 @@
 import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { isObject, isRecordObject, popProperty } from '@vitarx/utils'
-import { getDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../host-adapter/index.js'
 import type {
   BindParentElement,
   HostAdapter,
@@ -156,7 +156,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     if (visible !== this.show) {
       // 比较新值与当前值，只在不同时更新
       this._show = visible // 更新内部显示状态
-      this.handleShowState(visible)
+      this.handleShowState?.(visible)
     }
   }
 
@@ -220,7 +220,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     }
     return this._teleport // 如果_teleport不是字符串，直接返回其值
   }
-
   /**
    * 获取当前节点在 DOM 操作中的目标元素
    *
@@ -240,9 +239,8 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * 获取 Dom 适配器实例
    */
   get dom(): HostAdapter {
-    return getDomAdapter()
+    return useDomAdapter()
   }
-
   /**
    * 获取名称的getter方法
    * 根据type的类型返回对应的名称
@@ -256,7 +254,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       ? this.type
       : ((this.type as unknown as { displayName: string }).displayName ?? this.type.name)
   }
-
   /**
    * DOM 锚点（Anchor Node）
    *
@@ -267,7 +264,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * 或在传送结束时将节点还原至原始位置。
    */
   private _anchor: HostAnchorElement | null = null
-
   /**
    * 获取或创建当前节点的锚点元素
    * 这是一个受保护属性，用于在DOM中标记组件的位置
@@ -351,14 +347,15 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       props[key] = rawValue
     }
   }
-
   /**
    * 挂载虚拟节点到指定的容器中
    *
-   * @param [target] - 挂载目标，仅根节点需要提供，其他节点在渲染时就已经形成真实的挂载关系，所以不需要提供
+   * 注意：type 为 appendChild 时，target 元素如果传入，则必须支持子元素
+   *
+   * @param [target] - 挂载目标，仅根节点需要提供，子节点在渲染时就已经形成真实的挂载关系，所以不需要提供
    * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    */
-  abstract mount(target?: HostParentElement, type?: MountType): void
+  abstract mount(target?: HostElementInstance, type?: MountType): void
   /**
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
@@ -381,13 +378,11 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @param {boolean} [root=true] - 是否做为根元素卸载
    */
   abstract unmount(root?: boolean): void
-
   /**
    * 抽象方法，用于处理显示状态的变更
    * @param visible 布尔值，表示新的显示状态
    */
-  protected abstract handleShowState(visible: boolean): void
-
+  protected handleShowState?(visible: boolean): void
   /**
    * 规范化组件属性的抽象方法
    * 该方法用于处理和验证组件特定的属性，排除全局属性
