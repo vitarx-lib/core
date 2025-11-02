@@ -10,15 +10,71 @@ export type AnyProps = Record<string | symbol, any>
  */
 export type VNodeBuilder = Widget['build']
 /**
+ * 组件可选配置项。
+ *
+ * @template P - 组件的 props 类型
+ */
+export type WidgetOptions<P extends AnyProps> = {
+  /**
+   * 定义组件的默认属性。
+   *
+   * - 在组件实例创建时，`defaultProps` 会自动注入到 `props` 中。
+   * - 当外部未传入某个属性时，其默认值通过代理的 `get` 拦截动态返回，
+   *   因此 **不会直接合并到 `props` 对象本身**。
+   * - 注意：在组件实例中，`props` 是只读的响应式代理：
+   *   - 属性值不可修改；
+   *   - 使用 `key in props` 无法判断默认值是否存在；
+   *   - 默认值的访问由代理层动态处理。
+   *
+   * @example
+   * ```ts
+   * // 类组件
+   * class MyWidget extends Widget<{ name?: string; age: number }> {
+   *   static defaultProps = {
+   *     age: 18,
+   *   };
+   * }
+   *
+   * // 函数组件
+   * function MyFunctionWidget(props: { name?: string; age: number }) {
+   *   return <div>{props.name}</div>;
+   * }
+   * MyFunctionWidget.defaultProps = {
+   *   age: 18,
+   * };
+   * ```
+   */
+  defaultProps?: Partial<P>
+  /**
+   * 属性验证函数。
+   *
+   * 用于校验传入的 props 是否符合预期
+   *
+   * 校验时机：
+   *  - 开发环境：在创建节点（VNode）阶段执行。
+   *  - 生产环境：在节点创建完成之后构建实例之前执行。
+   *
+   * 校验结果说明：
+   * - `false`：校验失败，输出默认错误信息。
+   * - `string`：异常提示，输出该自定义异常提示。
+   * - 其他值/void：校验通过。
+   *
+   * 框架在开发模式下会自动捕获异常并将其转换为校验错误。
+   *
+   * @param props - 传入的组件属性对象
+   * @returns 校验结果
+   */
+  validateProps?: (props: AnyProps) => false | string | unknown
+}
+/**
  * 类小部件构造器类型
  *
  * @template P - 小部件的属性类型
  * @template I - 小部件实例类型
  */
 export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget> = {
-  defaultProps?: Partial<P>
   new (props: P): I
-}
+} & WidgetOptions<P>
 /**
  * 模块小部件类型
  */
@@ -44,9 +100,8 @@ export type ValidBuildElement =
  * 函数小部件类型
  */
 export type FunctionWidget<P extends AnyProps = any> = {
-  defaultProps?: Partial<P>
   (props: P): ValidBuildElement
-}
+} & WidgetOptions<P>
 
 /**
  * 小部件结构类型
@@ -88,15 +143,10 @@ export type AsyncWidget<P extends AnyProps = any> = (props: P) => Promise<VNodeC
 /**
  * 无状态小部件
  */
-export type StatelessWidget<
-  P extends AnyProps = any,
-  R extends VNodeChild = VNodeChild,
-  DP extends Partial<P> = Partial<P>
-> = {
+export type StatelessWidget<P extends AnyProps = any, R extends VNodeChild = VNodeChild> = {
   readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
-  defaultProps?: DP
   (props: P): R
-}
+} & WidgetOptions<P>
 
 export interface StatelessWidgetSymbol {
   readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true

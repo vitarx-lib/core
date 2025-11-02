@@ -1,5 +1,6 @@
 import { EffectScope, NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import type {
+  AnyProps,
   ErrorInfo,
   ExtractChildrenPropType,
   HostElementInstance,
@@ -47,6 +48,36 @@ export abstract class Widget<
    * 类小部件标识符符
    */
   static [CLASS_WIDGET_BASE_SYMBOL] = true
+  /**
+   * Props验证函数
+   *
+   * 校验结果：
+   * - `false`：校验失败，开发时不会渲染组件，控制台输出框架默认的错误提示信息。
+   * - `string`: 校验失败，错误信息会被打印在控制台，开发时包含源码位置
+   * - 其他值：校验通过，正常渲染组件
+   *
+   * @param props - 外部输入的props
+   * @returns { any } 校验结果
+   */
+  static validateProps?: (props: AnyProps) => any
+  /**
+   * Props默认值
+   *
+   * 会在创建组件实例时自动注入到props中
+   *
+   * 需注意：props在组件实例中是一个只读响应式代理，
+   * defaultProps 中的属性通过 in props 判断是无效的，它只在获取属性时有效
+   *
+   * @example
+   * ```ts
+   * class MyWidget extends Widget<{name?:string,age:number}> {
+   *  static defaultProps = {
+   *    age:18
+   *  }
+   * }
+   * ```
+   */
+  static defaultProps?: AnyProps
   /**
    * 存储小部件的传入属性
    *
