@@ -43,7 +43,7 @@ export const FRAGMENT_NODE_TYPE = 'fragment'
  * ```
  */
 export const Fragment = FRAGMENT_NODE_TYPE as unknown as {
-  (props: { children?: VNodeChildren }): any
+  (props: { children?: VNodeChildren }): VNode
   __isFragment__: true
 }
 export type Fragment = typeof Fragment
