@@ -3,7 +3,8 @@ import type {
   ClassWidget,
   StatelessWidget,
   StatelessWidgetSymbol,
-  VNodeChild
+  VNodeChild,
+  WidgetType
 } from '../types/index.js'
 import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from './constant.js'
 
@@ -81,4 +82,18 @@ export function isClassWidget(val: any): val is ClassWidget {
   // 使用可选链操作符安全地访问对象的CLASS_WIDGET_BASE_SYMBOL属性
   // 并检查其值是否为true
   return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
+}
+
+/**
+ * 检查给定值是否为Widget组件类型
+ *
+ * 这是一个类型保护函数，用于在运行时验证变量是否为Widget组件类型
+ *
+ * 只要是函数/构造函数都会被判断为Widget组件类型，由于js语言特性，暂无更精准的判断方式。
+ *
+ * @param val - 需要检查的任意值
+ * @returns {boolean} 如果值是函数类型则返回true，否则返回false
+ */
+export function isWidget(val: any): val is WidgetType {
+  return typeof val === 'function'
 }
