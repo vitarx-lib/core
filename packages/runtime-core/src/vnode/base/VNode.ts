@@ -22,6 +22,7 @@ import {
   VIRTUAL_NODE_SYMBOL,
   VNODE_PROPS_DEV_INFO_KEY_SYMBOL
 } from '../constants/index.js'
+import { getMemoNode, setMemoNode } from '../runtime/index.js'
 import { isRefEl, type RefEl } from '../runtime/ref.js'
 import { StyleUtils } from '../utils/index.js'
 
@@ -88,11 +89,11 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    *
    * @readonly - 外部只读，请勿修改！
    */
-  public readonly key: UniqueKey | null = null
+  public readonly key?: UniqueKey
   /**
    * 引用
    */
-  public ref: RefEl<any> | null = null
+  public ref?: RefEl<any>
   /**
    * 静态节点
    *
@@ -105,6 +106,12 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @readonly - 外部只读，请勿修改！
    */
   public props: NodeNormalizedProps<T>
+  /**
+   * 缓存特征数组
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public memo?: Array<any>
 
   /**
    * 创建一个虚拟节点实例
@@ -116,18 +123,24 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     this.type = type
     if (Object.keys(props).length) {
       // 提取key属性
-      this.key = popProperty(props, 'key') ?? null
+      this.key = popProperty(props, 'key')
       const ref = popProperty(props, 'ref')
       // 引用
-      this.ref = isRefEl(ref) ? ref : null
+      if (isRefEl(ref)) this.ref = ref
       // 提取显示属性
       this._show = 'v-show' in props ? !!unref(popProperty(props, 'v-show')) : true
       // 静态节点
       this.isStatic = !!unref(popProperty(props, 'v-static'))
-      // TODO 待实现缓存
+      // 缓存
       const memo = popProperty(props, 'v-memo')
+      // 初始化缓存
+      if (Array.isArray(memo) && !getMemoNode(memo)) {
+        // 备份之前的值
+        this.memo = Array.from(memo)
+        setMemoNode(memo, this)
+      }
       // 传送目标
-      this._teleport = popProperty(props, 'v-parent') || null
+      this._teleport = popProperty(props, 'v-parent') || undefined
       if (import.meta.env?.DEV) {
         // 开发模式下的调试信息
         this.devInfo = popProperty(props, VNODE_PROPS_DEV_INFO_KEY_SYMBOL)
@@ -182,6 +195,29 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   }
 
   /**
+   * 传送目标
+   */
+  private _teleport?: Exclude<BindParentElement, null>
+
+  /**
+   * 获取teleport属性的方法
+   * 这是一个getter，用于获取或计算teleport的目标元素
+   * @returns {HostParentElement | null} 返回宿主父级元素，如果不存在则返回null
+   */
+  get teleport(): HostParentElement | undefined {
+    if (typeof this._teleport === 'string') {
+      // 检查_teleport是否为字符串类型
+      const target = this.dom.querySelector(this._teleport) // 如果是字符串，则使用该字符串作为选择器查询DOM元素
+      if (target && this.dom.isContainer(target)) {
+        // 检查查询到的元素是否存在以及是否为容器元素
+        return (this._teleport = target as HostParentElement) // 如果验证通过，将_teleport更新为该元素并返回
+      }
+      return undefined // 如果验证不通过，返回null
+    }
+    return this._teleport // 如果_teleport不是字符串，直接返回其值
+  }
+
+  /**
    * 设置虚拟节点状态的受保护方法
    *
    * @protected
@@ -199,31 +235,9 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
         // 将锚点引用置为null
         this._anchor = null
       }
+      this.memo = undefined
     }
     this._state = state
-  }
-
-  /**
-   * 传送目标
-   */
-  private _teleport: Exclude<BindParentElement, undefined> = null
-
-  /**
-   * 获取teleport属性的方法
-   * 这是一个getter，用于获取或计算teleport的目标元素
-   * @returns {HostParentElement | null} 返回宿主父级元素，如果不存在则返回null
-   */
-  get teleport(): HostParentElement | null {
-    if (typeof this._teleport === 'string') {
-      // 检查_teleport是否为字符串类型
-      const target = this.dom.querySelector(this._teleport) // 如果是字符串，则使用该字符串作为选择器查询DOM元素
-      if (target && this.dom.isContainer(target)) {
-        // 检查查询到的元素是否存在以及是否为容器元素
-        return (this._teleport = target as HostParentElement) // 如果验证通过，将_teleport更新为该元素并返回
-      }
-      return null // 如果验证不通过，返回null
-    }
-    return this._teleport // 如果_teleport不是字符串，直接返回其值
   }
   /**
    * 获取当前节点在 DOM 操作中的目标元素
@@ -285,6 +299,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     // 如果锚点元素已存在，直接返回它
     return this._anchor
   }
+
   /**
    * 设置传送目标
    *
@@ -294,7 +309,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @returns {void}
    */
   public setTeleport(teleport: BindParentElement): void {
-    this._teleport = teleport || null
+    this._teleport = teleport || undefined
   }
   /**
    * 处理属性绑定
