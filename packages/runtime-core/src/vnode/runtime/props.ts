@@ -134,6 +134,8 @@ export function proxyWidgetProps<T extends AnyProps>(
 /**
  * 定义默认`Props` 属性
  *
+ * `4.0` 版本起支持直接给组件定义静态的 `defaultProps`，配合 Props 中定义必填属性可实现更优的类型推导
+ *
  * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有真实合并到 props 对象中
  *
  * @example
@@ -176,6 +178,7 @@ export function proxyWidgetProps<T extends AnyProps>(
  *   }
  * }
  *
+ * @override
  * @template D - 默认属性对象的类型
  * @param {D} defaultProps - 默认属性对象
  * @return {Readonly<D>} - 返回只读的Props对象
@@ -184,6 +187,8 @@ export function proxyWidgetProps<T extends AnyProps>(
 export function defineProps<D extends Record<string, any>>(defaultProps: D): Readonly<D>
 /**
  * 定义默认`Props` 属性
+ *
+ * `4.0` 版本起支持直接给组件定义静态的 `defaultProps`，配合 Props 中定义必填属性可实现更优的类型推导
  *
  * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有真实写入到 props 对象中
  *
@@ -205,6 +210,7 @@ export function defineProps<D extends Record<string, any>>(defaultProps: D): Rea
  *   return <div>{props.name} - {props.gender}</div>
  * }
  *
+ * @override
  * @template I - 组件接收的props对象的类型
  * @template D - 默认属性对象的类型
  * @param {D} defaultProps - 默认属性对象
