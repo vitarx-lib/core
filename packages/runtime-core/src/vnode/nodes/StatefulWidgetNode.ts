@@ -8,7 +8,6 @@ import {
 } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
 import { logger } from '@vitarx/utils/src/index.js'
-import { type App } from '../../app/index.js'
 import type {
   ErrorSource,
   FunctionWidget,
@@ -162,7 +161,7 @@ export class StatefulWidgetNode<
    *
    * @returns {Promise<Widget>} 返回一个Promise，解析为创建的组件实例
    */
-  createInstance(): Promise<WidgetInstanceType<T>> {
+  private createInstance(): Promise<WidgetInstanceType<T>> {
     return new Promise(resolve => {
       // 在特定上下文中运行实例创建逻辑
       this.runInContext(() => {
