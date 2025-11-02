@@ -6,7 +6,7 @@ import type {
   LifecycleHookReturnType,
   ValidBuildElement
 } from '../types/index.js'
-import { WidgetNode } from '../vnode/index.js'
+import { StatefulWidgetNode } from '../vnode/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from './constant.js'
 import type { Widget } from './widget.js'
 
@@ -71,7 +71,7 @@ export class HookCollector {
    * @param instance - 实例
    * @returns {HookCollectResult} - 同步收集结果
    */
-  static collect(vnode: WidgetNode<FunctionWidget>, instance: Widget): HookCollectResult {
+  static collect(vnode: StatefulWidgetNode<FunctionWidget>, instance: Widget): HookCollectResult {
     // 创建新的上下文
     const context: HookCollectResult = {
       exposed: {},
@@ -182,14 +182,6 @@ export const onUpdated = createLifecycleHook(LifecycleHooks.updated)
  * @param cb - 回调函数，遇到错误时触发
  */
 export const onError = createLifecycleHook(LifecycleHooks.error)
-/**
- * 真实的`Element`被移除前触发的钩子
- *
- * 可以返回`Promise`来延迟移除
- *
- * @param cb - 回调函数，元素从DOM中被移除前触发
- */
-export const onBeforeRemove = createLifecycleHook(LifecycleHooks.beforeRemove)
 /**
  * 服务端预取钩子，仅在服务端渲染时有效。
  *
