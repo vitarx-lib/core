@@ -9,10 +9,10 @@ import {
 } from '@vitarx/responsive'
 import { isRecordObject, logger } from '@vitarx/utils'
 import { LogLevel } from '@vitarx/utils/src/index.js'
-import type { MergeProps } from '../../types/index.js'
+import type { AnyProps, MergeProps } from '../../types/index.js'
 import { getCurrentVNode } from './context.js'
 
-const VNODE_PROPS_DEFAULT_DATA_SYMBOL = Symbol('VNODE_PROPS_DEFAULT_DATA')
+const VNODE_PROPS_DEFAULT_DATA_SYMBOL = Symbol('VNODE_PROPS_DEFAULT_DATA_SYMBOL')
 const VNODE_PROPS_PROXY_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
 const WARN_MESSAGE = `The component's props should maintain a one-way data flow, and you shouldn't modify it directly.`
 const STATIC_SYMBOL = new Set([SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, VNODE_PROPS_PROXY_SYMBOL])
@@ -117,14 +117,14 @@ class PropsProxyHandler<T extends Record<string, any>> implements ProxyHandler<T
  * @param {object} defaultProps - 默认属性对象
  * @returns {Readonly<Record<string, any>>} - 只读属性对象
  */
-export function proxyWidgetProps<T extends Record<string | symbol, any>>(
+export function proxyWidgetProps<T extends AnyProps>(
   props: T,
   defaultProps?: Partial<T>
 ): Readonly<T> {
   // 避免重复代理
   if (props[VNODE_PROPS_PROXY_SYMBOL]) {
     if (!isRecordObject(defaultProps)) {
-      props[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
+      ;(props as AnyProps)[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
     }
     return props as Readonly<T>
   }
