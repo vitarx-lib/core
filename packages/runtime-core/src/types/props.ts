@@ -106,7 +106,7 @@ export type UniqueKey = string | symbol | number | bigint
  *   - 对象Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
  *   - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，第二个元素可以指定哪些属性不需要绑定。
  */
-export type BindProperties = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
+export type BindAttributes = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
 
 /**
  * 绑定父元素
@@ -162,7 +162,7 @@ export interface IntrinsicAttributes {
    *  - [props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
    *  第二个元素可以指定哪些属性不需要绑定。
    */
-  'v-bind'?: BindProperties
+  'v-bind'?: BindAttributes
   /**
    * 显示/隐藏节点
    *
