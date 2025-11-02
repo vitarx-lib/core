@@ -1,7 +1,7 @@
 import { Ref, withAsyncContext } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import { createVNode, VNode, WidgetPropsType, WidgetType } from '../../vnode/index.js'
-import { type ErrorHandler } from '../types/index.js'
+import type { ErrorHandler, WidgetPropsType, WidgetType } from '../../types/index.js'
+import { createVNode, isVNode, NodeState, VNode } from '../../vnode/index.js'
 import { Widget } from '../widget.js'
 import { getSuspenseCounter } from './suspense-counter.js'
 
@@ -13,15 +13,6 @@ import { getSuspenseCounter } from './suspense-counter.js'
 export type LazyLoader<T extends WidgetType> = () => Promise<{ default: T }>
 
 /**
- * onError生命周期钩子
- *
- * @param {unknown} error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
- * @param {ErrorInfo} info - 具体的错误信息
- * @returns {void} - 可以返回一个`Element`虚拟节点，做为后备内容展示。
- */
-export type LazyWidgetErrorCallback<T extends WidgetType> = ErrorHandler<LazyWidget<T>>
-
-/**
  * 惰性加载小部件配置选项
  */
 export interface LazyWidgetProps<T extends WidgetType> {
@@ -29,8 +20,10 @@ export interface LazyWidgetProps<T extends WidgetType> {
    * 接收一个惰性加载器
    *
    * @example
+   * ```ts
    * // 小部件必须使用`export default`导出，否则会报错。
    * () => import('./YourWidget.js')
+   * ```
    */
   children: LazyLoader<T>
   /**
@@ -53,7 +46,7 @@ export interface LazyWidgetProps<T extends WidgetType> {
    * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
    * @param info - 捕获异常的阶段，可以是`build`或`render`
    */
-  onError?: LazyWidgetErrorCallback<T>
+  onError?: ErrorHandler
 }
 
 /**
@@ -72,6 +65,8 @@ export interface LazyWidgetProps<T extends WidgetType> {
  * <LazyWidget loading={<div>加载中...</div>}/>
  * // onError钩子接管异常
  * <LazyWidget onError={()=><div>加载失败...</div>}/>
+ * // 2.0 版本开始框架支持直接渲染异步组件模块
+ * <YourWidget data="数据会透传给最终渲染的组件"/>
  * ```
  */
 export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>> {
@@ -89,11 +84,11 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   constructor(props: LazyWidgetProps<T>) {
     if (typeof props.children !== 'function') {
       throw new TypeError(
-        `[Vitarx.LazyWidget]：children期望得到一个异步函数，给定${typeof props.children}`
+        `[LazyWidget]：children期望得到一个异步函数，给定${typeof props.children}`
       )
     }
     super(props)
-    if (props.loading && VNode.is(props.loading)) {
+    if (props.loading && isVNode(props.loading)) {
       this.#childVNode = props.loading
     } else {
       this.suspenseCounter = getSuspenseCounter()
@@ -103,7 +98,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     if (props.onError) {
       if (typeof props.onError !== 'function') {
         throw new TypeError(
-          `[Vitarx.LazyWidget]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
+          `[LazyWidget]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
         )
       } else {
         this.onError = props.onError
@@ -113,7 +108,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   }
 
   override onMounted() {
-    if (this.toBeUpdated) this.forceUpdate()
+    if (this.toBeUpdated) this.$forceUpdate()
   }
 
   build(): VNode | null {
@@ -132,10 +127,10 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
       this.suspenseCounter.value--
     }
     // 如果还未挂载状态则标记待更新
-    if (this.$vnode.state === 'notMounted') {
+    if (this.$vnode.state === NodeState.Rendered) {
       this.toBeUpdated = true
     } else if (this.$vnode.state === 'activated') {
-      this.forceUpdate()
+      this.$forceUpdate()
     }
   }
 
@@ -157,7 +152,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
         source: 'build',
         instance: this
       })
-      if (VNode.is(result)) this.updateChildVNode(result)
+      if (isVNode(result)) this.updateChildVNode(result)
     }
   }
 }
