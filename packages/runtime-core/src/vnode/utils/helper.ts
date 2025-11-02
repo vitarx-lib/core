@@ -8,12 +8,14 @@ import type {
   ValidNodeType,
   VNodeChild,
   VNodeInputProps,
-  VNodeInstanceType
+  VNodeInstanceType,
+  WidgetType
 } from '../../types/index.js'
 import { isStatelessWidget } from '../../widget/index.js'
 import {
   COMMENT_NODE_TYPE,
   DYNAMIC_RENDER_TYPE,
+  type DynamicRenderType,
   FRAGMENT_NODE_TYPE,
   TEXT_NODE_TYPE
 } from '../constants/index.js'
@@ -27,6 +29,128 @@ import {
   VoidElementVNode
 } from '../nodes/index.js'
 import { getMemoNode, isSameMemo, removeMemoNode } from '../runtime/index.js'
+import { __DEV__, getNodeDevInfo } from './dev.js'
+import { getWidgetName } from './displayName.js'
+
+/**
+ * 合并与规范化子节点。
+ * 保证 `children` 始终是扁平数组。
+ */
+function normalizeChildren(existing: any, children: any[]): any[] {
+  if (!existing) return children
+  if (Array.isArray(existing)) return [...existing, ...children]
+  return [existing, ...children]
+}
+
+/**
+ * 解析 props、处理 v-if / v-memo / children
+ */
+function resolveVNodeProps<T extends ValidNodeType>(
+  type: T,
+  props: VNodeInputProps<T> | null,
+  children: VNodeChild[]
+) {
+  const isValidProps = isRecordObject(props)
+  const resolvedProps: VNodeInputProps<T> = isValidProps ? props : ({} as VNodeInputProps<T>)
+
+  if (isValidProps) {
+    // v-if
+    if ('v-if' in resolvedProps && !unref(popProperty(resolvedProps, 'v-if'))) {
+      return { skip: true, vnode: new CommentNode({ value: 'v-if' }) }
+    }
+    // v-memo
+    const vMemoValue = resolvedProps['v-memo']
+    if (Array.isArray(vMemoValue)) {
+      const cached = getMemoNode(vMemoValue)
+      if (
+        cached &&
+        type === cached.type &&
+        props?.key === cached.key &&
+        isSameMemo(vMemoValue, cached.memo!)
+      ) {
+        logger.debug('v-memo cache hit', cached)
+        return { skip: true, vnode: cached }
+      }
+      if (cached) {
+        logger.debug('v-memo cache mismatch, invalidating', vMemoValue, cached)
+        removeMemoNode(vMemoValue)
+      }
+    }
+  }
+
+  // children 合并
+  if (children.length && type !== TEXT_NODE_TYPE && type !== COMMENT_NODE_TYPE) {
+    const existingChildren = resolvedProps.children
+    resolvedProps.children = normalizeChildren(existingChildren, children)
+  }
+
+  return { skip: false, props: resolvedProps }
+}
+
+/**
+ * 创建字符串类型节点（DOM / Text / Comment / Fragment / Void）
+ */
+function createVNodeByType<T extends Exclude<ValidNodeType, WidgetType | DynamicRenderType>>(
+  type: T,
+  props: VNodeInputProps<T>
+): VNodeInstanceType<T> {
+  switch (type) {
+    case TEXT_NODE_TYPE:
+      return new TextNode(
+        props as unknown as VNodeInputProps<TextNodeType>
+      ) as unknown as VNodeInstanceType<T>
+    case COMMENT_NODE_TYPE:
+      return new CommentNode(
+        props as unknown as VNodeInputProps<CommentNodeType>
+      ) as unknown as VNodeInstanceType<T>
+    case FRAGMENT_NODE_TYPE:
+      return new FragmentNode(props) as unknown as VNodeInstanceType<T>
+    default:
+      if (useDomAdapter().isVoidElement(type)) {
+        return new VoidElementVNode(type, props) as unknown as VNodeInstanceType<T>
+      }
+      return new ElementNode(type, props) as unknown as VNodeInstanceType<T>
+  }
+}
+
+/**
+ * 处理动态组件（v-is / DYNAMIC_RENDER_TYPE）
+ */
+function createDynamicVNode(props: Record<string, any>): VNodeInstanceType<any> {
+  const { is: dynamicWidget, ...dynamicProps } = props
+  const renderNodeType = unref(dynamicWidget)
+  if (!renderNodeType) {
+    throw new Error('dynamic render “is” prop is mandatory and cannot be empty.')
+  }
+  return createVNode(renderNodeType, dynamicProps)
+}
+
+/**
+ * 创建 Widget 节点（Stateless / Stateful）
+ */
+function createWidgetVNode<T extends WidgetType>(
+  widget: T,
+  props: VNodeInputProps<T>
+): VNodeInstanceType<T> {
+  if (__DEV__ && typeof widget.validateProps === 'function') {
+    const name = getWidgetName(widget)
+    const devInfo = getNodeDevInfo(props)
+    const result = widget.validateProps(props)
+
+    // 校验失败处理
+    if (result === false) {
+      const message = `Widget <${name}> props validation failed.`
+      logger.error(message, devInfo?.source)
+      return new CommentNode({ value: message }) as unknown as VNodeInstanceType<T>
+    } else if (typeof result === 'string') {
+      logger.warn(`Widget <${name}>: ${result}`, devInfo?.source)
+    }
+  }
+
+  return (isStatelessWidget(widget)
+    ? new StatelessWidgetNode(widget, props)
+    : new StatefulWidgetNode(widget, props)) as unknown as VNodeInstanceType<T>
+}
 
 /**
  * 创建虚拟节点（VNode）
@@ -34,88 +158,26 @@ import { getMemoNode, isSameMemo, removeMemoNode } from '../runtime/index.js'
  * @param type 节点类型（字符串或组件构造函数）
  * @param props 节点属性
  * @param children 子节点（JSX编译兼容）
- * @returns {object} 创建的虚拟节点，如果`v-if==false`则返回注释节点
+ * @returns {object} 创建的虚拟节点，如果 `v-if===false` 则返回注释节点
  */
 export function createVNode<T extends ValidNodeType>(
   type: T,
   props: VNodeInputProps<T> | null = null,
   ...children: VNodeChild[]
 ): VNodeInstanceType<T> {
-  const isValidProps = isRecordObject(props)
-  const resolvedProps: VNodeInputProps<T> = isValidProps ? props : ({} as VNodeInputProps<T>)
-
-  // ---------- v-if / v-memo ----------
-  if (isValidProps) {
-    if ('v-if' in resolvedProps && !unref(popProperty(resolvedProps, 'v-if'))) {
-      return new CommentNode({ value: 'v-if' }) as unknown as VNodeInstanceType<T>
-    }
-    const vMemoValue = resolvedProps['v-memo']
-    if (Array.isArray(vMemoValue)) {
-      const cached = getMemoNode(vMemoValue)
-      if (cached) {
-        if (
-          type === cached.type &&
-          props.key === cached.key &&
-          isSameMemo(vMemoValue, cached.memo!)
-        ) {
-          logger.debug('v-memo hit', cached)
-          return cached as VNodeInstanceType<T>
-        } else {
-          logger.debug(
-            'v-memo hits the cache, but the node type or key is inconsistent',
-            vMemoValue,
-            cached
-          )
-          removeMemoNode(vMemoValue)
-        }
-      }
-    }
-  }
-  // ---------- children ----------
-  if (children.length && type !== TEXT_NODE_TYPE && type !== COMMENT_NODE_TYPE) {
-    const existing = resolvedProps.children
-    resolvedProps.children = Array.isArray(existing)
-      ? [...existing, ...children]
-      : existing
-        ? [existing, ...children]
-        : children
-  }
-  // ---------- 字符串类型节点 ----------
+  const { skip, vnode, props: resolvedProps } = resolveVNodeProps(type, props, children)
+  if (skip && vnode) return vnode as unknown as VNodeInstanceType<T>
+  const propsResolved = resolvedProps!
   if (typeof type === 'string') {
-    switch (type) {
-      case TEXT_NODE_TYPE:
-        return new TextNode(
-          resolvedProps as unknown as VNodeInputProps<TextNodeType>
-        ) as unknown as VNodeInstanceType<T>
-      case COMMENT_NODE_TYPE:
-        return new CommentNode(
-          resolvedProps as unknown as VNodeInputProps<CommentNodeType>
-        ) as unknown as VNodeInstanceType<T>
-      case FRAGMENT_NODE_TYPE:
-        return new FragmentNode(resolvedProps) as unknown as VNodeInstanceType<T>
-      case DYNAMIC_RENDER_TYPE: {
-        const { is: dynamicWidget, ...dynamicProps } = resolvedProps
-        const renderNodeType = unref(dynamicWidget)
-        if (!renderNodeType) {
-          throw new Error('dynamic render “is” prop it is mandatory and cannot be empty.')
-        }
-        return createVNode(renderNodeType, dynamicProps) as unknown as VNodeInstanceType<T>
-      }
-      default:
-        if (useDomAdapter().isVoidElement(type)) {
-          return new VoidElementVNode(type, resolvedProps) as unknown as VNodeInstanceType<T>
-        } else {
-          return new ElementNode(type, resolvedProps) as unknown as VNodeInstanceType<T>
-        }
+    if (type === DYNAMIC_RENDER_TYPE) {
+      return createDynamicVNode(propsResolved) as unknown as VNodeInstanceType<T>
     }
+    return createVNodeByType(type, propsResolved) as unknown as VNodeInstanceType<T>
   }
-  // ---------- 组件 ----------
+
   if (typeof type === 'function') {
-    if (isStatelessWidget(type)) {
-      return new StatelessWidgetNode(type, resolvedProps) as unknown as VNodeInstanceType<T>
-    }
-    return new StatefulWidgetNode(type, resolvedProps) as unknown as VNodeInstanceType<T>
+    return createWidgetVNode(type as WidgetType, propsResolved) as unknown as VNodeInstanceType<T>
   }
-  // ---------- 兜底 ----------
-  throw new Error('createVNode() type parameter type is of the wrong type')
+
+  throw new Error('createVNode(): invalid node type')
 }
