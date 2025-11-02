@@ -8,10 +8,10 @@ import type {
   WidgetType
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
-import { getWidgetName } from '../utils/displayName.js'
+import { getWidgetName } from '../utils/index.js'
 import { VNode } from './VNode.js'
 
-export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
+export abstract class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
   protected _rootNode: VNode | null = null
   /**
    * app上下文
