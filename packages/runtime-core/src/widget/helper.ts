@@ -1,5 +1,4 @@
 import type {
-  AnyProps,
   ClassWidget,
   StatelessWidget,
   StatelessWidgetSymbol,
@@ -31,7 +30,7 @@ import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from './co
  * @param build - 视图构建器，通过函数返回要渲染的视图虚拟节点
  * @returns { StatelessWidget } - 无状态小部件
  */
-export function defineStatelessWidget<T extends (props: AnyProps) => VNodeChild>(
+export function defineStatelessWidget<T extends (props: any) => VNodeChild>(
   build: T
 ): T & StatelessWidgetSymbol {
   Object.defineProperty(build, STATELESS_FUNCTION_WIDGET_SYMBOL, { value: true })
@@ -44,7 +43,7 @@ export function defineStatelessWidget<T extends (props: AnyProps) => VNodeChild>
  * @deprecated 4.0 版本起标记为弃用，请使用 defineStatelessWidget 替代
  * @see {@linkcode defineStatelessWidget}
  */
-export function defineSimpleWidget<T extends (props: AnyProps) => VNodeChild>(
+export function defineSimpleWidget<T extends (props: any) => VNodeChild>(
   build: T
 ): T & StatelessWidgetSymbol {
   return defineStatelessWidget(build)
@@ -56,7 +55,7 @@ export function defineSimpleWidget<T extends (props: AnyProps) => VNodeChild>(
  * @deprecated 4.0 版本起标记为弃用，请使用 defineStatelessWidget 替代
  * @see {@linkcode defineStatelessWidget}
  */
-export function markSimpleWidget<T extends (props: AnyProps) => VNodeChild>(
+export function markSimpleWidget<T extends (props: any) => VNodeChild>(
   build: T
 ): T & StatelessWidgetSymbol {
   return defineStatelessWidget(build)
