@@ -46,7 +46,14 @@ export interface AppObjectPlugin<T extends {} = {}> {
  * @template T - 插件配置选项
  */
 export type AppPlugin<T extends {} = {}> = AppObjectPlugin<T> | AppPluginInstall<T>
-
+/**
+ * 默认错误处理函数
+ *
+ * @param error
+ * @param info
+ */
+const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
+  logger.error('uncaught exceptions', error, info)
 /**
  * Vitarx App 基类
  */
@@ -81,8 +88,8 @@ export abstract class App {
     }
     // 使用展开运算符合并配置，提供默认错误处理
     this.config = {
-      errorHandler: (error: unknown, info: ErrorInfo) =>
-        logger.error('uncaught exceptions', error, info),
+      errorHandler: defaultErrorHandler,
+      idPrefix: 'v-',
       ...config
     } as Required<AppConfig>
     this.#node.appContext = this

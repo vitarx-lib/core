@@ -114,6 +114,12 @@ declare global {
        * }
        */
       errorHandler?: ErrorHandler
+      /**
+       * useId() 返回的 ID 前缀
+       *
+       * 默认为 `v-`
+       */
+      idPrefix?: string
     }
   }
   namespace JSX {
