@@ -342,7 +342,7 @@ export function watchChanges<T extends AnyObject, C extends ChangeCallback<T>>(
 /**
  * 监听属性变化（支持多个属性）
  *
- * `watchProperties` 是 `SubManager.subscribeProperties` 和 `SubManager.subscribeProperty` 方法的一个函数门面封装。
+ * `watchProperty` 是 `SubManager.subscribeProperties` 和 `SubManager.subscribeProperty` 方法的一个函数门面封装。
  *
  * 它和 `watch` 存在不同之处，它不会记录新值和旧值，只关注哪些属性发生了变化。
  * 可以同时监听多个属性，当任意属性发生变化时触发回调。
