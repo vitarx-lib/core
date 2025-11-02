@@ -143,11 +143,13 @@ export type VNodeIntrinsicAttributes = IntrinsicAttributes & {
  */
 export type VNodeInputProps<T extends ValidNodeType> = (T extends ValidElementNames
   ? JSX.IntrinsicElements[T]
-  : T extends Fragment | Render
-    ? WidgetPropsType<T>
-    : T extends WidgetType
-      ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
-      : {}) &
+  : T extends Render
+    ? WidgetPropsType<Render>
+    : T extends Fragment
+      ? WidgetPropsType<Fragment>
+      : T extends WidgetType
+        ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
+        : {}) &
   VNodeIntrinsicAttributes
 
 /**
