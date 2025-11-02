@@ -1,24 +1,24 @@
 import type {
   AnyProps,
-  Child,
   ClassWidget,
-  SimpleWidget,
-  SimpleWidgetSymbol
+  StatelessWidget,
+  StatelessWidgetSymbol,
+  VNodeChild
 } from '../types/index.js'
-import { CLASS_WIDGET_BASE_SYMBOL, SIMPLE_FUNCTION_WIDGET_SYMBOL } from './constant.js'
+import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from './constant.js'
 
 /**
- * 标记一个'简单'的小部件
+ * 标记/定义一个无状态的小部件
  *
- * 简单小部件实际表达的是无状态，内部逻辑不存在副作用的函数式组件。
+ * 无状态小部件必须是内部逻辑不存在副作用的函数式组件。
  *
  * ```tsx
  * interface Props {
  *   title: string,
  *   color?: string
  * }
- * // 构建一个简单的小部件，它内部不包含任何副作用代码，也没有生命周期钩子
- * const Title = defineSimpleWidget(({title,color = 'black'}:Props) => {
+ * // 构建一个无状态小部件的小部件，它内部不包含任何副作用代码，也没有生命周期钩子
+ * const Title = defineStatelessWidget(({title,color = 'black'}:Props) => {
  *   // 返回需要渲染的元素
  *   return <h1 style={{color}}>{title}</div>
  * })
@@ -28,22 +28,47 @@ import { CLASS_WIDGET_BASE_SYMBOL, SIMPLE_FUNCTION_WIDGET_SYMBOL } from './const
  * ```
  *
  * @param build - 视图构建器，通过函数返回要渲染的视图虚拟节点
- * @returns { SimpleWidget } - 简单小部件
+ * @returns { StatelessWidget } - 无状态小部件
  */
-export function defineSimpleWidget<T extends (props: AnyProps) => Child>(
+export function defineStatelessWidget<T extends (props: AnyProps) => VNodeChild>(
   build: T
-): T & SimpleWidgetSymbol {
-  Object.defineProperty(build, SIMPLE_FUNCTION_WIDGET_SYMBOL, { value: true })
-  return build as T & SimpleWidgetSymbol
+): T & StatelessWidgetSymbol {
+  Object.defineProperty(build, STATELESS_FUNCTION_WIDGET_SYMBOL, { value: true })
+  return build as T & StatelessWidgetSymbol
 }
+
 /**
- * 判断是否为简单小部件
+ * 定义一个简单小部件
  *
- * @param {any} fn - 小部件
+ * @deprecated 4.0 版本起标记为弃用，请使用 defineStatelessWidget 替代
+ * @see {@linkcode defineStatelessWidget}
+ */
+export function defineSimpleWidget<T extends (props: AnyProps) => VNodeChild>(
+  build: T
+): T & StatelessWidgetSymbol {
+  return defineStatelessWidget(build)
+}
+
+/**
+ * 标记一个简单小部件
+ *
+ * @deprecated 4.0 版本起标记为弃用，请使用 defineStatelessWidget 替代
+ * @see {@linkcode defineStatelessWidget}
+ */
+export function markSimpleWidget<T extends (props: AnyProps) => VNodeChild>(
+  build: T
+): T & StatelessWidgetSymbol {
+  return defineStatelessWidget(build)
+}
+
+/**
+ * 判断是否为无状态小部件
+ *
+ * @param {any} fn - 函数式组件
  * @returns {boolean} - true 表示为简单小部件
  */
-export function isSimpleWidget(fn: any): fn is SimpleWidget {
-  return typeof fn === 'function' && fn[SIMPLE_FUNCTION_WIDGET_SYMBOL] === true
+export function isStatelessWidget(fn: any): fn is StatelessWidget {
+  return typeof fn === 'function' && fn[STATELESS_FUNCTION_WIDGET_SYMBOL] === true
 }
 /**
  * 检查一个值是为类小部件构造函数
