@@ -130,6 +130,10 @@ export class StatelessWidgetNode<
    * @inheritDoc
    */
   protected override normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
+    const defaultProps = this.type.defaultProps
+    if (defaultProps && typeof defaultProps === 'object') {
+      props = { ...defaultProps, ...props }
+    }
     return unwrapRefProps(props) as NodeNormalizedProps<T>
   }
 }
