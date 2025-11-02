@@ -567,7 +567,7 @@ class FnWidget extends Widget<Record<string, any>> {
     // 注入生命周期钩子到实例中
     this.#injectLifeCycleHooks(data.lifeCycleHooks)
     const hookCount = Object.keys(data.lifeCycleHooks).length
-    let build: VNodeBuilder | VNode | null | LazyWidgetModule = data.build as VNodeBuilder
+    let build: VNodeBuilder | VNodeChild | LazyWidgetModule = data.build as VNodeBuilder
     if (isPromise(data.build)) {
       // 如果有上级暂停计数器则让计数器+1
       if (this.#suspenseCounter) this.#suspenseCounter.value++
@@ -621,7 +621,7 @@ class FnWidget extends Widget<Record<string, any>> {
    * @param {VNodeBuilder} build - 构建函数
    * @private
    */
-  #setBuild(build: VNodeBuilder | VNode | null | LazyWidgetModule) {
+  #setBuild(build: VNodeBuilder | VNodeChild | LazyWidgetModule) {
     // 如果是函数，则直接赋值给build方法
     if (typeof build === 'function') {
       this.build = build
@@ -632,18 +632,12 @@ class FnWidget extends Widget<Record<string, any>> {
       this.build = () => build
       return
     }
-    if (build === null) return
     // 如果是module对象，则判断是否存在default导出
     if (typeof build === 'object' && 'default' in build! && isWidget(build.default)) {
       this.build = () => new StatefulWidgetNode(build.default, toRaw(this.props))
       return
     }
-    // 如果不符合要求，则在build方法中抛出异常
-    this.build = () => {
-      throw new Error(
-        `[Vitarx.FnWidget]：函数组件的返回值必须是VNode、()=>VNode、Promise<{ default: 函数组件/类组件 }>、null，实际返回的却是${typeof build}`
-      )
-    }
+    this.build = () => build as VNodeChild
   }
 
   /**
