@@ -1,5 +1,5 @@
 import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
-import { isObject, isRecordObject, logger, popProperty } from '@vitarx/utils'
+import { logger, popProperty } from '@vitarx/utils'
 import { useDomAdapter } from '../../host-adapter/index.js'
 import type {
   BindParentElement,
@@ -15,16 +15,11 @@ import type {
   VNodeInputProps,
   VNodeIntrinsicAttributes
 } from '../../types/index.js'
-import {
-  INTRINSIC_ATTRIBUTES,
-  NodeShapeFlags,
-  NodeState,
-  VIRTUAL_NODE_SYMBOL
-} from '../constants/index.js'
+import { NodeShapeFlags, NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
 import { getMemoNode, setMemoNode } from '../runtime/index.js'
 import { isRefEl, type RefEl } from '../runtime/ref.js'
 import { __DEV__, popNodeDevInfo } from '../utils/dev.js'
-import { StyleUtils } from '../utils/index.js'
+import { handleBindProps } from '../utils/normalizeProps.js'
 
 /**
  * 待规范化的属性类型
@@ -151,7 +146,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       /**
        * 处理绑定属性
        */
-      VNode.handleBindProps(props)
+      handleBindProps(props)
     }
     this.props = this.normalizeProps(props)
   }
@@ -306,62 +301,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    */
   public setTeleport(teleport: BindParentElement): void {
     this._teleport = teleport || undefined
-  }
-  /**
-   * 处理属性绑定
-   * @param props - 需要处理的属性对象
-   */
-  private static handleBindProps(props: Record<string, any>) {
-    // 弹出 v-bind 属性
-    const bind = popProperty(props, 'v-bind')
-    // 如果 v-bind 不是对象，则直接返回
-    if (!isObject(bind)) return
-    // ---------- 提取绑定对象与排除列表 ----------
-    let source: Record<string, any> | undefined // 源对象
-
-    // 基础排除列表（包含固有属性）
-    const exclude = INTRINSIC_ATTRIBUTES
-
-    // 如果 v-bind 是数组形式
-    if (Array.isArray(bind)) {
-      source = bind[0] // 获取源对象
-      // 如果源对象不是记录对象，则返回
-      if (!isRecordObject(source)) return
-      if (Array.isArray(bind[1])) {
-        for (const extra of bind[1]) {
-          exclude.add(extra)
-        }
-      }
-    } else {
-      source = bind // 直接使用 v-bind 作为源对象
-    }
-
-    // ---------- 遍历并合并属性 ----------
-    // 遍历源对象的每个属性
-    for (const [key, rawValue] of Object.entries(source)) {
-      // 如果值为 undefined 或在排除列表中，则跳过
-      if (rawValue === undefined || exclude.has(key)) continue
-      // 如果属性已存在
-      if (key in props) {
-        // ---- 特殊处理 style ----
-        if (key === 'style') {
-          // 合并样式对象
-          props[key] = StyleUtils.mergeCssStyle(unref(props[key]), unref(rawValue))
-          continue
-        }
-        // ---- 特殊处理 class ----
-        if (key === 'class' || key === 'className' || key === 'classname') {
-          // 合并类名字符串或对象
-          props[key] = StyleUtils.mergeCssClass(unref(props[key]), unref(rawValue))
-          continue
-        }
-        continue
-      }
-
-      // ---- 普通属性 ----
-      // 直接添加新属性
-      props[key] = rawValue
-    }
   }
   /**
    * 挂载虚拟节点到指定的容器中
