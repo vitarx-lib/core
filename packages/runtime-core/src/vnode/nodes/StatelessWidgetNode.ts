@@ -8,7 +8,7 @@ import type {
 } from '../../types/index.js'
 import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, NodeState } from '../constants/index.js'
-import { VNodeUpdate } from '../runtime/index.js'
+import { linkParentNode, VNodeUpdate } from '../runtime/index.js'
 import { isVNode } from '../utils/index.js'
 import { unwrapRefProps } from '../utils/normalizeProps.js'
 import { CommentNode } from './CommentNode.js'
@@ -93,22 +93,32 @@ export class StatelessWidgetNode<
    * @returns {VNode | TextNode | CommentNode} 返回构建的虚拟DOM节点
    */
   protected override rebuild(): VNode {
+    const node = this.buildRootNode()
+    linkParentNode(node, this)
+    return node
+  }
+  /**
+   * 构建根节点的方法
+   * 根据组件类型和属性创建相应的虚拟DOM节点
+   * @returns {VNode | TextNode | CommentNode} 返回构建的节点对象
+   */
+  private buildRootNode(): VNode {
     // 调用组件类型方法并传入props，获取构建结果
     // 如果构建结果是字符串或数字，创建文本节点并返回
     const buildResult = this.appContext
-      ? this.appContext.runInContext(() => this.type.call(null, this.props))
-      : this.type.call(null, this.props)
+      ? this.appContext.runInContext(() => this.type.call(null, this.props)) // 如果有应用上下文，则在上下文中运行组件类型方法
+      : this.type.call(null, this.props) // 否则直接调用组件类型方法
     // 如果构建结果是VNode节点，直接返回
     if (isVNode(buildResult)) return buildResult
     // 获取构建结果的类型
     const t = typeof buildResult
     // 如果构建结果是函数，抛出错误
-    if (t === 'function') throw new Error(`SimpleWidget(${this.name}) cannot return a function`)
+    if (t === 'function') throw new Error(`StatelessWidget<${this.name}> cannot return a function`)
+    // 如果构建结果是字符串或数字，创建并返回文本节点
     if (t === 'string' || t === 'number') return new TextNode({ value: String(buildResult) })
-    // 如果构建结果不是VNode，则创建错误注释节点
-    return new CommentNode({ value: `SimpleWidget(${this.name}) build ${String(t)}` })
+    // 如果构建结果不是VNode，则创建错误注释节点，记录构建结果的类型
+    return new CommentNode({ value: `StatelessWidget<${this.name}> build ${String(t)}` })
   }
-
   /**
    * 更新组件属性的方法
    *
