@@ -169,11 +169,13 @@ export const onUpdated = createLifecycleHook(LifecycleHooks.updated)
  * 小部件渲染或构建过程中捕获到异常时触发的钩子
  *
  * @example
+ * ```js
  * onError((error, info) => {
  *   console.error(error, info)
  *   // 返回一个备用元素展示错误提示，error通常是Error，强制转换字符串过后会显示 message
  *   return <div>{String(error)}</div>
  * })
+ *```
  *
  * info值说明：
  *  - build: 构建视图时捕获的异常
