@@ -234,31 +234,37 @@ export class StatefulWidgetNode<
   }
 
   /**
-   * @inheritDoc
+   * 重写渲染方法，用于渲染组件实例
+   *
+   * @returns {HostElementInstance<T>} 返回根元素实例
    */
-  override get element(): HostElementInstance<T> {
+  override render(): HostElementInstance<T> {
     // 检查组件状态，如果已经渲染过则抛出错误
     if (this.state !== NodeState.Created) {
       return this.rootNode.element as HostElementInstance<T>
     }
-    // 触发beforeMount生命周期钩子
+    // 触发beforeMount生命周期钩子，在组件挂载前执行
     this.triggerLifecycleHook(LifecycleHooks.beforeMount)
     let el: HostElementInstance
     try {
       // 尝试获取子组件的DOM元素
       el = this.rootNode.element
     } catch (e) {
-      // 触发onError生命周期
+      // 触发onError生命周期钩子，处理渲染过程中发生的错误
       const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
-        source: 'render',
-        instance: this.instance
+        source: 'render', // 错误来源为渲染过程
+        instance: this.instance // 当前实例
       })
       // 如果渲染失败，则使用错误视图替换原视图
+      // 如果返回的是有效的VNode节点，则使用该节点
+      // 否则创建一个注释节点作为错误提示
       this._rootNode = isVNode(errVNode)
         ? errVNode
         : new CommentNode({ value: `${VNode.name} Widget render fail` })
+      // 获取更新后的DOM元素
       el = this.rootNode.element
     }
+    // 返回渲染后的宿主元素实例
     return el as HostElementInstance<T>
   }
   /**

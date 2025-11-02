@@ -22,6 +22,12 @@ export abstract class WidgetNode<T extends WidgetType = WidgetType> extends VNod
     this.appContext = getAppContext()
   }
   /**
+   * @inheritDoc
+   */
+  override get element(): HostElementInstance<T> {
+    return this.render()
+  }
+  /**
    * 获取根节点
    * @returns {VNode} 返回虚拟根节点
    * 如果根节点尚未初始化，则通过 rebuild 方法重建

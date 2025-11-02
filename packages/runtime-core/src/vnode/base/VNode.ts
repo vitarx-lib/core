@@ -336,11 +336,11 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   /**
    * 渲染方法，返回宿主元素实例
    * 该方法用于获取当前组件的宿主元素实例
+   *
+   * @abstract
    * @returns HostElementInstance<T> - 宿主元素实例，泛型T表示元素的具体类型
    */
-  render(): HostElementInstance<T> {
-    return this.element // 返回组件的宿主元素实例
-  }
+  abstract render(): HostElementInstance<T>
   /**
    * 抽象方法，用于处理显示状态的变更
    * @param visible 布尔值，表示新的显示状态

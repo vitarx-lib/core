@@ -40,15 +40,17 @@ export class StatelessWidgetNode<
   }
   public override shapeFlags = NodeShapeFlags.STATELESS_WIDGET
   /**
-   * @inheritDoc
+   * 重写渲染方法，返回根元素实例
+   * @returns HostElementInstance<T> 根宿主元素实例
    */
-  override get element(): HostElementInstance<T> {
+  override render(): HostElementInstance<T> {
     if (this.state === NodeState.Created) {
-      this.state = NodeState.Rendered
+      this.state = NodeState.Rendered // 将节点状态从已创建更新为已渲染
     }
     // 从根节点获取元素并转换为宿主元素实例类型
     return this.rootNode.element as HostElementInstance<T>
   }
+
   /**
    * @inheritDoc
    */
