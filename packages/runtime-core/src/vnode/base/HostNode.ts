@@ -54,9 +54,9 @@ export abstract class HostNode<
   /**
    * 获取对象的名称属性
    * 这是一个getter方法，用于返回对象的type属性值
-   * @returns {any} 返回type属性值
+   * @returns {string} 返回type属性值
    */
-  get name() {
+  get name(): T {
     return this.type
   }
   /**
@@ -165,14 +165,6 @@ export abstract class HostNode<
     }
     // 情况 4️⃣：目标未变化，无需操作
   }
-  /**
-   * 渲染元素
-   *
-   * 此函数每次调用都会返回一个新的元素
-   *
-   * @returns {HostElementInstance<T>} 渲染后的元素
-   */
-  protected abstract render(): HostElementInstance<T>
   /**
    * 挂载子节点
    *
