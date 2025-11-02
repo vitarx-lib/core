@@ -50,21 +50,25 @@ export type WidgetOptions<P extends AnyProps> = {
    *
    * 用于校验传入的 props 是否符合预期
    *
-   * 校验时机：
-   *  - 开发环境：在创建节点（VNode）阶段执行。
-   *  - 生产环境：在节点创建完成之后构建实例之前执行。
+   * 校验时机：仅开发模式下节点创建之前进行校验
    *
    * 校验结果说明：
-   * - `false`：校验失败，输出默认错误信息。
-   * - `string`：异常提示，输出该自定义异常提示。
+   * - `string`：校验失败但不影响节点运行，打印该自定义异常提示。
+   * - `false`：打印默认的参数错误信息。
    * - 其他值/void：校验通过。
    *
    * 框架在开发模式下会自动捕获异常并将其转换为校验错误。
    *
    * @param props - 传入的组件属性对象
-   * @returns 校验结果
+   * @returns {string | false | unknown} 校验结果
    */
-  validateProps?: (props: AnyProps) => false | string | unknown
+  validateProps?: (props: AnyProps) => string | false | unknown
+  /**
+   * 组件名称
+   *
+   * 如果匿名组件不定义此名称，则默认使用 `AnonymousWidget` 作为名称。
+   */
+  displayName?: string
 }
 /**
  * 类小部件构造器类型
