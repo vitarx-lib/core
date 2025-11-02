@@ -1,4 +1,4 @@
-import { ContainerNode, VNode } from '../base/index.js'
+import { ContainerNode, VNode, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
 import type { ElementNode, StatelessWidgetNode } from '../nodes/index.js'
 import {
@@ -37,6 +37,19 @@ export function isStatefulWidgetNode(val: any): val is StatefulWidgetNode {
  */
 export function isStatelessWidgetNode(val: any): val is StatelessWidgetNode {
   return isVNode(val) && val.shapeFlags === NodeShapeFlags.STATELESS_WIDGET
+}
+/**
+ * 判断给定值是否为Widget节点
+ * @param val - 需要判断的值
+ * @returns {boolean} 如果值是Widget节点则返回true，否则返回false
+ */
+export function isWidgetNode(val: any): val is WidgetNode {
+  // 首先检查值是否为VNode，然后检查其shapeFlags是否为STATEFUL_WIDGET或STATELESS_WIDGET
+  return (
+    isVNode(val) &&
+    (val.shapeFlags === NodeShapeFlags.STATEFUL_WIDGET ||
+      val.shapeFlags === NodeShapeFlags.STATELESS_WIDGET)
+  )
 }
 
 /**
