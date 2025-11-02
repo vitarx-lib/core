@@ -19,6 +19,7 @@ import {
  * @param {CompareFunction} [options.compare=Object.is] - 自定义值比较函数
  * @returns {Reactive<T,Deep>} 响应式代理对象
  * @example
+ * ```ts
  * // 深层代理
  * const deepProxy = reactive({a:{b:1}}, {
  *   deep: true, // 可以不传，默认值是 true
@@ -29,6 +30,7 @@ import {
  * const shallowProxy = reactive({a:{b:1}}, false) // 第二个参数支持boolean值指定deep选项
  * shallowProxy.a.b++ // 不会触发订阅shallowProxy的回调函数
  * notifySubscribers(shallowProxy,'a') // 手动通知触发订阅者
+ * ```
  */
 export function reactive<T extends AnyObject, Deep extends boolean = true>(
   target: T,
@@ -67,7 +69,7 @@ export function shallowReactive<T extends AnyObject>(
  * @param {unknown} val - 要检查的值，可以是任意类型
  * @returns {boolean} 如果值是响应式对象则返回 `true`，否则返回 `false`
  * @example
- * ```typescript
+ * ```ts
  * const obj = { foo: 1 }
  * const reactiveObj = reactive(obj)
  *
@@ -96,7 +98,7 @@ export function isReactive(val: any): boolean {
  *   - 如果输入是响应式对象，返回其原始未代理的对象
  *   - 如果输入不是响应式对象，则原样返回
  * @example
- * ```typescript
+ * ```ts
  * const original = { count: 0 }
  * const proxy = reactive(original)
  *

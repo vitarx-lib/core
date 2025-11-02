@@ -29,10 +29,12 @@ export type ExcludeSignalSymbol<T> = Exclude<
  *
  * @template T 目标类型
  * @example
+ * ```ts
  * WatchProperty<RefSignal> // value // ref信号只会触发value变化
  * WatchProperty<AnyCollection>> // size，集合类型只会触发size变化
  * WatchProperty<ProxySignal<[]> | RefSignal<[]>> // `${number}` | length  数组类型的会触发数组长度和数组指定下标变化
  * WatchProperty<ProxySignal> // keyof T 对象类型会触发对象属性变化
+ * ```
  */
 export type CanWatchProperty<T> = T extends AnyCollection
   ? 'size'
@@ -77,11 +79,13 @@ export interface WatchOptions extends Omit<SubscriberOptions, 'paramsHandler'> {
  * @returns {void} - 回调函数不需要返回值
  *
  * @example
+ * ```ts
  * // 使用清理函数管理资源
  * watch(signal, (newVal, oldVal, onCleanup) => {
  *   const timer = setTimeout(() => console.log(newVal), 1000)
  *   onCleanup(() => clearTimeout(timer)) // 自动清理定时器
  * })
+ * ```
  */
 export type WatchCallback<T> = (
   newValue: SignalToRaw<T>,
@@ -97,11 +101,13 @@ export type WatchCallback<T> = (
  * @param {T} signal 监听的信号对象，即原始被监听的对象
  * @returns {void}
  * @example
+ * ```ts
  * // 回调函数示例
  * const callback = (changedProps, signal) => {
  *   console.log('变化的属性:', changedProps);
  *   console.log('信号源:', signal);
  * }
+ * ```
  */
 export type WatchPropertyCallback<T, P> = (
   props: P extends Set<infer U> ? Array<U> : P extends Array<any> ? P : [P],
@@ -146,6 +152,7 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  * @throws { TypeError } - 当参数类型不正确或监听源无效时抛出类型错误
  *
  * @example
+ * ```ts
  * // 监听ref信号
  * const count = ref(0)
  * const unwatch = watch(count, (newVal, oldVal) => {
@@ -179,6 +186,7 @@ function copyValue<T extends AnyObject>(obj: T, key: keyof T | undefined, clone:
  *   // 解决监听源是对象时新旧值引用地址相同，无法辨别新旧对象差异的问题
  *   console.log(newVal === oldVal) // false，因为新值和旧值并非同一个对象，它们已被深度克隆拷贝
  * }, { clone: true })
+ * ```
  */
 export function watch<
   T extends AnyObject | AnyFunction, // 定义泛型 T，可以是对象或函数类型
@@ -312,6 +320,7 @@ export function watch<
  *   - resume(): 恢复监听
  *
  * @example
+ * ```ts
  * import { watchChanges,reactive,ref } from 'vitarx'
  * const reactiveObj = reactive({a:1})
  * const refObj = ref({a:1})
@@ -328,6 +337,7 @@ export function watch<
  * },{
  *   flush:'sync'
  * })
+ *```
  *
  * @see SubManager.subscribes
  */
@@ -363,6 +373,7 @@ export function watchChanges<T extends AnyObject, C extends ChangeCallback<T>>(
  * @param {boolean} [options.immediate=false] - 立即执行一次回调
  * @returns {Subscriber<C>} - 返回订阅者实例，可用于管理订阅生命周期
  * @example
+ * ```ts
  * // 监听单个属性
  * const obj = reactive({ name: 'John', age: 30 });
  * const sub = watchProperty(obj, 'name', (props, obj) => {
@@ -390,8 +401,9 @@ export function watchChanges<T extends AnyObject, C extends ChangeCallback<T>>(
  *     return Array.from(new Set([...oldParams,...newParams]))
  *   }
  * })
+ * ```
  *
- * @see SubManager.subscribeProperties
+ * @see {@linkcode SubManager.subscribeProperties}
  */
 export function watchProperty<
   T extends AnyObject,

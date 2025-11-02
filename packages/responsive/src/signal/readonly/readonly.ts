@@ -119,7 +119,7 @@ export class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
  * @param {T} obj - 要检查的对象
  * @returns {boolean} 如果对象是只读代理则返回true，否则返回false
  * @example
- * ```typescript
+ * ```ts
  * const original = { count: 0 }
  * const readonlyObj = readonly(original)
  * const shallowReadonlyObj = shallowReadonly(original)

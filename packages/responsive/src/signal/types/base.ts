@@ -22,7 +22,7 @@ export type CompareFunction = (oldValue: any, newValue: any) => boolean
  * 为 false 时只转换顶层属性。compare 可用于自定义值的比较逻辑。
  *
  * @example
- * ```typescript
+ * ```ts
  * const user = reactive(data, {
  *   deep: true,
  *   compare: (a, b) => a === b

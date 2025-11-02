@@ -12,9 +12,11 @@ import { Context } from './context.js'
  * @param {boolean} [backup=true] - 是否备份当前上下文
  * @returns {RestoreContext} 用于恢复上下文的函数
  * @example
+ * ```js
  * const restore = createContext('user', { id: 123 })
  * // 使用上下文...
  * restore() // 恢复或删除上下文
+ * ```
  */
 export function createContext<T extends object>(
   tag: Tag,
@@ -33,8 +35,10 @@ export function createContext<T extends object>(
  * @param {Tag} tag - 上下文标签
  * @returns {T|undefined} 找到的上下文对象，如果不存在则返回undefined
  * @example
+ * ```js
  * const userCtx = getContext('user')
  * console.log(userCtx?.id) // 123
+ * ```
  */
 export function getContext<T extends Record<string | symbol, any>>(tag: Tag): T | undefined {
   return Context.get<T>(tag)
@@ -42,12 +46,12 @@ export function getContext<T extends Record<string | symbol, any>>(tag: Tag): T 
 
 /**
  * Context.unset方法的助手函数
+ *
  * 删除指定标签的上下文
+ *
  * @param {Tag} tag - 上下文标签
  * @param {object} [ctx] - 可选的要卸载的上下文对象
  * @returns {boolean} 是否卸载成功
- * @example
- * removeContext('user') // 删除用户上下文
  */
 export function removeContext(tag: Tag, ctx?: object): boolean {
   return Context.unset(tag, ctx)
@@ -65,10 +69,12 @@ export function removeContext(tag: Tag, ctx?: object): boolean {
  * @param {() => R} fn - 要在上下文中运行的函数
  * @returns {R} 函数的执行结果
  * @example
+ * ```js
  * const result = runInContext('user', { id: 123 }, () => {
  *   // 在此函数中可以访问用户上下文
  *   return getContext('user')?.id
  * })
+ * ```
  */
 export function runInContext<R>(tag: Tag, ctx: object, fn: () => R): R {
   return Context.run(tag, ctx, fn)
@@ -85,10 +91,12 @@ export { runInContext as runContext }
  * @param {Tag[]} [tags=[]] - 需要挂起的上下文标签数组
  * @returns {Promise<T>} 异步任务的执行结果
  * @example
+ * ```js
  * await withAsyncContext(async () => {
  *   // 在此函数中指定的上下文被挂起
  *   return fetchData()
  * }, ['user'])
+ * ```
  */
 export async function withAsyncContext<T>(
   asyncTask: AsyncContextTask<T>,
@@ -101,9 +109,6 @@ export async function withAsyncContext<T>(
  * Context.clear方法的助手函数
  *
  * 清除所有上下文
- *
- * @example
- * clearAllContexts() // 清除所有上下文状态
  */
 export function clearAllContexts(): void {
   Context.clear()
@@ -116,9 +121,11 @@ export function clearAllContexts(): void {
  *
  * @returns {IterableIterator<Tag>} 当前所有上下文标签的迭代器
  * @example
+ * ```js
  * for (const tag of getAllContextTags()) {
  *   console.log(tag)
  * }
+ * ```
  */
 export function getAllContextTags(): IterableIterator<Tag> {
   return Context.tags
@@ -128,8 +135,6 @@ export function getAllContextTags(): IterableIterator<Tag> {
  * Context.size属性的助手函数
  * 获取当前存储的上下文数量
  * @returns {number} 当前存储的上下文数量
- * @example
- * const count = getContextCount()
  */
 export function getContextCount(): number {
   return Context.size

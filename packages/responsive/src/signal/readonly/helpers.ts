@@ -16,7 +16,7 @@ import { ReadonlyHandler, type ReadonlyOptions } from './readonly.js'
  * @param {ReadonlyOptions<Deep> | Deep} [options={deep=true,write:'error',message:'The object is read-only, and the ${prop} attribute cannot be modify!'}] - 可选的配置选项，包括是否深度只读和写入行为处理模式，可以传入布尔值快捷设置deep配置
  * @returns {DeepReadonly<T>} 深度只读的代理对象
  * @example
- * ```typescript
+ * ```ts
  * const state = { user: { name: 'Alice', settings: { theme: 'dark' } } }
  * const readonlyState = readonly(state)
  *
@@ -49,7 +49,7 @@ export function readonly<T extends AnyObject, Deep extends boolean = true>(
  * @param {Omit<ReadonlyOptions, 'deep'>} [options={write:'error', message:'The object is read-only, and the ${prop} attribute cannot be modify!'}] - 可选的配置选项，包括写入行为处理模式
  * @returns {Readonly<T>} 浅层只读的代理对象
  * @example
- * ```typescript
+ * ```ts
  * const state = { user: { name: 'Alice', settings: { theme: 'dark' } } }
  * const shallowReadonlyState = shallowReadonly(state)
  *

@@ -22,7 +22,7 @@ import { isMarkNonSignal, isProxySignal, isRefSignal, isSignal } from '../utils/
  * 对象的所有属性都将被转换为响应式的，包括嵌套对象。
  *
  * @example
- * ```typescript
+ * ```ts
  * const user = reactive({
  *   name: ref('Alice'),
  *   age: 18,
@@ -50,7 +50,7 @@ export type Reactive<T extends AnyObject = {}, Deep extends boolean = true> = Pr
  * 如果传入的是普通对象，则原样返回。这个类型在需要访问原始数据结构时很有用。
  *
  * @example
- * ```typescript
+ * ```ts
  * const raw = { name: 'Alice' }
  * const proxy = reactive(raw)
  *
@@ -73,7 +73,7 @@ const STATIC_SYMBOL = new Set([SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, REACTIVE_PROX
  * @template Deep - 是否深度代理
  * @implements {ProxyHandler<T>}
  * @example
- * ```typescript
+ * ```ts
  * const target = { count: 0 }
  * const handler = new ReactiveProxyHandler(target)
  * const proxy = handler.proxy
@@ -368,10 +368,12 @@ function getObjectType(target: AnyObject): 'object' | 'set' | 'map' {
  * @param {CompareFunction} [options.compare=Object.is] - 自定义值比较函数
  * @returns {Reactive<T,Deep>} 响应式代理对象
  * @example
+ * ```js
  * const proxy = createReactiveProxy(target, {
  *   deep: true,
  *   compare: (a, b) => a === b
  * })
+ * ```
  */
 export function createReactiveProxySignal<T extends AnyObject, Deep extends boolean = true>(
   target: T,

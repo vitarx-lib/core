@@ -68,7 +68,7 @@ export interface SubscriberOptions<CB extends AnyCallback = AnyCallback> {
  * - 支持作用域管理
  *
  * @example
- * ```typescript
+ * ```ts
  * // 创建一个简单的订阅者
  * const subscriber = new Subscriber((msg: string) => {
  *   console.log(msg);

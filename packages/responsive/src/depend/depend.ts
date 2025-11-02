@@ -159,6 +159,7 @@ export class Depend {
    * @returns {Subscriber<VoidCallback>} returns.subscriber - 如果有依赖被收集，则返回订阅者对象
    * @throws {TypeError} 如果参数类型不符合要求，则抛出TypeError异常
    * @example
+   * ```js
    * const state = reactive({ count: 0 })
    *
    * // 订阅count属性的变化
@@ -169,6 +170,7 @@ export class Depend {
    *
    * console.log(result) // 输出: 0
    * state.count++ // 触发回调，输出: count changed!
+   * ```
    */
   static subscribe<R>(
     tracker: () => R,

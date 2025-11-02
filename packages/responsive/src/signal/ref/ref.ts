@@ -26,7 +26,7 @@ import { isMarkNonSignal, isRefSignal, isSignal } from '../utils/index.js'
  * 则提取其内部值类型；否则保持原类型不变。
  *
  * @example
- * ```typescript
+ * ```ts
  * type User = {
  *   name: RefSignal<string>
  *   age: number
@@ -267,6 +267,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
  * @param {any} val - 任意值
  * @return {boolean} 是否为 Ref 对象
  * @example
+ * ```ts
  * // 创建一个 Ref 对象
  * const count = ref(0)
  *
@@ -286,6 +287,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
  * const customRef = new CustomRef(0)
  * console.log(isRef(customRef)) // false，因为不是 Ref 实例
  * console.log(isRefSignal(customRef)) // true，因为 CustomRef 符合RefSignal的特征
+ * ```
  */
 export function isRef(val: any): val is Ref {
   return !!(val && val instanceof Ref)
@@ -340,6 +342,7 @@ export function ref<Value, Deep extends boolean = true>(
  * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新，默认使用Object.is进行比较
  * @returns {Ref<Value, Deep>} - 创建的响应式引用信号
  * @example
+ * ```ts
  * // 创建一个基本类型的ref
  * const count = ref(0)
  * console.log(count.value) // 0
@@ -361,6 +364,7 @@ export function ref<Value, Deep extends boolean = true>(
  * const count2 = ref(ref(1))
  * count2.value++
  * console.log(count2.value) // 2
+ * ```
  */
 export function ref<Value = any, Deep extends boolean = true>(
   value?: Value | Ref<Value, Deep>,
@@ -406,6 +410,7 @@ export function shallowRef<Value>(
  * @param {function} [options.compare=Object.is] - 值比较函数，用于决定是否触发更新
  * @returns {Ref<Value, false>} - 浅响应式引用信号对象
  * @example
+ * ```ts
  * // 创建一个基本的浅响应式引用
  * const count = shallowRef(0)
  * console.log(count.value) // 0
@@ -428,6 +433,7 @@ export function shallowRef<Value>(
  * const list = shallowRef([1, 2, 3], {
  *   compare: (prev, next) => prev.length === next.length
  * })
+ * ```
  */
 export function shallowRef<Value = any>(
   value?: Value | Ref<Value, false>,

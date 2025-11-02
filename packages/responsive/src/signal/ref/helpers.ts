@@ -1,5 +1,3 @@
-import { logger } from '@vitarx/utils'
-import { isReactive } from '../reactive/index.js'
 import type { RefSignal } from '../types/index.js'
 import { isRefSignal, type SignalToRaw, toRaw } from '../utils/index.js'
 import { PropertyRef } from './property.js'
@@ -31,11 +29,13 @@ export type UnwrapRef<T> = T extends RefSignal ? SignalToRaw<T> : T
  * @param {T | Ref<T>} ref - 需要解包的值，可以是RefSignal对象或普通值
  * @returns {T} 如果输入是RefSignal对象，返回其 `toRaw` 原始值；如果是普通值，则原样返回
  * @example
+ * ```js
  * // 处理Ref对象
  * const count = ref(0)
  * console.log(unref(count)) // 0 等效于 toRaw(count)
  * // 处理普通值
  * console.log(unref(100)) // 100
+ * ```
  */
 export function unref<T>(ref: T): UnwrapRef<T> {
   return isRefSignal(ref) ? toRaw(ref) : (ref as UnwrapRef<T>)
@@ -55,9 +55,11 @@ export function unref<T>(ref: T): UnwrapRef<T> {
  * @param {() => T} source - 一个返回值的函数
  * @returns {ReadonlyRef<T>} ReadonlyRef 对象
  * @example
+ * ```js
  * const getCount = () => 42
  * const countRef = toRef(getCount) // 等效于 readonlyRef(getCount)
  * console.log(countRef.value) // 42
+ * ```
  */
 export function toRef<T>(source: () => T): ReadonlyRef<T>
 
@@ -68,9 +70,11 @@ export function toRef<T>(source: () => T): ReadonlyRef<T>
  * @param {T} source - 已有的 Ref 对象
  * @returns {T} 原 Ref 对象
  * @example
+ * ```js
  * const count = ref(0)
  * const countRef = toRef(count)
  * console.log(countRef === count) // true
+ * ```
  */
 export function toRef<T extends RefSignal>(source: T): T
 
@@ -80,10 +84,12 @@ export function toRef<T extends RefSignal>(source: T): T
  * @param {T} value - 普通值
  * @returns {Ref<T>} 包装后的 Ref 对象
  * @example
+ * ```js
  * const countRef = toRef(42)
  * console.log(countRef.value) // 42
  * countRef.value = 43
  * console.log(countRef.value) // 43
+ * ```
  */
 export function toRef<T>(value: T): Ref<T>
 
@@ -97,6 +103,7 @@ export function toRef<T>(value: T): Ref<T>
  * @param {T[K]} [defaultValue] - 默认值（可选）
  * @returns {ToRef<T[K]>} 与对象属性绑定的 Ref 对象
  * @example
+ * ```js
  * const state = reactive({ count: 0 })
  * const countRef = toRef(state, 'count')
  * console.log(countRef.value) // 0
@@ -106,6 +113,7 @@ export function toRef<T>(value: T): Ref<T>
  * // 使用默认值
  * const nameRef = toRef(state, 'name', 'default')
  * console.log(nameRef.value) // 'default'
+ * ```
  */
 export function toRef<T extends object, K extends keyof T>(
   object: T,
@@ -149,6 +157,7 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
  * @param {T} object - reactive 对象
  * @returns {{ [K in keyof T]: ToRef<T[K]> }} - 属性到 Ref 的映射
  * @example
+ * ```js
  * const state = reactive({ count: 0, user: { name: 'Li' } })
  * const { count, user } = toRefs(state)
  * count.value++ // state.count === 1
@@ -157,12 +166,11 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
  * // 对于普通对象
  * const plain = { count: 0 }
  * const { count: countRef } = toRefs(plain)
- * // 会给出警告，但仍然创建 ref
+ * plain.count++
+ * console.log(countRef.value) // 0 (普通对象无法保持响应式，因此 countRef.value 为 0)
+ * ```
  */
 export function toRefs<T extends object>(object: T): { [K in keyof T]: ToRef<T[K]> } {
-  if (!isReactive(object)) {
-    logger.warn(`toRefs() expects a reactive object but received a plain one.`)
-  }
   const ret: any = {}
   for (const key in object) {
     const val = (object as any)[key]

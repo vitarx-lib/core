@@ -134,10 +134,12 @@ export class SignalManager {
  * @param {boolean} [notifyParent=true] - 是否通知父级信号
  * @returns {void}
  * @example
+ * ```ts
  * // 浅层代理
  * const shallowProxy = reactive({a:{b:1}}, false)
  * shallowProxy.a.b++ // 不会触发订阅shallowProxy的回调函数
  * notifySubscribers(shallowProxy,'a') // 手动通知触发订阅者
+ * ```
  */
 export function notifySubscribers<T extends BaseSignal>(
   signal: T,

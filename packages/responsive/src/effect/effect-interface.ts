@@ -7,7 +7,7 @@ import { VoidCallback } from '@vitarx/utils'
  * @param {string} source - 错误来源，指示在哪个生命周期事件中发生的错误
  *
  * @example
- * ```typescript
+ * ```ts
  * const errorHandler: EffectCallbackErrorHandler = (error, source) => {
  *   console.error(`Error in ${source} operation:`, error);
  * }
@@ -46,7 +46,7 @@ export type EffectState = 'active' | 'paused' | 'deprecated'
  * - 统一的错误处理
  *
  * @example
- * ```typescript
+ * ```ts
  * class MyEffect implements EffectInterface {
  *   private state: EffectState = 'active';
  *
@@ -70,7 +70,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    * 3. 清理所有事件监听器
    *
    * @example
-   * ```typescript
+   * ```ts
    * const effect = new Effect();
    * effect.dispose(); // 销毁实例
    * console.log(effect.getState()); // 输出: 'deprecated'
@@ -90,7 +90,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    * @param callback - 销毁事件的回调函数，在实例被销毁时执行
    * @throws {Error} 当实例已处于deprecated状态时抛出
    * @example
-   * ```typescript
+   * ```ts
    * effect.onDispose(() => {
    *   console.log('Effect has been disposed');
    *   // 清理相关资源...
@@ -108,7 +108,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    *
    * @throws {Error} 当实例不处于active状态时抛出错误
    * @example
-   * ```typescript
+   * ```ts
    * if (effect.isActive) {
    *   effect.pause();
    *   console.log(effect.getState()); // 输出: 'paused'
@@ -129,7 +129,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    * @param {VoidCallback} callback - 暂停事件的回调函数
    * @throws {Error} 当实例处于deprecated状态时抛出
    * @example
-   * ```typescript
+   * ```ts
    * effect.onPause(() => {
    *   console.log('Effect has been paused');
    *   // 保存当前状态...
@@ -147,7 +147,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    *
    * @throws {Error} 当实例不处于paused状态时抛出错误
    * @example
-   * ```typescript
+   * ```ts
    * if (effect.isPaused) {
    *   effect.resume();
    *   console.log(effect.getState()); // 输出: 'active'
@@ -168,7 +168,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    * @param callback - 恢复事件的回调函数
    * @throws {Error} 当实例处于deprecated状态时抛出
    * @example
-   * ```typescript
+   * ```ts
    * effect.onResume(() => {
    *   console.log('Effect has been resumed');
    *   // 恢复之前的状态...
@@ -188,7 +188,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    * @throws {Error} 当实例处于deprecated状态时抛出
    *
    * @example
-   * ```typescript
+   * ```ts
    * effect.onError((error, source) => {
    *   console.error(`Error in ${source} callback:`, error);
    *   // 进行错误处理...
@@ -212,7 +212,7 @@ export interface EffectInterface<ErrorSource extends string = string> {
    *
    * @returns {EffectState} 当前实例的状态
    * @example
-   * ```typescript
+   * ```ts
    * const state = effect.getState();
    * if (state === 'active') {
    *   // 实例正常工作中...

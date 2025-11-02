@@ -16,9 +16,11 @@ import { Subscriber, type SubscriberOptions } from './subscriber.js'
  * @param {P|P[]} property - 变更的属性名或属性名数组
  * @returns {void} 无返回值
  * @example
+ * ```js
  * const user = { name: 'John', age: 30 }
  * notify(user, 'name') // 通知name属性已变更
  * notify(user, ['name', 'age']) // 通知多个属性已变更
+ * ```
  */
 export function notify<T extends AnyObject, P extends keyof T>(target: T, property: P | P[]): void {
   SubManager.notify(target, property)
@@ -104,9 +106,9 @@ export function subscribes<T extends AnyObject, C extends ChangeCallback<T>>(
  * 对象属性与副作用之间的关联。
  *
  * @example
- * ```
+ * ```js
  * const user = { name: 'John', age: 30 }
- * const subscriber = subscribe(user,'name', () => {
+ * const subscriber = subscribeProperty(user,'name', () => {
  *   console.log(`name 属性值已发生变更`)
  * })
  * // 取消订阅
