@@ -52,6 +52,14 @@ export abstract class HostNode<
    */
   private _cachedElement: HostElementInstance<T> | null = null
   /**
+   * 获取对象的名称属性
+   * 这是一个getter方法，用于返回对象的type属性值
+   * @returns {any} 返回type属性值
+   */
+  get name() {
+    return this.type
+  }
+  /**
    * 获取或创建运行时元素实例的访问器属性
    *
    * 使用惰性初始化模式，只在第一次访问时创建元素实例

@@ -8,6 +8,7 @@ import type {
   WidgetType
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
+import { getWidgetName } from '../utils/displayName.js'
 import { VNode } from './VNode.js'
 
 export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
@@ -95,7 +96,14 @@ export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
   }
 
   protected abstract rebuild(): VNode
-
+  /**
+   * 获取名称的getter方法
+   *
+   * @returns {string} 返回名称字符串
+   */
+  get name(): string {
+    return getWidgetName(this.type)
+  }
   /**
    * @inheritDoc
    */

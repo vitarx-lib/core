@@ -260,23 +260,14 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    */
   abstract readonly element: HostElementInstance<T>
   /**
+   * 节点树中展示的名称
+   */
+  abstract readonly name: string
+  /**
    * 获取 Dom 适配器实例
    */
   get dom(): HostAdapter {
     return useDomAdapter()
-  }
-  /**
-   * 获取名称的getter方法
-   * 根据type的类型返回对应的名称
-   *
-   * @returns {string} 返回名称字符串
-   */
-  get name(): string {
-    // 如果this.type是字符串类型，则直接返回该字符串
-    // 否则返回this.type的displayName|name属性
-    return typeof this.type === 'string'
-      ? this.type
-      : ((this.type as unknown as { displayName: string }).displayName ?? this.type.name)
   }
   /**
    * DOM 锚点（Anchor Node）
