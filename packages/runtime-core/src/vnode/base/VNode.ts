@@ -19,11 +19,11 @@ import {
   INTRINSIC_ATTRIBUTES,
   NodeShapeFlags,
   NodeState,
-  VIRTUAL_NODE_SYMBOL,
-  VNODE_PROPS_DEV_INFO_KEY_SYMBOL
+  VIRTUAL_NODE_SYMBOL
 } from '../constants/index.js'
 import { getMemoNode, setMemoNode } from '../runtime/index.js'
 import { isRefEl, type RefEl } from '../runtime/ref.js'
+import { __DEV__, popNodeDevInfo } from '../utils/dev.js'
 import { StyleUtils } from '../utils/index.js'
 
 /**
@@ -141,9 +141,9 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       }
       // 传送目标
       this._teleport = popProperty(props, 'v-parent') || undefined
-      if (import.meta.env?.DEV) {
+      if (__DEV__) {
         // 开发模式下的调试信息
-        this.devInfo = popProperty(props, VNODE_PROPS_DEV_INFO_KEY_SYMBOL)
+        this.devInfo = popNodeDevInfo(props)
         if (this.devInfo?.isStatic && !this.isStatic) {
           logger.warn(`node is static, but not set v-static`, this.devInfo.source)
         }
@@ -163,8 +163,13 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    */
   private _show: boolean = true
 
+  /**
+   * 获取显示状态的getter方法
+   * 用于返回内部的_show属性值
+   * @returns {boolean} 返回当前的显示状态
+   */
   get show(): boolean {
-    return this._show
+    return this._show // 返回内部的_show属性值
   }
   /**
    * 设置v-show的属性值
