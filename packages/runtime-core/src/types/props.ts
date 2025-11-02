@@ -229,7 +229,7 @@ export type StyleRules = Vitarx.HostStyleRules
  * 它包含了所有标准CSS属性，同时也支持浏览器特定的样式属性。
  *
  * @example
- * ```typescript
+ * ```ts
  * const styles: CssRules = {
  *   display: 'flex',
  *   backgroundColor: '#fff',
@@ -248,7 +248,7 @@ export type StyleAttribute = string | Vitarx.HostStyleRules
  * - 对象：键为类名，值为布尔值，表示是否应用该类
  *
  * @example
- * ```typescript
+ * ```ts
  * // 字符串形式
  * const class1: ClassProperties = 'btn btn-primary'
  *
