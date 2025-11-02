@@ -1,8 +1,7 @@
 import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import type { ErrorInfo, WidgetType } from '../types/index.js'
-import { isStatefulWidgetNode, StatefulWidgetNode } from '../vnode/index.js'
-import { createVNode } from '../vnode/utils/helper.js'
+import { createVNode, isStatefulWidgetNode, StatefulWidgetNode } from '../vnode/index.js'
 import { runInAppContext } from './context.js'
 
 /** 应用配置 */
@@ -53,7 +52,7 @@ export type AppPlugin<T extends {} = {}> = AppObjectPlugin<T> | AppPluginInstall
  * @param info
  */
 const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
-  logger.error('uncaught exceptions', error, info)
+  logger.error('there are unhandled exceptions', error, info)
 /**
  * Vitarx App 基类
  */

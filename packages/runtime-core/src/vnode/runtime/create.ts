@@ -1,6 +1,5 @@
 import { unref } from '@vitarx/responsive'
-import { isRecordObject, popProperty } from '@vitarx/utils'
-import { logger } from '@vitarx/utils/src/index.js'
+import { isRecordObject, logger, popProperty } from '@vitarx/utils'
 import { useDomAdapter } from '../../host-adapter/index.js'
 import type {
   CommentNodeType,
@@ -28,9 +27,8 @@ import {
   TextNode,
   VoidElementVNode
 } from '../nodes/index.js'
-import { getMemoNode, isSameMemo, removeMemoNode } from '../runtime/index.js'
-import { __DEV__, getNodeDevInfo } from './dev.js'
-import { getWidgetName } from './displayName.js'
+import { __DEV__, getNodeDevInfo, getWidgetName } from '../utils/index.js'
+import { getMemoNode, isSameMemo, removeMemoNode } from './directives/index.js'
 
 /**
  * 合并与规范化子节点。
