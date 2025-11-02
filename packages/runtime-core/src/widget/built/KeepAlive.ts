@@ -1,16 +1,19 @@
-import type { RefSignal } from '@vitarx/responsive'
-import { unref } from '@vitarx/responsive'
-import { DomHelper } from '../../dom/index.js'
+import type {
+  AnyProps,
+  HostElementInstance,
+  TextNodeType,
+  UniqueKey,
+  WidgetType
+} from '../../types/index.js'
+import { onPropChange } from '../../utils/index.js'
 import {
   createVNode,
-  type UniqueKey,
+  isWidgetNode,
+  type StatefulWidgetNode,
   type VNode,
-  type VNodeType,
-  type WidgetNode,
-  type WidgetType
+  WidgetNode
 } from '../../vnode/index.js'
-import { isVNode } from '../../vnode/is.js'
-import { onPropChange } from '../property.js'
+import { isWidget } from '../helper.js'
 import { Widget } from '../widget.js'
 
 /**
@@ -21,29 +24,41 @@ export interface KeepAliveProps {
    * 当前展示的小部件或元素
    * @example
    * ```tsx
-   * import { shallowRef,types VNodeType } from 'vitarx'
+   * import { shallowRef,types WidgetType } from 'vitarx'
    * import User from './User.js'
    * import Home from './Home.js'
-   * const showChild = shallowRef<VNodeType>(User)
-   * // 使用 KeepAlive 组件
+   * const showChild = shallowRef<WidgetType>(User)
+   * // 使用 children attribute 传入子部件
    * <KeepAlive children={showChild}/>
+   * // 使用插槽传入小部件
+   * <KeepAlive>
+   *   { showChild }
+   * </KeepAlive>
+   * // 使用 render 动态渲染
+   * <KeepAlive>
+   *   <render is={showChild} test="透传attr">
+   * </KeepAlive>
    * // 更改显示的组件，User组件会触发onDeactivate钩子
    * showChild.value = Home
    * ```
    */
-  children: VNodeType | VNode | RefSignal<VNodeType | VNode>
+  children: WidgetType | VNode
   /**
    * 需要缓存的节点类型
    *
    * 当为空时，将缓存所有类型的节点
+   *
+   * @default []
    */
-  include?: VNodeType[]
+  include: WidgetType[]
   /**
    * 需要销毁状态的节点类型列表
    *
    * 优先级高于 include
+   *
+   * @default []
    */
-  exclude?: VNodeType[]
+  exclude: WidgetType[]
   /**
    * 最大缓存数量
    *
@@ -51,41 +66,88 @@ export interface KeepAliveProps {
    *
    * @default 10
    */
-  max?: number
+  max: number
 }
 
 /**
- * ## KeepAlive
+ * KeepAlive
  *
  * 缓存小部件实例，以减少小部件的创建和销毁性能开销。
  *
  * 这在某些场景下非常有用，例如：数据列表，频繁从树中移除又创建的小部件。
+ *
+ * 核心功能：
+ * - 缓存小部件实例，避免重复创建和销毁
+ * - 支持配置最大缓存数量
+ * - 支持指定需要缓存或排除缓存的小部件类型
+ *
+ * @example
+ * ```tsx
+ * import { shallowRef,types WidgetType } from 'vitarx'
+ * import User from './User.js'
+ * import Home from './Home.js'
+ * const showChild = shallowRef<WidgetType>(User)
+ * // 使用 children attribute 传入子部件
+ * <KeepAlive children={showChild}/>
+ * // 使用插槽传入小部件
+ * <KeepAlive>
+ *   { showChild }
+ * </KeepAlive>
+ * // 使用 render 动态渲染
+ * <KeepAlive>
+ *   <render is={showChild} test="透传attr">
+ * </KeepAlive>
+ * // 更改显示的组件，User组件会触发onDeactivate钩子
+ * showChild.value = Home
+ * ```
+ *
+ * @constructor
+ * @param {KeepAliveProps} props - 组件属性
+ * @param {WidgetType|VNode} props.children - 需要缓存的小部件
+ * @param {number} [props.max=10] - 最大缓存数量
+ * @param {string[]} [props.include=[]] - 需要缓存的小部件类型列表
+ * @param {string[]} [props.exclude=[]] - 不需要缓存的小部件类型列表
+ *
+ * @note
+ * - children 属性是必需的
+ * - 当缓存数量超过 max 时，会按照先进先出的原则移除最早缓存的小部件
+ * - 在组件卸载时会自动清理所有缓存的实例
  */
 export class KeepAlive extends Widget<KeepAliveProps> {
+  static override defaultProps = {
+    max: 10,
+    include: [],
+    exclude: []
+  }
   /**
    * 缓存的节点实例
    */
-  public readonly cached: Map<VNodeType, Map<UniqueKey | undefined, VNode>> = new Map()
+  public readonly cached: Map<WidgetType, Map<UniqueKey | undefined, WidgetNode>> = new Map()
   /**
    * 当前展示的小部件
    * @protected
    */
-  protected currentChild: VNode
+  protected currentChild: WidgetNode
 
   constructor(props: KeepAliveProps) {
     super(props)
-    if (!this.props.children) throw new Error('[KeepAlive]: children is required')
     // 缓存当前展示的小部件
-    this.currentChild = this.makeChildVNode(unref(props.children))
+    this.currentChild = this.makeChildVNode(props.children)
     // 开始监听 props.children
     onPropChange(this.props, 'children', this.handleChildChange.bind(this))
+  }
+
+  /**
+   * 缓存的最大数量
+   */
+  get max() {
+    return this.props.max
   }
 
   /**
    * 需要缓存的小部件
    */
   get include() {
-    if (!this.props.include) return []
     return this.props.include
   }
 
@@ -93,15 +155,21 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    * 排除缓存的小部件
    */
   get exclude() {
-    if (!this.props.exclude) return []
     return this.props.exclude
   }
 
   /**
-   * 缓存的最大数量
+   * 静态方法，用于验证组件的属性
+   * @override 重写父类的验证方法
+   * @param props - 需要验证的属性对象
+   * @throws Error 当缺少children属性时抛出错误
    */
-  get max() {
-    return this.props.max ?? 10
+  static override validateProps(props: AnyProps) {
+    // 检查是否存在children属性
+    if (!props.children) throw new TypeError('KeepAlive children is required')
+    if (!isWidgetNode(props.children) && typeof props.children !== 'function') {
+      throw new TypeError('KeepAlive children must be a WidgetNode or a Widget')
+    }
   }
 
   /**
@@ -109,7 +177,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @param type
    */
-  isKeep(type: VNodeType): boolean {
+  isKeep(type: WidgetType): boolean {
     if (this.exclude.includes(type)) return false
     return this.include.length === 0 || this.include.includes(type)
   }
@@ -140,15 +208,12 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * @inheritDoc
    */
-  override $patchUpdate(oldVNode: WidgetNode, newVNode: WidgetNode): VNode {
+  override $patchUpdate(oldVNode: StatefulWidgetNode, newVNode: StatefulWidgetNode): VNode {
     // 提前检查是否需要创建占位符
-    let placeholderElement: Text | null = null
+    let placeholderElement: HostElementInstance<TextNodeType> | null = null
     if (newVNode.state !== 'deactivated') {
-      placeholderElement = document.createTextNode('')
-      DomHelper.insertBefore(
-        placeholderElement,
-        oldVNode._teleport ? oldVNode.shadowElement : oldVNode.element
-      )
+      placeholderElement = oldVNode.dom.createText('')
+      oldVNode.dom.insertBefore(placeholderElement, oldVNode.operationTarget)
     }
 
     // 统一处理旧节点的清理
@@ -171,13 +236,13 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 生成子节点
    */
-  protected makeChildVNode(children: VNodeType | VNode): VNode {
-    const isValidVNode = isVNode(children)
-    if (isValidVNode) {
-      return children as VNode<WidgetType>
-    } else {
+  protected makeChildVNode(children: WidgetType | VNode): WidgetNode {
+    if (isWidgetNode(children)) {
+      return children
+    } else if (isWidget(children)) {
       return createVNode(children)
     }
+    throw new TypeError('KeepAlive children must be a WidgetNode or a Widget')
   }
 
   /**
@@ -185,7 +250,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @protected
    */
-  protected handleChildChange(child: VNodeType | VNode) {
+  protected handleChildChange(child: WidgetType | VNode) {
     const newVNode = this.makeChildVNode(child)
     const newType = newVNode.type // 新的组件类型
     const newKey = newVNode.key // 新的组件唯一键
@@ -209,7 +274,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
       }
 
       // 更新组件
-      this.forceUpdate()
+      this.$forceUpdate()
     }
   }
 
@@ -218,7 +283,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @param vnode
    */
-  protected addCache(vnode: VNode) {
+  protected addCache(vnode: WidgetNode) {
     const type = vnode.type
     const key = vnode.key
     if (this.isKeep(type)) {
