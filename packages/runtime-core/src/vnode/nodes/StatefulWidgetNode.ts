@@ -4,6 +4,7 @@ import {
   EffectScope,
   nextTick,
   Subscriber,
+  toRaw,
   withAsyncContext
 } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
@@ -634,7 +635,7 @@ class FnWidget extends Widget<Record<string, any>> {
     if (build === null) return
     // 如果是module对象，则判断是否存在default导出
     if (typeof build === 'object' && 'default' in build! && isWidget(build.default)) {
-      this.build = () => new StatefulWidgetNode(build.default, this.props)
+      this.build = () => new StatefulWidgetNode(build.default, toRaw(this.props))
       return
     }
     // 如果不符合要求，则在build方法中抛出异常
