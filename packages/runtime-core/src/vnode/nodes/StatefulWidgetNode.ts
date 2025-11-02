@@ -30,7 +30,8 @@ import {
   getSuspenseCounter,
   HookCollector,
   type HookCollectResult,
-  isClassWidget
+  isClassWidget,
+  isWidget
 } from '../../widget/index.js'
 import { Widget } from '../../widget/widget.js'
 import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
@@ -161,7 +162,7 @@ export class StatefulWidgetNode<
    *
    * @returns {Promise<Widget>} 返回一个Promise，解析为创建的组件实例
    */
-  private createInstance(): Promise<WidgetInstanceType<T>> {
+  public createInstance(): Promise<WidgetInstanceType<T>> {
     return new Promise(resolve => {
       // 在特定上下文中运行实例创建逻辑
       this.runInContext(() => {
@@ -632,7 +633,7 @@ class FnWidget extends Widget<Record<string, any>> {
     }
     if (build === null) return
     // 如果是module对象，则判断是否存在default导出
-    if (typeof build === 'object' && 'default' in build! && typeof build.default === 'function') {
+    if (typeof build === 'object' && 'default' in build! && isWidget(build.default)) {
       this.build = () => new StatefulWidgetNode(build.default, this.props)
       return
     }
