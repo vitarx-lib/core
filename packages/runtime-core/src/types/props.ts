@@ -181,10 +181,7 @@ export interface IntrinsicAttributes {
   /**
    * 缓存节点的指令
    *
-   * 值类型：
-   *  - object：任意对象，浅层属性相同，则命中缓存
-   *  - array：数组，所有元素都相同，则命中缓存
-   *  - any：其他任意类型值，值相同则命中缓存
+   * 值必须是 array 数组，所有元素都相同（ref会解包对比），则命中缓存
    *
    * 示例：
    * ```tsx
@@ -196,7 +193,7 @@ export interface IntrinsicAttributes {
    * }
    * ```
    */
-  'v-memo'?: any
+  'v-memo'?: any[]
   /**
    * 静态节点的指令
    *
