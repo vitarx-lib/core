@@ -1,4 +1,4 @@
-import type { ValidNodeType, VNodeChild } from '../../types/index.js'
+import type { ValidNodeType, VNodeChildren } from '../../types/index.js'
 import { VNode } from '../base/index.js'
 
 /**
@@ -43,7 +43,7 @@ export const FRAGMENT_NODE_TYPE = 'fragment'
  * ```
  */
 export const Fragment = FRAGMENT_NODE_TYPE as unknown as {
-  (props: { children?: VNodeChild }): any
+  (props: { children?: VNodeChildren }): any
   __isFragment__: true
 }
 export type Fragment = typeof Fragment
@@ -91,7 +91,7 @@ export type DynamicRenderType = typeof DYNAMIC_RENDER_TYPE
 export const Render = DYNAMIC_RENDER_TYPE as unknown as {
   (props: {
     is: Exclude<ValidNodeType, Render | DynamicRenderType>
-    children?: VNodeChild
+    children?: VNodeChildren
     [key: string]: any
   }): VNode
   __isDynamicRender__: true
