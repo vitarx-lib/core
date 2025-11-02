@@ -6,8 +6,21 @@ import { PropertyRef } from './property.js'
 import { ReadonlyRef } from './readonly.js'
 import { Ref } from './ref.js'
 
+/**
+ * 导出一个类型别名 ToRef，它根据输入类型 T 决定返回的类型
+ * @template T - 任意类型
+ *
+ * 如果 T 是 RefSignal 类型，则返回 T 本身；否则返回 Ref<T>
+ */
 export type ToRef<T> = T extends RefSignal ? T : Ref<T>
-
+/**
+ * 导出一个类型别名 UnwrapRef，用于解包 RefSignal 类型的值
+ *
+ * 如果 T 是 RefSignal 类型，则返回 SignalToRaw<T>，否则直接返回 T
+ *
+ * @template T - 泛型参数，表示需要解包的类型
+ */
+export type UnwrapRef<T> = T extends RefSignal ? SignalToRaw<T> : T
 /**
  * 解除 `RefSignal` 对象的包装，返回其原始值
  *
@@ -24,8 +37,8 @@ export type ToRef<T> = T extends RefSignal ? T : Ref<T>
  * // 处理普通值
  * console.log(unref(100)) // 100
  */
-export function unref<T>(ref: T): T extends RefSignal ? SignalToRaw<T> : T {
-  return isRefSignal(ref) ? toRaw(ref) : (ref as any)
+export function unref<T>(ref: T): UnwrapRef<T> {
+  return isRefSignal(ref) ? toRaw(ref) : (ref as UnwrapRef<T>)
 }
 /**
  * 创建一个基于源的 RefSignal
