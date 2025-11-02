@@ -16,7 +16,7 @@ export abstract class WidgetNode<T extends WidgetType> extends VNode<T> {
    * app上下文
    */
   public appContext?: App
-  constructor(type: T, props: VNodeInputProps<T>) {
+  protected constructor(type: T, props: VNodeInputProps<T>) {
     super(type, props)
     this.appContext = getAppContext()
   }
