@@ -5,13 +5,33 @@ import type {
   HostParentElement,
   MountType,
   VNodeInputProps,
-  WidgetType
+  WidgetNodeType
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
 import { getWidgetName } from '../utils/index.js'
 import { VNode } from './VNode.js'
 
-export abstract class WidgetNode<T extends WidgetType = WidgetType> extends VNode<T> {
+/**
+ * WidgetNode 是一个抽象的虚拟节点类，用于构建和管理界面组件。
+ * 它继承自 VNode，提供了组件的基础功能，包括节点挂载、状态管理和 Teleport 支持。
+ *
+ * 核心功能：
+ * - 虚拟节点的创建和管理
+ * - 组件挂载和卸载
+ * - 支持 Teleport 功能，允许组件渲染到 DOM 的不同位置
+ * - 提供组件状态管理
+ *
+ * @template T - 继承自 WidgetNodeType 的类型参数
+ *
+ * @param type - 节点类型，用于标识具体的组件类型
+ * @param props - 节点的属性配置对象
+ *
+ * 注意事项：
+ * - 这是一个抽象类，必须通过子类实现 rebuild() 方法来使用
+ * - 组件在使用前需要通过 mount() 方法进行挂载
+ * - 使用 Teleport 功能时，需要注意目标元素的存在性
+ */
+export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> extends VNode<T> {
   protected _rootNode: VNode | null = null
   /**
    * app上下文
@@ -113,7 +133,7 @@ export abstract class WidgetNode<T extends WidgetType = WidgetType> extends VNod
   /**
    * @inheritDoc
    */
-  protected override handleShowState(is: boolean): void {
-    this.rootNode.show = is
+  protected override handleShowState(visible: boolean): void {
+    this.rootNode.show = visible
   }
 }
