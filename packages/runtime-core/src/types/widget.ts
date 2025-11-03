@@ -132,7 +132,7 @@ export type WidgetPropsType<T extends WidgetType> = T extends WidgetType<infer P
 /**
  * 懒加载小部件类型
  */
-export type LazyWidget<P extends AnyProps = any> = () => Promise<{
+export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{
   default: WidgetType<P>
 }>
 
