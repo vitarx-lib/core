@@ -57,7 +57,7 @@ export class VNodeUpdate {
     // 如果新旧节点的类型或key不同，则替换整个节点
     if (currentVNode.type !== nextVNode.type || currentVNode.key !== nextVNode.key) {
       // 替换旧节点为新节点
-      this.replace(nextVNode, currentVNode)
+      this.replace(currentVNode, nextVNode)
       return nextVNode
     }
     if (!currentVNode.isStatic) {
@@ -135,14 +135,14 @@ export class VNodeUpdate {
    */
   static replace(currentVNode: VNode, nextVNode: VNode): VNode {
     const dom = useDomAdapter()
-    const oldElement = nextVNode.operationTarget
+    const oldElement = currentVNode.operationTarget
     const anchorElement = dom.createText('')
     // 插入一个新的锚点元素
     dom.insertBefore(anchorElement, oldElement)
-    // 卸载旧节点
-    nextVNode.unmount()
+    // 卸载当前节点
+    currentVNode.unmount()
     // 新节点执行挂载，使用锚点元素进行替换
-    currentVNode.mount(anchorElement, 'replace')
+    nextVNode.mount(anchorElement, 'replace')
     return currentVNode
   }
   /**
