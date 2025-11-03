@@ -1,4 +1,4 @@
-import { ref, Subscriber, watch } from '@vitarx/responsive'
+import { shallowRef, Subscriber, watch } from '@vitarx/responsive'
 import type { AnyProps, ErrorHandler, VNodeChild } from '../../types/index.js'
 import { isVNode, linkParentNode, NodeState, provide, VNode } from '../../vnode/index.js'
 import { Widget } from '../base/Widget.js'
@@ -46,7 +46,7 @@ interface SuspenseProps {
  * > 注意：在初次渲染完成后，子节点重新渲染发生的异步加载不会使`Suspense`节点重新回到挂起状态。
  */
 export class Suspense extends Widget<SuspenseProps> {
-  protected counter = ref(0)
+  protected counter = shallowRef(0)
   protected showFallback = true
   private listener?: Subscriber
   private onShow?: () => void
