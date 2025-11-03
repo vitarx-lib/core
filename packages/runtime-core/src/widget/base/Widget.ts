@@ -6,15 +6,15 @@ import type {
   HostElementInstance,
   MergeProps,
   VNodeChild
-} from '../types/index.js'
+} from '../../types/index.js'
 import {
   __DEV__,
   getCurrentVNode,
-  type StatefulWidgetNode,
+  StatefulWidgetNode,
   VNode,
   VNodeUpdate
-} from '../vnode/index.js'
-import { CLASS_WIDGET_BASE_SYMBOL } from './constant.js'
+} from '../../vnode/index.js'
+import { CLASS_WIDGET_BASE_SYMBOL } from '../constants/index.js'
 
 /**
  * 所有小部件的基类
