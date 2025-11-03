@@ -115,11 +115,7 @@ export type FunctionWidget<P extends AnyProps = any> = {
  * - FunctionWidget：函数小部件
  * - SimpleWidget：简单小部件
  */
-export type WidgetType<P extends AnyProps = any> =
-  | ClassWidget<P>
-  | FunctionWidget<P>
-  | StatelessWidget<P>
-
+export type WidgetType<P extends AnyProps = any> = StatefulWidget<P> | StatelessWidget<P>
 /**
  * 小部件实例推导
  *
@@ -156,3 +152,10 @@ export type StatelessWidget<P extends AnyProps = any, R extends VNodeChild = VNo
 export interface StatelessWidgetSymbol {
   readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
 }
+
+/**
+ * 有状态的小部件
+ *
+ * 只要未显式标记为无状态的小部件，则默认为有状态的小部件
+ */
+export type StatefulWidget<P extends AnyProps = any> = ClassWidget<P> | FunctionWidget<P>
