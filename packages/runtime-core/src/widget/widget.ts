@@ -7,7 +7,13 @@ import type {
   MergeProps,
   VNodeChild
 } from '../types/index.js'
-import { getCurrentVNode, type StatefulWidgetNode, VNode, VNodeUpdate } from '../vnode/index.js'
+import {
+  __DEV__,
+  getCurrentVNode,
+  type StatefulWidgetNode,
+  VNode,
+  VNodeUpdate
+} from '../vnode/index.js'
 import { CLASS_WIDGET_BASE_SYMBOL } from './constant.js'
 
 /**
@@ -48,6 +54,10 @@ export abstract class Widget<
    * 类小部件标识符符
    */
   static [CLASS_WIDGET_BASE_SYMBOL] = true
+  /**
+   * 禁止代理小部件实例
+   */
+  readonly [NON_SIGNAL_SYMBOL] = true
   /**
    * 属性验证函数。
    *
@@ -100,18 +110,11 @@ export abstract class Widget<
 
   constructor(props: InputProps) {
     this.#vnode = getCurrentVNode()!
-    if (!this.#vnode) {
+    if (__DEV__ && !this.#vnode) {
       throw new Error('The Widget instance must be created in the context of the WidgetVNode')
     }
     this.#props = props
     this.onCreate?.call(this)
-  }
-
-  /**
-   * 禁止代理小部件实例
-   */
-  get [NON_SIGNAL_SYMBOL]() {
-    return true
   }
 
   /**
