@@ -1,9 +1,8 @@
 import { ref, Subscriber, watch } from '@vitarx/responsive'
-import { createVNode, defineProps, provide, VNode } from '../../vnode/index.js'
-import { COMMENT_NODE_TYPE } from '../../vnode/node-symbol.js'
-import { type ErrorHandler } from '../types/index.js'
-import { Widget } from '../widget.js'
-import { SUSPENSE_SYMBOL } from './suspense-counter.js'
+import type { AnyProps, ErrorHandler, VNodeChild } from '../../types/index.js'
+import { isVNode, linkParentNode, NodeState, provide, VNode } from '../../vnode/index.js'
+import { Widget } from '../base/Widget.js'
+import { SUSPENSE_COUNTER_SYMBOL } from '../utils/index.js'
 
 /**
  * Suspense小部件的配置选项
@@ -28,7 +27,7 @@ interface SuspenseProps {
   /**
    * 异常处理钩子
    */
-  onError?: ErrorHandler<Suspense>
+  onError?: ErrorHandler
   /**
    * 监听子节点渲染完成
    *
@@ -46,36 +45,20 @@ interface SuspenseProps {
  *
  * > 注意：在初次渲染完成后，子节点重新渲染发生的异步加载不会使`Suspense`节点重新回到挂起状态。
  */
-export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
+export class Suspense extends Widget<SuspenseProps> {
   protected counter = ref(0)
   protected showFallback = true
   private listener?: Subscriber
   private onShow?: () => void
-
   constructor(props: SuspenseProps) {
     super(props)
-    if (props.fallback && !VNode.is(props.fallback)) {
-      throw new TypeError(
-        `[Vitarx.Suspense]：fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`
-      )
+    provide(SUSPENSE_COUNTER_SYMBOL, this.counter)
+    if (props.onError) this.onError = props.onError
+    if (typeof this.props.onShow === 'function') {
+      this.onShow = this.props.onShow
     }
-    defineProps(
-      { fallback: createVNode(COMMENT_NODE_TYPE, { children: '异步节点加载失败' }) },
-      props
-    )
-    if (props.onError) {
-      if (typeof props.onError !== 'function') {
-        throw new TypeError(
-          `[Vitarx.Suspense]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
-        )
-      } else {
-        this.onError = props.onError
-      }
-    }
-    provide(SUSPENSE_SYMBOL, this.counter)
     // 监听计数器变化，手动管理视图更新，优化性能
-    this.listener = watch(this.counter, () => {
-      const newValue = this.counter.value
+    this.listener = watch(this.counter, newValue => {
       const shouldShowFallback = newValue >= 1
       if (!shouldShowFallback && this.showFallback) {
         this.stopSuspense()
@@ -84,19 +67,43 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
   }
 
   /**
-   * 挂载完成后开始预渲染子节点
+   * 验证组件属性的类型和值是否符合预期
+   * @static 静态方法，可以通过类名直接调用
+   * @override 重写父类的validateProps方法
+   * @param {AnyProps} props 需要验证的属性对象
+   * @throws {TypeError} 当属性不符合预期时抛出类型错误
+   */
+  static override validateProps(props: AnyProps) {
+    // 检查fallback属性是否存在，且是否为VNode对象
+    if (props.fallback && !isVNode(props.fallback)) {
+      throw new TypeError(
+        `[Vitarx.Suspense]：fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`
+      )
+    }
+    // 检查onError属性是否存在，且是否为函数类型
+    if (props.onError && typeof props.onError !== 'function') {
+      throw new TypeError(
+        `[Vitarx.Suspense]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
+      )
+    }
+  }
+
+  /**
+   * 挂载前开始预渲染子节点
    *
    * @protected
    */
-  override onMounted() {
+  override onBeforeMount() {
     // 更新子节点的父节点
-    VNode.addParentVNodeMapping(this.children, this.$vnode)
+    linkParentNode(this.children, this.$vnode)
     // 预渲染子节点
-    this.children.element
+    this.children.render()
     // 如果计数器为0，则隐藏回退内容
     if (this.counter.value === 0) this.stopSuspense()
   }
-
+  override onMounted() {
+    this.$forceUpdate()
+  }
   override onUpdated() {
     if (this.onShow) {
       const fn = this.onShow
@@ -105,7 +112,7 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
     }
   }
 
-  build(): VNode {
+  build(): VNodeChild {
     return this.showFallback ? this.props.fallback : this.children
   }
 
@@ -119,9 +126,8 @@ export class Suspense extends Widget<SuspenseProps, Required<SuspenseProps>> {
       this.listener?.dispose()
       this.showFallback = false
       this.listener = undefined
-      this.forceUpdate()
-      if (typeof this.props.onShow === 'function') {
-        this.onShow = this.props.onShow
+      if (this.$vnode.state === NodeState.Activated) {
+        this.$forceUpdate()
       }
     }
   }
