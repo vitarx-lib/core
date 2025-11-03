@@ -7,8 +7,7 @@ import {
   toRaw,
   withAsyncContext
 } from '@vitarx/responsive'
-import { isPromise } from '@vitarx/utils'
-import { logger } from '@vitarx/utils/src/index.js'
+import { isPromise, logger } from '@vitarx/utils'
 import type {
   ErrorSource,
   FunctionWidget,
@@ -19,12 +18,11 @@ import type {
   LifecycleHookReturnType,
   MountType,
   NodeNormalizedProps,
-  StatelessWidget,
+  StatefulWidgetNodeType,
   VNodeBuilder,
   VNodeChild,
   VNodeInputProps,
-  WidgetInstanceType,
-  WidgetType
+  WidgetInstanceType
 } from '../../types/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from '../../widget/constant.js'
 import {
@@ -43,7 +41,7 @@ import {
   proxyWidgetProps,
   runInNodeContext
 } from '../runtime/index.js'
-import { isVNode } from '../utils/index.js'
+import { __DEV__, isStatefulWidgetNode, isVNode } from '../utils/index.js'
 import { CommentNode } from './CommentNode.js'
 import { TextNode } from './TextNode.js'
 
@@ -51,8 +49,6 @@ import { TextNode } from './TextNode.js'
  * 初始化函数组件的标识符
  */
 const __INITIALIZE_FN_WIDGET_METHOD__ = Symbol('__INITIALIZE_FN_WIDGET_METHOD__')
-
-export type StatefulWidgetNodeType = Exclude<WidgetType, StatelessWidget>
 
 /**
  * StatefulWidgetNode 是一个有状态组件节点类，继承自 WidgetNode。
@@ -117,9 +113,14 @@ export class StatefulWidgetNode<
     if (this.appContext) this.provide('App', this.appContext)
   }
 
+  /**
+   * 获取Widget实例的单例属性
+   * 如果实例不存在，则会创建一个新的实例
+   * @returns {WidgetInstanceType<T>} 返回Widget实例
+   */
   get instance(): WidgetInstanceType<T> {
-    if (!this._instance) this.createInstance().then()
-    return this._instance!
+    if (!this._instance) this.createInstance().then() // 如果实例不存在，则调用createInstance方法创建实例，但不等待其完成
+    return this._instance! // 返回实例，使用非空断言操作符(!)告诉编译器this._instance不为null或undefined
   }
 
   /**
@@ -128,7 +129,6 @@ export class StatefulWidgetNode<
    * @private
    */
   private _scope: EffectScope | null = null
-
   /**
    * 获取效果作用域（EffectScope）的访问器
    * 如果作用域尚未创建，则会创建一个新的作用域实例
@@ -232,7 +232,6 @@ export class StatefulWidgetNode<
     // 使用可选链操作符和 hasOwnProperty 方法检查属性是否存在
     return this._provide?.has(name) ?? false
   }
-
   /**
    * 重写渲染方法，用于渲染组件实例
    *
@@ -251,7 +250,7 @@ export class StatefulWidgetNode<
       el = this.rootNode.element
     } catch (e) {
       // 触发onError生命周期钩子，处理渲染过程中发生的错误
-      const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
+      const errVNode = this.reportError(e, {
         source: 'render', // 错误来源为渲染过程
         instance: this.instance // 当前实例
       })
@@ -260,7 +259,7 @@ export class StatefulWidgetNode<
       // 否则创建一个注释节点作为错误提示
       this._rootNode = isVNode(errVNode)
         ? errVNode
-        : new CommentNode({ value: `${VNode.name} Widget render fail` })
+        : new CommentNode({ value: `StatefulWidget<${VNode.name}> render fail` })
       // 获取更新后的DOM元素
       el = this.rootNode.element
     }
@@ -344,57 +343,30 @@ export class StatefulWidgetNode<
    * @return {VNode | void} VNode对象或void，用于渲染错误状态或执行错误处理逻辑
    */
   reportError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
-    // 首先检查实例上是否存在自定义错误处理器
-    if (this.instance.onError) {
-      // 如果存在，则调用该错误处理器并返回结果
-      return this.instance.onError.apply(this.instance, args)
-    }
-    // 如果没有自定义错误处理器，则开始查找父级组件
-    let parentNode = findParentNode(this)
-    // 遍历父级组件树，直到找到最近的WidgetVNode或到达根节点
-    while (parentNode && !(parentNode instanceof StatefulWidgetNode)) {
-      parentNode = findParentNode(parentNode)
-      if (!parentNode) break
-    }
-    // 如果没有找到任何父级WidgetVNode，则处理根级错误
-    if (!parentNode) return this.handleRootError(args)
-    // 如果找到父级WidgetVNode，则将错误向上传递给该父级组件处理
-    if (parentNode instanceof StatefulWidgetNode) return parentNode.reportError(...args)
-  }
-  /**
-   * 触发生命周期钩子
-   *
-   * @param hook - 生命周期钩子名称
-   * @param args - 参数列表
-   * @private
-   */
-  private triggerLifecycleHook<T extends LifecycleHooks>(
-    hook: T,
-    ...args: LifecycleHookParameter<T>
-  ): LifecycleHookReturnType<T> | void {
-    const isCallOnError = hook === LifecycleHooks.error
     try {
-      // 处理错误钩子的未处理情况
-      if (isCallOnError) {
-        return this.reportError.apply(
-          this,
-          args as LifecycleHookParameter<LifecycleHooks.error>
-        ) as LifecycleHookReturnType<T>
+      // 首先检查实例上是否存在自定义错误处理器
+      if (typeof this.instance.onError === 'function') {
+        // 如果存在，则调用该错误处理器并返回结果
+        return this.instance.onError.apply(this.instance, args)
       }
-      const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
-      return typeof method === 'function' ? method.apply(this.instance, args) : undefined
+      // 如果没有自定义错误处理器，则开始查找父级组件
+      let parentNode = findParentNode(this)
+      // 遍历父级组件树，直到找到最近的WidgetVNode或到达根节点
+      while (parentNode && !isStatefulWidgetNode(parentNode)) {
+        parentNode = findParentNode(parentNode)
+        if (!parentNode) break
+      }
+      // 如果没有找到任何父级WidgetVNode，则处理根级错误
+      if (!parentNode) return this.handleRootError(args)
+      // 如果找到父级WidgetVNode，则将错误向上传递给该父级组件处理
+      if (parentNode instanceof StatefulWidgetNode) {
+        return parentNode.reportError(...args)
+      }
     } catch (e) {
-      if (isCallOnError) {
-        logger.error(
-          `Widget(${this.name}) You can't keep throwing exceptions in the onError hook, this results in an infinite loop!`,
-          e
-        )
-      } else {
-        return this.reportError(e, {
-          source: `hook:${hook.replace('on', '').toLowerCase()}` as ErrorSource,
-          instance: this.instance
-        }) as LifecycleHookReturnType<T>
-      }
+      logger.error(
+        `StatefulWidget<${this.name}> You can't keep throwing exceptions in the onError hook, this results in an infinite loop!`,
+        e
+      )
     }
   }
   /**
@@ -406,9 +378,10 @@ export class StatefulWidgetNode<
    */
   readonly update = (): void => {
     if (this.state === NodeState.Unmounted) {
-      this.triggerLifecycleHook(
-        LifecycleHooks.error,
-        new Error('The widget is destroyed and the view can no longer be updated！'),
+      this.reportError(
+        new Error(
+          `The StatefulWidget<${this.name}> is destroyed and the view can no longer be updated!`
+        ),
         {
           source: 'update',
           instance: this.instance
@@ -437,14 +410,69 @@ export class StatefulWidgetNode<
       })
     } catch (e) {
       this._pendingUpdate = false
-      throw e
+      this.reportError(e, {
+        source: 'update',
+        instance: this.instance
+      })
     }
+  }
+  /**
+   * 重新构建子节点
+   *
+   * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
+   * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
+   *
+   * @returns {VNode} 返回构建好的虚拟节点
+   */
+  protected rebuild(): VNode {
+    // 如果已存在视图依赖订阅器，则先释放旧的订阅器
+    if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
+
+    // 订阅依赖并构建虚拟节点
+    const { result, subscriber, deps } = depSubscribe(this.buildRootNode, this.update, {
+      scope: false
+    })
+    // 开发模式记录依赖
+    if (__DEV__) this.deps = deps
+    // 更新订阅器
+    this._viewDepSubscriber = subscriber
+    // 添加到作用域中
+    if (subscriber) this.instance.$scope.addEffect(subscriber)
+    return result
   }
   /**
    * @inheritDoc
    */
   protected override normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     return props as NodeNormalizedProps<T>
+  }
+  /**
+   * 触发生命周期钩子
+   *
+   * @param hook - 生命周期钩子名称
+   * @param args - 参数列表
+   * @private
+   */
+  private triggerLifecycleHook<T extends LifecycleHooks>(
+    hook: T,
+    ...args: LifecycleHookParameter<T>
+  ): LifecycleHookReturnType<T> | void {
+    try {
+      // 处理错误钩子的未处理情况
+      if (hook === LifecycleHooks.error) {
+        return this.reportError.apply(
+          this,
+          args as LifecycleHookParameter<LifecycleHooks.error>
+        ) as LifecycleHookReturnType<T>
+      }
+      const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
+      return typeof method === 'function' ? method.apply(this.instance, args) : undefined
+    } catch (e) {
+      return this.reportError(e, {
+        source: `hook:${hook.replace('on', '').toLowerCase()}` as ErrorSource,
+        instance: this.instance
+      }) as LifecycleHookReturnType<T>
+    }
   }
   /**
    * 构建子视图节点
@@ -465,52 +493,27 @@ export class StatefulWidgetNode<
         const t = typeof buildNode
         if (t === 'string' || t === 'number') {
           vnode = new TextNode({ value: String(buildNode) })
+        } else {
+          // 如果构建结果不是VNode，则创建错误注释节点
+          vnode = new CommentNode({ value: `StatefulWidget<${this.name}> build ${String(t)}` })
         }
-        // 如果构建结果不是VNode，则创建错误注释节点
-        vnode = new CommentNode({ value: `${this.name} widget build ${String(t)}` })
       }
     } catch (e) {
       // 处理构建过程中的异常
       // 触发生命周期错误钩子
-      const errVNode = this.triggerLifecycleHook(LifecycleHooks.error, e, {
+      const errVNode = this.reportError(e, {
         source: 'build',
         instance: this.instance
       })
       // 如果构建出错，则使用错误虚拟节点
       vnode = isVNode(errVNode)
         ? errVNode
-        : new CommentNode({ value: `${this.name} Widget build fail` })
+        : new CommentNode({ value: `StatefulWidget<${this.name}> build fail` })
     }
 
     // 建立父子虚拟节点的映射关系
     linkParentNode(vnode, this)
     return vnode // 返回构建的虚拟节点
-  }
-  /**
-   * 重新构建子节点
-   *
-   * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
-   * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
-   *
-   * @returns {VNode} 返回构建好的虚拟节点
-   */
-  protected rebuild(): VNode {
-    // 如果已存在视图依赖订阅器，则先释放旧的订阅器
-    if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
-
-    // 订阅依赖并构建虚拟节点
-    const { result, subscriber, deps } = depSubscribe(this.buildRootNode, this.update, {
-      scope: false
-    })
-    if (import.meta.env?.DEV) {
-      // 如果是开发模式，则记录依赖关系，用于调试
-      this.deps = deps
-    }
-    // 更新订阅器
-    this._viewDepSubscriber = subscriber
-    // 添加到作用域中
-    if (subscriber) this.instance.$scope.addEffect(subscriber)
-    return result
   }
   /**
    * 处理根节点错误的函数
