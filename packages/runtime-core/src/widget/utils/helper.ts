@@ -4,8 +4,8 @@ import type {
   StatelessWidgetSymbol,
   VNodeChild,
   WidgetType
-} from '../types/index.js'
-import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from './constant.js'
+} from '../../types/index.js'
+import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
 
 /**
  * 标记/定义一个无状态的小部件

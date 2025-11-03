@@ -5,27 +5,52 @@ import type {
   LifecycleHookParameter,
   LifecycleHookReturnType,
   ValidBuildElement
-} from '../types/index.js'
-import { StatefulWidgetNode } from '../vnode/index.js'
-import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from './constant.js'
-import type { Widget } from './widget.js'
+} from '../../types/index.js'
+import { StatefulWidgetNode } from '../../vnode/index.js'
+import { Widget } from '../base/index.js'
+import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from '../constants/index.js'
 
 interface CollectContext {
   exposed: Record<string, any>
-  lifeCycleHooks: Record<LifecycleHooks, AnyCallback>
+  hooks: Record<LifecycleHooks, AnyCallback>
 }
 
 /**
  * 收集结果
  */
 export interface HookCollectResult extends CollectContext {
-  build: ValidBuildElement
+  buildResult: ValidBuildElement
 }
 
 const HOOK_COLLECTOR_CONTEXT = Symbol('HookCollectorContext')
-
 /**
- * 钩子收集器
+ * HookCollector 是一个用于收集和管理组件钩子的工具类。
+ * 该类主要负责收集函数式组件中的生命周期钩子和暴露的数据，并提供统一的访问接口。
+ *
+ * 核心功能：
+ * - 收集和管理组件的生命周期钩子
+ * - 收集和管理组件暴露的数据
+ * - 提供上下文访问机制
+ *
+ * 使用示例：
+ * ```ts
+ * // 在函数式组件中收集钩子
+ * const result = HookCollector.collect(vnode, instance);
+ *
+ * // 添加生命周期钩子
+ * HookCollector.addLifeCycle('onMount', () => console.log('mounted'));
+ *
+ * // 添加暴露数据
+ * HookCollector.addExposed({ count: 0 });
+ * ```
+ *
+ * 构造函数参数：
+ * 该类为静态工具类，无需构造函数实例化。
+ *
+ * 特殊说明：
+ * - 该类所有方法均为静态方法，直接通过类名调用
+ * - 需要在正确的上下文中使用，否则某些操作可能无效
+ * - collect 方法必须在组件渲染过程中调用
  */
 export class HookCollector {
   /**
@@ -56,10 +81,10 @@ export class HookCollector {
   static addLifeCycle(name: LifecycleHooks, fn: AnyCallback) {
     const ctx = this.context
     if (ctx && typeof fn === 'function') {
-      if (!ctx.lifeCycleHooks) {
-        ctx.lifeCycleHooks = { [name]: fn } as any
+      if (!ctx.hooks) {
+        ctx.hooks = { [name]: fn } as any
       } else {
-        ctx.lifeCycleHooks[name] = fn
+        ctx.hooks[name] = fn
       }
     }
   }
@@ -75,11 +100,11 @@ export class HookCollector {
     // 创建新的上下文
     const context: HookCollectResult = {
       exposed: {},
-      lifeCycleHooks: {}
+      hooks: {}
     } as HookCollectResult
     const callFnWidget = () => vnode.type.call(instance, vnode.props)
     // 运行函数式组件
-    context.build = runInContext(HOOK_COLLECTOR_CONTEXT, context, callFnWidget)
+    context.buildResult = runInContext(HOOK_COLLECTOR_CONTEXT, context, callFnWidget)
     return context
   }
 }
@@ -110,84 +135,83 @@ function createLifecycleHook<T extends LifecycleHooks>(
 /**
  * 小部件创建时触发的钩子
  *
- * @param cb - 回调函数，小部件实例创建时触发
+ * 因函数式组件被调用之前实例就已完成了创建，
+ * 所以此钩子注册的函数将会被立即执行;
+ *
+ * @param {Function} cb - 回调函数
  */
-export const onCreate = createLifecycleHook(LifecycleHooks.create)
+export const onCreate = (cb: () => void) => cb()
 /**
  * 小部件挂载前要触发的钩子
  *
  * 可以返回一个 DOM 元素作为挂载目标容器
  *
- * @param cb - 回调函数，小部件挂载之前触发
+ * @param {Function} cb - 回调函数，小部件挂载之前触发
  */
 export const onBeforeMount = createLifecycleHook(LifecycleHooks.beforeMount)
 /**
  * 小部件挂载完成时触发的钩子
  *
- * @param cb - 回调函数，小部件挂载完成后触发
+ * @param {Function} cb - 回调函数，小部件挂载完成后触发
  */
 export const onMounted = createLifecycleHook(LifecycleHooks.mounted)
 /**
  * 小部件被临时停用触发的钩子
  *
- * 此钩子由`KeepAlive`内置小部件触发。
+ * 此钩子由 `KeepAlive` 触发。
  *
- * @param cb - 回调函数，当小部件被临时停用时触发
+ * @param {Function} cb - 回调函数，当小部件被临时停用时触发
  */
 export const onDeactivated = createLifecycleHook(LifecycleHooks.deactivated)
 /**
  * 小部件被激活时触发的钩子
  *
- * @param cb - 回调函数，当小部件从停用状态恢复时触发
+ * @param {Function} cb - 回调函数，当小部件从停用状态恢复时触发
  */
 export const onActivated = createLifecycleHook(LifecycleHooks.activated)
 /**
  * 小部件实例被销毁前触发的钩子
  *
- * @param cb - 回调函数，小部件实例销毁前触发
+ * @param {Function} cb - 回调函数，小部件实例销毁前触发
  */
 export const onBeforeUnmount = createLifecycleHook(LifecycleHooks.beforeUnmount)
 /**
  * 小部件被卸载时完成触发的钩子
  *
- * @param cb - 回调函数，小部件卸载完成后触发
+ * @param {Function} cb - 回调函数，小部件卸载完成后触发
  */
 export const onUnmounted = createLifecycleHook(LifecycleHooks.unmounted)
 /**
  * 小部件更新前触发的钩子
  *
- * @param cb - 回调函数，在小部件更新之前触发
+ * @param {Function} cb - 回调函数，在小部件更新之前触发
  */
 export const onBeforeUpdate = createLifecycleHook(LifecycleHooks.beforeUpdate)
 /**
  * 小部件更新完成时触发的钩子
  *
- * @param cb - 回调函数，小部件更新完成后触发
+ * @param {Function} cb - 回调函数，小部件更新完成后触发
  */
 export const onUpdated = createLifecycleHook(LifecycleHooks.updated)
 /**
  * 小部件渲染或构建过程中捕获到异常时触发的钩子
  *
  * @example
- * ```js
- * onError((error, info) => {
+ * ```ts
+ * onError((error, info:ErrorInfo) => {
  *   console.error(error, info)
  *   // 返回一个备用元素展示错误提示，error通常是Error，强制转换字符串过后会显示 message
  *   return <div>{String(error)}</div>
  * })
  *```
  *
- * info值说明：
- *  - build: 构建视图时捕获的异常
- *  - render: 渲染时视图时捕获的异常
- *
- * @param cb - 回调函数，遇到错误时触发
+ * @param {Function} cb - 回调函数，遇到错误时触发
  */
 export const onError = createLifecycleHook(LifecycleHooks.error)
 /**
  * 服务端预取钩子，仅在服务端渲染时有效。
  *
- * @param cb - 回调函数，可以返回Promise。
+ * @param {Function} cb - 回调函数，可以返回Promise。
  */
 export const onServerPrefetch = createLifecycleHook(LifecycleHooks.serverPrefetch)
 
