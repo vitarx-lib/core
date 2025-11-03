@@ -83,8 +83,8 @@ export class FnWidget extends Widget<Record<string, any>> {
       if (hookCount !== Object.keys(hooks).length) injectHooks(hooks, this)
       // 暴露的属性和方法和数量发生变化，则重新注入
       if (exposedCount !== Object.keys(exposed).length) injectExposed(exposed, this)
-      if (counter) counter.value--
       doneAsyncRender(this)
+      if (counter) counter.value--
     }
     return this
   }
