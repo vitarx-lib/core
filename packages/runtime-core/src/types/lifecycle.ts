@@ -97,7 +97,7 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  * 不同的生命周期钩子有不同的返回值需求，这种类型推导确保了返回值的类型安全。
  *
  * 具体返回值规则：
- * - error 钩子：可以返回 void 或 VirtualNode，用于错误时渲染备用UI
+ * - error 钩子：可以返回 void 或 VNode，用于错误时渲染备用UI
  * - beforeRemove 钩子：可以返回 Promise<void> 或 void，支持异步卸载操作
  * - 其他钩子：只能返回 void
  *
@@ -111,7 +111,7 @@ export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error ? VNode 
  * 定义了错误处理器的函数签名，错误处理器用于捕获和处理组件生命周期中的错误。
  * 错误处理器可以访问组件实例（通过 this），并接收错误对象和错误信息作为参数。
  *
- * 错误处理器可以选择性地返回一个 VirtualNode，用于在错误发生时渲染备用UI。
+ * 错误处理器可以选择性地返回一个 VNode，用于在错误发生时渲染备用UI。
  *
  * @template T 错误处理器的宿主组件类型，默认为 Widget
  *
@@ -128,4 +128,8 @@ export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error ? VNode 
  * // 页面会显示 "Something went wrong"
  * ```
  */
-export type ErrorHandler = (error: unknown, info: ErrorInfo) => void | VNode
+export type ErrorHandler<T extends Widget = Widget> = (
+  this: T,
+  error: unknown,
+  info: ErrorInfo
+) => void | VNode
