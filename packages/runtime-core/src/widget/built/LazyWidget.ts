@@ -1,6 +1,6 @@
 import { Ref, withAsyncContext } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import type { ErrorHandler, WidgetPropsType, WidgetType } from '../../types/index.js'
+import type { AnyProps, ErrorHandler, WidgetPropsType, WidgetType } from '../../types/index.js'
 import { createVNode, isVNode, NodeState, VNode } from '../../vnode/index.js'
 import { Widget } from '../widget.js'
 import { getSuspenseCounter } from './suspenseCounter.js'
@@ -46,7 +46,7 @@ export interface LazyWidgetProps<T extends WidgetType> {
    * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
    * @param info - 捕获异常的阶段，可以是`build`或`render`
    */
-  onError?: ErrorHandler
+  onError?: ErrorHandler<LazyWidget<any>>
 }
 
 /**
@@ -80,13 +80,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   #childVNode: VNode | undefined
   // 标记是否需要更新
   private toBeUpdated: boolean = false
-
   constructor(props: LazyWidgetProps<T>) {
-    if (typeof props.children !== 'function') {
-      throw new TypeError(
-        `[LazyWidget]：children期望得到一个异步函数，给定${typeof props.children}`
-      )
-    }
     super(props)
     if (props.loading && isVNode(props.loading)) {
       this.#childVNode = props.loading
@@ -95,16 +89,30 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
       // 如果有上级暂停计数器则让计数器+1
       if (this.suspenseCounter) this.suspenseCounter.value++
     }
-    if (props.onError) {
-      if (typeof props.onError !== 'function') {
-        throw new TypeError(
-          `[LazyWidget]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
-        )
-      } else {
-        this.onError = props.onError
-      }
-    }
+    this.onError = props.onError
     this.load().then()
+  }
+
+  /**
+   * 静态方法，用于验证组件的属性是否符合预期要求
+   * @param props - 需要验证的组件属性对象
+   * @throws {TypeError} 当属性不符合要求时抛出类型错误
+   */
+  static override validateProps(props: AnyProps) {
+    // 检查children属性是否为函数
+    if (typeof props.children !== 'function') {
+      // 如果children不是函数，抛出类型错误提示
+      throw new TypeError(
+        `[LazyWidget]：children期望得到一个异步函数，给定${typeof props.children}`
+      )
+    }
+    // 检查onError属性是否存在且为函数
+    if (props.onError && typeof props.onError !== 'function') {
+      // 如果onError存在但不是函数，抛出类型错误提示
+      throw new TypeError(
+        `[LazyWidget]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
+      )
+    }
   }
 
   override onMounted() {
