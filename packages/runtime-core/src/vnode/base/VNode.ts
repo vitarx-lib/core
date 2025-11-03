@@ -16,7 +16,7 @@ import type {
   VNodeIntrinsicAttributes
 } from '../../types/index.js'
 import { NodeShapeFlags, NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
-import { getMemoNode, setMemoNode } from '../runtime/index.js'
+import { getMemoNode, setMemoNode, unlinkParentNode } from '../runtime/index.js'
 import { isRefEl, type RefEl } from '../runtime/ref.js'
 import { __DEV__, popNodeDevInfo } from '../utils/dev.js'
 import { handleBindProps } from '../utils/normalizeProps.js'
@@ -236,6 +236,8 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
         this._anchor = null
       }
       this.memo = undefined
+      // 移除父级映射
+      unlinkParentNode(this)
     }
     this._state = state
   }
