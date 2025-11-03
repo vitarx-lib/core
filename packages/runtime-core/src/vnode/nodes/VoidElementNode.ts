@@ -10,7 +10,7 @@ import { normalizeStyle } from '../utils/normalizeProps.js'
 export type VoidElementNodeType = HostVoidElementNames
 /**
  * VoidElementVNode 是一个用于表示自闭合 HTML 元素的虚拟节点类。
- * 它继承自 HostNode，专门处理如 <img>、<br>、<input> 等自闭合标签。
+ * 它继承自 HostNode，专门处理如 `img、br、input` 等自闭合标签。
  *
  * 核心功能：
  * - 处理自闭合元素的创建和渲染
@@ -49,7 +49,8 @@ export class VoidElementVNode<
   /**
    * @inheritDoc
    */
-  protected render(): HostElementInstance<T> {
+  render(): HostElementInstance<T> {
+    if (this._cachedElement) return this._cachedElement
     // 使用DOM操作创建指定类型和属性的元素
     const element = this.dom.createElement(this.type, this.props)
     if (!this.show) this.dom.setDisplay(element, false)
