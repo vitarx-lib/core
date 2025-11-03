@@ -7,8 +7,7 @@ import {
   SignalManager,
   unref
 } from '@vitarx/responsive'
-import { isRecordObject, logger } from '@vitarx/utils'
-import { LogLevel } from '@vitarx/utils/src/index.js'
+import { isRecordObject, logger, LogLevel } from '@vitarx/utils'
 import type { AnyProps, MergeProps } from '../../types/index.js'
 import { getCurrentVNode } from './context.js'
 
