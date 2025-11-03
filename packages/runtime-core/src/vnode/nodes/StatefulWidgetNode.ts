@@ -285,15 +285,24 @@ export class StatefulWidgetNode<
     // 2️⃣ 再激活子节点（父 → 子顺序）
     this.rootNode.activate(false)
     // 3️⃣ 触发一次更新逻辑，避免停用期间状态变化导致视图未更新问题
+    this.syncSilentUpdate()
+    this.triggerLifecycleHook(LifecycleHooks.activated)
+  }
+  /**
+   * 静默补丁更新
+   *
+   * 在不触发生命周期钩子或异步调度的情况下，
+   * 同步执行节点的补丁更新操作。
+   */
+  syncSilentUpdate(): void {
     try {
-      this.instance.$patchUpdate(this.rootNode, this.rebuild())
+      this._rootNode = this.instance.$patchUpdate(this.rootNode, this.rebuild())
     } catch (e) {
       this.reportError(e, {
-        source: 'update',
-        instance: this.instance
+        source: 'update', // 错误来源标识为更新操作
+        instance: this.instance // 相关的实例引用
       })
     }
-    this.triggerLifecycleHook(LifecycleHooks.activated)
   }
   /**
    * @inheritDoc
