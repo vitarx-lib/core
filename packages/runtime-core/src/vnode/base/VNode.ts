@@ -87,6 +87,8 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
   public readonly key?: UniqueKey
   /**
    * 引用
+   *
+   * @readonly - 外部只读，请勿修改！
    */
   public ref?: RefEl<any>
   /**
@@ -238,6 +240,8 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       this.memo = undefined
       // 移除父级映射
       unlinkParentNode(this)
+      // 移除引用
+      if (this.ref) this.ref.value = null
     }
     this._state = state
   }
