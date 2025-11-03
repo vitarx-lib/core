@@ -1,7 +1,7 @@
 import type { AnyProps, VNodeChildren } from '../../types/index.js'
 import { createVNode, Fragment, FragmentNode, isVNode } from '../../vnode/index.js'
 import { handleBindProps } from '../../vnode/utils/normalizeProps.js'
-import { defineStatelessWidget } from '../helper.js'
+import { defineStatelessWidget } from '../utils/index.js'
 
 interface PropBindProps {
   children: VNodeChildren
@@ -9,7 +9,7 @@ interface PropBindProps {
 }
 
 /**
- * 属性绑定绑定组件 - 内置组件（具有Simple标记，不支持ref引用）
+ * 属性绑定绑定组件 - 内置组件（具有Stateless标记，不支持ref引用）
  *
  * 通常在开发调试/演示时使用，可以快速给多个子组件/元素设置共同的属性。
  *
@@ -36,7 +36,6 @@ const PropBind = defineStatelessWidget(
       if (isVNode(child)) {
         const props = child.props as AnyProps
         props['v-bind'] = bindProps
-        // 调用属性处理方法，为子组件绑定属性
         handleBindProps(props)
       }
     })
