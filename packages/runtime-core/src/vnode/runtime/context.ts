@@ -1,4 +1,5 @@
 import { getContext, runInContext } from '@vitarx/responsive'
+import { logger } from '@vitarx/utils/src/index.js'
 import { Widget } from '../../widget/index.js'
 import { WidgetNode } from '../base/index.js'
 import { StatefulWidgetNode } from '../nodes/index.js'
@@ -21,11 +22,12 @@ export const runInNodeContext = <R>(node: WidgetNode, fn: () => R): R => {
 /**
  * 获取当前组件的虚拟节点
  *
+ * @template T - 虚拟节点的类型
  * @returns {WidgetNode | undefined} 返回当前组件的虚拟节点，如果没有则返回undefined
  */
-export const getCurrentVNode = (): WidgetNode | undefined => {
+export const getCurrentVNode = <T extends WidgetNode = WidgetNode>(): T | undefined => {
   // 调用runInContext函数，传入虚拟节点上下文符号和getCurrentVNode函数，返回当前组件虚拟节点
-  return getContext<WidgetNode>(VNODE_CONTEXT_SYMBOL)
+  return getContext<T>(VNODE_CONTEXT_SYMBOL)
 }
 
 export { getCurrentVNode as useCurrentVNode }
@@ -75,9 +77,10 @@ export { getCurrentInstance as useCurrentInstance }
 export const useForceUpdate = (): (() => void) => {
   const instance = getCurrentInstance()
   if (!instance) {
-    throw new Error(
+    logger.warn(
       'The useForceUpdate() API function can only be used in the top-level scope of the function component!'
     )
+    return () => void 0
   }
-  return instance.$forceUpdate.bind(instance)
+  return () => instance.$forceUpdate()
 }
