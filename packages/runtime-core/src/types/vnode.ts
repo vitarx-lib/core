@@ -29,13 +29,7 @@ import type {
   WithDefaultProps,
   WithRefProps
 } from './props.js'
-import type {
-  ClassWidget,
-  FunctionWidget,
-  StatelessWidget,
-  WidgetPropsType,
-  WidgetType
-} from './widget.js'
+import type { StatefulWidget, StatelessWidget, WidgetPropsType, WidgetType } from './widget.js'
 
 export type CodeSourceInfo = {
   /** 源文件名 */
@@ -59,12 +53,13 @@ export interface NodeDevInfo {
   /** 节点的原始`this`上下文，可用于调试 */
   self: any
 }
-
+export type StatefulWidgetNodeType = StatefulWidget
+export type StatelessWidgetNodeType = StatelessWidget
 export type ElementNodeType = HostElementNames
 export type VoidElementNodeType = HostVoidElementNames
 export type TextNodeType = typeof TEXT_NODE_TYPE
 export type CommentNodeType = typeof COMMENT_NODE_TYPE
-export type WidgetNodeType = ClassWidget | FunctionWidget
+export type WidgetNodeType = StatefulWidgetNodeType | StatelessWidgetNodeType
 export type NonElementNodeType = TextNodeType | CommentNodeType
 export type ContainerNodeType = ElementNodeType | FragmentNodeType
 export type FragmentNodeType = typeof FRAGMENT_NODE_TYPE
@@ -74,7 +69,7 @@ export type NodeTypes =
   | FragmentNodeType
   | TextNodeType
   | CommentNodeType
-  | WidgetNodeType
+  | WidgetType
 
 type ElementNormalizedProps<T extends ElementNodeType | VoidElementNodeType> = UnwrapRefProps<
   Omit<Vitarx.IntrinsicElements[T], 'children' | 'style' | 'class' | 'className'> & {
