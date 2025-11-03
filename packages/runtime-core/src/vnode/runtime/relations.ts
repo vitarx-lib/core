@@ -21,3 +21,16 @@ export function linkParentNode(child: VNode, parent: VNode) {
 export function findParentNode(vnode: VNode): VNode | undefined {
   return PARENT_NODE_MAPPING.get(vnode)
 }
+
+/**
+ * 移除父节点映射
+ *
+ * @param vnode - 需要从父节点映射中移除的虚拟节点
+ */
+export function unlinkParentNode(vnode: VNode): void {
+  // 检查虚拟节点是否存在于父节点映射中
+  if (PARENT_NODE_MAPPING.has(vnode)) {
+    // 如果存在，则从映射中删除该虚拟节点
+    PARENT_NODE_MAPPING.delete(vnode)
+  }
+}
