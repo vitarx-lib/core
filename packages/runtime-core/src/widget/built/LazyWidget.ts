@@ -1,16 +1,17 @@
 import { Ref, withAsyncContext } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import type { AnyProps, ErrorHandler, WidgetPropsType, WidgetType } from '../../types/index.js'
-import { createVNode, isVNode, NodeState, VNode } from '../../vnode/index.js'
-import { Widget } from '../widget.js'
-import { getSuspenseCounter } from './suspenseCounter.js'
-
-/**
- * 代码分块懒加载
- *
- * 用箭头函数返回import()，不会构建在入口js文件中，而是单独分包，在需要时才会加载。
- */
-export type LazyLoader<T extends WidgetType> = () => Promise<{ default: T }>
+import type {
+  AnyProps,
+  ErrorHandler,
+  LazyLoadWidget,
+  VNodeChild,
+  WidgetPropsType,
+  WidgetType
+} from '../../types/index.js'
+import { createVNode, isVNode, NodeState, type VNode } from '../../vnode/index.js'
+import { withDelayAndTimeout } from '../../vnode/utils/delay.js'
+import { Widget } from '../base/index.js'
+import { getSuspenseCounter } from '../utils/index.js'
 
 /**
  * 惰性加载小部件配置选项
@@ -25,7 +26,7 @@ export interface LazyWidgetProps<T extends WidgetType> {
    * () => import('./YourWidget.js')
    * ```
    */
-  children: LazyLoader<T>
+  children: LazyLoadWidget<T>
   /**
    * 需要透传给小部件的属性
    */
@@ -47,6 +48,20 @@ export interface LazyWidgetProps<T extends WidgetType> {
    * @param info - 捕获异常的阶段，可以是`build`或`render`
    */
   onError?: ErrorHandler<LazyWidget<any>>
+  /**
+   * 展示加载组件前的延迟时间
+   *
+   * @default 200
+   */
+  delay: number
+  /**
+   * 超时时间
+   *
+   * `<=0` 则不限制超时时间。
+   *
+   * @default 0
+   */
+  timeout: 0
 }
 
 /**
@@ -70,6 +85,10 @@ export interface LazyWidgetProps<T extends WidgetType> {
  * ```
  */
 export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>> {
+  static override defaultProps = {
+    delay: 200,
+    timeout: 0
+  }
   // 暂停计数器
   protected suspenseCounter: Ref<number> | undefined = undefined
   /**
@@ -77,22 +96,24 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
    *
    * @private
    */
-  #childVNode: VNode | undefined
+  private childVNode: VNode | undefined
   // 标记是否需要更新
   private toBeUpdated: boolean = false
+  private cancelTask?: () => void
+  private isUnmounted: boolean = false
   constructor(props: LazyWidgetProps<T>) {
     super(props)
-    if (props.loading && isVNode(props.loading)) {
-      this.#childVNode = props.loading
-    } else {
-      this.suspenseCounter = getSuspenseCounter()
-      // 如果有上级暂停计数器则让计数器+1
-      if (this.suspenseCounter) this.suspenseCounter.value++
-    }
+    this.suspenseCounter = getSuspenseCounter()
+    // 如果有上级暂停计数器则让计数器+1
+    if (this.suspenseCounter) this.suspenseCounter.value++
     this.onError = props.onError
     this.load().then()
   }
-
+  override onBeforeUnmount() {
+    this.isUnmounted = true
+    // 取消异步任务
+    this.cancelTask?.()
+  }
   /**
    * 静态方法，用于验证组件的属性是否符合预期要求
    * @param props - 需要验证的组件属性对象
@@ -119,8 +140,8 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
     if (this.toBeUpdated) this.$forceUpdate()
   }
 
-  build(): VNode | null {
-    return this.#childVNode || null
+  build(): VNodeChild {
+    return this.childVNode
   }
 
   /**
@@ -130,10 +151,8 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
    * @protected
    */
   protected updateChildVNode(vnode: VNode) {
-    this.#childVNode = vnode
-    if (this.suspenseCounter) {
-      this.suspenseCounter.value--
-    }
+    this.childVNode = vnode
+    if (this.suspenseCounter) this.suspenseCounter.value--
     // 如果还未挂载状态则标记待更新
     if (this.$vnode.state === NodeState.Rendered) {
       this.toBeUpdated = true
@@ -148,18 +167,40 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
    * @protected
    */
   protected async load(): Promise<void> {
+    const { delay, timeout, loading } = this.props
+
+    const task = withDelayAndTimeout(withAsyncContext(this.children), {
+      delay,
+      timeout,
+      signal: () => this.isUnmounted,
+      onDelay: () => {
+        if (this.isUnmounted) return
+        if (loading && !this.childVNode) {
+          this.childVNode = loading
+          this.$forceUpdate()
+        }
+      },
+      onTimeout: err => {
+        if (this.isUnmounted) return
+        const result = this.$vnode.reportError(err, { source: 'build', instance: this })
+        if (isVNode(result)) this.updateChildVNode(result)
+      }
+    })
+
+    // 保存取消函数
+    this.cancelTask = task.cancel
+
     try {
-      const { default: widget } = await withAsyncContext(this.children)
+      const { default: widget } = await task
+      if (this.isUnmounted) return
       this.updateChildVNode(
         isRecordObject(this.props.injectProps)
           ? createVNode(widget, this.props.injectProps)
           : createVNode(widget)
       )
     } catch (e) {
-      const result = this.$vnode.reportError(e, {
-        source: 'build',
-        instance: this
-      })
+      if (this.isUnmounted) return
+      const result = this.$vnode.reportError(e, { source: 'build', instance: this })
       if (isVNode(result)) this.updateChildVNode(result)
     }
   }
