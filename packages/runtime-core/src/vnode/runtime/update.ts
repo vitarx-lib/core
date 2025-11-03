@@ -2,6 +2,7 @@ import { SubManager, toRaw } from '@vitarx/responsive'
 import { useDomAdapter } from '../../host-adapter/index.js'
 import type { AnyProps } from '../../types/index.js'
 import { ContainerNode, NonElementNode, VNode } from '../base/index.js'
+import { NodeState } from '../constants/index.js'
 import { StatelessWidgetNode } from '../nodes/index.js'
 import {
   isContainerNode,
@@ -136,14 +137,22 @@ export class VNodeUpdate {
   static replace(currentVNode: VNode, nextVNode: VNode): VNode {
     const dom = useDomAdapter()
     const oldElement = currentVNode.operationTarget
-    const anchorElement = dom.createText('')
-    // 插入一个新的锚点元素
-    dom.insertBefore(anchorElement, oldElement)
-    // 卸载当前节点
-    currentVNode.unmount()
-    // 新节点执行挂载，使用锚点元素进行替换
-    nextVNode.mount(anchorElement, 'replace')
-    return currentVNode
+    if (dom.getParentElement(oldElement)) {
+      const anchorElement = dom.createText('')
+      // 插入一个新的锚点元素
+      dom.insertBefore(anchorElement, oldElement)
+      // 卸载当前节点
+      currentVNode.unmount()
+      // 新节点执行挂载，使用锚点元素进行替换
+      nextVNode.mount(anchorElement, 'replace')
+    } else if (currentVNode.state === NodeState.Rendered) {
+      currentVNode.unmount()
+      nextVNode.mount()
+    } else {
+      throw new Error('VNodeUpdate.replace(): the old node is not mounted and cannot be replaced')
+    }
+
+    return nextVNode
   }
   /**
    * 更新容器子节点
