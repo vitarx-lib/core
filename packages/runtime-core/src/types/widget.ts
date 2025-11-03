@@ -130,7 +130,9 @@ export type WidgetInstanceType<T extends ClassWidget | FunctionWidget> =
 export type WidgetPropsType<T extends WidgetType> = T extends WidgetType<infer P> ? P : {}
 
 /**
- * 懒加载小部件类型
+ * 懒加载组件
+ *
+ * 通常用于代码分块加载，vite 不会将其构建在入口js文件中，而是单独分包，在需要时才会加载。
  */
 export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{
   default: WidgetType<P>
