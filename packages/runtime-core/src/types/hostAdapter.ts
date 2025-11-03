@@ -170,4 +170,10 @@ export interface HostAdapter {
    * @returns { HostElementInstance[] } 查询到的元素实例数组
    */
   querySelectorAll(selector: string, container?: HostParentElement): HostElementInstance[]
+  /**
+   * 获取元素的父元素
+   * @param el - 元素实例
+   * @returns { HostParentElement | null } 父元素实例，或者null
+   */
+  getParentElement(el: HostElementInstance): HostParentElement | null
 }
