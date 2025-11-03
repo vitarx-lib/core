@@ -10,7 +10,7 @@ import { SUSPENSE_COUNTER_SYMBOL } from '../utils/index.js'
  * @property {VNode} fallback - 回退内容
  * @property {VNode} children - 子节点
  * @property {ErrorHandler<Suspense>} onError - 异常处理钩子
- * @property {() => void} onShow - 子节点渲染完成时触发的钩子
+ * @property {() => void} onResolved - 子节点渲染完成时触发的钩子
  */
 interface SuspenseProps {
   /**
@@ -33,39 +33,87 @@ interface SuspenseProps {
    *
    * 该钩子会在子节点全部渲染完成后执行
    */
-  onShow?: () => void
+  onResolved?: () => void
+  /**
+   * 是否持续监听异步子节点
+   *
+   * 默认为 false。若为 true，则即使首次异步完成，Suspense 仍保持监听，
+   * 当计数器再次增加时，会重新显示 fallback。
+   *
+   * @defaultValue false
+   */
+  persistent?: boolean
 }
 
 /**
- * 同步等待加载子节点
+ * Suspense 小部件
  *
- * 该小部件可以等待子节点的异步加载完成后一同显示
+ * Suspense 用于在异步子节点加载期间显示备用内容（fallback），
+ * 异步完成后自动切换到子节点内容。通常与异步函数组件、LazyWidget 搭配使用。
  *
- * 通常它与`异步函数组件`、`LazyWidget`搭配使用。
+ * 特性：
+ * - 首次异步加载显示 fallback，完成后显示子节点
+ * - 支持一次性回调 onResolved，在子节点首次渲染完成后触发
+ * - 可选 persistent 模式，持续监听子节点异步加载，子节点再次异步渲染时重新显示 fallback 并，渲染完成重新触发 onResolved
+ * - 安全处理卸载状态，避免已卸载组件更新
  *
- * > 注意：在初次渲染完成后，子节点重新渲染发生的异步加载不会使`Suspense`节点重新回到挂起状态。
+ * @example 基本用法
+ * ```tsx
+ * <Suspense
+ *   fallback={<div>加载中...</div>}
+ * >
+ *   <LazyWidget children={() => import('./MyWidget.js')} />
+ * </Suspense>
+ * ```
+ *
+ * @example 使用 onResolved 回调
+ * ```tsx
+ * <Suspense
+ *   fallback={<div>加载中...</div>}
+ *   onResolved={() => console.log('子节点渲染完成')}
+ * >
+ *   <LazyWidget children={() => import('./MyWidget.js')} />
+ * </Suspense>
+ * ```
+ *
+ * @example persistent 模式（持续监听）
+ * ```tsx
+ * <Suspense
+ *   fallback={<div>加载中...</div>}
+ *   persistent
+ *   onResolved={() => console.log('每次子节点从 fallback 切换完成时触发')}
+ * >
+ *   <LazyWidget children={() => import('./MyWidget.js')} />
+ * </Suspense>
+ * ```
+ *
+ * @template P - SuspenseProps 类型
  */
 export class Suspense extends Widget<SuspenseProps> {
   protected counter = shallowRef(0)
   protected showFallback = true
   private listener?: Subscriber
-  private onShow?: () => void
+  private pendingOnResolved: boolean = false
   constructor(props: SuspenseProps) {
     super(props)
     provide(SUSPENSE_COUNTER_SYMBOL, this.counter)
-    if (props.onError) this.onError = props.onError
-    if (typeof this.props.onShow === 'function') {
-      this.onShow = this.props.onShow
-    }
+    if (typeof props.onError === 'function') this.onError = props.onError
     // 监听计数器变化，手动管理视图更新，优化性能
     this.listener = watch(this.counter, newValue => {
+      // 如果为true则显示回退内容
       const shouldShowFallback = newValue >= 1
-      if (!shouldShowFallback && this.showFallback) {
+      if (shouldShowFallback && !this.showFallback) {
+        // 计数器增加且 persistent 模式开启，重新显示 fallback
+        if (this.props.persistent) {
+          this.showFallback = true
+          this.$vnode.syncSilentUpdate()
+        }
+      } else if (!shouldShowFallback && this.showFallback) {
+        // 首次或计数器归零，停止 fallback
         this.stopSuspense()
       }
     })
   }
-
   /**
    * 验证组件属性的类型和值是否符合预期
    * @static 静态方法，可以通过类名直接调用
@@ -76,18 +124,13 @@ export class Suspense extends Widget<SuspenseProps> {
   static override validateProps(props: AnyProps) {
     // 检查fallback属性是否存在，且是否为VNode对象
     if (props.fallback && !isVNode(props.fallback)) {
-      throw new TypeError(
-        `[Vitarx.Suspense]：fallback属性期望得到一个VNode对象，给定${typeof props.fallback}`
-      )
+      return `Suspense.fallback属性期望得到一个节点对象，给定${typeof props.fallback}`
     }
     // 检查onError属性是否存在，且是否为函数类型
     if (props.onError && typeof props.onError !== 'function') {
-      throw new TypeError(
-        `[Vitarx.Suspense]：onError属性期望得到一个回调函数，给定${typeof props.onError}`
-      )
+      return `Suspense.onError属性期望得到一个回调函数，给定${typeof props.onError}`
     }
   }
-
   /**
    * 挂载前开始预渲染子节点
    *
@@ -101,21 +144,17 @@ export class Suspense extends Widget<SuspenseProps> {
     // 如果计数器为0，则隐藏回退内容
     if (this.counter.value === 0) this.stopSuspense()
   }
-  override onMounted() {
-    this.$forceUpdate()
-  }
-  override onUpdated() {
-    if (this.onShow) {
-      const fn = this.onShow
-      this.onShow = undefined
-      fn()
+  override onActivated() {
+    // 如果是等待更新状态，则调用onUpdated钩子触发onResolved回调
+    if (this.pendingOnResolved && typeof this.props.onResolved === 'function') {
+      this.pendingOnResolved = false
+      this.props.onResolved()
     }
   }
 
   build(): VNodeChild {
     return this.showFallback ? this.props.fallback : this.children
   }
-
   /**
    * 停止挂起状态
    *
@@ -123,11 +162,18 @@ export class Suspense extends Widget<SuspenseProps> {
    */
   private stopSuspense() {
     if (this.showFallback) {
-      this.listener?.dispose()
+      if (this.$vnode.state === NodeState.Unmounted) return
+      if (!this.props.persistent) {
+        this.listener?.dispose()
+        this.listener = undefined
+      }
       this.showFallback = false
-      this.listener = undefined
-      if (this.$vnode.state === NodeState.Activated) {
-        this.$forceUpdate()
+      this.pendingOnResolved = true
+      if (this.$vnode.state === NodeState.Rendered) {
+        this.$vnode.syncSilentUpdate()
+      } else if (this.$vnode.state === NodeState.Activated) {
+        this.$vnode.syncSilentUpdate()
+        this.onActivated()
       }
     }
   }
