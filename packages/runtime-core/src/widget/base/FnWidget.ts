@@ -99,9 +99,11 @@ const doneAsyncRender = (instance: FnWidget) => {
   const vnode = instance.$vnode
   if (vnode.state === NodeState.Unmounted) return
   vnode.triggerLifecycleHook(LifecycleHooks.beforeUpdate)
-  if (vnode.state === NodeState.Rendered || vnode.state === NodeState.Activated) {
+  if (vnode.state === NodeState.Rendered) {
+    vnode.syncSilentUpdate()
+  } else if (vnode.state === NodeState.Activated) {
     try {
-      instance.$patchUpdate(vnode.rootNode, vnode.rebuild())
+      vnode.syncSilentUpdate()
       vnode.triggerLifecycleHook(LifecycleHooks.mounted)
       vnode.triggerLifecycleHook(LifecycleHooks.activated)
     } catch (e) {
