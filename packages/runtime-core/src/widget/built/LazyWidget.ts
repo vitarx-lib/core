@@ -8,8 +8,13 @@ import type {
   WidgetPropsType,
   WidgetType
 } from '../../types/index.js'
-import { createVNode, isVNode, NodeState, type VNode } from '../../vnode/index.js'
-import { withDelayAndTimeout } from '../../vnode/utils/delay.js'
+import {
+  createVNode,
+  isVNode,
+  NodeState,
+  type VNode,
+  withDelayAndTimeout
+} from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 import { getSuspenseCounter } from '../utils/index.js'
 
@@ -202,6 +207,8 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
       if (this.isUnmounted) return
       const result = this.$vnode.reportError(e, { source: 'build', instance: this })
       if (isVNode(result)) this.updateChildVNode(result)
+    } finally {
+      this.cancelTask = undefined
     }
   }
 }
