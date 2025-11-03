@@ -174,17 +174,7 @@ export abstract class Widget<
    * 在组件被挂载之前调用。
    *
    * 在此钩子被调用时，还没有创建真实DOM元素，因此不能访问DOM元素，
-   * 此时访问实例中的$el属性会导致无限循环！
-   *
-   * @example
-   * ```ts
-   * class MyWidget extends Widget {
-   *   onBeforeMount() {
-   *     // 挂载到指定的容器元素中
-   *     return document.querySelector('#container')! // 返回 #container 选择器是等效的
-   *   }
-   * }
-   * ```
+   * 切勿此时访问实例中的$el属性会导致无限循环！
    */
   onBeforeMount?(): void
 
