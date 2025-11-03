@@ -8,7 +8,7 @@ import { NodeShapeFlags } from '../constants/index.js'
 import { normalizeStyle } from '../utils/normalizeProps.js'
 
 /**
- * ElementVNode 是一个用于表示虚拟DOM中元素节点的类。它继承自 ContainerNode，提供了元素节点的基础功能。
+ * ElementNode 是一个用于表示虚拟DOM中元素节点的类。它继承自 ContainerNode，提供了元素节点的基础功能。
  *
  * 主要功能：
  * - 处理元素的显示/隐藏状态
@@ -18,7 +18,7 @@ import { normalizeStyle } from '../utils/normalizeProps.js'
  * @template T - 元素节点类型，默认为 ElementNodeType
  *
  * @example
- * ```typescript
+ * ```js
  * // 创建一个元素节点
  * const vnode = new ElementVNode('div', { class: 'container' })
  * ```
