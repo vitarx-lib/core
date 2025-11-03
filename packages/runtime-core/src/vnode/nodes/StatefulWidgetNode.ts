@@ -295,10 +295,14 @@ export class StatefulWidgetNode<
    * 同步执行节点的补丁更新操作。
    */
   syncSilentUpdate(): void {
+    // 定义同步静默更新方法，无返回值
     try {
-      this._rootNode = this.instance.$patchUpdate(this.rootNode, this.rebuild())
+      // 如果节点状态不是已渲染或有父元素
+      this._rootNode = this.instance.$patchUpdate(this.rootNode, this.rebuild()) // 直接执行补丁更新
     } catch (e) {
+      // 捕获可能发生的错误
       this.reportError(e, {
+        // 报告错误
         source: 'update', // 错误来源标识为更新操作
         instance: this.instance // 相关的实例引用
       })
@@ -386,6 +390,8 @@ export class StatefulWidgetNode<
    *
    * 更新视图不是同步的，会延迟更新，合并多个微任务。
    *
+   * 仅在活跃状态下才执行更新逻辑
+   *
    * @return {void}
    */
   readonly update = (): void => {
@@ -402,6 +408,10 @@ export class StatefulWidgetNode<
     }
     // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
     if (this.state === NodeState.Deactivated) return
+    if (this.state === NodeState.Rendered) {
+      this.syncSilentUpdate()
+      return
+    }
     // 如果是挂起的更新，则直接返回
     if (this._pendingUpdate) return
     this._pendingUpdate = true
