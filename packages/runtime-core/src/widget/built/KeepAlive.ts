@@ -13,8 +13,8 @@ import {
   type VNode,
   WidgetNode
 } from '../../vnode/index.js'
-import { isWidget } from '../helper.js'
-import { Widget } from '../widget.js'
+import { Widget } from '../base/index.js'
+import { isWidget } from '../utils/index.js'
 
 /**
  * KeepAlive配置选项
