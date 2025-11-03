@@ -1,38 +1,19 @@
 import type { DependencyMap } from '@vitarx/responsive'
-import {
-  depSubscribe,
-  EffectScope,
-  nextTick,
-  Subscriber,
-  toRaw,
-  withAsyncContext
-} from '@vitarx/responsive'
-import { isPromise, logger } from '@vitarx/utils'
+import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/responsive'
+import { logger } from '@vitarx/utils'
 import type {
   ErrorSource,
-  FunctionWidget,
   HostElementInstance,
-  LazyWidgetModule,
-  LifecycleHookMethods,
   LifecycleHookParameter,
   LifecycleHookReturnType,
   MountType,
   NodeNormalizedProps,
   StatefulWidgetNodeType,
-  VNodeBuilder,
-  VNodeChild,
   VNodeInputProps,
   WidgetInstanceType
 } from '../../types/index.js'
-import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks } from '../../widget/constant.js'
-import {
-  getSuspenseCounter,
-  HookCollector,
-  type HookCollectResult,
-  isClassWidget,
-  isWidget
-} from '../../widget/index.js'
-import { Widget } from '../../widget/widget.js'
+import { initializeFnWidget } from '../../widget/base/FnWidget.js'
+import { FnWidget, isClassWidget, LifecycleHooks } from '../../widget/index.js'
 import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, NodeState } from '../constants/index.js'
 import {
@@ -44,11 +25,6 @@ import {
 import { __DEV__, isStatefulWidgetNode, isVNode } from '../utils/index.js'
 import { CommentNode } from './CommentNode.js'
 import { TextNode } from './TextNode.js'
-
-/**
- * 初始化函数组件的标识符
- */
-const __INITIALIZE_FN_WIDGET_METHOD__ = Symbol('__INITIALIZE_FN_WIDGET_METHOD__')
 
 /**
  * StatefulWidgetNode 是一个有状态组件节点类，继承自 WidgetNode。
@@ -79,9 +55,18 @@ export class StatefulWidgetNode<
 > extends WidgetNode<T> {
   public override shapeFlags = NodeShapeFlags.STATEFUL_WIDGET
   /**
+   * 是否为异步组件
+   *
+   * 此属性在组件实例初始化之前默认为 false
+   * 如果是异步组件在初始化后将会被设置为 true
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public isAsyncWidget = false
+  /**
    * 依赖映射
    *
-   * @private
+   * @readonly
    */
   public deps: DependencyMap | null = null
   /**
@@ -108,6 +93,11 @@ export class StatefulWidgetNode<
    * @protected
    */
   private _instance: WidgetInstanceType<T> | null = null
+  /**
+   * 组件是否已就绪的标识符
+   * @private
+   */
+  private _isReady: boolean = false
   constructor(type: T, props: VNodeInputProps<T>) {
     super(type, props)
     if (this.appContext) this.provide('App', this.appContext)
@@ -119,7 +109,8 @@ export class StatefulWidgetNode<
    * @returns {WidgetInstanceType<T>} 返回Widget实例
    */
   get instance(): WidgetInstanceType<T> {
-    if (!this._instance) this.createInstance().then() // 如果实例不存在，则调用createInstance方法创建实例，但不等待其完成
+    // 如果实例不存在，则调用createInstance方法创建实例，但不等待其完成
+    if (!this._instance) this.createInstance().then()
     return this._instance! // 返回实例，使用非空断言操作符(!)告诉编译器this._instance不为null或undefined
   }
 
@@ -153,7 +144,6 @@ export class StatefulWidgetNode<
     // 如果已存在，直接返回现有作用域实例
     return this._scope
   }
-
   /**
    * 创建组件实例的方法
    *
@@ -164,6 +154,8 @@ export class StatefulWidgetNode<
    * @returns {Promise<Widget>} 返回一个Promise，解析为创建的组件实例
    */
   public createInstance(): Promise<WidgetInstanceType<T>> {
+    // 避免重复创建实例
+    if (this._instance) return Promise.resolve(this._instance)
     return new Promise(resolve => {
       // 在特定上下文中运行实例创建逻辑
       this.runInContext(() => {
@@ -177,14 +169,16 @@ export class StatefulWidgetNode<
           // 创建类组件实例
           this._instance = new this.type(this.props) as WidgetInstanceType<T>
           resolve(this._instance!)
+          this._isReady = true
         } else {
           // 创建函数组件实例
           const instance = new FnWidget(this.props)
           this._instance = instance as unknown as WidgetInstanceType<T>
           // 初始化函数组件并收集钩子
-          instance[__INITIALIZE_FN_WIDGET_METHOD__](
-            HookCollector.collect(this as StatefulWidgetNode<FunctionWidget>, instance)
-          ).then(() => resolve(this._instance!))
+          initializeFnWidget(instance).then(() => {
+            this._isReady = true
+            resolve(this._instance!)
+          })
         }
         // 绑定ref引用
         if (this.ref) this.ref.value = this._instance
@@ -242,6 +236,8 @@ export class StatefulWidgetNode<
     if (this.state !== NodeState.Created) {
       return this.rootNode.element as HostElementInstance<T>
     }
+    // 未就绪状态，先创建实例
+    if (!this._isReady) this.createInstance().then()
     // 触发beforeMount生命周期钩子，在组件挂载前执行
     this.triggerLifecycleHook(LifecycleHooks.beforeMount)
     let el: HostElementInstance
@@ -271,7 +267,7 @@ export class StatefulWidgetNode<
    */
   override mount(target?: HostElementInstance, type?: MountType): this {
     // 未渲染调用this.element渲染一次元素
-    if (this.state === NodeState.Created) this.element
+    if (this.state === NodeState.Created) this.render()
     super.mount(target, type)
     this.triggerLifecycleHook(LifecycleHooks.mounted)
     this.triggerLifecycleHook(LifecycleHooks.activated)
@@ -286,11 +282,18 @@ export class StatefulWidgetNode<
     // 1️⃣ 先调用父节点自己的激活逻辑
     this.updateActiveState(true, root)
     this.scope.resume()
-    this.triggerLifecycleHook(LifecycleHooks.activated)
     // 2️⃣ 再激活子节点（父 → 子顺序）
     this.rootNode.activate(false)
-    // 3️⃣ 更新视图
-    this.update()
+    // 3️⃣ 触发一次更新逻辑，避免停用期间状态变化导致视图未更新问题
+    try {
+      this.instance.$patchUpdate(this.rootNode, this.rebuild())
+    } catch (e) {
+      this.reportError(e, {
+        source: 'update',
+        instance: this.instance
+      })
+    }
+    this.triggerLifecycleHook(LifecycleHooks.activated)
   }
   /**
    * @inheritDoc
@@ -417,14 +420,14 @@ export class StatefulWidgetNode<
     }
   }
   /**
-   * 重新构建子节点
+   * 重新构建根节点
    *
    * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
    * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
    *
    * @returns {VNode} 返回构建好的虚拟节点
    */
-  protected rebuild(): VNode {
+  public rebuild(): VNode {
     // 如果已存在视图依赖订阅器，则先释放旧的订阅器
     if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
 
@@ -453,7 +456,7 @@ export class StatefulWidgetNode<
    * @param args - 参数列表
    * @private
    */
-  private triggerLifecycleHook<T extends LifecycleHooks>(
+  public triggerLifecycleHook<T extends LifecycleHooks>(
     hook: T,
     ...args: LifecycleHookParameter<T>
   ): LifecycleHookReturnType<T> | void {
@@ -465,8 +468,10 @@ export class StatefulWidgetNode<
           args as LifecycleHookParameter<LifecycleHooks.error>
         ) as LifecycleHookReturnType<T>
       }
-      const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
-      return typeof method === 'function' ? method.apply(this.instance, args) : undefined
+      if (this._isReady) {
+        const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
+        return typeof method === 'function' ? method.apply(this.instance, args) : undefined
+      }
     } catch (e) {
       return this.reportError(e, {
         source: `hook:${hook.replace('on', '').toLowerCase()}` as ErrorSource,
@@ -525,151 +530,9 @@ export class StatefulWidgetNode<
     const app = this.appContext
     // 处理错误
     if (app?.config?.errorHandler) {
-      return app.config.errorHandler.apply(null, args)
+      return app.config.errorHandler.apply(this.instance, args)
     } else {
       logger.error('there are unhandled exceptions', ...args)
-    }
-  }
-}
-
-/**
- * FnWidget 是一个函数式组件小部件类，继承自 Widget 基类，用于支持函数式组件的渲染和生命周期管理。
- *
- * 该类提供了以下核心功能：
- * - 支持异步初始化函数小部件
- * - 支持生命周期钩子的注入和管理
- * - 支持暴露属性和方法的注入
- * - 支持多种构建函数类型（函数、VNode、Promise等）
- *
- * 使用示例：
- * ```typescript
- * const widget = new FnWidget();
- * await widget[__INITIALIZE_FN_WIDGET__](data);
- * ```
- *
- * 构造函数参数：
- * - 无需直接实例化，通过调用 __INITIALIZE_FN_WIDGET__ 方法进行初始化
- *
- * @param data - 初始化数据对象，包含以下属性：
- *   - exposed: 需要暴露到实例的属性和方法
- *   - lifeCycleHooks: 生命周期钩子集合
- *   - build: 构建函数，可以是函数、VNode、Promise或包含default导出的对象
- *
- * 注意事项：
- * - build 属性支持多种类型，但必须是 VNode、返回 VNode 的函数、Promise<{ default: 函数组件/类组件 }> 或 null
- * - 如果 build 是 Promise，会自动处理异步情况
- * - 内部关键字（__WIDGET_INTRINSIC_KEYWORDS__）不会被注入到实例中
- *
- * @template T - 组件属性类型，继承自 Widget 基类
- */
-class FnWidget extends Widget<Record<string, any>> {
-  #suspenseCounter = getSuspenseCounter()
-  /**
-   * 初始化函数小部件
-   *
-   * @param data
-   */
-  async [__INITIALIZE_FN_WIDGET_METHOD__](data: HookCollectResult): Promise<FnWidget> {
-    // 注入暴露的属性和方法
-    this.#injectExposed(data.exposed)
-    const exposedCount = Object.keys(data.exposed).length
-    // 注入生命周期钩子到实例中
-    this.#injectLifeCycleHooks(data.lifeCycleHooks)
-    const hookCount = Object.keys(data.lifeCycleHooks).length
-    let build: VNodeBuilder | VNodeChild | LazyWidgetModule = data.build as VNodeBuilder
-    if (isPromise(data.build)) {
-      // 如果有上级暂停计数器则让计数器+1
-      if (this.#suspenseCounter) this.#suspenseCounter.value++
-      try {
-        build = await withAsyncContext(data.build as Promise<VNodeBuilder>)
-      } catch (e) {
-        // 让build方法抛出异常
-        build = () => {
-          throw e
-        }
-      } finally {
-        this.#setBuild(build)
-        // 如果有新增钩子则重新注入生命周期钩子
-        if (hookCount !== Object.keys(data.lifeCycleHooks).length) {
-          this.#injectLifeCycleHooks(data.lifeCycleHooks)
-        }
-        // 如果组件有新增暴露的属性和方法，则重新注入到实例中
-        if (exposedCount !== Object.keys(data.exposed).length) {
-          this.#injectExposed(data.exposed)
-        }
-        this.#updateView()
-        // 如果有上级暂停计数器则让计数器-1
-        if (this.#suspenseCounter) this.#suspenseCounter.value--
-      }
-    } else {
-      this.#setBuild(build)
-      this.#updateView()
-    }
-    return this
-  }
-
-  override build(): VNodeChild {
-    return undefined
-  }
-
-  /**
-   * 更新视图的方法
-   * 根据组件的状态决定是否执行更新操作
-   */
-  #updateView() {
-    // 检查组件状态是否为未挂载或激活状态
-    if (this.$vnode.state === NodeState.Rendered || this.$vnode.state === NodeState.Activated) {
-      // 如果条件满足，则执行更新操作
-      this.$forceUpdate()
-    }
-  }
-
-  /**
-   * 初始化函数小部件
-   *
-   * @param {VNodeBuilder} build - 构建函数
-   * @private
-   */
-  #setBuild(build: VNodeBuilder | VNodeChild | LazyWidgetModule) {
-    // 如果是函数，则直接赋值给build方法
-    if (typeof build === 'function') {
-      this.build = build
-      return
-    }
-    // 如果是vnode，则让build方法返回节点
-    if (isVNode(build)) {
-      this.build = () => build
-      return
-    }
-    // 如果是module对象，则判断是否存在default导出
-    if (typeof build === 'object' && 'default' in build! && isWidget(build.default)) {
-      this.build = () => new StatefulWidgetNode(build.default, toRaw(this.props))
-      return
-    }
-    this.build = () => build as VNodeChild
-  }
-
-  /**
-   * 注入生命周期钩子到实例中
-   *
-   * @param lifeCycleHooks
-   */
-  #injectLifeCycleHooks(lifeCycleHooks: HookCollectResult['lifeCycleHooks']) {
-    for (const lifeCycleHook in lifeCycleHooks) {
-      const k = lifeCycleHook as LifecycleHookMethods
-      this[k] = lifeCycleHooks[k]
-    }
-  }
-
-  /**
-   * 将暴露的属性和方法注入到实例中
-   *
-   * @param exposed
-   */
-  #injectExposed(exposed: HookCollectResult['exposed']) {
-    for (const exposedKey in exposed || {}) {
-      if (__WIDGET_INTRINSIC_KEYWORDS__.has(exposedKey)) continue
-      if (!(exposedKey in this)) (this as any)[exposedKey] = exposed[exposedKey]
     }
   }
 }
