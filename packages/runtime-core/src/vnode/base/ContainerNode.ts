@@ -90,6 +90,7 @@ export abstract class ContainerNode<
    * @inheritDoc
    */
   override render(): HostElementInstance<T> {
+    if (this._cachedElement) return this._cachedElement
     const selfElement = this.createElement()
     // 检查是否存在子节点
     if (this.children.length) {

@@ -50,7 +50,7 @@ export abstract class HostNode<
    *
    * @protected
    */
-  private _cachedElement: HostElementInstance<T> | null = null
+  protected _cachedElement: HostElementInstance<T> | null = null
   /**
    * 获取对象的名称属性
    * 这是一个getter方法，用于返回对象的type属性值
@@ -123,7 +123,6 @@ export abstract class HostNode<
     this.mountChildren?.()
     this.state = NodeState.Activated
   }
-
   /**
    * @inheritDoc
    */
