@@ -8,7 +8,7 @@ import type {
 } from '../../types/index.js'
 import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, NodeState } from '../constants/index.js'
-import { linkParentNode, VNodeUpdate } from '../runtime/index.js'
+import { linkParentNode, runInNodeContext, VNodeUpdate } from '../runtime/index.js'
 import { isVNode } from '../utils/index.js'
 import { unwrapRefProps } from '../utils/normalizeProps.js'
 import { CommentNode } from './CommentNode.js'
@@ -108,8 +108,10 @@ export class StatelessWidgetNode<
     // 调用组件类型方法并传入props，获取构建结果
     // 如果构建结果是字符串或数字，创建文本节点并返回
     const buildResult = this.appContext
-      ? this.appContext.runInContext(() => this.type.call(null, this.props)) // 如果有应用上下文，则在上下文中运行组件类型方法
-      : this.type.call(null, this.props) // 否则直接调用组件类型方法
+      ? this.appContext.runInContext(() =>
+          runInNodeContext(this, () => this.type.call(null, this.props))
+        ) // 如果有应用上下文，则在上下文中运行组件类型方法
+      : runInNodeContext(this, () => this.type.call(null, this.props)) // 否则直接调用组件类型方法
     // 如果构建结果是VNode节点，直接返回
     if (isVNode(buildResult)) return buildResult
     // 获取构建结果的类型
