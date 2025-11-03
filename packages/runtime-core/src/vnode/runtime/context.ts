@@ -1,43 +1,46 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import { Widget } from '../../widget/index.js'
+import { WidgetNode } from '../base/index.js'
 import { StatefulWidgetNode } from '../nodes/index.js'
 
 const VNODE_CONTEXT_SYMBOL = Symbol('VNODE_CONTEXT_SYMBOL')
 
 /**
- * 在指定上下文中执行函数
+ * 在指定组件节点上下文中执行函数
  *
  * @template R - 函数返回值的类型
  * @param node - 组件虚拟节点
  * @param {() => R} fn - 需要在特定上下文中执行的函数
  * @returns {R} 函数执行后的返回值
  */
-export function runInNodeContext<R>(node: StatefulWidgetNode, fn: () => R): R {
+export const runInNodeContext = <R>(node: WidgetNode, fn: () => R): R => {
   // 调用runInContext函数，传入虚拟节点上下文符号、当前对象和要执行的函数
   return runInContext(VNODE_CONTEXT_SYMBOL, node, fn)
 }
 
 /**
  * 获取当前组件的虚拟节点
- * @returns {StatefulWidgetNode | undefined} 返回当前组件的虚拟节点，如果没有则返回undefined
+ *
+ * @returns {WidgetNode | undefined} 返回当前组件的虚拟节点，如果没有则返回undefined
  */
-export function getCurrentVNode(): StatefulWidgetNode | undefined {
+export const getCurrentVNode = (): WidgetNode | undefined => {
   // 调用runInContext函数，传入虚拟节点上下文符号和getCurrentVNode函数，返回当前组件虚拟节点
-  return getContext<StatefulWidgetNode>(VNODE_CONTEXT_SYMBOL)
+  return getContext<WidgetNode>(VNODE_CONTEXT_SYMBOL)
 }
 
 export { getCurrentVNode as useCurrentVNode }
 
 /**
  * 获取当前组件实例
- * 该函数用于获取当前活动的 Widget 实例
- * 通过 WidgetVNode 的 getCurrentVNode 方法获取当前虚拟节点，然后返回其关联的实例
+ *
+ * 注意：无状态组件没有实例！
  *
  * @alias useCurrentInstance
+ * @template T - 组件实例的类型
  * @returns 返回当前活动的 Widget 实例，如果没有则返回 undefined
  */
-export function getCurrentInstance(): Widget | undefined {
-  return getCurrentVNode()?.instance // 使用可选链操作符安全地获取当前虚拟节点关联的实例
+export const getCurrentInstance = <T extends Widget = Widget>(): T | undefined => {
+  return (getCurrentVNode() as StatefulWidgetNode)?.instance as T // 使用可选链操作符安全地获取当前虚拟节点关联的实例
 }
 
 export { getCurrentInstance as useCurrentInstance }
@@ -47,17 +50,34 @@ export { getCurrentInstance as useCurrentInstance }
  *
  * 此函数返回的是一个用于更新视图的函数，通常你不需要强制更新视图，响应式数据改变会自动更新视图。
  *
- * 如果函数式组件返回的虚拟元素节点是预构建的，系统无法在初次构建视图时捕获其依赖的响应式数据，
- * 从而导致视图不会随着数据改变而更新。在这种特殊情况下你就可以使用该函数返回的视图更新器来更新视图。
+ * 使用场景：
+ * 如果函数式组件返回的视图虚拟节点中未包含任何响应式数据，系统不会自动更新视图，可以手动调用此函数来更新视图。
  *
  * @returns {(newChildVNode?: VNode) => void} - 视图更新器
+ * @throws {Error} - 非组件上下文中使用会抛出错误
+ * @example
+ * ```tsx
+ * function FuncComponent() {
+ *   let show = true
+ *   const forceUpdate = useForceUpdate()
+ *   const toggle = () => {
+ *     show = !show
+ *     //
+ *     forceUpdate()
+ *   }
+ *   return <div>
+ *     <button onClick={toggle}>Toggle</button>
+ *     {show && <div>Hello World</div>}
+ *   </div>
+ * }
+ * ```
  */
-export function useForceUpdate(): () => void {
-  const instance = getCurrentVNode()?.instance
+export const useForceUpdate = (): (() => void) => {
+  const instance = getCurrentInstance()
   if (!instance) {
     throw new Error(
       'The useForceUpdate() API function can only be used in the top-level scope of the function component!'
     )
   }
-  return instance.$forceUpdate
+  return instance.$forceUpdate.bind(instance)
 }
