@@ -84,49 +84,45 @@ export class FnWidget extends Widget<Record<string, any>> {
       // 暴露的属性和方法和数量发生变化，则重新注入
       if (exposedCount !== Object.keys(exposed).length) injectExposed(exposed, this)
       if (counter) counter.value--
-      this.#updateView()
+      doneAsyncRender(this)
     }
     return this
   }
   override build(): VNodeChild {
     return undefined
   }
-
-  /**
-   * 更新视图的方法
-   * 根据组件的状态决定是否执行更新操作
-   */
-  #updateView() {
-    const vnode = this.$vnode
-    if (vnode.state !== NodeState.Unmounted) {
-      this.$vnode.triggerLifecycleHook(LifecycleHooks.beforeUpdate)
+}
+/**
+ * 完成异步渲染
+ */
+const doneAsyncRender = (instance: FnWidget) => {
+  const vnode = instance.$vnode
+  if (vnode.state === NodeState.Unmounted) return
+  vnode.triggerLifecycleHook(LifecycleHooks.beforeUpdate)
+  if (vnode.state === NodeState.Rendered || vnode.state === NodeState.Activated) {
+    try {
+      instance.$patchUpdate(vnode.rootNode, vnode.rebuild())
+      vnode.triggerLifecycleHook(LifecycleHooks.mounted)
+      vnode.triggerLifecycleHook(LifecycleHooks.activated)
+    } catch (e) {
+      vnode.reportError(e, { source: 'build', instance: instance })
     }
-    if (vnode.state === NodeState.Rendered || vnode.state === NodeState.Activated) {
-      try {
-        this.$patchUpdate(this.$vnode.rootNode, this.$vnode.rebuild())
-        this.$vnode.triggerLifecycleHook(LifecycleHooks.mounted)
-        this.$vnode.triggerLifecycleHook(LifecycleHooks.activated)
-      } catch (e) {
-        this.$vnode.reportError(e, { source: 'build', instance: this })
-      }
-    } else if (vnode.state === NodeState.Deactivated) {
-      const userOnActivated = this.onActivated
-      this.onActivated = () => {
-        this.$vnode.triggerLifecycleHook(LifecycleHooks.mounted)
-        if (userOnActivated) {
-          try {
-            userOnActivated()
-          } finally {
-            this.onActivated = userOnActivated
-          }
-        } else {
-          this.onActivated = undefined
+  } else if (vnode.state === NodeState.Deactivated) {
+    const userOnActivated = instance.onActivated
+    instance.onActivated = () => {
+      vnode.triggerLifecycleHook(LifecycleHooks.mounted)
+      if (userOnActivated) {
+        try {
+          userOnActivated.call(instance)
+        } finally {
+          instance.onActivated = userOnActivated
         }
+      } else {
+        instance.onActivated = undefined
       }
     }
   }
 }
-
 /**
  * 注入钩子
  * @param hooks
