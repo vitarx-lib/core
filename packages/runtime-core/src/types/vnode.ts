@@ -22,13 +22,9 @@ import {
   VNODE_PROPS_DEV_INFO_KEY_SYMBOL
 } from '../vnode/index.js'
 import type {
-  HostCommentElement,
-  HostElement,
-  HostFragmentElement,
-  HostRegularElement,
+  HostNodeElement,
+  HostNodeNames,
   HostRegularElementNames,
-  HostTextElement,
-  HostVoidElement,
   HostVoidElementNames,
   JSXElementNames
 } from './element.js'
@@ -195,14 +191,6 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | Dyna
  *
  * @template T 虚拟节点类型
  */
-export type NodeElementType<T extends NodeTypes = NodeTypes> = T extends Fragment | FragmentNodeType
-  ? HostFragmentElement
-  : T extends TextNodeType
-    ? HostTextElement
-    : T extends CommentNodeType
-      ? HostCommentElement
-      : T extends RegularElementNodeType
-        ? HostRegularElement<T>
-        : T extends VoidElementNodeType
-          ? HostVoidElement<T>
-          : HostElement
+export type NodeElementType<T extends NodeTypes = NodeTypes> = T extends HostNodeNames
+  ? HostNodeElement<T>
+  : HostNodeElement
