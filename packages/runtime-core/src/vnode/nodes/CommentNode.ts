@@ -27,13 +27,10 @@ export class CommentNode extends NonElementNode<CommentNodeType> {
   constructor(props: VNodeInputProps<CommentNodeType>) {
     super(COMMENT_NODE_TYPE, props)
   }
-
   /**
    * @inheritDoc
    */
-  override render(): NodeElementType<CommentNodeType> {
-    if (this._cachedElement) return this._cachedElement
-    // 如果元素尚未渲染，则先进行渲染
+  protected override createElement(): NodeElementType<CommentNodeType> {
     return this.dom.createComment(String(this.value))
   }
 }

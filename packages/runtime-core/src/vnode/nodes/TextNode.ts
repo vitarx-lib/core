@@ -36,8 +36,7 @@ export class TextNode extends NonElementNode<TextNodeType> {
   /**
    * @inheritDoc
    */
-  override render(): NodeElementType<TextNodeType> {
-    if (this._cachedElement) return this._cachedElement
+  protected override createElement(): NodeElementType<TextNodeType> {
     return this.dom.createText(this.value)
   }
 }
