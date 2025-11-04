@@ -4,7 +4,6 @@ import type {
   HostElement,
   HostParentElement,
   MountType,
-  NodeElementType,
   VNodeInputProps,
   WidgetNodeType
 } from '../../types/index.js'
@@ -43,12 +42,6 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     this.appContext = getAppContext()
   }
   /**
-   * @inheritDoc
-   */
-  override get element(): NodeElementType<T> {
-    return this.render()
-  }
-  /**
    * 获取根节点
    * @returns {VNode} 返回虚拟根节点
    * 如果根节点尚未初始化，则通过 rebuild 方法重建
@@ -63,7 +56,6 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     // 返回根节点
     return this._rootNode
   }
-
   /**
    * @inheritDoc
    */
@@ -97,7 +89,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
   /**
    * @inheritDoc
    */
-  override mount(target?: HostElement, type?: MountType): void {
+  override mount(target?: HostElement | HostParentElement, type?: MountType): void {
     if (this.teleport) {
       if (target) {
         // 插入影子元素
@@ -121,7 +113,12 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     }
     this.state = NodeState.Activated
   }
-
+  /**
+   * 抽象方法，用于重建虚拟DOM节点
+   * 该方法必须在子类中被实现，用于重新构建虚拟DOM树结构
+   *
+   * @returns {VNode} 返回重建后的虚拟DOM节点(VNode)
+   */
   protected abstract rebuild(): VNode
   /**
    * 获取名称的getter方法
