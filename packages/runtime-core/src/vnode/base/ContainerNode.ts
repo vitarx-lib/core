@@ -1,175 +1,83 @@
-import { unref } from '@vitarx/responsive'
-import { logger, popProperty } from '@vitarx/utils'
-import type {
-  ContainerNodeType,
-  NodeElementType,
-  RuntimeVNodeChildren,
-  UniqueKey,
-  VNodeChild,
-  VNodeInputProps
-} from '../../types/index.js'
-import { CommentNode, TextNode } from '../nodes/index.js'
-import { linkParentNode } from '../runtime/index.js'
-import { isVNode } from '../utils/index.js'
-import { HostNode } from './HostNode.js'
-import { VNode } from './VNode.js'
+import type { ContainerNodeType, RuntimeVNodeChildren } from '../../types/index.js'
+import { HostNode } from '../base/index.js'
 
 /**
- * ContainerNode 类是一个抽象类，继承自 VNode 类，用于表示可以包含子节点的虚拟节点。
- * 所有支持children属性的节点都可以继承该类。
+ * 容器节点接口，继承自 HostNode
  *
- * 核心功能：
- * - 管理子节点的生命周期（挂载、激活、卸载等）
- * - 处理子节点的渲染和格式化
- * - 提供子节点的key重复检查机制
+ * ContainerNode 是一个接口约束，用于描述具有子节点的容器节点。
+ * 容器节点可以包含其他节点作为其子节点，并负责管理这些子节点的生命周期。
  *
- * 构造函数参数：
- * @param type - 节点类型
- * @param props - 节点属性，可以包含children属性
+ * @template T - 容器节点类型，默认为 ContainerNodeType
+ * @interface ContainerNode
+ * @extends HostNode<T>
+ * @property {RuntimeVNodeChildren} children - 容器节点的子节点集合
  *
- * 特殊说明：
- * - 这是一个抽象类，子类必须实现createElement方法
- * - 子节点的key重复会触发警告，但不会阻止渲染
- * - 支持嵌套数组节点的扁平化处理
+ * 可以通过 `mixinContainerNode` api 将容器节点的响应逻辑扩展进节点实例中。
  */
-export abstract class ContainerNode<
-  T extends ContainerNodeType = ContainerNodeType
-> extends HostNode<T> {
-  /**
-   * 子节点列表
-   */
-  public children: RuntimeVNodeChildren
+export interface ContainerNode<T extends ContainerNodeType = ContainerNodeType>
+  extends HostNode<T> {
+  children: RuntimeVNodeChildren
+}
 
-  constructor(type: T, props: VNodeInputProps<T>) {
-    const children = unref(popProperty(props, 'children'))
-    super(type, props)
-    // 如果存在children属性，则格式化子节点
-    this.children = Array.isArray(children) ? this.formatChildren(children) : []
-  }
-
+/**
+ * 将容器节点相关的方法混入到节点实例中
+ *
+ * 这个函数为容器节点添加管理子节点生命周期的能力，包括挂载、卸载、激活、
+ * 停用和渲染子节点的方法。
+ *
+ * @param {ContainerNode} node - 需要混入容器节点能力的节点实例
+ */
+export const mixinContainerNode = (node: ContainerNode) => {
   /**
-   * @inheritDoc
+   * 挂载所有子节点到DOM中
+   * @this ContainerNode
    */
-  protected override unmountChildren(): void {
-    for (const child of this.children) {
-      child.unmount(false)
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected override activateChildren(): void {
-    // 遍历所有子节点
-    for (let i = 0; i < this.children.length; i++) {
-      // 递归调用更新每个子节点的激活状态
-      this.children[i].activate(false)
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected override deactivateChildren() {
-    for (let i = 0; i < this.children.length; i++) {
-      this.children[i].deactivate(false)
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  protected override mountChildren() {
-    // 遍历挂载所有子节点
+  node['mountChildren'] = function (this: ContainerNode) {
     for (const child of this.children) {
       child.mount()
     }
   }
 
   /**
-   * @inheritDoc
+   * 卸载所有子节点
+   * @this ContainerNode
    */
-  override render(): NodeElementType<T> {
-    if (this._cachedElement) return this._cachedElement
-    const selfElement = this.createElement()
-    // 检查是否存在子节点
-    if (this.children.length) {
-      // 渲染所有子节点
-      for (const child of this.children) {
-        // 预先渲染元素
-        child.render()
-        this.dom.appendChild(selfElement, child.operationTarget)
-      }
+  node['unmountChildren'] = function (this: ContainerNode) {
+    for (const child of this.children) {
+      child.unmount(false)
     }
-    return selfElement
   }
 
   /**
-   * 创建元素实例
-   *
-   * 子类必须实现此方法
-   *
-   * @protected
+   * 激活所有子节点
+   * 激活通常指将节点从非活动状态转换为活动状态
+   * @this ContainerNode
    */
-  protected abstract createElement(): NodeElementType<T>
-
-  /**
-   * 扁平化并标准化子节点 (迭代优化版)
-   *
-   * @private
-   * @param target
-   * @returns {VNode[]} 返回一个包含所有子节点的数组
-   */
-  private formatChildren(target: VNodeChild): RuntimeVNodeChildren {
-    const keySet = new Set<UniqueKey>()
-    const childList: VNode[] = []
-    const stack: VNodeChild[] = [unref(target)]
-
-    while (stack.length > 0) {
-      const current = stack.pop()!
-      if (Array.isArray(current)) {
-        // 逆序压栈以保持顺序
-        for (let i = current.length - 1; i >= 0; i--) {
-          stack.push(unref(current[i]))
-        }
-      } else {
-        const vnode = this.normalizeChild(current, keySet)
-        linkParentNode(vnode, this)
-        childList.push(vnode)
-      }
+  node['activateChildren'] = function (this: ContainerNode) {
+    for (const child of this.children) {
+      child.activate()
     }
-
-    return childList
   }
 
   /**
-   * 将单个节点转换为 VNode
+   * 停用所有子节点
+   * 停用通常指将节点从活动状态转换为非活动状态
+   * @this ContainerNode
    */
-  private normalizeChild(current: unknown, keySet: Set<UniqueKey>): VNode {
-    if (current == null || typeof current === 'boolean') {
-      return new CommentNode({ value: String(current) })
+  node['deactivateChildren'] = function (this: ContainerNode) {
+    for (const child of this.children) {
+      child.deactivate()
     }
-
-    if (isVNode(current)) {
-      this.checkDuplicateKey(current, keySet)
-      return current
-    }
-
-    return new TextNode({ value: String(current) })
   }
 
   /**
-   * 检查 VNode 的 key 是否重复
+   * 渲染所有子节点并将其添加到DOM中
+   * @this ContainerNode
    */
-  private checkDuplicateKey(vnode: VNode, keySet: Set<UniqueKey>): void {
-    if (vnode.key == null) return
-    if (keySet.has(vnode.key)) {
-      logger.warn(
-        `Duplicate key ${String(vnode.key)} detected, which can cause rendering errors or performance issues`,
-        vnode.devInfo?.source
-      )
-    } else {
-      keySet.add(vnode.key)
+  node['renderChildren'] = function (this: ContainerNode) {
+    for (const child of this.children) {
+      child.render()
+      this.dom.appendChild(this.element, child.operationTarget)
     }
   }
 }
