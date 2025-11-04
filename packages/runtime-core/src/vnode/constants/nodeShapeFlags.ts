@@ -1,5 +1,5 @@
 export const enum NodeShapeFlags {
-  ELEMENT = 1,
+  REGULAR_ELEMENT = 1,
   VOID_ELEMENT = 1 << 1,
   FRAGMENT = 1 << 2,
   TEXT = 1 << 3,
