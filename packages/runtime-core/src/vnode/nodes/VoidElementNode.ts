@@ -1,5 +1,5 @@
 import type { VoidElementNodeType } from '../../types/index.js'
-import { ElementNode } from '../base/ElementNode.js'
+import { ElementNode } from '../base/index.js'
 import { NodeShapeFlags } from '../constants/index.js'
 
 /**
