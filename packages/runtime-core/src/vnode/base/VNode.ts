@@ -20,7 +20,7 @@ import { NodeShapeFlags, NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/ind
 import { getMemoNode, setMemoNode, unlinkParentNode } from '../runtime/index.js'
 import { isRefEl, type RefEl } from '../runtime/ref.js'
 import { __DEV__, popNodeDevInfo } from '../utils/dev.js'
-import { handleBindProps } from '../utils/normalizeProps.js'
+import { handleBindProps } from '../utils/normalize.js'
 
 /**
  * 待规范化的属性类型
