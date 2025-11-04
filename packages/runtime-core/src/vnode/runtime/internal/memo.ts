@@ -1,4 +1,3 @@
-import { unref } from '@vitarx/responsive'
 import { isArrayEqual } from '@vitarx/utils'
 import { VNode } from '../../base/index.js'
 
@@ -46,7 +45,7 @@ export function isSameMemo(prevMemo: Array<any>, nextMemo: Array<any>): boolean 
   for (let i = 0; i < nextMemo.length; i++) {
     // 使用unref函数获取每个元素的引用值，并进行比较
     // 如果发现任何一对元素不相等，立即返回false
-    if (unref(nextMemo[i]) !== unref(prevMemo[i])) return false
+    if (nextMemo[i] !== prevMemo[i]) return false
   }
   // 如果所有元素都相等，则返回true
   return true
