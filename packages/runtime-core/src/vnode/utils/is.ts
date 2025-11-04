@@ -63,13 +63,17 @@ export function isFragmentNode(val: any): val is FragmentNode {
 }
 
 /**
- * 检查给定的值是否为HTML元素节点(RegularElementNode)
+ * 检查给定的值是否为常规元素节点(RegularElementNode)
  *
  * @param val - 需要检查的值
  * @returns {boolean} 如果是元素虚拟节点返回true，否则返回false
  */
-export function isElementNode(val: any): val is RegularElementNode {
-  return isVNode(val) && typeof val.type === 'string' && val.shapeFlags === NodeShapeFlags.ELEMENT
+export function isRegularElementNode(val: any): val is RegularElementNode {
+  return (
+    isVNode(val) &&
+    typeof val.type === 'string' &&
+    val.shapeFlags === NodeShapeFlags.REGULAR_ELEMENT
+  )
 }
 
 /**
@@ -81,7 +85,18 @@ export function isElementNode(val: any): val is RegularElementNode {
 export function isVoidElementNode(val: any): val is VoidElementVNode {
   return isVNode(val) && val.shapeFlags === NodeShapeFlags.VOID_ELEMENT
 }
-
+/**
+ * 判断给定的值是否为元素节点
+ * @param val 需要判断的值
+ * @returns {boolean} 如果是元素节点返回true，否则返回false
+ */
+export function isElementNode(val: any): val is ContainerNode {
+  return (
+    isVNode(val) && // 首先判断是否为虚拟节点
+    (val.shapeFlags === NodeShapeFlags.REGULAR_ELEMENT || // 判断是否为普通元素节点
+      val.shapeFlags === NodeShapeFlags.FRAGMENT) // 或者片段节点
+  )
+}
 /**
  * 检查给定的值是否为文本虚拟节点(TextNode)
  *
@@ -112,7 +127,8 @@ export function isCommentNode(val: any): val is CommentNode {
 export function isContainerNode(val: any): val is ContainerNode {
   return (
     isVNode(val) &&
-    (val.shapeFlags === NodeShapeFlags.ELEMENT || val.shapeFlags === NodeShapeFlags.FRAGMENT)
+    (val.shapeFlags === NodeShapeFlags.REGULAR_ELEMENT ||
+      val.shapeFlags === NodeShapeFlags.FRAGMENT)
   )
 }
 

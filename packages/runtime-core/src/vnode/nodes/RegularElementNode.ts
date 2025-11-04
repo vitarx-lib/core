@@ -34,7 +34,7 @@ import { normalizeStyle } from '../utils/normalizeProps.js'
 export class RegularElementNode<
   T extends RegularElementNodeType = RegularElementNodeType
 > extends ContainerNode<T> {
-  public override shapeFlags = NodeShapeFlags.ELEMENT
+  public override shapeFlags = NodeShapeFlags.REGULAR_ELEMENT
   /**
    * @inheritDoc
    */
