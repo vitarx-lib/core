@@ -3,6 +3,8 @@ import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/respons
 import { logger } from '@vitarx/utils'
 import type {
   ErrorSource,
+  HostElement,
+  HostParentElement,
   LifecycleHookParameter,
   LifecycleHookReturnType,
   MountType,
@@ -113,7 +115,6 @@ export class StatefulWidgetNode<
     if (!this._instance) this.createInstance().then()
     return this._instance! // 返回实例，使用非空断言操作符(!)告诉编译器this._instance不为null或undefined
   }
-
   /**
    * 存储组件实例作用域的私有对象
    *
@@ -265,7 +266,7 @@ export class StatefulWidgetNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: NodeElementType, type?: MountType): this {
+  override mount(target?: HostElement | HostParentElement, type?: MountType): this {
     // 未渲染调用this.element渲染一次元素
     if (this.state === NodeState.Created) this.render()
     super.mount(target, type)
