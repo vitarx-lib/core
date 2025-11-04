@@ -1,5 +1,7 @@
 import { logger } from '@vitarx/utils'
 import type {
+  HostElement,
+  HostParentElement,
   MountType,
   NodeElementType,
   NodeNormalizedProps,
@@ -10,7 +12,7 @@ import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, NodeState } from '../constants/index.js'
 import { linkParentNode, runInNodeContext, VNodeUpdate } from '../runtime/index.js'
 import { isVNode } from '../utils/index.js'
-import { unwrapRefProps } from '../utils/normalizeProps.js'
+import { unwrapRefProps } from '../utils/normalize.js'
 import { CommentNode } from './CommentNode.js'
 import { TextNode } from './TextNode.js'
 
@@ -54,7 +56,7 @@ export class StatelessWidgetNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: NodeElementType, type?: MountType): void {
+  override mount(target?: HostElement | HostParentElement, type?: MountType): void {
     if (this.state === NodeState.Created) this.element
     super.mount(target, type)
   }
