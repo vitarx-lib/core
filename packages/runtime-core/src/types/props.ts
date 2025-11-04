@@ -237,7 +237,7 @@ export type StyleRules = Vitarx.HostStyleRules
  * }
  * ```
  */
-export type StyleAttribute = string | Vitarx.HostStyleRules
+export type StyleProperties = string | Vitarx.HostStyleRules
 /**
  * class属性值类型
  *
@@ -263,7 +263,7 @@ export type StyleAttribute = string | Vitarx.HostStyleRules
  * }
  * ```
  */
-export type ClassAttribute = string | Array<any> | Record<string, boolean>
+export type ClassProperties = string | Array<any> | Record<string, boolean>
 
 /**
  * 合并Props类型

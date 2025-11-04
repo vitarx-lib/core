@@ -3,8 +3,7 @@ import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/respons
 import { logger } from '@vitarx/utils'
 import type {
   ErrorSource,
-  HostElement,
-  HostParentElement,
+  HostNodeElement,
   LifecycleHookParameter,
   LifecycleHookReturnType,
   MountType,
@@ -14,6 +13,7 @@ import type {
   VNodeInputProps,
   WidgetInstanceType
 } from '../../types/index.js'
+import { __DEV__ } from '../../utils/index.js'
 import { initializeFnWidget } from '../../widget/base/FnWidget.js'
 import { FnWidget, isClassWidget, LifecycleHooks } from '../../widget/index.js'
 import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
@@ -24,7 +24,7 @@ import {
   proxyWidgetProps,
   runInNodeContext
 } from '../runtime/index.js'
-import { __DEV__, isStatefulWidgetNode, isVNode } from '../utils/index.js'
+import { isStatefulWidgetNode, isVNode } from '../utils/index.js'
 import { CommentNode } from './CommentNode.js'
 import { TextNode } from './TextNode.js'
 
@@ -266,7 +266,7 @@ export class StatefulWidgetNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: HostElement | HostParentElement, type?: MountType): this {
+  override mount(target?: HostNodeElement, type?: MountType): this {
     // 未渲染调用this.element渲染一次元素
     if (this.state === NodeState.Created) this.render()
     super.mount(target, type)

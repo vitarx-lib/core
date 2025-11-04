@@ -7,13 +7,8 @@ import type {
   NodeElementType,
   VNodeChild
 } from '../../types/index.js'
-import {
-  __DEV__,
-  getCurrentVNode,
-  StatefulWidgetNode,
-  VNode,
-  VNodeUpdate
-} from '../../vnode/index.js'
+import { __DEV__ } from '../../utils/index.js'
+import { getCurrentVNode, StatefulWidgetNode, VNode, VNodeUpdate } from '../../vnode/index.js'
 import { CLASS_WIDGET_BASE_SYMBOL } from '../constants/index.js'
 
 /**

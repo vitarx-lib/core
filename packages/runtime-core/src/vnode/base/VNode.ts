@@ -5,7 +5,7 @@ import type {
   BindParentElement,
   HostAdapter,
   HostCommentElement,
-  HostElement,
+  HostNodeElement,
   HostParentElement,
   MountType,
   NodeDevInfo,
@@ -16,11 +16,13 @@ import type {
   VNodeInputProps,
   VNodeIntrinsicAttributes
 } from '../../types/index.js'
+import { __DEV__ } from '../../utils/index.js'
 import { NodeShapeFlags, NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
-import { getMemoNode, setMemoNode, unlinkParentNode } from '../runtime/index.js'
+import { unlinkParentNode } from '../runtime/index.js'
+import { popNodeDevInfo } from '../runtime/internal/jsxDev.js'
+import { getMemoNode, setMemoNode } from '../runtime/internal/memo.js'
+import { handleBindProps } from '../runtime/internal/normalize.js'
 import { isRefEl, type RefEl } from '../runtime/ref.js'
-import { __DEV__, popNodeDevInfo } from '../utils/dev.js'
-import { handleBindProps } from '../utils/normalize.js'
 
 /**
  * 待规范化的属性类型
@@ -319,7 +321,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @param [target] - 挂载目标，仅根节点需要提供，子节点在渲染时就已经形成真实的挂载关系，所以不需要提供
    * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    */
-  abstract mount(target?: HostElement | HostParentElement, type?: MountType): void
+  abstract mount(target?: HostNodeElement, type?: MountType): void
   /**
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *

@@ -1,7 +1,6 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils/src/index.js'
 import { Widget } from '../../widget/index.js'
-import { WidgetNode } from '../base/index.js'
 import { StatefulWidgetNode } from '../nodes/index.js'
 
 const VNODE_CONTEXT_SYMBOL = Symbol('VNODE_CONTEXT_SYMBOL')
@@ -14,7 +13,7 @@ const VNODE_CONTEXT_SYMBOL = Symbol('VNODE_CONTEXT_SYMBOL')
  * @param {() => R} fn - 需要在特定上下文中执行的函数
  * @returns {R} 函数执行后的返回值
  */
-export const runInNodeContext = <R>(node: WidgetNode, fn: () => R): R => {
+export const runInNodeContext = <R>(node: StatefulWidgetNode, fn: () => R): R => {
   // 调用runInContext函数，传入虚拟节点上下文符号、当前对象和要执行的函数
   return runInContext(VNODE_CONTEXT_SYMBOL, node, fn)
 }
@@ -23,9 +22,11 @@ export const runInNodeContext = <R>(node: WidgetNode, fn: () => R): R => {
  * 获取当前组件的虚拟节点
  *
  * @template T - 虚拟节点的类型
- * @returns {WidgetNode | undefined} 返回当前组件的虚拟节点，如果没有则返回undefined
+ * @returns {StatefulWidgetNode | undefined} 返回当前组件的虚拟节点，如果没有则返回undefined
  */
-export const getCurrentVNode = <T extends WidgetNode = WidgetNode>(): T | undefined => {
+export const getCurrentVNode = <T extends StatefulWidgetNode = StatefulWidgetNode>():
+  | T
+  | undefined => {
   // 调用runInContext函数，传入虚拟节点上下文符号和getCurrentVNode函数，返回当前组件虚拟节点
   return getContext<T>(VNODE_CONTEXT_SYMBOL)
 }

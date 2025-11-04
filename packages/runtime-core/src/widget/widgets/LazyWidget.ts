@@ -8,13 +8,8 @@ import type {
   WidgetPropsType,
   WidgetType
 } from '../../types/index.js'
-import {
-  createVNode,
-  isVNode,
-  NodeState,
-  type VNode,
-  withDelayAndTimeout
-} from '../../vnode/index.js'
+import { withDelayAndTimeout } from '../../utils/index.js'
+import { createVNode, isVNode, NodeState, type VNode } from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 import { getSuspenseCounter } from '../utils/index.js'
 

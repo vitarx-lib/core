@@ -1,3 +1,6 @@
 export * from './id.js'
 export * from './twoWayBind.js'
 export * from './props.js'
+export * from './delay.js'
+export * from './style.js'
+export * from './dev.js'

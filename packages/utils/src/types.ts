@@ -39,6 +39,7 @@ export type AnyPrimitive = null | undefined | boolean | number | string | bigint
  * @template T - 要处理的对象类型
  *
  * @example
+ * ```ts
  * interface User {
  *   id: number;
  *   name: string;
@@ -65,6 +66,7 @@ export type AnyPrimitive = null | undefined | boolean | number | string | bigint
  * //   }
  * //   readonly tags: readonly string[];
  * // }
+ * ```
  */
 export type DeepReadonly<T> = {
   readonly [P in keyof T]: T[P] extends AnyFunction | AnyPrimitive | AnyCollection
@@ -87,6 +89,7 @@ export type DeepReadonly<T> = {
  * @template T - 要处理的对象类型
  *
  * @example
+ * ```ts
  * interface ReadonlyUser {
  *   readonly id: number;
  *   readonly name: string;
@@ -111,6 +114,7 @@ export type DeepReadonly<T> = {
  * //     }
  * //   }
  * // }
+ * ```
  */
 export type UnReadonly<T> = {
   -readonly [P in keyof T]: T[P] extends AnyFunction | AnyPrimitive | AnyCollection
@@ -137,6 +141,7 @@ export type UnReadonly<T> = {
  * @template K - 需要设为必填的属性键
  *
  * @example
+ * ```ts
  * interface User {
  *   id?: number;
  *   name?: string;
@@ -146,6 +151,7 @@ export type UnReadonly<T> = {
  * // 将id和name设为必填
  * type RequiredUser = MakeRequired<User, 'id' | 'name'>;
  * // 结果等同于: { id: number; name: string; email?: string; }
+ * ```
  */
 export type MakeRequired<T extends {}, K extends keyof T> = Omit<T, K> & {
   [P in K]-?: Exclude<T[P], undefined> // 强制指定的属性 K 为必填
@@ -158,6 +164,7 @@ export type MakeRequired<T extends {}, K extends keyof T> = Omit<T, K> & {
  * @template T - 要处理的对象类型
  *
  * @example
+ * ```ts
  * interface User {
  *   id: number;
  *   name?: string;
@@ -184,6 +191,7 @@ export type MakeRequired<T extends {}, K extends keyof T> = Omit<T, K> & {
  * //     }
  * //   }
  * // }
+ * ```
  */
 export type DeepRequired<T> = {
   [K in keyof T]-?: T extends Record<string | symbol, any>
@@ -198,6 +206,7 @@ export type DeepRequired<T> = {
  * @template T - 要处理的对象类型
  *
  * @example
+ * ```ts
  * interface User {
  *   id: number;
  *   name: string;
@@ -224,6 +233,7 @@ export type DeepRequired<T> = {
  * //     }
  * //   }
  * // }
+ * ```
  */
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends Record<string | symbol, any> ? DeepPartial<T[P]> : T[P]
@@ -235,6 +245,7 @@ export type DeepPartial<T> = {
  * @template K - 需要设为可选的属性键
  *
  * @example
+ * ```ts
  * interface User {
  *   id: number;
  *   name: string;
@@ -244,6 +255,7 @@ export type DeepPartial<T> = {
  * // 将name和email设为可选
  * type PartialUser = MakePartial<User, 'name' | 'email'>;
  * // 结果等同于: { id: number; name?: string; email?: string; }
+ * ```
  */
 export type MakePartial<T extends {}, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 /**
@@ -252,6 +264,7 @@ export type MakePartial<T extends {}, K extends keyof T> = Omit<T, K> & Partial<
  * @template T - 要被提取的对象类型
  *
  * @example
+ * ```ts
  * interface User {
  *   id: number;
  *   name?: string;
@@ -262,6 +275,7 @@ export type MakePartial<T extends {}, K extends keyof T> = Omit<T, K> & Partial<
  * // 提取所有可选属性的键
  * type UserOptionalKeys = OptionalKeys<User>;
  * // 结果为: 'name' | 'email'
+ * ```
  */
 export type OptionalKeys<T extends {}> = {
   [K in keyof T]: undefined extends T[K] ? K : never
@@ -272,6 +286,7 @@ export type OptionalKeys<T extends {}> = {
  * @template T - 键值对对象类型
  *
  * @example
+ * ```ts
  * interface User {
  *   id: number;
  *   name?: string;
@@ -282,6 +297,7 @@ export type OptionalKeys<T extends {}> = {
  * // 提取所有可选属性并转为必选
  * type RequiredOptionalProps = PickOptional<User>;
  * // 结果为: { name: string; email: string | null; }
+ * ```
  */
 export type PickOptional<T extends {}> = {
   [K in OptionalKeys<T>]-?: Exclude<T[K], undefined>
@@ -301,6 +317,7 @@ export type RequiredKeys<T extends {}> = {
  * @template T - 键值对对象类型
  *
  * @example
+ * ```js
  * interface User {
  *   id: number;
  *   name?: string;
@@ -311,6 +328,7 @@ export type RequiredKeys<T extends {}> = {
  * // 仅保留必填属性
  * type RequiredPropsOnly = PickRequired<User>;
  * // 结果为: { id: number; age: number; }
+ * ```
  */
 export type PickRequired<T extends {}> = {
   [K in RequiredKeys<T>]: T[K]

@@ -1,6 +1,6 @@
 import { toRaw } from '@vitarx/responsive'
 import { isRecordObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
-import type { ClassAttribute, StyleAttribute, StyleRules } from '../../types/index.js'
+import type { ClassProperties, StyleProperties, StyleRules } from '../types/index.js'
 
 /**
  * StyleUtils 类是一个用于处理 CSS 类和样式对象的工具类。
@@ -33,11 +33,11 @@ export class StyleUtils {
   /**
    * 合并两个class
    *
-   * @param {ClassAttribute} c1 - class1
-   * @param {ClassAttribute} c2 - class2
+   * @param {ClassProperties} c1 - class1
+   * @param {ClassProperties} c2 - class2
    * @returns {string[]} 合并后的数组，数组元素为类名
    */
-  static mergeCssClass(c1: ClassAttribute, c2: ClassAttribute): string[] {
+  static mergeCssClass(c1: ClassProperties, c2: ClassProperties): string[] {
     // 将 c1 和 c2 转换为数组
     const arr1 = this.cssClassValueToArray(c1)
     const arr2 = this.cssClassValueToArray(c2)
@@ -49,11 +49,11 @@ export class StyleUtils {
   /**
    * 合并两个style
    *
-   * @param {StyleAttribute} style1 - 第一个样式对象或字符串
-   * @param {StyleAttribute} style2 - 第二个样式对象或字符串
+   * @param {StyleProperties} style1 - 第一个样式对象或字符串
+   * @param {StyleProperties} style2 - 第二个样式对象或字符串
    * @returns {StyleRules} 合并后的style对象
    */
-  static mergeCssStyle(style1: StyleAttribute, style2: StyleAttribute): StyleRules {
+  static mergeCssStyle(style1: StyleProperties, style2: StyleProperties): StyleRules {
     // 如果style1是字符串，先转换为对象
     const obj1 = this.cssStyleValueToObject(style1)
     // 如果style2是字符串，先转换为对象
@@ -66,10 +66,10 @@ export class StyleUtils {
   /**
    * 将style对象转换为字符串
    *
-   * @param {StyleAttribute} styleObj - style对象
+   * @param {StyleProperties} styleObj - style对象
    * @returns {string} 转换后的style字符串
    */
-  static cssStyleValueToString(styleObj: StyleAttribute): string {
+  static cssStyleValueToString(styleObj: StyleProperties): string {
     if (!styleObj) return ''
     if (typeof styleObj === 'string') return styleObj
     if (!isRecordObject(styleObj)) return ''
@@ -90,10 +90,10 @@ export class StyleUtils {
    *
    * 如果是对象，则会直接返回
    *
-   * @param {StyleAttribute} style - style字符串
+   * @param {StyleProperties} style - style字符串
    * @returns {StyleRules}  转换后的style对象
    */
-  static cssStyleValueToObject(style: StyleAttribute): StyleRules {
+  static cssStyleValueToObject(style: StyleProperties): StyleRules {
     if (isString(style)) {
       const styleObj: Record<string, any> = {}
       style.split(';').forEach(styleRule => {
@@ -112,10 +112,10 @@ export class StyleUtils {
   /**
    * 将 class 属性转换为数组
    *
-   * @param {ClassAttribute} classInput - 可以是 string, string[] 或对象类型
+   * @param {ClassProperties} classInput - 可以是 string, string[] 或对象类型
    * @returns {string[]} 返回一个数组，数组元素为类名
    */
-  static cssClassValueToArray(classInput: ClassAttribute): string[] {
+  static cssClassValueToArray(classInput: ClassProperties): string[] {
     if (typeof classInput === 'string') {
       return classInput.split(' ').filter(Boolean)
     }
@@ -143,10 +143,10 @@ export class StyleUtils {
   /**
    * 将 class 属性转换为字符串
    *
-   * @param {ClassAttribute} classInput - 可以是 string, string[] 或对象类型
+   * @param {ClassProperties} classInput - 可以是 string, string[] 或对象类型
    * @returns {string} 返回一个字符串，字符串元素为类名
    */
-  static cssClassValueToString(classInput: ClassAttribute): string {
+  static cssClassValueToString(classInput: ClassProperties): string {
     if (typeof classInput === 'string') {
       return classInput.trim()
     }

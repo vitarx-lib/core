@@ -18,8 +18,7 @@ import {
   StatelessWidgetNode,
   TEXT_NODE_TYPE,
   TextNode,
-  VNode,
-  VNODE_PROPS_DEV_INFO_KEY_SYMBOL
+  VNode
 } from '../vnode/index.js'
 import type {
   HostNodeElement,
@@ -137,9 +136,7 @@ export type RuntimeVNodeChildren = Array<VNode>
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的虚拟节点类型是 `VNodeType`
  */
 export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetType
-export type VNodeIntrinsicAttributes = IntrinsicAttributes & {
-  [VNODE_PROPS_DEV_INFO_KEY_SYMBOL]?: NodeDevInfo
-}
+export type VNodeIntrinsicAttributes = IntrinsicAttributes
 /**
  * createVNode 支持的属性类型
  *

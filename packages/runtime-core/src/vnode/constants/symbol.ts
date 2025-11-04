@@ -9,8 +9,3 @@
  * 可以通过检查该属性的存在来验证对象是否为虚拟节点。
  */
 export const VIRTUAL_NODE_SYMBOL = Symbol('VIRTUAL_NODE_SYMBOL')
-
-/**
- * props中用于存放devInfo的属性名
- */
-export const VNODE_PROPS_DEV_INFO_KEY_SYMBOL = Symbol('VNODE_DEV_INFO_SYMBOL')

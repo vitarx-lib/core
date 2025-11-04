@@ -44,7 +44,7 @@ describe('deepClone', () => {
   })
 
   // 测试内置对象
-  it('should clone built-in objects', () => {
+  it('should clone widgets-in objects', () => {
     // Date
     const date = new Date()
     const clonedDate = deepClone(date)

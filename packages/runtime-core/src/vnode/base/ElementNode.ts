@@ -1,5 +1,5 @@
 import type { HostElementNames, NodeElementType, NodeNormalizedProps } from '../../types/index.js'
-import { normalizeStyle } from '../utils/normalize.js'
+import { normalizeStyle } from '../runtime/internal/normalize.js'
 import { HostNode } from './HostNode.js'
 
 /**

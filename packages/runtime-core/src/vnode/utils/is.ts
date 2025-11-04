@@ -1,5 +1,14 @@
+import { useDomAdapter } from '../../host-adapter/index.js'
+import type { ValidNodeType } from '../../types/index.js'
 import { ContainerNode, ElementNode, VNode, WidgetNode } from '../base/index.js'
-import { NodeShapeFlags, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
+import {
+  COMMENT_NODE_TYPE,
+  DYNAMIC_RENDER_TYPE,
+  FRAGMENT_NODE_TYPE,
+  NodeShapeFlags,
+  TEXT_NODE_TYPE,
+  VIRTUAL_NODE_SYMBOL
+} from '../constants/index.js'
 import type { RegularElementNode, StatelessWidgetNode } from '../nodes/index.js'
 import {
   CommentNode,
@@ -143,4 +152,26 @@ export function isNonElementNode(val: any): val is TextNode | CommentNode {
     isVNode(val) &&
     (val.shapeFlags === NodeShapeFlags.TEXT || val.shapeFlags === NodeShapeFlags.COMMENT)
   )
+}
+
+/**
+ * 判断是否支持子节点
+ *
+ * @param type - 节点类型
+ * @returns {boolean} 是否支持子节点
+ */
+export const isSupportChildren = (type: ValidNodeType): boolean => {
+  if (typeof type === 'string') {
+    switch (type) {
+      case COMMENT_NODE_TYPE:
+      case TEXT_NODE_TYPE:
+        return false
+      case FRAGMENT_NODE_TYPE:
+      case DYNAMIC_RENDER_TYPE:
+        return true
+      default:
+        return !useDomAdapter().isVoidElement(type)
+    }
+  }
+  return true
 }

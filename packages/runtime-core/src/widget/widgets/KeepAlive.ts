@@ -222,7 +222,6 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     } else {
       oldVNode.unmount()
     }
-
     // 处理新节点的激活或挂载
     if (newVNode.state === 'deactivated') {
       newVNode.activate()

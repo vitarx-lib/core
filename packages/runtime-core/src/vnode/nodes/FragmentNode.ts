@@ -8,7 +8,7 @@ import type {
 } from '../../types/index.js'
 import { type ContainerNode, HostNode, mixinContainerNode } from '../base/index.js'
 import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
-import { normalizeChildren } from '../utils/normalize.js'
+import { normalizeChildren } from '../runtime/internal/normalize.js'
 
 /**
  * FragmentNode是一个容器节点类，用于管理文档片段(Fragment)的子节点。

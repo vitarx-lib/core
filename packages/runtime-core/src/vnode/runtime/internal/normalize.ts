@@ -2,20 +2,19 @@ import { unref } from '@vitarx/responsive'
 import { isObject, isRecordObject, logger, popProperty } from '@vitarx/utils'
 import type {
   AnyProps,
-  ClassAttribute,
+  ClassProperties,
   RuntimeVNodeChildren,
   StyleRules,
   UniqueKey,
   VNodeChild,
   VNodeChildren
-} from '../../types/index.js'
-import { VNode } from '../base/index.js'
-import { INTRINSIC_ATTRIBUTES } from '../constants/index.js'
-import { CommentNode, TextNode } from '../nodes/index.js'
-import { linkParentNode } from '../runtime/index.js'
-import { __DEV__ } from './dev.js'
-import { isVNode } from './is.js'
-import { StyleUtils } from './style.js'
+} from '../../../types/index.js'
+import { __DEV__, StyleUtils } from '../../../utils/index.js'
+import { VNode } from '../../base/index.js'
+import { INTRINSIC_ATTRIBUTES } from '../../constants/index.js'
+import { CommentNode, TextNode } from '../../nodes/index.js'
+import { isVNode } from '../../utils/index.js'
+import { linkParentNode } from '../relations.js'
 // 用于定义特定属性的自定义合并逻辑
 const SPECIAL_MERGERS = {
   style: StyleUtils.mergeCssStyle,
@@ -124,11 +123,11 @@ export const normalizeStyle = <T extends AnyProps>(props: T): T => {
     )
   }
   // 处理 class 属性
-  let cssClass: ClassAttribute =
-    'class' in props ? StyleUtils.cssClassValueToArray(props.class as ClassAttribute) : []
+  let cssClass: ClassProperties =
+    'class' in props ? StyleUtils.cssClassValueToArray(props.class as ClassProperties) : []
   if ('className' in props) {
     // 合并class和className属性
-    cssClass = StyleUtils.mergeCssClass(cssClass, props.className as ClassAttribute)
+    cssClass = StyleUtils.mergeCssClass(cssClass, props.className as ClassProperties)
     // @ts-ignore - 删除className属性，因为已经合并到class中
     delete this.props.className
   }

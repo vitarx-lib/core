@@ -10,7 +10,8 @@ import type {
   VNodeInstanceType,
   WidgetType
 } from '../../types/index.js'
-import { isStatelessWidget } from '../../widget/index.js'
+import { __DEV__ } from '../../utils/index.js'
+import { getWidgetName, isStatelessWidget } from '../../widget/index.js'
 import {
   COMMENT_NODE_TYPE,
   DYNAMIC_RENDER_TYPE,
@@ -27,14 +28,15 @@ import {
   TextNode,
   VoidElementVNode
 } from '../nodes/index.js'
-import { __DEV__, getNodeDevInfo, getWidgetName } from '../utils/index.js'
-import { getMemoNode, isSameMemo, removeMemoNode } from './directives/index.js'
+import { isSupportChildren } from '../utils/index.js'
+import { getNodeDevInfo } from './internal/jsxDev.js'
+import { getMemoNode, isSameMemo, removeMemoNode } from './internal/memo.js'
 
 /**
- * 合并与规范化子节点。
+ * 合并与规子节点。
  * 保证 `children` 始终是扁平数组。
  */
-function normalizeChildren(existing: any, children: any[]): any[] {
+function mergeChildren(existing: any, children: any[]): any[] {
   if (!existing) return children
   if (Array.isArray(existing)) return [...existing, ...children]
   return [existing, ...children]
@@ -49,9 +51,14 @@ function resolveVNodeProps<T extends ValidNodeType>(
   children: VNodeChild[]
 ) {
   const isValidProps = isRecordObject(props)
-  const resolvedProps: VNodeInputProps<T> = isValidProps ? props : ({} as VNodeInputProps<T>)
-
+  const resolvedProps: Record<string, any> = isValidProps ? props : {}
+  const supportChildren = isSupportChildren(type)
   if (isValidProps) {
+    if (!supportChildren && 'children' in props) {
+      const devInfo = getNodeDevInfo(props)
+      logger.warn(`<${type}> children prop will be ignored`, devInfo?.source)
+      delete props.children
+    }
     // v-if
     if ('v-if' in resolvedProps && !unref(popProperty(resolvedProps, 'v-if'))) {
       return { skip: true, vnode: new CommentNode({ value: 'v-if' }) }
@@ -77,9 +84,11 @@ function resolveVNodeProps<T extends ValidNodeType>(
   }
 
   // children 合并
-  if (children.length && type !== TEXT_NODE_TYPE && type !== COMMENT_NODE_TYPE) {
+  if (supportChildren && children.length) {
     const existingChildren = resolvedProps.children
-    resolvedProps.children = normalizeChildren(existingChildren, children)
+    resolvedProps.children = mergeChildren(existingChildren, children)
+    // 如果 children 只有一个元素，则直接返回该元素
+    resolvedProps.children.length === 1 && (resolvedProps.children = resolvedProps.children[0])
   }
 
   return { skip: false, props: resolvedProps }

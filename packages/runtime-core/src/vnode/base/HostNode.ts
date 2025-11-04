@@ -1,5 +1,6 @@
 import type {
   BindParentElement,
+  HostNodeElement,
   HostNodeNames,
   HostParentElement,
   MountType,
@@ -7,7 +8,7 @@ import type {
   NodeNormalizedProps
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
-import { unwrapRefProps } from '../utils/normalize.js'
+import { unwrapRefProps } from '../runtime/internal/normalize.js'
 import { VNode } from './VNode.js'
 
 /**
@@ -102,7 +103,7 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
   /**
    * @inheritDoc
    */
-  override mount(target?: NodeElementType, type?: MountType): void {
+  override mount(target?: HostNodeElement, type?: MountType): void {
     const teleport = this.teleport
     let element: NodeElementType = this.element
     if (teleport) {

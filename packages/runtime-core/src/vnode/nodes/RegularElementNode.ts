@@ -7,8 +7,8 @@ import type {
 } from '../../types/index.js'
 import { type ContainerNode, ElementNode, mixinContainerNode, VNode } from '../base/index.js'
 import { NodeShapeFlags } from '../constants/index.js'
+import { normalizeChildren } from '../runtime/internal/normalize.js'
 import { isElementNode } from '../utils/index.js'
-import { normalizeChildren } from '../utils/normalize.js'
 
 /**
  * RegularElementNode 是一个用于表示虚拟DOM中元素节点的类。
