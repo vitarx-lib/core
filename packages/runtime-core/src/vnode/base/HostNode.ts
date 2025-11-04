@@ -1,4 +1,3 @@
-import { markNonSignal } from '@vitarx/responsive'
 import type {
   BindParentElement,
   HostNodeNames,
@@ -8,7 +7,7 @@ import type {
   NodeNormalizedProps
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
-import { unwrapRefProps } from '../utils/normalizeProps.js'
+import { unwrapRefProps } from '../utils/normalize.js'
 import { VNode } from './VNode.js'
 
 /**
@@ -48,7 +47,7 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
    *
    * @protected
    */
-  protected _cachedElement: NodeElementType<T> | null = null
+  protected cachedElement: NodeElementType<T> | null = null
   /**
    * 获取对象的名称属性
    * 这是一个getter方法，用于返回对象的type属性值
@@ -66,15 +65,36 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
    * @returns {NodeElementType<T>} 返回运行时元素实例
    */
   get element(): NodeElementType<T> {
-    // 检查是否已经缓存了元素实例
-    if (!this._cachedElement) {
-      // 如果没有缓存，则创建新的元素实例并缓存
-      this._cachedElement = markNonSignal(this.render())
-      if (this.ref) this.ref.value = this.element
-      if (this.state === NodeState.Created) this.state = NodeState.Rendered
+    return this.render()
+  }
+  /**
+   * 重写渲染方法，用于创建或获取缓存的DOM元素
+   * @returns {NodeElementType<T>} 返回渲染后的DOM元素
+   */
+  override render(): NodeElementType<T> {
+    // 如果已经存在缓存的元素，则直接返回
+    if (this.cachedElement) return this.cachedElement
+    // 如果没有缓存的元素，则创建新的元素
+    this.cachedElement = this.createElement()
+    // 渲染子节点
+    this.renderChildren?.()
+    // 更新节点状态为已渲染
+    this.state = NodeState.Rendered
+    // 返回创建或缓存的元素
+    return this.cachedElement
+  }
+  /**
+   * @inheritDoc
+   */
+  override unmount(root: boolean = true): void {
+    this.unmountChildren?.()
+    if (root) {
+      this.dom.remove(this.element)
+    } else if (this.teleport) {
+      this.dom.remove(this.element)
     }
-    // 如果已经缓存，则直接返回缓存的实例
-    return this._cachedElement
+    this.cachedElement = null
+    this.state = NodeState.Unmounted
   }
   /**
    * @inheritDoc
@@ -121,19 +141,15 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
     this.mountChildren?.()
     this.state = NodeState.Activated
   }
+
   /**
-   * @inheritDoc
+   * 创建运行时元素实例
+   *
+   * 子类需要实现此方法，用于创建运行时元素实例
+   *
+   * @protected
    */
-  override unmount(root: boolean = true): void {
-    this.unmountChildren?.()
-    if (root) {
-      this.dom.remove(this.element)
-    } else if (this.teleport) {
-      this.dom.remove(this.element)
-    }
-    this._cachedElement = null
-    this.state = NodeState.Unmounted
-  }
+  protected abstract createElement(): NodeElementType<T>
   /**
    * @inheritDoc
    */
@@ -194,6 +210,14 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
    * @protected
    */
   protected deactivateChildren?(): void
+  /**
+   * 渲染子节点
+   *
+   * 此方法是可选的，如果元素不支持子节点，则不需要实现此方法。
+   *
+   * @protected
+   */
+  protected renderChildren?(): void
   /**
    * 规范化节点属性的受保护重写方法
    * @param props - 需要规范化的属性对象，键为字符串，值为任意类型
