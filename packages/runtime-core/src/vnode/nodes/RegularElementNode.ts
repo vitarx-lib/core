@@ -5,8 +5,9 @@ import type {
   RuntimeVNodeChildren,
   VNodeInputProps
 } from '../../types/index.js'
-import { type ContainerNode, ElementNode, mixinContainerNode } from '../base/index.js'
+import { type ContainerNode, ElementNode, mixinContainerNode, VNode } from '../base/index.js'
 import { NodeShapeFlags } from '../constants/index.js'
+import { isElementNode } from '../utils/index.js'
 import { normalizeChildren } from '../utils/normalize.js'
 
 /**
@@ -41,8 +42,27 @@ export class RegularElementNode<T extends RegularElementNodeType = RegularElemen
     const hasChildren = 'children' in props
     const children = hasChildren ? unref(popProperty(props, 'children')) : undefined
     super(type, props)
-    // 如果存在children属性，则格式化子节点 // TODO 递归完善 svg
-    this.children = hasChildren ? normalizeChildren(children, this) : []
+    if (type === 'svg') this.isSVGElement = true
+    // 如果存在children属性，则格式化子节点
+    this.children = hasChildren
+      ? normalizeChildren(children, this, this.isSVGElement ? propagateSVGNamespace : undefined)
+      : []
     mixinContainerNode(this)
+  }
+}
+
+/**
+ * 递归处理SVG子节点
+ *
+ * @param node - 当前节点
+ */
+const propagateSVGNamespace = (node: VNode) => {
+  if (isElementNode(node) && !node.isSVGElement && node.type !== 'foreignObject') {
+    node.isSVGElement = true
+    if (node.shapeFlags === NodeShapeFlags.REGULAR_ELEMENT) {
+      for (const child of (node as RegularElementNode).children) {
+        propagateSVGNamespace(child)
+      }
+    }
   }
 }
