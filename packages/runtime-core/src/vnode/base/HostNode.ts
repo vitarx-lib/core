@@ -57,17 +57,6 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
     return this.type
   }
   /**
-   * 获取或创建运行时元素实例的访问器属性
-   *
-   * 使用惰性初始化模式，只在第一次访问时创建元素实例
-   * 并将创建的实例缓存起来，后续访问直接返回缓存的实例
-   *
-   * @returns {NodeElementType<T>} 返回运行时元素实例
-   */
-  get element(): NodeElementType<T> {
-    return this.render()
-  }
-  /**
    * 重写渲染方法，用于创建或获取缓存的DOM元素
    * @returns {NodeElementType<T>} 返回渲染后的DOM元素
    */

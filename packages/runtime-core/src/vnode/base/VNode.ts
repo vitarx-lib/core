@@ -160,7 +160,14 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @readonly - 外部只读，请勿修改！
    */
   private _show: boolean = true
-
+  /**
+   * 返回节点的元素实例
+   *
+   * 如果是组件类型节点则返回组件的根元素实例
+   */
+  get element(): NodeElementType<T> {
+    return this.render()
+  }
   /**
    * 获取显示状态的getter方法
    * 用于返回内部的_show属性值
@@ -246,12 +253,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     }
     this._state = state
   }
-  /**
-   * 返回节点的元素实例
-   *
-   * 如果是组件类型节点则返回组件的根元素实例
-   */
-  abstract readonly element: NodeElementType<T>
 
   /**
    * 获取当前节点在 DOM 操作中的目标元素
