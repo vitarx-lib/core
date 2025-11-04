@@ -1,4 +1,4 @@
-import { ContainerNode, VNode, WidgetNode } from '../base/index.js'
+import { ContainerNode, ElementNode, VNode, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
 import type { RegularElementNode, StatelessWidgetNode } from '../nodes/index.js'
 import {
@@ -90,7 +90,7 @@ export function isVoidElementNode(val: any): val is VoidElementVNode {
  * @param val 需要判断的值
  * @returns {boolean} 如果是元素节点返回true，否则返回false
  */
-export function isElementNode(val: any): val is ContainerNode {
+export function isElementNode(val: any): val is ElementNode {
   return (
     isVNode(val) && // 首先判断是否为虚拟节点
     (val.shapeFlags === NodeShapeFlags.REGULAR_ELEMENT || // 判断是否为普通元素节点
