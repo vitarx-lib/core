@@ -4,11 +4,12 @@ import { useDomAdapter } from '../../host-adapter/index.js'
 import type {
   BindParentElement,
   HostAdapter,
-  HostAnchorElement,
-  HostElementInstance,
+  HostCommentElement,
+  HostElement,
   HostParentElement,
   MountType,
   NodeDevInfo,
+  NodeElementType,
   NodeNormalizedProps,
   NodeTypes,
   UniqueKey,
@@ -246,20 +247,21 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     this._state = state
   }
   /**
+   * 返回节点的元素实例
+   *
+   * 如果是组件类型节点则返回组件的根元素实例
+   */
+  abstract readonly element: NodeElementType<T>
+
+  /**
    * 获取当前节点在 DOM 操作中的目标元素
    *
    * 如果节点启用了传送 (teleport) 或被停用 (deactivated)，
    * 返回锚点；否则返回实际的元素实例。
    */
-  public get operationTarget(): HostAnchorElement | HostElementInstance<T> {
+  public get operationTarget(): HostCommentElement | NodeElementType<T> {
     return this.teleport || this.state === NodeState.Deactivated ? this.anchor : this.element
   }
-  /**
-   * 返回节点的元素实例
-   *
-   * 如果是组件类型节点则返回组件的根元素实例
-   */
-  abstract readonly element: HostElementInstance<T>
   /**
    * 节点树中展示的名称
    */
@@ -279,14 +281,14 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * 框架通过此锚点在重新激活（activate）时恢复节点顺序，
    * 或在传送结束时将节点还原至原始位置。
    */
-  private _anchor: HostAnchorElement | null = null
+  private _anchor: HostCommentElement | null = null
   /**
    * 获取或创建当前节点的锚点元素
    * 这是一个受保护属性，用于在DOM中标记组件的位置
    *
-   * @returns {HostAnchorElement} 返回一个注释节点作为锚点，用于在DOM中标记组件的位置
+   * @returns {HostCommentElement} 返回一个注释节点作为锚点，用于在DOM中标记组件的位置
    */
-  public get anchor(): HostAnchorElement {
+  public get anchor(): HostCommentElement {
     // 如果锚点元素尚未创建，则创建一个新的注释节点作为锚点
     if (!this._anchor) {
       // 创建一个注释节点，内容包含组件名称和"anchor placeholder"标记
@@ -316,7 +318,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @param [target] - 挂载目标，仅根节点需要提供，子节点在渲染时就已经形成真实的挂载关系，所以不需要提供
    * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    */
-  abstract mount(target?: HostElementInstance, type?: MountType): void
+  abstract mount(target?: HostElement | HostParentElement, type?: MountType): void
   /**
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
@@ -344,9 +346,9 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * 该方法用于获取当前组件的宿主元素实例
    *
    * @abstract
-   * @returns HostElementInstance<T> - 宿主元素实例，泛型T表示元素的具体类型
+   * @returns NodeElementType<T> - 宿主元素实例，泛型T表示元素的具体类型
    */
-  abstract render(): HostElementInstance<T>
+  abstract render(): NodeElementType<T>
   /**
    * 抽象方法，用于处理显示状态的变更
    * @param visible 布尔值，表示新的显示状态

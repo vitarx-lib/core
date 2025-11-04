@@ -6,9 +6,12 @@ import {
   TEXT_NODE_TYPE
 } from '../vnode/index.js'
 import type { MaybeRef } from './props.js'
-import type { CommentNodeType, NodeTypes } from './vnode.js'
+import type { CommentNodeType, FragmentNodeType, TextNodeType } from './vnode.js'
 import type { WidgetPropsType } from './widget.js'
 
+/**
+ * 固有的特殊元素
+ */
 export interface IntrinsicSpecialElements {
   /**
    * 片段元素
@@ -39,11 +42,11 @@ export interface IntrinsicSpecialElements {
  * 此类型包含所有可用的元素名称，包括标准元素（如div、span等）
  * 和特殊元素（如fragment、text、comment等。）
  */
-export type ValidElementNames = keyof JSX.IntrinsicElements
+export type JSXElementNames = keyof JSX.IntrinsicElements
 /**
  * 运行时特殊元素名称
  */
-export type SpecialElementNames = keyof IntrinsicSpecialElements
+export type SpecialNodeNames = keyof IntrinsicSpecialElements
 /**
  * 所有宿主节点（包括 void）
  *
@@ -51,53 +54,76 @@ export type SpecialElementNames = keyof IntrinsicSpecialElements
  * 在 core 包中初始为空对象，各平台渲染包会通过 TypeScript 的声明合并
  * 机制扩展此类型，添加平台特定的元素类型映射。
  */
-export type AllHostElementInstanceMap = Vitarx.HostElementInstanceMap
+export type HostNodeInstanceMap = Vitarx.HostNodeMap
 /**
- * 全部宿主平台元素名称（特殊 plain-text、comment 、fragment 除外）
+ * 全部宿主平台节点名称
  *
  * 表示除了render之外的所有普通元素/特殊元素名称。
  */
-export type AllHostElementNames = Exclude<ValidElementNames, DynamicRenderType>
+export type HostNodeNames = Exclude<JSXElementNames, DynamicRenderType>
 /**
- * 叶子节点（无子元素）映射
+ * 叶子元素（无子元素）映射
  *
  * 此类型定义了运行时无内容元素名称与对应的元素实例类型的映射关系。
  * 在 core 包中初始为空对象，各平台渲染包会通过 TypeScript 的声明合并
  * 机制扩展此类型，添加平台特定的无内容元素名称映射。
  */
-export type HostVoidElementNamesMap = Vitarx.HostVoidElementNamesMap
+export type HostVoidElementMap = Vitarx.HostVoidElementMap
 /**
- * 叶子节点（无子元素）名称
+ * 叶子元素（无子元素）名称
  */
-export type HostVoidElementNames = keyof HostVoidElementNamesMap
+export type HostVoidElementNames = keyof HostVoidElementMap
 /**
- * 普通宿主节点（非特殊、非 void）
+ * 宿主元素（非特殊）名称
  *
  * plain-text、comment 、fragment 不被视为普通元素，因此排除
  */
-export type HostElementNames = Exclude<
-  AllHostElementNames,
-  SpecialElementNames | HostVoidElementNames
->
+export type HostElementNames = Exclude<HostNodeNames, SpecialNodeNames>
+/**
+ * 普通宿主元素（非特殊，非Void）名称
+ */
+export type HostRegularElementNames = Exclude<HostElementNames, HostVoidElementNames>
 /**
  * 运行时父元素实例接口
  */
-export type HostParentElement = Vitarx.HostParentElement
+export type HostParentElement = Vitarx.HostParentNode
 /**
- * 运行时锚元素
+ * 运行时注释元素
  *
- * 注释节点 作为锚元素，因为注释节点在开发者工具中是可见的，
+ * 注释作为锚元素，因为注释在开发者工具中是可见的，
  */
-export type HostAnchorElement = HostElementInstance<CommentNodeType>
+export type HostCommentElement = HostNodeElement<CommentNodeType>
 /**
- * 运行时元素实例类型推导
- *
- * 根据虚拟节点类型 T 推导出对应的运行时元素实例类型。
- * 如果 T 是 RuntimeDomInstanceMap 中的键，则返回对应的元素类型；
- * 否则返回 RuntimeDomInstanceMap 中所有值的联合类型。
- *
- * @template T 虚拟节点类型
+ * 运行时文本元素
  */
-export type HostElementInstance<T extends NodeTypes = NodeTypes> = T extends AllHostElementNames
-  ? AllHostElementInstanceMap[T]
-  : AllHostElementInstanceMap[keyof AllHostElementInstanceMap] | HostParentElement
+export type HostTextElement = HostNodeElement<TextNodeType>
+/**
+ * 运行时片段元素
+ */
+export type HostFragmentElement = HostNodeElement<FragmentNodeType>
+
+/**
+ * 主机节点元素类型，表示所有可能的宿主节点类型
+ * @template T - 节点名称类型，默认为所有可能的宿主节点名称
+ */
+export type HostNodeElement<T extends HostNodeNames = HostNodeNames> = HostNodeInstanceMap[T]
+
+/**
+ * 主机元素类型，表示所有可能的宿主元素
+ * @template T - 元素名称类型，默认为所有可能的宿主元素名称
+ */
+export type HostElement<T extends HostElementNames = HostElementNames> = HostNodeInstanceMap[T]
+
+/**
+ * 主机空元素类型，表示没有子内容的自闭合元素（如img、br、hr等）
+ * @template T - 空元素名称类型，默认为所有可能的宿主空元素名称
+ */
+export type HostVoidElement<T extends HostVoidElementNames = HostVoidElementNames> =
+  HostNodeInstanceMap[T]
+
+/**
+ * 主机常规元素类型，表示可以包含子内容的元素
+ * @template T - 常规元素名称类型，默认为所有可能的宿主常规元素名称
+ */
+export type HostRegularElement<T extends HostRegularElementNames = HostRegularElementNames> =
+  HostNodeInstanceMap[T]

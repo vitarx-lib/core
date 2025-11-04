@@ -1,7 +1,7 @@
 import { logger } from '@vitarx/utils'
 import type {
-  HostElementInstance,
   MountType,
+  NodeElementType,
   NodeNormalizedProps,
   StatelessWidgetNodeType,
   VNodeInputProps
@@ -43,18 +43,18 @@ export class StatelessWidgetNode<
    * 重写渲染方法，返回根元素实例
    * @returns HostElementInstance<T> 根宿主元素实例
    */
-  override render(): HostElementInstance<T> {
+  override render(): NodeElementType<T> {
     if (this.state === NodeState.Created) {
       this.state = NodeState.Rendered // 将节点状态从已创建更新为已渲染
     }
     // 从根节点获取元素并转换为宿主元素实例类型
-    return this.rootNode.element as HostElementInstance<T>
+    return this.rootNode.element as NodeElementType<T>
   }
 
   /**
    * @inheritDoc
    */
-  override mount(target?: HostElementInstance, type?: MountType): void {
+  override mount(target?: NodeElementType, type?: MountType): void {
     if (this.state === NodeState.Created) this.element
     super.mount(target, type)
   }

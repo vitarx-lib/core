@@ -1,10 +1,10 @@
 import { markNonSignal } from '@vitarx/responsive'
 import type {
-  AllHostElementNames,
   BindParentElement,
-  HostElementInstance,
+  HostNodeNames,
   HostParentElement,
   MountType,
+  NodeElementType,
   NodeNormalizedProps
 } from '../../types/index.js'
 import { NodeState } from '../constants/index.js'
@@ -42,15 +42,13 @@ import { VNode } from './VNode.js'
  *
  * @template T - 运行时元素名称
  */
-export abstract class HostNode<
-  T extends AllHostElementNames = AllHostElementNames
-> extends VNode<T> {
+export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends VNode<T> {
   /**
    * 缓存的元素
    *
    * @protected
    */
-  protected _cachedElement: HostElementInstance<T> | null = null
+  protected _cachedElement: NodeElementType<T> | null = null
   /**
    * 获取对象的名称属性
    * 这是一个getter方法，用于返回对象的type属性值
@@ -65,9 +63,9 @@ export abstract class HostNode<
    * 使用惰性初始化模式，只在第一次访问时创建元素实例
    * 并将创建的实例缓存起来，后续访问直接返回缓存的实例
    *
-   * @returns {HostElementInstance<T>} 返回运行时元素实例
+   * @returns {NodeElementType<T>} 返回运行时元素实例
    */
-  get element(): HostElementInstance<T> {
+  get element(): NodeElementType<T> {
     // 检查是否已经缓存了元素实例
     if (!this._cachedElement) {
       // 如果没有缓存，则创建新的元素实例并缓存
@@ -95,9 +93,9 @@ export abstract class HostNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: HostElementInstance, type?: MountType): void {
+  override mount(target?: NodeElementType, type?: MountType): void {
     const teleport = this.teleport
-    let element: HostElementInstance = this.element
+    let element: NodeElementType = this.element
     if (teleport) {
       // 挂载真实元素到 teleport 目标
       this.dom.appendChild(teleport, this.element)

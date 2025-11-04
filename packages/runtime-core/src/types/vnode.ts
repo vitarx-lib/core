@@ -9,10 +9,10 @@ import {
   COMMENT_NODE_TYPE,
   CommentNode,
   type DynamicRenderType,
-  ElementNode,
   type Fragment,
   FRAGMENT_NODE_TYPE,
   FragmentNode,
+  RegularElementNode,
   type Render,
   StatefulWidgetNode,
   StatelessWidgetNode,
@@ -21,7 +21,17 @@ import {
   VNode,
   VNODE_PROPS_DEV_INFO_KEY_SYMBOL
 } from '../vnode/index.js'
-import type { HostElementNames, HostVoidElementNames, ValidElementNames } from './element.js'
+import type {
+  HostCommentElement,
+  HostElement,
+  HostFragmentElement,
+  HostRegularElement,
+  HostRegularElementNames,
+  HostTextElement,
+  HostVoidElement,
+  HostVoidElementNames,
+  JSXElementNames
+} from './element.js'
 import type {
   IntrinsicAttributes,
   StyleRules,
@@ -55,28 +65,33 @@ export interface NodeDevInfo {
 }
 export type StatefulWidgetNodeType = StatefulWidget
 export type StatelessWidgetNodeType = StatelessWidget
-export type ElementNodeType = HostElementNames
+export type RegularElementNodeType = HostRegularElementNames
 export type VoidElementNodeType = HostVoidElementNames
 export type TextNodeType = typeof TEXT_NODE_TYPE
 export type CommentNodeType = typeof COMMENT_NODE_TYPE
 export type WidgetNodeType = StatefulWidgetNodeType | StatelessWidgetNodeType
 export type NonElementNodeType = TextNodeType | CommentNodeType
-export type ContainerNodeType = ElementNodeType | FragmentNodeType
+export type ContainerNodeType = RegularElementNodeType | FragmentNodeType
 export type FragmentNodeType = typeof FRAGMENT_NODE_TYPE
+
+/**
+ * 虚拟节点类型定义
+ */
 export type NodeTypes =
-  | ElementNodeType
+  | RegularElementNodeType
   | VoidElementNodeType
   | FragmentNodeType
   | TextNodeType
   | CommentNodeType
   | WidgetType
 
-type ElementNormalizedProps<T extends ElementNodeType | VoidElementNodeType> = UnwrapRefProps<
-  Omit<Vitarx.IntrinsicElements[T], 'children' | 'style' | 'class' | 'className'> & {
-    style?: StyleRules
-    class?: string[]
-  }
->
+type ElementNormalizedProps<T extends RegularElementNodeType | VoidElementNodeType> =
+  UnwrapRefProps<
+    Omit<Vitarx.IntrinsicElements[T], 'children' | 'style' | 'class' | 'className'> & {
+      style?: StyleRules
+      class?: string[]
+    }
+  >
 /**
  * 规范化节点属性类型
  * 根据节点类型返回对应的规范化属性结构
@@ -85,7 +100,7 @@ export type NodeNormalizedProps<T extends NodeTypes> = T extends FragmentNodeTyp
   ? {}
   : T extends NonElementNodeType
     ? { value: string }
-    : T extends ElementNodeType | VoidElementNodeType
+    : T extends RegularElementNodeType | VoidElementNodeType
       ? ElementNormalizedProps<T>
       : T extends WidgetType
         ? UnwrapRefProps<WidgetPropsType<T>>
@@ -125,7 +140,7 @@ export type RuntimeVNodeChildren = Array<VNode>
  *
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的虚拟节点类型是 `VNodeType`
  */
-export type ValidNodeType = ValidElementNames | Fragment | Render | WidgetType
+export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetType
 export type VNodeIntrinsicAttributes = IntrinsicAttributes & {
   [VNODE_PROPS_DEV_INFO_KEY_SYMBOL]?: NodeDevInfo
 }
@@ -136,7 +151,7 @@ export type VNodeIntrinsicAttributes = IntrinsicAttributes & {
  * - 元素或组件定义的属性
  * - 全局属性（如key、ref、v-show等）
  */
-export type VNodeInputProps<T extends ValidNodeType> = (T extends ValidElementNames
+export type VNodeInputProps<T extends ValidNodeType> = (T extends JSXElementNames
   ? JSX.IntrinsicElements[T]
   : T extends Render
     ? WidgetPropsType<Render>
@@ -164,10 +179,30 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | Dyna
       ? TextNode
       : T extends CommentNodeType
         ? CommentNode
-        : T extends ElementNodeType
-          ? ElementNode<T>
+        : T extends RegularElementNodeType
+          ? RegularElementNode<T>
           : T extends StatelessWidget
             ? StatelessWidgetNode
             : T extends WidgetType
               ? StatefulWidgetNode
               : VNode
+/**
+ * 运行时元素实例类型
+ *
+ * 根据虚拟节点类型 T 推导出对应的运行时元素实例类型。
+ * 如果 T 是 HostNodeElement 中的键，则返回对应的元素类型；
+ * 否则返回 HostNodeElement 中所有值的联合类型。
+ *
+ * @template T 虚拟节点类型
+ */
+export type NodeElementType<T extends NodeTypes = NodeTypes> = T extends Fragment | FragmentNodeType
+  ? HostFragmentElement
+  : T extends TextNodeType
+    ? HostTextElement
+    : T extends CommentNodeType
+      ? HostCommentElement
+      : T extends RegularElementNodeType
+        ? HostRegularElement<T>
+        : T extends VoidElementNodeType
+          ? HostVoidElement<T>
+          : HostElement

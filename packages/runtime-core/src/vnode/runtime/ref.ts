@@ -1,14 +1,14 @@
 import { isRefSignal, Ref, shallowRef } from '@vitarx/responsive'
-import type { AllHostElementNames, HostElementInstance } from '../../types/index.js'
+import type { HostNodeNames, NodeElementType } from '../../types/index.js'
 import type { ExcludeWidgetIntrinsicMethods } from '../../widget/index.js'
 
 /**
  * 辅助计算出元素类型
  */
-export type ComputedRefElType<T> = T extends HostElementInstance
+export type ComputedRefElType<T> = T extends NodeElementType
   ? T
-  : T extends AllHostElementNames
-    ? HostElementInstance<T>
+  : T extends HostNodeNames
+    ? NodeElementType<T>
     : ExcludeWidgetIntrinsicMethods<T>
 /** 引用元素类型 */
 export type RefEl<T> = Ref<ComputedRefElType<T> | null>

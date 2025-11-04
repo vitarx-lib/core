@@ -20,8 +20,8 @@ import {
 } from '../constants/index.js'
 import {
   CommentNode,
-  ElementNode,
   FragmentNode,
+  RegularElementNode,
   StatefulWidgetNode,
   StatelessWidgetNode,
   TextNode,
@@ -107,7 +107,7 @@ function createVNodeByType<T extends Exclude<ValidNodeType, WidgetType | Dynamic
       if (useDomAdapter().isVoidElement(type)) {
         return new VoidElementVNode(type, props) as unknown as VNodeInstanceType<T>
       }
-      return new ElementNode(type, props) as unknown as VNodeInstanceType<T>
+      return new RegularElementNode(type, props) as unknown as VNodeInstanceType<T>
   }
 }
 

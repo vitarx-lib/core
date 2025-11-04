@@ -3,10 +3,10 @@ import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/respons
 import { logger } from '@vitarx/utils'
 import type {
   ErrorSource,
-  HostElementInstance,
   LifecycleHookParameter,
   LifecycleHookReturnType,
   MountType,
+  NodeElementType,
   NodeNormalizedProps,
   StatefulWidgetNodeType,
   VNodeInputProps,
@@ -229,18 +229,18 @@ export class StatefulWidgetNode<
   /**
    * 重写渲染方法，用于渲染组件实例
    *
-   * @returns {HostElementInstance<T>} 返回根元素实例
+   * @returns {NodeElementType<T>} 返回根元素实例
    */
-  override render(): HostElementInstance<T> {
+  override render(): NodeElementType<T> {
     // 检查组件状态，如果已经渲染过则抛出错误
     if (this.state !== NodeState.Created) {
-      return this.rootNode.element as HostElementInstance<T>
+      return this.rootNode.element as NodeElementType<T>
     }
     // 未就绪状态，先创建实例
     if (!this._isReady) this.createInstance().then()
     // 触发beforeMount生命周期钩子，在组件挂载前执行
     this.triggerLifecycleHook(LifecycleHooks.beforeMount)
-    let el: HostElementInstance
+    let el: NodeElementType
     try {
       // 尝试获取子组件的DOM元素
       el = this.rootNode.element
@@ -260,12 +260,12 @@ export class StatefulWidgetNode<
       el = this.rootNode.element
     }
     // 返回渲染后的宿主元素实例
-    return el as HostElementInstance<T>
+    return el as NodeElementType<T>
   }
   /**
    * @inheritDoc
    */
-  override mount(target?: HostElementInstance, type?: MountType): this {
+  override mount(target?: NodeElementType, type?: MountType): this {
     // 未渲染调用this.element渲染一次元素
     if (this.state === NodeState.Created) this.render()
     super.mount(target, type)

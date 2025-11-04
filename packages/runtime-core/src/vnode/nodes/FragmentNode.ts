@@ -1,4 +1,4 @@
-import type { FragmentNodeType, HostElementInstance, VNodeInputProps } from '../../types/index.js'
+import type { FragmentNodeType, NodeElementType, VNodeInputProps } from '../../types/index.js'
 import { ContainerNode } from '../base/index.js'
 import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
 
@@ -23,7 +23,7 @@ export class FragmentNode extends ContainerNode<FragmentNodeType> {
   /**
    * @inheritDoc
    */
-  protected override createElement(): HostElementInstance<FragmentNodeType> {
+  protected override createElement(): NodeElementType<FragmentNodeType> {
     return this.dom.createFragment() // 调用dom对象的createFragment方法创建文档片段
   }
 }

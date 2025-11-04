@@ -1,4 +1,4 @@
-import type { CommentNodeType, HostElementInstance, VNodeInputProps } from '../../types/index.js'
+import type { CommentNodeType, NodeElementType, VNodeInputProps } from '../../types/index.js'
 import { NonElementNode } from '../base/index.js'
 import { COMMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
 
@@ -31,7 +31,8 @@ export class CommentNode extends NonElementNode<CommentNodeType> {
   /**
    * @inheritDoc
    */
-  override render(): HostElementInstance<CommentNodeType> {
+  override render(): NodeElementType<CommentNodeType> {
+    if (this._cachedElement) return this._cachedElement
     // 如果元素尚未渲染，则先进行渲染
     return this.dom.createComment(String(this.value))
   }

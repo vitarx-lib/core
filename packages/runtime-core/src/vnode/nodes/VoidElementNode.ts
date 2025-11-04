@@ -1,13 +1,12 @@
 import type {
-  HostElementInstance,
-  HostVoidElementNames,
-  NodeNormalizedProps
+  NodeElementType,
+  NodeNormalizedProps,
+  VoidElementNodeType
 } from '../../types/index.js'
 import { HostNode } from '../base/HostNode.js'
 import { NodeShapeFlags } from '../constants/index.js'
 import { normalizeStyle } from '../utils/normalizeProps.js'
 
-export type VoidElementNodeType = HostVoidElementNames
 /**
  * VoidElementVNode 是一个用于表示自闭合 HTML 元素的虚拟节点类。
  * 它继承自 HostNode，专门处理如 `img、br、input` 等自闭合标签。
@@ -49,11 +48,11 @@ export class VoidElementVNode<
   /**
    * @inheritDoc
    */
-  render(): HostElementInstance<T> {
+  render(): NodeElementType<T> {
     if (this._cachedElement) return this._cachedElement
     // 使用DOM操作创建指定类型和属性的元素
     const element = this.dom.createElement(this.type, this.props)
     if (!this.show) this.dom.setDisplay(element, false)
-    return element
+    return element as NodeElementType<T>
   }
 }

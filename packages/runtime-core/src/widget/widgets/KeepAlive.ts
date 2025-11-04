@@ -1,6 +1,6 @@
 import type {
   AnyProps,
-  HostElementInstance,
+  NodeElementType,
   TextNodeType,
   UniqueKey,
   WidgetType
@@ -210,7 +210,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    */
   override $patchUpdate(oldVNode: StatefulWidgetNode, newVNode: StatefulWidgetNode): VNode {
     // 提前检查是否需要创建占位符
-    let placeholderElement: HostElementInstance<TextNodeType> | null = null
+    let placeholderElement: NodeElementType<TextNodeType> | null = null
     if (newVNode.state !== 'deactivated') {
       placeholderElement = oldVNode.dom.createText('')
       oldVNode.dom.insertBefore(placeholderElement, oldVNode.operationTarget)

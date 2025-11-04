@@ -1,14 +1,15 @@
 import type {
-  ElementNodeType,
-  HostElementInstance,
-  NodeNormalizedProps
+  NodeElementType,
+  NodeNormalizedProps,
+  RegularElementNodeType
 } from '../../types/index.js'
 import { ContainerNode } from '../base/index.js'
 import { NodeShapeFlags } from '../constants/index.js'
 import { normalizeStyle } from '../utils/normalizeProps.js'
 
 /**
- * ElementNode 是一个用于表示虚拟DOM中元素节点的类。它继承自 ContainerNode，提供了元素节点的基础功能。
+ * RegularElementNode 是一个用于表示虚拟DOM中元素节点的类。
+ * 它继承自 ContainerNode，提供了元素节点的基础功能。
  *
  * 主要功能：
  * - 处理元素的显示/隐藏状态
@@ -30,7 +31,9 @@ import { normalizeStyle } from '../utils/normalizeProps.js'
  * - 不应直接实例化，而是通过框架的创建函数来使用
  * - 元素的属性会被自动规范化处理
  */
-export class ElementNode<T extends ElementNodeType = ElementNodeType> extends ContainerNode<T> {
+export class RegularElementNode<
+  T extends RegularElementNodeType = RegularElementNodeType
+> extends ContainerNode<T> {
   public override shapeFlags = NodeShapeFlags.ELEMENT
   /**
    * @inheritDoc
@@ -48,9 +51,9 @@ export class ElementNode<T extends ElementNodeType = ElementNodeType> extends Co
   /**
    * @inheritDoc
    */
-  protected createElement(): HostElementInstance<T> {
+  protected createElement(): NodeElementType<T> {
     const element = this.dom.createElement(this.type, this.props)
     if (!this.show) this.dom.setDisplay(element, false)
-    return element
+    return element as NodeElementType<T>
   }
 }

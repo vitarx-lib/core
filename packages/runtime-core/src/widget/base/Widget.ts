@@ -3,8 +3,8 @@ import type {
   AnyProps,
   ErrorInfo,
   ExtractChildrenPropType,
-  HostElementInstance,
   MergeProps,
+  NodeElementType,
   VNodeChild
 } from '../../types/index.js'
 import {
@@ -149,9 +149,9 @@ export abstract class Widget<
   /**
    * 获取当前虚拟节点对应的 DOM 元素
    * 这是一个 getter 属性，用于返回小部件或虚拟节点挂载后的真实 DOM 元素
-   * @returns { HostElementInstance } 返回虚拟节点对应的 DOM 元素实例
+   * @returns { NodeElementType } 返回虚拟节点对应的 DOM 元素实例
    */
-  get $el(): HostElementInstance {
+  get $el(): NodeElementType {
     return this.#vnode.element
   }
 

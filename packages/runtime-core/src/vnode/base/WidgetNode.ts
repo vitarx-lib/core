@@ -1,9 +1,10 @@
 import { type App, getAppContext } from '../../app/index.js'
 import type {
   BindParentElement,
-  HostElementInstance,
+  HostElement,
   HostParentElement,
   MountType,
+  NodeElementType,
   VNodeInputProps,
   WidgetNodeType
 } from '../../types/index.js'
@@ -44,7 +45,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
   /**
    * @inheritDoc
    */
-  override get element(): HostElementInstance<T> {
+  override get element(): NodeElementType<T> {
     return this.render()
   }
   /**
@@ -96,7 +97,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
   /**
    * @inheritDoc
    */
-  override mount(target?: HostElementInstance, type?: MountType): void {
+  override mount(target?: HostElement, type?: MountType): void {
     if (this.teleport) {
       if (target) {
         // 插入影子元素

@@ -11,7 +11,7 @@ import type { ValidBuildElement, WidgetPropsType, WidgetType } from './widget.js
 declare global {
   namespace Vitarx {
     /**
-     * 宿主平台父元素接口
+     * 宿主平台父节点接口
      *
      * 为了能让 `v-parent` 的类型声明符合运行时元素实例的类型要求，宿主平台特定包需要重写此接口。
      *
@@ -19,15 +19,15 @@ declare global {
      * ```ts
      * declare global {
      *   namespace Vitarx {
-     *     // 重写 Web 平台的支持做为父元素的元素类型
-     *     interface RuntimeParentElement extends ParentNode {
+     *     // 重写 DOM 平台的支持做为父元素的元素类型
+     *     interface HostParentNode extends ParentNode {
      *
      *     }
      *   }
      * }
      * ```
      */
-    interface HostParentElement {}
+    interface HostParentNode {}
     /**
      * 允许渲染的元素接口
      *
@@ -68,27 +68,27 @@ declare global {
       [DYNAMIC_RENDER_TYPE]: WidgetPropsType<Render>
     }
     /**
-     * 运行时DOM实例映射
+     * 宿主平台运行时节点映射
      *
-     * 此类型定义了运行时支持的tag与其实例的映射关系。
-     * 在 core 包中初始为空对象，各平台渲染包会通过 TypeScript 的声明合并
+     * 此类型定义了运行时支持的元素类型标签与其实例的映射关系。
+     * 在 core 包中初始为空接口，各平台渲染包会通过 TypeScript 的声明合并
      * 机制扩展此类型，添加平台特定的元素类型映射。
      *
      * @example
      * ```ts
-     * // 在 Web 平台渲染包中扩展
+     * // 在 DOM 平台渲染包中扩展
      * declare global {
      *   namespace Vitarx {
-     *     types RuntimeDomInstanceMap = {
+     *     types HostNodeMap = {
      *       div: HTMLDivElement,
      *       span: HTMLSpanElement,
-     *       // 其他元素映射...
+     *       // 其他映射...
      *     }
      *   }
      * }
      * ```
      */
-    interface HostElementInstanceMap {}
+    interface HostNodeMap {}
     /**
      * 元素支持的样式规则
      *
@@ -98,7 +98,7 @@ declare global {
     /**
      * 运行时无子节点元素实例映射
      */
-    interface HostVoidElementNamesMap {}
+    interface HostVoidElementMap {}
     /**
      * Vitarx 框架内置固有属性
      */

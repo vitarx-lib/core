@@ -1,4 +1,4 @@
-import type { HostElementInstance, TextNodeType, VNodeInputProps } from '../../types/index.js'
+import type { NodeElementType, TextNodeType, VNodeInputProps } from '../../types/index.js'
 import { NonElementNode } from '../base/index.js'
 import { NodeShapeFlags, TEXT_NODE_TYPE } from '../constants/index.js'
 
@@ -36,7 +36,8 @@ export class TextNode extends NonElementNode<TextNodeType> {
   /**
    * @inheritDoc
    */
-  override render(): HostElementInstance<TextNodeType> {
+  override render(): NodeElementType<TextNodeType> {
+    if (this._cachedElement) return this._cachedElement
     return this.dom.createText(this.value)
   }
 }

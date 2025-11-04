@@ -2,7 +2,7 @@ import { unref } from '@vitarx/responsive'
 import { logger, popProperty } from '@vitarx/utils'
 import type {
   ContainerNodeType,
-  HostElementInstance,
+  NodeElementType,
   RuntimeVNodeChildren,
   UniqueKey,
   VNodeChild,
@@ -89,7 +89,7 @@ export abstract class ContainerNode<
   /**
    * @inheritDoc
    */
-  override render(): HostElementInstance<T> {
+  override render(): NodeElementType<T> {
     if (this._cachedElement) return this._cachedElement
     const selfElement = this.createElement()
     // 检查是否存在子节点
@@ -97,10 +97,8 @@ export abstract class ContainerNode<
       // 渲染所有子节点
       for (const child of this.children) {
         // 预先渲染元素
-        const childElement = child.element
-        // 如果是传送节点，则将影子元素添加到当前元素中
-        const mountElement = child.teleport ? child.anchor : childElement
-        this.dom.appendChild(selfElement, mountElement)
+        child.render()
+        this.dom.appendChild(selfElement, child.operationTarget)
       }
     }
     return selfElement
@@ -113,7 +111,7 @@ export abstract class ContainerNode<
    *
    * @protected
    */
-  protected abstract createElement(): HostElementInstance<T>
+  protected abstract createElement(): NodeElementType<T>
 
   /**
    * 扁平化并标准化子节点 (迭代优化版)

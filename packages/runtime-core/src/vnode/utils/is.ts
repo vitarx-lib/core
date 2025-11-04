@@ -1,6 +1,6 @@
 import { ContainerNode, VNode, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
-import type { ElementNode, StatelessWidgetNode } from '../nodes/index.js'
+import type { RegularElementNode, StatelessWidgetNode } from '../nodes/index.js'
 import {
   CommentNode,
   FragmentNode,
@@ -63,12 +63,12 @@ export function isFragmentNode(val: any): val is FragmentNode {
 }
 
 /**
- * 检查给定的值是否为HTML元素节点(ElementNode)
+ * 检查给定的值是否为HTML元素节点(RegularElementNode)
  *
  * @param val - 需要检查的值
  * @returns {boolean} 如果是元素虚拟节点返回true，否则返回false
  */
-export function isElementNode(val: any): val is ElementNode {
+export function isElementNode(val: any): val is RegularElementNode {
   return isVNode(val) && typeof val.type === 'string' && val.shapeFlags === NodeShapeFlags.ELEMENT
 }
 
@@ -103,7 +103,7 @@ export function isCommentNode(val: any): val is CommentNode {
 }
 
 /**
- * 判断给定的值是否是容器虚拟节点(FragmentNode|ElementNode)
+ * 判断给定的值是否是容器虚拟节点(FragmentNode|RegularElementNode)
  * 容器虚拟节点是指可以包含子节点的虚拟节点
  *
  * @param val - 需要检查的值
