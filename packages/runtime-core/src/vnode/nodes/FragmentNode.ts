@@ -1,6 +1,14 @@
-import type { FragmentNodeType, NodeElementType, VNodeInputProps } from '../../types/index.js'
-import { ContainerNode } from '../base/index.js'
+import { unref } from '@vitarx/responsive'
+import { popProperty } from '@vitarx/utils'
+import type {
+  FragmentNodeType,
+  NodeElementType,
+  RuntimeVNodeChildren,
+  VNodeInputProps
+} from '../../types/index.js'
+import { type ContainerNode, HostNode, mixinContainerNode } from '../base/index.js'
 import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
+import { normalizeChildren } from '../utils/normalize.js'
 
 /**
  * FragmentNode是一个容器节点类，用于管理文档片段(Fragment)的子节点。
@@ -14,11 +22,19 @@ import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
  * - 子节点的显示状态会随父节点同步变化
  * - 创建的文档片段不会直接显示在DOM中，需要通过父节点插入
  */
-export class FragmentNode extends ContainerNode<FragmentNodeType> {
+export class FragmentNode extends HostNode<FragmentNodeType> implements ContainerNode {
   public override shapeFlags = NodeShapeFlags.FRAGMENT
-
+  /**
+   * 子节点列表
+   */
+  public children: RuntimeVNodeChildren
   constructor(props: VNodeInputProps<FragmentNodeType>) {
+    const hasChildren = 'children' in props
+    const children = hasChildren ? unref(popProperty(props, 'children')) : undefined
     super(FRAGMENT_NODE_TYPE, props)
+    // 如果存在children属性，则格式化子节点
+    this.children = hasChildren ? normalizeChildren(children, this) : []
+    mixinContainerNode(this)
   }
   /**
    * @inheritDoc
