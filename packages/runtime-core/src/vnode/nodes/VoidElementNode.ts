@@ -1,11 +1,6 @@
-import type {
-  NodeElementType,
-  NodeNormalizedProps,
-  VoidElementNodeType
-} from '../../types/index.js'
-import { HostNode } from '../base/HostNode.js'
+import type { VoidElementNodeType } from '../../types/index.js'
+import { ElementNode } from '../base/ElementNode.js'
 import { NodeShapeFlags } from '../constants/index.js'
-import { normalizeStyle } from '../utils/normalizeProps.js'
 
 /**
  * VoidElementVNode 是一个用于表示自闭合 HTML 元素的虚拟节点类。
@@ -30,29 +25,6 @@ import { normalizeStyle } from '../utils/normalizeProps.js'
  */
 export class VoidElementVNode<
   T extends VoidElementNodeType = VoidElementNodeType
-> extends HostNode<T> {
+> extends ElementNode<T> {
   public override shapeFlags = NodeShapeFlags.VOID_ELEMENT
-  /**
-   * @inheritDoc
-   */
-  protected override handleShowState(visible: boolean): void {
-    this.dom.setDisplay(this.element, visible)
-  }
-  /**
-   * @inheritDoc
-   */
-  protected override normalizeProps(props: Record<string, any>): NodeNormalizedProps<T> {
-    return normalizeStyle(super.normalizeProps(props))
-  }
-
-  /**
-   * @inheritDoc
-   */
-  render(): NodeElementType<T> {
-    if (this._cachedElement) return this._cachedElement
-    // 使用DOM操作创建指定类型和属性的元素
-    const element = this.dom.createElement(this.type, this.props)
-    if (!this.show) this.dom.setDisplay(element, false)
-    return element as NodeElementType<T>
-  }
 }
