@@ -1,6 +1,6 @@
 import { SubManager, toRaw } from '@vitarx/responsive'
 import { useDomAdapter } from '../../host-adapter/index.js'
-import type { AnyProps } from '../../types/index.js'
+import type { AnyProps, HostElement } from '../../types/index.js'
 import { ContainerNode, NonElementNode, VNode } from '../base/index.js'
 import { NodeState } from '../constants/index.js'
 import { StatelessWidgetNode } from '../nodes/index.js'
@@ -72,6 +72,7 @@ export class VNodeUpdate {
     }
     return currentVNode
   }
+
   /**
    * 更新虚拟节点的属性
    * @param currentVNode - 旧的虚拟节点
@@ -117,13 +118,13 @@ export class VNodeUpdate {
       keysToDelete.delete(key)
       // 更新或新增属性
       if (oldValue !== newValue) {
-        dom.setAttribute(el, key, newValue, oldValue) // 设置DOM属性
+        dom.setAttribute(el as HostElement, key, newValue, oldValue) // 设置DOM属性
         oldAttrs[key] = newValue // 更新旧属性值
       }
     }
     // 遍历要删除的键集合，并删除对应的属性
     for (const key of keysToDelete) {
-      dom.removeAttribute(el, key, oldAttrs[key]) // 移除DOM属性
+      dom.removeAttribute(el as HostElement, key, oldAttrs[key]) // 移除DOM属性
       delete oldAttrs[key] // 删除旧属性
     }
   }
@@ -184,7 +185,7 @@ export class VNodeUpdate {
     // --- 创建 key 映射 ---
     const newKeyed = new Map<any, { vnode: VNode; index: number }>()
     newChildren.forEach((n, i) => {
-      if (n.key !== null) newKeyed.set(n.key, { vnode: n, index: i })
+      if (n.key !== undefined) newKeyed.set(n.key, { vnode: n, index: i })
     })
 
     // 保存旧节点在新数组中的位置
@@ -244,7 +245,9 @@ export class VNodeUpdate {
     }
 
     // --- 卸载未复用节点 ---
-    removedNodes.forEach(c => c?.unmount())
+    for (const removedNode of removedNodes) {
+      removedNode.unmount()
+    }
 
     return newChildren
   }

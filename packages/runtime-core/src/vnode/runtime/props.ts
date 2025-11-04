@@ -131,13 +131,10 @@ export function proxyWidgetProps<T extends AnyProps>(
 }
 
 /**
- * 定义默认`Props` 属性
+ * 动态定义默认Props
  *
- * `4.0` 版本起支持直接给组件定义静态的 `defaultProps`，配合 Props 中定义必填属性可实现更优的类型推导
- *
- * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有真实合并到 props 对象中
- *
- * @example
+ * @example 在函数式组件中使用
+ * ```tsx
  * interface Props {
  *   name: string
  *   gender?: number
@@ -151,7 +148,7 @@ export function proxyWidgetProps<T extends AnyProps>(
  *   //   gender: string
  *   // }
  *   // 从上面的推导结果可以看出缺少了name属性，
- *   // 这是因为`defineProps`并不知道组件是如何定义的 Props 接口
+ *   // 这是因为`defineProps`并不知道组件是如何定义的 Props 类型接口
  *   // 所以为了更好的类型推导，我们需要将函数接收的props当做第二参数传递给defineProps
  *   const props2 = defineProps({
  *     gender: 1
@@ -164,9 +161,14 @@ export function proxyWidgetProps<T extends AnyProps>(
  *
  *   return <div>{props2.name} - {props2.gender}</div>
  * }
+ * ```
  *
- * // 在类组件中也可以使用此API
- *
+ * @example 在类组件中使用
+ * ```tsx
+ * interface Props {
+ *   name: string
+ *   gender?: number
+ * }
  * class UserInfo extends Widget<Props,Required<T>>{
  *   onCreate(){
  *     defineProps({ gender: 1 })
@@ -176,22 +178,20 @@ export function proxyWidgetProps<T extends AnyProps>(
  *     return <div>{this.props.name} - {this.props.gender}</div>
  *   }
  * }
+ * ```
+ *
  *
  * @override
  * @template D - 默认属性对象的类型
  * @param {D} defaultProps - 默认属性对象
  * @return {Readonly<D>} - 返回只读的Props对象
- * @alias defineDefaultProps
  */
-export function defineProps<D extends Record<string, any>>(defaultProps: D): Readonly<D>
+export function defineProps<D extends AnyProps>(defaultProps: D): Readonly<D>
 /**
- * 定义默认`Props` 属性
+ * 动态定义默认Props
  *
- * `4.0` 版本起支持直接给组件定义静态的 `defaultProps`，配合 Props 中定义必填属性可实现更优的类型推导
- *
- * 注意：定义的默认属性通过 key in props 判断是无效的，它并没有真实写入到 props 对象中
- *
- * @example
+ * @example 在函数式组件中传入第二个参数优化类型推导
+ * ```tsx
  * interface Props {
  *   name: string
  *   gender?: number
@@ -208,6 +208,7 @@ export function defineProps<D extends Record<string, any>>(defaultProps: D): Rea
  *
  *   return <div>{props.name} - {props.gender}</div>
  * }
+ * ```
  *
  * @override
  * @template I - 组件接收的props对象的类型
@@ -217,11 +218,11 @@ export function defineProps<D extends Record<string, any>>(defaultProps: D): Rea
  * @return {Readonly<D & MergeProps<I, keyof D>>} - 返回合并后的只读Props对象
  * @alias defineDefaultProps
  */
-export function defineProps<D extends Record<string, any>, I extends Record<string, any>>(
+export function defineProps<D extends AnyProps, I extends AnyProps>(
   defaultProps: D,
   inputProps: I
 ): Readonly<MergeProps<I, D>>
-export function defineProps<D extends Record<string, any>, I extends Record<string, any> = {}>(
+export function defineProps<D extends AnyProps, I extends AnyProps = {}>(
   defaultProps: D,
   inputProps?: I
 ): Readonly<MergeProps<I, D>> {
@@ -265,7 +266,7 @@ export function defineProps<D extends Record<string, any>, I extends Record<stri
 }
 
 /**
- * defineDefaultProps是defineProps的别名
+ * defineDefaultProps 是 defineProps 的别名
  *
  * @see defineProps
  */
