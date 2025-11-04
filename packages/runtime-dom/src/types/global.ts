@@ -4,8 +4,8 @@ import type { HTMLElementTagMap, HTMLIntrinsicElement, HTMLVoidElementMap } from
 declare global {
   namespace Vitarx {
     interface IntrinsicElements extends HTMLIntrinsicElement {}
-    interface HostParentElement extends ParentNode {}
-    interface HostElementInstanceMap extends HTMLElementTagMap {
+    interface HostParentNode extends HTMLElement {}
+    interface HostNodeMap extends HTMLElementTagMap {
       /**
        * 片段元素
        */
@@ -29,7 +29,7 @@ declare global {
        */
       comment: Comment
     }
-    interface HostVoidElementNamesMap extends HTMLVoidElementMap {}
+    interface HostVoidElementMap extends HTMLVoidElementMap {}
     interface HostStyleRules extends HTMLStyleRules {}
   }
 }
