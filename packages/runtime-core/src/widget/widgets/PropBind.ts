@@ -1,6 +1,6 @@
 import type { AnyProps, VNodeChildren } from '../../types/index.js'
 import { createVNode, Fragment, FragmentNode, isVNode } from '../../vnode/index.js'
-import { handleBindProps } from '../../vnode/utils/normalizeProps.js'
+import { handleBindProps } from '../../vnode/utils/normalize.js'
 import { defineStatelessWidget } from '../utils/index.js'
 
 interface PropBindProps {
