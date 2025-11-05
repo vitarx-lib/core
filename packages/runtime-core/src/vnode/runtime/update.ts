@@ -51,14 +51,15 @@ export class VNodeUpdate {
    * @template T - VNode 的子类型
    * @param currentVNode - 当前的虚拟节点
    * @param nextVNode - 新的虚拟节点
+   * @param [skipShow=false] - 是否跳过显示状态的更新
    */
-  static patchUpdateNode<T extends VNode>(currentVNode: T, nextVNode: T): void {
+  static patchUpdateNode<T extends VNode>(currentVNode: T, nextVNode: T, skipShow = false): void {
     // 如果是同一个节点引用，直接返回
     if (currentVNode === nextVNode) return
     // 静态节点不需要更新
     if (currentVNode.isStatic) return
     // 更新节点属性
-    this.patchUpdateProps(currentVNode, nextVNode)
+    this.patchUpdateProps(currentVNode, nextVNode, skipShow)
 
     // 如果是容器节点，更新子节点
     if (isContainerNode(currentVNode)) {
@@ -81,11 +82,12 @@ export class VNodeUpdate {
    * @template T - VNode 的子类型
    * @param currentVNode - 当前的虚拟节点
    * @param nextVNode - 新的虚拟节点
+   * @param [skipShow=false] - 是否跳过显示状态的更新
    */
-  static patchUpdateProps<T extends VNode>(currentVNode: T, nextVNode: T) {
+  static patchUpdateProps<T extends VNode>(currentVNode: T, nextVNode: T, skipShow = false) {
     // 更新基本属性
     currentVNode.setTeleport(nextVNode.teleport)
-    currentVNode.show = nextVNode.show
+    if (!skipShow) currentVNode.show = nextVNode.show
 
     // 片段节点不需要更新其他属性
     if (isFragmentNode(currentVNode)) return
