@@ -18,5 +18,5 @@ export interface RefSignal<Value = any, Raw = Value> extends BaseSignal<Raw> {
   /**
    * 设置信号的新值
    */
-  set value(newValue: Value)
+  set value(newValue: Raw)
 }
