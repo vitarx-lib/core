@@ -137,7 +137,7 @@ export class StatelessWidgetNode<
     if (!newNode.show) newNode.show = false
     // 使用patchUpdate方法对比并更新实际的DOM节点
     // 将当前根节点与新构建的节点进行差异更新，并将结果赋值给_rootNode
-    this._rootNode = VNodeUpdate.patchUpdate(this.rootNode, newNode)
+    this._rootNode = VNodeUpdate.patch(this.rootNode, newNode)
   }
 
   /**
