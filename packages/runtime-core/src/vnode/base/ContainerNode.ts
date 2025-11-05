@@ -16,6 +16,12 @@ import { HostNode } from '../base/index.js'
  */
 export interface ContainerNode<T extends ContainerNodeType = ContainerNodeType>
   extends HostNode<T> {
+  /**
+   * 运行时子节点列表
+   *
+   * @type {RuntimeVNodeChildren}
+   * @readonly 此属性虽然是公开的，但请不要修改它，会导致节点树结构异常，仅内部patch时会替换为新的子节点列表
+   */
   children: RuntimeVNodeChildren
 }
 
