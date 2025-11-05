@@ -235,7 +235,7 @@ export class StatefulWidgetNode<
   override render(): NodeElementType<T> {
     // 检查组件状态，如果已经渲染过则抛出错误
     if (this.state !== NodeState.Created) {
-      return this.rootNode.element as NodeElementType<T>
+      return this.child.element as NodeElementType<T>
     }
     // 未就绪状态，先创建实例
     if (!this._isReady) this.createInstance().then()
@@ -244,7 +244,7 @@ export class StatefulWidgetNode<
     let el: NodeElementType
     try {
       // 尝试获取子组件的DOM元素
-      el = this.rootNode.element
+      el = this.child.element
     } catch (e) {
       // 触发onError生命周期钩子，处理渲染过程中发生的错误
       const errVNode = this.reportError(e, {
@@ -254,11 +254,11 @@ export class StatefulWidgetNode<
       // 如果渲染失败，则使用错误视图替换原视图
       // 如果返回的是有效的VNode节点，则使用该节点
       // 否则创建一个注释节点作为错误提示
-      this._rootNode = isVNode(errVNode)
+      this._child = isVNode(errVNode)
         ? errVNode
         : new CommentNode({ value: `StatefulWidget<${VNode.name}> render fail` })
       // 获取更新后的DOM元素
-      el = this.rootNode.element
+      el = this.child.element
     }
     this.state = NodeState.Rendered
     // 返回渲染后的宿主元素实例
@@ -285,7 +285,7 @@ export class StatefulWidgetNode<
     this.updateActiveState(true, root)
     this.scope.resume()
     // 2️⃣ 再激活子节点（父 → 子顺序）
-    this.rootNode.activate(false)
+    this.child.activate(false)
     // 3️⃣ 触发一次更新逻辑，避免停用期间状态变化导致视图未更新问题
     this.syncSilentUpdate()
     this.triggerLifecycleHook(LifecycleHooks.activated)
@@ -300,7 +300,7 @@ export class StatefulWidgetNode<
     // 定义同步静默更新方法，无返回值
     try {
       // 如果节点状态不是已渲染或有父元素
-      this._rootNode = this.instance.$patchUpdate(this.rootNode, this.rebuild()) // 直接执行补丁更新
+      this._child = this.instance.$patchUpdate(this.child, this.rebuild()) // 直接执行补丁更新
     } catch (e) {
       // 捕获可能发生的错误
       this.reportError(e, {
@@ -317,7 +317,7 @@ export class StatefulWidgetNode<
     // 如果当前状态不是已激活，则直接返回
     if (this.state !== NodeState.Activated) return
     // 1️⃣ 先调用根节点的停用逻辑（子 → 父顺序）
-    this.rootNode.deactivate(false)
+    this.child.deactivate(false)
     // 2️⃣ 触发 onDeactivated 生命周期
     this.triggerLifecycleHook(LifecycleHooks.deactivated)
     // 3️⃣ 暂停作用域
@@ -336,7 +336,7 @@ export class StatefulWidgetNode<
     // 触发onDeactivated生命周期
     this.triggerLifecycleHook(LifecycleHooks.deactivated)
     // 递归卸载子节点
-    this.rootNode.unmount(root)
+    this.child.unmount(root)
     // 停止作用域
     this.scope.dispose()
     if (this.state !== NodeState.Deactivated) {
@@ -350,7 +350,7 @@ export class StatefulWidgetNode<
     // 触发onUnmounted生命周期
     this.triggerLifecycleHook(LifecycleHooks.unmounted)
     this._scope = null
-    this._rootNode = null
+    this._child = null
     this._instance = null
     this._provide = null
     this._pendingUpdate = false
@@ -427,10 +427,10 @@ export class StatefulWidgetNode<
         this._pendingUpdate = false
         // 如果组件已卸载，则不进行更新
         if (this.state === NodeState.Unmounted) return
-        const oldVNode = this.rootNode
+        const oldVNode = this.child
         const newVNode = this.rebuild()
         if (!this.show) newVNode.show = false
-        this._rootNode = this.instance.$patchUpdate(oldVNode, newVNode)
+        this._child = this.instance.$patchUpdate(oldVNode, newVNode)
         // 触发更新后生命周期
         this.triggerLifecycleHook(LifecycleHooks.updated)
       })

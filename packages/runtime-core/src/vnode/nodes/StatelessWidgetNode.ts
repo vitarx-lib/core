@@ -50,7 +50,7 @@ export class StatelessWidgetNode<
       this.state = NodeState.Rendered // 将节点状态从已创建更新为已渲染
     }
     // 从根节点获取元素并转换为宿主元素实例类型
-    return this.rootNode.element as NodeElementType<T>
+    return this.child.element as NodeElementType<T>
   }
 
   /**
@@ -69,7 +69,7 @@ export class StatelessWidgetNode<
     // 1️⃣ 先调用父节点自己的激活逻辑
     this.updateActiveState(true, root)
     // 2️⃣ 再激活子节点（父 → 子顺序）
-    this.rootNode.activate(false)
+    this.child.activate(false)
   }
   /**
    * @inheritDoc
@@ -77,7 +77,7 @@ export class StatelessWidgetNode<
   override deactivate(root: boolean = true): void {
     // 如果当前状态不是已激活，则直接返回
     if (this.state !== NodeState.Activated) return
-    this.rootNode.deactivate(false)
+    this.child.deactivate(false)
     // 1️⃣ 更新挂载状态（先移除 DOM）
     this.updateActiveState(false, root)
   }
@@ -86,8 +86,8 @@ export class StatelessWidgetNode<
    */
   override unmount(root: boolean = true): void {
     // 递归卸载子节点
-    this.rootNode.unmount(root)
-    this._rootNode = null
+    this.child.unmount(root)
+    this._child = null
     this.state = NodeState.Unmounted
   }
 
@@ -137,7 +137,7 @@ export class StatelessWidgetNode<
     if (!newNode.show) newNode.show = false
     // 使用patchUpdate方法对比并更新实际的DOM节点
     // 将当前根节点与新构建的节点进行差异更新，并将结果赋值给_rootNode
-    this._rootNode = VNodeUpdate.patch(this.rootNode, newNode)
+    this._child = VNodeUpdate.patch(this.child, newNode)
   }
 
   /**

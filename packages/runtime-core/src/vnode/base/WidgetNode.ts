@@ -36,7 +36,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
    * 组件构建的根节点
    * @protected
    */
-  protected _rootNode: VNode | null = null
+  protected _child: VNode | null = null
   /**
    * app上下文
    */
@@ -46,19 +46,20 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     this.appContext = getAppContext()
   }
   /**
-   * 获取根节点
-   * @returns {VNode} 返回虚拟根节点
-   * 如果根节点尚未初始化，则通过 rebuild 方法重建
+   * 获取组件构建的子节点
+   *
+   * @returns {VNode} 返回虚拟子节点
+   * 如果子节点尚未初始化，则通过 rebuild 方法重建
    * 使用惰性初始化策略，只在首次访问时创建根节点
    */
-  get rootNode(): VNode {
+  get child(): VNode {
     // 检查根节点是否已存在
-    if (this._rootNode == null) {
+    if (this._child == null) {
       // 如果不存在，则调用 rebuild 方法重建根节点
-      this._rootNode = this.rebuild()
+      this._child = this.rebuild()
     }
     // 返回根节点
-    return this._rootNode
+    return this._child
   }
   /**
    * @inheritDoc
@@ -69,7 +70,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     const newTeleport = this.teleport // 获取更新后的teleport元素
     // 如果不是活跃状态则直接返回
     if (this.state !== NodeState.Activated || oldTeleport === newTeleport) return
-    const element = this.rootNode.operationTarget
+    const element = this.child.operationTarget
     // 情况 1️⃣：从 teleport 恢复到原位置
     if (oldTeleport && !newTeleport) {
       this.dom.replace(element, this.anchor)
@@ -111,9 +112,9 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
             this.dom.appendChild(target as HostParentElement, this.anchor)
         }
       }
-      this.rootNode.mount(this.teleport, 'appendChild')
+      this.child.mount(this.teleport, 'appendChild')
     } else {
-      this.rootNode.mount(target, type)
+      this.child.mount(target, type)
     }
     this.state = NodeState.Activated
   }
@@ -136,6 +137,6 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
    * @inheritDoc
    */
   protected override handleShowState(visible: boolean): void {
-    this.rootNode.show = visible
+    this.child.show = visible
   }
 }
