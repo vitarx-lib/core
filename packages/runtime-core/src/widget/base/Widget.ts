@@ -15,15 +15,14 @@ import { CLASS_WIDGET_BASE_SYMBOL } from '../constants/index.js'
  * 所有小部件的基类
  *
  * @template InputProps - 输入的属性类型
- * @template Props - `this.props`的类型，默认=InputProps
+ * @template DefaultProps - `this.props`的类型，默认=InputProps
  *
  * @remarks
- * `Props`泛型详细说明：假设`InputProps`中有一个name属性类型是可选的string，
- * 但通过 `defineProps` 定义了默认值，调用`this.props.name`获取数据时，`this.props.name`的类型是string|undefined，
- * 这是TS类型推导的问题，满屏的错误提示需使用`!`强制断言不为空，为了解决这个问题我们可以传入`Props`泛型来重载`this.props`的类型，
- * 就像下面那样：
+ * `DefaultProps` 泛型详细说明：假设`InputProps`中有一个属性类型是可选的string，
+ * 但在组件内通过 `defineProps` 定义了默认值，调用`this.props.name`获取数据时，`this.props.name`的类型是string|undefined，
+ * 这是TS类型推导的问题，满屏的错误提示需使用`!`强制断言不为空，为了解决这个问题我们可以传入`DefaultProps`泛型来重载`this.props`的类型，
  *
- * @example
+ * @example `DefaultProps` 泛型使用
  * ```tsx
  * import {defineProps} from 'vitarx'
  * interface MyProps {
@@ -34,16 +33,16 @@ import { CLASS_WIDGET_BASE_SYMBOL } from '../constants/index.js'
  * class MyWidget extends Widget<MyProps,Required<MyProps> {
  *   constructor(props:MyProps){
  *    super(props)
+ *    defineProps({name:'小明',age:18}) // 定义默认属性
  *    const name:string = this.props.name // 如果你没有给Widget传入第二个泛型 这里就会提示类型错误
  *   }
  * }
- * defineProps(MyWidget,{name:'小明',age:18})
  * export default MyWidget
  * ```
  */
 export abstract class Widget<
-  InputProps extends Record<string, any> = {},
-  DefaultProps extends InputProps = InputProps
+  InputProps extends AnyProps = {},
+  DefaultProps extends Partial<InputProps> = InputProps
 > {
   /**
    * 类小部件标识符符
@@ -68,6 +67,7 @@ export abstract class Widget<
    *
    * 框架在开发模式下会自动捕获异常并将其转换为校验错误。
    *
+   * @since 4.0.0
    * @param props - 传入的组件属性对象
    * @returns {string | false | unknown} 校验结果
    */
@@ -80,12 +80,28 @@ export abstract class Widget<
    * 需注意：props在组件实例中是一个只读响应式代理，
    * defaultProps 中的属性通过 in props 判断是无效的，它只在获取属性时有效
    *
-   * @example
-   * ```ts
-   * class MyWidget extends Widget<{name?:string,age:number}> {
-   *  static defaultProps = {
-   *    age:18
-   *  }
+   * @since 4.0.0
+   * @example defaultProps 静态属性的使用
+   * ```tsx
+   * interface UserInfoProps {
+   *   name:string,
+   *   age:number
+   * }
+   * class UserInfo extends Widget<UserInfoProps> {
+   *   static defaultProps = {
+   *     age:18
+   *   }
+   *   onCreate() {
+   *    console.log(this.props.name,this.props.age) // 小明 18
+   *   }
+   *   build() {
+   *    return <div>{this.props.name}-{this.props.age}</div>
+   *   }
+   * }
+   *
+   * function App() {
+   *  // age 会被推导为可选的，不传入不会报错
+   *  return <UserInfo name="小明"/>
    * }
    * ```
    */
@@ -114,7 +130,7 @@ export abstract class Widget<
 
   /**
    * 获取小部件的属性
-   * @returns {Readonly<InputProps & Props>}
+   * @returns {Readonly<InputProps & DefaultProps>}
    */
   get props(): Readonly<MergeProps<InputProps, DefaultProps>> {
     return this.#props as unknown as MergeProps<InputProps, DefaultProps>
