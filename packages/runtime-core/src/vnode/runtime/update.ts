@@ -30,9 +30,6 @@ export class VNodeUpdate {
    * @returns {VNode} 更新后的虚拟节点
    */
   static patch(currentVNode: VNode, nextVNode: VNode): VNode {
-    // 如果是同一个节点引用，直接返回
-    if (currentVNode === nextVNode) return currentVNode
-
     // 如果类型或 key 不同，需要替换节点
     if (currentVNode.type !== nextVNode.type || currentVNode.key !== nextVNode.key) {
       this.replace(currentVNode, nextVNode)
@@ -47,7 +44,8 @@ export class VNodeUpdate {
   /**
    * 更新节点的属性和子节点
    *
-   * 对于非静态节点，更新其属性和子节点。
+   * 静态节点会忽略更新。
+   * 对于非静态节点，更新其属性和子节点,
    * 如果是容器节点，则递归更新其子节点。
    *
    * @template T - VNode 的子类型
@@ -55,18 +53,19 @@ export class VNodeUpdate {
    * @param nextVNode - 新的虚拟节点
    */
   static patchUpdateNode<T extends VNode>(currentVNode: T, nextVNode: T): void {
+    // 如果是同一个节点引用，直接返回
+    if (currentVNode === nextVNode) return
     // 静态节点不需要更新
-    if (!currentVNode.isStatic) {
-      // 更新节点属性
-      this.patchUpdateProps(currentVNode, nextVNode)
+    if (currentVNode.isStatic) return
+    // 更新节点属性
+    this.patchUpdateProps(currentVNode, nextVNode)
 
-      // 如果是容器节点，更新子节点
-      if (isContainerNode(currentVNode)) {
-        currentVNode.children = this.patchUpdateChildren(
-          currentVNode,
-          nextVNode as unknown as ContainerNode
-        )
-      }
+    // 如果是容器节点，更新子节点
+    if (isContainerNode(currentVNode)) {
+      currentVNode.children = this.patchUpdateChildren(
+        currentVNode,
+        nextVNode as unknown as ContainerNode
+      )
     }
   }
   /**
