@@ -27,6 +27,7 @@ import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from '../c
  * }
  * ```
  *
+ * @since 4.0.0
  * @param build - 视图构建器，通过函数返回要渲染的视图虚拟节点
  * @returns { StatelessWidget } - 无状态小部件
  */
