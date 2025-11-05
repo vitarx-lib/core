@@ -411,7 +411,7 @@ export abstract class Widget<
    * @returns {VNode} 更新后的虚拟节点（可能是原节点或新节点）
    */
   $patchUpdate(currentVNode: VNode, nextVNode: VNode): VNode {
-    return VNodeUpdate.patchUpdate(currentVNode, nextVNode)
+    return VNodeUpdate.patch(currentVNode, nextVNode)
   }
 
   /**
