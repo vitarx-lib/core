@@ -16,7 +16,8 @@ import {
  * VNodeUpdate 是一个用于虚拟DOM节点更新的工具类，提供了虚拟DOM节点的更新、替换等功能。
  *
  * 核心功能包括：
- * - patchUpdate: 更新虚拟DOM节点，处理节点类型、属性和子节点的变更
+ * - patch：用于更新虚拟节点，处理节点类型、属性和子节点的变更
+ * - patchUpdate: 更新虚拟节点属性和子节点的变更
  * - patchUpdateAttrs: 更新虚拟节点的属性，处理属性的增加、删除和修改
  * - patchUpdateChildren: 更新子节点，处理子节点的增删改查和位置调整
  * - replace: 替换旧节点为新节点，处理不同类型节点的替换逻辑
@@ -46,13 +47,13 @@ import {
  */
 export class VNodeUpdate {
   /**
-   * 用于更新虚拟节点的patch方法
+   * 补丁更新两个节点
    *
    * @param currentVNode - 旧的虚拟节点
    * @param nextVNode - 新的虚拟节点
-   * @returns {VNode} 更新后的虚拟节点
+   * @returns {VNode} 更新后的虚拟节点，如果两个节点类型，key完全相同，则返回旧节点
    */
-  static patchUpdate(currentVNode: VNode, nextVNode: VNode): VNode {
+  static patch(currentVNode: VNode, nextVNode: VNode): VNode {
     // 如果两个节点相同，则返回旧节点
     if (currentVNode === nextVNode) return currentVNode
     // 如果新旧节点的类型或key不同，则替换整个节点
@@ -61,25 +62,41 @@ export class VNodeUpdate {
       this.replace(currentVNode, nextVNode)
       return nextVNode
     }
+    this.patchUpdate(currentVNode, nextVNode)
+    return currentVNode
+  }
+
+  /**
+   * 补丁更新节点
+   *
+   * 节点属性更新和子节点更新
+   *
+   * @remarks 调用时必须确保两个节点类型完全一致！
+   * @param currentVNode - 旧的虚拟节点
+   * @param nextVNode - 新的虚拟节点，必须和旧节点是同类型！！！
+   * @template T - 继承自VNode的泛型类型
+   */
+  static patchUpdate<T extends VNode>(currentVNode: T, nextVNode: T): void {
     if (!currentVNode.isStatic) {
       // 更新节点的属性
       this.patchUpdateProps(currentVNode, nextVNode)
       // 如果是容器节点，则更新其子节点
       if (isContainerNode(currentVNode)) {
         // 递归更新子节点并获取更新后的子节点列表
-        currentVNode.children = this.patchUpdateChildren(currentVNode, nextVNode as ContainerNode)
+        currentVNode.children = this.patchUpdateChildren(
+          currentVNode,
+          nextVNode as unknown as ContainerNode
+        )
       }
     }
-    return currentVNode
   }
-
   /**
    * 更新虚拟节点的属性
    * @param currentVNode - 旧的虚拟节点
    * @param nextVNode - 新的虚拟节点，必须和旧节点是同类型！！！
    * @template T - 继承自VNode的泛型类型
    */
-  static patchUpdateProps<T extends VNode>(currentVNode: T, nextVNode: T) {
+  static patchUpdateProps<T extends VNode>(currentVNode: T, nextVNode: T): void {
     // 更新节点的挂载目标
     currentVNode.setTeleport(nextVNode.teleport)
     // 更新节点的显示状态
@@ -133,9 +150,8 @@ export class VNodeUpdate {
    *
    * @param currentVNode - 新的虚拟节点
    * @param nextVNode - 旧的虚拟节点
-   * @return {VNode} 替换后的虚拟节点
    */
-  static replace(currentVNode: VNode, nextVNode: VNode): VNode {
+  static replace(currentVNode: VNode, nextVNode: VNode): void {
     const dom = useDomAdapter()
     const oldElement = currentVNode.operationTarget
     if (dom.getParentElement(oldElement)) {
@@ -152,11 +168,9 @@ export class VNodeUpdate {
     } else {
       throw new Error('VNodeUpdate.replace(): the old node is not mounted and cannot be replaced')
     }
-
-    return nextVNode
   }
   /**
-   * 更新容器子节点
+   * 更新子节点
    *
    * @param currentVNode - 旧的虚拟节点
    * @param nextVNode - 新的虚拟节点，必须和旧的节点类型相同！！！
@@ -225,7 +239,7 @@ export class VNodeUpdate {
 
       if (reuseChild) {
         // --- 节点复用 ---
-        this.patchUpdate(reuseChild, newChild)
+        this.patch(reuseChild, newChild)
         newChildren[i] = reuseChild
         // 判断是否在 LIS 中，不在则移动
         if (seqIndex >= 0 && seq[seqIndex] === i) {
