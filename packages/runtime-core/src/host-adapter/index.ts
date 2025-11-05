@@ -1,6 +1,6 @@
 import type { HostAdapter } from '../types/index.js'
 
-let _domAdapter: HostAdapter | null = null
+let _domAdapter: HostAdapter
 
 /**
  * 设置DOM适配器
@@ -19,10 +19,6 @@ export function setDomAdapter(adapter: HostAdapter) {
  */
 export function useDomAdapter(): HostAdapter {
   // 检查_domAdapter是否已定义
-  if (!_domAdapter) {
-    // 如果_domAdapter未定义，抛出错误
-    throw new Error('[vitarx][ERROR] DomAdapter has not been registered.')
-  }
-  // 返回已定义的_domAdapter
-  return _domAdapter
+  if (_domAdapter) return _domAdapter
+  throw new Error('[vitarx][ERROR] DomAdapter has not been registered.')
 }
