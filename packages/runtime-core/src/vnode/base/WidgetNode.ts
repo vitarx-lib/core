@@ -32,6 +32,10 @@ import { VNode } from './VNode.js'
  * - 使用 Teleport 功能时，需要注意目标元素的存在性
  */
 export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> extends VNode<T> {
+  /**
+   * 组件构建的根节点
+   * @protected
+   */
   protected _rootNode: VNode | null = null
   /**
    * app上下文

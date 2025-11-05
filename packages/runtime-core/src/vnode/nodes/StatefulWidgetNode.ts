@@ -260,6 +260,7 @@ export class StatefulWidgetNode<
       // 获取更新后的DOM元素
       el = this.rootNode.element
     }
+    this.state = NodeState.Rendered
     // 返回渲染后的宿主元素实例
     return el as NodeElementType<T>
   }
