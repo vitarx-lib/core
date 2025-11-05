@@ -73,6 +73,12 @@ export interface HostAdapter {
    */
   isVoidElement(tag: string): tag is HostVoidElementNames
   /**
+   * 判断给定的元素实例是否为元素
+   * @param el - 元素实例
+   * @returns {boolean} - 如果是元素则返回 true，否则返回 false
+   */
+  isElement(el: HostNodeElement): el is HostElement
+  /**
    * 从DOM中移除元素
    * @param el - 要移除的元素实例
    */
@@ -116,6 +122,49 @@ export interface HostAdapter {
    * @param classValue - CSS类名数组
    */
   setClass(el: HostElement, classValue: string[]): void
+  /**
+   * 添加样式类
+   * @param el
+   * @param className
+   */
+  addClass(el: HostElement, className: string): void
+  /**
+   * 移除样式类
+   * @param el
+   * @param className
+   */
+  removeClass(el: HostElement, className: string): void
+  /**
+   * 获取动画时间
+   *
+   * @returns {number} 动画时间，单位毫秒，0则代表无
+   */
+  getAnimationDuration(el: HostElement): number
+  /**
+   * 获取过渡时间
+   *
+   * @returns {number} 过渡时间，单位毫秒，0则代表无
+   */
+  getTransitionDuration(el: HostElement): number
+  /**
+   * 请求动画帧
+   *
+   * 该方法用于在下一次宿主平台重绘之前调用指定的函数，实现平滑的动画效果。
+   * 通常与 cancelAnimationFrame 配合使用，可以在动画不再需要时取消回调。
+   *
+   * @param fn - 在下一次浏览器重绘前执行的回调函数
+   * @returns {number} 请求ID，可用于后续取消该动画帧请求
+   */
+  requestAnimationFrame(fn: () => void): number
+  /**
+   * 取消动画帧
+   *
+   * 该方法用于取消之前通过 requestAnimationFrame 方法请求的动画帧回调。
+   * 需要传入 requestAnimationFrame 返回的请求ID作为参数。
+   *
+   * @param id - 要取消的动画帧请求ID，由 requestAnimationFrame 返回
+   */
+  cancelAnimationFrame(id: number): void
   /**
    * 设置元素显示模式
    *
