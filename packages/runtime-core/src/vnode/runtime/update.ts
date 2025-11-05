@@ -24,14 +24,20 @@ import {
  *
  * 使用示例：
  * ```typescript
- * // 更新虚拟节点
- * const updatedNode = VNodeUpdate.patchUpdate(oldNode, newNode);
+ * // 补丁更新入口，类型不同/key不同则替换节点，否则更新属性和子节点
+ * const updatedNode = VNodeUpdate.patch(oldNode, newNode);
+ *
+ * // 更新节点
+ * VNodeUpdate.patchUpdate(oldNode, newNode);
  *
  * // 更新节点属性
  * VNodeUpdate.patchUpdateAttrs(oldNode, newNode);
  *
  * // 更新子节点
  * const newChildren = VNodeUpdate.patchUpdateChildren(containerNode, newContainerNode);
+ *
+ * // 节点替换
+ * VNodeUpdate.replace(oldNode, newNode);
  * ```
  *
  * 构造函数参数：
