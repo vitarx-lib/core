@@ -117,6 +117,12 @@ export interface HostAdapter {
    */
   setStyle(el: HostElement, style: StyleRules): void
   /**
+   * 获取元素的计算样式
+   * @param el - 元素实例
+   * @returns {StyleRules} - 元素的计算样式对象
+   */
+  getComputedStyle(el: HostElement): StyleRules
+  /**
    * 设置元素的CSS类
    * @param el - 元素实例
    * @param classValue - CSS类名数组
