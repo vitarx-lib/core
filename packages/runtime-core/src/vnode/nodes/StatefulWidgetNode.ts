@@ -316,12 +316,14 @@ export class StatefulWidgetNode<
   override deactivate(root: boolean = true): void {
     // 如果当前状态不是已激活，则直接返回
     if (this.state !== NodeState.Activated) return
-    // 1️⃣ 先调用根节点的停用逻辑  （子 → 父顺序）
+    // 1️⃣ 先调用根节点的停用逻辑（子 → 父顺序）
     this.rootNode.deactivate(false)
-    // 2️⃣ 再调用父节点自己的停用逻辑
-    this.updateActiveState(false, root)
-    this.scope.pause()
+    // 2️⃣ 触发 onDeactivated 生命周期
     this.triggerLifecycleHook(LifecycleHooks.deactivated)
+    // 3️⃣ 暂停作用域
+    this.scope.pause()
+    // 4️⃣ 再调用父节点自己的停用逻辑（更新状态）
+    this.updateActiveState(false, root)
   }
   /**
    * @inheritDoc
