@@ -1,4 +1,4 @@
-import { getCurrentInstance } from '../vnode/index.js'
+import { getCurrentVNode } from '../vnode/index.js'
 
 let globalId = -1
 /**
@@ -6,8 +6,9 @@ let globalId = -1
  *
  * 算法为 `${应用id前缀-递增计数器}`
  *
- * 可以通过 `app.config.idPrefix` 设置id前缀，默认为 `v`
+ * 可以通过 `app.config.idPrefix` 或 prefix 参数设置id前缀，默认为 `v`
  *
+ * @param {string} [prefix] - ID前缀
  * @returns {string} 返回生成的唯一ID字符串
  * @example
  * ```ts
@@ -18,13 +19,13 @@ let globalId = -1
  * }
  * ```
  */
-export function useId(): string {
+export const useId = (prefix?: string): string => {
   // 获取当前Vue组件实例
-  const instance = getCurrentInstance()
+  const vnode = getCurrentVNode()
   // 如果没有实例（非组件环境），则使用全局ID计数器生成ID
-  if (!instance) return `v-${globalId++}`
+  if (!vnode) return `${prefix || 'v'}-${globalId++}`
 
   // 从应用上下文中获取ID前缀
-  const prefix = instance.$vnode.appContext?.config.idPrefix || 'v'
+  prefix ||= vnode.appContext?.config.idPrefix || 'v'
   return `${prefix}-${globalId++}`
 }
