@@ -1,6 +1,6 @@
 import { SubManager, toRaw } from '@vitarx/responsive'
 import { useDomAdapter } from '../../host-adapter/index.js'
-import type { AnyProps, HostElement } from '../../types/index.js'
+import type { AnyProps, HostElements } from '../../types/index.js'
 import { ContainerNode, NonElementNode, VNode } from '../base/index.js'
 import { NodeState } from '../constants/index.js'
 import { StatelessWidgetNode } from '../nodes/index.js'
@@ -20,12 +20,6 @@ export interface ChildNodeUpdateHooks {
    */
   onMount?: (child: VNode) => void
   /**
-   * 移动一个子节点
-   *
-   * @param child - 已被移动的子节点
-   */
-  onMove?: (child: VNode) => void
-  /**
    * 卸载一个子节点
    *
    * @param child - 要卸载的子节点
@@ -39,7 +33,7 @@ export interface ChildNodeUpdateHooks {
    * @param newChild - 新节点
    * @param done - 完成回调函数，务必调用！
    */
-  onUpdate?: (oldChild: VNode, newChild: VNode, done: () => void) => void
+  onUpdate?: (oldChild: VNode, newChild: VNode, done: (skipShow?: boolean) => void) => void
 }
 /**
  * VNode 更新管理器
@@ -146,7 +140,7 @@ export class VNodeUpdate {
 
     // 处理普通元素节点
     const dom = useDomAdapter()
-    const el = currentVNode.element as HostElement
+    const el = currentVNode.element as HostElements
     const oldProps = toRaw(currentVNode.props) as Record<string, any>
     const newProps = nextVNode.props as Record<string, any>
     this.updateElementProps(el, oldProps, newProps, dom)
@@ -246,12 +240,10 @@ export class VNodeUpdate {
     // 计算最长递增子序列，用于优化节点移动操作
     const seq = this.getLIS(newIndexToOldIndex)
     let seqIndex = seq.length - 1
-    // 获取移动钩子函数
-    const onMove = typeof hooks?.onMove === 'function' ? hooks.onMove : undefined
     // 获取更新钩子函数
     const onUpdate = typeof hooks?.onUpdate === 'function' ? hooks.onUpdate : undefined
     // 从后向前遍历新子节点，处理复用、移动和创建
-    for (let i = newChildren.length - 1; i >= 0; i--) {
+    for (let i = newChildren.length; i--; ) {
       const oldIndex = newIndexToOldIndex[i]
       const newChild = newChildren[i]
       const anchor = newChildren[i + 1]?.operationTarget || null
@@ -260,7 +252,9 @@ export class VNodeUpdate {
       if (oldIndex !== -1) {
         const reuseChild = oldChildren[oldIndex]
         if (onUpdate) {
-          onUpdate(reuseChild, newChild, () => this.patchUpdateNode(reuseChild, newChild))
+          onUpdate(reuseChild, newChild, (skipShow?: boolean) =>
+            this.patchUpdateNode(reuseChild, newChild, skipShow)
+          )
         } else {
           // 更新节点
           this.patchUpdateNode(reuseChild, newChild)
@@ -273,7 +267,6 @@ export class VNodeUpdate {
         } else {
           // 节点移动到新位置
           dom.insertBefore(reuseChild.operationTarget, anchor)
-          onMove?.(reuseChild) // 💡 移动钩子在真实 DOM 移动后触发
         }
         continue
       }
@@ -344,7 +337,7 @@ export class VNodeUpdate {
    * @param dom - DOM 适配器实例
    */
   private static updateElementProps(
-    el: HostElement,
+    el: HostElements,
     oldProps: Record<string, any>,
     newProps: Record<string, any>,
     dom: ReturnType<typeof useDomAdapter>
