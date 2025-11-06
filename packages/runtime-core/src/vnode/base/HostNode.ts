@@ -101,10 +101,11 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
    */
   override mount(target?: HostNodeElements, type?: MountType): void {
     const teleport = this.teleport
+    const dom = this.dom
     let element: NodeElementType = this.element
     if (teleport) {
       // 挂载真实元素到 teleport 目标
-      this.dom.appendChild(teleport, this.element)
+      dom.appendChild(teleport, this.element)
       // 在原文档位置保留 anchor 作为占位
       element = this.anchor
     }
@@ -112,16 +113,16 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
     if (target) {
       switch (type) {
         case 'insertBefore':
-          this.dom.insertBefore(element, target)
+          dom.insertBefore(element, target)
           break
         case 'insertAfter':
-          this.dom.insertAfter(element, target)
+          dom.insertAfter(element, target)
           break
         case 'replace':
-          this.dom.replace(element, target)
+          dom.replace(element, target)
           break
         default:
-          this.dom.appendChild(target as HostParentElement, element)
+          dom.appendChild(target as HostParentElement, element)
       }
     }
     this.mountChildren?.()
