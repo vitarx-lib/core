@@ -64,7 +64,7 @@ export abstract class App {
    * 根节点
    * @private
    */
-  readonly #node: StatefulWidgetNode
+  readonly #rootNode: StatefulWidgetNode
   /**
    * 提供数据
    * @private
@@ -79,28 +79,30 @@ export abstract class App {
    */
   protected constructor(node: WidgetType, config?: AppConfig) {
     if (typeof node === 'function') {
-      this.#node = createVNode(node) as StatefulWidgetNode
+      this.#rootNode = createVNode(node) as StatefulWidgetNode
     } else if (isStatefulWidgetNode(node)) {
-      this.#node = node
+      this.#rootNode = node
     } else {
       throw new Error('The root node must be a widget')
     }
     // 使用展开运算符合并配置，提供默认错误处理
     this.config = {
       errorHandler: defaultErrorHandler,
-      idPrefix: 'v-',
+      idPrefix: 'v',
+      ssr: false,
       ...config
     } as Required<AppConfig>
-    this.#node.appContext = this
-    this.#node.provide('App', this)
+    this.#rootNode.appContext = this
+    this.#rootNode.provide('App', this)
   }
 
   /**
-   * 获取当前组件的虚拟DOM节点(VNode)
-   * @returns {StatefulWidgetNode} 返回当前组件的虚拟DOM节点实例
+   * 获取当前应用的根节点
+   *
+   * @returns {StatefulWidgetNode} 返回根组件节点
    */
-  get node(): StatefulWidgetNode {
-    return this.#node
+  get rootNode(): StatefulWidgetNode {
+    return this.#rootNode
   }
 
   /**
@@ -126,13 +128,14 @@ export abstract class App {
   }
 
   /**
-   * 获取提供值的方法
-   * @template T - 提供值的类型
-   * @param name - 要获取的提供值的名称，可以是字符串或symbol类型
-   * @param defaultValue - 可选参数，当指定名称的提供值不存在时返回的默认值
-   * @returns {T} 返回获取到的提供值，如果不存在则返回默认值
+   * 获取注入值的方法
+   *
+   * @template T - 注入值的类型
+   * @param name - 要获取的注入值的名称，可以是字符串或symbol类型
+   * @param defaultValue - 可选参数，当指定名称的注入值不存在时返回的默认值
+   * @returns {T} 返回获取到的注入值，如果不存在则返回默认值
    */
-  getProvide<T = any>(name: string | symbol, defaultValue?: T): T {
+  inject<T = any>(name: string | symbol, defaultValue?: T): T {
     return this.#provide.get(name) ?? defaultValue
   }
 
