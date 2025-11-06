@@ -4,7 +4,7 @@ import type { VNodeChild } from './vnode.js'
 /**
  * 任意组件属性类型
  */
-export type AnyProps = Record<string | symbol, any>
+export type AnyProps = Record<string, any>
 /**
  * 视图构建器类型
  */
