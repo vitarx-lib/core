@@ -238,7 +238,7 @@ export abstract class BaseTransition<
    */
   private activeTransitions = new WeakMap<
     HostElement,
-    { id: number | NodeJS.Timeout; cancel: () => void }
+    { id: ReturnType<typeof setTimeout> | null; cancel: () => void }
   >()
 
   /**
@@ -298,12 +298,12 @@ export abstract class BaseTransition<
     type: 'enter' | 'leave' | 'appear',
     doneCallback?: () => void
   ): void {
+    if (this.$vnode.appContext?.config.ssr) {
+      return doneCallback?.()
+    }
     const dom = useDomAdapter()
     // 如果不是元素节点，不执行动画，但离开时需要删除元素
     if (!dom.isElement(el)) return doneCallback?.()
-    const fromClass = this.props[`${type}FromClass`] || `${this.props.name}-${type}-from`
-    const activeClass = this.props[`${type}ActiveClass`] || `${this.props.name}-${type}-active`
-    const toClass = this.props[`${type}ToClass`] || `${this.props.name}-${type}-to`
     const capitalizeType = toCapitalize(type)
     // 获取钩子
     const beforeHookRaw = this.props[`onBefore${capitalizeType}`]
@@ -321,9 +321,10 @@ export abstract class BaseTransition<
     beforeHook?.(el)
     if (this.props.css) {
       // CSS 过渡模式
-      const from = fromClass || `${this.props.name}-${type}-from`
-      const active = activeClass || `${this.props.name}-${type}-active`
-      const to = toClass || `${this.props.name}-${type}-to`
+      const cssPrefix = `${this.props.name}-${type}`
+      const from = this.props[`${type}FromClass`] || `${cssPrefix}-from`
+      const active = this.props[`${type}ActiveClass`] || `${cssPrefix}-active`
+      const to = this.props[`${type}ToClass`] || `${cssPrefix}-to`
 
       // 添加开始和进行中的类
       dom.addClass(el, from)
@@ -339,20 +340,28 @@ export abstract class BaseTransition<
         dom.addClass(el, to)
         hook?.(el, () => void 0) // JS 钩子通知进入中，done不触发任何效果
       })
+      let ended = false
       // 设置定时器，在动画完成后清理
       const timer = setTimeout(() => {
-        dom.removeClass(el, toClass)
-        dom.removeClass(el, activeClass)
-        afterHook?.(el)
-        doneCallback?.()
+        if (ended) return
+        ended = true
         this.activeTransitions.delete(el)
-      }, duration + 1)
+        dom.removeClass(el, to)
+        dom.removeClass(el, active)
+        try {
+          afterHook?.(el)
+        } finally {
+          doneCallback?.()
+        }
+      }, duration + 16)
       // 记录定时器以便取消
       this.activeTransitions.set(el, {
         id: timer,
         cancel: () => {
-          dom.removeClass(el, toClass)
-          dom.removeClass(el, activeClass)
+          if (ended) return
+          ended = true
+          dom.removeClass(el, to)
+          dom.removeClass(el, active)
         }
       })
     } else {
@@ -360,16 +369,43 @@ export abstract class BaseTransition<
       let ended = false
       const end = () => {
         if (ended) return
+        this.activeTransitions.delete(el)
         ended = true
-        afterHook?.(el)
-        doneCallback?.()
+        try {
+          afterHook?.(el)
+        } finally {
+          doneCallback?.()
+        }
       }
-      // 使用 requestAnimationFrame 确保下一帧再触发钩子
-      if (hook) {
-        dom.requestAnimationFrame(() => hook(el, end))
-      } else {
-        // 没有 hook 的情况下，直接结束动画（下一帧触发）
-        dom.requestAnimationFrame(end)
+      const cancel = () => {
+        ended = true
+        this.activeTransitions.delete(el)
+      }
+      this.activeTransitions.set(el, { id: null, cancel })
+      dom.requestAnimationFrame(() => {
+        if (hook) hook(el, end)
+        else end()
+      })
+    }
+  }
+  /**
+   * 取消元素上正在进行的过渡动画
+   *
+   * 清除元素上的定时器，从活动过渡映射中移除该元素，
+   * 并触发取消钩子函数（如果提供）。
+   *
+   * @param el - 要取消动画的元素
+   * @param cancelledHook - 动画被取消时的钩子函数（可选）
+   */
+  private cancelTransition(el: HostElement, cancelledHook?: (el: HostElement) => void) {
+    const tick = this.activeTransitions.get(el)
+    if (tick) {
+      this.activeTransitions.delete(el)
+      tick.id && clearTimeout(tick.id)
+      try {
+        tick.cancel()
+      } finally {
+        cancelledHook?.(el)
       }
     }
   }
@@ -405,25 +441,6 @@ export abstract class BaseTransition<
         const td = dom.getTransitionDuration(el)
         const ad = dom.getAnimationDuration(el)
         return Math.max(td, ad)
-    }
-  }
-
-  /**
-   * 取消元素上正在进行的过渡动画
-   *
-   * 清除元素上的定时器，从活动过渡映射中移除该元素，
-   * 并触发取消钩子函数（如果提供）。
-   *
-   * @param el - 要取消动画的元素
-   * @param cancelledHook - 动画被取消时的钩子函数（可选）
-   */
-  private cancelTransition(el: HostElement, cancelledHook?: (el: HostElement) => void) {
-    const tick = this.activeTransitions.get(el)
-    if (tick) {
-      this.activeTransitions.delete(el)
-      clearTimeout(tick.id)
-      tick.cancel()
-      cancelledHook?.(el)
     }
   }
 }
