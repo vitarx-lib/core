@@ -6,7 +6,13 @@ import type {
   WithDefaultProps,
   WithRefProps
 } from './props.js'
-import type { ValidBuildElement, WidgetPropsType, WidgetType } from './widget.js'
+import type {
+  AnyProps,
+  FunctionWidget,
+  ValidBuildElement,
+  WidgetPropsType,
+  WidgetType
+} from './widget.js'
 
 declare global {
   namespace Vitarx {
@@ -124,6 +130,10 @@ declare global {
        */
       idPrefix?: string
     }
+    /**
+     * 函数式组件类型别名
+     */
+    type FC<P extends AnyProps = any> = FunctionWidget<P>
   }
   namespace JSX {
     /**

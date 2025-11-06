@@ -107,7 +107,10 @@ export type ValidBuildElement =
 export type FunctionWidget<P extends AnyProps = any> = {
   (props: P): ValidBuildElement
 } & WidgetOptions<P>
-
+/**
+ * 函数小部件类型别名
+ */
+export type FC<P extends AnyProps = any> = FunctionWidget<P>
 /**
  * 小部件结构类型
  *
