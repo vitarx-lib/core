@@ -21,7 +21,7 @@ import {
   VNode
 } from '../vnode/index.js'
 import type {
-  HostNodeElement,
+  HostNodeElements,
   HostNodeNames,
   HostRegularElementNames,
   HostVoidElementNames,
@@ -145,5 +145,5 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | Dyna
  * @template T 虚拟节点类型
  */
 export type NodeElementType<T extends NodeTypes = NodeTypes> = T extends HostNodeNames
-  ? HostNodeElement<T>
-  : HostNodeElement
+  ? HostNodeElements<T>
+  : HostNodeElements
