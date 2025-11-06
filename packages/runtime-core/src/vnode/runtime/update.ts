@@ -12,6 +12,11 @@ import {
   isStatelessWidgetNode
 } from '../utils/index.js'
 
+interface ChildUpdateHooks {
+  onMount?: (node: VNode) => void
+  onMove?: (node: VNode) => void
+  onUnmount?: (node: VNode, done: () => void) => void
+}
 /**
  * VNode 更新管理器
  *
@@ -172,26 +177,47 @@ export class VNodeUpdate {
    *
    * @param parent - 父容器节点
    * @param nextVNode - 包含新子节点的虚拟节点
+   * @param hooks - 更新钩子函数
    * @returns {VNode[]} 更新后的子节点数组
    */
-  static patchUpdateChildren(parent: ContainerNode, nextVNode: ContainerNode): VNode[] {
+  static patchUpdateChildren(
+    parent: ContainerNode,
+    nextVNode: ContainerNode,
+    hooks?: ChildUpdateHooks
+  ): VNode[] {
     const dom = useDomAdapter()
     const oldChildren = parent.children
     const newChildren = nextVNode.children
     const parentEl = parent.element
-
+    // 获取更新钩子函数
+    const onMount = typeof hooks?.onMount === 'function' ? hooks.onMount : undefined
     // 边界情况：旧子节点为空，直接挂载所有新子节点
     if (!oldChildren.length) {
-      for (const child of newChildren) child.mount(parentEl)
+      if (onMount) {
+        for (const child of newChildren) {
+          child.mount(parentEl)
+          onMount(child)
+        }
+      } else {
+        for (const child of newChildren) child.mount(parentEl)
+      }
       return newChildren
     }
-
+    // 获取更新钩子函数
+    const onUnmount = typeof hooks?.onUnmount === 'function' ? hooks.onUnmount : undefined
     // 边界情况：新子节点为空，直接卸载所有旧子节点
     if (!newChildren.length) {
-      for (const child of oldChildren) child.unmount()
+      if (onUnmount) {
+        for (const child of oldChildren) {
+          onUnmount(child, () => child.unmount())
+        }
+      } else {
+        for (const child of oldChildren) child.unmount()
+      }
       return newChildren
     }
-
+    // 获取移动钩子函数
+    const onMove = typeof hooks?.onMove === 'function' ? hooks.onMove : undefined
     // 通过 key 匹配新旧子节点，获取映射关系和需要移除的节点
     const { newIndexToOldIndex, removedNodes } = this.matchChildrenByKey(oldChildren, newChildren)
 
@@ -212,8 +238,13 @@ export class VNodeUpdate {
         newChildren[i] = reuseChild
 
         // 检查是否需要移动节点
-        if (seqIndex >= 0 && seq[seqIndex] === i) seqIndex--
-        else dom.insertBefore(reuseChild.operationTarget, anchor)
+        if (seqIndex >= 0 && seq[seqIndex] === i) {
+          seqIndex--
+        } else {
+          // 节点移动到新位置
+          dom.insertBefore(reuseChild.operationTarget, anchor)
+          onMove?.(reuseChild) // 💡 移动钩子在真实 DOM 移动后触发
+        }
         continue
       }
 
