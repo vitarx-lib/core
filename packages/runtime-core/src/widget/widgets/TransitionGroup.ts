@@ -5,7 +5,7 @@
  * 与 Transition 组件不同，TransitionGroup 可以同时处理多个子元素的过渡。
  */
 
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type {
   FragmentNodeType,
   HostRegularElementNames,

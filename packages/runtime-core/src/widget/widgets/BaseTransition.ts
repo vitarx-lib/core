@@ -1,5 +1,5 @@
 import { toCapitalize } from '@vitarx/utils/src/index.js'
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type {
   HostElements,
   HostNodeElements,

@@ -1,6 +1,6 @@
 import { unref } from '@vitarx/responsive'
 import { isRecordObject, logger, popProperty } from '@vitarx/utils'
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type {
   CommentNodeType,
   TextNodeType,

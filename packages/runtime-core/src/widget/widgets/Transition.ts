@@ -1,6 +1,6 @@
 import { computed } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils/src/index.js'
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type { HostNodeElements } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'
 import { isNonElementNode, VNode, VNodeUpdate } from '../../vnode/index.js'

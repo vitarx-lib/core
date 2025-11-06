@@ -1,5 +1,5 @@
 import { SubManager, toRaw } from '@vitarx/responsive'
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type { AnyProps, HostElements } from '../../types/index.js'
 import { ContainerNode, NonElementNode, VNode } from '../base/index.js'
 import { NodeState } from '../constants/index.js'

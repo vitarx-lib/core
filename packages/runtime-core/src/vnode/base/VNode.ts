@@ -1,6 +1,6 @@
 import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { logger, popProperty } from '@vitarx/utils'
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type {
   BindParentElement,
   HostAdapter,

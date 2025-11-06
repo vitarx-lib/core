@@ -1,4 +1,4 @@
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type { NonElementNodeType } from '../../types/index.js'
 import { HostNode } from './HostNode.js'
 

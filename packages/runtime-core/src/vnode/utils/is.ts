@@ -1,4 +1,4 @@
-import { useDomAdapter } from '../../host-adapter/index.js'
+import { useDomAdapter } from '../../adapter/index.js'
 import type { ValidNodeType } from '../../types/index.js'
 import { ContainerNode, ElementNode, VNode, WidgetNode } from '../base/index.js'
 import {
