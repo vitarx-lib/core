@@ -271,11 +271,9 @@ export type ClassProperties = string | Array<any> | Record<string, boolean>
  * @param Input - 可选的属性对象
  * @param Default - 默认的属性对象
  */
-export type MergeProps<Input extends {}, Default extends {}> = Omit<Input, keyof Default> & {
-  [P in Extract<keyof Input, keyof Default>]-?: Default[P] extends Exclude<Input[P], undefined>
-    ? Exclude<Input[P], undefined>
-    : Exclude<Input[P], undefined> | Default[P]
-} & Omit<Default, keyof Input>
+export type MergeProps<Input extends {}, Default extends {}> = Input & {
+  [P in keyof Default]-?: P extends keyof Input ? Exclude<Input[P], undefined> : Default[P]
+}
 
 /**
  * 从props中提取出children的类型
@@ -315,7 +313,7 @@ export type ExtractChildrenPropType<P> = P extends { children: infer U }
  * };
  *
  * // 使用 WithDefaultProps 转换属性类型
- * types ButtonPropsWithDefaults = WithDefaultProps<ButtonProps, typeof defaultProps>;
+ * type ButtonPropsWithDefaults = WithDefaultProps<ButtonProps, typeof defaultProps>;
  * // 等价于:
  * // {
  * //   text: string; // 必需属性
@@ -324,5 +322,11 @@ export type ExtractChildrenPropType<P> = P extends { children: infer U }
  * // }
  * ```
  */
-export type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> =
-  D extends Partial<P> ? Partial<Pick<P, Extract<keyof D, keyof P>>> : P
+export type WithDefaultProps<
+  P extends AnyProps,
+  D extends AnyProps | undefined
+> = D extends undefined
+  ? P
+  : Omit<P, keyof D> & {
+      [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
+    }
