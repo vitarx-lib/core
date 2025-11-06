@@ -3,11 +3,11 @@ import { isObject, isRecordObject, logger, popProperty } from '@vitarx/utils'
 import type {
   AnyProps,
   ClassProperties,
-  RuntimeVNodeChildren,
   StyleRules,
   UniqueKey,
   VNodeChild,
-  VNodeChildren
+  VNodeChildren,
+  VNodeNormalizedChildren
 } from '../../../types/index.js'
 import { __DEV__, StyleUtils } from '../../../utils/index.js'
 import { VNode } from '../../base/index.js'
@@ -175,7 +175,7 @@ export const normalizeChildren = (
   children: VNodeChild | VNodeChildren,
   parent: VNode,
   handler?: (node: VNode) => void
-): RuntimeVNodeChildren => {
+): VNodeNormalizedChildren => {
   const keySet = new Set<UniqueKey>()
   const childList: VNode[] = []
   const stack: Array<VNodeChild | VNodeChildren> = [unref(children)]

@@ -4,7 +4,7 @@ import type {
   HostNodeElement,
   HostParentElement,
   MountType,
-  VNodeInputProps,
+  ValidNodeProps,
   WidgetNodeType
 } from '../../types/index.js'
 import { getWidgetName } from '../../widget/index.js'
@@ -41,7 +41,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
    * app上下文
    */
   public appContext?: App
-  protected constructor(type: T, props: VNodeInputProps<T>) {
+  protected constructor(type: T, props: ValidNodeProps<T>) {
     super(type, props)
     this.appContext = getAppContext()
   }

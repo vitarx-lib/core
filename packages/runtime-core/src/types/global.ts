@@ -124,15 +124,6 @@ declare global {
        */
       idPrefix?: string
     }
-    /**
-     * JSX元素类型
-     *
-     * 此类型定义了jsx表达式支持的元素映射，
-     * 并添加了 ref 支持。
-     */
-    type JSXIntrinsicElements = {
-      [tagName in keyof Vitarx.IntrinsicElements]: WithRefProps<Vitarx.IntrinsicElements[tagName]>
-    }
   }
   namespace JSX {
     /**
@@ -142,19 +133,21 @@ declare global {
      * 这使得 JSX 表达式可以直接用作组件的子元素。
      */
     type Element = ValidBuildElement
-    interface IntrinsicAttributes extends Vitarx.IntrinsicAttributes {}
+    /**
+     * JSX 支持的固有属性
+     */
+    type IntrinsicAttributes = Vitarx.IntrinsicAttributes
     /**
      * JSX 支持的固有元素
      *
      * 定义了 JSX 中可以直接使用的标签及其属性类型。
      * 这些元素是框架内置的，不需要额外导入即可使用。
-     * 通过扩展 RuntimeSpecialElements，框架提供了特殊元素（如 fragment、text 等）的支持。
      *
      * @example
      * ```ts
-     * // 在 Web 平台渲染包中扩展
+     * // 在平台渲染包中扩展
      * declare global {
-     *   namespace JSX {
+     *   namespace Vitarx {
      *     interface IntrinsicElements {
      *       div: Partial<HTMLDivElement>, // 伪代码，具体实现需根据实际需求进行修改
      *       span: Partial<HTMLSpanElement>,
@@ -164,7 +157,9 @@ declare global {
      * }
      * ```
      */
-    interface IntrinsicElements extends Vitarx.JSXIntrinsicElements {}
+    type IntrinsicElements = {
+      [tagName in keyof Vitarx.IntrinsicElements]: WithRefProps<Vitarx.IntrinsicElements[tagName]>
+    }
     /**
      * 组件属性类型转换
      *

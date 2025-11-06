@@ -1,4 +1,4 @@
-import type { ContainerNodeType, RuntimeVNodeChildren } from '../../types/index.js'
+import type { ContainerNodeType, VNodeNormalizedChildren } from '../../types/index.js'
 import { HostNode } from '../base/index.js'
 
 /**
@@ -10,7 +10,7 @@ import { HostNode } from '../base/index.js'
  * @template T - 容器节点类型，默认为 ContainerNodeType
  * @interface ContainerNode
  * @extends HostNode<T>
- * @property {RuntimeVNodeChildren} children - 容器节点的子节点集合
+ * @property {VNodeNormalizedChildren} children - 容器节点的子节点集合
  *
  * 可以通过 `mixinContainerNode` api 将容器节点的响应逻辑扩展进节点实例中。
  */
@@ -19,10 +19,10 @@ export interface ContainerNode<T extends ContainerNodeType = ContainerNodeType>
   /**
    * 运行时子节点列表
    *
-   * @type {RuntimeVNodeChildren}
+   * @type {VNodeNormalizedChildren}
    * @readonly 此属性虽然是公开的，但请不要修改它，会导致节点树结构异常，仅内部patch时会替换为新的子节点列表
    */
-  children: RuntimeVNodeChildren
+  children: VNodeNormalizedChildren
 }
 
 /**

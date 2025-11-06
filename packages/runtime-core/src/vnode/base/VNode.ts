@@ -7,14 +7,14 @@ import type {
   HostCommentElement,
   HostNodeElement,
   HostParentElement,
+  IntrinsicAttrNames,
   MountType,
   NodeDevInfo,
   NodeElementType,
   NodeNormalizedProps,
   NodeTypes,
   UniqueKey,
-  VNodeInputProps,
-  VNodeIntrinsicAttributes
+  ValidNodeProps
 } from '../../types/index.js'
 import { __DEV__ } from '../../utils/index.js'
 import { NodeShapeFlags, NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
@@ -29,10 +29,7 @@ import { isRefEl, type RefEl } from '../runtime/ref.js'
  *
  * 去除了固有属性，只保留了用户输入的其他属性
  */
-export type WaitNormalizedProps<T extends NodeTypes> = Omit<
-  VNodeInputProps<T>,
-  keyof VNodeIntrinsicAttributes
->
+export type WaitNormalizedProps<T extends NodeTypes> = Omit<ValidNodeProps<T>, IntrinsicAttrNames>
 
 /**
  * 虚拟节点（VNode）基类，用于构建虚拟DOM树结构。
@@ -118,7 +115,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
    * @param props 虚拟节点的属性对象
    */
-  constructor(type: T, props: VNodeInputProps<T>) {
+  constructor(type: T, props: ValidNodeProps<T>) {
     // 节点类型
     this.type = type
     if (Object.keys(props).length) {

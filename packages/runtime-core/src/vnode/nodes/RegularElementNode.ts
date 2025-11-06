@@ -2,8 +2,8 @@ import { unref } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import type {
   RegularElementNodeType,
-  RuntimeVNodeChildren,
-  VNodeInputProps
+  ValidNodeProps,
+  VNodeNormalizedChildren
 } from '../../types/index.js'
 import { type ContainerNode, ElementNode, mixinContainerNode, VNode } from '../base/index.js'
 import { NodeShapeFlags } from '../constants/index.js'
@@ -36,9 +36,9 @@ export class RegularElementNode<T extends RegularElementNodeType = RegularElemen
   /**
    * 子节点列表
    */
-  public children: RuntimeVNodeChildren
+  public children: VNodeNormalizedChildren
 
-  constructor(type: T, props: VNodeInputProps<T>) {
+  constructor(type: T, props: ValidNodeProps<T>) {
     const hasChildren = 'children' in props
     const children = hasChildren ? unref(popProperty(props, 'children')) : undefined
     super(type, props)

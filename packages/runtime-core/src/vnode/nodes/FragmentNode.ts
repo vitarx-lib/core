@@ -3,8 +3,8 @@ import { popProperty } from '@vitarx/utils'
 import type {
   FragmentNodeType,
   NodeElementType,
-  RuntimeVNodeChildren,
-  VNodeInputProps
+  ValidNodeProps,
+  VNodeNormalizedChildren
 } from '../../types/index.js'
 import { type ContainerNode, HostNode, mixinContainerNode } from '../base/index.js'
 import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
@@ -27,8 +27,8 @@ export class FragmentNode extends HostNode<FragmentNodeType> implements Containe
   /**
    * 子节点列表
    */
-  public children: RuntimeVNodeChildren
-  constructor(props: VNodeInputProps<FragmentNodeType>) {
+  public children: VNodeNormalizedChildren
+  constructor(props: ValidNodeProps<FragmentNodeType>) {
     const hasChildren = 'children' in props
     const children = hasChildren ? unref(popProperty(props, 'children')) : undefined
     super(FRAGMENT_NODE_TYPE, props)

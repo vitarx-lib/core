@@ -10,7 +10,7 @@ import type {
   NodeElementType,
   NodeNormalizedProps,
   StatefulWidgetNodeType,
-  VNodeInputProps,
+  ValidNodeProps,
   WidgetInstanceType
 } from '../../types/index.js'
 import { __DEV__ } from '../../utils/index.js'
@@ -100,7 +100,7 @@ export class StatefulWidgetNode<
    * @private
    */
   private _isReady: boolean = false
-  constructor(type: T, props: VNodeInputProps<T>) {
+  constructor(type: T, props: ValidNodeProps<T>) {
     super(type, props)
     if (this.appContext) this.provide('App', this.appContext)
   }

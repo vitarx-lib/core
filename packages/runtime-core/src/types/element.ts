@@ -37,12 +37,26 @@ export interface IntrinsicSpecialElements {
   [COMMENT_NODE_TYPE]: { value: MaybeRef<string> }
 }
 /**
+ * JSX 元素接口
+ *
+ * 此接口定义了 JSX 元素的属性类型，
+ * 这是让jsx表达式中支持直接传入ref的关键。
+ */
+export type JSXInternalElements = JSX.IntrinsicElements
+/**
  * createVNode 支持的字符串类型元素名称
  *
  * 此类型包含所有可用的元素名称，包括标准元素（如div、span等）
  * 和特殊元素（如fragment、text、comment等。）
  */
-export type JSXElementNames = keyof JSX.IntrinsicElements
+export type JSXElementNames = keyof JSXInternalElements
+/**
+ * 固有元素
+ *
+ * 和 JSX.IntrinsicElements 存在区别，
+ * 此接口中的元素属性还没有支持ref
+ */
+export type IntrinsicElements = Vitarx.IntrinsicElements
 /**
  * 运行时特殊元素名称
  */

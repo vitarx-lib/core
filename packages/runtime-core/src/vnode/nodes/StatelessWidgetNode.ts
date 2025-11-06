@@ -6,7 +6,7 @@ import type {
   NodeElementType,
   NodeNormalizedProps,
   StatelessWidgetNodeType,
-  VNodeInputProps
+  ValidNodeProps
 } from '../../types/index.js'
 import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
 import { NodeShapeFlags, NodeState } from '../constants/index.js'
@@ -31,7 +31,7 @@ import { TextNode } from './TextNode.js'
 export class StatelessWidgetNode<
   T extends StatelessWidgetNodeType = StatelessWidgetNodeType
 > extends WidgetNode<T> {
-  constructor(type: T, props: VNodeInputProps<T>) {
+  constructor(type: T, props: ValidNodeProps<T>) {
     super(type, props)
     if (this.ref) {
       logger.warn(

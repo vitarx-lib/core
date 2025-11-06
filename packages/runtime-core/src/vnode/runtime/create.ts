@@ -4,9 +4,9 @@ import { useDomAdapter } from '../../host-adapter/index.js'
 import type {
   CommentNodeType,
   TextNodeType,
+  ValidNodeProps,
   ValidNodeType,
   VNodeChild,
-  VNodeInputProps,
   VNodeInstanceType,
   WidgetType
 } from '../../types/index.js'
@@ -47,7 +47,7 @@ function mergeChildren(existing: any, children: any[]): any[] {
  */
 function resolveVNodeProps<T extends ValidNodeType>(
   type: T,
-  props: VNodeInputProps<T> | null,
+  props: ValidNodeProps<T> | null,
   children: VNodeChild[]
 ) {
   const isValidProps = isRecordObject(props)
@@ -89,6 +89,8 @@ function resolveVNodeProps<T extends ValidNodeType>(
     resolvedProps.children = mergeChildren(existingChildren, children)
     // 如果 children 只有一个元素，则直接返回该元素
     resolvedProps.children.length === 1 && (resolvedProps.children = resolvedProps.children[0])
+  } else if ('children' in resolvedProps) {
+    delete resolvedProps.children
   }
 
   return { skip: false, props: resolvedProps }
@@ -99,16 +101,16 @@ function resolveVNodeProps<T extends ValidNodeType>(
  */
 function createVNodeByType<T extends Exclude<ValidNodeType, WidgetType | DynamicRenderType>>(
   type: T,
-  props: VNodeInputProps<T>
+  props: ValidNodeProps<T>
 ): VNodeInstanceType<T> {
   switch (type) {
     case TEXT_NODE_TYPE:
       return new TextNode(
-        props as unknown as VNodeInputProps<TextNodeType>
+        props as unknown as ValidNodeProps<TextNodeType>
       ) as unknown as VNodeInstanceType<T>
     case COMMENT_NODE_TYPE:
       return new CommentNode(
-        props as unknown as VNodeInputProps<CommentNodeType>
+        props as unknown as ValidNodeProps<CommentNodeType>
       ) as unknown as VNodeInstanceType<T>
     case FRAGMENT_NODE_TYPE:
       return new FragmentNode(props) as unknown as VNodeInstanceType<T>
@@ -137,7 +139,7 @@ function createDynamicVNode(props: Record<string, any>): VNodeInstanceType<any> 
  */
 function createWidgetVNode<T extends WidgetType>(
   widget: T,
-  props: VNodeInputProps<T>
+  props: ValidNodeProps<T>
 ): VNodeInstanceType<T> {
   if (__DEV__ && typeof widget.validateProps === 'function') {
     const name = getWidgetName(widget)
@@ -169,7 +171,7 @@ function createWidgetVNode<T extends WidgetType>(
  */
 export function createVNode<T extends ValidNodeType>(
   type: T,
-  props: VNodeInputProps<T> | null = null,
+  props: ValidNodeProps<T> | null = null,
   ...children: VNodeChild[]
 ): VNodeInstanceType<T> {
   const { skip, vnode, props: resolvedProps } = resolveVNodeProps(type, props, children)

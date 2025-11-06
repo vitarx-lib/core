@@ -1,4 +1,4 @@
-import type { HostElementNames, NodeElementType, NodeNormalizedProps } from '../../types/index.js'
+import type { ElementNodeType, NodeElementType, NodeNormalizedProps } from '../../types/index.js'
 import { normalizeStyle } from '../runtime/internal/normalize.js'
 import { HostNode } from './HostNode.js'
 
@@ -19,9 +19,7 @@ import { HostNode } from './HostNode.js'
  * - 通过 isSVGElement 标志来区分普通元素和 SVG 元素
  * - 元素的显示状态可以通过 show 属性控制
  */
-export abstract class ElementNode<
-  T extends HostElementNames = HostElementNames
-> extends HostNode<T> {
+export abstract class ElementNode<T extends ElementNodeType = ElementNodeType> extends HostNode<T> {
   /**
    * special flag for svg element
    */

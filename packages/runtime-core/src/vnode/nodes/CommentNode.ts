@@ -1,4 +1,4 @@
-import type { CommentNodeType, NodeElementType, VNodeInputProps } from '../../types/index.js'
+import type { CommentNodeType, NodeElementType, ValidNodeProps } from '../../types/index.js'
 import { NonElementNode } from '../base/index.js'
 import { COMMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
 
@@ -24,7 +24,7 @@ import { COMMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
  */
 export class CommentNode extends NonElementNode<CommentNodeType> {
   public override shapeFlags = NodeShapeFlags.COMMENT
-  constructor(props: VNodeInputProps<CommentNodeType>) {
+  constructor(props: ValidNodeProps<CommentNodeType>) {
     super(COMMENT_NODE_TYPE, props)
   }
   /**

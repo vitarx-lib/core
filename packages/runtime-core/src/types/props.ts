@@ -1,7 +1,19 @@
 import type { RefSignal } from '@vitarx/responsive'
-import type { RefEl } from '../vnode/index.js'
-import type { HostParentElement } from './element.js'
-import type { AnyProps } from './widget.js'
+import type { Fragment, RefEl, Render } from '../vnode/index.js'
+import type {
+  HostParentElement,
+  IntrinsicElements,
+  JSXElementNames,
+  JSXInternalElements
+} from './element.js'
+import type {
+  ElementNodeType,
+  FragmentNodeType,
+  NodeTypes,
+  NonElementNodeType,
+  ValidNodeType
+} from './vnode.js'
+import type { AnyProps, WidgetPropsType, WidgetType } from './widget.js'
 
 /**
  * 可能是引用值的类型
@@ -280,7 +292,7 @@ export type ClassProperties = string | Array<any> | Record<string, boolean>
  * @param Default - 默认的属性对象
  */
 export type MergeProps<Input extends {}, Default extends {}> = Input & {
-  [P in keyof Default]-?: P extends keyof Input ? Exclude<Input[P], undefined> : Default[P]
+  [P in keyof Default]: P extends keyof Input ? Exclude<Input[P], undefined> : Default[P]
 }
 
 /**
@@ -338,3 +350,86 @@ export type WithDefaultProps<
   : Omit<P, keyof D> & {
       [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
     }
+
+/**
+ * createVNode 支持的属性类型推导
+ *
+ * 此属性类型是JSX/createVNode中可用的属性的联合类型，包括：
+ * - 元素或组件定义的属性
+ * - 全局属性（如key、ref、v-show等）
+ */
+export type ValidNodeProps<T extends ValidNodeType> = (T extends JSXElementNames
+  ? JSXInternalElements[T]
+  : T extends Render
+    ? WidgetPropsType<Render>
+    : T extends Fragment
+      ? WithRefProps<WidgetPropsType<Fragment>>
+      : T extends WidgetType
+        ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
+        : {}) &
+  IntrinsicAttributes
+
+/**
+ * 元素属性类型定义
+ *
+ * 元素属性类型定义，用于定义元素节点的属性。
+ */
+export type HostElementNormalizedProps<T extends ElementNodeType> = Omit<
+  IntrinsicElements[T],
+  'children' | 'style' | 'class' | 'className'
+> & {
+  style?: StyleRules
+  class?: string[]
+}
+
+/**
+ * 规范化节点属性类型
+ * 根据节点类型返回对应的规范化属性结构
+ */
+export type NodeNormalizedProps<T extends NodeTypes> = T extends FragmentNodeType
+  ? {}
+  : T extends NonElementNodeType
+    ? { value: string }
+    : T extends ElementNodeType
+      ? HostElementNormalizedProps<T>
+      : T extends WidgetType
+        ? UnwrapRefProps<WidgetPropsType<T>>
+        : {}
+
+/**
+ * 根据节点类型推断其对应的属性类型
+ *
+ * 该类型用于根据不同的节点类型 T，推断出该节点所接受的属性类型：
+ * 1. 如果 T 是 Vitarx 支持的元素名称，则返回 Vitarx.IntrinsicElements[T] 对应的属性类型
+ * 3. 如果 T 是 Fragment 类型，则返回 Fragment 对应的属性类型
+ * 4. 如果 T 是 WidgetType 类型，则返回该组件类型的属性类型
+ * 5. 其他情况返回空对象类型
+ *
+ * 去除了 children 属性，主要是为了编写组件Props接口时方便继承或使用其他元素/组件可透传绑定的属性。
+ *
+ * @example
+ * ```ts
+ * // 通过继承 WithNodeProps<div> 可以让组件支持所有div元素的属性，
+ * // 在jsx表达式中可以获得良好的类型提示和代码补全。
+ * interface MyWidgetProps extends WithNodeProps<'div'> {
+ *   children: VNode
+ *   // ... 其他自定义属性
+ * }
+ * const MyWidget = (props: MyWidgetProps) => {
+ *   // 使用 v-bind 绑定属性 不支持 children v-show v-if 等特殊的固有属性
+ *   // 所以我们需要单独处理 children 属性
+ *   // 如果使用 {...props} js原生语法则无需额外传递 children 属性
+ *   return <div v-bind={props}>{props.children}</div>
+ * }
+ * export default MyWidget
+ * ```
+ *
+ * @template T - 节点类型，必须继承自 NodeTypes
+ */
+export type WithNodeProps<T extends NodeTypes> = T extends keyof IntrinsicElements
+  ? Omit<IntrinsicElements[T], 'children'>
+  : T extends Fragment
+    ? {}
+    : T extends WidgetType
+      ? Omit<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>, 'children'>
+      : {}

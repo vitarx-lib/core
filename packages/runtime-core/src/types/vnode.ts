@@ -27,15 +27,11 @@ import type {
   HostVoidElementNames,
   JSXElementNames
 } from './element.js'
-import type {
-  IntrinsicAttributes,
-  StyleRules,
-  UnwrapRefProps,
-  WithDefaultProps,
-  WithRefProps
-} from './props.js'
-import type { StatefulWidget, StatelessWidget, WidgetPropsType, WidgetType } from './widget.js'
+import type { StatefulWidget, StatelessWidget, WidgetType } from './widget.js'
 
+/**
+ * 代码位置信息
+ */
 export type CodeSourceInfo = {
   /** 源文件名 */
   fileName: string
@@ -58,6 +54,7 @@ export interface NodeDevInfo {
   /** 节点的原始`this`上下文，可用于调试 */
   self: any
 }
+
 export type StatefulWidgetNodeType = StatefulWidget
 export type StatelessWidgetNodeType = StatelessWidget
 export type RegularElementNodeType = HostRegularElementNames
@@ -68,6 +65,7 @@ export type WidgetNodeType = StatefulWidgetNodeType | StatelessWidgetNodeType
 export type NonElementNodeType = TextNodeType | CommentNodeType
 export type ContainerNodeType = RegularElementNodeType | FragmentNodeType
 export type FragmentNodeType = typeof FRAGMENT_NODE_TYPE
+export type ElementNodeType = RegularElementNodeType | VoidElementNodeType
 
 /**
  * 虚拟节点类型定义
@@ -79,28 +77,6 @@ export type NodeTypes =
   | TextNodeType
   | CommentNodeType
   | WidgetType
-
-type ElementNormalizedProps<T extends RegularElementNodeType | VoidElementNodeType> =
-  UnwrapRefProps<
-    Omit<Vitarx.IntrinsicElements[T], 'children' | 'style' | 'class' | 'className'> & {
-      style?: StyleRules
-      class?: string[]
-    }
-  >
-/**
- * 规范化节点属性类型
- * 根据节点类型返回对应的规范化属性结构
- */
-export type NodeNormalizedProps<T extends NodeTypes> = T extends FragmentNodeType
-  ? {}
-  : T extends NonElementNodeType
-    ? { value: string }
-    : T extends RegularElementNodeType | VoidElementNodeType
-      ? ElementNormalizedProps<T>
-      : T extends WidgetType
-        ? UnwrapRefProps<WidgetPropsType<T>>
-        : {}
-
 /**
  * 支持渲染的元素类型定义
  *
@@ -120,10 +96,9 @@ export type VNodeChildren = VNodeChild | Iterable<VNodeChild>
 /**
  * 运行时子节点列表类型
  *
- * `RuntimeVNodeChildren` 仅代表节点内部规范化后的子节点列表类型
+ * `VNodeNormalizedChildren` 仅代表节点内部规范化后的子节点列表类型
  */
-export type RuntimeVNodeChildren = Array<VNode>
-
+export type VNodeNormalizedChildren = Array<VNode>
 /**
  * createVNode支持的节点类型
  *
@@ -136,25 +111,6 @@ export type RuntimeVNodeChildren = Array<VNode>
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的虚拟节点类型是 `VNodeType`
  */
 export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetType
-export type VNodeIntrinsicAttributes = IntrinsicAttributes
-/**
- * createVNode 支持的属性类型
- *
- * 此属性类型是JSX/createVNode中可用的属性的联合类型，包括：
- * - 元素或组件定义的属性
- * - 全局属性（如key、ref、v-show等）
- */
-export type VNodeInputProps<T extends ValidNodeType> = (T extends JSXElementNames
-  ? JSX.IntrinsicElements[T]
-  : T extends Render
-    ? WidgetPropsType<Render>
-    : T extends Fragment
-      ? WidgetPropsType<Fragment>
-      : T extends WidgetType
-        ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
-        : {}) &
-  VNodeIntrinsicAttributes
-
 /**
  * 挂载类型
  *

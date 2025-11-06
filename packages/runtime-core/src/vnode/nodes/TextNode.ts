@@ -1,4 +1,4 @@
-import type { NodeElementType, TextNodeType, VNodeInputProps } from '../../types/index.js'
+import type { NodeElementType, TextNodeType, ValidNodeProps } from '../../types/index.js'
 import { NonElementNode } from '../base/index.js'
 import { NodeShapeFlags, TEXT_NODE_TYPE } from '../constants/index.js'
 
@@ -29,7 +29,7 @@ import { NodeShapeFlags, TEXT_NODE_TYPE } from '../constants/index.js'
  */
 export class TextNode extends NonElementNode<TextNodeType> {
   public override shapeFlags = NodeShapeFlags.TEXT
-  constructor(props: VNodeInputProps<TextNodeType>) {
+  constructor(props: ValidNodeProps<TextNodeType>) {
     super(TEXT_NODE_TYPE, props)
   }
 
