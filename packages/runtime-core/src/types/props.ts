@@ -203,7 +203,7 @@ export interface IntrinsicAttributes {
    */
   'v-static'?: MaybeRef<boolean>
   /**
-   * 父元素 - 支持选择器或 `HTMLElement` 实例
+   * 父元素 - 支持选择器或 `HostParentElement` 实例
    *
    * ```tsx
    * // 在html元素中使用
@@ -216,6 +216,13 @@ export interface IntrinsicAttributes {
    */
   'v-parent'?: BindParentElement
 }
+
+/**
+ * 定义一个类型别名 IntrinsicAttrNames，表
+ * 示 IntrinsicAttributes 对象的所有属性名组成的联合类型
+ * 使用 keyof 操作符获取 IntrinsicAttributes 类型所有键的联合类型
+ */
+export type IntrinsicAttrNames = keyof IntrinsicAttributes
 
 /**
  * CSS 样式规则类型
