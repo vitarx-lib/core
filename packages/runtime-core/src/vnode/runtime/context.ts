@@ -24,11 +24,9 @@ export const runInNodeContext = <R>(node: StatefulWidgetNode, fn: () => R): R =>
  * @template T - 虚拟节点的类型
  * @returns {StatefulWidgetNode | undefined} 返回当前组件的虚拟节点，如果没有则返回undefined
  */
-export const getCurrentVNode = <T extends StatefulWidgetNode = StatefulWidgetNode>():
-  | T
-  | undefined => {
+export const getCurrentVNode = (): StatefulWidgetNode | undefined => {
   // 调用runInContext函数，传入虚拟节点上下文符号和getCurrentVNode函数，返回当前组件虚拟节点
-  return getContext<T>(VNODE_CONTEXT_SYMBOL)
+  return getContext<StatefulWidgetNode>(VNODE_CONTEXT_SYMBOL)
 }
 
 export { getCurrentVNode as useCurrentVNode }
