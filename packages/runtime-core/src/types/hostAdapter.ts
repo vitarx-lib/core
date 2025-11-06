@@ -1,16 +1,76 @@
 import type {
   HostCommentElement,
-  HostElement,
   HostElementNames,
+  HostElements,
   HostFragmentElement,
-  HostNodeElement,
+  HostNodeElements,
   HostParentElement,
-  HostRegularElement,
+  HostRegularElements,
   HostTextElement,
   HostVoidElementNames
 } from './element.js'
 import type { StyleRules } from './props.js'
 
+/**
+ * DOMRect 接口，表示一个矩形区域，
+ * 用于测量和操作元素位置和尺寸。
+ */
+export interface DOMRect {
+  /**
+   * The **`height`** property of the DOMRect interface represents the height of the rectangle.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/height)
+   */
+  height: number
+  /**
+   * The **`width`** property of the DOMRect interface represents the width of the rectangle.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/width)
+   */
+  width: number
+  /**
+   * The **`x`** property of the DOMRect interface represents the x-coordinate of the rectangle, which is the horizontal distance between the viewport's left edge and the rectangle's origin.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/x)
+   */
+  x: number
+  /**
+   * The **`y`** property of the DOMRect interface represents the y-coordinate of the rectangle, which is the vertical distance between the viewport's top edge and the rectangle's origin.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/y)
+   */
+  y: number
+  /**
+   * The **`bottom`** read-only property of the **`DOMRectReadOnly`** interface returns the bottom coordinate value of the `DOMRect`.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/bottom)
+   */
+  readonly bottom: number
+  /**
+   * The **`left`** read-only property of the **`DOMRectReadOnly`** interface returns the left coordinate value of the `DOMRect`.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/left)
+   */
+  readonly left: number
+  /**
+   * The **`right`** read-only property of the **`DOMRectReadOnly`** interface returns the right coordinate value of the `DOMRect`.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/right)
+   */
+  readonly right: number
+  /**
+   * The **`top`** read-only property of the **`DOMRectReadOnly`** interface returns the top coordinate value of the `DOMRect`.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/top)
+   */
+  readonly top: number
+  /**
+   * The **`toJSON()`** method of the **`DOMRectReadOnly`** interface returns a JSON serialization of the rectangle.
+   *
+   * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/toJSON)
+   */
+  toJSON(): any
+}
 /**
  * DOM适配器接口，定义了操作DOM元素的基本方法
  * 提供创建、修改、删除DOM元素以及处理事件和样式的能力
@@ -22,24 +82,24 @@ export interface HostAdapter {
    * @template T - 元素类型
    * @param type - 元素类型，如 'div', 'span' 等
    * @param initAttributes - 初始属性对象
-   * @returns { HostElement<T> } 返回创建的元素实例
+   * @returns { HostElements<T> } 返回创建的元素实例
    */
   createElement<T extends HostElementNames>(
     type: T,
     initAttributes?: Record<string, any>
-  ): HostElement<T>
+  ): HostElements<T>
   /**
    * 创建SVG元素
    *
    * @template T - 元素类型
    * @param type - 元素类型，如 'svg', 'path' 等
    * @param initAttributes - 初始属性对象
-   * @returns { HostElement<T> } 创建的元素实例
+   * @returns { HostElements<T> } 创建的元素实例
    */
   createSVGElement<T extends HostElementNames>(
     type: T,
     initAttributes?: Record<string, any>
-  ): HostElement<T>
+  ): HostElements<T>
   /**
    * 判断是否为容器元素
    *
@@ -47,7 +107,7 @@ export interface HostAdapter {
    *
    * @param el
    */
-  isContainer(el: HostNodeElement): boolean
+  isContainer(el: HostNodeElements): boolean
   /**
    * 创建文档片段，用于批量DOM操作提高性能
    * @returns { HostFragmentElement } 返回文档片段实例
@@ -77,81 +137,95 @@ export interface HostAdapter {
    * @param el - 元素实例
    * @returns {boolean} - 如果是元素则返回 true，否则返回 false
    */
-  isElement(el: HostNodeElement): el is HostElement
+  isElement(el: HostNodeElements): el is HostElements
   /**
    * 从DOM中移除元素
    * @param el - 要移除的元素实例
    */
-  remove(el: HostNodeElement): void
+  remove(el: HostNodeElements): void
   /**
    * 在指定锚点元素之前插入新元素
    * @param el - 要插入的元素实例
    * @param anchor - 锚点元素，新元素将插入到此元素之前
    */
-  insertBefore(el: HostNodeElement, anchor: HostNodeElement): void
+  insertBefore(el: HostNodeElements, anchor: HostNodeElements): void
   /**
    * 在指定锚点元素之后插入新元素
    * @param el - 要插入的元素实例
    * @param anchor - 锚点元素，新元素将插入到此元素之后
    */
-  insertAfter(el: HostNodeElement, anchor: HostNodeElement): void
+  insertAfter(el: HostNodeElements, anchor: HostNodeElements): void
   /**
    * 用新元素替换旧元素
    * @param newElement - 新元素实例
    * @param oldElement - 要被替换的旧元素实例
    */
-  replace(newElement: HostNodeElement, oldElement: HostNodeElement): void
+  replace(newElement: HostNodeElements, oldElement: HostNodeElements): void
   /**
    * 将元素添加到父元素的子元素列表末尾
    * @param parent - 父元素实例
    * @param el - 要添加的子元素实例
    */
   appendChild(
-    parent: HostParentElement | HostRegularElement | HostFragmentElement,
-    el: HostNodeElement
+    parent: HostParentElement | HostRegularElements | HostFragmentElement,
+    el: HostNodeElements
   ): void
   /**
    * 设置元素的样式
    * @param el - 元素实例
    * @param style - 样式规则对象
    */
-  setStyle(el: HostElement, style: StyleRules): void
+  setStyle(el: HostElements, style: StyleRules): void
+  /**
+   * 添加样式
+   * @param el - 元素实例
+   * @param key - 样式属性名
+   * @param value - 样式属性值
+   * @returns {()=>void} - 移除/恢复到之前的样式
+   */
+  addStyle<K extends keyof StyleRules>(el: HostElements, key: K, value: StyleRules[K]): () => void
+  /**
+   * 移除样式
+   * @param el - 元素实例
+   * @param key - 样式属性名
+   */
+  removeStyle(el: HostElements, key: string): void
   /**
    * 获取元素的计算样式
    * @param el - 元素实例
-   * @returns {StyleRules} - 元素的计算样式对象
+   * @returns {DOMRect} - 元素的计算样式对象
    */
-  getComputedStyle(el: HostElement): StyleRules
+  getBoundingClientRect(el: HostElements): DOMRect
   /**
    * 设置元素的CSS类
    * @param el - 元素实例
    * @param classValue - CSS类名数组
    */
-  setClass(el: HostElement, classValue: string[]): void
+  setClass(el: HostElements, classValue: string[]): void
   /**
    * 添加样式类
    * @param el
    * @param className
    */
-  addClass(el: HostElement, className: string): void
+  addClass(el: HostElements, className: string): void
   /**
    * 移除样式类
    * @param el
    * @param className
    */
-  removeClass(el: HostElement, className: string): void
+  removeClass(el: HostElements, className: string): void
   /**
    * 获取动画时间
    *
    * @returns {number} 动画时间，单位毫秒，0则代表无
    */
-  getAnimationDuration(el: HostElement): number
+  getAnimationDuration(el: HostElements): number
   /**
    * 获取过渡时间
    *
    * @returns {number} 过渡时间，单位毫秒，0则代表无
    */
-  getTransitionDuration(el: HostElement): number
+  getTransitionDuration(el: HostElements): number
   /**
    * 请求动画帧
    *
@@ -177,7 +251,7 @@ export interface HostAdapter {
    * @param el - 元素实例
    * @param visible - 是否显示元素
    */
-  setDisplay(el: HostElement, visible: boolean): void
+  setDisplay(el: HostElements, visible: boolean): void
   /**
    * 设置元素的属性
    * @param el - 元素实例
@@ -185,20 +259,20 @@ export interface HostAdapter {
    * @param nextValue - 新属性值
    * @param prevValue - 旧属性值（可选）
    */
-  setAttribute(el: HostElement, key: string, nextValue: any, prevValue?: any): void
+  setAttribute(el: HostElements, key: string, nextValue: any, prevValue?: any): void
   /**
    * 移除元素的属性
    * @param el - 元素实例
    * @param key - 属性名
    * @param prevValue - 旧属性值（可选）
    */
-  removeAttribute(el: HostElement, key: string, prevValue?: any): void
+  removeAttribute(el: HostElements, key: string, prevValue?: any): void
   /**
    * 设置元素的属性
    * @param el - 元素实例
    * @param attrs - 属性对象
    */
-  setAttributes(el: HostElement, attrs: Record<string, any>): void
+  setAttributes(el: HostElements, attrs: Record<string, any>): void
   /**
    * 设置元素的文本内容
    * @param el - 元素实例
@@ -211,33 +285,33 @@ export interface HostAdapter {
    * @param name - 事件名称
    * @param handler - 事件处理函数
    */
-  addEventListener(el: HostElement, name: string, handler: (...args: any[]) => any): void
+  addEventListener(el: HostElements, name: string, handler: (...args: any[]) => any): void
   /**
    * 移除元素的事件监听器
    * @param el - 元素实例
    * @param name - 事件名称
    * @param handler - 要移除的事件处理函数
    */
-  removeEventListener(el: HostElement, name: string, handler: (...args: any[]) => any): void
+  removeEventListener(el: HostElements, name: string, handler: (...args: any[]) => any): void
   /**
    * 查询元素
    *
    * @param selector - 选择器字符串
    * @param [container] - 可选的容器元素实例，不传入时，默认为body
-   * @returns { HostElement | null } 查询到的元素实例，或者null
+   * @returns { HostElements | null } 查询到的元素实例，或者null
    */
-  querySelector(selector: string, container?: HostParentElement): HostElement | null
+  querySelector(selector: string, container?: HostParentElement): HostElements | null
   /**
    * 查询元素下的指定选择器的所有元素
    * @param selector - 选择器字符串
    * @param [container] - 可选的容器元素实例，不传入时，默认为body
-   * @returns { HostElement[] } 查询到的元素实例数组
+   * @returns { HostElements[] } 查询到的元素实例数组
    */
-  querySelectorAll(selector: string, container?: HostParentElement): HostElement[]
+  querySelectorAll(selector: string, container?: HostParentElement): HostElements[]
   /**
    * 获取元素的父元素
    * @param el - 元素实例
    * @returns { HostParentElement | null } 父元素实例，或者null
    */
-  getParentElement(el: HostNodeElement): HostParentElement | null
+  getParentElement(el: HostNodeElements): HostParentElement | null
 }
