@@ -1,6 +1,6 @@
 import { toCapitalize } from '@vitarx/utils/src/index.js'
 import { useDomAdapter } from '../../host-adapter/index.js'
-import type { HostElement, HostNodeElement } from '../../types/index.js'
+import type { HostElement, HostNodeElement, VNodeChild, VNodeChildren } from '../../types/index.js'
 import { VNode } from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 
@@ -74,8 +74,21 @@ export interface TransitionCssClass {
  * 过渡模式、持续时间等设置。
  */
 export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass {
-  /** 子节点，可以是单个 VNode 或 VNode 数组 */
-  children: VNode | VNode[]
+  /**
+   * 子节点
+   *
+   * 可以是单个，也可以是多个
+   * 仅元素类型/组件类型节点支持过渡。
+   *
+   * @example
+   * ```tsx
+   * <Transition>
+   *   <div v-if="show">内容</div>
+   *   <div v-if="!show">内容</div>
+   * </Transition>
+   * ```
+   */
+  children: VNodeChild | VNodeChildren
   /** 过渡名称前缀，用于生成 CSS 类名，默认为 'v' */
   name?: string
   /** 是否在初始渲染时触发过渡，默认为 false */
@@ -131,33 +144,33 @@ const DEFAULT_PROPS = {
 
 /**
  * 过渡组件基类
- * 
+ *
  * 提供了过渡动画的核心功能，包括进入、离开和首次出现动画。
  * 支持 CSS 过渡和 JavaScript 钩子两种方式实现动画效果。
- * 
+ *
  * ## 主要特性
- * 
+ *
  * - 支持三种过渡类型：enter（进入）、leave（离开）、appear（首次出现）
  * - 支持 CSS 过渡和 JavaScript 钩子两种实现方式
  * - 可自定义过渡持续时间
  * - 可自定义 CSS 类名
  * - 提供完整的生命周期钩子函数
  * - 支持取消正在进行的动画
- * 
+ *
  * ## 使用示例
- * 
+ *
  * ### 基础用法
- * 
+ *
  * ```tsx
  * class MyTransition extends BaseTransition {
  *   // 实现具体的过渡逻辑
  * }
- * 
+ *
  * // 使用 CSS 过渡
  * <MyTransition name="fade">
  *   {show && <div>内容</div>}
  * </MyTransition>
- * 
+ *
  * // 对应的 CSS
  * .fade-enter-active, .fade-leave-active {
  *   transition: opacity 0.5s;
@@ -166,9 +179,9 @@ const DEFAULT_PROPS = {
  *   opacity: 0;
  * }
  * ```
- * 
+ *
  * ### 使用 JavaScript 钩子
- * 
+ *
  * ```tsx
  * <MyTransition
  *   onBeforeEnter={(el) => console.log('进入前', el)}
@@ -187,11 +200,11 @@ const DEFAULT_PROPS = {
  *   {show && <div>内容</div>}
  * </MyTransition>
  * ```
- * 
+ *
  * ## 过渡类名
- * 
+ *
  * 当使用 CSS 过渡时，BaseTransition 会自动应用以下类名：
- * 
+ *
  * - `v-enter-from`：定义进入过渡的开始状态
  * - `v-enter-active`：定义进入过渡生效时的状态
  * - `v-enter-to`：定义进入过渡的结束状态
@@ -201,11 +214,11 @@ const DEFAULT_PROPS = {
  * - `v-appear-from`：定义首次出现过渡的开始状态
  * - `v-appear-active`：定义首次出现过渡生效时的状态
  * - `v-appear-to`：定义首次出现过渡的结束状态
- * 
+ *
  * 其中 `v` 是 Transition 组件的 name 属性值，默认为 "v"。
- * 
+ *
  * ## 注意事项
- * 
+ *
  * - 这是一个抽象基类，需要通过继承来实现具体的过渡组件
  * - 子类需要实现具体的过渡逻辑和渲染逻辑
  * - 当使用 CSS 过渡时，确保在 CSS 中正确定义了过渡或动画属性
