@@ -1,6 +1,11 @@
 import { toCapitalize } from '@vitarx/utils/src/index.js'
 import { useDomAdapter } from '../../host-adapter/index.js'
-import type { HostElement, HostNodeElement, VNodeChild, VNodeChildren } from '../../types/index.js'
+import type {
+  HostElements,
+  HostNodeElements,
+  VNodeChild,
+  VNodeChildren
+} from '../../types/index.js'
 import { VNode } from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 
@@ -12,32 +17,32 @@ import { Widget } from '../base/index.js'
  */
 export interface TransitionHooks {
   /** 进入动画被取消时调用 */
-  onEnterCancelled?: (el: HostElement) => void
+  onEnterCancelled?: (el: HostElements) => void
   /** 离开动画被取消时调用 */
-  onLeaveCancelled?: (el: HostElement) => void
+  onLeaveCancelled?: (el: HostElements) => void
   /** 首次出现动画被取消时调用 */
-  onAppearCancelled?: (el: HostElement) => void
+  onAppearCancelled?: (el: HostElements) => void
 
   /** 进入动画开始前调用 */
-  onBeforeEnter?(el: HostElement): void
+  onBeforeEnter?(el: HostElements): void
   /** 进入动画开始时调用，需要手动调用 done() 来表示动画完成 */
-  onEnter?(el: HostElement, done: () => void): void
+  onEnter?(el: HostElements, done: () => void): void
   /** 进入动画完成后调用 */
-  onAfterEnter?(el: HostElement): void
+  onAfterEnter?(el: HostElements): void
 
   /** 离开动画开始前调用 */
-  onBeforeLeave?(el: HostElement): void
+  onBeforeLeave?(el: HostElements): void
   /** 离开动画开始时调用，需要手动调用 done() 来表示动画完成 */
-  onLeave?(el: HostElement, done: () => void): void
+  onLeave?(el: HostElements, done: () => void): void
   /** 离开动画完成后调用 */
-  onAfterLeave?(el: HostElement): void
+  onAfterLeave?(el: HostElements): void
 
   /** 首次出现动画开始前调用 */
-  onBeforeAppear?(el: HostElement): void
+  onBeforeAppear?(el: HostElements): void
   /** 首次出现动画开始时调用，需要手动调用 done() 来表示动画完成 */
-  onAppear?(el: HostElement, done: () => void): void
+  onAppear?(el: HostElements, done: () => void): void
   /** 首次出现动画完成后调用 */
-  onAfterAppear?(el: HostElement): void
+  onAfterAppear?(el: HostElements): void
 }
 
 /**
@@ -237,7 +242,7 @@ export abstract class BaseTransition<
    * 支持 NodeJS 环境的 setTimeout 类型
    */
   private activeTransitions = new WeakMap<
-    HostElement,
+    HostElements,
     { id: ReturnType<typeof setTimeout> | null; cancel: () => void }
   >()
 
@@ -249,7 +254,7 @@ export abstract class BaseTransition<
    *
    * @param el - 要执行动画的元素
    */
-  protected runAppear(el: HostNodeElement) {
+  protected runAppear(el: HostNodeElements) {
     this.runTransition(el, 'appear')
   }
 
@@ -294,7 +299,7 @@ export abstract class BaseTransition<
    * @param doneCallback - 动画完成后的回调函数
    */
   protected runTransition(
-    el: HostNodeElement,
+    el: HostNodeElements,
     type: 'enter' | 'leave' | 'appear',
     doneCallback?: () => void
   ): void {
@@ -388,27 +393,6 @@ export abstract class BaseTransition<
       })
     }
   }
-  /**
-   * 取消元素上正在进行的过渡动画
-   *
-   * 清除元素上的定时器，从活动过渡映射中移除该元素，
-   * 并触发取消钩子函数（如果提供）。
-   *
-   * @param el - 要取消动画的元素
-   * @param cancelledHook - 动画被取消时的钩子函数（可选）
-   */
-  private cancelTransition(el: HostElement, cancelledHook?: (el: HostElement) => void) {
-    const tick = this.activeTransitions.get(el)
-    if (tick) {
-      this.activeTransitions.delete(el)
-      tick.id && clearTimeout(tick.id)
-      try {
-        tick.cancel()
-      } finally {
-        cancelledHook?.(el)
-      }
-    }
-  }
 
   /**
    * 获取动画持续时间
@@ -420,7 +404,7 @@ export abstract class BaseTransition<
    * @param type - 动画类型，'enter' 或 'leave'
    * @returns {number} 动画最长耗时
    */
-  private getDuration(el: HostElement, type: 'enter' | 'leave' | 'appear'): number {
+  protected getDuration(el: HostElements, type: 'enter' | 'leave' | 'appear'): number {
     // 如果 duration 是数字，直接返回
     if (typeof this.props.duration === 'number') {
       return this.props.duration
@@ -441,6 +425,28 @@ export abstract class BaseTransition<
         const td = dom.getTransitionDuration(el)
         const ad = dom.getAnimationDuration(el)
         return Math.max(td, ad)
+    }
+  }
+
+  /**
+   * 取消元素上正在进行的过渡动画
+   *
+   * 清除元素上的定时器，从活动过渡映射中移除该元素，
+   * 并触发取消钩子函数（如果提供）。
+   *
+   * @param el - 要取消动画的元素
+   * @param cancelledHook - 动画被取消时的钩子函数（可选）
+   */
+  private cancelTransition(el: HostElements, cancelledHook?: (el: HostElements) => void) {
+    const tick = this.activeTransitions.get(el)
+    if (tick) {
+      this.activeTransitions.delete(el)
+      tick.id && clearTimeout(tick.id)
+      try {
+        tick.cancel()
+      } finally {
+        cancelledHook?.(el)
+      }
     }
   }
 }
