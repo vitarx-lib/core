@@ -1,7 +1,7 @@
 import { type App, getAppContext } from '../../app/index.js'
 import type {
   BindParentElement,
-  HostNodeElement,
+  HostNodeElements,
   HostParentElement,
   MountType,
   ValidNodeProps,
@@ -94,7 +94,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
   /**
    * @inheritDoc
    */
-  override mount(target?: HostNodeElement, type?: MountType): void {
+  override mount(target?: HostNodeElements, type?: MountType): void {
     if (this.teleport) {
       if (target) {
         // 插入影子元素

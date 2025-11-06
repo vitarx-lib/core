@@ -50,7 +50,7 @@ export const mixinContainerNode = (node: ContainerNode) => {
    */
   node['unmountChildren'] = function (this: ContainerNode) {
     for (const child of this.children) {
-      child.unmount(false)
+      child.unmount()
     }
   }
 

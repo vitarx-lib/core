@@ -3,7 +3,7 @@ import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/respons
 import { logger } from '@vitarx/utils'
 import type {
   ErrorSource,
-  HostNodeElement,
+  HostNodeElements,
   LifecycleHookParameter,
   LifecycleHookReturnType,
   MountType,
@@ -267,7 +267,7 @@ export class StatefulWidgetNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: HostNodeElement, type?: MountType): this {
+  override mount(target?: HostNodeElements, type?: MountType): this {
     // 未渲染调用this.element渲染一次元素
     if (this.state === NodeState.Created) this.render()
     super.mount(target, type)
@@ -328,7 +328,7 @@ export class StatefulWidgetNode<
   /**
    * @inheritDoc
    */
-  override unmount(root: boolean = true): void {
+  override unmount(): void {
     // 检查当前状态是否允许卸载
     if (this.state === NodeState.Unmounted) {
       throw new Error(`the node is already ${this.state}`)
@@ -336,7 +336,7 @@ export class StatefulWidgetNode<
     // 触发onDeactivated生命周期
     this.triggerLifecycleHook(LifecycleHooks.deactivated)
     // 递归卸载子节点
-    this.child.unmount(root)
+    this.child.unmount()
     // 停止作用域
     this.scope.dispose()
     if (this.state !== NodeState.Deactivated) {

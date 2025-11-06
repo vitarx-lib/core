@@ -5,7 +5,7 @@ import type {
   BindParentElement,
   HostAdapter,
   HostCommentElement,
-  HostNodeElement,
+  HostNodeElements,
   HostParentElement,
   IntrinsicAttrNames,
   MountType,
@@ -318,7 +318,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @param [target] - 挂载目标，仅根节点需要提供，子节点在渲染时就已经形成真实的挂载关系，所以不需要提供
    * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
    */
-  abstract mount(target?: HostNodeElement, type?: MountType): void
+  abstract mount(target?: HostNodeElements, type?: MountType): void
   /**
    * 让小部件恢复激活状态，重新挂载到父元素上。
    *
@@ -337,10 +337,8 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * 卸载元素或组件的方法
    *
    * 此方法需实现元素/组件的卸载逻辑
-   *
-   * @param {boolean} [root=true] - 是否做为根元素卸载
    */
-  abstract unmount(root?: boolean): void
+  abstract unmount(): void
   /**
    * 渲染方法，返回宿主元素实例
    * 该方法用于获取当前组件的宿主元素实例

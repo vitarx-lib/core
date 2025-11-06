@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
 import type {
-  HostElement,
+  HostElements,
   HostParentElement,
   MountType,
   NodeElementType,
@@ -56,7 +56,7 @@ export class StatelessWidgetNode<
   /**
    * @inheritDoc
    */
-  override mount(target?: HostElement | HostParentElement, type?: MountType): void {
+  override mount(target?: HostElements | HostParentElement, type?: MountType): void {
     if (this.state === NodeState.Created) this.element
     super.mount(target, type)
   }
@@ -84,13 +84,12 @@ export class StatelessWidgetNode<
   /**
    * @inheritDoc
    */
-  override unmount(root: boolean = true): void {
+  override unmount(): void {
     // 递归卸载子节点
-    this.child.unmount(root)
+    this.child.unmount()
     this._child = null
     this.state = NodeState.Unmounted
   }
-
   /**
    * 构建组件方法
    * 根据组件类型和属性生成对应的虚拟DOM节点
@@ -139,7 +138,6 @@ export class StatelessWidgetNode<
     // 将当前根节点与新构建的节点进行差异更新，并将结果赋值给_rootNode
     this._child = VNodeUpdate.patch(this.child, newNode)
   }
-
   /**
    * @inheritDoc
    */

@@ -1,6 +1,6 @@
 import type {
   BindParentElement,
-  HostNodeElement,
+  HostNodeElements,
   HostNodeNames,
   HostParentElement,
   MountType,
@@ -76,13 +76,9 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
   /**
    * @inheritDoc
    */
-  override unmount(root: boolean = true): void {
+  override unmount(): void {
     this.unmountChildren?.()
-    if (root) {
-      this.dom.remove(this.element)
-    } else if (this.teleport) {
-      this.dom.remove(this.element)
-    }
+    this.dom.remove(this.element)
     this.cachedElement = null
     this.state = NodeState.Unmounted
   }
@@ -103,7 +99,7 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
   /**
    * @inheritDoc
    */
-  override mount(target?: HostNodeElement, type?: MountType): void {
+  override mount(target?: HostNodeElements, type?: MountType): void {
     const teleport = this.teleport
     let element: NodeElementType = this.element
     if (teleport) {
