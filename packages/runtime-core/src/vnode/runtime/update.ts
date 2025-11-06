@@ -12,10 +12,34 @@ import {
   isStatelessWidgetNode
 } from '../utils/index.js'
 
-interface ChildUpdateHooks {
-  onMount?: (node: VNode) => void
-  onMove?: (node: VNode) => void
-  onUnmount?: (node: VNode, done: () => void) => void
+export interface ChildNodeUpdateHooks {
+  /**
+   * 挂载一个子节点
+   *
+   * @param child - 已被挂载的子节点
+   */
+  onMount?: (child: VNode) => void
+  /**
+   * 移动一个子节点
+   *
+   * @param child - 已被移动的子节点
+   */
+  onMove?: (child: VNode) => void
+  /**
+   * 卸载一个子节点
+   *
+   * @param child - 要卸载的子节点
+   * @param done - 完成回调函数，务必调用！
+   */
+  onUnmount?: (child: VNode, done: () => void) => void
+  /**
+   * 更新两个子节点
+   *
+   * @param oldChild - 旧节点
+   * @param newChild - 新节点
+   * @param done - 完成回调函数，务必调用！
+   */
+  onUpdate?: (oldChild: VNode, newChild: VNode, done: () => void) => void
 }
 /**
  * VNode 更新管理器
@@ -183,7 +207,7 @@ export class VNodeUpdate {
   static patchUpdateChildren(
     parent: ContainerNode,
     nextVNode: ContainerNode,
-    hooks?: ChildUpdateHooks
+    hooks?: ChildNodeUpdateHooks
   ): VNode[] {
     const dom = useDomAdapter()
     const oldChildren = parent.children
@@ -216,15 +240,16 @@ export class VNodeUpdate {
       }
       return newChildren
     }
-    // 获取移动钩子函数
-    const onMove = typeof hooks?.onMove === 'function' ? hooks.onMove : undefined
     // 通过 key 匹配新旧子节点，获取映射关系和需要移除的节点
     const { newIndexToOldIndex, removedNodes } = this.matchChildrenByKey(oldChildren, newChildren)
 
     // 计算最长递增子序列，用于优化节点移动操作
     const seq = this.getLIS(newIndexToOldIndex)
     let seqIndex = seq.length - 1
-
+    // 获取移动钩子函数
+    const onMove = typeof hooks?.onMove === 'function' ? hooks.onMove : undefined
+    // 获取更新钩子函数
+    const onUpdate = typeof hooks?.onUpdate === 'function' ? hooks.onUpdate : undefined
     // 从后向前遍历新子节点，处理复用、移动和创建
     for (let i = newChildren.length - 1; i >= 0; i--) {
       const oldIndex = newIndexToOldIndex[i]
@@ -234,7 +259,12 @@ export class VNodeUpdate {
       // 如果旧节点中有匹配的节点，则复用
       if (oldIndex !== -1) {
         const reuseChild = oldChildren[oldIndex]
-        this.patch(reuseChild, newChild)
+        if (onUpdate) {
+          onUpdate(reuseChild, newChild, () => this.patchUpdateNode(reuseChild, newChild))
+        } else {
+          // 更新节点
+          this.patchUpdateNode(reuseChild, newChild)
+        }
         newChildren[i] = reuseChild
 
         // 检查是否需要移动节点
@@ -250,12 +280,20 @@ export class VNodeUpdate {
 
       // 没有匹配的旧节点，创建新节点
       newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
+      onMount?.(newChild)
     }
 
-    // 卸载不再需要的旧节点
-    for (const removedNode of removedNodes) {
-      removedNode.unmount()
+    if (onUnmount) {
+      for (const removedNode of removedNodes) {
+        onUnmount(removedNode, () => removedNode.unmount())
+      }
+    } else {
+      // 卸载不再需要的旧节点
+      for (const removedNode of removedNodes) {
+        removedNode.unmount()
+      }
     }
+
     return newChildren
   }
 
