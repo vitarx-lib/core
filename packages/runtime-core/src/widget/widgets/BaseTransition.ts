@@ -236,7 +236,10 @@ export abstract class BaseTransition<
    * 用于跟踪每个元素的过渡动画，以便在需要时取消动画。
    * 支持 NodeJS 环境的 setTimeout 类型
    */
-  private activeTransitions = new WeakMap<HostElement, number | NodeJS.Timeout>()
+  private activeTransitions = new WeakMap<
+    HostElement,
+    { id: number | NodeJS.Timeout; cancel: () => void }
+  >()
 
   /**
    * 执行首次出现动画
@@ -253,16 +256,16 @@ export abstract class BaseTransition<
   /**
    * 执行进入动画
    *
-   * 处理新节点的进入动画。首先挂载新节点，然后根据配置执行过渡动画。
+   * 必须先挂载节点
+   *
+   * 处理新节点的进入动画。
+   *
    * 如果目标元素不是有效的 DOM 元素，则直接挂载并调用完成回调。
    *
    * @param newChild - 要进入的新子节点 VNode
-   * @param anchor - 插入位置的锚点元素
    * @param done - 动画完成后的回调函数（可选）
    */
-  protected runEnter(newChild: VNode, anchor: HostNodeElement, done?: () => void) {
-    // 挂载新节点并执行过渡动画
-    newChild.mount(anchor, 'replace')
+  protected runEnter(newChild: VNode, done?: () => void) {
     this.runTransition(newChild.element, 'enter', done)
   }
 
@@ -277,10 +280,7 @@ export abstract class BaseTransition<
    */
   protected runLeave(oldChild: VNode, done?: () => void) {
     // 执行离开过渡动画，动画结束后移除元素
-    this.runTransition(oldChild.element, 'leave', () => {
-      oldChild.unmount()
-      done?.()
-    })
+    this.runTransition(oldChild.element, 'leave', done)
   }
 
   /**
@@ -348,7 +348,13 @@ export abstract class BaseTransition<
         this.activeTransitions.delete(el)
       }, duration + 1)
       // 记录定时器以便取消
-      this.activeTransitions.set(el, timer)
+      this.activeTransitions.set(el, {
+        id: timer,
+        cancel: () => {
+          dom.removeClass(el, toClass)
+          dom.removeClass(el, activeClass)
+        }
+      })
     } else {
       // JavaScript-only 模式，钩子自行控制 done
       let ended = false
@@ -412,10 +418,11 @@ export abstract class BaseTransition<
    * @param cancelledHook - 动画被取消时的钩子函数（可选）
    */
   private cancelTransition(el: HostElement, cancelledHook?: (el: HostElement) => void) {
-    const timer = this.activeTransitions.get(el)
-    if (timer) {
-      clearTimeout(timer as number)
+    const tick = this.activeTransitions.get(el)
+    if (tick) {
       this.activeTransitions.delete(el)
+      clearTimeout(tick.id)
+      tick.cancel()
       cancelledHook?.(el)
     }
   }
