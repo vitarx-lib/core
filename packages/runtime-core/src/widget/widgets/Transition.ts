@@ -1,6 +1,7 @@
 import { computed } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils/src/index.js'
 import { useDomAdapter } from '../../host-adapter/index.js'
+import type { HostNodeElement } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'
 import { isNonElementNode, VNode, VNodeUpdate } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
@@ -216,17 +217,41 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
     switch (this.props.mode) {
       case 'out-in':
         // 先执行离开动画，完成后再执行进入动画
-        this.runLeave(oldChild, () => this.runEnter(newChild, anchor))
+        this.runLeave(oldChild, () => this.mountAndEnter(newChild, anchor))
         break
       case 'in-out':
         // 先执行进入动画，完成后再执行离开动画
-        this.runEnter(newChild, anchor, () => this.runLeave(oldChild))
+        this.mountAndEnter(newChild, anchor, () => this.runLeave(oldChild))
         break
       default:
         // 同时执行进入和离开动画
         this.runLeave(oldChild)
-        this.runEnter(newChild, anchor)
+        this.mountAndEnter(newChild, anchor)
     }
     return newChild
+  }
+
+  /**
+   * @inheritDoc
+   */
+  protected override runLeave(oldChild: VNode, done?: () => void) {
+    // 执行离开动画或过渡效果，done回调会在动画完成后执行（如果提供）
+    super.runLeave(oldChild, () => {
+      oldChild.unmount() // 卸载虚拟节点对应的DOM元素
+      done?.() // 如果提供了done回调，则执行它
+    })
+  }
+
+  /**
+   * 挂载并执行进入新子节点动画
+   * @param newChild - 新的虚拟节点(VNode)需要被挂载
+   * @param anchor - 锚点(HostNodeElement)，用于确定新节点的插入位置
+   * @param done - 可选的回调函数，在动画完成或操作完成后执行
+   */
+  private mountAndEnter(newChild: VNode, anchor: HostNodeElement, done?: () => void) {
+    // 调用mount方法将新子节点挂载到指定锚点位置，使用'replace'模式
+    newChild.mount(anchor, 'replace')
+    // 执行进入动画或过渡效果，done回调会在动画完成后执行（如果提供）
+    this.runEnter(newChild, done)
   }
 }
