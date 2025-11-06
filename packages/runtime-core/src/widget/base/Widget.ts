@@ -42,7 +42,7 @@ import { CLASS_WIDGET_BASE_SYMBOL } from '../constants/index.js'
  */
 export abstract class Widget<
   InputProps extends AnyProps = {},
-  DefaultProps extends Partial<InputProps> = InputProps
+  DefaultProps extends AnyProps | Partial<InputProps> = InputProps
 > {
   /**
    * 类小部件标识符符
