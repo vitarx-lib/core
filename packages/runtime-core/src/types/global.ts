@@ -103,6 +103,9 @@ declare global {
      * Vitarx 框架内置固有属性
      */
     interface IntrinsicAttributes extends GlobalIntrinsicAttributes {}
+    /**
+     * App配置项
+     */
     interface AppConfig {
       /**
        * 错误处理函数
@@ -120,6 +123,15 @@ declare global {
        * 默认为 `v-`
        */
       idPrefix?: string
+    }
+    /**
+     * JSX元素类型
+     *
+     * 此类型定义了jsx表达式支持的元素映射，
+     * 并添加了 ref 支持。
+     */
+    type JSXIntrinsicElements = {
+      [tagName in keyof Vitarx.IntrinsicElements]: WithRefProps<Vitarx.IntrinsicElements[tagName]>
     }
   }
   namespace JSX {
@@ -152,9 +164,7 @@ declare global {
      * }
      * ```
      */
-    type IntrinsicElements = {
-      [tagName in keyof Vitarx.IntrinsicElements]: WithRefProps<Vitarx.IntrinsicElements[tagName]>
-    }
+    interface IntrinsicElements extends Vitarx.JSXIntrinsicElements {}
     /**
      * 组件属性类型转换
      *
