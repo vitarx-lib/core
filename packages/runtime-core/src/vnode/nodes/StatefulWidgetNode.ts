@@ -296,7 +296,7 @@ export class StatefulWidgetNode<
    * 在不触发生命周期钩子或异步调度的情况下，
    * 同步执行节点的补丁更新操作。
    */
-  syncSilentUpdate(): void {
+  public syncSilentUpdate(): void {
     // 定义同步静默更新方法，无返回值
     try {
       // 如果节点状态不是已渲染或有父元素
@@ -362,7 +362,7 @@ export class StatefulWidgetNode<
    * @param args - 生命周期钩子参数，包含错误信息等相关数据
    * @return {VNode | void} VNode对象或void，用于渲染错误状态或执行错误处理逻辑
    */
-  reportError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
+  public reportError(...args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
     try {
       // 首先检查实例上是否存在自定义错误处理器
       if (typeof this.instance.onError === 'function') {
@@ -450,7 +450,7 @@ export class StatefulWidgetNode<
    *
    * @returns {VNode} 返回构建好的虚拟节点
    */
-  public rebuild(): VNode {
+  protected rebuild(): VNode {
     // 如果已存在视图依赖订阅器，则先释放旧的订阅器
     if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
 
