@@ -1,5 +1,5 @@
 export * from './id.js'
-export * from './twoWayBind.js'
+export * from './twoWayRef.js'
 export * from './props.js'
 export * from './delay.js'
 export * from './style.js'

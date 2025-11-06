@@ -12,7 +12,7 @@ import {
 } from '@vitarx/responsive'
 
 /**
- * TwoWayBindProp 类实现了一个双向绑定的属性代理，用于在组件Prop和响应式系统之间建立双向数据绑定。
+ * TwoWayRef 类实现了一个双向绑定的属性代理，用于在组件Prop和响应式系统之间建立双向数据绑定。
  *
  * 核心功能：
  * - 提供对组件Prop的响应式访问
@@ -21,7 +21,7 @@ import {
  * 使用示例：
  * ```typescript
  * const props = { count: 0 }; // 模拟的组件props对象
- * const boundCount = new TwoWayBindProp(props, 'count', 0);
+ * const boundCount = new TwoWayRef(props, 'count', 0);
  * boundCount.value = 10; // 会自动更新 props.count
  * ```
  *
@@ -35,7 +35,7 @@ import {
  * - 会自动处理原始值是否为 RefSignal 的情况
  * - 当属性值未改变时，不会触发更新
  */
-export class TwoWayBindProp<T extends {}, K extends keyof T> implements RefSignal<T[K]> {
+export class TwoWayRef<T extends {}, K extends keyof T> implements RefSignal<T[K]> {
   readonly [REF_SIGNAL_SYMBOL] = true
   readonly [SIGNAL_SYMBOL] = true
   private readonly _ref: RefSignal
@@ -52,7 +52,7 @@ export class TwoWayBindProp<T extends {}, K extends keyof T> implements RefSigna
       }
     })
     // 为了解决父组件传入的是 ref() , 所以初始化默认值通过 this.value 来使传入的ref更新
-    if (defaultValue !== undefined) this.value = defaultValue
+    if (defaultValue !== undefined && this._ref.value === undefined) this.value = defaultValue
   }
   get [SIGNAL_RAW_VALUE_SYMBOL]() {
     return this._ref.value
@@ -109,8 +109,8 @@ export class TwoWayBindProp<T extends {}, K extends keyof T> implements RefSigna
  *
  * @example
  * // 在组件中使用
- * function MyInput(props: { value: string, onChange: (value: string) => void }) {
- *   const valueRef = useTwoWayBind(props, 'value')
+ * function MyInput(props: { value: string) {
+ *   const valueRef = TwoWayRef(props, 'value')
  *
  *   const handleChange = (e: Event) => {
  *     // 修改valueRef.value会自动更新props.value或其对应的Ref
@@ -123,15 +123,18 @@ export class TwoWayBindProp<T extends {}, K extends keyof T> implements RefSigna
  * // 使用组件
  * function App() {
  *   const value = ref('initial')
- *   return <MyInput value={value} onChange={setValue} />
+ *   watch(value,(newValue)=>{
+ *     console.log('value changed:', newValue)
+ *   })
+ *   return <MyInput value={value}/>
  * }
  *
- * @see {@linkcode TwoWayBindProp} - 实现双向绑定的属性代理的类
+ * @see {@linkcode TwoWayRef} - 实现双向绑定的属性代理的类
  */
-export function useTwoWayBind<T extends {}, K extends keyof T>(
+export function useTwoWayRef<T extends {}, K extends keyof T>(
   props: T,
   propName: K,
   defaultValue?: T[K]
-): TwoWayBindProp<T, K> {
-  return new TwoWayBindProp(props, propName, defaultValue)
+): TwoWayRef<T, K> {
+  return new TwoWayRef(props, propName, defaultValue)
 }
