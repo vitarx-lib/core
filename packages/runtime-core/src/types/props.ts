@@ -216,6 +216,7 @@ export interface IntrinsicAttributes {
    */
   'v-parent'?: BindParentElement
 }
+
 /**
  * CSS 样式规则类型
  */
