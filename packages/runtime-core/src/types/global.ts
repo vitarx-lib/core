@@ -1,5 +1,6 @@
 import { DYNAMIC_RENDER_TYPE, type Render } from '../vnode/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
+import type { DOMRect as VDOMRect } from './hostAdapter.js'
 import type { ErrorHandler } from './lifecycle.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
@@ -15,6 +16,11 @@ import type {
 } from './widget.js'
 
 declare global {
+  /**
+   * DOMRect 接口，表示一个矩形区域，
+   * 用于测量和操作元素位置和尺寸。
+   */
+  interface DOMRect extends VDOMRect {}
   namespace Vitarx {
     /**
      * 宿主平台父节点接口
