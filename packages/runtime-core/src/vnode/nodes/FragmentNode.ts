@@ -1,14 +1,14 @@
 import { unref } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
+import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../../constants/index.js'
 import type {
   FragmentNodeType,
   NodeElementType,
   ValidNodeProps,
   VNodeNormalizedChildren
 } from '../../types/index.js'
-import { type ContainerNode, HostNode, mixinContainerNode } from '../base/index.js'
-import { FRAGMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
-import { normalizeChildren } from '../runtime/internal/normalize.js'
+import { type ContainerNode, mixinContainerNode, normalizeChildren } from '../core/ContainerNode.js'
+import { HostNode } from '../core/HostNode.js'
 
 /**
  * FragmentNode是一个容器节点类，用于管理文档片段(Fragment)的子节点。

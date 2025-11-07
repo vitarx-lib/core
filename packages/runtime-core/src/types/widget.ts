@@ -1,4 +1,8 @@
-import type { STATELESS_FUNCTION_WIDGET_SYMBOL, Widget } from '../widget/index.js'
+import {
+  type __WIDGET_INTRINSIC_METHOD_KEYWORDS__,
+  STATELESS_FUNCTION_WIDGET_SYMBOL
+} from '../constants/widget.js'
+import type { Widget } from '../widget/index.js'
 import type { VNodeChild } from './vnode.js'
 
 /**
@@ -164,3 +168,9 @@ export interface StatelessWidgetSymbol {
  * 只要未显式标记为无状态的小部件，则默认为有状态的小部件
  */
 export type StatefulWidget<P extends AnyProps = any> = ClassWidget<P> | FunctionWidget<P>
+
+/** 排除组件内部保留的方法 */
+export type ExcludeWidgetIntrinsicMethods<T> = Omit<
+  T,
+  (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
+>

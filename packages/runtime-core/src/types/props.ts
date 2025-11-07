@@ -1,5 +1,6 @@
 import type { RefSignal } from '@vitarx/responsive'
-import type { Fragment, RefEl, Render } from '../vnode/index.js'
+import type { Fragment, Render } from '../constants/index.js'
+import type { RefEl } from '../utils/index.js'
 import type {
   HostParentElement,
   IntrinsicElements,

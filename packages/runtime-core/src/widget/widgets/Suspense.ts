@@ -1,8 +1,10 @@
 import { shallowRef, Subscriber, watch } from '@vitarx/responsive'
+import { NodeState } from '../../constants/index.js'
+import { linkParentNode, provide, SUSPENSE_COUNTER_SYMBOL } from '../../runtime/index.js'
 import type { AnyProps, ErrorHandler, VNodeChild } from '../../types/index.js'
-import { isVNode, linkParentNode, NodeState, provide, VNode } from '../../vnode/index.js'
-import { Widget } from '../base/Widget.js'
-import { SUSPENSE_COUNTER_SYMBOL } from '../utils/index.js'
+import { isVNode } from '../../utils/index.js'
+import type { VNode } from '../../vnode/index.js'
+import { Widget } from '../core/Widget.js'
 
 /**
  * Suspense小部件的配置选项

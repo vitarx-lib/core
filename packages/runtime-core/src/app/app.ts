@@ -1,8 +1,9 @@
 import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
+import { runInAppContext } from '../runtime/index.js'
 import type { ErrorInfo, WidgetType } from '../types/index.js'
-import { createVNode, isStatefulWidgetNode, StatefulWidgetNode } from '../vnode/index.js'
-import { runInAppContext } from './context.js'
+import { isStatefulWidgetNode } from '../utils/index.js'
+import { createVNode, StatefulWidgetNode } from '../vnode/index.js'
 
 /** 应用配置 */
 export type AppConfig = Vitarx.AppConfig

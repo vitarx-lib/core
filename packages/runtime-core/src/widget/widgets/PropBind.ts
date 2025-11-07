@@ -1,7 +1,8 @@
+import { Fragment } from '../../constants/index.js'
 import type { AnyProps, VNodeChildren } from '../../types/index.js'
-import { createVNode, Fragment, FragmentNode, isVNode } from '../../vnode/index.js'
-import { handleBindProps } from '../../vnode/runtime/internal/normalize.js'
-import { defineStatelessWidget } from '../utils/index.js'
+import { isVNode } from '../../utils/index.js'
+import { defineStatelessWidget } from '../../utils/widget.js'
+import { createVNode, FragmentNode, VNode } from '../../vnode/index.js'
 
 interface PropBindProps {
   children: VNodeChildren
@@ -35,8 +36,7 @@ const PropBind = defineStatelessWidget(
       // 检查子组件是否为虚拟节点，如果是则处理其属性
       if (isVNode(child)) {
         const props = child.props as AnyProps
-        props['v-bind'] = bindProps
-        handleBindProps(props)
+        VNode.bindProps(props, bindProps)
       }
     })
     // 创建并返回一个 Fragment 元素，包含处理后的子组件列表

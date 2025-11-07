@@ -1,6 +1,6 @@
+import { NodeShapeFlags } from '../../constants/index.js'
 import type { VoidElementNodeType } from '../../types/index.js'
-import { ElementNode } from '../base/index.js'
-import { NodeShapeFlags } from '../constants/index.js'
+import { ElementNode } from '../core/ElementNode.js'
 
 /**
  * VoidElementVNode 是一个用于表示自闭合 HTML 元素的虚拟节点类。

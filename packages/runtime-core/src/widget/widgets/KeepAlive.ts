@@ -5,16 +5,9 @@ import type {
   UniqueKey,
   WidgetType
 } from '../../types/index.js'
-import { onPropChange } from '../../utils/index.js'
-import {
-  createVNode,
-  isWidgetNode,
-  type StatefulWidgetNode,
-  type VNode,
-  WidgetNode
-} from '../../vnode/index.js'
-import { Widget } from '../base/index.js'
-import { isWidget } from '../utils/index.js'
+import { isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
+import { createVNode, type StatefulWidgetNode, type VNode, WidgetNode } from '../../vnode/index.js'
+import { Widget } from '../core/index.js'
 
 /**
  * KeepAlive配置选项

@@ -6,22 +6,16 @@
  */
 
 import { useDomAdapter } from '../../adapter/index.js'
+import { type Fragment, FRAGMENT_NODE_TYPE } from '../../constants/index.js'
+import { type ChildNodeUpdateHooks, VNodeUpdate } from '../../runtime/index.js'
 import type {
   FragmentNodeType,
   HostRegularElementNames,
   VNodeChild,
   WithNodeProps
 } from '../../types/index.js'
-import {
-  type ChildNodeUpdateHooks,
-  type ContainerNode,
-  createVNode,
-  type Fragment,
-  FRAGMENT_NODE_TYPE,
-  isContainerNode,
-  VNode,
-  VNodeUpdate
-} from '../../vnode/index.js'
+import { isContainerNode } from '../../utils/index.js'
+import { type ContainerNode, createVNode, VNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 /**

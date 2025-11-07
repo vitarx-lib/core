@@ -1,0 +1,9 @@
+export const enum NodeShapeFlags {
+  REGULAR_ELEMENT,
+  VOID_ELEMENT,
+  FRAGMENT,
+  TEXT,
+  COMMENT,
+  STATEFUL_WIDGET,
+  STATELESS_WIDGET
+}

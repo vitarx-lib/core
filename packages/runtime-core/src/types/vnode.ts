@@ -7,16 +7,18 @@
 
 import {
   COMMENT_NODE_TYPE,
-  CommentNode,
   type DynamicRenderType,
   type Fragment,
   FRAGMENT_NODE_TYPE,
+  type Render,
+  TEXT_NODE_TYPE
+} from '../constants/index.js'
+import {
+  CommentNode,
   FragmentNode,
   RegularElementNode,
-  type Render,
   StatefulWidgetNode,
   StatelessWidgetNode,
-  TEXT_NODE_TYPE,
   TextNode,
   VNode
 } from '../vnode/index.js'

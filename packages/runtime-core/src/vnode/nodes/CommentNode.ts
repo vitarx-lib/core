@@ -1,6 +1,6 @@
+import { COMMENT_NODE_TYPE, NodeShapeFlags } from '../../constants/index.js'
 import type { CommentNodeType, NodeElementType, ValidNodeProps } from '../../types/index.js'
-import { NonElementNode } from '../base/index.js'
-import { COMMENT_NODE_TYPE, NodeShapeFlags } from '../constants/index.js'
+import { NonElementNode } from '../core/NonElementNode.js'
 
 /**
  * 表示一个注释节点的虚拟节点类，用于在DOM中创建和管理注释节点。

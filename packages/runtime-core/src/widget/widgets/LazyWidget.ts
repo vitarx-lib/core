@@ -1,5 +1,7 @@
 import { Ref, withAsyncContext } from '@vitarx/responsive'
-import { isRecordObject } from '@vitarx/utils'
+import { isRecordObject, withDelayAndTimeout } from '@vitarx/utils'
+import { NodeState } from '../../constants/index.js'
+import { useSuspense } from '../../runtime/index.js'
 import type {
   AnyProps,
   ErrorHandler,
@@ -8,10 +10,9 @@ import type {
   WidgetPropsType,
   WidgetType
 } from '../../types/index.js'
-import { withDelayAndTimeout } from '../../utils/index.js'
-import { createVNode, isVNode, NodeState, type VNode } from '../../vnode/index.js'
-import { Widget } from '../base/index.js'
-import { getSuspenseCounter } from '../utils/index.js'
+import { isVNode } from '../../utils/index.js'
+import { createVNode, VNode } from '../../vnode/index.js'
+import { Widget } from '../core/index.js'
 
 /**
  * 惰性加载小部件配置选项
@@ -103,7 +104,7 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   private isUnmounted: boolean = false
   constructor(props: LazyWidgetProps<T>) {
     super(props)
-    this.suspenseCounter = getSuspenseCounter()
+    this.suspenseCounter = useSuspense()
     // 如果有上级暂停计数器则让计数器+1
     if (this.suspenseCounter) this.suspenseCounter.value++
     this.onError = props.onError

@@ -1,5 +1,6 @@
-import { VNode } from '../vnode/index.js'
-import { LifecycleHooks, Widget } from '../widget/index.js'
+import type { LifecycleHooks } from '../constants/index.js'
+import type { VNode } from '../vnode/index.js'
+import type { Widget } from '../widget/index.js'
 
 /**
  * 错误来源联合类型

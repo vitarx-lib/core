@@ -1,6 +1,6 @@
+import { NodeShapeFlags, TEXT_NODE_TYPE } from '../../constants/index.js'
 import type { NodeElementType, TextNodeType, ValidNodeProps } from '../../types/index.js'
-import { NonElementNode } from '../base/index.js'
-import { NodeShapeFlags, TEXT_NODE_TYPE } from '../constants/index.js'
+import { NonElementNode } from '../core/NonElementNode.js'
 
 /**
  * TextNode 是一个用于表示纯文本节点的虚拟节点类，继承自 NonElementNode。

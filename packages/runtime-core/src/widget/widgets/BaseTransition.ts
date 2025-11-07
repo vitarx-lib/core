@@ -7,7 +7,7 @@ import type {
   VNodeChildren
 } from '../../types/index.js'
 import { VNode } from '../../vnode/index.js'
-import { Widget } from '../base/index.js'
+import { Widget } from '../core/index.js'
 
 /**
  * 过渡钩子函数接口

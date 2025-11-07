@@ -1,9 +1,11 @@
 import { computed } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils'
 import { useDomAdapter } from '../../adapter/index.js'
+import { VNodeUpdate } from '../../runtime/index.js'
 import type { HostNodeElements } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'
-import { isNonElementNode, VNode, VNodeUpdate } from '../../vnode/index.js'
+import { isNonElementNode } from '../../utils/index.js'
+import type { VNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 interface TransitionProps extends BaseTransitionProps {

@@ -1,4 +1,8 @@
+import { unref } from '@vitarx/responsive'
+import type { AnyRecord } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
+import { NodeShapeFlags, NodeState } from '../../constants/index.js'
+import { linkParentNode, VNodeUpdate } from '../../runtime/index.js'
 import type {
   HostElements,
   HostParentElement,
@@ -8,11 +12,9 @@ import type {
   StatelessWidgetNodeType,
   ValidNodeProps
 } from '../../types/index.js'
-import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
-import { NodeShapeFlags, NodeState } from '../constants/index.js'
-import { linkParentNode, VNodeUpdate } from '../runtime/index.js'
-import { unwrapRefProps } from '../runtime/internal/normalize.js'
-import { isVNode } from '../utils/index.js'
+import { isVNode } from '../../utils/index.js'
+import type { VNode, WaitNormalizedProps } from '../core/VNode.js'
+import { WidgetNode } from '../core/WidgetNode.js'
 import { CommentNode } from './CommentNode.js'
 import { TextNode } from './TextNode.js'
 
@@ -146,6 +148,10 @@ export class StatelessWidgetNode<
     if (defaultProps && typeof defaultProps === 'object') {
       props = { ...defaultProps, ...props }
     }
-    return unwrapRefProps(props) as NodeNormalizedProps<T>
+    // 解包ref
+    for (const prop in props) {
+      ;(props as AnyRecord)[prop] = unref(props[prop])
+    }
+    return props as NodeNormalizedProps<T>
   }
 }

@@ -1,14 +1,15 @@
 import { unref } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
+import { NodeShapeFlags } from '../../constants/index.js'
 import type {
   RegularElementNodeType,
   ValidNodeProps,
   VNodeNormalizedChildren
 } from '../../types/index.js'
-import { type ContainerNode, ElementNode, mixinContainerNode, VNode } from '../base/index.js'
-import { NodeShapeFlags } from '../constants/index.js'
-import { normalizeChildren } from '../runtime/internal/normalize.js'
-import { isElementNode } from '../utils/index.js'
+import { isElementNode } from '../../utils/index.js'
+import { type ContainerNode, mixinContainerNode, normalizeChildren } from '../core/ContainerNode.js'
+import { ElementNode } from '../core/ElementNode.js'
+import type { VNode } from '../core/VNode.js'
 
 /**
  * RegularElementNode 是一个用于表示虚拟DOM中元素节点的类。

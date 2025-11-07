@@ -1,6 +1,13 @@
 import type { DependencyMap } from '@vitarx/responsive'
 import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
+import { LifecycleHooks, NodeShapeFlags, NodeState } from '../../constants/index.js'
+import {
+  findParentNode,
+  linkParentNode,
+  proxyWidgetProps,
+  runInNodeContext
+} from '../../runtime/index.js'
 import type {
   ErrorSource,
   HostNodeElements,
@@ -13,18 +20,11 @@ import type {
   ValidNodeProps,
   WidgetInstanceType
 } from '../../types/index.js'
-import { __DEV__ } from '../../utils/index.js'
-import { initializeFnWidget } from '../../widget/base/FnWidget.js'
-import { FnWidget, isClassWidget, LifecycleHooks } from '../../widget/index.js'
-import { VNode, type WaitNormalizedProps, WidgetNode } from '../base/index.js'
-import { NodeShapeFlags, NodeState } from '../constants/index.js'
-import {
-  findParentNode,
-  linkParentNode,
-  proxyWidgetProps,
-  runInNodeContext
-} from '../runtime/index.js'
-import { isStatefulWidgetNode, isVNode } from '../utils/index.js'
+import { __DEV__, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
+import { isClassWidget } from '../../utils/widget.js'
+import { FnWidget, initializeFnWidget } from '../../widget/core/FnWidget.js'
+import { VNode, type WaitNormalizedProps } from '../core/VNode.js'
+import { WidgetNode } from '../core/WidgetNode.js'
 import { CommentNode } from './CommentNode.js'
 import { TextNode } from './TextNode.js'
 
@@ -176,7 +176,7 @@ export class StatefulWidgetNode<
           const instance = new FnWidget(this.props)
           this._instance = instance as unknown as WidgetInstanceType<T>
           // 初始化函数组件并收集钩子
-          initializeFnWidget(instance).then(() => {
+          initializeFnWidget(instance, StatefulWidgetNode).then(() => {
             this._isReady = true
             resolve(this._instance!)
           })
@@ -197,9 +197,10 @@ export class StatefulWidgetNode<
     return this.scope.run(() => runInNodeContext(this, fn))
   }
   /**
-   * 向子组件提供数据或方法
-   * @param name 提供者的标识符，可以是字符串或符号
-   * @param value 要提供的值，可以是任意类型
+   * 向下提供注入值
+   *
+   * @param name 注入名称
+   * @param value 注入的值
    */
   provide(name: string | symbol, value: any): void {
     // 如果当前没有提供者对象，则创建一个新的
@@ -209,12 +210,14 @@ export class StatefulWidgetNode<
     this._provide.set(name, value)
   }
   /**
-   * 获取提供者提供的值
-   * @param name 要获取的提供者标识符
-   * @param defaultValue 当提供者不存在时返回的默认值
-   * @returns { any } 返回提供者提供的值，如果不存在则返回默认值
+   * 获取注入值的方法
+   *
+   * @template T - 注入值的类型
+   * @param name - 要获取的注入值的名称，可以是字符串或symbol类型
+   * @param defaultValue - 可选参数，当指定名称的注入值不存在时返回的默认值
+   * @returns {T} 返回获取到的注入值，如果不存在则返回默认值
    */
-  getProvide<T = any>(name: string | symbol, defaultValue?: T): T {
+  inject<T = any>(name: string | symbol, defaultValue?: T): T {
     // 使用可选链操作符访问 provide 对象的属性，如果不存在则返回默认值
     return this._provide?.get(name) ?? defaultValue
   }

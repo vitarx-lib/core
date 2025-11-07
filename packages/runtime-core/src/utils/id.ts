@@ -1,4 +1,4 @@
-import { getAppContext } from '../app/index.js'
+import { getAppContext } from '../runtime/context.js'
 
 let globalId = -1
 /**

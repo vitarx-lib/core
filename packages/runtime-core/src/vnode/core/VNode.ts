@@ -1,0 +1,440 @@
+import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
+import { isObject, isRecordObject, logger, popProperty } from '@vitarx/utils'
+import { useDomAdapter } from '../../adapter/index.js'
+import {
+  INTRINSIC_ATTRIBUTES,
+  NodeShapeFlags,
+  NodeState,
+  VIRTUAL_NODE_SYMBOL
+} from '../../constants/index.js'
+import { getMemoNode, setMemoNode, unlinkParentNode } from '../../runtime/index.js'
+import type {
+  AnyProps,
+  BindAttributes,
+  BindParentElement,
+  HostAdapter,
+  HostCommentElement,
+  HostNodeElements,
+  HostParentElement,
+  IntrinsicAttrNames,
+  MountType,
+  NodeDevInfo,
+  NodeElementType,
+  NodeNormalizedProps,
+  NodeTypes,
+  UniqueKey,
+  ValidNodeProps
+} from '../../types/index.js'
+import { __DEV__, isRefEl, popNodeDevInfo, type RefEl, StyleUtils } from '../../utils/index.js'
+
+/**
+ * 待规范化的属性类型
+ *
+ * 去除了固有属性，只保留了用户输入的其他属性
+ */
+export type WaitNormalizedProps<T extends NodeTypes> = Omit<ValidNodeProps<T>, IntrinsicAttrNames>
+/**
+ * 虚拟节点（VNode）基类，用于构建虚拟DOM树结构。
+ *
+ * 该类提供了虚拟节点的核心功能，包括节点类型管理、属性处理、缓存机制、
+ * 父子节点关系维护等。作为抽象类，它定义了虚拟节点的基本行为和接口，
+ * 具体的渲染和挂载逻辑由子类实现。
+ *
+ * 主要功能：
+ * - 节点类型和属性管理
+ * - 节点缓存和记忆功能（memo）
+ * - 父子节点关系维护
+ * - anchor 元素处理
+ * - 节点生命周期管理（挂载、卸载、激活、停用）
+ *
+ * @template T - 节点类型
+ * @param type - 虚拟节点的类型，可以是标签名（如'div'）、组件（函数或类）或其他类型
+ * @param props - 虚拟节点的属性对象，包含节点的各种配置和属性
+ *
+ * @warning
+ * - 不应直接实例化此类，而应通过其子类使用
+ * - 使用activate/deactivate方法时需注意root参数的正确使用
+ */
+export abstract class VNode<T extends NodeTypes = NodeTypes> {
+  /**
+   * 标记为非信号状态的getter
+   */
+  readonly [NON_SIGNAL_SYMBOL]: true = true
+  /**
+   * 标记为虚拟节点的 getter 方法
+   */
+  readonly [VIRTUAL_NODE_SYMBOL]: true = true
+  /**
+   * 节点标志位
+   */
+  public abstract readonly shapeFlags: NodeShapeFlags
+  /**
+   * 虚拟节点的调试信息
+   *
+   * 仅在开发模式下存在
+   */
+  public devInfo?: NodeDevInfo
+  /**
+   * 虚拟节点类型
+   * 可以是标签名（如 'div'）、组件（函数或类）或特殊符号
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public type: T
+  /**
+   * 唯一标识符
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public readonly key?: UniqueKey
+  /**
+   * 引用
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public ref?: RefEl<any>
+  /**
+   * 静态节点
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public isStatic: boolean = false
+  /**
+   * 规范化后的属性对象
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public props: NodeNormalizedProps<T>
+  /**
+   * 缓存特征数组
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  public memo?: Array<any>
+
+  /**
+   * 创建一个虚拟节点实例
+   * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
+   * @param props 虚拟节点的属性对象
+   */
+  constructor(type: T, props: ValidNodeProps<T>) {
+    // 节点类型
+    this.type = type
+    if (Object.keys(props).length) {
+      // 提取key属性
+      this.key = popProperty(props, 'key')
+      const ref = popProperty(props, 'ref')
+      // 引用
+      if (isRefEl(ref)) this.ref = ref
+      // 提取显示属性
+      this._show = 'v-show' in props ? !!unref(popProperty(props, 'v-show')) : true
+      // 静态节点
+      this.isStatic = !!unref(popProperty(props, 'v-static'))
+      // 缓存
+      const memo = popProperty(props, 'v-memo')
+      // 初始化缓存
+      if (Array.isArray(memo) && !getMemoNode(memo)) {
+        // 备份之前的值
+        this.memo = Array.from(memo)
+        setMemoNode(memo, this)
+      }
+      // 传送目标
+      this._teleport = popProperty(props, 'v-parent') || undefined
+      if (__DEV__) {
+        // 开发模式下的调试信息
+        this.devInfo = popNodeDevInfo(props)
+        if (this.devInfo?.isStatic && !this.isStatic) {
+          logger.warn(`node is static, but not set v-static`, this.devInfo.source)
+        }
+      }
+      // ---------- 取出并绑定属性 v-bind ----------
+      const bind = popProperty(props, 'v-bind')
+      if (isObject(bind)) VNode.bindProps(props, bind)
+    }
+    this.props = this.normalizeProps(props)
+  }
+  /**
+   * 显示状态
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  private _show: boolean = true
+  /**
+   * 返回节点的元素实例
+   *
+   * 如果是组件类型节点则返回组件的根元素实例
+   */
+  get element(): NodeElementType<T> {
+    return this.render()
+  }
+  /**
+   * 获取显示状态的getter方法
+   * 用于返回内部的_show属性值
+   * @returns {boolean} 返回当前的显示状态
+   */
+  get show(): boolean {
+    return this._show // 返回内部的_show属性值
+  }
+  /**
+   * 设置v-show的属性值
+   * @param visible - 传入的显示状态值，可以是响应式引用或普通值
+   */
+  set show(visible: boolean) {
+    if (visible !== this.show) {
+      // 比较新值与当前值，只在不同时更新
+      this._show = visible // 更新内部显示状态
+      this.handleShowState?.(visible)
+    }
+  }
+  /**
+   * 节点状态
+   *
+   * @readonly - 外部只读，请勿修改！
+   */
+  private _state: NodeState = NodeState.Created
+
+  /**
+   * 获取当前节点的状态
+   * 这是一个getter方法，用于返回VNode的内部状态
+   * @returns {NodeState} 返回当前VNode的内部状态
+   */
+  get state(): NodeState {
+    return this._state
+  }
+
+  /**
+   * 传送目标
+   */
+  private _teleport?: Exclude<BindParentElement, null>
+
+  /**
+   * 获取teleport属性的方法
+   * 这是一个getter，用于获取或计算teleport的目标元素
+   * @returns {HostParentElement | null} 返回宿主父级元素，如果不存在则返回null
+   */
+  get teleport(): HostParentElement | undefined {
+    if (typeof this._teleport === 'string') {
+      // 检查_teleport是否为字符串类型
+      const target = this.dom.querySelector(this._teleport) // 如果是字符串，则使用该字符串作为选择器查询DOM元素
+      if (target && this.dom.isContainer(target)) {
+        // 检查查询到的元素是否存在以及是否为容器元素
+        return (this._teleport = target as HostParentElement) // 如果验证通过，将_teleport更新为该元素并返回
+      }
+      return undefined // 如果验证不通过，返回null
+    }
+    return this._teleport // 如果_teleport不是字符串，直接返回其值
+  }
+
+  /**
+   * 设置虚拟节点状态的受保护方法
+   *
+   * @protected
+   * @param state - 要设置的新的虚拟节点状态
+   */
+  protected set state(state: NodeState) {
+    // 如果设置的状态与当前状态相同，则直接返回，不做任何处理
+    if (state === this._state) return
+    // 如果设置的状态为未挂载(Unmounted)状态
+    if (state === NodeState.Unmounted || state === NodeState.Created) {
+      // 检查是否存在锚点元素
+      if (this._anchor) {
+        // 从DOM中移除锚点元素
+        this.dom.remove(this._anchor)
+        // 将锚点引用置为null
+        this._anchor = null
+      }
+      this.memo = undefined
+      // 移除父级映射
+      unlinkParentNode(this)
+      // 移除引用
+      if (this.ref) this.ref.value = null
+    }
+    this._state = state
+  }
+
+  /**
+   * 获取当前节点在 DOM 操作中的目标元素
+   *
+   * 如果节点启用了传送 (teleport) 或被停用 (deactivated)，
+   * 返回锚点；否则返回实际的元素实例。
+   */
+  public get operationTarget(): HostCommentElement | NodeElementType<T> {
+    return this.teleport || this.state === NodeState.Deactivated ? this.anchor : this.element
+  }
+  /**
+   * 节点树中展示的名称
+   */
+  abstract readonly name: string
+  /**
+   * 获取 Dom 适配器实例
+   */
+  get dom(): HostAdapter {
+    return useDomAdapter()
+  }
+  /**
+   * DOM 锚点（Anchor Node）
+   *
+   * 用于在节点启用传送（teleport）或临时停用（deactivate）时，
+   * 记录该节点在原始 DOM 树中的实际插入位置。
+   *
+   * 框架通过此锚点在重新激活（activate）时恢复节点顺序，
+   * 或在传送结束时将节点还原至原始位置。
+   */
+  private _anchor: HostCommentElement | null = null
+  /**
+   * 获取或创建当前节点的锚点元素
+   * 这是一个受保护属性，用于在DOM中标记组件的位置
+   *
+   * @returns {HostCommentElement} 返回一个注释节点作为锚点，用于在DOM中标记组件的位置
+   */
+  public get anchor(): HostCommentElement {
+    // 如果锚点元素尚未创建，则创建一个新的注释节点作为锚点
+    if (!this._anchor) {
+      // 创建一个注释节点，内容包含组件名称和"anchor placeholder"标记
+      // 这个注释节点将作为组件在DOM中的位置标记
+      return (this._anchor = this.dom.createComment(`${this.name} placeholder anchor`))
+    }
+    // 如果锚点元素已存在，直接返回它
+    return this._anchor
+  }
+
+  /**
+   * 设置传送目标
+   *
+   * 仅对 this.teleport 进项了赋值，派生类可重写此方法以处理传送目标的变化
+   *
+   * @param {BindParentElement} teleport - 传送目标
+   * @returns {void}
+   */
+  public setTeleport(teleport: BindParentElement): void {
+    this._teleport = teleport || undefined
+  }
+  /**
+   * 绑定属性
+   *
+   * @param props - 属性对象
+   * @param {BindAttributes} bind - 要绑定的属性
+   */
+  public static bindProps(props: AnyProps, bind: BindAttributes): void {
+    // ---------- Step 1: 解析绑定源与排除列表 ----------
+    let source: AnyProps
+    let exclude: Set<string> | null = null
+
+    if (Array.isArray(bind)) {
+      // v-bind 是数组形式： [源对象, 排除数组]
+      const [src, ex] = bind as [props: AnyProps, exclude: string[]]
+      if (!isRecordObject(src)) return
+      source = src
+      if (Array.isArray(ex) && ex.length) exclude = new Set(ex)
+    } else {
+      // 普通对象形式
+      source = bind
+    }
+
+    // ---------- Step 2: 遍历并合并属性 ----------
+    for (const [key, rawValue] of Object.entries(source)) {
+      // ---- 跳过无效属性 ----
+      if (
+        rawValue === undefined || // 忽略 undefined 值
+        INTRINSIC_ATTRIBUTES.has(key) || // 忽略固有属性（如 key/ref 等）
+        (exclude && exclude.has(key)) // 忽略用户指定排除属性
+      ) {
+        continue
+      }
+
+      const existing = props[key] // 当前 props 中已有的值
+      const value = unref(rawValue) // 解包可能的 ref/reactive 值
+      // 用于定义特定属性的自定义合并逻辑
+      const SPECIAL_MERGERS = {
+        style: StyleUtils.mergeCssStyle,
+        class: StyleUtils.mergeCssClass,
+        className: StyleUtils.mergeCssClass,
+        classname: StyleUtils.mergeCssClass
+      } as const
+      // ---- 特殊属性处理（class/style）----
+      if (key in SPECIAL_MERGERS) {
+        const merger = SPECIAL_MERGERS[key as keyof typeof SPECIAL_MERGERS]
+        props[key] = existing
+          ? merger(unref(existing), value) // 合并已有与新值
+          : value // 无现值则直接使用新值
+        continue
+      }
+
+      // ---- 已存在的普通属性保持不变 ----
+      if (existing !== undefined) continue
+
+      // ---- 新增普通属性 ----
+      props[key] = value
+    }
+  }
+  /**
+   * 挂载虚拟节点到指定的容器中
+   *
+   * 注意：type 为 appendChild 时，target 元素如果传入，则必须支持子元素
+   *
+   * @param [target] - 挂载目标，仅根节点需要提供，子节点在渲染时就已经形成真实的挂载关系，所以不需要提供
+   * @param [type='appendChild'] - 挂载类型，可以是 insertBefore、insertAfter、replace 或 appendChild
+   */
+  abstract mount(target?: HostNodeElements, type?: MountType): void
+  /**
+   * 让小部件恢复激活状态，重新挂载到父元素上。
+   *
+   * @param {boolean} [root=true] - 如果root为true，则需要重新挂载元素，false则不需要
+   * @returns {void}
+   */
+  abstract activate(root?: boolean): void
+  /**
+   * 让小部件停用，将元素从父元素中移除。
+   *
+   * @param {boolean} [root=true] - 如果root为true，则需要重新挂载元素，false则不需要
+   * @returns {void}
+   */
+  abstract deactivate(root?: boolean): void
+  /**
+   * 卸载元素或组件的方法
+   *
+   * 此方法需实现元素/组件的卸载逻辑
+   */
+  abstract unmount(): void
+  /**
+   * 渲染方法，返回宿主元素实例
+   * 该方法用于获取当前组件的宿主元素实例
+   *
+   * @abstract
+   * @returns NodeElementType<T> - 宿主元素实例，泛型T表示元素的具体类型
+   */
+  abstract render(): NodeElementType<T>
+  /**
+   * 抽象方法，用于处理显示状态的变更
+   * @param visible 布尔值，表示新的显示状态
+   */
+  protected handleShowState?(visible: boolean): void
+  /**
+   * 规范化组件属性的抽象方法
+   * 该方法用于处理和验证组件特定的属性，排除全局属性
+   * @param props - 需要规范化的组件属性对象，类型为排除全局属性后的有效创建属性
+   */
+  protected abstract normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T>
+  /**
+   * 更新小部件的挂载状态（激活或停用）
+   *
+   * @param active - true 表示激活，false 表示停用
+   * @param root - 如果为 true，则操作根节点，false 则非根
+   */
+  protected updateActiveState(active: boolean, root: boolean): void {
+    const { teleport, element: el, anchor } = this
+    // 判断是否使用 teleport
+    const useTeleport = !!teleport && (active || !root)
+
+    if (useTeleport) {
+      // teleport 节点处理
+      active ? this.dom.appendChild(teleport, el) : this.dom.remove(el)
+    } else if (root) {
+      // 根节点且无 teleport，用 anchor 替换
+      this.dom.replace(el, anchor)
+    }
+    // 非 root 且无 teleport 不操作 DOM
+    // 更新状态
+    this.state = active ? NodeState.Activated : NodeState.Deactivated
+  }
+}
