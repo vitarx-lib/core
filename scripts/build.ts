@@ -28,10 +28,10 @@ const log = {
  * @param distPath 要检查的目录路径，例如 './dist'。
  */
 async function checkForCircularDependencies(distPath: string): Promise<void> {
-  log.warn(`\nChecking for circular dependencies in ${distPath}...`)
   // 构建命令
   const command = `madge --extensions js --circular ${distPath} --warning --exclude '.*\\.d\\.ts$'`
-
+  log.warn(`\nChecking for circular dependencies`)
+  log.warn(`\n${command}`)
   try {
     // 执行命令
     // 注意：madge 在发现循环依赖时，会将信息输出到 stdout，但退出码为 1
