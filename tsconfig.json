@@ -40,15 +40,5 @@
       "vite/client",
       "node"
     ]
-  },
-  "include": [
-    "**/__tests__",
-    "**/src",
-    "**/global.d.ts",
-    "scripts/*.ts"
-  ],
-  "exclude": [
-    "**/dist",
-    "**/node_modules"
-  ]
+  }
 }
