@@ -1,5 +1,5 @@
 import { getContext, runInContext } from '@vitarx/responsive'
-import { logger } from '@vitarx/utils/src/index.js'
+import { logger } from '@vitarx/utils'
 import { Widget } from '../../widget/index.js'
 import { StatefulWidgetNode } from '../nodes/index.js'
 

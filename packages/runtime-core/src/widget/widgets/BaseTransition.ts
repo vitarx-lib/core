@@ -1,4 +1,4 @@
-import { toCapitalize } from '@vitarx/utils/src/index.js'
+import { toCapitalize } from '@vitarx/utils'
 import { useDomAdapter } from '../../adapter/index.js'
 import type {
   HostElements,
