@@ -183,7 +183,7 @@ export interface HostAdapter {
    * @param value - 样式属性值
    * @returns {()=>void} - 移除/恢复到之前的样式
    */
-  addStyle<K extends keyof StyleRules>(el: HostElements, key: K, value: StyleRules[K]): () => void
+  addStyle(el: HostElements, key: string, value: string | number): () => void
   /**
    * 移除样式
    * @param el - 元素实例
