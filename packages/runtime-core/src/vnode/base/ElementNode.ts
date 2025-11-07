@@ -1,4 +1,9 @@
-import type { ElementNodeType, NodeElementType, NodeNormalizedProps } from '../../types/index.js'
+import type {
+  ElementNodeType,
+  HostElements,
+  NodeElementType,
+  NodeNormalizedProps
+} from '../../types/index.js'
 import { normalizeStyle } from '../runtime/internal/normalize.js'
 import { HostNode } from './HostNode.js'
 
@@ -46,6 +51,6 @@ export abstract class ElementNode<T extends ElementNodeType = ElementNodeType> e
    * @inheritDoc
    */
   protected override handleShowState(visible: boolean): void {
-    this.dom.setDisplay(this.element, visible)
+    this.dom.setDisplay(this.element as HostElements, visible)
   }
 }
