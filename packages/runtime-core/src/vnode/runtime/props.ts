@@ -7,6 +7,7 @@ import {
   SignalManager,
   unref
 } from '@vitarx/responsive'
+import type { AnyRecord } from '@vitarx/utils'
 import { isRecordObject, logger, LogLevel } from '@vitarx/utils'
 import type { AnyProps, MergeProps } from '../../types/index.js'
 import { getCurrentVNode } from './context.js'
@@ -116,14 +117,14 @@ class PropsProxyHandler<T extends Record<string, any>> implements ProxyHandler<T
  * @param {object} defaultProps - 默认属性对象
  * @returns {Readonly<Record<string, any>>} - 只读属性对象
  */
-export function proxyWidgetProps<T extends AnyProps>(
+export function proxyWidgetProps<T extends Record<string | symbol, any>>(
   props: T,
   defaultProps?: Partial<T>
 ): Readonly<T> {
   // 避免重复代理
   if (props[VNODE_PROPS_PROXY_SYMBOL]) {
-    if (!isRecordObject(defaultProps)) {
-      ;(props as AnyProps)[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
+    if (isRecordObject(defaultProps)) {
+      ;(props as AnyRecord)[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
     }
     return props as Readonly<T>
   }

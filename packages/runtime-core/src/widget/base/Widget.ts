@@ -120,7 +120,7 @@ export abstract class Widget<
   readonly #vnode: StatefulWidgetNode
 
   constructor(props: InputProps) {
-    this.#vnode = getCurrentVNode<StatefulWidgetNode>()!
+    this.#vnode = getCurrentVNode()!
     if (__DEV__ && !this.#vnode) {
       throw new Error('The Widget instance must be created in the context of the WidgetVNode')
     }
