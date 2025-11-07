@@ -338,7 +338,7 @@ export abstract class BaseTransition<
       // 获取动画持续时间
       const duration = this.getDuration(el, type)
       // 💡 强制（浏览器）重排，确保动画触发
-      if ('offsetWidth' in el) void el.offsetWidth
+      if ('offsetWidth' in el) void (el as Record<'offsetWidth', number>).offsetWidth
       // 下一帧切换到结束状态
       dom.requestAnimationFrame(() => {
         dom.removeClass(el, from)
