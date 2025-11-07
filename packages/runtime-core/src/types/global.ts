@@ -1,4 +1,4 @@
-import { DYNAMIC_RENDER_TYPE, type Render } from '../vnode/index.js'
+import { DYNAMIC_RENDER_TYPE, type DynamicRenderType, type Render } from '../vnode/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
 import type { DOMRect as VDOMRect } from './hostAdapter.js'
 import type { ErrorHandler } from './lifecycle.js'
@@ -15,6 +15,9 @@ import type {
   WidgetType
 } from './widget.js'
 
+type DefaultHostNodeMap = {
+  [K in Exclude<keyof Vitarx.IntrinsicElements, DynamicRenderType>]: {}
+}
 declare global {
   /**
    * DOMRect 接口，表示一个矩形区域，
@@ -100,7 +103,7 @@ declare global {
      * }
      * ```
      */
-    interface HostNodeMap {}
+    interface HostNodeMap extends DefaultHostNodeMap {}
     /**
      * 元素支持的样式规则
      *
