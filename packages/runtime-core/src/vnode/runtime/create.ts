@@ -8,6 +8,7 @@ import type {
   ValidNodeType,
   VNodeChild,
   VNodeInstanceType,
+  VoidElementNodeType,
   WidgetType
 } from '../../types/index.js'
 import { __DEV__ } from '../../utils/index.js'
@@ -115,10 +116,16 @@ function createVNodeByType<T extends Exclude<ValidNodeType, WidgetType | Dynamic
     case FRAGMENT_NODE_TYPE:
       return new FragmentNode(props) as unknown as VNodeInstanceType<T>
     default:
-      if (useDomAdapter().isVoidElement(type)) {
-        return new VoidElementVNode(type, props) as unknown as VNodeInstanceType<T>
+      if (useDomAdapter().isVoidElement(type as string)) {
+        return new VoidElementVNode(
+          type as VoidElementNodeType,
+          props as unknown as ValidNodeProps<VoidElementNodeType>
+        ) as unknown as VNodeInstanceType<T>
       }
-      return new RegularElementNode(type, props) as unknown as VNodeInstanceType<T>
+      return new RegularElementNode(
+        type as VoidElementNodeType,
+        props as unknown as ValidNodeProps<VoidElementNodeType>
+      ) as unknown as VNodeInstanceType<T>
   }
 }
 
