@@ -85,12 +85,13 @@ function cleanDist(dist: string) {
  */
 function createTempTsConfig(packagePath: string): string {
   // 定义临时配置文件的完整路径
-  const tsconfigPath = join(packagePath, 'tsconfig.temp.json')
+  const tsconfigPath = join(packagePath, 'tsconfig.json')
+  if (existsSync(tsconfigPath)) return tsconfigPath
   // 定义临时配置文件的内容结构
   const tsconfigJson = {
     extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
     compilerOptions: { outDir: 'dist' }, // 设置编译输出目录为dist
-    include: ['src', 'global.d.ts'], // 包含的文件和目录
+    include: ['src'], // 包含的文件和目录
     exclude: ['dist', 'node_modules', '__tests__'] // 排除的文件和目录
   }
   // 将配置对象写入JSON文件，使用2个空格进行格式化
@@ -168,10 +169,13 @@ async function buildPackage(
   log.warn('🔨 Compiling TypeScript...')
   // 创建临时 TypeScript 配置文件
   const tempTsConfig = createTempTsConfig(packagePath)
-  // 使用 tsc 编译 TypeScript
-  await runCommand(`tsc -p ${tempTsConfig}`)
-  // 删除临时配置文件
-  rmSync(tempTsConfig)
+  try {
+    // 使用 tsc 编译 TypeScript
+    await runCommand(`tsc -p ${tempTsConfig}`)
+  } finally {
+    // 删除临时配置文件
+    rmSync(tempTsConfig)
+  }
 
   // vitarx 特殊版本替换处理
   if (packageDirName === 'vitarx') {
