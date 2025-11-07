@@ -126,18 +126,18 @@ export type HostNodeElements<T extends HostNodeNames = HostNodeNames> = HostNode
  * 主机元素类型，表示所有可能的宿主元素
  * @template T - 元素名称类型，默认为所有可能的宿主元素名称
  */
-export type HostElements<T extends HostElementNames = HostElementNames> = HostNodeInstanceMap[T]
+export type HostElements<T extends HostElementNames = HostElementNames> = HostNodeElements<T>
 
 /**
  * 主机空元素类型，表示没有子内容的自闭合元素（如img、br、hr等）
  * @template T - 空元素名称类型，默认为所有可能的宿主空元素名称
  */
 export type HostVoidElements<T extends HostVoidElementNames = HostVoidElementNames> =
-  HostNodeInstanceMap[T]
+  HostNodeElements<T>
 
 /**
  * 主机常规元素类型，表示可以包含子内容的元素
  * @template T - 常规元素名称类型，默认为所有可能的宿主常规元素名称
  */
 export type HostRegularElements<T extends HostRegularElementNames = HostRegularElementNames> =
-  HostNodeInstanceMap[T]
+  HostNodeElements<T>
