@@ -216,7 +216,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
         const recoverTransitionDuration = dom.addStyle(el, 'transitionDuration', '0s')
 
         // 强制 reflow，确保动画触发
-        if ('offsetWidth' in el) void el.offsetWidth
+        if ('offsetWidth' in el) void (el as { offsetWidth: number }).offsetWidth
 
         // 添加 moveClass，启用过渡
         dom.addClass(el, moveClass)
