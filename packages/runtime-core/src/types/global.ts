@@ -1,4 +1,4 @@
-import { DYNAMIC_RENDER_TYPE, type DynamicRenderType, type Render } from '../constants/index.js'
+import { DYNAMIC_RENDER_TYPE, type Render } from '../constants/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
 import type { DOMRect as VDOMRect } from './hostAdapter.js'
 import type { ErrorHandler } from './lifecycle.js'
@@ -15,9 +15,6 @@ import type {
   WidgetType
 } from './widget.js'
 
-type DefaultHostNodeMap = {
-  [K in Exclude<keyof Vitarx.IntrinsicElements, DynamicRenderType>]: {}
-}
 declare global {
   /**
    * DOMRect 接口，表示一个矩形区域，
@@ -82,6 +79,28 @@ declare global {
        */
       [DYNAMIC_RENDER_TYPE]: WidgetPropsType<Render>
     }
+
+    /**
+     * 宿主平台片段节点接口
+     *
+     * 用于表示虚拟的片段节点，通常用于包装多个子节点而不产生额外的DOM元素。
+     * 在渲染时，片段节点本身不会渲染为任何实体元素，只会渲染其子节点。
+     */
+    interface HostFragmentNode {}
+    /**
+     * 宿主平台文本节点接口
+     *
+     * 用于表示纯文本内容的节点，如 <div>Hello</div> 中的 "Hello"。
+     * 文本节点只能包含纯文本内容，不能包含其他元素。
+     */
+    interface HostTextNode {}
+    /**
+     * 宿主平台注释节点接口
+     *
+     * 用于表示注释内容，如 <div><!--This is a comment--></div> 中的 "This is a comment"。
+     * 在开发过程中，注释节点可用于显示调试信息，如条件渲染的提示。
+     */
+    interface HostCommentNode {}
     /**
      * 宿主平台运行时节点映射
      *
@@ -103,7 +122,30 @@ declare global {
      * }
      * ```
      */
-    interface HostNodeMap extends DefaultHostNodeMap {}
+    interface HostNodeMap {
+      /**
+       * 片段元素
+       */
+      fragment: HostFragmentNode
+      /**
+       * 纯文本
+       *
+       * 用于处理纯文本节点，如 <div>Hello</div> 中的 "Hello"。
+       *
+       * @remarks 开发者无需在视图中使用它，在内部逻辑中会自动转换。
+       */
+      'plain-text': HostTextNode
+      /**
+       * 注释
+       *
+       * 用于处理注释节点，如 <div><!--This is a comment--></div> 中的 "This is a comment"。
+       *
+       * 开发时内部会使用注释来提示一些重要信息，如 `v-if = false` 在开发阶段可以通过开发者控制台查看到 `<!--v-if-->` 便于调试。
+       *
+       * @remarks 不建议在视图中使用它，除非你真的需要在生产环境中显示一段注释。
+       */
+      comment: HostCommentNode
+    }
     /**
      * 元素支持的样式规则
      *
