@@ -1,3 +1,4 @@
+import { isReactive } from '../reactive/index.js'
 import type { RefSignal } from '../types/index.js'
 import { isRefSignal, type SignalToRaw, toRaw } from '../utils/index.js'
 import { PropertyRef } from './property.js'
@@ -151,7 +152,7 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
  * 每个 ref 与原对象属性保持双向绑定
  *
  * 该函数主要用于解构 reactive 对象，同时保持响应式特性。
- * 如果传入的是普通对象而非 reactive 对象，会给出警告并仍然创建 ref。
+ * 如果传入的是普通对象而非 reactive 对象，会给出警告但仍然创建代理，但不具备响应式特性。
  *
  * @template T - 对象类型
  * @param {T} object - reactive 对象
@@ -162,19 +163,15 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
  * const { count, user } = toRefs(state)
  * count.value++ // state.count === 1
  * state.user.name = 'Zhang' // user.value.name === 'Zhang'
- *
- * // 对于普通对象
- * const plain = { count: 0 }
- * const { count: countRef } = toRefs(plain)
- * plain.count++
- * console.log(countRef.value) // 0 (普通对象无法保持响应式，因此 countRef.value 为 0)
  * ```
  */
 export function toRefs<T extends object>(object: T): { [K in keyof T]: ToRef<T[K]> } {
+  if (!isReactive(object)) {
+    console.warn(`toRefs() called on a non-reactive object`)
+  }
   const ret: any = {}
   for (const key in object) {
-    const val = (object as any)[key]
-    ret[key] = isRefSignal(val) ? val : toRef(object, key)
+    ret[key] = toRef(object, key)
   }
   return ret
 }
