@@ -103,9 +103,6 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
           case 'insertBefore':
             this.dom.insertBefore(this.anchor, target)
             break
-          case 'insertAfter':
-            this.dom.insertAfter(this.anchor, target)
-            break
           case 'replace':
             this.dom.replace(this.anchor, target)
             break

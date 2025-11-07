@@ -118,7 +118,7 @@ export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetType
  *
  * 挂载类型定义了节点的挂载方式，包括插入、替换、追加等。
  */
-export type MountType = 'insertBefore' | 'insertAfter' | 'replace' | 'appendChild'
+export type MountType = 'insertBefore' | 'replace' | 'appendChild'
 /**
  * 节点实例类型重载
  */

@@ -150,12 +150,6 @@ export interface HostAdapter {
    */
   insertBefore(el: HostNodeElements, anchor: HostNodeElements): void
   /**
-   * 在指定锚点元素之后插入新元素
-   * @param el - 要插入的元素实例
-   * @param anchor - 锚点元素，新元素将插入到此元素之后
-   */
-  insertAfter(el: HostNodeElements, anchor: HostNodeElements): void
-  /**
    * 用新元素替换旧元素
    * @param newElement - 新元素实例
    * @param oldElement - 要被替换的旧元素实例

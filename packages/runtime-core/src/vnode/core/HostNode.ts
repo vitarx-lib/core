@@ -115,9 +115,6 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
         case 'insertBefore':
           dom.insertBefore(element, target)
           break
-        case 'insertAfter':
-          dom.insertAfter(element, target)
-          break
         case 'replace':
           dom.replace(element, target)
           break
