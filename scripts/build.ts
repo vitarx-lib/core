@@ -167,6 +167,7 @@ async function buildPackage(
 
   // TypeScript 编译阶段
   log.warn('🔨 Compiling TypeScript...')
+  const isRemoveTempTsConfig = existsSync(join(packagePath, 'tsconfig.json'))
   // 创建临时 TypeScript 配置文件
   const tempTsConfig = createTempTsConfig(packagePath)
   try {
@@ -174,7 +175,7 @@ async function buildPackage(
     await runCommand(`tsc -p ${tempTsConfig}`)
   } finally {
     // 删除临时配置文件
-    rmSync(tempTsConfig)
+    if (!isRemoveTempTsConfig) rmSync(tempTsConfig)
   }
 
   // vitarx 特殊版本替换处理
