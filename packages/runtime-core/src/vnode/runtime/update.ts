@@ -193,98 +193,85 @@ export class VNodeUpdate {
    * 4. 从后向前遍历新子节点，复用、移动或创建节点
    * 5. 卸载不再需要的旧节点
    *
-   * @param parent - 父容器节点
-   * @param nextVNode - 包含新子节点的虚拟节点
+   * @param currentNode - 当前容器节点
+   * @param nextVNode - 包含新子节点的容器节点
    * @param hooks - 更新钩子函数
    * @returns {VNode[]} 更新后的子节点数组
    */
   static patchUpdateChildren(
-    parent: ContainerNode,
+    currentNode: ContainerNode,
     nextVNode: ContainerNode,
     hooks?: ChildNodeUpdateHooks
   ): VNode[] {
     const dom = useDomAdapter()
-    const oldChildren = parent.children
+    const oldChildren = currentNode.children
     const newChildren = nextVNode.children
-    const parentEl = parent.element
-    // 获取更新钩子函数
-    const onMount = typeof hooks?.onMount === 'function' ? hooks.onMount : undefined
+    const parentEl = currentNode.element
+
+    const onMount = hooks?.onMount
+    const onUnmount = hooks?.onUnmount
+    const onUpdate = hooks?.onUpdate
+
     // 边界情况：旧子节点为空，直接挂载所有新子节点
     if (!oldChildren.length) {
-      if (onMount) {
-        for (const child of newChildren) {
-          child.mount(parentEl)
-          onMount(child)
-        }
-      } else {
-        for (const child of newChildren) child.mount(parentEl)
+      for (const child of newChildren) {
+        child.mount(parentEl)
+        onMount?.(child)
       }
       return newChildren
     }
-    // 获取更新钩子函数
-    const onUnmount = typeof hooks?.onUnmount === 'function' ? hooks.onUnmount : undefined
+
     // 边界情况：新子节点为空，直接卸载所有旧子节点
     if (!newChildren.length) {
-      if (onUnmount) {
-        for (const child of oldChildren) {
-          onUnmount(child, () => child.unmount())
-        }
-      } else {
-        for (const child of oldChildren) child.unmount()
+      for (const child of oldChildren) {
+        onUnmount ? onUnmount(child, () => child.unmount()) : child.unmount()
       }
       return newChildren
     }
-    // 通过 key 匹配新旧子节点，获取映射关系和需要移除的节点
+
+    // 匹配 key，获取映射和需要卸载的节点
     const { newIndexToOldIndex, removedNodes } = this.matchChildrenByKey(oldChildren, newChildren)
 
-    // 计算最长递增子序列，用于优化节点移动操作
+    // 计算最长递增子序列，优化节点移动
     const seq = this.getLIS(newIndexToOldIndex)
     let seqIndex = seq.length - 1
-    // 获取更新钩子函数
-    const onUpdate = typeof hooks?.onUpdate === 'function' ? hooks.onUpdate : undefined
-    // 从后向前遍历新子节点，处理复用、移动和创建
-    for (let i = newChildren.length; i--; ) {
+
+    // 从后向前遍历新子节点
+    for (let i = newChildren.length - 1; i >= 0; i--) {
       const oldIndex = newIndexToOldIndex[i]
       const newChild = newChildren[i]
-      const anchor = newChildren[i + 1]?.operationTarget || null
+      const anchor = newChildren[i + 1]?.operationTarget ?? null
 
-      // 如果旧节点中有匹配的节点，则复用
       if (oldIndex !== -1) {
+        // 节点复用
         const reuseChild = oldChildren[oldIndex]
         if (onUpdate) {
           onUpdate(reuseChild, newChild, (skipShow?: boolean) =>
             this.patchUpdateNode(reuseChild, newChild, skipShow)
           )
         } else {
-          // 更新节点
           this.patchUpdateNode(reuseChild, newChild)
         }
         newChildren[i] = reuseChild
 
-        // 检查是否需要移动节点
+        // 移动节点，如果不在 LIS
         if (seqIndex >= 0 && seq[seqIndex] === i) {
           seqIndex--
         } else {
-          // 节点移动到新位置
-          dom.insertBefore(reuseChild.operationTarget, anchor)
+          if (anchor) dom.insertBefore(reuseChild.operationTarget, anchor)
+          else dom.appendChild(parentEl, reuseChild.operationTarget)
         }
         continue
       }
 
-      // 没有匹配的旧节点，创建新节点
-      newChild.mount(anchor || parentEl, anchor ? 'insertBefore' : 'appendChild')
+      // 新节点挂载
+      newChild.mount(anchor ?? parentEl, anchor ? 'insertBefore' : 'appendChild')
       onMount?.(newChild)
     }
 
-    if (onUnmount) {
-      for (const removedNode of removedNodes) {
-        onUnmount(removedNode, () => removedNode.unmount())
-      }
-    } else {
-      // 卸载不再需要的旧节点
-      for (const removedNode of removedNodes) {
-        removedNode.unmount()
-      }
+    // 卸载不再需要的旧节点
+    for (const removedNode of removedNodes) {
+      onUnmount ? onUnmount(removedNode, () => removedNode.unmount()) : removedNode.unmount()
     }
 
     return newChildren
