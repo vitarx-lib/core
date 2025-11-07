@@ -1,4 +1,4 @@
-import type { Child } from '@vitarx/runtime-core'
+import type { VNodeChild, VNodeChildren } from '@vitarx/runtime-core'
 import type { Properties as CssProperties } from 'csstype'
 import { type HTMLElementEvents } from './event.js'
 
@@ -199,7 +199,7 @@ interface PartAttributes {
   /**
    * 子元素
    */
-  children?: Child | Child[]
+  children?: VNodeChild | VNodeChildren
   /**
    * 表单控件的类型
    *
