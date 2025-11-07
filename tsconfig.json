@@ -40,5 +40,13 @@
       "vite/client",
       "node"
     ]
-  }
+  },
+  "include": [
+    "**/src",
+    "**/tests"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist"
+  ]
 }
