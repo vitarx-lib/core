@@ -1,4 +1,4 @@
-import type { AnyArray, AnyCollection } from './types'
+import type { AnyArray, AnyCollection, AnyRecord } from './types'
 
 /**
  * 判断是否为对象
@@ -20,7 +20,7 @@ export function isObject(val: any): val is object {
  * @param val - 要判断的变量
  * @returns { boolean } - 如果是键值对对象则返回true
  */
-export function isRecordObject(val: any): val is Record<any, any> {
+export function isRecordObject(val: any): val is AnyRecord {
   return val !== null && typeof val === 'object' && !Array.isArray(val)
 }
 
