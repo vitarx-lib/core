@@ -151,10 +151,10 @@ export interface HostAdapter {
   insertBefore(el: HostNodeElements, anchor: HostNodeElements): void
   /**
    * 用新元素替换旧元素
-   * @param newElement - 新元素实例
-   * @param oldElement - 要被替换的旧元素实例
+   * @param newChild - 新节点实例
+   * @param oldChild - 要被替换的旧节点实例
    */
-  replace(newElement: HostNodeElements, oldElement: HostNodeElements): void
+  replace(newChild: HostNodeElements, oldChild: HostNodeElements): void
   /**
    * 将元素添加到父元素的子元素列表末尾
    * @param parent - 父元素实例
@@ -177,7 +177,7 @@ export interface HostAdapter {
    * @param value - 样式属性值
    * @returns {()=>void} - 移除/恢复到之前的样式
    */
-  addStyle(el: HostElements, key: string, value: string | number): () => void
+  addStyle(el: HostElements, key: string, value: string): () => void
   /**
    * 移除样式
    * @param el - 元素实例
@@ -301,7 +301,7 @@ export interface HostAdapter {
    * @param [container] - 可选的容器元素实例，不传入时，默认为body
    * @returns { HostElements[] } 查询到的元素实例数组
    */
-  querySelectorAll(selector: string, container?: HostParentElement): HostElements[]
+  querySelectorAll(selector: string, container?: HostParentElement): Iterable<HostElements>
   /**
    * 获取元素的父元素
    * @param el - 元素实例
