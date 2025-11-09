@@ -104,10 +104,10 @@ export class LazyWidget<T extends WidgetType> extends Widget<LazyWidgetProps<T>>
   private isUnmounted: boolean = false
   constructor(props: LazyWidgetProps<T>) {
     super(props)
+    this.onError = props.onError
     this.suspenseCounter = useSuspense()
     // 如果有上级暂停计数器则让计数器+1
     if (this.suspenseCounter) this.suspenseCounter.value++
-    this.onError = props.onError
     this.load().then()
   }
   override onBeforeUnmount() {
