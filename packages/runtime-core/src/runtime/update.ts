@@ -1,4 +1,5 @@
 import { SubManager, toRaw } from '@vitarx/responsive'
+import { isDeepEqual } from '@vitarx/utils'
 import { useDomAdapter } from '../adapter/index.js'
 import { NodeState } from '../constants/index.js'
 import type { AnyProps, HostElements } from '../types/index.js'
@@ -302,7 +303,7 @@ export class VNodeUpdate {
       // 从删除集合中移除（因为新属性中存在）
       keysToDelete.delete(key)
       // 如果值不同，则添加到变化列表
-      if (oldValue !== newValue) changedKeys.push(key)
+      if (isDeepEqual(newValue, oldValue, 1)) changedKeys.push(key)
     }
 
     // 将剩余的需要删除的属性也添加到变化列表
