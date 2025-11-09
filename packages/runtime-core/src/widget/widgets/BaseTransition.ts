@@ -303,9 +303,6 @@ export abstract class BaseTransition<
     type: 'enter' | 'leave' | 'appear',
     doneCallback?: () => void
   ): void {
-    if (this.$vnode.appContext?.config.ssr) {
-      return doneCallback?.()
-    }
     const dom = useDomAdapter()
     // 如果不是元素节点，不执行动画，但离开时需要删除元素
     if (!dom.isElement(el)) return doneCallback?.()

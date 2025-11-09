@@ -454,8 +454,6 @@ export class StatefulWidgetNode<
    * @returns {VNode} 返回构建好的虚拟节点
    */
   protected rebuild(): VNode {
-    // 如果是服务端渲染，则直接构建根节点
-    if (this.appContext?.config.ssr) return this.buildRootNode()
     // 如果已存在视图依赖订阅器，则先释放旧的订阅器
     if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
 
