@@ -70,21 +70,26 @@ export interface DelayTimeoutOptions<T = any> {
  * ```
  */
 export function withDelayAndTimeout<T>(
-  task: Promise<T>,
+  task: Promise<T> | (() => Promise<T>),
   options: DelayTimeoutOptions<T>
 ): Promise<T> & { cancel: () => void } {
+  // 解构配置选项，设置默认值
   const { delay = 0, timeout = 0, onDelay, onTimeout, onResolve, onReject, signal } = options
-
+  // 声明定时器变量
   let delayTimer: number | undefined
   let timeoutTimer: number | undefined
+  // 标记Promise是否已完成
   let isSettled = false
 
+  // 清除所有定时器的工具函数
   const clearTimers = () => {
     if (delayTimer) clearTimeout(delayTimer)
     if (timeoutTimer) clearTimeout(timeoutTimer)
   }
 
+  // 创建并返回一个带有取消功能的Promise
   const promise = new Promise<T>((resolve, reject) => {
+    // 处理延迟回调
     if (delay > 0 && onDelay) {
       delayTimer = setTimeout(() => {
         if (!isSettled && !signal?.()) onDelay()
@@ -93,6 +98,7 @@ export function withDelayAndTimeout<T>(
       onDelay()
     }
 
+    // 处理超时逻辑
     if (timeout > 0 && onTimeout) {
       timeoutTimer = setTimeout(() => {
         if (isSettled || signal?.()) return
@@ -104,6 +110,12 @@ export function withDelayAndTimeout<T>(
       }, timeout) as unknown as number
     }
 
+    // 如果task是函数，执行它获取Promise
+    if (typeof task === 'function') {
+      task = task()
+    }
+
+    // 处理原始Promise的成功和失败
     task
       .then(value => {
         if (isSettled || signal?.()) return
@@ -121,6 +133,7 @@ export function withDelayAndTimeout<T>(
       })
   })
 
+  // 添加取消方法到Promise实例
   ;(promise as any).cancel = () => {
     if (isSettled) return
     isSettled = true
