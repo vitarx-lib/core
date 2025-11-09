@@ -1,5 +1,6 @@
 import { unref } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
+import { NodeShapeFlags } from '../../constants/index.js'
 import { linkParentNode } from '../../runtime/index.js'
 import type {
   ContainerNodeType,
@@ -74,7 +75,7 @@ export const mixinContainerNode = (node: ContainerNode) => {
    */
   node['activateChildren'] = function (this: ContainerNode) {
     for (const child of this.children) {
-      child.activate()
+      child.activate(this.shapeFlags === NodeShapeFlags.FRAGMENT)
     }
   }
 
@@ -85,7 +86,7 @@ export const mixinContainerNode = (node: ContainerNode) => {
    */
   node['deactivateChildren'] = function (this: ContainerNode) {
     for (const child of this.children) {
-      child.deactivate()
+      child.deactivate(this.shapeFlags === NodeShapeFlags.FRAGMENT)
     }
   }
 
