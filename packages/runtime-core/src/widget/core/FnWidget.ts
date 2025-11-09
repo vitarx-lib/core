@@ -55,14 +55,11 @@ export class FnWidget extends Widget<Record<string, any>> {
     )
     // 暴露的属性和方法数量
     const exposedCount = Object.keys(exposed).length
-    // 钩子数量
-    const hookCount = Object.keys(hooks).length
     // 注入暴露的属性和方法
     if (exposedCount) injectExposed(exposed, this)
-    // 异步完成前仅注册错误钩子
-    if (hookCount) injectHooks(hooks, this)
     // 非异步初始化，则直接设置build方法
     if (!isPromise(buildResult)) {
+      if (Object.keys(hooks).length) injectHooks(hooks, this)
       this.build = typeof buildResult === 'function' ? buildResult : () => buildResult
       return this
     }
@@ -71,6 +68,10 @@ export class FnWidget extends Widget<Record<string, any>> {
     // 如果有上级暂停计数器则让计数器+1
     if (counter) counter.value++
     try {
+      // 异步完成前仅注册错误钩子
+      if ('error' in hooks) {
+        this.onError = hooks.error as (e: any, args: any) => void
+      }
       const result = await withAsyncContext(buildResult)
       // 如果是module对象，则判断是否存在default导出
       this.build = await parseAsyncBuildResult(result, this, nodeConstructor)
@@ -80,8 +81,8 @@ export class FnWidget extends Widget<Record<string, any>> {
         throw e
       }
     } finally {
-      // 如果钩子数量变化，则重新注入钩子
-      if (hookCount !== Object.keys(hooks).length) injectHooks(hooks, this)
+      // 注入钩子
+      injectHooks(hooks, this)
       // 暴露的属性和方法和数量发生变化，则重新注入
       if (exposedCount !== Object.keys(exposed).length) injectExposed(exposed, this)
       doneAsyncRender(this)
@@ -101,17 +102,20 @@ const doneAsyncRender = (instance: FnWidget) => {
   if (vnode.state === NodeState.Unmounted) return
   vnode.triggerLifecycleHook(LifecycleHooks.beforeUpdate)
   if (vnode.state === NodeState.Rendered) {
+    // 还未挂载，触发静默更新
     vnode.syncSilentUpdate()
   } else if (vnode.state === NodeState.Activated) {
+    // 已被挂载
     try {
-      vnode.syncSilentUpdate()
-      vnode.triggerLifecycleHook(LifecycleHooks.mounted)
-      vnode.triggerLifecycleHook(LifecycleHooks.activated)
+      vnode.syncSilentUpdate() // 静默更新
+      vnode.triggerLifecycleHook(LifecycleHooks.mounted) // 补发挂载钩子
+      vnode.triggerLifecycleHook(LifecycleHooks.activated) // 补发激活钩子
     } catch (e) {
       vnode.reportError(e, { source: 'build', instance: instance })
     }
   } else if (vnode.state === NodeState.Deactivated) {
     const userOnActivated = instance.onActivated
+    // 在下一次激活时补发
     instance.onActivated = () => {
       vnode.triggerLifecycleHook(LifecycleHooks.mounted)
       if (userOnActivated) {
@@ -172,7 +176,6 @@ const parseAsyncBuildResult = async (
   }
   return () => buildResult as VNodeChild
 }
-
 /**
  * 初始化函数小部件
  *
