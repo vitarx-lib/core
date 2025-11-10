@@ -96,6 +96,12 @@ export class Suspense extends Widget<SuspenseProps> {
   protected showFallback = true
   private listener?: Subscriber
   private pendingOnResolved: boolean = false
+  /**
+   * 服务端渲染时触发的回调
+   *
+   * @private
+   */
+  private ssrPromise?: (value: void) => void
   constructor(props: SuspenseProps) {
     super(props)
     provide(SUSPENSE_COUNTER_SYMBOL, this.counter)
@@ -133,27 +139,29 @@ export class Suspense extends Widget<SuspenseProps> {
       return `Suspense.onError属性期望得到一个回调函数，给定${typeof props.onError}`
     }
   }
-  /**
-   * 挂载前开始预渲染子节点
-   *
-   * @protected
-   */
-  override onBeforeMount() {
-    // 更新子节点的父节点
+  override async onRender(): Promise<void> {
+    // 链接父子关系
     linkParentNode(this.children, this.$vnode)
-    // 预渲染子节点
+    // 渲染子节点
     this.children.render()
-    // 如果计数器为0，则隐藏回退内容
-    if (this.counter.value === 0) this.stopSuspense()
+    // 如果计数器为0，则直接显示子节点
+    if (this.counter.value === 0) {
+      this.showFallback = false
+      return void 0
+    }
+    return new Promise(resolve => (this.ssrPromise = resolve))
   }
   override onActivated() {
     // 如果是等待更新状态，则调用onUpdated钩子触发onResolved回调
     if (this.pendingOnResolved && typeof this.props.onResolved === 'function') {
       this.pendingOnResolved = false
+      if (this.ssrPromise) {
+        this.ssrPromise()
+        this.ssrPromise = undefined
+      }
       this.props.onResolved()
     }
   }
-
   build(): VNodeChild {
     return this.showFallback ? this.props.fallback : this.children
   }
@@ -171,9 +179,7 @@ export class Suspense extends Widget<SuspenseProps> {
       }
       this.showFallback = false
       this.pendingOnResolved = true
-      if (this.$vnode.state === NodeState.Rendered) {
-        this.$vnode.syncSilentUpdate()
-      } else if (this.$vnode.state === NodeState.Activated) {
+      if (this.$vnode.state !== NodeState.Deactivated) {
         this.$vnode.syncSilentUpdate()
         this.onActivated()
       }
