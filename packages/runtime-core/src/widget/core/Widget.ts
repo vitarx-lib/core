@@ -347,7 +347,7 @@ export abstract class Widget<
    *
    * @param error - 捕获到的错误
    * @param info - 错误的详细信息
-   * @returns {VNode|void} 备用UI，如果返回的不是虚拟节点则不会显示！
+   * @returns {VNode | false | void} 如果返回备用ui或false，事件都不会继续冒泡！
    *
    * @example
    * ```tsx
@@ -362,7 +362,7 @@ export abstract class Widget<
    * }
    * ```
    */
-  onError?(error: unknown, info: ErrorInfo): VNode | void
+  onError?(error: unknown, info: ErrorInfo): VNode | false | void
 
   /**
    * 服务端预取钩子
