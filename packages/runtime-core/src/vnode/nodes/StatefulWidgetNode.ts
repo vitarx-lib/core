@@ -186,6 +186,12 @@ export class StatefulWidgetNode<
     if (!this._provide) {
       this._provide = new Map()
     }
+    if (this.appContext?.hasProvide(name)) {
+      logger.warn(
+        `provide() '${String(name)}' is already used in the app, and repeatedly providing it will be invalid.`
+      )
+      return
+    }
     this._provide.set(name, value)
   }
   /**
