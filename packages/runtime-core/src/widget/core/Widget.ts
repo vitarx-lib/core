@@ -347,7 +347,7 @@ export abstract class Widget<
    *
    * @param error - 捕获到的错误
    * @param info - 错误的详细信息
-   * @returns {VNode|void} 备用UI，如果返回null或undefined，则不显示备用UI
+   * @returns {VNode|void} 备用UI，如果返回的不是虚拟节点则不会显示！
    *
    * @example
    * ```tsx
