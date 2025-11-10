@@ -163,7 +163,15 @@ export abstract class App {
     this.#provide.set(name, value)
     return this
   }
-
+  /**
+   * 检查提供者是否存在
+   *
+   * @param name - 要检查的提供者名称，可以是字符串或Symbol类型
+   * @returns {boolean} 如果存在对应的提供者则返回true，否则返回false
+   */
+  hasProvide(name: string | symbol): boolean {
+    return this.#provide.has(name) // 使用Set的has方法检查是否存在对应的提供者
+  }
   /**
    * 获取注入值的方法
    *
