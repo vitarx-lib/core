@@ -98,7 +98,7 @@ export class StatelessWidgetNode<
    * @returns {VNode | TextNode | CommentNode} 返回构建的虚拟DOM节点
    */
   protected override rebuild(): VNode {
-    const node = this.buildRootNode()
+    const node = this.buildChildNode()
     linkParentNode(node, this)
     return node
   }
@@ -107,7 +107,7 @@ export class StatelessWidgetNode<
    * 根据组件类型和属性创建相应的虚拟DOM节点
    * @returns {VNode | TextNode | CommentNode} 返回构建的节点对象
    */
-  private buildRootNode(): VNode {
+  private buildChildNode(): VNode {
     // 调用组件类型方法并传入props，获取构建结果
     // 如果构建结果是字符串或数字，创建文本节点并返回
     const buildResult = this.appContext
