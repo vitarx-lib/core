@@ -98,6 +98,7 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  *
  * 具体返回值规则：
  * - error 钩子：可以返回 void 或 VNode | false，用于错误时渲染备用UI
+ * - render 钩子：可以返回 Promise<unknown> | void，Promise用于服务端等待渲染
  * - 其他钩子：只能返回 void
  *
  * @template T 生命周期钩子类型
@@ -105,7 +106,7 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
 export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error
   ? VNode | false | void
   : T extends LifecycleHooks.render
-    ? Promise<void> | void
+    ? Promise<unknown> | void
     : void
 
 /**
