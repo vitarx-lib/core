@@ -108,9 +108,11 @@ export function inject<T>(
   if (!currentVNode) {
     throw new Error(`inject can only be used during widget constructor/onCreate`)
   }
-  if (name === 'App') {
-    return (currentVNode.appContext ?? currentVNode.inject('App')) as T
-  }
+  const app = currentVNode.appContext ?? currentVNode.inject('App')
+
+  if (name === 'App') return app as T
+  // 如果有 App 上下文，则尝试从 App 中获取数据
+  if (app && app.inject(name)) return app.inject(name) as T
   // 从当前 VNode 的父级开始查找
   let vnode: VNode | undefined = findParentNode(currentVNode)
   while (vnode) {
