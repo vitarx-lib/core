@@ -100,7 +100,7 @@ export class FnWidget extends Widget<Record<string, any>> {
 const doneAsyncRender = (instance: FnWidget) => {
   const vnode = instance.$vnode
   if (vnode.state === NodeState.Unmounted) return
-  vnode.triggerLifecycleHook(LifecycleHooks.beforeUpdate)
+  vnode.callHook(LifecycleHooks.beforeUpdate)
   if (vnode.state === NodeState.Rendered) {
     // 还未挂载，触发静默更新
     vnode.syncSilentUpdate()
@@ -108,8 +108,8 @@ const doneAsyncRender = (instance: FnWidget) => {
     // 已被挂载
     try {
       vnode.syncSilentUpdate() // 静默更新
-      vnode.triggerLifecycleHook(LifecycleHooks.mounted) // 补发挂载钩子
-      vnode.triggerLifecycleHook(LifecycleHooks.activated) // 补发激活钩子
+      vnode.callHook(LifecycleHooks.mounted) // 补发挂载钩子
+      vnode.callHook(LifecycleHooks.activated) // 补发激活钩子
     } catch (e) {
       vnode.reportError(e, { source: 'build', instance: instance })
     }
@@ -117,7 +117,7 @@ const doneAsyncRender = (instance: FnWidget) => {
     const userOnActivated = instance.onActivated
     // 在下一次激活时补发
     instance.onActivated = () => {
-      vnode.triggerLifecycleHook(LifecycleHooks.mounted)
+      vnode.callHook(LifecycleHooks.mounted)
       if (userOnActivated) {
         try {
           userOnActivated.call(instance)
