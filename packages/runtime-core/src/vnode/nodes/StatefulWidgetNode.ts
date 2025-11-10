@@ -240,8 +240,8 @@ export class StatefulWidgetNode<
     if (this.state !== NodeState.Created) {
       return this.child.element as NodeElementType<T>
     }
-    // 未就绪状态，先创建实例
-    if (!this._isReady) this.createInstance().then()
+    // 先创建实例
+    this.createInstance()
     // 触发beforeMount生命周期钩子，在组件挂载前执行
     this.callHook(LifecycleHooks.beforeMount)
     let el: NodeElementType
@@ -370,7 +370,9 @@ export class StatefulWidgetNode<
       // 首先检查实例上是否存在自定义错误处理器
       if (typeof this.instance.onError === 'function') {
         // 如果存在，则调用该错误处理器并返回结果
-        return this.instance.onError.apply(this.instance, args)
+        const result = this.instance.onError.apply(this.instance, args)
+        if (result === false) return void 0
+        if (isVNode(result)) return result
       }
       // 如果没有自定义错误处理器，则开始查找父级组件
       let parentNode = findParentNode(this)
