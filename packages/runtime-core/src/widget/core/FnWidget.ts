@@ -1,5 +1,6 @@
 import { toRaw, withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
+import { logger } from '@vitarx/utils/src/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks, NodeState } from '../../constants/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
 import { useSuspense } from '../../runtime/index.js'
@@ -68,9 +69,12 @@ export class FnWidget extends Widget<Record<string, any>> {
     // 如果有上级暂停计数器则让计数器+1
     if (counter) counter.value++
     try {
-      // 异步完成前仅注册错误钩子
-      if ('error' in hooks) {
-        this.onError = hooks.error as (e: any, args: any) => void
+      // 异步完成前仅注册错误钩子 和 render 钩子
+      if (LifecycleHooks.error in hooks) {
+        this.onError = hooks.onError
+      }
+      if (LifecycleHooks.render in hooks) {
+        this.onRender = hooks.onRender
       }
       const result = await withAsyncContext(buildResult)
       // 如果是module对象，则判断是否存在default导出
@@ -171,6 +175,10 @@ const parseAsyncBuildResult = async (
     'default' in buildResult &&
     isWidget(buildResult.default)
   ) {
+    logger.warn(
+      'The asynchronous lazy loading component module recommends using lazy() mark to improve the parsing performance of node components.',
+      instance.$vnode.devInfo?.source
+    )
     // 如果是module对象，则判断是否存在default导出
     return () => new nodeConstructor(buildResult.default, { ...toRaw(instance.props) })
   }
@@ -179,12 +187,12 @@ const parseAsyncBuildResult = async (
 /**
  * 初始化函数小部件
  *
- * @param widget - 函数小部件实例
+ * @param instance - 函数小部件实例
  * @param nodeConstructor - StatefulWidgetNode构造函数，为了避免循环依赖
  */
 export const initializeFnWidget = async (
-  widget: FnWidget,
+  instance: FnWidget,
   nodeConstructor: typeof StatefulWidgetNode
 ): Promise<FnWidget> => {
-  return await widget[__INITIALIZE_FN_WIDGET_METHOD__](nodeConstructor)
+  return await instance[__INITIALIZE_FN_WIDGET_METHOD__](nodeConstructor)
 }
