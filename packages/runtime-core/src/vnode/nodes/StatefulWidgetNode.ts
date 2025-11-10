@@ -23,6 +23,7 @@ import type {
 import { __DEV__, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import { isClassWidget } from '../../utils/widget.js'
 import { FnWidget, initializeFnWidget } from '../../widget/core/FnWidget.js'
+import { Widget } from '../../widget/index.js'
 import { VNode, type WaitNormalizedProps } from '../core/VNode.js'
 import { WidgetNode } from '../core/WidgetNode.js'
 import { CommentNode } from './CommentNode.js'
@@ -95,11 +96,6 @@ export class StatefulWidgetNode<
    * @protected
    */
   private _instance: WidgetInstanceType<T> | null = null
-  /**
-   * 组件是否已就绪的标识符
-   * @private
-   */
-  private _isReady: boolean = false
   constructor(type: T, props: ValidNodeProps<T>) {
     super(type, props)
     if (this.appContext) this.provide('App', this.appContext)
@@ -170,14 +166,12 @@ export class StatefulWidgetNode<
           // 创建类组件实例
           this._instance = new this.type(this.props) as WidgetInstanceType<T>
           resolve(this._instance!)
-          this._isReady = true
         } else {
           // 创建函数组件实例
           const instance = new FnWidget(this.props)
           this._instance = instance as unknown as WidgetInstanceType<T>
           // 初始化函数组件并收集钩子
           initializeFnWidget(instance, StatefulWidgetNode).then(() => {
-            this._isReady = true
             resolve(this._instance!)
           })
         }
@@ -496,10 +490,8 @@ export class StatefulWidgetNode<
           args as LifecycleHookParameter<LifecycleHooks.error>
         ) as LifecycleHookReturnType<T>
       }
-      if (this._isReady) {
-        const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
-        return typeof method === 'function' ? method.apply(this.instance, args) : undefined
-      }
+      const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
+      return typeof method === 'function' ? method.apply(this.instance, args) : undefined
     } catch (e) {
       return this.reportError(e, {
         source: `hook:${hook.replace('on', '').toLowerCase()}` as ErrorSource,
