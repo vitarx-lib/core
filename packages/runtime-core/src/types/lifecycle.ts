@@ -104,7 +104,9 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  */
 export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error
   ? VNode | false | void
-  : void
+  : T extends LifecycleHooks.render
+    ? Promise<void> | void
+    : void
 
 /**
  * 错误处理器类型
