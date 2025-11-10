@@ -46,8 +46,8 @@ export abstract class ElementNode<T extends ElementNodeType = ElementNodeType> e
   /**
    * @inheritDoc
    */
-  protected override normalizeProps(props: Record<string, any>): NodeNormalizedProps<T> {
-    props = super.normalizeProps(props)
+  protected override initProps(props: Record<string, any>): NodeNormalizedProps<T> {
+    props = super.initProps(props)
     // 处理 style 属性
     if ('style' in props) {
       // 将样式值转换为对象格式

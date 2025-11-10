@@ -207,7 +207,7 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
    * @param props - 需要规范化的属性对象，键为字符串，值为任意类型
    * @returns {NodeNormalizedProps<T>} 返回规范化的有效节点属性对象
    */
-  protected override normalizeProps(props: Record<string, any>): NodeNormalizedProps<T> {
+  protected override initProps(props: Record<string, any>): NodeNormalizedProps<T> {
     // 解包ref
     for (const prop in props) {
       props[prop] = unref(props[prop])

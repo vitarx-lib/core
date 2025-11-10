@@ -151,7 +151,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       const bind = popProperty(props, 'v-bind')
       if (isObject(bind)) VNode.bindProps(props, bind)
     }
-    this.props = this.normalizeProps(props)
+    this.props = this.initProps(props)
   }
   /**
    * 显示状态
@@ -414,7 +414,7 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * 该方法用于处理和验证组件特定的属性，排除全局属性
    * @param props - 需要规范化的组件属性对象，类型为排除全局属性后的有效创建属性
    */
-  protected abstract normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T>
+  protected abstract initProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T>
   /**
    * 更新小部件的挂载状态（激活或停用）
    *
