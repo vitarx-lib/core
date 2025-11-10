@@ -1,6 +1,5 @@
 import { toRaw, withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
-import { logger } from '@vitarx/utils/src/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks, NodeState } from '../../constants/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
 import { useSuspense } from '../../runtime/index.js'
@@ -175,10 +174,6 @@ const parseAsyncBuildResult = async (
     'default' in buildResult &&
     isWidget(buildResult.default)
   ) {
-    logger.warn(
-      'The asynchronous lazy loading component module recommends using lazy() mark to improve the parsing performance of node components.',
-      instance.$vnode.devInfo?.source
-    )
     // 如果是module对象，则判断是否存在default导出
     return () => new nodeConstructor(buildResult.default, { ...toRaw(instance.props) })
   }
