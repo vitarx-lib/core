@@ -47,6 +47,23 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     this.appContext = getAppContext()
   }
   /**
+   * 判断当前是否为服务器渲染的getter方法
+   * @returns {boolean} 如果是服务器渲染且不是水合阶段则返回true，否则返回false
+   */
+  get isServerRender(): boolean {
+    return Boolean(this.appContext?.isSSR && !this.appContext.isHydration)
+  }
+  /**
+   * 获取当前是否处于水合阶段（hydration）的状态
+   * 水合是指将服务端渲染的HTML与客户端JavaScript进行匹配的过程
+   * @returns {boolean} 如果处于水合阶段返回true，否则返回false
+   */
+  get isHydration(): boolean {
+    // 使用Boolean()确保返回值为布尔类型
+    // 检查appContext中是否存在isSSR和isHydration属性，并且都为真值
+    return Boolean(this.appContext?.isSSR && this.appContext?.isHydration)
+  }
+  /**
    * 获取组件构建的子节点
    *
    * @returns {VNode} 返回虚拟子节点
@@ -91,7 +108,6 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     }
     // 情况 4️⃣：目标未变化，无需操作
   }
-
   /**
    * @inheritDoc
    */
