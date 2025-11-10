@@ -1,6 +1,6 @@
 import type { DependencyMap } from '@vitarx/responsive'
 import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/responsive'
-import { logger } from '@vitarx/utils'
+import { isPromise, logger } from '@vitarx/utils'
 import { LifecycleHooks, NodeShapeFlags, NodeState } from '../../constants/index.js'
 import {
   findParentNode,
@@ -23,7 +23,6 @@ import type {
 import { __DEV__, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import { isClassWidget } from '../../utils/widget.js'
 import { FnWidget, initializeFnWidget } from '../../widget/core/FnWidget.js'
-import { Widget } from '../../widget/index.js'
 import { VNode, type WaitNormalizedProps } from '../core/VNode.js'
 import { WidgetNode } from '../core/WidgetNode.js'
 import { CommentNode } from './CommentNode.js'
@@ -100,7 +99,6 @@ export class StatefulWidgetNode<
     super(type, props)
     if (this.appContext) this.provide('App', this.appContext)
   }
-
   /**
    * 获取Widget实例的单例属性
    * 如果实例不存在，则会创建一个新的实例
@@ -108,7 +106,33 @@ export class StatefulWidgetNode<
    */
   get instance(): WidgetInstanceType<T> {
     // 如果实例不存在，则调用createInstance方法创建实例，但不等待其完成
-    if (!this._instance) this.createInstance().then()
+    if (!this._instance) {
+      // 在特定上下文中运行实例创建逻辑
+      this.runInContext(() => {
+        // 包装props为响应式对象
+        this.props = proxyWidgetProps(
+          this.props,
+          this.type['defaultProps']
+        ) as NodeNormalizedProps<T>
+        // 判断是否为类组件
+        if (isClassWidget(this.type)) {
+          // 创建类组件实例
+          this._instance = new this.type(this.props) as WidgetInstanceType<T>
+        } else {
+          // 创建函数组件实例
+          const instance = new FnWidget(this.props)
+          this._instance = instance as unknown as WidgetInstanceType<T>
+          // 初始化函数组件并收集钩子
+          const promise = initializeFnWidget(instance, StatefulWidgetNode)
+          // 如果是异步组件且是服务端渲染，则将promise添加到appContext的renderPromises中
+          if (this.isAsyncWidget && this.isServerRender && isPromise(promise)) {
+            this.appContext?.registerRenderPromise?.(promise)
+          }
+        }
+        // 绑定ref引用
+        if (this.ref) this.ref.value = this._instance
+      })
+    }
     return this._instance! // 返回实例，使用非空断言操作符(!)告诉编译器this._instance不为null或undefined
   }
   /**
@@ -140,45 +164,6 @@ export class StatefulWidgetNode<
     }
     // 如果已存在，直接返回现有作用域实例
     return this._scope
-  }
-  /**
-   * 创建组件实例的方法
-   *
-   * 此方法每次都会创建一个新的组件实例，并返回一个Promise，解析为创建的组件实例。
-   *
-   * 建议通过this.instance getter 访问组件实例，此方法的存在仅为了兼容SSR渲染。
-   *
-   * @returns {Promise<Widget>} 返回一个Promise，解析为创建的组件实例
-   */
-  public createInstance(): Promise<WidgetInstanceType<T>> {
-    // 避免重复创建实例
-    if (this._instance) return Promise.resolve(this._instance)
-    return new Promise(resolve => {
-      // 在特定上下文中运行实例创建逻辑
-      this.runInContext(() => {
-        // 包装props为响应式对象
-        this.props = proxyWidgetProps(
-          this.props,
-          this.type['defaultProps']
-        ) as NodeNormalizedProps<T>
-        // 判断是否为类组件
-        if (isClassWidget(this.type)) {
-          // 创建类组件实例
-          this._instance = new this.type(this.props) as WidgetInstanceType<T>
-          resolve(this._instance!)
-        } else {
-          // 创建函数组件实例
-          const instance = new FnWidget(this.props)
-          this._instance = instance as unknown as WidgetInstanceType<T>
-          // 初始化函数组件并收集钩子
-          initializeFnWidget(instance, StatefulWidgetNode).then(() => {
-            resolve(this._instance!)
-          })
-        }
-        // 绑定ref引用
-        if (this.ref) this.ref.value = this._instance
-      })
-    })
   }
   /**
    * 在指定上下文中执行函数
@@ -234,8 +219,12 @@ export class StatefulWidgetNode<
     if (this.state !== NodeState.Created) {
       return this.child.element as NodeElementType<T>
     }
-    // 先创建实例
-    this.createInstance()
+    // 触发render生命周期钩子，在组件渲染时执行
+    const promise = this.callHook(LifecycleHooks.render)
+    if (this.isServerRender && isPromise(promise) && !this.isAsyncWidget) {
+      // 仅注册同步组件渲染任务，因为异步组件在创建实例时就已添加异步渲染任务，不应该使用 onRender 钩子进行额外的请求数据
+      this.appContext?.registerRenderPromise?.(promise.then(() => this.syncSilentUpdate()))
+    }
     // 触发beforeMount生命周期钩子，在组件挂载前执行
     this.callHook(LifecycleHooks.beforeMount)
     let el: NodeElementType
@@ -373,12 +362,18 @@ export class StatefulWidgetNode<
       // 遍历父级组件树，直到找到最近的WidgetVNode或到达根节点
       while (parentNode && !isStatefulWidgetNode(parentNode)) {
         parentNode = findParentNode(parentNode)
-        if (!parentNode) break
       }
       // 如果没有找到任何父级WidgetVNode，则处理根级错误
-      if (!parentNode) return this.handleRootError(args)
+      if (!parentNode) {
+        if (this.appContext?.config?.errorHandler) {
+          return this.appContext.config.errorHandler.apply(this.instance, args)
+        } else {
+          logger.error('there are unhandled exceptions', ...args)
+          return void 0
+        }
+      }
       // 如果找到父级WidgetVNode，则将错误向上传递给该父级组件处理
-      if (parentNode instanceof StatefulWidgetNode) {
+      if (isStatefulWidgetNode(parentNode)) {
         return parentNode.reportError(...args)
       }
     } catch (e) {
@@ -397,7 +392,7 @@ export class StatefulWidgetNode<
    *
    * @return {void}
    */
-  readonly update = (): void => {
+  public readonly update = (): void => {
     if (this.state === NodeState.Unmounted) {
       this.reportError(
         new Error(
@@ -442,36 +437,6 @@ export class StatefulWidgetNode<
     }
   }
   /**
-   * 重新构建根节点
-   *
-   * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
-   * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
-   *
-   * @returns {VNode} 返回构建好的虚拟节点
-   */
-  protected rebuild(): VNode {
-    // 如果已存在视图依赖订阅器，则先释放旧的订阅器
-    if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
-
-    // 订阅依赖并构建虚拟节点
-    const { result, subscriber, deps } = depSubscribe(this.buildRootNode, this.update, {
-      scope: false
-    })
-    // 开发模式记录依赖
-    if (__DEV__) this.deps = deps
-    // 更新订阅器
-    this._viewDepSubscriber = subscriber
-    // 添加到作用域中
-    if (subscriber) this.instance.$scope.addEffect(subscriber)
-    return result
-  }
-  /**
-   * @inheritDoc
-   */
-  protected override normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
-    return props as NodeNormalizedProps<T>
-  }
-  /**
    * 触发生命周期钩子
    *
    * @param hook - 生命周期钩子名称
@@ -490,6 +455,8 @@ export class StatefulWidgetNode<
           args as LifecycleHookParameter<LifecycleHooks.error>
         ) as LifecycleHookReturnType<T>
       }
+      // 忽略服务端渲染时调用非render钩子
+      if (this.isServerRender && hook !== LifecycleHooks.render) return
       const method = this.instance[hook] as unknown as (...args: LifecycleHookParameter<T>) => any
       return typeof method === 'function' ? method.apply(this.instance, args) : undefined
     } catch (e) {
@@ -499,12 +466,43 @@ export class StatefulWidgetNode<
       }) as LifecycleHookReturnType<T>
     }
   }
+
+  /**
+   * 重新构建根节点
+   *
+   * 该函数负责构建当前组件的子虚拟节点，并建立相应的依赖订阅关系。
+   * 在构建过程中会处理异常情况，如果构建失败则会触发错误生命周期钩子。
+   *
+   * @returns {VNode} 返回构建好的虚拟节点
+   */
+  protected override rebuild(): VNode {
+    // 如果已存在视图依赖订阅器，则先释放旧的订阅器
+    if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
+
+    // 订阅依赖并构建虚拟节点
+    const { result, subscriber, deps } = depSubscribe(this.buildChildNode, this.update, {
+      scope: false
+    })
+    // 开发模式记录依赖
+    if (__DEV__) this.deps = deps
+    // 更新订阅器
+    this._viewDepSubscriber = subscriber
+    // 添加到作用域中
+    if (subscriber) this.instance.$scope.addEffect(subscriber)
+    return result
+  }
+  /**
+   * @inheritDoc
+   */
+  protected override initProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
+    return props as NodeNormalizedProps<T>
+  }
   /**
    * 构建子视图节点
    *
    * @returns {VNode} 返回构建的虚拟节点
    */
-  private readonly buildRootNode = (): VNode => {
+  private readonly buildChildNode = (): VNode => {
     let vnode: VNode // 声明虚拟节点变量
     try {
       // 执行构建逻辑
@@ -539,20 +537,5 @@ export class StatefulWidgetNode<
     // 建立父子虚拟节点的映射关系
     linkParentNode(vnode, this)
     return vnode // 返回构建的虚拟节点
-  }
-  /**
-   * 处理根节点错误的函数
-   *
-   * @param args - 错误处理函数的参数数组
-   */
-  private handleRootError(args: LifecycleHookParameter<LifecycleHooks.error>): VNode | void {
-    // 首先尝试获取当前 App 实例
-    const app = this.appContext
-    // 处理错误
-    if (app?.config?.errorHandler) {
-      return app.config.errorHandler.apply(this.instance, args)
-    } else {
-      logger.error('there are unhandled exceptions', ...args)
-    }
   }
 }
