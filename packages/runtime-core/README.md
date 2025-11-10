@@ -31,9 +31,12 @@ Widget 是组件系统的核心，支持创建函数组件和类组件。
 内置组件：
 
 - `Suspense`：处理异步依赖
+- `Transition`: 动画过渡，4.0版本新增
+- `TransitionGroup`：列表动画，4.0版本新增
 - `KeepAlive`：组件缓存
+- `PropBind`: 快捷透传绑定属性给多个一级子节点，4.0版本新增
 - `LazyWidget`：懒加载组件
-- `Teleport`：传送组件
+- ~~`Teleport`~~：传送组件，于4.0被移除，使用 v-parent 指令代替
 
 ### 生命周期
 
@@ -48,8 +51,7 @@ Widget 是组件系统的核心，支持创建函数组件和类组件。
 - `onUnmounted`：小部件卸载完成后触发
 - `onBeforeUpdate`：小部件更新之前触发
 - `onUpdated`：小部件更新完成后触发
-- `onError`：小部件渲染或构建过程中捕获到异常时触发
-- `onBeforeRemove`：真实的`Element`被移除前触发，可以返回`Promise`来延迟移除
+- `onError`：小部件内部发生未捕获异常时触发
 - `onServerPrefetch`：服务端预取钩子，仅在服务端渲染时有效
 
 ### 函数组件
@@ -58,7 +60,7 @@ Widget 是组件系统的核心，支持创建函数组件和类组件。
 
 ```tsx
 const MyComponent = (props) => {
-  return <div>Hello Vitarx!</div>
+  return <div class="my-component">Hello Vitarx!</div>
 }
 ```
 
@@ -76,14 +78,14 @@ class MyComponent extends Widget {
 }
 ```
 
-### DOM Helper
+### HostAdapter
 
-封装了 DOM 操作相关的工具方法，包括：
+定义了 不同平台 DOM Adapter 相关接口，包括：
 
-- CSS 类名处理
-- 样式处理
-- 属性处理
-- 事件处理
+- createElement
+- setAttribute
+- addEventListener
+- ... 具体方法请查看源码
 
 ## 安装
 
@@ -112,4 +114,4 @@ app.mount('#app')
 
 - [VNode API](./src/vnode/)
 - [Widget API](./src/widget/)
-- [DOM Helper API](./src/dom/)
+- [DOM Adapter API](./src/adapter/)
