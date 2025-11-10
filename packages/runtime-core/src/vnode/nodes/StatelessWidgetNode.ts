@@ -143,7 +143,7 @@ export class StatelessWidgetNode<
   /**
    * @inheritDoc
    */
-  protected override normalizeProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
+  protected override initProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     const defaultProps = this.type.defaultProps
     if (defaultProps && typeof defaultProps === 'object') {
       props = { ...defaultProps, ...props }
