@@ -277,26 +277,6 @@ export class StatefulWidgetNode<
     this.callHook(LifecycleHooks.activated)
   }
   /**
-   * 静默补丁更新
-   *
-   * 在不触发生命周期钩子或异步调度的情况下，
-   * 同步执行节点的补丁更新操作。
-   */
-  public syncSilentUpdate(): void {
-    // 定义同步静默更新方法，无返回值
-    try {
-      // 如果节点状态不是已渲染或有父元素
-      this._child = this.instance.$patchUpdate(this.child, this.rebuild()) // 直接执行补丁更新
-    } catch (e) {
-      // 捕获可能发生的错误
-      this.reportError(e, {
-        // 报告错误
-        source: 'update', // 错误来源标识为更新操作
-        instance: this.instance // 相关的实例引用
-      })
-    }
-  }
-  /**
    * @inheritDoc
    */
   override deactivate(root: boolean = true): void {
@@ -381,6 +361,24 @@ export class StatefulWidgetNode<
         `StatefulWidget<${this.name}> You can't keep throwing exceptions in the onError hook, this results in an infinite loop!`,
         e
       )
+    }
+  }
+  /**
+   * 静默补丁更新
+   *
+   * 在不触发生命周期钩子或异步调度的情况下，
+   * 同步执行节点的补丁更新操作。
+   */
+  public syncSilentUpdate(): void {
+    try {
+      this._child = this.instance.$patchUpdate(this.child, this.rebuild()) // 直接执行补丁更新
+    } catch (e) {
+      // 捕获可能发生的错误
+      this.reportError(e, {
+        // 报告错误
+        source: 'update', // 错误来源标识为更新操作
+        instance: this.instance // 相关的实例引用
+      })
     }
   }
   /**
@@ -476,9 +474,10 @@ export class StatefulWidgetNode<
    * @returns {VNode} 返回构建好的虚拟节点
    */
   protected override rebuild(): VNode {
+    // 服务端渲染不跟踪依赖！
+    if (this.isServerRender) return this.buildChildNode()
     // 如果已存在视图依赖订阅器，则先释放旧的订阅器
     if (this._viewDepSubscriber) this._viewDepSubscriber.dispose()
-
     // 订阅依赖并构建虚拟节点
     const { result, subscriber, deps } = depSubscribe(this.buildChildNode, this.update, {
       scope: false
@@ -488,21 +487,21 @@ export class StatefulWidgetNode<
     // 更新订阅器
     this._viewDepSubscriber = subscriber
     // 添加到作用域中
-    if (subscriber) this.instance.$scope.addEffect(subscriber)
+    if (subscriber) this.scope.addEffect(subscriber)
     return result
   }
+
   /**
    * @inheritDoc
    */
   protected override initProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     return props as NodeNormalizedProps<T>
   }
+
   /**
-   * 构建子视图节点
-   *
-   * @returns {VNode} 返回构建的虚拟节点
+   * 构建子节点
    */
-  private readonly buildChildNode = (): VNode => {
+  private buildChildNode = (): VNode => {
     let vnode: VNode // 声明虚拟节点变量
     try {
       // 执行构建逻辑
@@ -533,7 +532,6 @@ export class StatefulWidgetNode<
         ? errVNode
         : new CommentNode({ value: `StatefulWidget<${this.name}> build fail` })
     }
-
     // 建立父子虚拟节点的映射关系
     linkParentNode(vnode, this)
     return vnode // 返回构建的虚拟节点
