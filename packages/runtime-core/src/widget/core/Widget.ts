@@ -365,15 +365,23 @@ export abstract class Widget<
   onError?(error: unknown, info: ErrorInfo): VNode | false | void
 
   /**
-   * 服务端预取钩子
+   * 小部件渲染前钩子
    *
-   * 在服务端渲染期间获取数据
+   * - 在客户端渲染时，其执行时机等同于 onBeforeMount。
+   *   如果返回 Promise，不会阻塞渲染，依赖响应式更新机制会自动触发视图更新。
    *
-   * 此钩子功能暂未实现
+   * - 在服务端渲染（SSR）时：
+   *   - 渲染流程会先渲染一个占位节点。
+   *   - 如果返回 Promise，Promise 完成后会用真实节点替换占位节点。
+   *   - 这种行为类似异步组件的渲染逻辑，保证 SSR 不被阻塞。
    *
-   * @returns {Promise<void>} - Promise解析后继续服务端渲染流程
+   * 使用建议：
+   * - 可在此钩子中处理异步数据获取、依赖初始化等操作。
+   * - 如果希望客户端在数据未加载完成时不渲染真实组件，应使用异步组件。
+   *
+   * @returns {Promise<void> | void} - 可返回 Promise 以延迟占位节点替换为真实节点，客户端不会阻塞渲染。
    */
-  onServerPrefetch?(): Promise<void>
+  onRender?(): Promise<void> | void
 
   /**
    * 构建`UI`元素。

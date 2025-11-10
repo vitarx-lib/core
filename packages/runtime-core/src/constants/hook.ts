@@ -2,6 +2,7 @@
 export enum LifecycleHooks {
   create = 'onCreate',
   beforeMount = 'onBeforeMount',
+  render = 'onRender',
   mounted = 'onMounted',
   deactivated = 'onDeactivated',
   activated = 'onActivated',
@@ -9,6 +10,5 @@ export enum LifecycleHooks {
   updated = 'onUpdated',
   error = 'onError',
   unmounted = 'onUnmounted',
-  beforeUnmount = 'onBeforeUnmount',
-  serverPrefetch = 'onServerPrefetch'
+  beforeUnmount = 'onBeforeUnmount'
 }
