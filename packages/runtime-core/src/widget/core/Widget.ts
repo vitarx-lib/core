@@ -379,9 +379,9 @@ export abstract class Widget<
    * - 可在此钩子中处理异步数据获取、依赖初始化等操作。
    * - 如果希望客户端在数据未加载完成时不渲染真实组件，应使用异步组件。
    *
-   * @returns {Promise<void> | void} - 可返回 Promise 以延迟占位节点替换为真实节点，客户端不会阻塞渲染。
+   * @returns {Promise<unknown> | void} - 可返回 Promise 以延迟占位节点替换为真实节点，客户端不会阻塞渲染。
    */
-  onRender?(): Promise<void> | void
+  onRender?(): Promise<unknown> | void
 
   /**
    * 构建`UI`元素。
