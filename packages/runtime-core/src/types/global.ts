@@ -165,14 +165,6 @@ declare global {
      */
     interface AppConfig {
       /**
-       * 是否为服务端渲染
-       *
-       * 如果设置为true，会禁用组件依赖跟踪，Transition等依赖定时器的内置组件不会生效。
-       *
-       * @default false
-       */
-      ssr?: boolean
-      /**
        * 错误处理函数
        *
        * @param error - 捕获到的异常
