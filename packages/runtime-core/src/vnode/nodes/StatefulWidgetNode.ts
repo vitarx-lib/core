@@ -243,7 +243,7 @@ export class StatefulWidgetNode<
     // 未就绪状态，先创建实例
     if (!this._isReady) this.createInstance().then()
     // 触发beforeMount生命周期钩子，在组件挂载前执行
-    this.triggerLifecycleHook(LifecycleHooks.beforeMount)
+    this.callHook(LifecycleHooks.beforeMount)
     let el: NodeElementType
     try {
       // 尝试获取子组件的DOM元素
@@ -274,8 +274,8 @@ export class StatefulWidgetNode<
     // 未渲染调用this.element渲染一次元素
     if (this.state === NodeState.Created) this.render()
     super.mount(target, type)
-    this.triggerLifecycleHook(LifecycleHooks.mounted)
-    this.triggerLifecycleHook(LifecycleHooks.activated)
+    this.callHook(LifecycleHooks.mounted)
+    this.callHook(LifecycleHooks.activated)
     return this
   }
   /**
@@ -291,7 +291,7 @@ export class StatefulWidgetNode<
     this.child.activate(false)
     // 3️⃣ 触发一次更新逻辑，避免停用期间状态变化导致视图未更新问题
     this.syncSilentUpdate()
-    this.triggerLifecycleHook(LifecycleHooks.activated)
+    this.callHook(LifecycleHooks.activated)
   }
   /**
    * 静默补丁更新
@@ -322,7 +322,7 @@ export class StatefulWidgetNode<
     // 1️⃣ 先调用根节点的停用逻辑（子 → 父顺序）
     this.child.deactivate(false)
     // 2️⃣ 触发 onDeactivated 生命周期
-    this.triggerLifecycleHook(LifecycleHooks.deactivated)
+    this.callHook(LifecycleHooks.deactivated)
     // 3️⃣ 暂停作用域
     this.scope.pause()
     // 4️⃣ 再调用父节点自己的停用逻辑（更新状态）
@@ -337,7 +337,7 @@ export class StatefulWidgetNode<
       throw new Error(`the node is already ${this.state}`)
     }
     // 触发onDeactivated生命周期
-    this.triggerLifecycleHook(LifecycleHooks.deactivated)
+    this.callHook(LifecycleHooks.deactivated)
     // 递归卸载子节点
     this.child.unmount()
     // 停止作用域
@@ -346,12 +346,12 @@ export class StatefulWidgetNode<
       // 修改状态为已停用
       this.state = NodeState.Deactivated
       // 触发onBeforeUnmount生命周期
-      this.triggerLifecycleHook(LifecycleHooks.beforeUnmount)
+      this.callHook(LifecycleHooks.beforeUnmount)
     }
     // 修改状态为已卸载
     this.state = NodeState.Unmounted
     // 触发onUnmounted生命周期
-    this.triggerLifecycleHook(LifecycleHooks.unmounted)
+    this.callHook(LifecycleHooks.unmounted)
     this._scope = null
     this._child = null
     this._instance = null
@@ -424,7 +424,7 @@ export class StatefulWidgetNode<
     this._pendingUpdate = true
     try {
       // 触发更新前生命周期
-      this.triggerLifecycleHook(LifecycleHooks.beforeUpdate)
+      this.callHook(LifecycleHooks.beforeUpdate)
       // 使用 nextTick 来延迟更新，合并多个微任务
       nextTick(() => {
         this._pendingUpdate = false
@@ -435,7 +435,7 @@ export class StatefulWidgetNode<
         if (!this.show) newVNode.show = false
         this._child = this.instance.$patchUpdate(oldVNode, newVNode)
         // 触发更新后生命周期
-        this.triggerLifecycleHook(LifecycleHooks.updated)
+        this.callHook(LifecycleHooks.updated)
       })
     } catch (e) {
       this._pendingUpdate = false
@@ -482,7 +482,7 @@ export class StatefulWidgetNode<
    * @param args - 参数列表
    * @private
    */
-  public triggerLifecycleHook<T extends LifecycleHooks>(
+  public callHook<T extends LifecycleHooks>(
     hook: T,
     ...args: LifecycleHookParameter<T>
   ): LifecycleHookReturnType<T> | void {
