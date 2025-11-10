@@ -71,7 +71,20 @@ export abstract class App {
    * @private
    */
   readonly #provide: Map<string | symbol, any> = new Map()
-
+  /**
+   * 是否为服务端渲染
+   *
+   * 如果设置为true，会禁用组件依赖跟踪。
+   *
+   * @default false
+   */
+  public readonly isSSR: boolean = false
+  /**
+   * 是否为 hydration 模式
+   *
+   * @default false
+   */
+  public readonly isHydration: boolean = false
   /**
    * 构建应用实例
    *
@@ -87,12 +100,7 @@ export abstract class App {
       throw new Error('The root node must be a widget')
     }
     // 使用展开运算符合并配置，提供默认错误处理
-    this.config = {
-      errorHandler: defaultErrorHandler,
-      idPrefix: 'v',
-      ssr: false,
-      ...config
-    } as Required<AppConfig>
+    this.config = this.initConfig(config)
     this.#rootNode.appContext = this
     this.#rootNode.provide('App', this)
   }
@@ -104,6 +112,34 @@ export abstract class App {
    */
   get rootNode(): StatefulWidgetNode {
     return this.#rootNode
+  }
+
+  /**
+   * 注册异步渲染任务
+   *
+   * 此方法在服务端渲染时会被内部渲染逻辑调用，如果是异步渲染的组件，
+   * 则会注册 Promise 对象，监听对象可得知是否渲染完成。
+   *
+   * ssr 应用app可以实现此方法，来完成服务端渲染。
+   *
+   * @param {Promise<unknown>} promise - 需要注册的Promise对象，该Promise不返回任何值（void类型）
+   */
+  public registerRenderPromise?(promise: Promise<unknown>): void
+
+  /**
+   * 初始化应用配置
+   *
+   * @param config 可选的应用配置对象
+   * @return {Required<AppConfig>} 返回一个包含完整配置的对象，所有必需属性都已设置
+   */
+  protected initConfig(config?: AppConfig): Required<AppConfig> {
+    // 使用展开运算符合并配置，提供默认错误处理
+    // 将默认配置与传入的配置合并，传入的配置会覆盖默认配置中的相同属性
+    return {
+      errorHandler: defaultErrorHandler, // 设置默认的错误处理函数
+      idPrefix: 'v', // 设置默认的ID前缀
+      ...config // 展开传入的配置对象，覆盖默认值
+    }
   }
 
   /**
