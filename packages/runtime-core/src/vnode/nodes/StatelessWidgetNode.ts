@@ -59,7 +59,7 @@ export class StatelessWidgetNode<
    * @inheritDoc
    */
   override mount(target?: HostElements | HostParentElement, type?: MountType): void {
-    if (this.state === NodeState.Created) this.element
+    if (this.state === NodeState.Created) this.render()
     super.mount(target, type)
   }
   /**
