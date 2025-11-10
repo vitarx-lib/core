@@ -83,7 +83,6 @@ export type LifecycleHookMethods = `${LifecycleHooks}`
  *
  * 具体参数规则：
  * - error 钩子：接收 [error: unknown, info: ErrorInfo] 参数
- * - beforeRemove 钩子：接收 [el: RuntimeElementInstance, types: 'unmount' | 'deactivate'] 参数
  * - 其他钩子：不接收参数（空数组）
  *
  * @template T 生命周期钩子类型
@@ -98,13 +97,14 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  * 不同的生命周期钩子有不同的返回值需求，这种类型推导确保了返回值的类型安全。
  *
  * 具体返回值规则：
- * - error 钩子：可以返回 void 或 VNode，用于错误时渲染备用UI
- * - beforeRemove 钩子：可以返回 Promise<void> 或 void，支持异步卸载操作
+ * - error 钩子：可以返回 void 或 VNode | false，用于错误时渲染备用UI
  * - 其他钩子：只能返回 void
  *
  * @template T 生命周期钩子类型
  */
-export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error ? VNode | void : void
+export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error
+  ? VNode | false | void
+  : void
 
 /**
  * 错误处理器类型
