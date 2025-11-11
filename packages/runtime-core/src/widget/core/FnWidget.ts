@@ -1,4 +1,3 @@
-import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks, NodeState } from '../../constants/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
@@ -127,9 +126,6 @@ const parseAsyncBuildResult = async (
     'default' in buildResult &&
     isWidget(buildResult.default)
   ) {
-    const widget = buildResult.default
-    const props = instance.props
-
     // 如果是module对象，则判断是否存在default导出
     return () => createWidgetVNode(buildResult.default, instance.props, instance.$vnode.devInfo)
   }
@@ -174,7 +170,7 @@ export const initializeFnWidget = async (
     if (LifecycleHooks.render in hooks) {
       instance.onRender = hooks.onRender
     }
-    const result = await withAsyncContext(buildResult)
+    const result = await buildResult
     // 如果是module对象，则判断是否存在default导出
     instance.build = await parseAsyncBuildResult(result, instance, createWidgetVNode)
   } catch (e) {
