@@ -2,22 +2,26 @@ import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks, NodeState } from '../../constants/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
-import { useSuspense, validateProps } from '../../runtime/index.js'
+import { useSuspense } from '../../runtime/index.js'
 import type {
   FunctionWidget,
   LazyLoadModule,
   LifecycleHookMethods,
+  NodeDevInfo,
   ValidNodeProps,
   VNodeBuilder,
   VNodeChild,
   WidgetType
 } from '../../types/index.js'
-import { __DEV__ } from '../../utils/index.js'
 import { isWidget } from '../../utils/widget.js'
-import { CommentNode, StatefulWidgetNode, WidgetNode } from '../../vnode/index.js'
+import type { CommentNode, StatefulWidgetNode, WidgetNode } from '../../vnode/index.js'
 import { Widget } from './Widget.js'
 
-type CreateWidgetNode = (widget: WidgetType, props: ValidNodeProps<WidgetType>) => WidgetNode
+type CreateWidgetNode = (
+  widget: WidgetType,
+  props: ValidNodeProps<WidgetType>,
+  devInfo: NodeDevInfo | undefined
+) => WidgetNode | CommentNode
 /**
  * FnWidget 是一个函数式组件小部件类，继承自 Widget 基类，用于支持函数式组件的渲染和生命周期管理。
  *
@@ -125,12 +129,9 @@ const parseAsyncBuildResult = async (
   ) {
     const widget = buildResult.default
     const props = instance.props
-    if (__DEV__) {
-      const message = validateProps(widget, props, instance.$vnode.devInfo)
-      if (message) return () => new CommentNode({ value: message })
-    }
+
     // 如果是module对象，则判断是否存在default导出
-    return () => createWidgetVNode(buildResult.default, instance.props)
+    return () => createWidgetVNode(buildResult.default, instance.props, instance.$vnode.devInfo)
   }
   return () => buildResult as VNodeChild
 }
