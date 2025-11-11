@@ -9,7 +9,15 @@ import {
 } from '@vitarx/responsive'
 import type { AnyRecord } from '@vitarx/utils'
 import { isRecordObject, logger, LogLevel } from '@vitarx/utils'
-import type { AnyProps, MergeProps } from '../types/index.js'
+import type {
+  AnyProps,
+  MergeProps,
+  NodeDevInfo,
+  ValidNodeProps,
+  WidgetType
+} from '../types/index.js'
+import { getWidgetName } from '../utils/index.js'
+import { CommentNode } from '../vnode/index.js'
 import { getCurrentVNode } from './context.js'
 
 const VNODE_PROPS_DEFAULT_DATA_SYMBOL = Symbol('VNODE_PROPS_DEFAULT_DATA_SYMBOL')
@@ -129,6 +137,38 @@ export function proxyWidgetProps<T extends Record<string | symbol, any>>(
     return props as Readonly<T>
   }
   return new PropsProxyHandler<T>(props, defaultProps).proxy as Readonly<T>
+}
+/**
+ * 校验组件属性
+ * @param widget 组件类型
+ * @param props 组件属性
+ * @param devInfo 开发信息（可选）
+ * @returns {CommentNode|void} 如果校验失败，返回一个包含错误信息的注释节点；否则返回undefined
+ */
+export function validateProps<T extends WidgetType>(
+  widget: T,
+  props: ValidNodeProps<T>,
+  devInfo?: NodeDevInfo
+): string | void {
+  // 在开发环境下，如果组件提供了validateProps方法，则执行属性校验
+  if (typeof widget.validateProps === 'function') {
+    // 获取组件名称
+    const name = getWidgetName(widget)
+    // 执行组件的属性校验方法
+    const result = widget.validateProps(props)
+    // 校验失败处理
+    if (result === false) {
+      // 构造错误信息
+      const message = `Widget <${name}> props validation failed.`
+      // 记录错误日志，包含源信息
+      logger.error(message, devInfo?.source)
+      // 返回一个包含错误信息的注释节点
+      return message
+    } else if (typeof result === 'string') {
+      // 如果返回的是字符串，则记录警告日志
+      logger.warn(`Widget <${name}>: ${result}`, devInfo?.source)
+    }
+  }
 }
 
 /**
