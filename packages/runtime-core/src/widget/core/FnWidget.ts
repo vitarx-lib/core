@@ -114,11 +114,11 @@ const injectExposed = (exposed: HookCollectResult['exposed'], instance: FnWidget
  * @param createWidgetVNode
  * @returns
  */
-const parseAsyncBuildResult = async (
+const parseAsyncBuildResult = (
   buildResult: VNodeChild | LazyLoadModule | VNodeBuilder,
   instance: FnWidget,
   createWidgetVNode: CreateWidgetNode
-): Promise<VNodeBuilder> => {
+): VNodeBuilder => {
   if (typeof buildResult === 'function') return buildResult
   if (
     buildResult &&
@@ -172,7 +172,7 @@ export const initializeFnWidget = async (
     }
     const result = await buildResult
     // 如果是module对象，则判断是否存在default导出
-    instance.build = await parseAsyncBuildResult(result, instance, createWidgetVNode)
+    instance.build = parseAsyncBuildResult(result, instance, createWidgetVNode)
   } catch (e) {
     // 让build方法抛出异常
     instance.build = () => {
