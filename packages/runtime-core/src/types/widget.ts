@@ -87,7 +87,7 @@ export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget> = {
 /**
  * 模块小部件类型
  */
-export interface LazyWidgetModule {
+export interface LazyLoadModule {
   default: WidgetType
 }
 /**
@@ -103,7 +103,7 @@ export interface LazyWidgetModule {
 export type ValidBuildElement =
   | VNodeChild
   | VNodeBuilder
-  | Promise<VNodeChild | LazyWidgetModule | VNodeBuilder>
+  | Promise<VNodeChild | LazyLoadModule | VNodeBuilder>
 
 /**
  * 函数小部件类型
