@@ -1,5 +1,10 @@
-import type { DependencyMap } from '@vitarx/responsive'
-import { depSubscribe, EffectScope, nextTick, Subscriber } from '@vitarx/responsive'
+import {
+  type DependencyMap,
+  depSubscribe,
+  EffectScope,
+  nextTick,
+  Subscriber
+} from '@vitarx/responsive'
 import { isPromise, logger } from '@vitarx/utils'
 import { LifecycleHooks, NodeShapeFlags, NodeState } from '../../constants/index.js'
 import {
@@ -18,14 +23,16 @@ import type {
   NodeNormalizedProps,
   StatefulWidgetNodeType,
   ValidNodeProps,
-  WidgetInstanceType
+  WidgetInstanceType,
+  WidgetType
 } from '../../types/index.js'
-import { __DEV__, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
+import { __DEV__, isStatefulWidgetNode, isStatelessWidget, isVNode } from '../../utils/index.js'
 import { isClassWidget } from '../../utils/widget.js'
 import { FnWidget, initializeFnWidget } from '../../widget/core/FnWidget.js'
 import { VNode, type WaitNormalizedProps } from '../core/VNode.js'
 import { WidgetNode } from '../core/WidgetNode.js'
 import { CommentNode } from './CommentNode.js'
+import { StatelessWidgetNode } from './StatelessWidgetNode.js'
 import { TextNode } from './TextNode.js'
 
 /**
@@ -123,9 +130,9 @@ export class StatefulWidgetNode<
           const instance = new FnWidget(this.props)
           this._instance = instance as unknown as WidgetInstanceType<T>
           // 初始化函数组件并收集钩子
-          const promise = initializeFnWidget(instance, StatefulWidgetNode)
-          // 如果是异步组件且是服务端渲染，则将promise添加到appContext的renderPromises中
-          if (this.isAsyncWidget && this.isServerRender && isPromise(promise)) {
+          const promise = initializeFnWidget(instance, createNode)
+          // 如果是异步组件且是ssr模式，则将promise添加到appContext的renderPromises中
+          if (isPromise(promise) && this.isAsyncWidget && this.appContext?.isSSR) {
             this.appContext?.registerRenderPromise?.(promise)
           }
         }
@@ -236,7 +243,7 @@ export class StatefulWidgetNode<
     let el: NodeElementType
     try {
       // 尝试获取子组件的DOM元素
-      el = this.child.element
+      el = this.child.render()
     } catch (e) {
       // 触发onError生命周期钩子，处理渲染过程中发生的错误
       const errVNode = this.reportError(e, {
@@ -542,4 +549,18 @@ export class StatefulWidgetNode<
     linkParentNode(vnode, this)
     return vnode // 返回构建的虚拟节点
   }
+}
+
+/**
+ * 提供给FnWidget初始化使用
+ *
+ * 未了避免循环依赖问题，提供一个createNode方法，用于创建节点实例。
+ *
+ * @param widget
+ * @param props
+ */
+const createNode = (widget: WidgetType, props: ValidNodeProps<WidgetType>) => {
+  return isStatelessWidget(widget)
+    ? new StatelessWidgetNode(widget, { ...props })
+    : new StatefulWidgetNode(widget, props)
 }
