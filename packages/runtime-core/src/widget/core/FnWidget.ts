@@ -1,21 +1,23 @@
-import { toRaw, withAsyncContext } from '@vitarx/responsive'
+import { withAsyncContext } from '@vitarx/responsive'
 import { isPromise } from '@vitarx/utils'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks, NodeState } from '../../constants/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
-import { useSuspense } from '../../runtime/index.js'
+import { useSuspense, validateProps } from '../../runtime/index.js'
 import type {
   FunctionWidget,
-  LazyWidgetModule,
+  LazyLoadModule,
   LifecycleHookMethods,
+  ValidNodeProps,
   VNodeBuilder,
-  VNodeChild
+  VNodeChild,
+  WidgetType
 } from '../../types/index.js'
+import { __DEV__ } from '../../utils/index.js'
 import { isWidget } from '../../utils/widget.js'
-import type { StatefulWidgetNode } from '../../vnode/index.js'
+import { CommentNode, StatefulWidgetNode, WidgetNode } from '../../vnode/index.js'
 import { Widget } from './Widget.js'
 
-const __INITIALIZE_FN_WIDGET_METHOD__ = Symbol('initializeFnWidget')
-
+type CreateWidgetNode = (widget: WidgetType, props: ValidNodeProps<WidgetType>) => WidgetNode
 /**
  * FnWidget 是一个函数式组件小部件类，继承自 Widget 基类，用于支持函数式组件的渲染和生命周期管理。
  *
@@ -39,64 +41,11 @@ const __INITIALIZE_FN_WIDGET_METHOD__ = Symbol('initializeFnWidget')
  * @template T - 组件属性类型，继承自 Widget 基类
  */
 export class FnWidget extends Widget<Record<string, any>> {
-  /**
-   * 初始化函数小部件
-   *
-   * @param nodeConstructor - 节点构造函数，为了避免循环依赖
-   */
-  async [__INITIALIZE_FN_WIDGET_METHOD__](
-    nodeConstructor: typeof StatefulWidgetNode
-  ): Promise<FnWidget> {
-    const counter = useSuspense()
-    // 收集函数组件钩子
-    const { exposed, hooks, buildResult } = HookCollector.collect(
-      this.$vnode as StatefulWidgetNode<FunctionWidget>,
-      this
-    )
-    // 暴露的属性和方法数量
-    const exposedCount = Object.keys(exposed).length
-    // 注入暴露的属性和方法
-    if (exposedCount) injectExposed(exposed, this)
-    // 非异步初始化，则直接设置build方法
-    if (!isPromise(buildResult)) {
-      if (Object.keys(hooks).length) injectHooks(hooks, this)
-      this.build = typeof buildResult === 'function' ? buildResult : () => buildResult
-      return this
-    }
-    // 标记为异步组件
-    this.$vnode.isAsyncWidget = true
-    // 如果有上级暂停计数器则让计数器+1
-    if (counter) counter.value++
-    try {
-      // 异步完成前仅注册错误钩子 和 render 钩子
-      if (LifecycleHooks.error in hooks) {
-        this.onError = hooks.onError
-      }
-      if (LifecycleHooks.render in hooks) {
-        this.onRender = hooks.onRender
-      }
-      const result = await withAsyncContext(buildResult)
-      // 如果是module对象，则判断是否存在default导出
-      this.build = await parseAsyncBuildResult(result, this, nodeConstructor)
-    } catch (e) {
-      // 让build方法抛出异常
-      this.build = () => {
-        throw e
-      }
-    } finally {
-      // 注入钩子
-      injectHooks(hooks, this)
-      // 暴露的属性和方法和数量发生变化，则重新注入
-      if (exposedCount !== Object.keys(exposed).length) injectExposed(exposed, this)
-      doneAsyncRender(this)
-      if (counter) counter.value--
-    }
-    return this
-  }
   override build(): VNodeChild {
     return undefined
   }
 }
+
 /**
  * 完成异步渲染
  */
@@ -159,13 +108,13 @@ const injectExposed = (exposed: HookCollectResult['exposed'], instance: FnWidget
  * 解析异步构建结果
  * @param buildResult
  * @param instance
- * @param nodeConstructor
+ * @param createWidgetVNode
  * @returns
  */
 const parseAsyncBuildResult = async (
-  buildResult: VNodeChild | LazyWidgetModule | VNodeBuilder,
+  buildResult: VNodeChild | LazyLoadModule | VNodeBuilder,
   instance: FnWidget,
-  nodeConstructor: typeof StatefulWidgetNode
+  createWidgetVNode: CreateWidgetNode
 ): Promise<VNodeBuilder> => {
   if (typeof buildResult === 'function') return buildResult
   if (
@@ -174,20 +123,71 @@ const parseAsyncBuildResult = async (
     'default' in buildResult &&
     isWidget(buildResult.default)
   ) {
+    const widget = buildResult.default
+    const props = instance.props
+    if (__DEV__) {
+      const message = validateProps(widget, props, instance.$vnode.devInfo)
+      if (message) return () => new CommentNode({ value: message })
+    }
     // 如果是module对象，则判断是否存在default导出
-    return () => new nodeConstructor(buildResult.default, { ...toRaw(instance.props) })
+    return () => createWidgetVNode(buildResult.default, instance.props)
   }
   return () => buildResult as VNodeChild
 }
 /**
  * 初始化函数小部件
  *
+ * @internal 内部关键逻辑
  * @param instance - 函数小部件实例
- * @param nodeConstructor - StatefulWidgetNode构造函数，为了避免循环依赖
+ * @param createWidgetVNode - 创建widget节点的函数
  */
 export const initializeFnWidget = async (
   instance: FnWidget,
-  nodeConstructor: typeof StatefulWidgetNode
+  createWidgetVNode: CreateWidgetNode
 ): Promise<FnWidget> => {
-  return await instance[__INITIALIZE_FN_WIDGET_METHOD__](nodeConstructor)
+  const counter = useSuspense()
+  // 收集函数组件钩子
+  const { exposed, hooks, buildResult } = HookCollector.collect(
+    instance.$vnode as StatefulWidgetNode<FunctionWidget>,
+    instance
+  )
+  // 暴露的属性和方法数量
+  const exposedCount = Object.keys(exposed).length
+  // 注入暴露的属性和方法
+  if (exposedCount) injectExposed(exposed, instance)
+  // 非异步初始化，则直接设置build方法
+  if (!isPromise(buildResult)) {
+    if (Object.keys(hooks).length) injectHooks(hooks, instance)
+    instance.build = typeof buildResult === 'function' ? buildResult : () => buildResult
+    return instance
+  }
+  // 标记为异步组件
+  instance.$vnode.isAsyncWidget = true
+  // 如果有上级暂停计数器则让计数器+1
+  if (counter) counter.value++
+  try {
+    // 异步完成前仅注册错误钩子 和 render 钩子
+    if (LifecycleHooks.error in hooks) {
+      instance.onError = hooks.onError
+    }
+    if (LifecycleHooks.render in hooks) {
+      instance.onRender = hooks.onRender
+    }
+    const result = await withAsyncContext(buildResult)
+    // 如果是module对象，则判断是否存在default导出
+    instance.build = await parseAsyncBuildResult(result, instance, createWidgetVNode)
+  } catch (e) {
+    // 让build方法抛出异常
+    instance.build = () => {
+      throw e
+    }
+  } finally {
+    // 注入钩子
+    injectHooks(hooks, instance)
+    // 暴露的属性和方法和数量发生变化，则重新注入
+    if (exposedCount !== Object.keys(exposed).length) injectExposed(exposed, instance)
+    doneAsyncRender(instance)
+    if (counter) counter.value--
+  }
+  return instance
 }
