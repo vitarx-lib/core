@@ -11,7 +11,8 @@ import {
   findParentNode,
   linkParentNode,
   proxyWidgetProps,
-  runInNodeContext
+  runInNodeContext,
+  validateProps
 } from '../../runtime/index.js'
 import type {
   ErrorSource,
@@ -19,6 +20,7 @@ import type {
   LifecycleHookParameter,
   LifecycleHookReturnType,
   MountType,
+  NodeDevInfo,
   NodeElementType,
   NodeNormalizedProps,
   StatefulWidgetNodeType,
@@ -558,8 +560,17 @@ export class StatefulWidgetNode<
  *
  * @param widget
  * @param props
+ * @param devInfo
  */
-const createNode = (widget: WidgetType, props: ValidNodeProps<WidgetType>) => {
+const createNode = (
+  widget: WidgetType,
+  props: ValidNodeProps<WidgetType>,
+  devInfo: NodeDevInfo | undefined
+) => {
+  if (__DEV__) {
+    const message = validateProps(widget, props, devInfo)
+    if (message) return new CommentNode({ value: message })
+  }
   return isStatelessWidget(widget)
     ? new StatelessWidgetNode(widget, { ...props })
     : new StatefulWidgetNode(widget, props)
