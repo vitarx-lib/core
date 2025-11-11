@@ -132,9 +132,9 @@ export class StatefulWidgetNode<
           const instance = new FnWidget(this.props)
           this._instance = instance as unknown as WidgetInstanceType<T>
           // 初始化函数组件并收集钩子
-          const promise = initializeFnWidget(instance, createNode)
+          const promise = initializeFnWidget(instance, StatefulWidgetNode.createNode)
           // 如果是异步组件且是ssr模式，则将promise添加到appContext的renderPromises中
-          if (isPromise(promise) && this.isAsyncWidget && this.appContext?.isSSR) {
+          if (this.isAsyncWidget && this.appContext?.isSSR) {
             this.appContext?.registerRenderPromise?.(promise)
           }
         }
@@ -225,6 +225,26 @@ export class StatefulWidgetNode<
     return this._provide?.has(name) ?? false
   }
   /**
+   * 创建节点
+   *
+   * @param widget
+   * @param props
+   * @param devInfo
+   */
+  private static createNode = (
+    widget: WidgetType,
+    props: ValidNodeProps<WidgetType>,
+    devInfo: NodeDevInfo | undefined
+  ) => {
+    if (__DEV__) {
+      const message = validateProps(widget, props, devInfo)
+      if (message) return new CommentNode({ value: message })
+    }
+    return isStatelessWidget(widget)
+      ? new StatelessWidgetNode(widget, { ...props })
+      : new StatefulWidgetNode(widget, props)
+  }
+  /**
    * 重写渲染方法，用于渲染组件实例
    *
    * @returns {NodeElementType<T>} 返回根元素实例
@@ -236,7 +256,7 @@ export class StatefulWidgetNode<
     }
     // 触发render生命周期钩子，在组件渲染时执行
     const promise = this.callHook(LifecycleHooks.render)
-    if (this.isServerRender && isPromise(promise) && !this.isAsyncWidget) {
+    if (this.appContext?.isSSR && isPromise(promise)) {
       // 仅注册同步组件渲染任务，因为异步组件在创建实例时就已添加异步渲染任务，不应该使用 onRender 钩子进行额外的请求数据
       this.appContext?.registerRenderPromise?.(promise.then(() => this.syncSilentUpdate()))
     }
@@ -386,7 +406,11 @@ export class StatefulWidgetNode<
    */
   public syncSilentUpdate(): void {
     try {
-      this._child = this.instance.$patchUpdate(this.child, this.rebuild()) // 直接执行补丁更新
+      if (this.state === NodeState.Created) {
+        this._child = this.rebuild()
+      } else {
+        this._child = this.instance.$patchUpdate(this.child, this.rebuild()) // 直接执行补丁更新
+      }
     } catch (e) {
       // 捕获可能发生的错误
       this.reportError(e, {
@@ -551,27 +575,4 @@ export class StatefulWidgetNode<
     linkParentNode(vnode, this)
     return vnode // 返回构建的虚拟节点
   }
-}
-
-/**
- * 提供给FnWidget初始化使用
- *
- * 未了避免循环依赖问题，提供一个createNode方法，用于创建节点实例。
- *
- * @param widget
- * @param props
- * @param devInfo
- */
-const createNode = (
-  widget: WidgetType,
-  props: ValidNodeProps<WidgetType>,
-  devInfo: NodeDevInfo | undefined
-) => {
-  if (__DEV__) {
-    const message = validateProps(widget, props, devInfo)
-    if (message) return new CommentNode({ value: message })
-  }
-  return isStatelessWidget(widget)
-    ? new StatelessWidgetNode(widget, { ...props })
-    : new StatefulWidgetNode(widget, props)
 }
