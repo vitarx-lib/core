@@ -443,7 +443,7 @@ export class StatefulWidgetNode<
     }
     // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
     if (this.state === NodeState.Deactivated) return
-    if (this.state === NodeState.Rendered) {
+    if (this.state === NodeState.Created || this.state === NodeState.Rendered) {
       this.syncSilentUpdate()
       return
     }
