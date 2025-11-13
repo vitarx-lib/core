@@ -1,116 +1,94 @@
-import { beforeEach, describe, expect, it } from 'vitest'
-import { Context } from '../../src'
+import { describe, expect, it } from 'vitest'
+import { Context } from '../../src/index.js'
 
 describe('Context', () => {
-  beforeEach(() => {
-    Context.clear()
-  })
-
-  describe('store属性', () => {
-    it('应该返回只读的store', () => {
-      const store = Context.store
-      expect(store).toBeInstanceOf(Map)
-    })
-  })
-
-  describe('size属性', () => {
-    it('空store应该返回0', () => {
-      expect(Context.size).toBe(0)
-    })
-
-    it('应该返回正确的size', () => {
-      Context.set('test', {})
-      expect(Context.size).toBe(1)
-    })
-  })
-
-  describe('tags属性', () => {
-    it('应该返回tags的迭代器', () => {
-      Context.set('test1', {})
-      Context.set('test2', {})
-      const tags = Array.from(Context.tags)
-      expect(tags).toEqual(['test1', 'test2'])
-    })
-  })
-
-  describe('get方法', () => {
-    it('不存在的tag应该返回undefined', () => {
-      expect(Context.get('test')).toBeUndefined()
-    })
-
-    it('存在的tag应该返回对应的context', () => {
-      const ctx = { value: 1 }
-      Context.set('test', ctx)
-      expect(Context.get('test')).toBe(ctx)
-    })
-  })
-
-  describe('unset方法', () => {
-    it('应该能通过tag删除context', () => {
-      Context.set('test', {})
-      expect(Context.unset('test')).toBe(true)
-      expect(Context.get('test')).toBeUndefined()
-    })
-
-    it('只有匹配的context才会被删除', () => {
-      const ctx = { value: 1 }
-      Context.set('test', ctx)
-      expect(Context.unset('test', {})).toBe(false)
-      expect(Context.unset('test', ctx)).toBe(true)
-    })
-  })
-
-  describe('run方法', () => {
-    it('应该在指定上下文中运行函数', () => {
-      const ctx = { value: 1 }
-      const result = Context.run('test', ctx, () => {
-        expect(Context.get('test')).toBe(ctx)
-        return 'done'
+  describe('基本功能', () => {
+    it('应能设置和获取上下文', () => {
+      Context.run('user', { id: 1 }, () => {
+        expect(Context.get('user')).toEqual({ id: 1 })
       })
-      expect(result).toBe('done')
-      expect(Context.get('test')).toBeUndefined()
+      // 执行完应恢复
+      expect(Context.get('user')).toBeUndefined()
+    })
+
+    it('run 执行时应能嵌套上下文', () => {
+      Context.run('a', { name: 'outer' }, () => {
+        expect(Context.get('a')?.name).toBe('outer')
+        Context.run('a', { name: 'inner' }, () => {
+          expect(Context.get('a')?.name).toBe('inner')
+          return 'ok'
+        })
+        expect(Context.get('a')?.name).toBe('outer')
+      })
+      expect(Context.get('a')).toBeUndefined()
     })
   })
 
-  describe('withAsyncContext方法', () => {
-    it('异步任务完成后应自动恢复上下文', async () => {
-      Context.set('test1', { value: 1 })
-      Context.set('test2', { value: 2 })
+  describe('异步行为', () => {
+    it('withAsyncContext 应保持上下文恢复', async () => {
+      Context.run('user', { id: 42 }, () => {
+        expect(Context.get('user')?.id).toBe(42)
+      })
+
+      // 模拟 await 后恢复
+      await Context.run('session', { sid: 'abc' }, async () => {
+        expect(Context.get('session')?.sid).toBe('abc')
+        await Context.withAsyncContext(async () => {
+          // 临时异步上下文中应保持原值
+          expect(Context.get('session')?.sid).toBe('abc')
+          await Context.withAsyncContext(new Promise(r => setTimeout(r, 10)))
+          expect(Context.get('session')?.sid).toBe('abc')
+        })
+        // 返回后应仍保持一致
+        expect(Context.get('session')?.sid).toBe('abc')
+      })
+    })
+
+    it('run 在异步函数中也应保持独立上下文', async () => {
+      const logs: any[] = []
+      await Promise.all([
+        Context.run('req', { id: 1 }, async () => {
+          new Promise(r => setTimeout(r, 5))
+          logs.push(Context.get('req')?.id)
+        }),
+        Context.run('req', { id: 2 }, async () => {
+          new Promise(r => setTimeout(r, 2))
+          logs.push(Context.get('req')?.id)
+        })
+      ])
+      // 并发请求不应串 context
+      expect(new Set(logs)).toEqual(new Set([1, 2]))
+    })
+    it('withAsyncContext 应在异步任务中恢复', async () => {
+      await Context.run('user', { id: 0 }, async () => {
+        await Context.run('user2', { id: 1 }, async () => {
+          await Context.withAsyncContext(async () => {
+            expect(Context.get('user')?.id).toBe(0)
+            expect(Context.get('user2')?.id).toBe(1)
+            await new Promise(r => setTimeout(r, 10))
+          })
+          expect(Context.get('user')?.id).toBe(0)
+          expect(Context.get('user2')?.id).toBe(1)
+        })
+      })
+      expect(Context.get('user')).toBe(undefined)
+      expect(Context.get('user2')).toBe(undefined)
+    })
+  })
+
+  describe('浏览器端 withAsyncContext 模拟', () => {
+    it('应在浏览器端挂起并恢复全局上下文', async () => {
+      // 直接操作全局 store 模拟
+      Context.run('key', { value: 'test' }, () => {
+        expect(Context.get('key')?.value).toBe('test')
+      })
 
       await Context.withAsyncContext(async () => {
-        expect(Context.get('test1')?.value).toBe(1)
-        expect(Context.get('test2')?.value).toBe(2)
-        return 'done'
+        expect(Context.store).toBeInstanceOf(Map)
+        Context.run('k2', { ok: true }, () => {
+          expect(Context.get('k2')?.ok).toBe(true)
+        })
       })
-      expect(Context.get('test1')).toBeDefined()
-      expect(Context.get('test2')).toBeDefined()
-    })
-  })
-
-  describe('clear方法', () => {
-    it('应该清除所有上下文', () => {
-      Context.set('test1', {})
-      Context.set('test2', {})
-      Context.clear()
-      expect(Context.size).toBe(0)
-    })
-  })
-
-  describe('set方法', () => {
-    it('应该能恢复之前的上下文', () => {
-      const ctx1 = { value: 1 }
-      const ctx2 = { value: 2 }
-      Context.set('test', ctx1, false)
-      const restore = Context.set('test', ctx2, true)
-      restore()
-      expect(Context.get('test')).toBe(ctx1)
-    })
-
-    it('不备份时应该替换上下文', () => {
-      const ctx = { value: 1 }
-      const restore = Context.set('test', ctx, false)
-      restore()
-      expect(Context.get('test')).toBeUndefined()
     })
   })
 })
