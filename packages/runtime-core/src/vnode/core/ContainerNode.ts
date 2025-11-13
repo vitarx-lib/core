@@ -54,7 +54,7 @@ export const mixinContainerNode = (node: ContainerNode) => {
    */
   node['mountChildren'] = function (this: ContainerNode) {
     for (const child of this.children) {
-      child.mount()
+      child.mount(this.element)
     }
   }
 
