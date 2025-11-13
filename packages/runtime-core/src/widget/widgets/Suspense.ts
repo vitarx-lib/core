@@ -130,6 +130,10 @@ export class Suspense extends Widget<SuspenseProps> {
    * @throws {TypeError} 当属性不符合预期时抛出类型错误
    */
   static override validateProps(props: AnyProps) {
+    // 检查children属性是否存在且为VNode对象
+    if (!isVNode(props.children)) {
+      throw new TypeError(`Suspense.children属性期望得到一个节点对象，给定${typeof props.children}`)
+    }
     // 检查fallback属性是否存在，且是否为VNode对象
     if (props.fallback && !isVNode(props.fallback)) {
       return `Suspense.fallback属性期望得到一个节点对象，给定${typeof props.fallback}`
