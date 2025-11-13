@@ -1,31 +1,35 @@
 import { getAppContext } from '../runtime/context.js'
 
-let globalId = -1
+let globalId = 0
+
 /**
- * 生成应用内唯一的id
+ * 生成应用内唯一的 id
  *
- * 算法为 `${应用id前缀-递增计数器}`
+ * 算法为 `${前缀}-${递增计数器}`
  *
- * 可以通过 `app.config.idPrefix` 或 prefix 参数配置id前缀，默认为 `v`
+ * - Vitarx 组件内：使用 appContext 独立计数
+ * - 非组件环境：使用全局计数器
  *
- * @param {string} [prefix] - ID前缀
- * @returns {string} 返回生成的唯一ID字符串
- * @example
- * ```ts
- * function App() {
- *  const id = useId() // v-0
- *  console.log(useId()) // v-1
- *  return <div id={id}>test</div>
- * }
- * ```
+ * @param prefix ID 前缀（优先级最高）
+ * @returns 唯一 ID 字符串
  */
 export const useId = (prefix?: string): string => {
-  // 获取当前Vue组件实例
-  const appContext = getAppContext()
-  // 如果没有实例（非组件环境），则使用全局ID计数器生成ID
-  if (!appContext) return `${prefix || 'v'}-${globalId++}`
+  const appContext = getAppContext?.()
 
-  // 从应用上下文中获取ID前缀
-  prefix = appContext.config.idPrefix || 'v'
-  return `${prefix}-${globalId++}`
+  // 若无 Vue 实例，使用全局 ID
+  if (!appContext) {
+    return `${prefix || 'v'}-${globalId++}`
+  }
+
+  // 初始化上下文内计数器
+  const ctx = appContext as Record<string, any>
+  if (typeof ctx.__globalId !== 'number') {
+    ctx.__globalId = 0
+  }
+
+  // 计算前缀优先级：传入参数 > app.config.idPrefix > 'v'
+  const idPrefix = prefix ?? ctx.config?.idPrefix ?? 'v'
+
+  const id = ctx.__globalId++
+  return `${idPrefix}-${id}`
 }
