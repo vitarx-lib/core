@@ -1,7 +1,6 @@
 import { SubManager, toRaw } from '@vitarx/responsive'
 import { isDeepEqual } from '@vitarx/utils'
 import { useDomAdapter } from '../adapter/index.js'
-import { NodeState } from '../constants/index.js'
 import type { AnyProps, HostElements } from '../types/index.js'
 import {
   isContainerNode,
@@ -158,7 +157,7 @@ export class VNodeUpdate {
    * @param nextVNode - 用于替换的新节点
    * @throws {Error} 当旧节点未挂载且无法替换时抛出错误
    */
-  static replace(currentVNode: VNode, nextVNode: VNode) {
+  static replace(currentVNode: VNode, nextVNode: VNode): VNode {
     const dom = useDomAdapter()
     const oldElement = currentVNode.operationTarget
 
@@ -168,16 +167,9 @@ export class VNodeUpdate {
       dom.insertBefore(anchorElement, oldElement)
       currentVNode.unmount()
       nextVNode.mount(anchorElement, 'replace')
+      return nextVNode
     }
-    // 如果旧节点处于已渲染状态但没有父元素，直接卸载并挂载新节点
-    else if (currentVNode.state === NodeState.Rendered) {
-      currentVNode.unmount()
-      nextVNode.mount()
-    }
-    // 其他情况无法替换，抛出错误
-    else {
-      throw new Error('VNodeUpdate.replace(): the old node is not mounted and cannot be replaced')
-    }
+    throw new Error('VNodeUpdate.replace(): the old node is not mounted and cannot be replaced')
   }
 
   /**
