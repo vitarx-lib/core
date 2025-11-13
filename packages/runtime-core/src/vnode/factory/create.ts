@@ -23,9 +23,9 @@ import { getNodeDevInfo, isSupportChildren } from '../../utils/index.js'
 import { CommentNode } from '../nodes/CommentNode.js'
 import { FragmentNode } from '../nodes/FragmentNode.js'
 import { RegularElementNode } from '../nodes/RegularElementNode.js'
+import { createWidgetVNode } from '../nodes/StatefulWidgetNode.js'
 import { TextNode } from '../nodes/TextNode.js'
 import { VoidElementVNode } from '../nodes/VoidElementNode.js'
-import { createWidgetVNode } from './widget.js'
 
 /**
  * 合并与规子节点。
@@ -149,17 +149,17 @@ export function createVNode<T extends ValidNodeType>(
   ...children: VNodeChild[]
 ): VNodeInstanceType<T> {
   const { skip, vnode, props: resolvedProps } = resolveVNodeProps(type, props, children)
-  if (skip && vnode) return vnode as unknown as VNodeInstanceType<T>
+  if (skip && vnode) return vnode as VNodeInstanceType<T>
   const propsResolved = resolvedProps!
   if (typeof type === 'string') {
     if (type === DYNAMIC_RENDER_TYPE) {
-      return createDynamicVNode(propsResolved) as unknown as VNodeInstanceType<T>
+      return createDynamicVNode(propsResolved) as VNodeInstanceType<T>
     }
-    return createVNodeByType(type, propsResolved) as unknown as VNodeInstanceType<T>
+    return createVNodeByType(type, propsResolved) as VNodeInstanceType<T>
   }
 
   if (typeof type === 'function') {
-    return createWidgetVNode(type as WidgetType, propsResolved) as unknown as VNodeInstanceType<T>
+    return createWidgetVNode(type as WidgetType, propsResolved) as VNodeInstanceType<T>
   }
 
   throw new Error('createVNode(): invalid node type')

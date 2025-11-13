@@ -28,7 +28,13 @@ import type {
   WidgetInstanceType,
   WidgetType
 } from '../../types/index.js'
-import { __DEV__, isStatefulWidgetNode, isStatelessWidget, isVNode } from '../../utils/index.js'
+import {
+  __DEV__,
+  getNodeDevInfo,
+  isStatefulWidgetNode,
+  isStatelessWidget,
+  isVNode
+} from '../../utils/index.js'
 import { isClassWidget } from '../../utils/widget.js'
 import { FnWidget, initializeFnWidget } from '../../widget/core/FnWidget.js'
 import { VNode, type WaitNormalizedProps } from '../core/VNode.js'
@@ -117,30 +123,32 @@ export class StatefulWidgetNode<
     // 如果实例不存在，则调用createInstance方法创建实例，但不等待其完成
     if (!this._instance) {
       // 在特定上下文中运行实例创建逻辑
-      this.runInContext(() => {
-        // 包装props为响应式对象
-        this.props = proxyWidgetProps(
-          this.props,
-          this.type['defaultProps']
-        ) as NodeNormalizedProps<T>
-        // 判断是否为类组件
-        if (isClassWidget(this.type)) {
-          // 创建类组件实例
-          this._instance = new this.type(this.props) as WidgetInstanceType<T>
-        } else {
-          // 创建函数组件实例
-          const instance = new FnWidget(this.props)
-          this._instance = instance as unknown as WidgetInstanceType<T>
-          // 初始化函数组件并收集钩子
-          const promise = initializeFnWidget(instance, StatefulWidgetNode.createNode)
-          // 如果是异步组件且是ssr模式，则将promise添加到appContext的renderPromises中
-          if (this.isAsyncWidget && this.appContext?.isSSR) {
-            this.appContext?.registerRenderPromise?.(promise)
+      this.scope.run(() =>
+        runInNodeContext(this, () => {
+          // 包装props为响应式对象
+          this.props = proxyWidgetProps(
+            this.props,
+            this.type['defaultProps']
+          ) as NodeNormalizedProps<T>
+          // 判断是否为类组件
+          if (isClassWidget(this.type)) {
+            // 创建类组件实例
+            this._instance = new this.type(this.props) as WidgetInstanceType<T>
+          } else {
+            // 创建函数组件实例
+            const instance = new FnWidget(this.props)
+            this._instance = instance as unknown as WidgetInstanceType<T>
+            // 初始化函数组件并收集钩子
+            const promise = initializeFnWidget(instance, createWidgetVNode)
+            // 如果是异步组件且是ssr模式，则将promise添加到appContext的renderPromises中
+            if (this.isAsyncWidget && this.appContext?.isSSR) {
+              this.appContext?.registerRenderPromise?.(promise)
+            }
           }
-        }
-        // 绑定ref引用
-        if (this.ref) this.ref.value = this._instance
-      })
+          // 绑定ref引用
+          if (this.ref) this.ref.value = this._instance
+        })
+      )
     }
     return this._instance! // 返回实例，使用非空断言操作符(!)告诉编译器this._instance不为null或undefined
   }
@@ -173,16 +181,6 @@ export class StatefulWidgetNode<
     }
     // 如果已存在，直接返回现有作用域实例
     return this._scope
-  }
-  /**
-   * 在指定上下文中执行函数
-   *
-   * @template R - 函数返回值的类型
-   * @param {() => R} fn - 需要在特定上下文中执行的函数
-   * @returns {R} 函数执行后的返回值
-   */
-  runInContext<R>(fn: () => R): R {
-    return this.scope.run(() => runInNodeContext(this, fn))
   }
   /**
    * 向下提供注入值
@@ -223,26 +221,6 @@ export class StatefulWidgetNode<
   hasProvide(name: string | symbol): boolean {
     // 使用可选链操作符和 hasOwnProperty 方法检查属性是否存在
     return this._provide?.has(name) ?? false
-  }
-  /**
-   * 创建节点
-   *
-   * @param widget
-   * @param props
-   * @param devInfo
-   */
-  private static createNode = (
-    widget: WidgetType,
-    props: ValidNodeProps<WidgetType>,
-    devInfo: NodeDevInfo | undefined
-  ) => {
-    if (__DEV__) {
-      const message = validateProps(widget, props, devInfo)
-      if (message) return new CommentNode({ value: message })
-    }
-    return isStatelessWidget(widget)
-      ? new StatelessWidgetNode(widget, { ...props })
-      : new StatefulWidgetNode(widget, props)
   }
   /**
    * 重写渲染方法，用于渲染组件实例
@@ -503,7 +481,6 @@ export class StatefulWidgetNode<
       }) as LifecycleHookReturnType<T>
     }
   }
-
   /**
    * 重新构建根节点
    *
@@ -529,14 +506,26 @@ export class StatefulWidgetNode<
     if (subscriber) this.scope.addEffect(subscriber)
     return result
   }
-
   /**
    * @inheritDoc
    */
   protected override initProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     return props as NodeNormalizedProps<T>
   }
-
+  /**
+   * 在指定上下文中执行函数
+   *
+   * @template R - 函数返回值的类型
+   * @param {() => R} fn - 需要在特定上下文中执行的函数
+   * @returns {R} 函数执行后的返回值
+   */
+  private runInContext<R>(fn: () => R): R {
+    if (this.appContext) {
+      return this.appContext.runInContext(() => runInNodeContext(this, fn))
+    } else {
+      return runInNodeContext(this, fn)
+    }
+  }
   /**
    * 构建子节点
    */
@@ -544,9 +533,7 @@ export class StatefulWidgetNode<
     let vnode: VNode // 声明虚拟节点变量
     try {
       // 执行构建逻辑
-      const buildNode = this.appContext
-        ? this.appContext.runInContext(() => this.instance.build()) // 在应用上下文中运行构建逻辑
-        : this.instance.build() // 调用实例的build方法
+      const buildNode = this.runInContext(() => this.instance.build()) // 调用实例的build方法
       if (isVNode(buildNode)) {
         // 如果构建结果是VNode实例，则直接使用
         vnode = buildNode
@@ -575,4 +562,28 @@ export class StatefulWidgetNode<
     linkParentNode(vnode, this)
     return vnode // 返回构建的虚拟节点
   }
+}
+
+/**
+ * 创建组件虚拟节点(VNode)的工厂函数
+ * 根据组件类型创建对应的虚拟节点实例
+ *
+ * @param widget 组件类型，可以是函数组件或类组件
+ * @param props 传递给组件的属性对象
+ * @param devInfo 开发环境信息，可选参数
+ * @returns 返回创建的虚拟节点实例，可能是StatelessWidgetNode或StatefulWidgetNode
+ */
+export function createWidgetVNode(
+  widget: WidgetType, // 组件类型，定义组件的构造函数或函数
+  props: ValidNodeProps<WidgetType>, // 有效的节点属性，与组件类型匹配
+  devInfo?: NodeDevInfo // 可选的开发环境信息，用于调试
+): StatefulWidgetNode | StatelessWidgetNode {
+  // 在开发环境下，验证传入的props是否有效
+  if (__DEV__) validateProps(widget, props, devInfo ? devInfo : getNodeDevInfo(props))
+  // 根据组件类型创建对应的虚拟节点
+  // 如果是无状态组件，创建StatelessWidgetNode实例
+  // 如果是有状态组件，创建StatefulWidgetNode实例
+  return isStatelessWidget(widget)
+    ? new StatelessWidgetNode(widget, { ...props })
+    : new StatefulWidgetNode(widget, props)
 }
