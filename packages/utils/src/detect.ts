@@ -443,7 +443,7 @@ export function isArrayEqual(a: AnyArray, b: AnyArray): boolean {
  * @param var2 - 要比较的第二个变量
  * @param depth - 比较深度，默认为无限深度。0表示只比较引用，1表示只比较一层属性/元素，以此类推
  * @returns {boolean} 如果两个变量在指定深度内完全相等，则返回true；否则返回false
- * 
+ *
  * @example
  * ```typescript
  * // 基本比较
@@ -451,28 +451,28 @@ export function isArrayEqual(a: AnyArray, b: AnyArray): boolean {
  * isDeepEqual("hello", "hello"); // true
  * isDeepEqual(null, null); // true
  * isDeepEqual(1, "1"); // false
- * 
+ *
  * // 对象比较
  * isDeepEqual({a: 1}, {a: 1}); // true
  * isDeepEqual({a: 1}, {a: 2}); // false
  * isDeepEqual({a: 1}, {b: 1}); // false
- * 
+ *
  * // 数组比较
  * isDeepEqual([1, 2, 3], [1, 2, 3]); // true
  * isDeepEqual([1, 2, 3], [1, 2, 4]); // false
  * isDeepEqual([1, 2], [1, 2, 3]); // false
- * 
+ *
  * // 嵌套对象比较
  * const obj1 = {a: 1, b: {c: 2}};
  * const obj2 = {a: 1, b: {c: 2}};
  * isDeepEqual(obj1, obj2); // true
- * 
+ *
  * // 使用深度参数
  * const obj3 = {a: 1, b: {c: {d: 3}}};
  * const obj4 = {a: 1, b: {c: {d: 4}}};
  * isDeepEqual(obj3, obj4, 1); // true (只比较一层)
  * isDeepEqual(obj3, obj4, 2); // false (比较两层)
- * 
+ *
  * // 特殊情况
  * isDeepEqual(NaN, NaN); // true
  * isDeepEqual(0, -0); // false
@@ -535,5 +535,5 @@ export function isDeepEqual(var1: any, var2: any, depth: number = Infinity): boo
  * ```
  */
 export function isPromise(val: any): val is Promise<any> {
-  return val instanceof Promise
+  return val && val instanceof Promise
 }
