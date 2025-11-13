@@ -1,5 +1,5 @@
 import { unref } from '@vitarx/responsive'
-import { isRecordObject, logger, popProperty } from '@vitarx/utils'
+import { isRecordObject, logger } from '@vitarx/utils'
 import { useDomAdapter } from '../../adapter/index.js'
 import {
   COMMENT_NODE_TYPE,
@@ -8,7 +8,6 @@ import {
   FRAGMENT_NODE_TYPE,
   TEXT_NODE_TYPE
 } from '../../constants/index.js'
-import { getMemoNode, isSameMemo, removeMemoNode } from '../../runtime/index.js'
 import type {
   CommentNodeType,
   TextNodeType,
@@ -54,28 +53,6 @@ function resolveVNodeProps<T extends ValidNodeType>(
       logger.warn(`<${type}> children prop will be ignored`, devInfo?.source)
       delete props.children
     }
-    // v-if
-    if ('v-if' in resolvedProps && !unref(popProperty(resolvedProps, 'v-if'))) {
-      return { skip: true, vnode: new CommentNode({ value: 'v-if' }) }
-    }
-    // v-memo
-    const vMemoValue = resolvedProps['v-memo']
-    if (Array.isArray(vMemoValue)) {
-      const cached = getMemoNode(vMemoValue)
-      if (
-        cached &&
-        type === cached.type &&
-        props?.key === cached.key &&
-        isSameMemo(vMemoValue, cached.memo!)
-      ) {
-        logger.debug('v-memo cache hit', cached)
-        return { skip: true, vnode: cached }
-      }
-      if (cached) {
-        logger.debug('v-memo cache mismatch, invalidating', vMemoValue, cached)
-        removeMemoNode(vMemoValue)
-      }
-    }
   }
 
   // children 合并
@@ -88,7 +65,7 @@ function resolveVNodeProps<T extends ValidNodeType>(
     delete resolvedProps.children
   }
 
-  return { skip: false, props: resolvedProps }
+  return resolvedProps
 }
 
 /**
@@ -124,7 +101,7 @@ function createVNodeByType<T extends Exclude<ValidNodeType, WidgetType | Dynamic
 }
 
 /**
- * 处理动态组件（v-is / DYNAMIC_RENDER_TYPE）
+ * 处理动态组件（DYNAMIC_RENDER_TYPE）
  */
 function createDynamicVNode(props: Record<string, any>): VNodeInstanceType<any> {
   const { is: dynamicWidget, ...dynamicProps } = props
@@ -148,9 +125,7 @@ export function createVNode<T extends ValidNodeType>(
   props: ValidNodeProps<T> | null = null,
   ...children: VNodeChild[]
 ): VNodeInstanceType<T> {
-  const { skip, vnode, props: resolvedProps } = resolveVNodeProps(type, props, children)
-  if (skip && vnode) return vnode as VNodeInstanceType<T>
-  const propsResolved = resolvedProps!
+  const propsResolved = resolveVNodeProps(type, props, children)
   if (typeof type === 'string') {
     if (type === DYNAMIC_RENDER_TYPE) {
       return createDynamicVNode(propsResolved) as VNodeInstanceType<T>
