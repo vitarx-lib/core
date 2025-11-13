@@ -5,7 +5,7 @@ import {
   nextTick,
   Subscriber
 } from '@vitarx/responsive'
-import { isPromise, logger } from '@vitarx/utils'
+import { logger } from '@vitarx/utils'
 import { LifecycleHooks, NodeShapeFlags, NodeState } from '../../constants/index.js'
 import {
   findParentNode,
@@ -121,11 +121,22 @@ export class StatefulWidgetNode<
    */
   get instance(): WidgetInstanceType<T> {
     // 如果实例不存在，则调用createInstance方法创建实例，但不等待其完成
-    if (!this._instance) {
-      // 在特定上下文中运行实例创建逻辑
+    if (!this._instance) this.createInstance()
+    return this._instance!
+  }
+  /**
+   * 创建组件实例的方法
+   *
+   * @returns {WidgetInstanceType<T>} 返回一个Promise，解析为组件实例
+   */
+  createInstance(): Promise<WidgetInstanceType<T>> {
+    if (this._instance) return Promise.resolve(this._instance)
+    return new Promise(resolve => {
+      // 在作用域中运行组件初始化逻辑
       this.scope.run(() =>
+        // 在Node上下文中运行，确保正确的环境
         runInNodeContext(this, () => {
-          // 包装props为响应式对象
+          // 包装props为响应式对象，确保组件能够响应props的变化
           this.props = proxyWidgetProps(
             this.props,
             this.type['defaultProps']
@@ -134,23 +145,19 @@ export class StatefulWidgetNode<
           if (isClassWidget(this.type)) {
             // 创建类组件实例
             this._instance = new this.type(this.props) as WidgetInstanceType<T>
+            resolve(this._instance)
           } else {
             // 创建函数组件实例
             const instance = new FnWidget(this.props)
-            this._instance = instance as unknown as WidgetInstanceType<T>
             // 初始化函数组件并收集钩子
             const promise = initializeFnWidget(instance, createWidgetVNode)
-            // 如果是异步组件且是ssr模式，则将promise添加到appContext的renderPromises中
-            if (this.isAsyncWidget && this.appContext?.isSSR) {
-              this.appContext?.registerRenderPromise?.(promise)
-            }
+            promise.then(() => resolve(this._instance!))
           }
           // 绑定ref引用
           if (this.ref) this.ref.value = this._instance
         })
       )
-    }
-    return this._instance! // 返回实例，使用非空断言操作符(!)告诉编译器this._instance不为null或undefined
+    })
   }
   /**
    * 存储组件实例作用域的私有对象
@@ -232,14 +239,10 @@ export class StatefulWidgetNode<
     if (this.state !== NodeState.Created) {
       return this.child.element as NodeElementType<T>
     }
-    // 触发render生命周期钩子，在组件渲染时执行
-    const promise = this.callHook(LifecycleHooks.render)
-    if (this.appContext?.isSSR && isPromise(promise)) {
-      // 仅注册同步组件渲染任务，因为异步组件在创建实例时就已添加异步渲染任务，不应该使用 onRender 钩子进行额外的请求数据
-      this.appContext?.registerRenderPromise?.(promise.then(() => this.syncSilentUpdate()))
-    }
     // 触发beforeMount生命周期钩子，在组件挂载前执行
     this.callHook(LifecycleHooks.beforeMount)
+    // 触发render生命周期钩子
+    this.callHook(LifecycleHooks.render)
     let el: NodeElementType
     try {
       // 尝试获取子组件的DOM元素
@@ -257,7 +260,7 @@ export class StatefulWidgetNode<
         ? errVNode
         : new CommentNode({ value: `StatefulWidget<${VNode.name}> render fail` })
       // 获取更新后的DOM元素
-      el = this.child.element
+      el = this.child.render()
     }
     this.state = NodeState.Rendered
     // 返回渲染后的宿主元素实例
@@ -379,15 +382,15 @@ export class StatefulWidgetNode<
   /**
    * 静默补丁更新
    *
-   * 在不触发生命周期钩子或异步调度的情况下，
+   * 在不触发生命周期钩子和异步调度的情况下，
    * 同步执行节点的补丁更新操作。
    */
   public syncSilentUpdate(): void {
     try {
-      if (this.state === NodeState.Created) {
-        this._child = this.rebuild()
+      if (this.dom.getParentElement(this.operationTarget)) {
+        this._child = this.instance.$patchUpdate(this.child, this.rebuild())
       } else {
-        this._child = this.instance.$patchUpdate(this.child, this.rebuild()) // 直接执行补丁更新
+        this._child = this.rebuild()
       }
     } catch (e) {
       // 捕获可能发生的错误
@@ -421,8 +424,8 @@ export class StatefulWidgetNode<
     }
     // 如果状态是不活跃的，则不进行更新操作，会在下一次激活时执行更新操作
     if (this.state === NodeState.Deactivated) return
-    if (this.state === NodeState.Created || this.state === NodeState.Rendered) {
-      this.syncSilentUpdate()
+    if (this.state === NodeState.Created) {
+      this._child = this.rebuild()
       return
     }
     // 如果是挂起的更新，则直接返回
@@ -529,7 +532,7 @@ export class StatefulWidgetNode<
   /**
    * 构建子节点
    */
-  private buildChildNode = (): VNode => {
+  public buildChildNode = (): VNode => {
     let vnode: VNode // 声明虚拟节点变量
     try {
       // 执行构建逻辑
