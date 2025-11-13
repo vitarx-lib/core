@@ -149,7 +149,7 @@ export function validateProps<T extends WidgetType>(
   widget: T,
   props: ValidNodeProps<T>,
   devInfo?: NodeDevInfo
-): string | void {
+): void {
   // 在开发环境下，如果组件提供了validateProps方法，则执行属性校验
   if (typeof widget.validateProps === 'function') {
     // 获取组件名称
@@ -158,12 +158,8 @@ export function validateProps<T extends WidgetType>(
     const result = widget.validateProps(props)
     // 校验失败处理
     if (result === false) {
-      // 构造错误信息
-      const message = `Widget <${name}> props validation failed.`
       // 记录错误日志，包含源信息
-      logger.error(message, devInfo?.source)
-      // 返回一个包含错误信息的注释节点
-      return message
+      logger.error(`Widget <${name}> props validation failed.`, devInfo?.source)
     } else if (typeof result === 'string') {
       // 如果返回的是字符串，则记录警告日志
       logger.warn(`Widget <${name}>: ${result}`, devInfo?.source)
