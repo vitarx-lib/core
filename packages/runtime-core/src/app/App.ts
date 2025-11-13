@@ -80,12 +80,6 @@ export abstract class App {
    */
   public readonly isSSR: boolean = false
   /**
-   * 是否为 hydration 模式
-   *
-   * @default false
-   */
-  public readonly isHydration: boolean = false
-  /**
    * 构建应用实例
    *
    * @param node - 根节点/小部件
