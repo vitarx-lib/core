@@ -119,7 +119,9 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
           dom.replace(element, target)
           break
         default:
-          dom.appendChild(target as HostParentElement, element)
+          if (dom.getParentElement(element) !== target) {
+            dom.appendChild(target as HostParentElement, element)
+          }
       }
     }
     this.mountChildren?.()
