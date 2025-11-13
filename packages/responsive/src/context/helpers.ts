@@ -1,30 +1,5 @@
-import type { AsyncContextTask, RestoreContext, Tag } from './context.js'
+import type { AsyncContextTask, Tag } from './context.js'
 import { Context } from './context.js'
-
-/**
- * Context.set方法的助手函数
- *
- * 创建一个新的上下文并返回恢复函数
- *
- * @template T - 上下文对象的类型
- * @param {Tag} tag - 上下文标签
- * @param {T} ctx - 要设置的上下文对象
- * @param {boolean} [backup=true] - 是否备份当前上下文
- * @returns {RestoreContext} 用于恢复上下文的函数
- * @example
- * ```js
- * const restore = createContext('user', { id: 123 })
- * // 使用上下文...
- * restore() // 恢复或删除上下文
- * ```
- */
-export function createContext<T extends object>(
-  tag: Tag,
-  ctx: T,
-  backup: boolean = true
-): RestoreContext {
-  return Context.set(tag, ctx, backup)
-}
 
 /**
  * Context.get方法的助手函数
@@ -42,19 +17,6 @@ export function createContext<T extends object>(
  */
 export function getContext<T extends Record<string | symbol, any>>(tag: Tag): T | undefined {
   return Context.get<T>(tag)
-}
-
-/**
- * Context.unset方法的助手函数
- *
- * 删除指定标签的上下文
- *
- * @param {Tag} tag - 上下文标签
- * @param {object} [ctx] - 可选的要卸载的上下文对象
- * @returns {boolean} 是否卸载成功
- */
-export function removeContext(tag: Tag, ctx?: object): boolean {
-  return Context.unset(tag, ctx)
 }
 
 /**
@@ -83,59 +45,29 @@ export function runInContext<R>(tag: Tag, ctx: object, fn: () => R): R {
 export { runInContext as runContext }
 
 /**
- * Context.withAsyncContext方法的助手函数
- * 在异步任务中管理上下文
+ * Context.withAsyncContext 方法的助手函数
+ *
+ * @description
+ * 1. 执行异步任务前会备份所有上下文
+ * 2. 任务完成后会自动恢复原来的上下文状态
+ * 3. asyncTask可以是返回Promise的函数或直接传入的Promise对象
+ * 4. 无论任务成功或失败，都会确保上下文状态被正确恢复
+ * 5. 在 Node.js 环境中使用 AsyncLocalStorage 确保异步操作中的上下文隔离
+ *
  * @async
  * @template T - 异步任务的返回值类型
  * @param {AsyncContextTask<T>} asyncTask - 需要执行的异步任务
- * @param {Tag[]} [tags=[]] - 需要挂起的上下文标签数组
  * @returns {Promise<T>} 异步任务的执行结果
  * @example
  * ```js
- * await withAsyncContext(async () => {
- *   // 在此函数中指定的上下文被挂起
- *   return fetchData()
- * }, ['user'])
- * ```
- */
-export async function withAsyncContext<T>(
-  asyncTask: AsyncContextTask<T>,
-  tags: Tag[] = []
-): Promise<T> {
-  return Context.withAsyncContext(asyncTask, tags)
-}
-
-/**
- * Context.clear方法的助手函数
- *
- * 清除所有上下文
- */
-export function clearAllContexts(): void {
-  Context.clear()
-}
-
-/**
- * Context.tags属性的助手函数
- *
- * 获取当前所有活跃上下文标签
- *
- * @returns {IterableIterator<Tag>} 当前所有上下文标签的迭代器
- * @example
- * ```js
- * for (const tag of getAllContextTags()) {
- *   console.log(tag)
+ * async function App() {
+ *  // 非nodejs端必须使用withAsyncContext确保上下文有效
+ *  await withAsyncContext(fetchData)
+ *  getContext('user')?.id // 123
  * }
+ * runInContext('user', { id: 123 }, App)
  * ```
  */
-export function getAllContextTags(): IterableIterator<Tag> {
-  return Context.tags
-}
-
-/**
- * Context.size属性的助手函数
- * 获取当前存储的上下文数量
- * @returns {number} 当前存储的上下文数量
- */
-export function getContextCount(): number {
-  return Context.size
+export async function withAsyncContext<T>(asyncTask: AsyncContextTask<T>): Promise<T> {
+  return Context.withAsyncContext(asyncTask)
 }
