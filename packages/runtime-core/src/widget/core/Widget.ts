@@ -121,7 +121,7 @@ export abstract class Widget<
   readonly #vnode: StatefulWidgetNode
 
   constructor(props: InputProps) {
-    this.#vnode = getCurrentVNode()!
+    this.#vnode = getCurrentVNode() as StatefulWidgetNode
     if (__DEV__ && !this.#vnode) {
       throw new Error('The Widget instance must be created in the context of the WidgetVNode')
     }
@@ -377,7 +377,7 @@ export abstract class Widget<
    *
    * 使用建议：
    * - 可在此钩子中处理异步数据获取、依赖初始化等操作。
-   * - 如果希望客户端在数据未加载完成时不渲染真实组件，应使用异步组件。
+   * - 如果希望在未使用ssr渲染时在数据未加载完成时不渲染真实节点，应使用异步组件。
    *
    * @returns {Promise<unknown> | void} - 可返回 Promise 以延迟占位节点替换为真实节点，客户端不会阻塞渲染。
    */
