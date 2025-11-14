@@ -1,37 +1,5 @@
-import { isArrayEqual } from '@vitarx/utils'
 import type { VNode } from '../vnode/index.js'
-
-const MEMO_STORE = new WeakMap<Array<any>, VNode>()
-/**
- * 根据提供的memo数组获取对应的VNode节点
- * @param memo - 用于查找VNode节点的数组，包含任意类型的数据
- * @returns {VNode|undefined} 如果找到匹配的VNode节点且memo数组内容相同，则返回该VNode节点；否则返回undefined
- */
-export function getMemoNode(memo: Array<any>): VNode | undefined {
-  // 从MEMO_STORE中获取与memo数组关联的VNode节点
-  const node = MEMO_STORE.get(memo)
-  // 检查是否存在节点且memo数组内容是否与节点中存储的memo数组相同
-  // 如果条件满足则返回节点，否则返回undefined
-  return node && node.memo && isArrayEqual(memo, node.memo) ? node : undefined
-}
-/**
- * 设置记忆节点的函数
- * 将给定的记忆数组(memo)和虚拟节点(node)存储到MEMO_STORE映射中
- * @param memo - 用于作为键的数组，可以是任意类型的数组
- * @param node - 要存储的虚拟节点(VNode)对象
- */
-export function setMemoNode(memo: Array<any>, node: VNode): void {
-  MEMO_STORE.set(memo, node) // 将memo作为键，node作为值存储到MEMO_STORE中
-}
-
-/**
- * 从记忆存储中移除指定的记忆节点
- * @param memo - 记忆数组，用于标识一组记忆节点
- */
-export function removeMemoNode(memo: Array<any>): void {
-  // 使用记忆数组作为键，从记忆存储中删除对应的记忆节点
-  MEMO_STORE.delete(memo)
-}
+import { getCurrentVNode } from './context.js'
 
 /**
  * 检查两个记忆数组是否相同
@@ -40,7 +8,7 @@ export function removeMemoNode(memo: Array<any>): void {
  * @param nextMemo - 后一个记忆数组，包含任意类型的元素
  * @returns {boolean} 如果两个数组的所有元素经过unref处理后都相等，则返回true，否则返回false
  */
-export function isSameMemo(prevMemo: Array<any>, nextMemo: Array<any>): boolean {
+export function isMemoSame(prevMemo: Array<any>, nextMemo: Array<any>): boolean {
   // 遍历nextMemo数组，比较每个元素与prevMemo中对应元素的值
   for (let i = 0; i < nextMemo.length; i++) {
     // 使用unref函数获取每个元素的引用值，并进行比较
@@ -49,4 +17,57 @@ export function isSameMemo(prevMemo: Array<any>, nextMemo: Array<any>): boolean 
   }
   // 如果所有元素都相等，则返回true
   return true
+}
+
+/**
+ * 带有记忆功能的VNode构建函数
+ *
+ * 该api通常无需显式使用，编译器会自动为jsx模板中使用v-memo的节点进行自动替换。
+ *
+ * @template R - 构建的VNode的类型
+ * @param memo 记忆值数组，用于比较是否需要重新构建VNode
+ * @param builder VNode构建函数
+ * @param index 缓存索引值
+ * @returns {VNode} 构建好的VNode
+ * @example
+ * ```jsx
+ * function Foo() {
+ *   return <div>
+ *     <div v-memo={[1, 2, 3]}>
+ *       此节点只会被创建一次，直到 memo 值发生变化时才会重新构建
+ *     </div>
+ *   </div>
+ * }
+ * // 上面使用v-memo的div会被编译为以下代码：
+ * // 第三个参数0是由编译器递增生成的，表示缓存的索引，在组件中不会重复
+ * withMemo([1, 2, 3], () => jsx('div',{children:"此节点..."}),0)
+ * ```
+ */
+export function withMemo<R extends VNode>(memo: any[], builder: () => R, index: number): R {
+  // 获取当前虚拟节点
+  const vnode = getCurrentVNode()
+  // 无上下文 vnode，直接构建
+  if (!vnode) return builder()
+
+  let cache = vnode.memoCache // 获取缓存对象
+
+  // 初始化 cache
+  if (!cache) {
+    const ret = builder() // 构建VNode
+    ret.memo = memo.slice() // 保存记忆值的副本
+    vnode.memoCache = new Map([[index, ret]]) // 创建新的缓存Map并存储
+    return ret
+  }
+
+  // 有缓存则尝试命中
+  const cached = cache.get(index) // 从缓存中获取对应索引的VNode
+  // 如果缓存存在且记忆值相同，则返回缓存的VNode
+  if (cached && isMemoSame(cached.memo!, memo)) {
+    return cached as R
+  }
+  // 未命中：重新构建并写入 cache
+  const ret = builder() // 重新构建VNode
+  ret.memo = memo.slice() // 保存记忆值的副本
+  cache.set(index, ret) // 将新构建的VNode存入缓存
+  return ret
 }
