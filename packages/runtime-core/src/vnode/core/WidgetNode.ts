@@ -1,6 +1,7 @@
 import { type App } from '../../app/index.js'
 import { NodeState } from '../../constants/index.js'
 import { getAppContext, runInNodeContext } from '../../runtime/index.js'
+import { useSSRContext } from '../../runtime/SSRContext.js'
 import type {
   BindParentElement,
   HostNodeElements,
@@ -54,8 +55,9 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
    * 判断当前是否为服务器渲染的getter方法
    * @returns {boolean} 如果是服务器渲染且不是水合阶段则返回true，否则返回false
    */
-  get isServerRender(): boolean {
-    return !!this.appContext?.isSSR
+  protected get isServerRender(): boolean {
+    const ctx = useSSRContext()
+    return !!(ctx && !ctx.isClientHydrate)
   }
   /**
    * 获取组件构建的子节点
