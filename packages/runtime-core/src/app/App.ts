@@ -1,5 +1,6 @@
 import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
+import type { Directive, DirectiveOptions } from '../directive/index.js'
 import { runInAppContext } from '../runtime/index.js'
 import type { ErrorInfo, WidgetType } from '../types/index.js'
 import { isStatefulWidgetNode } from '../utils/index.js'
@@ -72,6 +73,11 @@ export abstract class App {
    */
   readonly #provide: Map<string | symbol, any> = new Map()
   /**
+   * 应用作用域的指令
+   * @private
+   */
+  readonly #directives: Map<string, Directive> = new Map()
+  /**
    * 构建应用实例
    *
    * @param node - 根节点/小部件
@@ -101,18 +107,6 @@ export abstract class App {
   }
 
   /**
-   * 注册异步渲染任务
-   *
-   * 此方法在服务端渲染时会被内部渲染逻辑调用，如果是异步渲染的组件，
-   * 则会注册 Promise 对象，监听对象可得知是否渲染完成。
-   *
-   * ssr 应用app可以实现此方法，来完成服务端渲染。
-   *
-   * @param {Promise<unknown>} promise - 需要注册的Promise对象，该Promise不返回任何值（void类型）
-   */
-  public registerRenderPromise?(promise: Promise<unknown>): void
-
-  /**
    * 初始化应用配置
    *
    * @param config 可选的应用配置对象
@@ -138,7 +132,73 @@ export abstract class App {
   runInContext<T>(fn: () => T): T {
     return runInAppContext(this, fn)
   }
-
+  /**
+   * 获取指令
+   *
+   * @overload
+   * @param {string} name - 指令名称
+   * @returns {Directive | undefined} 已注册的指令，如果不存在则返回 undefined
+   *
+   *
+   * @example
+   * ```js
+   * // 获取已注册的指令
+   * const focusDirective = app.directive('focus');
+   * ```
+   */
+  directive(name: string): Directive | undefined
+  /**
+   * 注册指令
+   *
+   * @overload
+   * @param {string} name - 指令名称
+   * @param {DirectiveOptions} directive - 指令选项（可选）
+   * @returns {this} 根据参数不同返回不同类型
+   *
+   * @example
+   * // 注册一个指令
+   * app.directive('focus', {
+   *   mounted(el) {
+   *     el.focus();
+   *   }
+   * });
+   *
+   * @example
+   * ```js
+   * // 获取已注册的指令
+   * const focusDirective = app.directive('focus');
+   * ```
+   *
+   * @example
+   * ```js
+   * // 链式注册多个指令
+   * app
+   *   .directive('click-outside', clickOutsideDirective)
+   *   .directive('lazy-load', lazyLoadDirective);
+   * ```
+   */
+  directive(name: string, directive: DirectiveOptions): this
+  /**
+   * 注册或获取指令的方法
+   *
+   * @param name - 指令名称，会自动去除前后空格
+   * @param [directive] - 可选，指令配置对象
+   * @returns 如果传入 directive 参数，返回 this 实例以支持链式调用；
+   *          如果未传入 directive 参数，返回获取到的指令对象或 undefined
+   */
+  directive(name: string, directive?: DirectiveOptions): Directive | undefined | this {
+    // 去除指令名称前后的空格
+    name = name.trim()
+    if (directive) {
+      // 如果没有提供指令名称，抛出类型错误
+      if (!name) throw new TypeError('The directive name cannot be empty')
+      ;(directive as Directive).name = name
+      this.#directives.set(name, directive as Directive)
+      return this
+    } else {
+      return this.#directives.get(name)
+    }
+  }
   /**
    * 应用级数据提供
    *
