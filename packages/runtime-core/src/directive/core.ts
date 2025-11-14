@@ -164,24 +164,52 @@ function normalizeDirective(
  *
  * 将一个或多个指令添加到虚拟节点的指令集合中。
  * 每个指令通过其名称进行标识，并存储在vnode的directives Map中。
+ * 支持两种指令格式：简单指令对象和包含指令、值和参数的数组形式。
  *
  * @param vnode - 要添加指令的虚拟节点
- * @param directives - 要添加的指令数组
+ * @param directives - 要添加的指令数组，可以是Directive对象数组或[Directive, value?, arg?]形式的元组数组
  *
  * @example
  * ```typescript
- * // 创建一个虚拟节点
- *
- * // 创建一些指令
+ * // 使用简单指令对象形式
  * const focusDirective = { name: 'focus', mounted: el => el.focus() };
  * const tooltipDirective = { name: 'tooltip', mounted: (el, binding) => { //... } };
+ *
  * // 将指令添加到虚拟节点
  * withDirectives(createVNode('div'), [focusDirective, tooltipDirective]);
  * ```
+ *
+ * @example
+ * ```typescript
+ * // 使用数组形式，包含指令、值和参数
+ * const modelDirective = { name: 'model', mounted: (el, binding) => { //... } };
+ * const colorDirective = { name: 'color', mounted: (el, binding) => { //... } };
+ *
+ * // 将指令添加到虚拟节点，同时传递值和参数
+ * withDirectives(createVNode('input'), [
+ *   [modelDirective, inputValue], // 只有指令和值
+ *   [colorDirective, 'red', 'theme'] // 指令、值和参数
+ * ]);
+ * ```
  */
-export function withDirectives(vnode: VNode, directives: Directive[]) {
-  for (const directive of directives) {
-    vnode.directives.set(directive.name, directive)
+export function withDirectives(
+  vnode: VNode,
+  directives:
+    | Array<[directive: Directive, value?: any, arg?: string | undefined]>
+    | Array<Directive>
+) {
+  for (const item of directives) {
+    let dir: Directive
+    let value: any
+    let arg: string | undefined
+    if (Array.isArray(item)) {
+      dir = item[0]
+      value = item[1]
+      arg = item[2]
+    } else {
+      dir = item
+    }
+    vnode.directives.set(dir.name, [dir, value, arg])
   }
 }
 
