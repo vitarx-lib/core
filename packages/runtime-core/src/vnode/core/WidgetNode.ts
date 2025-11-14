@@ -1,7 +1,7 @@
 import { type App } from '../../app/index.js'
 import { NodeState } from '../../constants/index.js'
-import { getAppContext, runInNodeContext } from '../../runtime/index.js'
-import { useSSRContext } from '../../runtime/SSRContext.js'
+import type { Directive } from '../../directive/index.js'
+import { getAppContext, runInNodeContext, useSSRContext } from '../../runtime/index.js'
 import type {
   BindParentElement,
   HostNodeElements,
@@ -47,6 +47,10 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
    * 缓存组件的记忆数组
    */
   public memoCache?: Map<number, VNode>
+  /**
+   * 缓存组件指令
+   */
+  public directiveCache?: Map<string, Directive>
   protected constructor(type: T, props: ValidNodeProps<T>) {
     super(type, props)
     this.appContext = getAppContext()
@@ -82,6 +86,7 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     super.cleanData()
     this.memoCache = undefined
     this._child = null
+    this.directiveCache = undefined
   }
   /**
    * @inheritDoc
