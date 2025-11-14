@@ -79,8 +79,14 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
   override unmount(): void {
     this.unmountChildren?.()
     this.dom.remove(this.element)
-    this.cachedElement = null
     this.state = NodeState.Unmounted
+  }
+  /**
+   * @inheritDoc
+   */
+  protected override cleanData() {
+    super.cleanData()
+    this.cachedElement = null
   }
   /**
    * @inheritDoc

@@ -7,7 +7,6 @@ import {
   NodeState,
   VIRTUAL_NODE_SYMBOL
 } from '../../constants/index.js'
-import { getMemoNode, setMemoNode, unlinkParentNode } from '../../runtime/index.js'
 import type {
   AnyProps,
   BindAttributes,
@@ -130,14 +129,6 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       this._show = 'v-show' in props ? !!unref(popProperty(props, 'v-show')) : true
       // 静态节点
       this.isStatic = !!unref(popProperty(props, 'v-static'))
-      // 缓存
-      const memo = popProperty(props, 'v-memo')
-      // 初始化缓存
-      if (Array.isArray(memo) && !getMemoNode(memo)) {
-        // 备份之前的值
-        this.memo = Array.from(memo)
-        setMemoNode(memo, this)
-      }
       // 传送目标
       this._teleport = popProperty(props, 'v-parent') || undefined
       if (__DEV__) {
@@ -236,22 +227,27 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     if (state === this._state) return
     // 如果设置的状态为未挂载(Unmounted)状态
     if (state === NodeState.Unmounted || state === NodeState.Created) {
-      // 检查是否存在锚点元素
-      if (this._anchor) {
-        // 从DOM中移除锚点元素
-        this.dom.remove(this._anchor)
-        // 将锚点引用置为null
-        this._anchor = null
-      }
-      this.memo = undefined
-      // 移除父级映射
-      unlinkParentNode(this)
-      // 移除引用
-      if (this.ref) this.ref.value = null
+      this.cleanData()
     }
     this._state = state
   }
-
+  /**
+   * 清理数据的方法吗
+   *
+   * 当节点状态变更到Unmounted或Created状态时调用
+   */
+  protected cleanData() {
+    // 检查是否存在锚点元素
+    if (this._anchor) {
+      // 从DOM中移除锚点元素
+      this.dom.remove(this._anchor)
+      // 将锚点引用置为null
+      this._anchor = null
+    }
+    this.memo = undefined
+    // 移除引用
+    if (this.ref) this.ref.value = null
+  }
   /**
    * 获取当前节点在 DOM 操作中的目标元素
    *

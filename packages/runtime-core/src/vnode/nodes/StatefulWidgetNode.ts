@@ -331,8 +331,13 @@ export class StatefulWidgetNode<
     this.state = NodeState.Unmounted
     // 触发onUnmounted生命周期
     this.callHook(LifecycleHooks.unmounted)
+  }
+  /**
+   * @inheritDoc
+   */
+  protected override cleanData() {
+    super.cleanData()
     this._scope = null
-    this._child = null
     this._instance = null
     this._provide = null
     this._pendingUpdate = false
@@ -514,20 +519,6 @@ export class StatefulWidgetNode<
    */
   protected override initProps(props: WaitNormalizedProps<T>): NodeNormalizedProps<T> {
     return props as NodeNormalizedProps<T>
-  }
-  /**
-   * 在指定上下文中执行函数
-   *
-   * @template R - 函数返回值的类型
-   * @param {() => R} fn - 需要在特定上下文中执行的函数
-   * @returns {R} 函数执行后的返回值
-   */
-  private runInContext<R>(fn: () => R): R {
-    if (this.appContext) {
-      return this.appContext.runInContext(() => runInNodeContext(this, fn))
-    } else {
-      return runInNodeContext(this, fn)
-    }
   }
   /**
    * 构建子节点

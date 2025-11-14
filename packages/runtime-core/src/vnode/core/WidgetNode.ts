@@ -1,6 +1,6 @@
 import { type App } from '../../app/index.js'
 import { NodeState } from '../../constants/index.js'
-import { getAppContext } from '../../runtime/index.js'
+import { getAppContext, runInNodeContext } from '../../runtime/index.js'
 import type {
   BindParentElement,
   HostNodeElements,
@@ -42,6 +42,10 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
    * app上下文
    */
   public appContext?: App
+  /**
+   * 缓存组件的记忆数组
+   */
+  public memoCache?: Map<number, VNode>
   protected constructor(type: T, props: ValidNodeProps<T>) {
     super(type, props)
     this.appContext = getAppContext()
@@ -68,6 +72,14 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
     }
     // 返回根节点
     return this._child
+  }
+  /**
+   * @inheritDoc
+   */
+  protected override cleanData() {
+    super.cleanData()
+    this.memoCache = undefined
+    this._child = null
   }
   /**
    * @inheritDoc
@@ -142,5 +154,19 @@ export abstract class WidgetNode<T extends WidgetNodeType = WidgetNodeType> exte
    */
   protected override handleShowState(visible: boolean): void {
     this.child.show = visible
+  }
+  /**
+   * 在指定上下文中执行函数
+   *
+   * @template R - 函数返回值的类型
+   * @param {() => R} fn - 需要在特定上下文中执行的函数
+   * @returns {R} 函数执行后的返回值
+   */
+  protected runInContext<R>(fn: () => R): R {
+    if (this.appContext) {
+      return this.appContext.runInContext(() => runInNodeContext(this, fn))
+    } else {
+      return runInNodeContext(this, fn)
+    }
   }
 }
