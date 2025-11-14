@@ -1,4 +1,3 @@
-import { unref } from '@vitarx/responsive'
 import { NodeState } from '../../constants/index.js'
 import type {
   BindParentElement,
@@ -216,10 +215,6 @@ export abstract class HostNode<T extends HostNodeNames = HostNodeNames> extends 
    * @returns {NodeNormalizedProps<T>} 返回规范化的有效节点属性对象
    */
   protected override initProps(props: Record<string, any>): NodeNormalizedProps<T> {
-    // 解包ref
-    for (const prop in props) {
-      props[prop] = unref(props[prop])
-    }
     return props as NodeNormalizedProps<T>
   }
 }
