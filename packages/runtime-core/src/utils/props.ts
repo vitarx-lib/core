@@ -9,9 +9,14 @@ import {
   SubManager,
   Subscriber,
   toRaw,
+  unref,
   type WatchOptions,
   watchProperty
 } from '@vitarx/responsive'
+import { isRecordObject } from '@vitarx/utils'
+import { INTRINSIC_ATTRIBUTES } from '../constants/index.js'
+import type { AnyProps, BindAttributes } from '../types/index.js'
+import { StyleUtils } from './style.js'
 
 /**
  * 监听props属性变化的函数
@@ -51,7 +56,7 @@ export function onPropChange<T extends {}, K extends keyof T>(
 }
 
 /**
- * TwoWayProp 类实现了一个双向绑定的属性代理，用于在组件Prop和响应式系统之间建立双向数据绑定。
+ * PropModel 类实现了一个双向绑定的属性代理，用于在组件Prop和响应式系统之间建立双向数据绑定。
  *
  * 核心功能：
  * - 提供对组件Prop的响应式访问
@@ -60,7 +65,7 @@ export function onPropChange<T extends {}, K extends keyof T>(
  * 使用示例：
  * ```typescript
  * const props = { count: 0 }; // 模拟的组件props对象
- * const boundCount = new TwoWayProp(props, 'count', 0);
+ * const boundCount = new PropModel(props, 'count', 0);
  * boundCount.value = 10; // 会自动更新 props.count
  * ```
  *
@@ -74,7 +79,7 @@ export function onPropChange<T extends {}, K extends keyof T>(
  * - 会自动处理原始值是否为 RefSignal 的情况
  * - 当属性值未改变时，不会触发更新
  */
-export class TwoWayProp<T extends {}, K extends keyof T> implements RefSignal<T[K]> {
+export class PropModel<T extends {}, K extends keyof T> implements RefSignal<T[K]> {
   readonly [REF_SIGNAL_SYMBOL] = true
   readonly [SIGNAL_SYMBOL] = true
   private readonly _ref: RefSignal
@@ -132,7 +137,7 @@ export class TwoWayProp<T extends {}, K extends keyof T> implements RefSignal<T[
  * 创建一个支持双向绑定的属性引用
  *
  * 该函数用于创建一个特殊的Ref对象，它可以与组件的props属性进行双向绑定。
- * 当通过该Ref修改值时，会智能地更新原始props中的对应属性或Ref。
+ * 当通过该`.value`修改值时，会智能地更新原始props中的对应属性或Ref。
  *
  * 主要特性：
  * 1. 如果原始props中的属性传入的是RefSignal，则直接更新该Ref的值
@@ -147,9 +152,10 @@ export class TwoWayProp<T extends {}, K extends keyof T> implements RefSignal<T[
  * @returns {RefSignal} 返回一个支持双向绑定的Ref对象
  *
  * @example
+ * ```jsx
  * // 在组件中使用
  * function MyInput(props: { value: string) {
- *   const valueRef = useTwoWayProp(props, 'value')
+ *   const valueRef = usePropModel(props, 'value')
  *
  *   const handleChange = (e: Event) => {
  *     // 修改valueRef.value会自动更新props.value或其对应的Ref
@@ -167,13 +173,80 @@ export class TwoWayProp<T extends {}, K extends keyof T> implements RefSignal<T[
  *   })
  *   return <MyInput value={value}/>
  * }
- *
- * @see {@linkcode TwoWayProp} - 实现双向绑定的属性代理的类
+ * ```
+ * @see {@linkcode PropModel} - 实现双向绑定的属性代理的类
  */
-export function useTwoWayProp<T extends {}, K extends keyof T>(
+export function usePropModel<T extends {}, K extends keyof T>(
   props: T,
   propName: K,
   defaultValue?: T[K]
-): TwoWayProp<T, K> {
-  return new TwoWayProp(props, propName, defaultValue)
+): PropModel<T, K> {
+  return new PropModel(props, propName, defaultValue)
+}
+
+/**
+ * 将绑定的属性合并到目标属性对象中
+ *
+ * 该函数支持两种绑定格式：
+ * 1. 对象形式：直接将对象属性合并到目标属性中
+ * 2. 数组形式：[源对象, 排除数组]，将源对象属性合并到目标属性中，但排除指定的属性
+ *
+ * 对于特殊属性（style、class等）会使用特定的合并策略，
+ * 对于已存在的普通属性保持不变，只添加新的属性。
+ *
+ * @internal 这是一个框架内部使用的工具函数
+ * @param props - 目标属性对象，合并后的属性将存储在此对象中
+ * @param bind - 要绑定的属性，可以是对象或 [源对象, 排除数组] 的数组形式
+ */
+export function bindProps(props: AnyProps, bind: BindAttributes): void {
+  // ---------- Step 1: 解析绑定源与排除列表 ----------
+  let source: AnyProps
+  let exclude: Set<string> | null = null
+
+  if (Array.isArray(bind)) {
+    // v-bind 是数组形式： [源对象, 排除数组]
+    const [src, ex] = bind as [props: AnyProps, exclude: string[]]
+    if (!isRecordObject(src)) return
+    source = src
+    if (Array.isArray(ex) && ex.length) exclude = new Set(ex)
+  } else {
+    // 普通对象形式
+    source = bind
+  }
+
+  // ---------- Step 2: 遍历并合并属性 ----------
+  for (const [key, rawValue] of Object.entries(source)) {
+    // ---- 跳过无效属性 ----
+    if (
+      rawValue === undefined || // 忽略 undefined 值
+      INTRINSIC_ATTRIBUTES.has(key) || // 忽略固有属性（如 key/ref 等）
+      (exclude && exclude.has(key)) // 忽略用户指定排除属性
+    ) {
+      continue
+    }
+
+    const existing = props[key] // 当前 props 中已有的值
+    const value = unref(rawValue) // 解包可能的 ref/reactive 值
+    // 用于定义特定属性的自定义合并逻辑
+    const SPECIAL_MERGERS = {
+      style: StyleUtils.mergeCssStyle,
+      class: StyleUtils.mergeCssClass,
+      className: StyleUtils.mergeCssClass,
+      classname: StyleUtils.mergeCssClass
+    } as const
+    // ---- 特殊属性处理（class/style）----
+    if (key in SPECIAL_MERGERS) {
+      const merger = SPECIAL_MERGERS[key as keyof typeof SPECIAL_MERGERS]
+      props[key] = existing
+        ? merger(unref(existing), value) // 合并已有与新值
+        : value // 无现值则直接使用新值
+      continue
+    }
+
+    // ---- 已存在的普通属性保持不变 ----
+    if (existing !== undefined) continue
+
+    // ---- 新增普通属性 ----
+    props[key] = value
+  }
 }
