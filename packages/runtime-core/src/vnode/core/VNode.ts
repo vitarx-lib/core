@@ -1,15 +1,9 @@
 import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
-import { isObject, isRecordObject, logger, popProperty } from '@vitarx/utils'
+import { isObject, logger, popProperty } from '@vitarx/utils'
 import { useDomAdapter } from '../../adapter/index.js'
-import {
-  INTRINSIC_ATTRIBUTES,
-  NodeShapeFlags,
-  NodeState,
-  VIRTUAL_NODE_SYMBOL
-} from '../../constants/index.js'
+import { NodeShapeFlags, NodeState, VIRTUAL_NODE_SYMBOL } from '../../constants/index.js'
+import { type Directive, resolveDirective } from '../../directive/index.js'
 import type {
-  AnyProps,
-  BindAttributes,
   BindParentElement,
   HostAdapter,
   HostCommentElement,
@@ -24,7 +18,7 @@ import type {
   UniqueKey,
   ValidNodeProps
 } from '../../types/index.js'
-import { __DEV__, isRefEl, popNodeDevInfo, type RefEl, StyleUtils } from '../../utils/index.js'
+import { __DEV__, bindProps, isRefEl, popNodeDevInfo, type RefEl } from '../../utils/index.js'
 
 /**
  * 待规范化的属性类型
@@ -55,6 +49,13 @@ export type WaitNormalizedProps<T extends NodeTypes> = Omit<ValidNodeProps<T>, I
  * - 使用activate/deactivate方法时需注意root参数的正确使用
  */
 export abstract class VNode<T extends NodeTypes = NodeTypes> {
+  /**
+   * 节点使用的指令集合
+   */
+  public readonly directives = new Map<
+    string,
+    [directive: Directive, value: any, arg: string | undefined]
+  >()
   /**
    * 标记为非信号状态的getter
    */
@@ -110,7 +111,12 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
    * @readonly - 外部只读，请勿修改！
    */
   public memo?: Array<any>
-
+  /**
+   * 是否自动解包属性值
+   *
+   * @protected
+   */
+  protected autoUnrefProp = true
   /**
    * 创建一个虚拟节点实例
    * @param type 虚拟节点的类型，可以是标签名、组件函数或其他类型
@@ -140,8 +146,9 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
       }
       // ---------- 取出并绑定属性 v-bind ----------
       const bind = popProperty(props, 'v-bind')
-      if (isObject(bind)) VNode.bindProps(props, bind)
+      if (isObject(bind)) bindProps(props, bind)
     }
+    this.extractDirectives(props)
     this.props = this.initProps(props)
   }
   /**
@@ -306,61 +313,33 @@ export abstract class VNode<T extends NodeTypes = NodeTypes> {
     this._teleport = teleport || undefined
   }
   /**
-   * 绑定属性
+   * 从属性对象中提取指令并注册到指令映射中
    *
-   * @param props - 属性对象
-   * @param {BindAttributes} bind - 要绑定的属性
+   * 该方法会遍历属性对象，查找以 'v-' 开头的指令属性，
+   * 解析指令名称和参数，并将有效的指令注册到 directives 映射中。
+   *
+   * @param props - 包含节点属性的对象
+   *
+   * @private
    */
-  public static bindProps(props: AnyProps, bind: BindAttributes): void {
-    // ---------- Step 1: 解析绑定源与排除列表 ----------
-    let source: AnyProps
-    let exclude: Set<string> | null = null
+  private extractDirectives(props: Record<string, any>) {
+    for (const key of Object.keys(props)) {
+      // 只处理以 'v-' 开头的指令属性
+      if (!key.startsWith('v-')) continue
 
-    if (Array.isArray(bind)) {
-      // v-bind 是数组形式： [源对象, 排除数组]
-      const [src, ex] = bind as [props: AnyProps, exclude: string[]]
-      if (!isRecordObject(src)) return
-      source = src
-      if (Array.isArray(ex) && ex.length) exclude = new Set(ex)
-    } else {
-      // 普通对象形式
-      source = bind
-    }
-
-    // ---------- Step 2: 遍历并合并属性 ----------
-    for (const [key, rawValue] of Object.entries(source)) {
-      // ---- 跳过无效属性 ----
-      if (
-        rawValue === undefined || // 忽略 undefined 值
-        INTRINSIC_ATTRIBUTES.has(key) || // 忽略固有属性（如 key/ref 等）
-        (exclude && exclude.has(key)) // 忽略用户指定排除属性
-      ) {
-        continue
-      }
-
-      const existing = props[key] // 当前 props 中已有的值
-      const value = unref(rawValue) // 解包可能的 ref/reactive 值
-      // 用于定义特定属性的自定义合并逻辑
-      const SPECIAL_MERGERS = {
-        style: StyleUtils.mergeCssStyle,
-        class: StyleUtils.mergeCssClass,
-        className: StyleUtils.mergeCssClass,
-        classname: StyleUtils.mergeCssClass
-      } as const
-      // ---- 特殊属性处理（class/style）----
-      if (key in SPECIAL_MERGERS) {
-        const merger = SPECIAL_MERGERS[key as keyof typeof SPECIAL_MERGERS]
-        props[key] = existing
-          ? merger(unref(existing), value) // 合并已有与新值
-          : value // 无现值则直接使用新值
-        continue
-      }
-
-      // ---- 已存在的普通属性保持不变 ----
-      if (existing !== undefined) continue
-
-      // ---- 新增普通属性 ----
-      props[key] = value
+      // 删除 v- 前缀
+      const raw = key.slice(2)
+      // 解析参数（只支持一个冒号）
+      const [name, arg] = raw.split(':', 2)
+      // 取出属性值
+      const value = unref(props[key])
+      // 如果启用自动解包，则将属性值设置为解包后的值
+      if (this.autoUnrefProp) props[key] = value
+      delete props[key]
+      // 查找指令
+      const directive = resolveDirective(name)
+      // 注册（directive 可能为 undefined）
+      if (directive) this.directives.set(name, [directive, value, arg])
     }
   }
   /**
