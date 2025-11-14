@@ -1,8 +1,8 @@
 import { Fragment } from '../../constants/index.js'
 import type { AnyProps, VNodeChildren } from '../../types/index.js'
-import { isVNode } from '../../utils/index.js'
+import { bindProps, isVNode } from '../../utils/index.js'
 import { defineStatelessWidget } from '../../utils/widget.js'
-import { createVNode, FragmentNode, VNode } from '../../vnode/index.js'
+import { createVNode, FragmentNode } from '../../vnode/index.js'
 
 interface PropBindProps {
   children: VNodeChildren
@@ -27,21 +27,19 @@ interface PropBindProps {
  * @param props - 组件的属性对象
  * @returns {FragmentNode} 返回一个 Fragment 元素，包含处理后的子组件
  */
-const PropBind = defineStatelessWidget(
-  ({ children, ...bindProps }: PropBindProps): FragmentNode => {
-    // 将 children 转换为数组格式，确保可以统一处理
-    const childrenList = Array.isArray(children) ? children : [children]
-    // 遍历子组件列表，为每个子组件绑定属性
-    childrenList.forEach(child => {
-      // 检查子组件是否为虚拟节点，如果是则处理其属性
-      if (isVNode(child)) {
-        const props = child.props as AnyProps
-        VNode.bindProps(props, bindProps)
-      }
-    })
-    // 创建并返回一个 Fragment 元素，包含处理后的子组件列表
-    return createVNode(Fragment, { children: childrenList })
-  }
-)
+const PropBind = defineStatelessWidget(({ children, ...bind }: PropBindProps): FragmentNode => {
+  // 将 children 转换为数组格式，确保可以统一处理
+  const childrenList = Array.isArray(children) ? children : [children]
+  // 遍历子组件列表，为每个子组件绑定属性
+  childrenList.forEach(child => {
+    // 检查子组件是否为虚拟节点，如果是则处理其属性
+    if (isVNode(child)) {
+      const props = child.props as AnyProps
+      bindProps(props, bind)
+    }
+  })
+  // 创建并返回一个 Fragment 元素，包含处理后的子组件列表
+  return createVNode(Fragment, { children: childrenList })
+})
 
 export { PropBind }
