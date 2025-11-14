@@ -115,11 +115,12 @@ const SSR_CONTEXT_SYMBOL = Symbol('SSR_CONTEXT_SYMBOL')
 
 /**
  * 在SSR(服务器端渲染)上下文中运行函数
- * @param fn - 要在SSR上下文中运行的函数
+ *
  * @param context - 传递给函数的上下文对象
+ * @param fn - 要在SSR上下文中运行的函数
  * @returns 函数执行的结果
  */
-export function runInSSRContext<R>(fn: () => R, context: AnyRecord): R {
+export function runInSSRContext<R>(context: AnyRecord, fn: () => R): R {
   // 使用SSR_CONTEXT_SYMBOL作为标识，在指定上下文中运行函数
   return runInContext(SSR_CONTEXT_SYMBOL, context, fn)
 }
