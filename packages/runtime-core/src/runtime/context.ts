@@ -1,8 +1,7 @@
 import { getContext, runInContext } from '@vitarx/responsive'
-import type { AnyRecord } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
 import type { App } from '../app/index.js'
-import { type StatefulWidgetNode, WidgetNode } from '../vnode/index.js'
+import type { StatefulWidgetNode, WidgetNode } from '../vnode/index.js'
 import type { Widget } from '../widget/index.js'
 
 const VNODE_CONTEXT_SYMBOL = Symbol('VNODE_CONTEXT_SYMBOL')
@@ -112,29 +111,3 @@ export function getAppContext<T extends App = App>(): T | undefined {
 export { getAppContext as useAppContext }
 
 const SSR_CONTEXT_SYMBOL = Symbol('SSR_CONTEXT_SYMBOL')
-
-/**
- * 在SSR(服务器端渲染)上下文中运行函数
- *
- * @param context - 传递给函数的上下文对象
- * @param fn - 要在SSR上下文中运行的函数
- * @returns 函数执行的结果
- */
-export function runInSSRContext<R>(context: AnyRecord, fn: () => R): R {
-  // 使用SSR_CONTEXT_SYMBOL作为标识，在指定上下文中运行函数
-  return runInContext(SSR_CONTEXT_SYMBOL, context, fn)
-}
-
-/**
- * 获取服务端渲染(SSR)上下文函数
- * 该函数用于在服务端渲染/客户端水合过程中获取或共享上下文数据
- *
- * @template T - 表示一个通用的记录类型，默认为 AnyRecord
- * @returns T | undefined - 返回获取到的上下文数据，如果不存在则返回 undefined
- */
-export function getSSRContext<T extends AnyRecord = AnyRecord>(): T | undefined {
-  // 使用 SSR_CONTEXT_SYMBOL 作为键调用 getContext 函数获取上下文
-  return getContext<T>(SSR_CONTEXT_SYMBOL)
-}
-
-export { getSSRContext as useSSRContext }
