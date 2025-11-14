@@ -72,14 +72,6 @@ export abstract class App {
    */
   readonly #provide: Map<string | symbol, any> = new Map()
   /**
-   * 是否为服务端渲染
-   *
-   * 如果设置为true，会禁用组件依赖跟踪。
-   *
-   * @default false
-   */
-  public readonly isSSR: boolean = false
-  /**
    * 构建应用实例
    *
    * @param node - 根节点/小部件
@@ -177,7 +169,6 @@ export abstract class App {
   inject<T = any>(name: string | symbol, defaultValue?: T): T {
     return this.#provide.get(name) ?? defaultValue
   }
-
   /**
    * ## 安装插件
    *
