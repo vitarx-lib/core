@@ -72,6 +72,12 @@ export class StatefulWidgetNode<
 > extends WidgetNode<T> {
   public override shapeFlags = NodeShapeFlags.STATEFUL_WIDGET
   /**
+   * 有状态组件不自动解包ref
+   *
+   * @protected
+   */
+  protected override autoUnrefProp = false
+  /**
    * 是否为异步组件
    *
    * 此属性在组件实例初始化之前默认为 false

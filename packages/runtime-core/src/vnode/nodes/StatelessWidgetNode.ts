@@ -1,5 +1,3 @@
-import { unref } from '@vitarx/responsive'
-import type { AnyRecord } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
 import { NodeShapeFlags, NodeState } from '../../constants/index.js'
 import { linkParentNode, VNodeUpdate } from '../../runtime/index.js'
@@ -144,10 +142,6 @@ export class StatelessWidgetNode<
     const defaultProps = this.type.defaultProps
     if (defaultProps && typeof defaultProps === 'object') {
       props = { ...defaultProps, ...props }
-    }
-    // 解包ref
-    for (const prop in props) {
-      ;(props as AnyRecord)[prop] = unref(props[prop])
     }
     return props as NodeNormalizedProps<T>
   }
