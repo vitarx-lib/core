@@ -38,8 +38,8 @@ const packageJson = {
   main: './dist/index.js',
   module: './dist/index.js',
   types: 'dist/index.d.ts',
-  unpkg: 'dist/index.iife.js',
-  jsdelivr: 'dist/index.iife.js',
+  // unpkg: 'dist/index.iife.js',
+  // jsdelivr: 'dist/index.iife.js',
   files: ['dist', 'LICENSE', 'README.md'],
   exports: {
     '.': {
@@ -47,9 +47,9 @@ const packageJson = {
         types: './dist/index.d.ts',
         default: './dist/index.js'
       }
-    },
-    './unpkg': './dist/index.iife.js',
-    './jsdelivr': './dist/index.iife.js'
+    }
+    // './unpkg': './dist/index.iife.js',
+    // './jsdelivr': './dist/index.iife.js'
   },
   dependencies: {
     '@vitarx/utils': 'workspace:^'
