@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync 
 import { join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { promisify } from 'util'
-import { build, type InlineConfig, mergeConfig } from 'vite'
+import { type InlineConfig } from 'vite'
 
 const execAsync = promisify(exec)
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -192,23 +192,23 @@ async function buildPackage(
   log.success('  ✓ TypeScript compilation completed')
 
   // Vite bundle
-  log.warn('\n📦 Compiling bundle formats...')
-  const name = toCamelCase(pkg.name)
-  const defaultConfig: InlineConfig = {
-    configFile: false,
-    build: {
-      lib: {
-        name,
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['iife'],
-        fileName: format => `index.${format}.js`
-      },
-      outDir: dist,
-      emptyOutDir: false
-    },
-    define: { __VERSION__: JSON.stringify(pkg.version) }
-  }
-  await build(mergeConfig(defaultConfig, pkg.vite || {}))
+  // log.warn('\n📦 Compiling bundle formats...')
+  // const name = toCamelCase(pkg.name)
+  // const defaultConfig: InlineConfig = {
+  //   configFile: false,
+  //   build: {
+  //     lib: {
+  //       name,
+  //       entry: resolve(packagePath, 'src/index.ts'),
+  //       formats: ['iife'],
+  //       fileName: format => `index.${format}.js`
+  //     },
+  //     outDir: dist,
+  //     emptyOutDir: false
+  //   },
+  //   define: { __VERSION__: JSON.stringify(pkg.version) }
+  // }
+  // await build(mergeConfig(defaultConfig, pkg.vite || {}))
   log.success(`✓ Bundle ${packageDirName} compilation completed`)
   await checkForCircularDependencies(dist)
   log.info(separator + '\n')
