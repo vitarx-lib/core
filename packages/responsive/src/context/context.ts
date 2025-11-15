@@ -1,7 +1,6 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { isPromise } from '@vitarx/utils'
 
-export type RestoreContext = () => void
 export type Tag = string | symbol
 export type AsyncContextTask<T> = (() => Promise<T>) | Promise<T>
 /**
