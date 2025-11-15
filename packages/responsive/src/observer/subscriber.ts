@@ -26,12 +26,14 @@ export interface SubscriberOptions<CB extends AnyCallback = AnyCallback> {
   /**
    * 是否自动添加到当前作用域
    *
-   * 当设置为true时，会自动将订阅者添加到当前作用域中，
-   * 作用域销毁时会自动清理订阅者
+   * 可选值：
+   * - true - 自动添加到当前作用域中，作用域销毁时会自动清理订阅者
+   * - false - 不自动添加到当前作用域中，需要手动管理
+   * - EffectScope - 作用域对象，自动将订阅者添加到作用域中，作用域销毁时会自动清理订阅者
    *
    * @default true
    */
-  scope?: boolean
+  scope?: boolean | EffectScope
   /**
    * 触发时机
    *
@@ -141,8 +143,11 @@ export class Subscriber<CB extends AnyCallback = AnyCallback> extends Effect<'no
     this._paramsHandler = paramsHandler
     this.flush = flush
     this.limit = limit
-    // 自动添加到当前作用域
-    if (scope) EffectScope.getCurrentScope()?.addEffect(this)
+    // 自动添加到作用域
+    if (scope) {
+      const targetScope = typeof scope === 'object' ? scope : EffectScope.getCurrentScope()
+      targetScope?.addEffect(this)
+    }
   }
 
   /**
