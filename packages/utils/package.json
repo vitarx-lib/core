@@ -13,8 +13,6 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "unpkg": "dist/index.iife.js",
-  "jsdelivr": "dist/index.iife.js",
   "files": [
     "dist",
     "LICENSE",
