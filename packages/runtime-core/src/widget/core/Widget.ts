@@ -413,7 +413,7 @@ export abstract class Widget<
    * 选择性地执行复用、更新或销毁并替换节点。
    *
    * 如需自定义特殊更新逻辑，可重写此方法，但需谨慎！
-   * 默认使用 VNodeUpdate.patchUpdate 进行差异计算和更新。
+   * 默认使用 VNodeUpdate.patch 进行差异计算和更新。
    *
    * @param currentVNode - 当前已渲染的虚拟节点
    * @param nextVNode - 目标虚拟节点描述，将被用于对比更新
