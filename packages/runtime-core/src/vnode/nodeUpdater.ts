@@ -1,15 +1,10 @@
-import { SubManager, toRaw } from '@vitarx/responsive'
-import { isDeepEqual } from '@vitarx/utils'
-import { useDomAdapter } from '../adapter/index.js'
-import type { AnyProps, HostElements } from '../types/index.js'
-import {
-  isContainerNode,
-  isFragmentNode,
-  isNonElementNode,
-  isStatefulWidgetNode,
-  isStatelessWidgetNode
-} from '../utils/index.js'
-import { type ContainerNode, NonElementNode, StatelessWidgetNode, VNode } from '../vnode/index.js'
+import { NodeState } from '../constants/index.js'
+import { diffDirectives } from '../directive/index.js'
+import { getNodeDomOpsTarget } from '../internal/utils.js'
+import { useRenderer } from '../renderer/index.js'
+import type { ContainerVNode, ElementVNode, VNode, WidgetVNode } from '../types/index.js'
+import { isContainerNode, isElementNode, isWidgetNode } from '../utils/index.js'
+import { mountNode, renderNode, unmountNode, updateNodeProps } from './driver.js'
 
 export interface ChildNodeUpdateHooks {
   /**
@@ -40,7 +35,7 @@ export interface ChildNodeUpdateHooks {
  * 负责处理虚拟节点(VNode)的更新、替换和子节点管理等操作。
  * 实现了高效的 diff 算法，以最小化 DOM 操作。
  */
-export class VNodeUpdate {
+export class NodeUpdater {
   /**
    * 比较并更新两个虚拟节点
    *
@@ -57,12 +52,10 @@ export class VNodeUpdate {
       this.replace(currentVNode, nextVNode)
       return nextVNode
     }
-
     // 类型相同，更新节点
     this.patchUpdateNode(currentVNode, nextVNode)
     return currentVNode
   }
-
   /**
    * 更新节点的属性和子节点
    *
@@ -73,21 +66,27 @@ export class VNodeUpdate {
    * @template T - VNode 的子类型
    * @param currentVNode - 当前的虚拟节点
    * @param nextVNode - 新的虚拟节点
-   * @param [skipShow=false] - 是否跳过显示状态的更新
    */
-  static patchUpdateNode<T extends VNode>(currentVNode: T, nextVNode: T, skipShow = false): void {
+  static patchUpdateNode<T extends VNode>(currentVNode: T, nextVNode: T): void {
     // 如果是同一个节点引用，直接返回
     if (currentVNode === nextVNode) return
+    if (isWidgetNode(currentVNode)) {
+      if (isElementNode(currentVNode.runtimeInstance!.child)) {
+        diffDirectives(currentVNode, nextVNode as WidgetVNode)
+      }
+    } else if (isElementNode(currentVNode)) {
+      //  diff 指令
+      diffDirectives(currentVNode, nextVNode as unknown as ElementVNode)
+    }
     // 静态节点不需要更新
-    if (currentVNode.isStatic) return
+    if (currentVNode.static) return
     // 更新节点属性
-    this.patchUpdateProps(currentVNode, nextVNode, skipShow)
-
+    this.patchUpdateProps(currentVNode, nextVNode)
     // 如果是容器节点，更新子节点
     if (isContainerNode(currentVNode)) {
       currentVNode.children = this.patchUpdateChildren(
         currentVNode,
-        nextVNode as unknown as ContainerNode
+        nextVNode as unknown as ContainerVNode
       )
     }
   }
@@ -104,47 +103,10 @@ export class VNodeUpdate {
    * @template T - VNode 的子类型
    * @param currentVNode - 当前的虚拟节点
    * @param nextVNode - 新的虚拟节点
-   * @param [skipShow=false] - 是否跳过显示状态的更新
    */
-  static patchUpdateProps<T extends VNode>(currentVNode: T, nextVNode: T, skipShow = false) {
-    // 更新基本属性
-    currentVNode.setTeleport(nextVNode.teleport)
-    if (!skipShow) currentVNode.show = nextVNode.show
-
-    // 片段节点不需要更新其他属性
-    if (isFragmentNode(currentVNode)) return
-
-    // 处理非元素节点
-    if (isNonElementNode(currentVNode)) {
-      ;(currentVNode as NonElementNode<any>).value = (
-        nextVNode as unknown as NonElementNode<any>
-      ).value
-      return
-    }
-
-    // 处理有状态组件节点
-    if (isStatefulWidgetNode(currentVNode)) {
-      this.updateStatefulProps(currentVNode.props, nextVNode.props)
-      return
-    }
-
-    // 处理无状态组件节点
-    if (isStatelessWidgetNode(currentVNode)) {
-      this.updateStatelessProps(
-        currentVNode as StatelessWidgetNode,
-        nextVNode as unknown as StatelessWidgetNode
-      )
-      return
-    }
-
-    // 处理普通元素节点
-    const dom = useDomAdapter()
-    const el = currentVNode.element as HostElements
-    const oldProps = toRaw(currentVNode.props) as Record<string, any>
-    const newProps = nextVNode.props as Record<string, any>
-    this.updateElementProps(el, oldProps, newProps, dom)
+  static patchUpdateProps<T extends VNode>(currentVNode: T, nextVNode: T) {
+    updateNodeProps(currentVNode, nextVNode.props, nextVNode)
   }
-
   /**
    * 用新节点替换旧节点
    *
@@ -158,20 +120,24 @@ export class VNodeUpdate {
    * @throws {Error} 当旧节点未挂载且无法替换时抛出错误
    */
   static replace(currentVNode: VNode, nextVNode: VNode): VNode {
-    const dom = useDomAdapter()
-    const oldElement = currentVNode.operationTarget
-
+    // 如果节点仅渲染完成，则不进行dom替换
+    if (currentVNode.state === NodeState.Rendered) {
+      unmountNode(currentVNode)
+      renderNode(nextVNode)
+      return nextVNode
+    }
+    const dom = useRenderer()
+    const oldElement = getNodeDomOpsTarget(currentVNode)
     // 如果旧节点有父元素，则创建锚点进行替换
     if (dom.getParentElement(oldElement)) {
       const anchorElement = dom.createText('')
       dom.insertBefore(anchorElement, oldElement)
-      currentVNode.unmount()
-      nextVNode.mount(anchorElement, 'replace')
+      unmountNode(currentVNode)
+      mountNode(nextVNode, anchorElement, 'replace')
       return nextVNode
     }
-    throw new Error('VNodeUpdate.replace(): the old node is not mounted and cannot be replaced')
+    throw new Error('NodeUpdate.replace(): the old node is not mounted and cannot be replaced')
   }
-
   /**
    * 更新容器节点的子节点
    *
@@ -191,15 +157,17 @@ export class VNodeUpdate {
    * @returns {VNode[]} 更新后的子节点数组
    */
   static patchUpdateChildren(
-    currentNode: ContainerNode,
-    nextVNode: ContainerNode,
+    currentNode: ContainerVNode,
+    nextVNode: ContainerVNode,
     hooks?: ChildNodeUpdateHooks
   ): VNode[] {
-    const dom = useDomAdapter()
+    const dom = useRenderer()
     const oldChildren = currentNode.children
     const newChildren = nextVNode.children
-    const parentEl = currentNode.element
-
+    const parentEl = currentNode.el
+    if (!parentEl) {
+      throw new Error('NodeUpdate.patchUpdateChildren() currentNode el is undefined')
+    }
     const onMount = hooks?.onMount
     const onUnmount = hooks?.onUnmount
     const onUpdate = hooks?.onUpdate
@@ -207,7 +175,7 @@ export class VNodeUpdate {
     // 边界情况：旧子节点为空，直接挂载所有新子节点
     if (!oldChildren.length) {
       for (const child of newChildren) {
-        child.mount(parentEl)
+        mountNode(child, parentEl)
         onMount?.(child)
       }
       return newChildren
@@ -216,7 +184,7 @@ export class VNodeUpdate {
     // 边界情况：新子节点为空，直接卸载所有旧子节点
     if (!newChildren.length) {
       for (const child of oldChildren) {
-        onUnmount ? onUnmount(child, () => child.unmount()) : child.unmount()
+        onUnmount ? onUnmount(child, () => unmountNode(child)) : unmountNode(child)
       }
       return newChildren
     }
@@ -232,15 +200,14 @@ export class VNodeUpdate {
     for (let i = newChildren.length - 1; i >= 0; i--) {
       const oldIndex = newIndexToOldIndex[i]
       const newChild = newChildren[i]
-      const anchor = newChildren[i + 1]?.operationTarget ?? null
+      const nextNode = newChildren[i + 1]
+      const anchor = nextNode?.el
 
       if (oldIndex !== -1) {
         // 节点复用
         const reuseChild = oldChildren[oldIndex]
         if (onUpdate) {
-          onUpdate(reuseChild, newChild, (skipShow?: boolean) =>
-            this.patchUpdateNode(reuseChild, newChild, skipShow)
-          )
+          onUpdate(reuseChild, newChild, () => this.patchUpdateNode(reuseChild, newChild))
         } else {
           this.patchUpdateNode(reuseChild, newChild)
         }
@@ -250,145 +217,23 @@ export class VNodeUpdate {
         if (seqIndex >= 0 && seq[seqIndex] === i) {
           seqIndex--
         } else {
-          if (anchor) dom.insertBefore(reuseChild.operationTarget, anchor)
-          else dom.appendChild(parentEl, reuseChild.operationTarget)
+          if (anchor) dom.insertBefore(getNodeDomOpsTarget(reuseChild), anchor)
+          else dom.appendChild(parentEl, getNodeDomOpsTarget(reuseChild))
         }
         continue
       }
 
       // 新节点挂载
-      newChild.mount(anchor ?? parentEl, anchor ? 'insertBefore' : 'appendChild')
+      mountNode(newChild, anchor ?? parentEl, anchor ? 'insertBefore' : 'appendChild')
       onMount?.(newChild)
     }
 
     // 卸载不再需要的旧节点
     for (const removedNode of removedNodes) {
-      onUnmount ? onUnmount(removedNode, () => removedNode.unmount()) : removedNode.unmount()
+      onUnmount ? onUnmount(removedNode, () => unmountNode(removedNode)) : unmountNode(removedNode)
     }
 
     return newChildren
-  }
-
-  /**
-   * 比较两个属性对象，找出变化的属性
-   *
-   * 通过比较新旧属性对象，确定哪些属性发生了变化，
-   * 以及哪些属性需要被删除。返回包含这些信息的对象。
-   *
-   * @param oldProps - 旧的属性对象
-   * @param newProps - 新的属性对象
-   * @returns {Object} 包含 changedKeys（变化的属性）和 keysToDelete（需要删除的属性）的对象
-   */
-  private static diffProps(
-    oldProps: Record<string, any>,
-    newProps: Record<string, any>
-  ): { changedKeys: string[]; keysToDelete: Set<string> } {
-    // 初始化需要删除的属性集合（初始为所有旧属性）
-    const keysToDelete = new Set(Object.keys(oldProps))
-    // 初始化变化的属性数组
-    const changedKeys: string[] = []
-
-    // 遍历新属性，找出变化的属性
-    for (const key in newProps) {
-      const newValue = newProps[key]
-      const oldValue = oldProps[key]
-      // 从删除集合中移除（因为新属性中存在）
-      keysToDelete.delete(key)
-      // 如果值不同，则添加到变化列表
-      if (isDeepEqual(newValue, oldValue, 1)) changedKeys.push(key)
-    }
-
-    // 将剩余的需要删除的属性也添加到变化列表
-    for (const key of keysToDelete) changedKeys.push(key)
-
-    return { changedKeys, keysToDelete }
-  }
-
-  /**
-   * 更新 DOM 元素的属性
-   *
-   * 根据属性变化情况，更新或删除 DOM 元素的属性。
-   * 首先通过 diffProps 找出变化的属性，然后分别处理更新和删除操作。
-   *
-   * @param el - 要更新的 DOM 元素
-   * @param oldProps - 旧的属性对象
-   * @param newProps - 新的属性对象
-   * @param dom - DOM 适配器实例
-   */
-  private static updateElementProps(
-    el: HostElements,
-    oldProps: Record<string, any>,
-    newProps: Record<string, any>,
-    dom: ReturnType<typeof useDomAdapter>
-  ): void {
-    // 找出变化的属性和需要删除的属性
-    const { changedKeys, keysToDelete } = this.diffProps(oldProps, newProps)
-
-    // 处理更新或新增的属性
-    for (const key of changedKeys) {
-      if (key in newProps) {
-        // 更新 DOM 属性
-        dom.setAttribute(el, key, newProps[key], oldProps[key])
-        // 更新属性对象
-        oldProps[key] = newProps[key]
-      }
-    }
-
-    // 处理需要删除的属性
-    for (const key of keysToDelete) {
-      if (!(key in newProps)) {
-        // 从 DOM 中移除属性
-        dom.removeAttribute(el, key, oldProps[key])
-        // 从属性对象中删除
-        delete oldProps[key]
-      }
-    }
-  }
-
-  /**
-   * 更新有状态组件的属性
-   *
-   * 处理有状态组件的属性更新，包括更新属性值和通知响应式系统。
-   * 首先找出变化的属性，然后更新旧属性对象，最后通知订阅者。
-   *
-   * @param oldProps - 旧的属性对象
-   * @param newProps - 新的属性对象
-   */
-  private static updateStatefulProps(oldProps: AnyProps, newProps: AnyProps): void {
-    // 获取原始属性对象（非响应式）
-    const oldRaw = toRaw(oldProps) as Record<string, any>
-    const newRaw = newProps as Record<string, any>
-    // 找出变化的属性
-    const { changedKeys } = this.diffProps(oldRaw, newRaw)
-
-    // 更新旧属性
-    for (const key of changedKeys) {
-      if (key in newRaw) oldRaw[key] = newRaw[key]
-      else delete oldRaw[key]
-    }
-
-    // 如果有属性变化，通知响应式系统
-    if (changedKeys.length > 0) SubManager.notify(oldProps as Record<string, any>, changedKeys)
-  }
-
-  /**
-   * 更新无状态组件的属性
-   *
-   * 检查无状态组件的属性是否发生变化，如果有变化则调用组件的更新方法。
-   * 通过比较新旧属性的所有键值对来确定是否需要更新。
-   *
-   * @param node - 无状态组件节点
-   * @param newProps - 新的属性对象
-   */
-  private static updateStatelessProps(node: StatelessWidgetNode, newProps: AnyProps): void {
-    const oldProps = node.props
-    // 获取所有属性的键的并集
-    const allKeys = new Set([...Object.keys(oldProps), ...Object.keys(newProps)])
-    // 检查是否有属性值发生变化
-    const isChanged = Array.from(allKeys).some(key => oldProps[key] !== newProps[key])
-
-    // 如果有变化，更新组件属性
-    if (isChanged) node.updateProps(newProps)
   }
 
   /**
@@ -519,4 +364,18 @@ export class VNodeUpdate {
     }
     return seq
   }
+}
+
+/**
+ * 更新节点 - 对比新旧节点并执行更新
+ *
+ * @param n1 - 旧虚拟节点
+ * @param n2 - 新虚拟节点
+ * @returns 更新后的虚拟节点
+ */
+export function patchUpdate(n1: VNode, n2: VNode): VNode {
+  if (n1.state !== NodeState.Activated) {
+    throw new Error(`The node state (${n1.state}) is also not in the patchable stage`)
+  }
+  return NodeUpdater.patch(n1, n2)
 }
