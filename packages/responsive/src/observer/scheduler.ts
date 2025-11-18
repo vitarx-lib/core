@@ -135,18 +135,7 @@ export class Scheduler {
    * - 如果正在刷新中，则跳过执行以避免并发问题
    */
   public static flushSync(): void {
-    if (this.isFlushing) return
-
-    this.isFlushPending = false
-    this.isFlushing = true
-
-    try {
-      this.flushJobMap(this.preFlushQueue)
-      this.flushJobMap(this.mainQueue)
-      this.flushJobMap(this.postFlushQueue)
-    } finally {
-      this.isFlushing = false
-    }
+    this.flushAll()
   }
 
   // =============================
