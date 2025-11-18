@@ -84,7 +84,7 @@ export function depCollect<T>(
  * @returns {DependSubscribeResult<R>} 包含订阅结果的对象
  * @returns {R} returns.result - effect函数的执行结果
  * @returns {DependencyMap} returns.deps - 收集到的依赖映射
- * @returns {Subscriber<VoidCallback>} returns.subscriber - 如果有依赖被收集，则返回订阅者对象
+ * @returns {Subscriber} returns.subscriber - 如果有依赖被收集，则返回订阅者对象
  * @throws {TypeError} 如果参数类型不符合要求，则抛出TypeError异常
  * @example
  * ```ts
