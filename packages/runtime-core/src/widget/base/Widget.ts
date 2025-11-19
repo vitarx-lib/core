@@ -157,6 +157,7 @@ export abstract class Widget<
    * @returns { NodeElementType } 返回虚拟节点对应的 DOM 元素实例
    */
   get $el(): NodeElementType {
+    if (!this.#vnode.el) throw new Error('the component has not been rendered yet')
     return this.#vnode.el!
   }
 
