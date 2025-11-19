@@ -194,7 +194,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    *
    * @returns Promise，在更新完成后 resolve
    */
-  public update(): void {
+  public override update = (): void => {
     // 处于销毁状态时不允许更新
     if (__DEV__ && this.node.state === NodeState.Unmounted) {
       throw new Error(`Cannot update unmounted component: StatefulWidget<${this.name}>`)
@@ -271,13 +271,9 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
       this.renderDepsSubscriber.dispose()
     }
     // 构建虚拟节点并订阅依赖变化
-    const { result, subscriber, deps } = depSubscribe(
-      this.buildChildVNode.bind(this),
-      this.update.bind(this),
-      {
-        flush: 'sync'
-      }
-    )
+    const { result, subscriber, deps } = depSubscribe(this.buildChildVNode, this.update, {
+      flush: 'sync'
+    })
     // 开发模式下记录依赖用于调试
     if (__DEV__) {
       this.deps = deps
@@ -295,7 +291,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    *
    * @returns 构建的虚拟节点
    */
-  private buildChildVNode(): VNode {
+  private buildChildVNode = (): VNode => {
     let vnode: VNode
 
     try {
