@@ -1,6 +1,6 @@
 import { AnyObject } from '@vitarx/utils'
 import { Scheduler } from './scheduler.js'
-import { type ChangeCallback, SubManager } from './subManager.js'
+import { ALL_PROPERTIES_SYMBOL, type ChangeCallback, SubManager } from './subManager.js'
 import { Subscriber, type SubscriberOptions } from './subscriber.js'
 
 /**
@@ -27,6 +27,43 @@ export function notify<T extends AnyObject, P extends keyof T>(target: T, proper
 }
 
 export { notify as trigger }
+
+/**
+ * 检查对象是否存在订阅者
+ *
+ * 判断目标对象是否有订阅者监听其属性变更。
+ * 可以检查整个对象或指定属性的订阅情况。
+ *
+ * @example
+ * ```ts
+ * const user = { name: 'John', age: 30 }
+ *
+ * // 检查对象是否有订阅者（任意属性）
+ * hasSubscribers(user) // false
+ *
+ * // 添加订阅
+ * subscribe(user, () => console.log('changed'))
+ *
+ * // 再次检查
+ * hasSubscribers(user) // true
+ *
+ * // 检查特定属性是否有订阅者
+ * hasSubscribers(user, 'name') // false
+ * subscribeProperty(user, 'name', () => console.log('name changed'))
+ * hasSubscribers(user, 'name') // true
+ * ```
+ *
+ * @template T - 目标对象类型
+ * @param {T} target - 目标对象
+ * @param {keyof T} [property] - 可选的属性名，不传则检查整个对象的订阅情况
+ * @returns {boolean} - 如果存在订阅者返回 true，否则返回 false
+ */
+export function hasSubscribers<T extends AnyObject>(
+  target: T,
+  property?: keyof T
+): boolean {
+  return SubManager.hasSubscribers(target, property ?? SubManager.ALL_PROPERTIES_SYMBOL)
+}
 
 /**
  * 订阅对象变化
