@@ -1,19 +1,8 @@
 import type { RefSignal } from '@vitarx/responsive'
 import type { Fragment, Render } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
-import type {
-  HostParentElement,
-  IntrinsicElements,
-  JSXElementNames,
-  JSXInternalElements
-} from './element.js'
-import type {
-  ElementNodeType,
-  FragmentNodeType,
-  NodeTypes,
-  NonElementNodeType,
-  ValidNodeType
-} from './vnode.js'
+import type { IntrinsicElements, JSXElementNames, JSXInternalElements } from './element.js'
+import type { ValidNodeType, VNodeTypes } from './vnode.js'
 import type { AnyProps, WidgetPropsType, WidgetType } from './widget.js'
 
 /**
@@ -49,7 +38,7 @@ export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | RefSig
  *
  * @example
  * ```ts
- * interface ButtonProps {
+ * nodes ButtonProps {
  *   text: string;
  *   disabled: boolean;
  *   onClick: () => void;
@@ -87,7 +76,7 @@ export type WithRefProps<T extends {}> = {
  *
  * @example
  * ```ts
- * interface Props {
+ * nodes Props {
  *   count: RefSignal<number>;
  *   name: string;
  *   visible: RefSignal<boolean>;
@@ -121,14 +110,6 @@ export type UniqueKey = string | symbol | number | bigint
  */
 export type BindAttributes = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
 
-/**
- * 绑定父元素
- *
- * 可选值：
- *   - string | ParentNode | Element | null | undefined：父元素，可以是字符串选择器，也可以是 DOM 元素。
- *   - (): BindParentElementBase：动态获取父元素，返回一个字符串选择器或 DOM 元素。
- */
-export type BindParentElement = string | HostParentElement | null | undefined
 /**
  * 支持的全局属性
  */
@@ -166,17 +147,6 @@ export interface IntrinsicAttributes {
    */
   'v-if'?: MaybeRef<boolean>
   /**
-   * 绑定属性
-   *
-   * 注意：不能通过 `v-bind` 指令绑定全局属性(ref、key、children...)，简单组件除外。
-   *
-   * 可选值：
-   *  - Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
-   *  - [props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
-   *  第二个元素可以指定哪些属性不需要绑定。
-   */
-  'v-bind'?: BindAttributes
-  /**
    * 显示/隐藏节点
    *
    * 此属性会给元素添加上 `display: none` 样式，它可能会和元素原有的样式冲突，请自行处理。
@@ -191,6 +161,17 @@ export interface IntrinsicAttributes {
    * ```
    */
   'v-show'?: MaybeRef<boolean>
+  /**
+   * 绑定属性
+   *
+   * 注意：不能通过 `v-bind` 指令绑定全局属性(ref、key、children...)，简单组件除外。
+   *
+   * 可选值：
+   *  - Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
+   *  - [props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
+   *  第二个元素可以指定哪些属性不需要绑定。
+   */
+  'v-bind'?: BindAttributes
   /**
    * 缓存节点的指令
    *
@@ -215,27 +196,7 @@ export interface IntrinsicAttributes {
    * 注意：此指令不接受动态更新，第一次是true后，不能再改为false
    */
   'v-static'?: MaybeRef<boolean>
-  /**
-   * 父元素 - 支持选择器或 `HostParentElement` 实例
-   *
-   * ```tsx
-   * // 在html元素中使用
-   * <div v-parent="#container">此div将会挂载到id为#container的容器中</div>
-   * // 在组件上使用，使组件的内容挂载到body中，如果组件内部通过`onBeforeMount`钩子指定了父元素，`v-parent`将无效
-   * <YourWidget v-parent={document.body}></YourWidget>
-   * // 使用getter做为查询器
-   * <div v-parent={() => document.querySelector('#container')}></div>
-   * ```
-   */
-  'v-parent'?: BindParentElement
 }
-
-/**
- * 定义一个类型别名 IntrinsicAttrNames，表
- * 示 IntrinsicAttributes 对象的所有属性名组成的联合类型
- * 使用 keyof 操作符获取 IntrinsicAttributes 类型所有键的联合类型
- */
-export type IntrinsicAttrNames = keyof IntrinsicAttributes
 
 /**
  * CSS 样式规则类型
@@ -321,7 +282,7 @@ export type ExtractChildrenPropType<P> = P extends { children: infer U }
  *
  * @example
  * ```ts
- * interface ButtonProps {
+ * nodes ButtonProps {
  *   text: string;
  *   disabled: boolean;
  *   size: 'small' | 'medium' | 'large';
@@ -362,40 +323,13 @@ export type WithDefaultProps<
 export type ValidNodeProps<T extends ValidNodeType> = (T extends JSXElementNames
   ? JSXInternalElements[T]
   : T extends Render
-    ? WidgetPropsType<Render>
+    ? WithRefProps<WidgetPropsType<Render>>
     : T extends Fragment
       ? WithRefProps<WidgetPropsType<Fragment>>
       : T extends WidgetType
         ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
         : {}) &
   IntrinsicAttributes
-
-/**
- * 元素属性类型定义
- *
- * 元素属性类型定义，用于定义元素节点的属性。
- */
-export type HostElementNormalizedProps<T extends ElementNodeType> = Omit<
-  IntrinsicElements[T],
-  'children' | 'style' | 'class' | 'className'
-> & {
-  style?: StyleRules
-  class?: string[]
-}
-
-/**
- * 规范化节点属性类型
- * 根据节点类型返回对应的规范化属性结构
- */
-export type NodeNormalizedProps<T extends NodeTypes> = T extends FragmentNodeType
-  ? {}
-  : T extends NonElementNodeType
-    ? { value: string }
-    : T extends ElementNodeType
-      ? HostElementNormalizedProps<T>
-      : T extends WidgetType
-        ? UnwrapRefProps<WidgetPropsType<T>>
-        : {}
 
 /**
  * 根据节点类型推断其对应的属性类型
@@ -412,7 +346,7 @@ export type NodeNormalizedProps<T extends NodeTypes> = T extends FragmentNodeTyp
  * ```ts
  * // 通过继承 WithNodeProps<div> 可以让组件支持所有div元素的属性，
  * // 在jsx表达式中可以获得良好的类型提示和代码补全。
- * interface MyWidgetProps extends WithNodeProps<'div'> {
+ * nodes MyWidgetProps extends WithNodeProps<'div'> {
  *   children: VNode
  *   // ... 其他自定义属性
  * }
@@ -427,7 +361,7 @@ export type NodeNormalizedProps<T extends NodeTypes> = T extends FragmentNodeTyp
  *
  * @template T - 节点类型，必须继承自 NodeTypes
  */
-export type WithNodeProps<T extends NodeTypes> = T extends keyof IntrinsicElements
+export type WithNodeProps<T extends VNodeTypes> = T extends keyof IntrinsicElements
   ? Omit<IntrinsicElements[T], 'children'>
   : T extends Fragment
     ? {}
