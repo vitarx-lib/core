@@ -77,6 +77,8 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
   }
   /** 组件实例 */
   public readonly instance: Widget
+  /** 是否正在处理更新任务 */
+  private isUpdating: boolean = false
   /** 是否有待处理的更新任务 */
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
@@ -195,25 +197,63 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    * @param sync - 是否同步更新
    * @returns Promise，在更新完成后 resolve
    */
-  public override update = (sync: boolean = false): void => {
-    // 处于销毁状态时不允许更新
-    if (__DEV__ && this.node.state === NodeState.Unmounted) {
-      throw new Error(`Cannot update unmounted component: StatefulWidget<${this.name}>`)
-    }
-    // 组件未激活时跳过更新，激活时会自动更新
-    if (this.node.state === NodeState.Deactivated) {
-      this.dirty = true
+  public override update(sync: boolean = false): void {
+    // patch 中禁止重入
+    if (this.isUpdating) return
+
+    // ---------- 同步更新 ----------
+    if (sync) {
+      const removed = Scheduler.removeJob(this.finishUpdate)
+
+      if (removed || this.hasPendingUpdate) {
+        // 已经触发过 beforeUpdate，因此不能再触发
+        this.finishUpdate()
+        return
+      }
+      // 完全没有 pending，这是首次 update
+      this.hasPendingUpdate = true
+      this.callHook(LifecycleHooks.beforeUpdate)
+      this.finishUpdate()
       return
     }
-    if (this.options.enableScheduler) {
-      Scheduler.queueJob(this.finishUpdate)
-    }
-    // 防止重复进入beforeUpdate钩子
+    // ---------- 异步更新 ----------
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
     this.callHook(LifecycleHooks.beforeUpdate)
-    if (!this.options.enableScheduler || sync) {
+    if (this.options.enableScheduler) {
+      Scheduler.queueJob(this.finishUpdate)
+    } else {
       this.finishUpdate()
+    }
+  }
+  /**
+   * 在 update 内部调用的渲染执行函数
+   */
+  private finishUpdate(): void {
+    // 防止重复执行
+    if (this.isUpdating) return
+
+    if (this.node.state === NodeState.Unmounted) {
+      this.hasPendingUpdate = false
+      return
+    }
+
+    if (this.node.state === NodeState.Deactivated) {
+      this.dirty = true
+      this.hasPendingUpdate = false
+      return
+    }
+
+    this.isUpdating = true
+    this.hasPendingUpdate = false
+
+    try {
+      this.cachedChildVNode = this.patch()
+    } catch (err) {
+      this.reportError(err, 'update')
+    } finally {
+      this.isUpdating = false
+      this.callHook(LifecycleHooks.updated)
     }
   }
   /**
@@ -297,23 +337,6 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
     }
     linkParentNode(vnode, this.node)
     return vnode
-  }
-  /**
-   * 完成更新流程
-   *
-   * 执行实际的 DOM patch 操作，并触发 updated 生命周期钩子
-   */
-  private finishUpdate = (): void => {
-    try {
-      this.hasPendingUpdate = false
-      if (this.node.state === NodeState.Unmounted) return
-      this.cachedChildVNode = this.patch()
-    } catch (error) {
-      this.hasPendingUpdate = false
-      this.reportError(error, 'update')
-    } finally {
-      this.callHook(LifecycleHooks.updated)
-    }
   }
   /**
    * 补丁方法，用于处理节点的更新和重建
