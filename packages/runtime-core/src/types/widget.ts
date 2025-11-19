@@ -1,7 +1,5 @@
-import {
-  type __WIDGET_INTRINSIC_METHOD_KEYWORDS__,
-  STATELESS_FUNCTION_WIDGET_SYMBOL
-} from '../constants/widget.js'
+import { STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
+import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
 import type { VNodeChild } from './vnode.js'
 
@@ -128,7 +126,7 @@ export type WidgetType<P extends AnyProps = any> = StatefulWidget<P> | Stateless
  *
  * 通过小部件构造函数推导出小部件的实例类型
  */
-export type WidgetInstanceType<T extends ClassWidget | FunctionWidget> =
+export type WidgetInstance<T extends ClassWidget | FunctionWidget> =
   T extends ClassWidget<any, infer I> ? I : T extends FunctionWidget<infer P> ? Widget<P> : Widget
 
 /**
