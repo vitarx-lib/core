@@ -10,18 +10,10 @@ import {
   type DynamicRenderType,
   type Fragment,
   FRAGMENT_NODE_TYPE,
+  NodeKind,
   type Render,
   TEXT_NODE_TYPE
 } from '../constants/index.js'
-import {
-  CommentNode,
-  FragmentNode,
-  RegularElementNode,
-  StatefulWidgetNode,
-  StatelessWidgetNode,
-  TextNode,
-  VNode
-} from '../vnode/index.js'
 import type {
   HostNodeElements,
   HostNodeNames,
@@ -29,6 +21,15 @@ import type {
   HostVoidElementNames,
   JSXElementNames
 } from './element.js'
+import type {
+  CommentVNode,
+  FragmentVNode,
+  RegularElementVNode,
+  StatefulWidgetVNode,
+  StatelessWidgetVNode,
+  TextVNode,
+  VNode
+} from './nodes/index.js'
 import type { StatefulWidget, StatelessWidget, WidgetType } from './widget.js'
 
 /**
@@ -57,28 +58,40 @@ export interface NodeDevInfo {
   self: any
 }
 
-export type StatefulWidgetNodeType = StatefulWidget
-export type StatelessWidgetNodeType = StatelessWidget
-export type RegularElementNodeType = HostRegularElementNames
-export type VoidElementNodeType = HostVoidElementNames
-export type TextNodeType = typeof TEXT_NODE_TYPE
-export type CommentNodeType = typeof COMMENT_NODE_TYPE
-export type WidgetNodeType = StatefulWidgetNodeType | StatelessWidgetNodeType
-export type NonElementNodeType = TextNodeType | CommentNodeType
-export type ContainerNodeType = RegularElementNodeType | FragmentNodeType
-export type FragmentNodeType = typeof FRAGMENT_NODE_TYPE
-export type ElementNodeType = RegularElementNodeType | VoidElementNodeType
+export type StatefulWidgetVNodeType = StatefulWidget
+export type StatelessWidgetVNodeType = StatelessWidget
+export type RegularElementVNodeType = HostRegularElementNames
+export type VoidElementVNodeType = HostVoidElementNames
+export type TextVNodeType = typeof TEXT_NODE_TYPE
+export type CommentVNodeType = typeof COMMENT_NODE_TYPE
+export type WidgetVNodeType = StatefulWidgetVNodeType | StatelessWidgetVNodeType
+export type NonElementVNodeType = TextVNodeType | CommentVNodeType
+export type ContainerVNodeType = RegularElementVNodeType | FragmentVNodeType
+export type FragmentVNodeType = typeof FRAGMENT_NODE_TYPE
+export type ElementVNodeType = RegularElementVNodeType | VoidElementVNodeType
 
+export interface NodeKindToNodeType {
+  [NodeKind.REGULAR_ELEMENT]: RegularElementVNodeType
+  [NodeKind.VOID_ELEMENT]: VoidElementVNodeType
+  [NodeKind.FRAGMENT]: FragmentVNodeType
+  [NodeKind.TEXT]: TextVNodeType
+  [NodeKind.COMMENT]: CommentVNodeType
+  [NodeKind.STATELESS_WIDGET]: StatelessWidgetVNodeType
+  [NodeKind.STATEFUL_WIDGET]: StatefulWidgetVNodeType
+}
 /**
  * 虚拟节点类型定义
  */
-export type NodeTypes =
-  | RegularElementNodeType
-  | VoidElementNodeType
-  | FragmentNodeType
-  | TextNodeType
-  | CommentNodeType
+export type VNodeTypes =
+  | RegularElementVNodeType
+  | VoidElementVNodeType
+  | FragmentVNodeType
+  | TextVNodeType
+  | CommentVNodeType
   | WidgetType
+
+export type HostVNodeType = Exclude<VNodeTypes, WidgetType>
+
 /**
  * 支持渲染的元素类型定义
  *
@@ -113,30 +126,26 @@ export type VNodeNormalizedChildren = Array<VNode>
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的虚拟节点类型是 `VNodeType`
  */
 export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetType
-/**
- * 挂载类型
- *
- * 挂载类型定义了节点的挂载方式，包括插入、替换、追加等。
- */
-export type MountType = 'insertBefore' | 'replace' | 'appendChild'
+
 /**
  * 节点实例类型重载
  */
 export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | DynamicRenderType
   ? VNode
-  : T extends Fragment | FragmentNodeType
-    ? FragmentNode
-    : T extends TextNodeType
-      ? TextNode
-      : T extends CommentNodeType
-        ? CommentNode
-        : T extends RegularElementNodeType
-          ? RegularElementNode<T>
+  : T extends Fragment | FragmentVNodeType
+    ? FragmentVNode
+    : T extends TextVNodeType
+      ? TextVNode
+      : T extends CommentVNodeType
+        ? CommentVNode
+        : T extends RegularElementVNodeType
+          ? RegularElementVNode<T>
           : T extends StatelessWidget
-            ? StatelessWidgetNode
+            ? StatelessWidgetVNode
             : T extends WidgetType
-              ? StatefulWidgetNode
+              ? StatefulWidgetVNode
               : VNode
+
 /**
  * 运行时元素实例类型
  *
@@ -146,6 +155,6 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | Dyna
  *
  * @template T 虚拟节点类型
  */
-export type NodeElementType<T extends NodeTypes = NodeTypes> = T extends HostNodeNames
+export type NodeElementType<T extends VNodeTypes = VNodeTypes> = T extends HostNodeNames
   ? HostNodeElements<T>
   : HostNodeElements
