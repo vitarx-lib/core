@@ -8,7 +8,7 @@ import type {
   StatelessWidget,
   StatelessWidgetVNode,
   ValidNodeProps,
-  WidgetType
+  WidgetTypes
 } from '../types/index.js'
 import { isStatelessWidget } from '../utils/index.js'
 import { createBaseVNode } from './baseCreateor.js'
@@ -96,7 +96,7 @@ export function createWidgetNode<T extends StatefulWidget>(
  * const statefulNode = createWidgetNode(StatefulComponent, { text: 'Hello' });
  * ```
  */
-export function createWidgetNode<T extends WidgetType>(
+export function createWidgetNode<T extends WidgetTypes>(
   widget: T,
   props: ValidNodeProps<T>
 ): StatelessWidgetVNode | StatefulWidgetVNode {
