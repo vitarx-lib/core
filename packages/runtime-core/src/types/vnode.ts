@@ -30,7 +30,7 @@ import type {
   TextVNode,
   VNode
 } from './nodes/index.js'
-import type { StatefulWidget, StatelessWidget, WidgetType } from './widget.js'
+import type { StatefulWidget, StatelessWidget, WidgetTypes } from './widget.js'
 
 /**
  * 代码位置信息
@@ -88,10 +88,15 @@ export type VNodeTypes =
   | FragmentVNodeType
   | TextVNodeType
   | CommentVNodeType
-  | WidgetType
+  | WidgetVNodeType
 
-export type HostVNodeType = Exclude<VNodeTypes, WidgetType>
-
+/**
+ * 运行时元素类型定义
+ *
+ * `HostNodeElement` 表示运行时元素类型，
+ * 它是 `HostNodeNames` 的子集，表示运行时元素类型。
+ */
+export type HostVNodeType = Exclude<VNodeTypes, WidgetVNodeType>
 /**
  * 支持渲染的元素类型定义
  *
@@ -125,7 +130,7 @@ export type VNodeNormalizedChildren = Array<VNode>
  *
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的虚拟节点类型是 `VNodeType`
  */
-export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetType
+export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetTypes
 
 /**
  * 节点实例类型重载
@@ -142,7 +147,7 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | Dyna
           ? RegularElementVNode<T>
           : T extends StatelessWidget
             ? StatelessWidgetVNode
-            : T extends WidgetType
+            : T extends WidgetTypes
               ? StatefulWidgetVNode
               : VNode
 
