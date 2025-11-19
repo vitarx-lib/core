@@ -2,7 +2,7 @@ import type { AnyKey } from '@vitarx/utils'
 import { isFunction, logger } from '@vitarx/utils'
 import { Depend } from '../../depend/index.js'
 import { EffectScope } from '../../effect/index.js'
-import { SubManager, Subscriber, type SubscriberOptions } from '../../observer/index.js'
+import { SubManager, Subscriber } from '../../observer/index.js'
 import {
   DEEP_SIGNAL_SYMBOL,
   REF_SIGNAL_SYMBOL,
@@ -32,7 +32,7 @@ export type ComputedSetter<T> = (newValue: T) => void
  *
  * @template T - 计算结果的类型
  */
-export interface ComputedOptions<T> extends Omit<SubscriberOptions, 'paramsHandler'> {
+export interface ComputedOptions<T> {
   /**
    * 计算属性的setter处理函数
    *
@@ -59,12 +59,22 @@ export interface ComputedOptions<T> extends Omit<SubscriberOptions, 'paramsHandl
   /**
    * 立即计算
    *
-   * 如果设置为true，则立即计算结果。
-   * 默认为false，在第一次访问value时，才进行计算。
+   * 如果设置为true，则在创建时立即执行getter并计算结果。
+   * 默认为false，采用Vue的懒计算模式，在第一次访问value时才进行计算。
    *
    * @default false
    */
   immediate?: boolean
+  /**
+   * 是否自动添加到当前作用域
+   *
+   * 如果设置为true，则自动添加到当前的EffectScope中，作用域销毁时自动清理。
+   * 如果设置为false，则不添加到作用域，需要手动管理生命周期。
+   * 也可以传入具体的EffectScope实例。
+   *
+   * @default true
+   */
+  scope?: boolean | EffectScope
 }
 
 /**
@@ -103,80 +113,72 @@ export class Computed<T> implements RefSignal<T> {
   readonly [SIGNAL_SYMBOL]: true = true
 
   /**
-   * 计算结果缓存
+   * 脏标记，标识是否需要重新计算
+   * true表示依赖已变化，需要重新计算
    * @private
    */
-  private _computedResult: T = undefined as T
-
+  private _dirty: boolean = true
   /**
    * 计算属性的getter函数
    * @private
    */
-  private readonly _getter: (oldValue: T | undefined) => T
-
+  private readonly _getter: ComputedGetter<T>
   /**
-   * 计算属性的配置选项
+   * 计算属性的setter函数
    * @private
    */
-  private readonly _options: Pick<ComputedOptions<T>, 'setter' | 'immediate' | 'scope'>
-  /**
-   * 订阅者配置选项
-   * @private
-   */
-  private readonly _subOptions: Omit<SubscriberOptions, 'paramsHandler'>
-
+  private readonly _setter?: ComputedSetter<T>
   /**
    * 依赖变化的订阅处理器
    * @private
    */
-  private _handler: Subscriber | undefined = undefined
+  private _effect: Subscriber | undefined = undefined
   /**
-   * 作用域
+   * 作用域实例
    * @private
    */
   private _scope: EffectScope | undefined = undefined
+  /**
+   * 是否已设置副作用
+   * @private
+   */
+  private _isSetup: boolean = false
 
   /**
    * 构造一个计算属性对象
    *
-   * @param {(oldValue: T | undefined) => T} getter - 计算属性的getter函数，接收上一次的计算结果作为参数
+   * @param {ComputedGetter<T>} getter - 计算属性的getter函数，接收上一次的计算结果作为参数
    * @param {ComputedOptions<T>} [options={}] - 计算属性的配置选项
-   * @param {(newValue: T) => void} [options.setter] - 计算属性的setter函数，用于处理对计算属性的赋值操作
-   * @param {boolean} [options.immediate=false] - 是否立即计算，默认为false，首次访问时才计算
-   * @param {boolean} [options.scope=true] - 是否添加到当前作用域，默认为true，作用域销毁时自动清理
-   * @param {boolean} [options.batch=true] - 是否使用批处理模式，默认为true，多个连续的变更会合并为一次计算
+   * @param {ComputedSetter<T>} [options.setter] - 计算属性的setter函数，用于处理对计算属性的赋值操作
+   * @param {boolean} [options.immediate=false] - 是否立即计算，默认为false，采用懒计算模式
+   * @param {boolean | EffectScope} [options.scope=true] - 是否添加到当前作用域，默认为true，作用域销毁时自动清理
    */
   constructor(getter: ComputedGetter<T>, options: ComputedOptions<T> = {}) {
     this._getter = getter
-    const { immediate = true, scope = true, setter, ...subOptions } = options
-    this._options = {
-      immediate,
-      scope,
-      setter
+    this._setter = options.setter
+
+    // 处理作用域
+    const { scope = true, immediate = false } = options
+    if (scope) {
+      if (typeof scope === 'object') {
+        this._scope = scope
+      } else {
+        this._scope = EffectScope.getCurrentScope()
+      }
     }
-    this._subOptions = {
-      ...subOptions,
-      scope: false
+
+    // 如果设置了立即计算，则在构造时就初始化并计算
+    if (immediate) {
+      this._setupEffect()
+      this._evaluate()
     }
-    if (this._options.scope) this._scope = EffectScope.getCurrentScope()
-    // 如果设置了立即计算，则在构造时就初始化
-    if (options.immediate) this.init()
   }
 
   /**
-   * 是否已初始化
+   * 计算结果缓存
    * @private
    */
-  private _initialize: boolean = false
-
-  /**
-   * 获取初始化状态的访问器
-   * 返回一个布尔值，表示对象是否已初始化
-   * @returns {boolean} 返回内部的_initialize属性值
-   */
-  get initialize(): boolean {
-    return this._initialize
-  }
+  private _value: T = undefined as T
 
   /**
    * 获取计算属性的原始值
@@ -191,17 +193,28 @@ export class Computed<T> implements RefSignal<T> {
   /**
    * 获取计算结果
    *
-   * 如果计算属性尚未初始化，则会先进行初始化。
-   * 每次访问都会追踪依赖，以便在依赖变化时能够正确地通知订阅者。
+   * 采用Vue的懒计算策略：
+   * 1. 首次访问时设置副作用并计算
+   * 2. 后续访问时，仅当dirty为true时才重新计算
+   * 3. 追踪对value的访问，建立依赖关系
    *
    * @returns {T} 计算结果
    */
   get value(): T {
-    // 如果尚未初始化，则先初始化
-    this.init()
+    // 首次访问或手动调用后，设置副作用
+    if (!this._isSetup) {
+      this._setupEffect()
+    }
+
+    // 如果dirty为true，说明依赖已变化，需要重新计算
+    if (this._dirty) {
+      this._evaluate()
+    }
+
     // 追踪对value属性的访问
     Depend.track(this, 'value')
-    return this._computedResult
+
+    return this._value
   }
 
   /**
@@ -213,11 +226,11 @@ export class Computed<T> implements RefSignal<T> {
    * @param {T} newValue - 要设置的新值
    */
   set value(newValue: T) {
-    if (typeof this._options.setter === 'function') {
-      this._options.setter(newValue)
+    if (this._setter) {
+      this._setter(newValue)
     } else {
       logger.warn(
-        'Computed properties should not be modified directly unless a setter function is defined。'
+        'Computed properties should not be modified directly unless a setter function is defined.'
       )
     }
   }
@@ -225,36 +238,29 @@ export class Computed<T> implements RefSignal<T> {
   /**
    * 将计算属性转换为字符串
    *
-   * 如果计算结果有toString方法，则调用该方法；
-   * 否则，返回格式化的类型描述。
-   *
    * @returns {string} 字符串表示
    */
   toString(): string {
-    if (this.value?.toString && isFunction(this.value.toString)) {
-      return this.value.toString()
-    } else {
-      return `[Object Computed<${typeof this.value}>]`
+    const val = this.value
+    if (val?.toString && isFunction(val.toString)) {
+      return val.toString()
     }
+    return `[Object Computed<${typeof val}>]`
   }
 
   /**
    * 停止监听依赖变化
    *
-   * 调用此方法会停止对依赖的监听，并释放相关监听器。
+   * 调用此方法会停止对依赖的监听，并释放相关资源。
    * 计算属性将不再响应依赖的变化，但仍然保留最后一次计算的结果。
-   *
-   * @returns {T} 最后一次的计算结果
    */
-  stop(): T {
-    if (this._handler) {
-      this._handler.dispose()
-      this._handler = undefined
-      this._scope = undefined
-    } else {
-      this._computedResult = this._getter(undefined)
+  stop(): void {
+    if (this._effect) {
+      this._effect.dispose()
+      this._effect = undefined
     }
-    return this._computedResult
+    this._isSetup = false
+    this._scope = undefined
   }
 
   /**
@@ -282,80 +288,111 @@ export class Computed<T> implements RefSignal<T> {
   /**
    * 设置作用域
    *
-   * 此方法仅在计算属性被初始化之前设置有效
+   * 此方法仅在副作用设置之前调用有效
    *
-   * @param {boolean | EffectScope} scope - 作用域或boolean值，表示是否允许添加到作用域
+   * @param {boolean | EffectScope} scope - 作用域或boolean值
    * @returns {this} 当前实例，支持链式调用
    */
-  public scope(scope: boolean | EffectScope): this {
-    if (this.initialize) return this
+  public setScope(scope: boolean | EffectScope): this {
+    if (this._isSetup) return this
+
     if (scope instanceof EffectScope) {
       this._scope = scope
     } else if (scope) {
       this._scope = EffectScope.getCurrentScope()
+    } else {
+      this._scope = undefined
     }
+
     return this
   }
 
   /**
-   * 手动初始化计算属性
+   * 执行计算
+   *
+   * Vue风格的懒计算：仅在dirty为true时才执行getter并缓存结果
+   * 注意：此方法不收集依赖，依赖收集在_setupEffect中完成
+   * @private
+   */
+  private _evaluate(): void {
+    // 直接执行getter，不需要收集依赖
+    this._value = this._getter(this._value)
+    this._dirty = false
+  }
+
+  /**
+   * 设置副作用（依赖追踪）
    *
    * 执行以下步骤：
    * 1. 收集getter函数执行过程中的依赖
-   * 2. 缓存计算结果
-   * 3. 如果有依赖，创建订阅处理器监听依赖变化
-   * 4. 设置清理函数，在销毁时移除订阅
-   *
-   * @returns {this} 当前实例，支持链式调用
+   * 2. 为每个依赖创建订阅，当依赖变化时智能处理
+   * 3. 将副作用添加到作用域中（如果存在）
+   * 4. 设置清理函数，在销毁时移除所有订阅
+   * @private
    */
-  init(): this {
-    if (this.initialize) return this
-    // 标记为已初始化
-    this._initialize = true
+  private _setupEffect(): void {
+    if (this._isSetup) return
+    this._isSetup = true
 
-    // 收集依赖并获取初始计算结果
-    const { result, deps } = Depend.collect(() => this._getter(this._computedResult), 'exclusive')
-    // 缓存计算结果
-    this._computedResult = result
+    // 收集依赖
+    const { deps } = Depend.collect(() => this._getter(this._value), 'exclusive')
 
     // 如果有依赖，则创建订阅处理器
     if (deps.size > 0) {
-      const handler = () => {
-        // 重新计算结果
-        const newResult = this._getter(this._computedResult)
+      // 当依赖变化时的智能处理
+      const onDependencyChange = () => {
+        // 检查是否有订阅者关注这个computed
+        const hasSubscribers = SubManager.hasSubscribers(this, 'value')
 
-        // 只有当结果发生变化时才通知订阅者
-        if (newResult !== this._computedResult) {
-          this._computedResult = newResult
-          SignalManager.notifySubscribers(this, 'value')
+        if (hasSubscribers) {
+          // 有订阅者：立即重新计算并比较值
+          const oldValue = this._value
+          const newValue = this._getter(oldValue)
+
+          // 只有值真正变化时才更新并通知
+          if (newValue !== oldValue) {
+            this._value = newValue
+            SignalManager.notifySubscribers(this, 'value')
+          }
+          // 注意：这里不标脏，因为已经计算过了
+        } else {
+          // 没有订阅者：只标脏，等待下次访问时再计算（懒计算）
+          this._dirty = true
         }
       }
-      // 创建订阅处理器，使用微任务延迟执行以提高性能
-      this._handler = new Subscriber(handler, this._subOptions)
+
+      // 创建订阅处理器，使用同步模式立即响应依赖变化
+      this._effect = new Subscriber(onDependencyChange, {
+        flush: 'sync',
+        scope: false
+      })
+
       // 如果存在作用域，则添加到作用域中
-      if (this._scope) this._scope.addEffect(this._handler)
-      const clean: [{}, AnyKey][] = []
+      if (this._scope) {
+        this._scope.addEffect(this._effect)
+      }
+
+      const cleanupList: Array<[object, AnyKey]> = []
+
       // 为每个依赖添加订阅
       deps.forEach((props, signal) => {
         for (const prop of props) {
-          SubManager.addSubscriber(signal, prop, this._handler!, false)
-          clean.push([signal, prop])
+          SubManager.addSubscriber(signal, prop, this._effect!, false)
+          cleanupList.push([signal, prop])
         }
       })
+
       // 设置清理函数，在销毁时移除所有订阅
-      this._handler.onDispose(() => {
-        for (const [signal, prop] of clean) {
-          SubManager.removeSubscriber(signal, prop, this._handler!)
+      this._effect.onDispose(() => {
+        for (const [signal, prop] of cleanupList) {
+          SubManager.removeSubscriber(signal, prop, this._effect!)
         }
-        clean.length = 0
-        this._handler = undefined
-        this._scope = undefined
+        cleanupList.length = 0
       })
     } else {
       logger.warn(
         'No dependencies detected in computed property. The computed value will not automatically update when data changes. Consider checking if your getter function accesses signal properties correctly.'
       )
     }
-    return this
   }
 }
