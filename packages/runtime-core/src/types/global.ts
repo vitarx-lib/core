@@ -9,9 +9,9 @@ import type {
 import type {
   AnyProps,
   FunctionWidget,
-  ValidBuildElement,
+  ValidBuildResult,
   WidgetPropsType,
-  WidgetType
+  WidgetTypes
 } from './widget.js'
 
 declare global {
@@ -187,7 +187,7 @@ declare global {
      * 定义了 JSX 表达式返回值的类型，对应于有效的子节点类型。
      * 这使得 JSX 表达式可以直接用作组件的子元素。
      */
-    type Element = ValidBuildElement
+    type Element = ValidBuildResult
     /**
      * JSX 支持的固有属性
      */
@@ -230,7 +230,7 @@ declare global {
      * @param P 原始属性类型
      */
     type LibraryManagedAttributes<C, P> =
-      C extends WidgetType<infer WP>
+      C extends WidgetTypes<infer WP>
         ? WithRefProps<WithDefaultProps<WP, C['defaultProps']>>
         : P extends object
           ? WithRefProps<P>
