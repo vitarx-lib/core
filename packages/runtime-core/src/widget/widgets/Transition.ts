@@ -1,8 +1,9 @@
 import { computed } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils'
+import { diffDirectives } from '../../directive/index.js'
 import { getNodeDomOpsTarget, getNodeElement } from '../../internal/utils.js'
 import { useRenderer } from '../../renderer/index.js'
-import type { HostNodeElements, VNode } from '../../types/index.js'
+import type { ElementVNode, HostNodeElements, VNode } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'
 import { isNonElementNode } from '../../utils/index.js'
 import { mountNode, unmountNode } from '../../vnode/index.js'
@@ -185,10 +186,11 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
       const newShow = newChild.directives?.get('show')?.[1]
       if (oldShow !== newShow) {
         if (oldShow) {
+          NodeUpdater.patchUpdateNode(oldChild, newChild, { skip: ['show'] })
           // 离场动画执行完成后才更新节点
-          this.runTransition(getNodeElement(oldChild), 'leave', () =>
-            NodeUpdater.patchUpdateNode(oldChild, newChild)
-          )
+          this.runTransition(getNodeElement(oldChild), 'leave', () => {
+            diffDirectives(oldChild as ElementVNode, newChild as ElementVNode, { only: ['show'] })
+          })
         } else {
           NodeUpdater.patchUpdateNode(oldChild, newChild)
           this.runTransition(getNodeElement(newChild), 'enter')
