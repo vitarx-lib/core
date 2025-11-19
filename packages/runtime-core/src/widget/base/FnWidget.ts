@@ -53,11 +53,11 @@ const performChildReplacement = (
   oldChild: VNode,
   newChild: VNode
 ) => {
-  runtime.callHook(LifecycleHooks.beforeMount)
   const renderer = useRenderer()
   const anchor = renderer.createText('')
   renderer.insertBefore(anchor, oldChild.el!)
   unmountNode(oldChild)
+  runtime.callHook(LifecycleHooks.beforeMount)
   mountNode(newChild, anchor, 'replace')
   runtime.callHook(LifecycleHooks.mounted)
 }
@@ -65,20 +65,16 @@ const performChildReplacement = (
 /**
  * 检查节点状态是否有效
  */
-const isValidNodeState = (state: NodeState | 'created'): boolean => {
-  return state !== NodeState.Unmounted && state !== 'created'
+const isValidNodeState = (state: NodeState): boolean => {
+  return state !== NodeState.Unmounted && state !== NodeState.Created
 }
 
 /**
  * 处理激活状态的异步渲染完成
  */
 const handleActivatedState = (runtime: StatefulWidgetRuntime, oldChild: VNode, newChild: VNode) => {
-  try {
-    performChildReplacement(runtime, oldChild, newChild)
-    runtime.callHook(LifecycleHooks.activated)
-  } catch (error) {
-    runtime.reportError(error, 'build')
-  }
+  performChildReplacement(runtime, oldChild, newChild)
+  runtime.callHook(LifecycleHooks.activated)
 }
 
 /**
