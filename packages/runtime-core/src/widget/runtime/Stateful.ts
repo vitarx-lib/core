@@ -192,9 +192,10 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    * 默认为异步批量更新，多次调用会合并为一次更新，避免重复渲染
    * 仅在组件处于活跃状态时才会执行更新
    *
+   * @param sync - 是否同步更新
    * @returns Promise，在更新完成后 resolve
    */
-  public override update = (): void => {
+  public override update = (sync: boolean = false): void => {
     // 处于销毁状态时不允许更新
     if (__DEV__ && this.node.state === NodeState.Unmounted) {
       throw new Error(`Cannot update unmounted component: StatefulWidget<${this.name}>`)
@@ -211,29 +212,8 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
     this.callHook(LifecycleHooks.beforeUpdate)
-    if (!this.options.enableScheduler) {
+    if (!this.options.enableScheduler || sync) {
       this.finishUpdate()
-    }
-  }
-  /**
-   * 同步静默更新
-   *
-   * 立即执行同步更新，不触发生命周期钩子，不进行状态检查
-   * 主要用于内部优化场景
-   */
-  public syncSilentUpdate(): void {
-    // 处于销毁状态时不允许更新
-    if (__DEV__ && this.node.state === NodeState.Unmounted) {
-      throw new Error(`Cannot update unmounted component: StatefulWidget<${this.name}>`)
-    }
-    if (this.node.state === NodeState.Deactivated) {
-      this.dirty = true
-      return
-    }
-    try {
-      this.cachedChildVNode = this.patch()
-    } catch (error) {
-      this.reportError(error, 'update')
     }
   }
   /**
