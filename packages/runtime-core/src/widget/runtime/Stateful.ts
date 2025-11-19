@@ -328,10 +328,11 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
       this.hasPendingUpdate = false
       if (this.node.state === NodeState.Unmounted) return
       this.cachedChildVNode = this.patch()
-      this.callHook(LifecycleHooks.updated)
     } catch (error) {
       this.hasPendingUpdate = false
       this.reportError(error, 'update')
+    } finally {
+      this.callHook(LifecycleHooks.updated)
     }
   }
   /**
