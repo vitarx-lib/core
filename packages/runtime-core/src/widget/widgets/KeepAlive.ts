@@ -1,3 +1,4 @@
+import { getNodeDomOpsTarget } from '../../internal/utils.js'
 import { useRenderer } from '../../renderer/index.js'
 import type {
   AnyProps,
@@ -6,7 +7,7 @@ import type {
   TextVNodeType,
   UniqueKey,
   VNode,
-  WidgetType,
+  WidgetTypes,
   WidgetVNode
 } from '../../types/index.js'
 import { isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
@@ -45,7 +46,7 @@ export interface KeepAliveProps {
    * showChild.value = Home
    * ```
    */
-  children: WidgetType | VNode
+  children: WidgetTypes | VNode
   /**
    * 需要缓存的节点类型
    *
@@ -53,7 +54,7 @@ export interface KeepAliveProps {
    *
    * @default []
    */
-  include: WidgetType[]
+  include: WidgetTypes[]
   /**
    * 需要销毁状态的节点类型列表
    *
@@ -61,7 +62,7 @@ export interface KeepAliveProps {
    *
    * @default []
    */
-  exclude: WidgetType[]
+  exclude: WidgetTypes[]
   /**
    * 最大缓存数量
    *
@@ -106,7 +107,7 @@ export interface KeepAliveProps {
  *
  * @constructor
  * @param {KeepAliveProps} props - 组件属性
- * @param {WidgetType|VNode} props.children - 需要缓存的小部件
+ * @param {WidgetTypes|VNode} props.children - 需要缓存的小部件
  * @param {number} [props.max=10] - 最大缓存数量
  * @param {string[]} [props.include=[]] - 需要缓存的小部件类型列表
  * @param {string[]} [props.exclude=[]] - 不需要缓存的小部件类型列表
@@ -125,7 +126,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 缓存的节点实例
    */
-  public readonly cached: Map<WidgetType, Map<UniqueKey | undefined, WidgetVNode>> = new Map()
+  public readonly cached: Map<WidgetTypes, Map<UniqueKey | undefined, WidgetVNode>> = new Map()
   /**
    * 当前展示的小部件
    * @protected
@@ -180,7 +181,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @param type
    */
-  isKeep(type: WidgetType): boolean {
+  isKeep(type: WidgetTypes): boolean {
     if (this.exclude.includes(type)) return false
     return this.include.length === 0 || this.include.includes(type)
   }
@@ -217,7 +218,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     const dom = useRenderer()
     if (newVNode.state !== 'deactivated') {
       placeholderElement = dom.createText('')
-      dom.insertBefore(placeholderElement, oldVNode.anchor || oldVNode.el!)
+      dom.insertBefore(placeholderElement, getNodeDomOpsTarget(oldVNode))
     }
 
     // 统一处理旧节点的清理
@@ -239,7 +240,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 生成子节点
    */
-  protected makeChildVNode(children: WidgetType | VNode): WidgetVNode {
+  protected makeChildVNode(children: WidgetTypes | VNode): WidgetVNode {
     if (isWidgetNode(children)) {
       return children
     } else if (isWidget(children)) {
@@ -253,7 +254,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @protected
    */
-  protected handleChildChange(child: WidgetType | VNode) {
+  protected handleChildChange(child: WidgetTypes | VNode) {
     const newVNode = this.makeChildVNode(child)
     const newType = newVNode.type // 新的组件类型
     const newKey = newVNode.key // 新的组件唯一键
