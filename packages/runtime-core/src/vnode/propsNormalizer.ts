@@ -1,7 +1,20 @@
 import { unref } from '@vitarx/responsive'
 import { isRecordObject } from '@vitarx/utils'
-import { INTRINSIC_ATTRIBUTES } from '../constants/index.js'
-import type { AnyProps, BindAttributes, ClassProperties, StyleRules } from '../types/index.js'
+import {
+  COMMENT_NODE_TYPE,
+  DYNAMIC_RENDER_TYPE,
+  FRAGMENT_NODE_TYPE,
+  INTRINSIC_ATTRIBUTES,
+  TEXT_NODE_TYPE
+} from '../constants/index.js'
+import { useRenderer } from '../renderer/index.js'
+import type {
+  AnyProps,
+  BindAttributes,
+  ClassProperties,
+  StyleRules,
+  ValidNodeType
+} from '../types/index.js'
 import { StyleUtils } from '../utils/index.js'
 
 /**
@@ -108,4 +121,26 @@ export const NormalizerStyleAndClassProp = (props: AnyProps): AnyProps => {
   // 如果合并后的 class 存在，赋值给 props.class，确保为标准数组格式
   if (cssClass.length > 0) (props as unknown as Record<'class', string[]>).class = cssClass
   return props
+}
+
+/**
+ * 判断是否支持子节点
+ *
+ * @param type - 节点类型
+ * @returns {boolean} 是否支持子节点
+ */
+export function isSupportChildren(type: ValidNodeType): boolean {
+  if (typeof type === 'string') {
+    switch (type) {
+      case COMMENT_NODE_TYPE:
+      case TEXT_NODE_TYPE:
+        return false
+      case FRAGMENT_NODE_TYPE:
+      case DYNAMIC_RENDER_TYPE:
+        return true
+      default:
+        return !useRenderer().isVoidElement(type)
+    }
+  }
+  return true
 }
