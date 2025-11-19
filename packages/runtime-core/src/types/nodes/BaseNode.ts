@@ -135,6 +135,10 @@ export interface VNode<T extends VNodeTypes = VNodeTypes> extends VNodeMeta {
    */
   anchor?: HostCommentElement
   /**
+   * 应用上下文
+   */
+  appContext?: App
+  /**
    * 开发模式调试信息
    *
    * 包含用于调试的元数据，如节点在源码中的位置、创建堆栈等。
@@ -203,10 +207,6 @@ export interface ElementVNode<T extends ElementVNodeType = ElementVNodeType> ext
  * @template T 组件节点类型，默认为WidgetVNodeType
  */
 export interface WidgetVNode<T extends WidgetVNodeType = WidgetVNodeType> extends VNode<T> {
-  /**
-   * 应用上下文
-   */
-  appContext?: App
   /**
    * 缓存组件的记忆数组
    */
