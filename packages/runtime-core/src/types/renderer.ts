@@ -7,9 +7,9 @@ import type {
   HostParentElement,
   HostRegularElements,
   HostTextElement,
-  HostVoidElementNames
-} from './element.js'
-import type { StyleRules } from './props.js'
+  HostVoidElementNames,
+  StyleRules
+} from '../types/index.js'
 
 /**
  * DOMRect 接口，表示一个矩形区域，
@@ -17,65 +17,66 @@ import type { StyleRules } from './props.js'
  */
 export interface DOMRect {
   /**
-   * The **`height`** property of the DOMRect interface represents the height of the rectangle.
+   * The **`height`** property of the DOMRect nodes represents the height of the rectangle.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/height)
    */
   height: number
   /**
-   * The **`width`** property of the DOMRect interface represents the width of the rectangle.
+   * The **`width`** property of the DOMRect nodes represents the width of the rectangle.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/width)
    */
   width: number
   /**
-   * The **`x`** property of the DOMRect interface represents the x-coordinate of the rectangle, which is the horizontal distance between the viewport's left edge and the rectangle's origin.
+   * The **`x`** property of the DOMRect nodes represents the x-coordinate of the rectangle, which is the horizontal distance between the viewport's left edge and the rectangle's origin.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/x)
    */
   x: number
   /**
-   * The **`y`** property of the DOMRect interface represents the y-coordinate of the rectangle, which is the vertical distance between the viewport's top edge and the rectangle's origin.
+   * The **`y`** property of the DOMRect nodes represents the y-coordinate of the rectangle, which is the vertical distance between the viewport's top edge and the rectangle's origin.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRect/y)
    */
   y: number
   /**
-   * The **`bottom`** read-only property of the **`DOMRectReadOnly`** interface returns the bottom coordinate value of the `DOMRect`.
+   * The **`bottom`** read-only property of the **`DOMRectReadOnly`** nodes returns the bottom coordinate value of the `DOMRect`.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/bottom)
    */
   readonly bottom: number
   /**
-   * The **`left`** read-only property of the **`DOMRectReadOnly`** interface returns the left coordinate value of the `DOMRect`.
+   * The **`left`** read-only property of the **`DOMRectReadOnly`** nodes returns the left coordinate value of the `DOMRect`.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/left)
    */
   readonly left: number
   /**
-   * The **`right`** read-only property of the **`DOMRectReadOnly`** interface returns the right coordinate value of the `DOMRect`.
+   * The **`right`** read-only property of the **`DOMRectReadOnly`** nodes returns the right coordinate value of the `DOMRect`.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/right)
    */
   readonly right: number
   /**
-   * The **`top`** read-only property of the **`DOMRectReadOnly`** interface returns the top coordinate value of the `DOMRect`.
+   * The **`top`** read-only property of the **`DOMRectReadOnly`** nodes returns the top coordinate value of the `DOMRect`.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/top)
    */
   readonly top: number
   /**
-   * The **`toJSON()`** method of the **`DOMRectReadOnly`** interface returns a JSON serialization of the rectangle.
+   * The **`toJSON()`** method of the **`DOMRectReadOnly`** nodes returns a JSON serialization of the rectangle.
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/DOMRectReadOnly/toJSON)
    */
   toJSON(): any
 }
+
 /**
  * DOM适配器接口，定义了操作DOM元素的基本方法
  * 提供创建、修改、删除DOM元素以及处理事件和样式的能力
  */
-export interface HostAdapter {
+export interface HostRenderer {
   /**
    * 创建指定类型的DOM元素
    *
@@ -157,12 +158,12 @@ export interface HostAdapter {
   replace(newChild: HostNodeElements, oldChild: HostNodeElements): void
   /**
    * 将元素添加到父元素的子元素列表末尾
-   * @param parent - 父元素实例
    * @param el - 要添加的子元素实例
+   * @param parent - 父元素实例
    */
   appendChild(
-    parent: HostParentElement | HostRegularElements | HostFragmentElement,
-    el: HostNodeElements
+    el: HostNodeElements,
+    parent: HostParentElement | HostRegularElements | HostFragmentElement
   ): void
   /**
    * 设置元素的样式
