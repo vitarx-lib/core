@@ -1,8 +1,9 @@
 import { Fragment } from '../../constants/index.js'
-import type { AnyProps, VNodeChildren } from '../../types/index.js'
-import { bindProps, isVNode } from '../../utils/index.js'
+import type { AnyProps, FragmentVNode, VNodeChildren } from '../../types/index.js'
+import { isVNode } from '../../utils/index.js'
 import { defineStatelessWidget } from '../../utils/widget.js'
-import { createVNode, FragmentNode } from '../../vnode/index.js'
+import { createVNode } from '../../vnode/index.js'
+import { bindProps } from '../../vnode/propsNormalizer.js'
 
 interface PropBindProps {
   children: VNodeChildren
@@ -25,9 +26,9 @@ interface PropBindProps {
  * ```
  *
  * @param props - 组件的属性对象
- * @returns {FragmentNode} 返回一个 Fragment 元素，包含处理后的子组件
+ * @returns {FragmentVNode} 返回一个 Fragment 元素，包含处理后的子组件
  */
-const PropBind = defineStatelessWidget(({ children, ...bind }: PropBindProps): FragmentNode => {
+const PropBind = defineStatelessWidget(({ children, ...bind }: PropBindProps): FragmentVNode => {
   // 将 children 转换为数组格式，确保可以统一处理
   const childrenList = Array.isArray(children) ? children : [children]
   // 遍历子组件列表，为每个子组件绑定属性
