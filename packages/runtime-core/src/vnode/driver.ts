@@ -9,6 +9,7 @@ import type {
   VNode
 } from '../types/index.js'
 import type { VNodeTypes } from '../types/vnode.js'
+import { unlinkParentNode } from './relations.js'
 
 type Controllers = {
   [key in NodeKind]: NodeController<NodeKindToNodeType[key]>
@@ -98,6 +99,7 @@ export function unmountNode(node: VNode): void {
     throw new Error(`The node state (${node.state}) is also not in the unmountable stage`)
   }
   controllers[node.kind].unmount(node as VNode<never>)
+  unlinkParentNode(node)
   node.state = NodeState.Unmounted
 }
 
