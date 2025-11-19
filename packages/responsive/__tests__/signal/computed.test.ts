@@ -12,7 +12,7 @@ describe('computed', () => {
 
     it('应该根据依赖的变化更新计算值', () => {
       const count = ref(0)
-      const double = computed(() => count.value * 2, { flush: 'sync' })
+      const double = computed(() => count.value * 2)
 
       count.value = 2
       expect(double.value).toBe(4)
@@ -26,7 +26,7 @@ describe('computed', () => {
     it('应该缓存计算结果', () => {
       const count = ref(0)
       const fn = vi.fn(() => count.value * 2)
-      const double = computed(fn, { flush: 'sync' })
+      const double = computed(fn)
 
       // 首次访问会计算
       expect(double.value).toBe(0)
@@ -41,19 +41,26 @@ describe('computed', () => {
       expect(double.value).toBe(4)
       expect(fn).toHaveBeenCalledTimes(2)
     })
-    it('支持批处理', async () => {
+    it('支持懒计算（多次修改依赖只计算一次）', () => {
       const count = ref(0)
       const fn = vi.fn(() => count.value * 2)
       const double = computed(fn)
+      
+      // 首次访问会计算
       expect(double.value).toBe(0)
       expect(fn).toHaveBeenCalledTimes(1)
-      for (let i = 0; i < 10; i++) {
+      
+      // 多次修改依赖，但不访问值
+      for (let i = 1; i <= 10; i++) {
         count.value = i
       }
-      await vi.waitFor(() => {
-        expect(fn).toHaveBeenCalledTimes(2)
-        expect(double.value).toBe(count.value * 2)
-      })
+      
+      // 此时还没有重新计算（懒计算）
+      expect(fn).toHaveBeenCalledTimes(1)
+      
+      // 访问时才重新计算，只计算一次
+      expect(double.value).toBe(20) // 10 * 2
+      expect(fn).toHaveBeenCalledTimes(2) // 初始1次 + 重新计算1次
     })
   })
 
@@ -63,8 +70,7 @@ describe('computed', () => {
       const double = computed(() => count.value * 2, {
         setter: val => {
           count.value = val / 2
-        },
-        flush: 'sync'
+        }
       })
 
       expect(double.value).toBe(0)
@@ -78,7 +84,7 @@ describe('computed', () => {
   describe('与reactive的交互', () => {
     it('应该支持reactive对象作为依赖', () => {
       const state = reactive({ count: 0 })
-      const double = computed(() => state.count * 2, { flush: 'sync' })
+      const double = computed(() => state.count * 2)
 
       expect(double.value).toBe(0)
 
@@ -90,8 +96,8 @@ describe('computed', () => {
   describe('嵌套computed', () => {
     it('应该支持嵌套的computed', () => {
       const count = ref(0)
-      const double = computed(() => count.value * 2, { flush: 'sync' })
-      const quadruple = computed(() => double.value * 2, { flush: 'sync' })
+      const double = computed(() => count.value * 2)
+      const quadruple = computed(() => double.value * 2)
 
       expect(quadruple.value).toBe(0)
 

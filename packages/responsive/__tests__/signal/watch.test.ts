@@ -28,7 +28,7 @@ describe('watch', () => {
     })
     it('应该监听computed的变化', () => {
       const count = ref(0)
-      const double = computed(() => count.value * 2, { flush: 'sync' })
+      const double = computed(() => count.value * 2)
       const fn = vi.fn()
 
       watch(double, fn, { flush: 'sync' })
