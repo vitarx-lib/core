@@ -13,7 +13,7 @@ import type {
  * 无状态小部件必须是内部逻辑不存在副作用的函数式组件。
  *
  * ```tsx
- * interface Props {
+ * nodes Props {
  *   title: string,
  *   color?: string
  * }
@@ -105,7 +105,5 @@ export function isWidget(val: any): val is WidgetType {
  */
 export function getWidgetName(widget: WidgetType) {
   // 首先检查 displayName 是否为字符串且存在
-  return typeof widget.displayName === 'string' && widget.displayName
-    ? widget.displayName // 如果 displayName 存在，返回它
-    : widget.name || 'AnonymousWidget' // 否则返回 name，如果 name 也不存在则返回默认名称
+  return widget.displayName || widget.name || 'AnonymousWidget'
 }
