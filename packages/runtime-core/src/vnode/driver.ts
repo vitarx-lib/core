@@ -64,9 +64,9 @@ export function mountNode(
  * 激活节点 - 将停用的节点重新激活
  *
  * @param node - 虚拟节点
- * @param root - 是否为根节点
+ * @param [root=true] - 是否为根节点
  */
-export function activateNode(node: VNode, root: boolean): void {
+export function activateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Deactivated) {
     controllers[node.kind].activate(node as VNode<never>, root)
     node.state = NodeState.Activated
@@ -78,9 +78,9 @@ export function activateNode(node: VNode, root: boolean): void {
  * 停用节点 - 从 DOM 中移除但保留状态
  *
  * @param node - 虚拟节点
- * @param root - 是否为根节点
+ * @param [root=true] - 是否为根节点
  */
-export function deactivateNode(node: VNode, root: boolean): void {
+export function deactivateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Activated) {
     controllers[node.kind].deactivate(node as VNode<never>, root)
     node.state = NodeState.Deactivated
