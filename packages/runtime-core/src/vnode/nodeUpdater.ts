@@ -1,5 +1,5 @@
 import { NodeState } from '../constants/index.js'
-import { diffDirectives } from '../directive/index.js'
+import { diffDirectives, type DiffDirectivesOptions } from '../directive/index.js'
 import { getNodeDomOpsTarget } from '../internal/utils.js'
 import { useRenderer } from '../renderer/index.js'
 import type { ContainerVNode, ElementVNode, VNode, WidgetVNode } from '../types/index.js'
@@ -27,7 +27,11 @@ export interface ChildNodeUpdateHooks {
    * @param newChild - 新节点
    * @param done - 完成回调函数，务必调用！
    */
-  onUpdate?: (oldChild: VNode, newChild: VNode, done: (skipShow?: boolean) => void) => void
+  onUpdate?: (
+    oldChild: VNode,
+    newChild: VNode,
+    done: (options?: DiffDirectivesOptions) => void
+  ) => void
 }
 /**
  * VNode 更新管理器
@@ -66,20 +70,25 @@ export class NodeUpdater {
    * @template T - VNode 的子类型
    * @param currentVNode - 当前的虚拟节点
    * @param nextVNode - 新的虚拟节点
+   * @param options -  diff 指令选项
    */
-  static patchUpdateNode<T extends VNode>(currentVNode: T, nextVNode: T): void {
+  static patchUpdateNode<T extends VNode>(
+    currentVNode: T,
+    nextVNode: T,
+    options?: DiffDirectivesOptions
+  ): void {
     // 如果是同一个节点引用，直接返回
     if (currentVNode === nextVNode) return
+    // 静态节点不需要更新
+    if (currentVNode.static) return
     if (isWidgetNode(currentVNode)) {
       if (isElementNode(currentVNode.runtimeInstance!.child)) {
-        diffDirectives(currentVNode, nextVNode as WidgetVNode)
+        diffDirectives(currentVNode, nextVNode as WidgetVNode, options)
       }
     } else if (isElementNode(currentVNode)) {
       //  diff 指令
-      diffDirectives(currentVNode, nextVNode as unknown as ElementVNode)
+      diffDirectives(currentVNode, nextVNode as unknown as ElementVNode, options)
     }
-    // 静态节点不需要更新
-    if (currentVNode.static) return
     // 更新节点属性
     this.patchUpdateProps(currentVNode, nextVNode)
     // 如果是容器节点，更新子节点
