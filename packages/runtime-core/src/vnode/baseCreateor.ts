@@ -2,6 +2,7 @@ import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { isObject, logger, popProperty } from '@vitarx/utils'
 import { NodeKind, NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
 import { __DEV__, popNodeDevInfo } from '../internal/dev.js'
+import { getAppContext } from '../runtime/index.js'
 import type { AnyProps, VNode, VNodeTypes } from '../types/index.js'
 import { isRefEl } from '../utils/index.js'
 import { bindProps } from './propsNormalizer.js'
@@ -31,10 +32,11 @@ export const createBaseVNode = (
   const node: VNode = {
     [NON_SIGNAL_SYMBOL]: true,
     [VIRTUAL_NODE_SYMBOL]: true,
+    state: NodeState.Created,
     type,
     kind,
     props,
-    state: NodeState.Created
+    appContext: getAppContext()
   }
 
   // --------- 开发信息（可选） ----------
