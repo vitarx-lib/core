@@ -1,13 +1,23 @@
+import { useRenderer } from '../../renderer/index.js'
 import type {
   AnyProps,
   NodeElementType,
-  TextNodeType,
+  StatefulWidgetVNode,
+  TextVNodeType,
   UniqueKey,
-  WidgetType
+  VNode,
+  WidgetType,
+  WidgetVNode
 } from '../../types/index.js'
 import { isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
-import { createVNode, type StatefulWidgetNode, type VNode, WidgetNode } from '../../vnode/index.js'
-import { Widget } from '../core/index.js'
+import {
+  activateNode,
+  createVNode,
+  deactivateNode,
+  mountNode,
+  unmountNode
+} from '../../vnode/index.js'
+import { Widget } from '../base/index.js'
 
 /**
  * KeepAlive配置选项
@@ -115,12 +125,12 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 缓存的节点实例
    */
-  public readonly cached: Map<WidgetType, Map<UniqueKey | undefined, WidgetNode>> = new Map()
+  public readonly cached: Map<WidgetType, Map<UniqueKey | undefined, WidgetVNode>> = new Map()
   /**
    * 当前展示的小部件
    * @protected
    */
-  protected currentChild: WidgetNode
+  protected currentChild: WidgetVNode
 
   constructor(props: KeepAliveProps) {
     super(props)
@@ -192,7 +202,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     // 遍历缓存中的所有 VNode 并卸载其实例
     this.cached.forEach(typeCache => {
       // 遍历每个 VNode 卸载实例
-      typeCache.forEach(vnode => vnode !== this.currentChild && vnode.unmount())
+      typeCache.forEach(vnode => vnode !== this.currentChild && unmountNode(vnode))
     })
     // 清空缓存
     this.cached.clear()
@@ -201,25 +211,26 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * @inheritDoc
    */
-  override $patchUpdate(oldVNode: StatefulWidgetNode, newVNode: StatefulWidgetNode): VNode {
+  override $patchUpdate(oldVNode: StatefulWidgetVNode, newVNode: StatefulWidgetVNode): VNode {
     // 提前检查是否需要创建占位符
-    let placeholderElement: NodeElementType<TextNodeType> | null = null
+    let placeholderElement: NodeElementType<TextVNodeType> | null = null
+    const dom = useRenderer()
     if (newVNode.state !== 'deactivated') {
-      placeholderElement = oldVNode.dom.createText('')
-      oldVNode.dom.insertBefore(placeholderElement, oldVNode.operationTarget)
+      placeholderElement = dom.createText('')
+      dom.insertBefore(placeholderElement, oldVNode.anchor || oldVNode.el!)
     }
 
     // 统一处理旧节点的清理
     if (this.isKeep(oldVNode.type)) {
-      oldVNode.deactivate()
+      deactivateNode(oldVNode, true)
     } else {
-      oldVNode.unmount()
+      unmountNode(oldVNode)
     }
     // 处理新节点的激活或挂载
     if (newVNode.state === 'deactivated') {
-      newVNode.activate()
+      activateNode(newVNode)
     } else {
-      newVNode.mount(placeholderElement!, 'replace')
+      mountNode(newVNode, placeholderElement!, 'replace')
     }
 
     return newVNode
@@ -228,7 +239,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 生成子节点
    */
-  protected makeChildVNode(children: WidgetType | VNode): WidgetNode {
+  protected makeChildVNode(children: WidgetType | VNode): WidgetVNode {
     if (isWidgetNode(children)) {
       return children
     } else if (isWidget(children)) {
@@ -275,7 +286,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @param vnode
    */
-  protected addCache(vnode: WidgetNode) {
+  protected addCache(vnode: WidgetVNode) {
     const type = vnode.type
     const key = vnode.key
     if (this.isKeep(type)) {
@@ -306,9 +317,11 @@ export class KeepAlive extends Widget<KeepAliveProps> {
           const firstType = this.cached.keys().next().value!
           const firstTypeMap = this.cached.get(firstType)!
           const firstKey = firstTypeMap.keys().next().value!
-          firstTypeMap.get(firstKey)?.unmount()
-          firstTypeMap.delete(firstKey)
-
+          const firstVNode = firstTypeMap.get(firstKey)
+          if (firstVNode) {
+            unmountNode(firstVNode)
+            firstTypeMap.delete(firstKey)
+          }
           // 如果该类型的缓存已空，移除类型
           if (firstTypeMap.size === 0) {
             this.cached.delete(firstType)
