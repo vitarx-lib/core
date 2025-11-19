@@ -4,7 +4,7 @@ import type {
   StatelessWidget,
   StatelessWidgetSymbol,
   VNodeChild,
-  WidgetType
+  WidgetTypes
 } from '../types/index.js'
 
 /**
@@ -37,30 +37,7 @@ export function defineStatelessWidget<T extends (props: any) => VNodeChild>(
   Object.defineProperty(build, STATELESS_FUNCTION_WIDGET_SYMBOL, { value: true })
   return build as T & StatelessWidgetSymbol
 }
-
-/**
- * 定义一个简单小部件
- *
- * @deprecated 4.0 版本起标记为弃用，请使用 defineStatelessWidget 替代
- * @see {@linkcode defineStatelessWidget}
- */
-export function defineSimpleWidget<T extends (props: any) => VNodeChild>(
-  build: T
-): T & StatelessWidgetSymbol {
-  return defineStatelessWidget(build)
-}
-
-/**
- * 标记一个简单小部件
- *
- * @deprecated 4.0 版本起标记为弃用，请使用 defineStatelessWidget 替代
- * @see {@linkcode defineStatelessWidget}
- */
-export function markSimpleWidget<T extends (props: any) => VNodeChild>(
-  build: T
-): T & StatelessWidgetSymbol {
-  return defineStatelessWidget(build)
-}
+export { defineStatelessWidget as stateless }
 
 /**
  * 判断是否为无状态小部件
@@ -71,6 +48,7 @@ export function markSimpleWidget<T extends (props: any) => VNodeChild>(
 export function isStatelessWidget(fn: any): fn is StatelessWidget {
   return typeof fn === 'function' && fn[STATELESS_FUNCTION_WIDGET_SYMBOL] === true
 }
+
 /**
  * 检查一个值是为类小部件构造函数
  * 这是一个类型谓词函数，用于类型收窄
@@ -94,7 +72,7 @@ export function isClassWidget(val: any): val is ClassWidget {
  * @param val - 需要检查的任意值
  * @returns {boolean} 如果值是函数类型则返回true，否则返回false
  */
-export function isWidget(val: any): val is WidgetType {
+export function isWidget(val: any): val is WidgetTypes {
   return typeof val === 'function'
 }
 
@@ -103,7 +81,7 @@ export function isWidget(val: any): val is WidgetType {
  * @param widget - WidgetType 类型的组件对象，包含 displayName 和 name 属性
  * @returns 返回组件的显示名称，如果不存在则返回名称，如果都不存在则返回 'AnonymousWidget'
  */
-export function getWidgetName(widget: WidgetType) {
+export function getWidgetName(widget: WidgetTypes) {
   // 首先检查 displayName 是否为字符串且存在
-  return widget.displayName || widget.name || 'AnonymousWidget'
+  return widget.displayName || widget.name || 'anonymous'
 }
