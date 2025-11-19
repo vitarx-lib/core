@@ -1,12 +1,11 @@
 import {
   COMMENT_NODE_TYPE,
-  type DynamicRenderType,
   type Fragment,
   FRAGMENT_NODE_TYPE,
   TEXT_NODE_TYPE
 } from '../constants/index.js'
 import type { MaybeRef } from './props.js'
-import type { CommentNodeType, FragmentNodeType, TextNodeType } from './vnode.js'
+import type { CommentVNodeType, FragmentVNodeType, TextVNodeType } from './vnode.js'
 import type { WidgetPropsType } from './widget.js'
 
 /**
@@ -65,7 +64,7 @@ export type SpecialNodeNames = keyof IntrinsicSpecialElements
  * 所有宿主节点（包括 void）
  *
  * 此类型定义了运行时支持的元素类型与其实例的映射关系。
- * 在 core 包中初始为空对象，各平台渲染包会通过 TypeScript 的声明合并
+ * 在 base 包中初始为空对象，各平台渲染包会通过 TypeScript 的声明合并
  * 机制扩展此类型，添加平台特定的元素类型映射。
  */
 export type HostNodeInstanceMap = Vitarx.HostNodeMap
@@ -74,12 +73,12 @@ export type HostNodeInstanceMap = Vitarx.HostNodeMap
  *
  * 表示除了render之外的所有普通元素/特殊元素名称。
  */
-export type HostNodeNames = Exclude<JSXElementNames, DynamicRenderType>
+export type HostNodeNames = keyof HostNodeInstanceMap
 /**
  * 叶子元素（无子元素）映射
  *
  * 此类型定义了运行时无内容元素名称与对应的元素实例类型的映射关系。
- * 在 core 包中初始为空对象，各平台渲染包会通过 TypeScript 的声明合并
+ * 在 base 包中初始为空对象，各平台渲染包会通过 TypeScript 的声明合并
  * 机制扩展此类型，添加平台特定的无内容元素名称映射。
  */
 export type HostVoidElementMap = Vitarx.HostVoidElementMap
@@ -106,15 +105,15 @@ export type HostParentElement = Vitarx.HostParentNode
  *
  * 注释作为锚元素，因为注释在开发者工具中是可见的，
  */
-export type HostCommentElement = HostNodeElements<CommentNodeType>
+export type HostCommentElement = HostNodeElements<CommentVNodeType>
 /**
  * 运行时文本元素
  */
-export type HostTextElement = HostNodeElements<TextNodeType>
+export type HostTextElement = HostNodeElements<TextVNodeType>
 /**
  * 运行时片段元素
  */
-export type HostFragmentElement = HostNodeElements<FragmentNodeType>
+export type HostFragmentElement = HostNodeElements<FragmentVNodeType>
 
 /**
  * 主机节点元素类型，表示所有可能的宿主节点类型
