@@ -103,7 +103,7 @@ export abstract class WidgetRuntime<W extends WidgetVNodeType> {
    * @param fn - 要执行的函数
    * @returns 函数执行结果
    */
-  protected runInContext<R>(fn: () => R): R {
+  public runInContext<R>(fn: () => R): R {
     if (this.node.appContext) {
       return this.node.appContext.runInContext(() => runInNodeContext(this.node, fn))
     }
