@@ -1,16 +1,17 @@
-import { EffectScope, NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
+import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { CLASS_WIDGET_BASE_SYMBOL } from '../../constants/index.js'
-import { getCurrentVNode, VNodeUpdate } from '../../runtime/index.js'
+import { __DEV__ } from '../../internal/dev.js'
+import { getCurrentVNode } from '../../runtime/index.js'
 import type {
   AnyProps,
   ErrorInfo,
   ExtractChildrenPropType,
   MergeProps,
   NodeElementType,
+  StatefulWidgetVNode,
+  VNode,
   VNodeChild
 } from '../../types/index.js'
-import { __DEV__ } from '../../utils/index.js'
-import { StatefulWidgetNode, VNode } from '../../vnode/index.js'
 
 /**
  * 所有小部件的基类
@@ -26,7 +27,7 @@ import { StatefulWidgetNode, VNode } from '../../vnode/index.js'
  * @example `DefaultProps` 泛型使用
  * ```tsx
  * import {defineProps} from 'vitarx'
- * interface MyProps {
+ * nodes MyProps {
  *   name?:string,
  *   age?:number
  * }
@@ -84,7 +85,7 @@ export abstract class Widget<
    * @since 4.0.0
    * @example defaultProps 静态属性的使用
    * ```tsx
-   * interface UserInfoProps {
+   * nodes UserInfoProps {
    *   name:string,
    *   age:number
    * }
@@ -118,10 +119,10 @@ export abstract class Widget<
    *
    * @private
    */
-  readonly #vnode: StatefulWidgetNode
+  readonly #vnode: StatefulWidgetVNode
 
   constructor(props: InputProps) {
-    this.#vnode = getCurrentVNode() as StatefulWidgetNode
+    this.#vnode = getCurrentVNode() as StatefulWidgetVNode
     if (__DEV__ && !this.#vnode) {
       throw new Error('The Widget instance must be created in the context of the WidgetVNode')
     }
@@ -151,27 +152,19 @@ export abstract class Widget<
   }
 
   /**
-   * 获取作用域对象的getter方法
-   * @returns {EffectScope} 返回内部的作用域对象#scope
-   */
-  get $scope(): EffectScope {
-    return this.$vnode.scope
-  }
-
-  /**
    * 获取当前虚拟节点对应的 DOM 元素
    * 这是一个 getter 属性，用于返回小部件或虚拟节点挂载后的真实 DOM 元素
    * @returns { NodeElementType } 返回虚拟节点对应的 DOM 元素实例
    */
   get $el(): NodeElementType {
-    return this.#vnode.element
+    return this.#vnode.el!
   }
 
   /**
    * 获取小部件的虚拟DOM节点
-   * @returns {StatefulWidgetNode} 返回小部件的虚拟DOM节点
+   * @returns {StatefulWidgetVNode} 返回小部件的虚拟DOM节点
    */
-  get $vnode(): StatefulWidgetNode {
+  get $vnode(): StatefulWidgetVNode {
     return this.#vnode
   }
 
@@ -365,9 +358,9 @@ export abstract class Widget<
   onError?(error: unknown, info: ErrorInfo): VNode | false | void
 
   /**
-   * 小部件渲染前钩子
+   * 小部件渲染前触发钩子
    *
-   * - 在客户端渲染时，其执行时机等同于 onBeforeMount。
+   * - 在客户端渲染时，其执行时机早于 onBeforeMount。
    *   如果返回 Promise，不会阻塞渲染，依赖响应式更新机制会自动触发视图更新。
    *
    * - 在服务端渲染（SSR）时：
@@ -377,7 +370,7 @@ export abstract class Widget<
    *
    * 使用建议：
    * - 可在此钩子中处理异步数据获取、依赖初始化等操作。
-   * - 如果希望在未使用ssr渲染时在数据未加载完成时不渲染真实节点，应使用异步组件。
+   * - 如果希望在未使用ssr渲染时在数据未加载完成时不渲染真实节点，应使用异步组件实现。
    *
    * @returns {Promise<unknown> | void} - 可返回 Promise 以延迟占位节点替换为真实节点，客户端不会阻塞渲染。
    */
@@ -413,20 +406,18 @@ export abstract class Widget<
    * 选择性地执行复用、更新或销毁并替换节点。
    *
    * 如需自定义特殊更新逻辑，可重写此方法，但需谨慎！
-   * 默认使用 VNodeUpdate.patch 进行差异计算和更新。
+   * 默认使用 NodeUpdate.patch 进行差异计算和更新。
    *
    * @param currentVNode - 当前已渲染的虚拟节点
    * @param nextVNode - 目标虚拟节点描述，将被用于对比更新
    * @returns {VNode} 更新后的虚拟节点（可能是原节点或新节点）
    */
-  $patchUpdate(currentVNode: VNode, nextVNode: VNode): VNode {
-    return VNodeUpdate.patch(currentVNode, nextVNode)
-  }
+  $patchUpdate?(currentVNode: VNode, nextVNode: VNode): VNode
 
   /**
    * 强制更新小部件
    */
-  $forceUpdate(): void {
-    this.$vnode.update()
+  $forceUpdate() {
+    return this.$vnode.runtimeInstance!.update()
   }
 }
