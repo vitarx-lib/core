@@ -126,6 +126,52 @@ export class Scheduler {
   }
 
   // =============================
+  // 任务移除方法
+  // =============================
+  /**
+   * 从准备阶段队列中移除指定任务
+   *
+   * @param job 要移除的任务函数
+   * @returns {boolean} 如果任务存在并被移除则返回 true，否则返回 false
+   */
+  public static removePreFlushJob(job: Job): boolean {
+    return this.preFlushQueue.delete(job)
+  }
+
+  /**
+   * 从主任务队列中移除指定任务
+   *
+   * @param job 要移除的任务函数
+   * @returns {boolean} 如果任务存在并被移除则返回 true，否则返回 false
+   */
+  public static removeJob(job: Job): boolean {
+    return this.mainQueue.delete(job)
+  }
+
+  /**
+   * 从清理阶段队列中移除指定任务
+   *
+   * @param job 要移除的任务函数
+   * @returns {boolean} 如果任务存在并被移除则返回 true，否则返回 false
+   */
+  public static removePostFlushJob(job: Job): boolean {
+    return this.postFlushQueue.delete(job)
+  }
+
+  /**
+   * 从所有队列中移除指定任务
+   *
+   * @param job 要移除的任务函数
+   * @returns {boolean} 如果任务在任意队列中存在并被移除则返回 true
+   */
+  public static removeJobFromAll(job: Job): boolean {
+    const removedFromPre = this.preFlushQueue.delete(job)
+    const removedFromMain = this.mainQueue.delete(job)
+    const removedFromPost = this.postFlushQueue.delete(job)
+    return removedFromPre || removedFromMain || removedFromPost
+  }
+
+  // =============================
   /**
    * 立即同步执行所有队列中的任务
    *
