@@ -86,7 +86,7 @@ export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget> = {
  * 模块小部件类型
  */
 export interface LazyLoadModule {
-  default: WidgetType
+  default: WidgetTypes
 }
 /**
  * 函数小部件有效地返回值，会提供给 `JSX.Element` 使用，让 tsx 能够兼容 vitarx 特有的函数组件返回值类型
@@ -98,7 +98,7 @@ export interface LazyLoadModule {
  * - `Promise<VNodeBuilder>`：异步返回视图节点构建器
  * - `Promise<{ default: WidgetConstructorType }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
  */
-export type ValidBuildElement =
+export type ValidBuildResult =
   | VNodeChild
   | VNodeBuilder
   | Promise<VNodeChild | LazyLoadModule | VNodeBuilder>
@@ -107,7 +107,7 @@ export type ValidBuildElement =
  * 函数小部件类型
  */
 export type FunctionWidget<P extends AnyProps = any> = {
-  (props: P): ValidBuildElement
+  (props: P): ValidBuildResult
 } & WidgetOptions<P>
 /**
  * 函数小部件类型别名
@@ -120,7 +120,7 @@ export type FC<P extends AnyProps = any> = FunctionWidget<P>
  * - FunctionWidget：函数小部件
  * - SimpleWidget：简单小部件
  */
-export type WidgetType<P extends AnyProps = any> = StatefulWidget<P> | StatelessWidget<P>
+export type WidgetTypes<P extends AnyProps = any> = StatefulWidget<P> | StatelessWidget<P>
 /**
  * 小部件实例推导
  *
@@ -132,15 +132,18 @@ export type WidgetInstance<T extends ClassWidget | FunctionWidget> =
 /**
  * Widget节点Props类型重载
  */
-export type WidgetPropsType<T extends WidgetType> = T extends WidgetType<infer P> ? P : {}
+export type WidgetPropsType<T extends WidgetTypes> = T extends WidgetTypes<infer P> ? P : {}
 
 /**
  * 懒加载组件
  *
  * 通常用于代码分块加载，vite 不会将其构建在入口js文件中，而是单独分包，在需要时才会加载。
  */
-export type LazyLoadWidget<P extends AnyProps = any> = () => Promise<{
-  default: WidgetType<P>
+export type LazyLoadWidget<
+  P extends AnyProps = any,
+  T extends WidgetTypes = WidgetTypes<P>
+> = () => Promise<{
+  default: T
 }>
 
 /**
