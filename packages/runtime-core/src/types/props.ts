@@ -1,9 +1,9 @@
 import type { RefSignal } from '@vitarx/responsive'
 import type { Fragment, Render } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
-import type { IntrinsicElements, JSXElementNames, JSXInternalElements } from './element.js'
-import type { ValidNodeType, VNodeTypes } from './vnode.js'
-import type { AnyProps, WidgetPropsType, WidgetType } from './widget.js'
+import type { JSXElementNames, JSXInternalElements } from './element.js'
+import type { ValidNodeType } from './vnode.js'
+import type { AnyProps, WidgetPropsType, WidgetTypes } from './widget.js'
 
 /**
  * 可能是引用值的类型
@@ -320,22 +320,13 @@ export type WithDefaultProps<
  * - 元素或组件定义的属性
  * - 全局属性（如key、ref、v-show等）
  */
-export type ValidNodeProps<T extends ValidNodeType> = (T extends JSXElementNames
-  ? JSXInternalElements[T]
-  : T extends Render
-    ? WithRefProps<WidgetPropsType<Render>>
-    : T extends Fragment
-      ? WithRefProps<WidgetPropsType<Fragment>>
-      : T extends WidgetType
-        ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
-        : {}) &
-  IntrinsicAttributes
+export type ValidNodeProps<T extends ValidNodeType> = WithNodeProps<T, never> & IntrinsicAttributes
 
 /**
  * 根据节点类型推断其对应的属性类型
  *
  * 该类型用于根据不同的节点类型 T，推断出该节点所接受的属性类型：
- * 1. 如果 T 是 Vitarx 支持的元素名称，则返回 Vitarx.IntrinsicElements[T] 对应的属性类型
+ * 1. 如果 T 是支持的元素名称，则返回 JSXInternalElements[T] 对应的属性类型
  * 3. 如果 T 是 Fragment 类型，则返回 Fragment 对应的属性类型
  * 4. 如果 T 是 WidgetType 类型，则返回该组件类型的属性类型
  * 5. 其他情况返回空对象类型
@@ -359,12 +350,18 @@ export type ValidNodeProps<T extends ValidNodeType> = (T extends JSXElementNames
  * export default MyWidget
  * ```
  *
- * @template T - 节点类型，必须继承自 NodeTypes
+ * @template T - 节点类型，必须继承自 ValidNodeType
+ * @template K - 忽略的属性名称，默认为 'children'
  */
-export type WithNodeProps<T extends VNodeTypes> = T extends keyof IntrinsicElements
-  ? Omit<IntrinsicElements[T], 'children'>
-  : T extends Fragment
-    ? {}
-    : T extends WidgetType
-      ? Omit<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>, 'children'>
-      : {}
+export type WithNodeProps<T extends ValidNodeType, K extends keyof any = 'children'> = Omit<
+  T extends JSXElementNames
+    ? JSXInternalElements[T]
+    : T extends Render
+      ? WithRefProps<WidgetPropsType<Render>>
+      : T extends Fragment
+        ? WithRefProps<WidgetPropsType<Fragment>>
+        : T extends WidgetTypes
+          ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
+          : {},
+  K
+>
