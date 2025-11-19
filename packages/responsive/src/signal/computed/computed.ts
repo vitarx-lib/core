@@ -167,10 +167,9 @@ export class Computed<T> implements RefSignal<T> {
       }
     }
 
-    // 如果设置了立即计算，则在构造时就初始化并计算
+    // 如果设置了立即计算，则在构造时就初始化（setupEffect会自动计算并缓存）
     if (immediate) {
       this._setupEffect()
-      this._evaluate()
     }
   }
 
@@ -253,14 +252,17 @@ export class Computed<T> implements RefSignal<T> {
    *
    * 调用此方法会停止对依赖的监听，并释放相关资源。
    * 计算属性将不再响应依赖的变化，但仍然保留最后一次计算的结果。
+   *
+   * @returns {T} 返回当前缓存的计算结果
    */
-  stop(): void {
+  stop(): T {
     if (this._effect) {
       this._effect.dispose()
       this._effect = undefined
     }
     this._isSetup = false
     this._scope = undefined
+    return this._value
   }
 
   /**
@@ -324,7 +326,7 @@ export class Computed<T> implements RefSignal<T> {
    * 设置副作用（依赖追踪）
    *
    * 执行以下步骤：
-   * 1. 收集getter函数执行过程中的依赖
+   * 1. 收集getter函数执行过程中的依赖，并缓存结果
    * 2. 为每个依赖创建订阅，当依赖变化时智能处理
    * 3. 将副作用添加到作用域中（如果存在）
    * 4. 设置清理函数，在销毁时移除所有订阅
@@ -334,15 +336,24 @@ export class Computed<T> implements RefSignal<T> {
     if (this._isSetup) return
     this._isSetup = true
 
-    // 收集依赖
-    const { deps } = Depend.collect(() => this._getter(this._value), 'exclusive')
+    // 收集依赖并缓存结果（只执行一次getter）
+    const { result, deps } = Depend.collect(() => this._getter(this._value), 'exclusive')
+
+    // 缓存结果并清除dirty标记，避免首次访问时重复计算
+    this._value = result
+    this._dirty = false
 
     // 如果有依赖，则创建订阅处理器
     if (deps.size > 0) {
       // 当依赖变化时的智能处理
       const onDependencyChange = () => {
-        // 检查是否有订阅者关注这个computed
-        const hasSubscribers = SubManager.hasSubscribers(this, 'value')
+        // 检查是否有订阅者关注这个computed（检查'value'属性和全局订阅）
+        const hasValueSubscribers = SubManager.hasSubscribers(this, 'value')
+        const hasGlobalSubscribers = SubManager.hasSubscribers(
+          this,
+          SubManager.ALL_PROPERTIES_SYMBOL
+        )
+        const hasSubscribers = hasValueSubscribers || hasGlobalSubscribers
 
         if (hasSubscribers) {
           // 有订阅者：立即重新计算并比较值
