@@ -1,99 +1,24 @@
+import { Scheduler } from '@vitarx/responsive'
+import { logger } from '@vitarx/utils/src/index.js'
+import { __DEV__ } from '../internal/dev.js'
 import { getCurrentVNode } from '../runtime/index.js'
-import type { HostElements } from '../types/index.js'
-import type { VNode } from '../vnode/index.js'
-
-interface Binding {
-  /**
-   * 指令绑定的值，已解包ref！
-   */
-  value: any
-  /**
-   * 新的指令绑定的值，已解包ref！
-   *
-   * 仅在updated/beforeUpdate中可用，其他钩子和value
-   */
-  newValue: any
-  /**
-   * 传递给指令的参数
-   *
-   * @example
-   * ```jsx
-   * <div v-directive:arg="value" />
-   * ```
-   */
-  arg: string | undefined
-}
-export interface DirectiveOptions {
-  /**
-   * 节点元素创建完成后调用
-   *
-   * @param el - 宿主元素实例
-   * @param binding - 指令绑定信息对象
-   * @param vnode - 节点实例
-   */
-  created?(el: HostElements, binding: Binding, vnode: VNode): void
-  /**
-   * 节点元素即将被挂载到DOM前调用
-   *
-   * @param el - 宿主元素实例
-   * @param binding - 指令绑定信息对象
-   * @param vnode - 节点实例
-   */
-  beforeMount?(el: HostElements, binding: Binding, vnode: any): void
-  /**
-   * 节点元素被真实挂载到DOM后调用
-   *
-   * @param el - 宿主元素实例
-   * @param binding - 指令绑定信息对象
-   * @param vnode - 节点实例
-   */
-  mounted?(el: HostElements, binding: Binding, vnode: any): void
-  /**
-   * 节点元素即将被更新前调用
-   *
-   * @param el - 宿主元素实例
-   * @param binding - 指令绑定信息对象
-   * @param VNode - 节点实例
-   */
-  beforeUpdate?(el: HostElements, binding: Binding, VNode: any): void
-  /**
-   * 节点元素被更新后调用
-   *
-   * @param el - 宿主元素实例
-   * @param binding - 指令绑定信息对象
-   * @param vnode - 节点实例
-   */
-  updated?(el: HostElements, binding: Binding, vnode: any): void
-  /**
-   * 节点元素即将被卸载前调用
-   *
-   * @param el - 宿主元素实例
-   * @param binding - 指令绑定信息对象
-   * @param vnode - 节点实例
-   */
-  beforeUnmount?(el: HostElements, binding: Binding, vnode: any): void
-  /**
-   * 节点元素被卸载后调用
-   *
-   * @param el - 宿主元素实例
-   * @param binding - 指令绑定信息对象
-   * @param vnode - 节点实例
-   */
-  unmounted?(el: HostElements, binding: Binding, vnode: any): void
-}
-export interface Directive extends DirectiveOptions {
-  /**
-   * 指令名称
-   */
-  name: string
-}
+import {
+  type Directive,
+  type DirectiveOptions,
+  type ElementVNode,
+  type HostNodeElements,
+  type VNode,
+  type VNodeDirectives,
+  type WidgetVNode
+} from '../types/index.js'
+import { isElementNode, isStatefulWidgetNode, isWidgetNode } from '../utils/index.js'
 
 const globalDirectives = new Map<string, Directive>()
 
 /**
  * 定义指令
  *
- * 如果在组件上下文中定义，则会将指令存储在当前组件的指令缓存中，否则存储在全局指令缓存中
+ * 如果在有状态的组件上下文中定义，则会将指令存储在当前组件的指令缓存中，否则存储在全局指令缓存中
  *
  * @param name - 指令名称
  * @param directive - 指令配置对象或函数
@@ -116,11 +41,12 @@ export function defineDirective(
   const vnode = getCurrentVNode()
 
   // 存储指令到适当的缓存中
-  if (vnode) {
-    if (!vnode.directiveCache) {
-      vnode.directiveCache = new Map()
+  if (isStatefulWidgetNode(vnode)) {
+    if (vnode.directiveStore) {
+      vnode.directiveStore.set(normalizedName, resolvedDirective)
+    } else {
+      vnode.directiveStore = new Map([[normalizedName, resolvedDirective]])
     }
-    vnode.directiveCache.set(normalizedName, resolvedDirective)
   } else {
     globalDirectives.set(normalizedName, resolvedDirective)
   }
@@ -192,12 +118,14 @@ function normalizeDirective(
  * ]);
  * ```
  */
-export function withDirectives(
-  vnode: VNode,
+export function withDirectives<T extends VNode>(
+  vnode: T,
   directives:
     | Array<[directive: Directive, value?: any, arg?: string | undefined]>
     | Array<Directive>
-) {
+): T {
+  if (!isElementNode(vnode) && !isWidgetNode(vnode)) return vnode
+  vnode.directives = vnode.directives || new Map()
   for (const item of directives) {
     let dir: Directive
     let value: any
@@ -209,8 +137,19 @@ export function withDirectives(
     } else {
       dir = item
     }
+    // 开发模式类型检查
+    if (__DEV__) {
+      if (!dir || typeof dir.name !== 'string' || !dir.name.length) {
+        logger.warn(
+          `withDirectives() invalid directive provided. Each directive must have a non-empty "name" property.`,
+          dir
+        )
+        continue
+      }
+    }
     vnode.directives.set(dir.name, [dir, value, arg])
   }
+  return vnode
 }
 
 /**
@@ -233,15 +172,129 @@ export function withDirectives(
  */
 export function resolveDirective(name: string): Directive | undefined {
   const vnode = getCurrentVNode()
-  if (vnode) {
-    if (vnode.directiveCache?.has(name)) {
+  if (isStatefulWidgetNode(vnode)) {
+    if (vnode.directiveStore?.has(name)) {
       // 获取组件局部指令
-      return vnode.directiveCache.get(name)
+      return vnode.directiveStore.get(name)
     } else if (vnode.appContext?.directive(name)) {
       // 获取应用级指令
       return vnode.appContext.directive(name)
     }
   }
+  if (!globalDirectives.has(name)) {
+    logger.warn(`resolve directive "${name}" not found.`)
+    return undefined
+  }
   // 获取全局指令
   return globalDirectives.get(name)
+}
+
+/**
+ * 指令差异更新选项
+ */
+export interface DiffDirectivesOptions {
+  /**
+   * 只更新指定的指令名称列表
+   * 如果提供，则只处理这些指令的更新，其他指令将被忽略
+   */
+  only?: string[]
+  /**
+   * 跳过这些指令的更新
+   * 如果提供，这些指令将不会被处理
+   */
+  skip?: string[]
+}
+
+/**
+ * 检查指令是否应该被处理
+ *
+ * @param name - 指令名称
+ * @param options - 差异更新选项
+ * @returns 如果应该处理返回true，否则返回false
+ */
+function shouldProcessDirective(name: string, options?: DiffDirectivesOptions): boolean {
+  if (!options) return true
+
+  // 如果在跳过列表中，则不处理
+  if (options.skip?.includes(name)) {
+    return false
+  }
+
+  // 如果指定了only列表，则只处理列表中的指令
+  if (options.only) {
+    return options.only.includes(name)
+  }
+
+  return true
+}
+
+/**
+ * 比较并更新指令差异的函数
+ *
+ * @param oldVNode - 旧的虚拟DOM节点元素
+ * @param newVNode - 新的虚拟DOM节点元素
+ * @param options - 差异更新选项，可指定only或skip来控制更新范围
+ */
+export function diffDirectives(
+  oldVNode: ElementVNode | WidgetVNode,
+  newVNode: ElementVNode | WidgetVNode,
+  options?: DiffDirectivesOptions
+): void {
+  // 获取DOM元素引用
+  const el = oldVNode.el! as HostNodeElements
+  if (!el) throw new Error('oldVNode.el is not defined.')
+
+  // 获取新旧节点的指令集合，如果不存在则使用空Map
+  const oldDirs: VNodeDirectives = oldVNode?.directives ?? new Map()
+  const newDirs: VNodeDirectives = newVNode?.directives ?? new Map()
+
+  // 1. 遍历所有新指令：包含 新增 + 更新
+  for (const [name, [dir, newValue, arg]] of newDirs) {
+    // 检查是否应该处理此指令
+    if (!shouldProcessDirective(name, options)) {
+      continue
+    }
+
+    // 获取旧指令的对应项
+    const oldEntry = oldDirs.get(name)
+
+    if (oldEntry) {
+      // --- 更新 ---
+      const [, oldValue] = oldEntry
+      const binding = { value: newValue, oldValue, arg }
+
+      oldEntry[0] = dir
+      oldEntry[1] = newValue
+      oldEntry[2] = arg
+
+      // 调用指令的更新生命周期钩子
+      dir.beforeUpdate?.(el as never, binding, oldVNode)
+      dir.updated &&
+        Scheduler.queuePostFlushJob(() => dir.updated?.(el as never, binding, oldVNode))
+    } else {
+      // --- 新增 ---
+      const binding = { value: newValue, oldValue: undefined, arg }
+
+      // 调用指令的挂载生命周期钩子
+      dir.beforeMount?.(el as never, binding, oldVNode)
+      dir.mounted?.(el as never, binding, oldVNode)
+      oldDirs.set(name, [dir, newValue, arg])
+    }
+  }
+
+  // 2. 遍历旧指令：补充"旧有 → 新无" → 删除
+  for (const [name, [dir, oldValue, arg]] of oldDirs) {
+    // 检查是否应该处理此指令
+    if (!shouldProcessDirective(name, options)) {
+      continue
+    }
+
+    if (!newDirs.has(name)) {
+      const binding = { value: undefined, oldValue, arg }
+
+      dir.beforeUnmount?.(el as never, binding, oldVNode)
+      dir.unmounted?.(el as never, binding, oldVNode)
+      oldDirs.delete(name)
+    }
+  }
 }
