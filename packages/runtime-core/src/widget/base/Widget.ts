@@ -417,8 +417,10 @@ export abstract class Widget<
 
   /**
    * 强制更新小部件
+   *
+   * @param [sync=false] - 是否同步更新
    */
-  $forceUpdate() {
-    return this.$vnode.runtimeInstance!.update()
+  $forceUpdate(sync?: boolean): void {
+    this.$vnode.runtimeInstance!.update(sync)
   }
 }
