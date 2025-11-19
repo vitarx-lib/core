@@ -14,7 +14,7 @@ import type {
   VNode,
   VNodeInstanceType
 } from '../types/index.js'
-import { isSupportChildren, isWidget } from '../utils/index.js'
+import { isWidget } from '../utils/index.js'
 import {
   createCommentNode,
   createFragmentNode,
@@ -22,6 +22,7 @@ import {
   createTextNode,
   createVoidElementNode
 } from './hostNodeCreator.js'
+import { isSupportChildren } from './propsNormalizer.js'
 import { createWidgetNode } from './widgetNodeCreator.js'
 
 /**
@@ -61,9 +62,13 @@ export function createVNode<T extends ValidNodeType>(
       case DYNAMIC_RENDER_TYPE:
         return createDynamicVNode(props) as VNodeInstanceType<T>
       case TEXT_NODE_TYPE:
-        return createTextNode(props as ValidNodeProps<TextVNodeType>) as VNodeInstanceType<T>
+        return createTextNode(
+          props as unknown as ValidNodeProps<TextVNodeType>
+        ) as VNodeInstanceType<T>
       case COMMENT_NODE_TYPE:
-        return createCommentNode(props as ValidNodeProps<TextVNodeType>) as VNodeInstanceType<T>
+        return createCommentNode(
+          props as unknown as ValidNodeProps<TextVNodeType>
+        ) as VNodeInstanceType<T>
       case FRAGMENT_NODE_TYPE:
         return createFragmentNode(props) as VNodeInstanceType<T>
       default:
