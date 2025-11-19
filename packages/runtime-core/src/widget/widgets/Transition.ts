@@ -1,11 +1,12 @@
 import { computed } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils'
-import { useDomAdapter } from '../../adapter/index.js'
-import { VNodeUpdate } from '../../runtime/index.js'
-import type { HostNodeElements } from '../../types/index.js'
+import { getNodeDomOpsTarget, getNodeElement } from '../../internal/utils.js'
+import { useRenderer } from '../../renderer/index.js'
+import type { HostNodeElements, VNode } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'
 import { isNonElementNode } from '../../utils/index.js'
-import type { VNode } from '../../vnode/index.js'
+import { mountNode, unmountNode } from '../../vnode/index.js'
+import { NodeUpdater } from '../../vnode/nodeUpdater.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 interface TransitionProps extends BaseTransitionProps {
@@ -179,25 +180,29 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
     // 节点类型相同，key相同，则直接更新
     if (oldChild.type === newChild.type && oldChild.key === newChild.key) {
       // 静态不更新
-      if (oldChild.isStatic) return oldChild
-      if (oldChild.show !== newChild.show) {
-        if (oldChild.show) {
-          this.runTransition(oldChild.element, 'leave', () => (oldChild.show = false))
-          VNodeUpdate.patchUpdateNode(oldChild, newChild, true)
+      if (oldChild.static) return oldChild
+      const oldShow = oldChild.directives?.get('show')?.[1]
+      const newShow = newChild.directives?.get('show')?.[1]
+      if (oldShow !== newShow) {
+        if (oldShow) {
+          // 离场动画执行完成后才更新节点
+          this.runTransition(getNodeElement(oldChild), 'leave', () =>
+            NodeUpdater.patchUpdateNode(oldChild, newChild)
+          )
         } else {
-          VNodeUpdate.patchUpdateNode(oldChild, newChild)
-          this.runTransition(oldChild.element, 'enter')
+          NodeUpdater.patchUpdateNode(oldChild, newChild)
+          this.runTransition(getNodeElement(newChild), 'enter')
         }
       } else {
-        VNodeUpdate.patchUpdateNode(oldChild, newChild)
+        NodeUpdater.patchUpdateNode(oldChild, newChild)
       }
       return oldChild
     }
 
     // 创建锚点元素，用于新节点的插入位置
-    const dom = useDomAdapter()
+    const dom = useRenderer()
     const anchor = dom.createText('')
-    dom.insertBefore(anchor, oldChild.operationTarget)
+    dom.insertBefore(anchor, getNodeDomOpsTarget(oldChild))
     // 根据不同的过渡模式执行动画
     switch (this.props.mode) {
       case 'out-in':
@@ -222,7 +227,7 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
   protected override runLeave(oldChild: VNode, done?: () => void) {
     // 执行离开动画或过渡效果，done回调会在动画完成后执行（如果提供）
     super.runLeave(oldChild, () => {
-      oldChild.unmount() // 卸载虚拟节点对应的DOM元素
+      unmountNode(oldChild) // 卸载虚拟节点对应的DOM元素
       done?.() // 如果提供了done回调，则执行它
     })
   }
@@ -234,8 +239,7 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
    * @param done - 可选的回调函数，在动画完成或操作完成后执行
    */
   private mountAndEnter(newChild: VNode, anchor: HostNodeElements, done?: () => void) {
-    // 调用mount方法将新子节点挂载到指定锚点位置，使用'replace'模式
-    newChild.mount(anchor, 'replace')
+    mountNode(newChild, anchor, 'replace')
     // 执行进入动画或过渡效果，done回调会在动画完成后执行（如果提供）
     this.runEnter(newChild, done)
   }
