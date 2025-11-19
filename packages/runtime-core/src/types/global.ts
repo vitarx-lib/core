@@ -1,6 +1,5 @@
 import { DYNAMIC_RENDER_TYPE, type Render } from '../constants/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
-import type { DOMRect as VDOMRect } from './hostAdapter.js'
 import type { ErrorHandler } from './lifecycle.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
@@ -16,11 +15,6 @@ import type {
 } from './widget.js'
 
 declare global {
-  /**
-   * DOMRect 接口，表示一个矩形区域，
-   * 用于测量和操作元素位置和尺寸。
-   */
-  interface DOMRect extends VDOMRect {}
   namespace Vitarx {
     /**
      * 宿主平台父节点接口
@@ -32,7 +26,7 @@ declare global {
      * declare global {
      *   namespace Vitarx {
      *     // 重写 DOM 平台的支持做为父元素的元素类型
-     *     interface HostParentNode extends ParentNode {
+     *     nodes HostParentNode extends ParentNode {
      *
      *     }
      *   }
@@ -105,7 +99,7 @@ declare global {
      * 宿主平台运行时节点映射
      *
      * 此类型定义了运行时支持的元素类型标签与其实例的映射关系。
-     * 在 core 包中初始为空接口，各平台渲染包会通过 TypeScript 的声明合并
+     * 在 base 包中初始为空接口，各平台渲染包会通过 TypeScript 的声明合并
      * 机制扩展此类型，添加平台特定的元素类型映射。
      *
      * @example
@@ -149,7 +143,7 @@ declare global {
     /**
      * 元素支持的样式规则
      *
-     * 运行时支持的样式规则映射，core 包中未定义任何规则，需要在各平台渲染包中扩展此类型。
+     * 运行时支持的样式规则映射，base 包中未定义任何规则，需要在各平台渲染包中扩展此类型。
      */
     interface HostStyleRules {}
     /**
@@ -209,7 +203,7 @@ declare global {
      * // 在平台渲染包中扩展
      * declare global {
      *   namespace Vitarx {
-     *     interface IntrinsicElements {
+     *     nodes IntrinsicElements {
      *       div: Partial<HTMLDivElement>, // 伪代码，具体实现需根据实际需求进行修改
      *       span: Partial<HTMLSpanElement>,
      *       // 其他元素映射...
