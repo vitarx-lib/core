@@ -9,6 +9,7 @@ const PARENT_NODE_MAPPING = new WeakMap<VNode, VNode>()
  * @param parent - 父节点
  */
 export function linkParentNode(child: VNode, parent: VNode) {
+  child.appContext = parent.appContext
   PARENT_NODE_MAPPING.set(child, parent)
 }
 
