@@ -1,83 +1,87 @@
 import type { AnyFunction } from '@vitarx/utils'
+import type { VNode } from '../types/index.js'
 import { isStatefulWidgetNode } from '../utils/vnode.js'
-import type { VNode } from '../vnode/index.js'
+import { findParentNode } from '../vnode/index.js'
 import { getCurrentVNode } from './context.js'
-import { findParentNode } from './relations.js'
 
 /**
- * 提供依赖数据，实现小部件间的依赖注入
+ * 提供依赖数据,实现小部件间的依赖注入
  *
- * 该函数允许小部件向其所有子部件提供数据，形成依赖注入体系。子部件可通过 `inject` 函数获取祖先小部件提供的数据。
+ * 注意：依赖有状态的组件上下文，仅支持在有状态函数/类组件初始化阶段使用！！！
  *
- * @remarks
- * 在类小部件中使用时，只能是属性初始化值或 `constructor`、`onCreate`方法中使用
+ * @param name - 依赖数据的唯一标识符
+ * @param value - 要提供的数据值
+ * @throws {Error} 当不在有状态小部件上下文中调用时抛出错误
  *
  * @example
  * ```ts
- * // 在类小部件中
+ * // 类组件
  * class MyWidget extends Widget {
- *   constructor(props) {
- *     super(props);
- *     provide('theme', 'dark');
- *   }
- *
- *   onMounted() {
- *     // 会抛出一个Error异常，因为此时已不在小部件的构造期内。
- *     provide('userData', { id: 1 });
+ *   onCreate() {
+ *    provide('theme', 'dark');
  *   }
  * }
+ * // 函数组件
+ * function Foo() {
+ *   provide('theme', 'dark');
+ *   return <div>...</div>
+ * }
  * ```
- *
- * @param name - 依赖数据的唯一标识符，可以是字符串或Symbol
- * @param value - 要提供的数据值
- * @returns {void}
- * @throws {Error} 当名称为'App'时会抛出错误，因为这是内部保留关键词
  */
 export function provide(name: string | symbol, value: any): void {
-  if (name === 'App') throw new Error('App is an internal reserved keyword, please do not use it!')
   const currentVNode = getCurrentVNode()
-  if (!currentVNode) throw new Error('provide must be called in widget')
-  currentVNode.provide(name, value)
+  if (!isStatefulWidgetNode(currentVNode)) {
+    throw new Error('provide must be called in stateful widget')
+  }
+  if (!currentVNode.injectionStore) {
+    currentVNode.injectionStore = new Map([[name, value]])
+  } else {
+    currentVNode.injectionStore.set(name, value)
+  }
 }
 
 /**
- * 依赖注入函数 - 基本用法
+ * 注入依赖数据 - 基本用法
+ *
+ * 注意：依赖组件上下文，仅支持在组件初始化阶段使用！！！
  *
  * @template T - 注入数据的类型
- * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
- * @returns {T | undefined} - 注入的数据，如果找不到则返回 undefined
+ * @param name - 依赖数据的唯一标识符
  */
 export function inject<T>(name: string | symbol): T | undefined
 
 /**
- * 依赖注入函数 - 带默认值
+ * 注入依赖数据 - 带默认值
+ *
+ * 注意：依赖组件上下文，仅支持在组件初始化阶段使用！！！
  *
  * @template T - 注入数据的类型
- * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
- * @param defaultValue - 当找不到指定名称的依赖数据时返回的默认值
- * @returns {T} - 注入的数据或默认值
+ * @param name - 依赖数据的唯一标识符
+ * @param defaultValue - 默认值
  */
 export function inject<T>(name: string | symbol, defaultValue: T): T
 
 /**
- * 依赖注入函数 - 明确指定默认值不作为工厂函数
+ * 注入依赖数据 - 明确指定默认值不作为工厂函数
+ *
+ * 注意：依赖组件上下文，仅支持在组件初始化阶段使用！！！
  *
  * @template T - 注入数据的类型
- * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
- * @param defaultValue - 当找不到指定名称的依赖数据时返回的默认值
- * @param treatDefaultAsFactory - 明确指定不将默认值作为工厂函数
- * @returns {T} - 注入的数据或默认值
+ * @param name - 依赖数据的唯一标识符
+ * @param defaultValue - 默认值
+ * @param treatDefaultAsFactory - 是否将默认值作为工厂函数
  */
 export function inject<T>(name: string | symbol, defaultValue: T, treatDefaultAsFactory: false): T
 
 /**
- * 依赖注入函数 - 默认值作为工厂函数
+ * 注入依赖数据 - 默认值作为工厂函数
  *
- * @template T - 注入数据的类型，必须是函数类型
- * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
- * @param defaultValue - 当找不到指定名称的依赖数据时调用的工厂函数
- * @param treatDefaultAsFactory - 明确指定将默认值作为工厂函数
- * @returns {ReturnType<T>} - 工厂函数的返回值
+ * 注意：依赖组件上下文，仅支持在组件初始化阶段使用！！！
+ *
+ * @template T - 函数类型
+ * @param name - 依赖数据的唯一标识符
+ * @param defaultValue - 工厂函数
+ * @param treatDefaultAsFactory - 是否将默认值作为工厂函数
  */
 export function inject<T extends AnyFunction>(
   name: string | symbol,
@@ -86,49 +90,37 @@ export function inject<T extends AnyFunction>(
 ): ReturnType<T>
 
 /**
- * 依赖注入函数 - 完整参数
- *
- * @remarks
- * 在类小部件中使用时，只能是属性初始化值或 `constructor`、`onCreate`方法中使用
+ * 注入祖先组件提供的依赖数据
  *
  * @template T - 注入数据的类型
- * @param name - 要注入的依赖数据的唯一标识符，与provide中使用的标识符对应
- * @param [defaultValue] - 当找不到指定名称的依赖数据时返回的默认值
- * @param [treatDefaultAsFactory=false] - 是否将默认值作为工厂函数
- * @returns {T} - 注入的数据或默认值
- * @throws - 当无法获取上下文时抛出错误
+ * @param name - 依赖数据的唯一标识符
+ * @param defaultValue - 默认值或工厂函数
+ * @param treatDefaultAsFactory - 是否将默认值作为工厂函数,默认为 false
+ * @returns 注入的数据或默认值
+ * @throws {Error} 当不在小部件上下文中调用时抛出错误
  */
 export function inject<T>(
   name: string | symbol,
   defaultValue?: T,
   treatDefaultAsFactory?: boolean
 ): T {
-  // 获取当前 VNode
   const currentVNode = getCurrentVNode()
   if (!currentVNode) {
-    throw new Error(`inject can only be used during widget constructor/onCreate`)
+    throw new Error('inject must be called in widget')
   }
-  const app = currentVNode.appContext ?? currentVNode.inject('App')
 
-  if (name === 'App') return app as T
-  // 如果有 App 上下文，则尝试从 App 中获取数据
-  if (app && app.inject(name)) return app.inject(name) as T
-  // 从当前 VNode 的父级开始查找
-  let vnode: VNode | undefined = findParentNode(currentVNode)
-  while (vnode) {
-    // 如果是 WidgetVNode 且包含提供的数据，直接返回
-    if (isStatefulWidgetNode(vnode)) {
-      if (vnode.hasProvide(name)) {
-        return vnode.inject(name) as T
-      }
+  // 向上查找祖先节点
+  let parentNode: VNode | undefined = findParentNode(currentVNode)
+  while (parentNode) {
+    if (isStatefulWidgetNode(parentNode) && parentNode.injectionStore?.has(name)) {
+      return parentNode.injectionStore.get(name) as T
     }
-    // 移动到父级 VNode
-    vnode = findParentNode(vnode)
+    parentNode = findParentNode(parentNode)
   }
-  // 处理默认值工厂函数
+
+  // 处理默认值
   if (typeof defaultValue === 'function' && treatDefaultAsFactory) {
     return defaultValue()
   }
-  // 返回默认值
   return defaultValue as T
 }
