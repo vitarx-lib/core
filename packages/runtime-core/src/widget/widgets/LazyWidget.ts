@@ -137,17 +137,6 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
     return undefined
   }
   /**
-   * 更新构建函数并强制刷新组件
-   *
-   * @param builder - 新的构建函数
-   * @private
-   */
-  private _updateBuild(builder: () => VNodeChild): void {
-    this.build = builder
-    this.$forceUpdate(true)
-  }
-
-  /**
    * 加载异步组件
    *
    * @protected
@@ -164,7 +153,7 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
           this._updateBuild(() => loading)
         }
       },
-      onTimeout: (error) => {
+      onTimeout: error => {
         this._updateBuild(() => {
           throw error
         })
@@ -172,7 +161,7 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
       onResolve: ({ default: widget }) => {
         this._updateBuild(() => createVNode(widget, this.props.injectProps))
       },
-      onReject: (error) => {
+      onReject: error => {
         this._updateBuild(() => {
           throw error
         })
@@ -186,5 +175,17 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
     } finally {
       this._cancelTask = undefined
     }
+  }
+
+  /**
+   * 更新构建函数并强制刷新组件
+   *
+   * @param builder - 新的构建函数
+   * @private
+   */
+  private _updateBuild(builder: () => VNodeChild): void {
+    this.build = builder
+    this.$forceUpdate(true)
+    if (this.suspenseCounter) this.suspenseCounter.value--
   }
 }
