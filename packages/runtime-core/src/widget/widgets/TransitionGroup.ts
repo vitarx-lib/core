@@ -5,17 +5,22 @@
  * 与 Transition 组件不同，TransitionGroup 可以同时处理多个子元素的过渡。
  */
 
-import { useDomAdapter } from '../../adapter/index.js'
 import { type Fragment, FRAGMENT_NODE_TYPE } from '../../constants/index.js'
-import { type ChildNodeUpdateHooks, VNodeUpdate } from '../../runtime/index.js'
+import { diffDirectives } from '../../directive/index.js'
+import { getNodeElement } from '../../internal/utils.js'
+import { useRenderer } from '../../renderer/index.js'
 import type {
-  FragmentNodeType,
+  ContainerVNode,
+  ElementVNode,
+  FragmentVNodeType,
   HostRegularElementNames,
+  VNode,
   VNodeChild,
   WithNodeProps
 } from '../../types/index.js'
 import { isContainerNode } from '../../utils/index.js'
-import { type ContainerNode, createVNode, VNode } from '../../vnode/index.js'
+import { createVNode } from '../../vnode/index.js'
+import { type ChildNodeUpdateHooks, NodeUpdater } from '../../vnode/nodeUpdater.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 /**
@@ -27,7 +32,7 @@ import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
  * @template T - 包裹元素的标签类型，默认为 FragmentNodeType
  */
 interface TransitionGroupProps<
-  T extends HostRegularElementNames | Fragment | FragmentNodeType = FragmentNodeType
+  T extends HostRegularElementNames | Fragment | FragmentVNodeType = FragmentVNodeType
 > extends BaseTransitionProps {
   /** 包裹子节点的标签名，默认为 fragment */
   tag?: T
@@ -149,32 +154,33 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
    * @returns {VNode} 更新后的虚拟节点
    */
   override $patchUpdate(currentVNode: VNode, nextVNode: VNode): VNode {
-    const dom = useDomAdapter()
+    const dom = useRenderer()
 
     // 根节点类型或 key 不同 → 替换节点
     if (currentVNode.type !== nextVNode.type || currentVNode.key !== nextVNode.key) {
-      VNodeUpdate.replace(currentVNode, nextVNode)
+      NodeUpdater.replace(currentVNode, nextVNode)
       return nextVNode
     }
 
     // 更新节点属性
-    VNodeUpdate.patchUpdateProps(currentVNode, nextVNode)
+    NodeUpdater.patchUpdateProps(currentVNode, nextVNode)
 
     if (isContainerNode(currentVNode)) {
-      const container = currentVNode as ContainerNode
+      const container = currentVNode as ContainerVNode
 
       // === 1️⃣ 记录更新前位置 ===
       // 保存所有子元素的当前位置，用于后续计算移动距离
       const prevRects = new Map<VNode, DOMRect>()
       for (const child of container.children) {
-        if (dom.isElement(child.element)) {
-          prevRects.set(child, dom.getBoundingClientRect(child.element))
+        const el = getNodeElement(child)
+        if (dom.isElement(el)) {
+          prevRects.set(child, dom.getBoundingClientRect(el))
         }
       }
 
       // === 2️⃣ 更新子节点 ===
       // 使用自定义的更新钩子处理子节点的进入、离开和显示状态变化
-      VNodeUpdate.patchUpdateChildren(container, nextVNode as ContainerNode, {
+      NodeUpdater.patchUpdateChildren(container, nextVNode as ContainerVNode, {
         onMount: child => this.runEnter(child),
         onUnmount: (child, done) => this.runLeave(child, done),
         onUpdate: this.handleChildUpdate
@@ -187,7 +193,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
 
       // 遍历所有子元素，检查是否需要移动
       for (const child of container.children) {
-        const el = child.element
+        const el = getNodeElement(child)
         const oldRect = prevRects.get(child)
 
         // 跳过非元素节点或没有旧位置的元素
@@ -262,16 +268,20 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
    * @param done - 完成回调函数
    */
   private handleChildUpdate: ChildNodeUpdateHooks['onUpdate'] = (oldChild, newChild, done) => {
+    const oldShow = oldChild.directives?.get('show')?.[1]
+    const newShow = newChild.directives?.get('show')?.[1]
     // 处理显示状态变化
-    if (oldChild.show !== newChild.show) {
-      if (oldChild.show) {
+    if (oldShow !== newShow) {
+      if (oldShow) {
+        done({ skip: ['show'] })
         // 从显示变为隐藏，执行离开动画
-        this.runTransition(oldChild.element, 'leave', () => (oldChild.show = false))
-        done(true)
+        this.runTransition(oldChild.el!, 'leave', () =>
+          diffDirectives(oldChild as ElementVNode, newChild as ElementVNode, { only: ['show'] })
+        )
       } else {
         // 从隐藏变为显示，先完成更新再执行进入动画
         done()
-        this.runTransition(oldChild.element, 'enter')
+        this.runTransition(oldChild.el!, 'enter')
       }
     } else {
       // 显示状态未变化，直接完成更新
