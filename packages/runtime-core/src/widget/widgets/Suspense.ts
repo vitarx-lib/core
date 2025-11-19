@@ -1,10 +1,10 @@
 import { shallowRef, Subscriber, watch } from '@vitarx/responsive'
-import { NodeState } from '../../constants/index.js'
-import { linkParentNode, provide, SUSPENSE_COUNTER_SYMBOL } from '../../runtime/index.js'
-import type { AnyProps, ErrorHandler, VNodeChild } from '../../types/index.js'
+import { NodeState, SUSPENSE_COUNTER_SYMBOL } from '../../constants/index.js'
+import { provide } from '../../runtime/index.js'
+import type { AnyProps, ErrorHandler, VNode, VNodeChild } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
-import type { VNode } from '../../vnode/index.js'
-import { Widget } from '../core/Widget.js'
+import { linkParentNode, renderNode } from '../../vnode/index.js'
+import { Widget } from '../base/Widget.js'
 
 /**
  * Suspense小部件的配置选项
@@ -114,7 +114,7 @@ export class Suspense extends Widget<SuspenseProps> {
         // 计数器增加且 persistent 模式开启，重新显示 fallback
         if (this.props.persistent) {
           this.showFallback = true
-          this.$vnode.syncSilentUpdate()
+          this.$forceUpdate(true)
         }
       } else if (!shouldShowFallback && this.showFallback) {
         // 首次或计数器归零，停止 fallback
@@ -147,7 +147,7 @@ export class Suspense extends Widget<SuspenseProps> {
     // 链接父子关系
     linkParentNode(this.children, this.$vnode)
     // 渲染子节点
-    this.children.render()
+    renderNode(this.children)
     // 如果计数器为0，则直接显示子节点
     if (this.counter.value === 0) {
       this.showFallback = false
@@ -184,7 +184,7 @@ export class Suspense extends Widget<SuspenseProps> {
       this.showFallback = false
       this.pendingOnResolved = true
       if (this.$vnode.state !== NodeState.Deactivated) {
-        this.$vnode.syncSilentUpdate()
+        this.$forceUpdate(true)
         this.onActivated()
       }
     }
