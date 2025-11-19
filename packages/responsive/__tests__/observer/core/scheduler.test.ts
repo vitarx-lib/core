@@ -255,4 +255,175 @@ describe('Scheduler', () => {
       expect(postJob).not.toHaveBeenCalled()
     })
   })
+
+  describe('任务移除功能', () => {
+    it('removePreFlushJob 应该能够移除准备阶段队列中的任务', () => {
+      const job1 = vi.fn()
+      const job2 = vi.fn()
+
+      Scheduler.queuePreFlushJob(job1)
+      Scheduler.queuePreFlushJob(job2)
+
+      // 移除 job1
+      const removed = Scheduler.removePreFlushJob(job1)
+
+      expect(removed).toBe(true)
+
+      Scheduler.flushSync()
+
+      // job1 不应该被执行，job2 应该被执行
+      expect(job1).not.toHaveBeenCalled()
+      expect(job2).toHaveBeenCalledTimes(1)
+    })
+
+    it('removeJob 应该能够移除主任务队列中的任务', () => {
+      const job1 = vi.fn()
+      const job2 = vi.fn()
+
+      Scheduler.queueJob(job1)
+      Scheduler.queueJob(job2)
+
+      // 移除 job1
+      const removed = Scheduler.removeJob(job1)
+
+      expect(removed).toBe(true)
+
+      Scheduler.flushSync()
+
+      // job1 不应该被执行，job2 应该被执行
+      expect(job1).not.toHaveBeenCalled()
+      expect(job2).toHaveBeenCalledTimes(1)
+    })
+
+    it('removePostFlushJob 应该能够移除清理阶段队列中的任务', () => {
+      const job1 = vi.fn()
+      const job2 = vi.fn()
+
+      Scheduler.queuePostFlushJob(job1)
+      Scheduler.queuePostFlushJob(job2)
+
+      // 移除 job1
+      const removed = Scheduler.removePostFlushJob(job1)
+
+      expect(removed).toBe(true)
+
+      Scheduler.flushSync()
+
+      // job1 不应该被执行，job2 应该被执行
+      expect(job1).not.toHaveBeenCalled()
+      expect(job2).toHaveBeenCalledTimes(1)
+    })
+
+    it('移除不存在的任务应该返回 false', () => {
+      const job1 = vi.fn()
+      const job2 = vi.fn()
+
+      Scheduler.queueJob(job1)
+
+      // 尝试移除未添加的任务
+      const removed = Scheduler.removeJob(job2)
+
+      expect(removed).toBe(false)
+    })
+
+    it('removeJobFromAll 应该能够从所有队列中移除任务', () => {
+      const job = vi.fn()
+
+      // 将同一任务添加到所有队列（实际场景可能不会这样，但用于测试）
+      Scheduler.queuePreFlushJob(job)
+      Scheduler.queueJob(job)
+      Scheduler.queuePostFlushJob(job)
+
+      // 从所有队列中移除
+      const removed = Scheduler.removeJobFromAll(job)
+
+      expect(removed).toBe(true)
+
+      Scheduler.flushSync()
+
+      // 任务不应该被执行
+      expect(job).not.toHaveBeenCalled()
+    })
+
+    it('removeJobFromAll 应该在任意队列中移除成功时返回 true', () => {
+      const job = vi.fn()
+
+      // 只添加到主队列
+      Scheduler.queueJob(job)
+
+      // 从所有队列中移除
+      const removed = Scheduler.removeJobFromAll(job)
+
+      expect(removed).toBe(true)
+
+      Scheduler.flushSync()
+
+      expect(job).not.toHaveBeenCalled()
+    })
+
+    it('removeJobFromAll 在所有队列都不存在时应该返回 false', () => {
+      const job = vi.fn()
+
+      // 不添加任务，直接尝试移除
+      const removed = Scheduler.removeJobFromAll(job)
+
+      expect(removed).toBe(false)
+    })
+
+    it('应该能够在执行前移除带参数的任务', () => {
+      const job = vi.fn()
+
+      Scheduler.queueJob(job, ['param1', 'param2'])
+
+      // 移除任务
+      const removed = Scheduler.removeJob(job)
+
+      expect(removed).toBe(true)
+
+      Scheduler.flushSync()
+
+      // 任务不应该被执行
+      expect(job).not.toHaveBeenCalled()
+    })
+
+    it('移除任务后再次添加应该能够正常执行', () => {
+      const job = vi.fn()
+
+      // 添加任务
+      Scheduler.queueJob(job, ['first'])
+
+      // 移除任务
+      Scheduler.removeJob(job)
+
+      // 再次添加任务
+      Scheduler.queueJob(job, ['second'])
+
+      Scheduler.flushSync()
+
+      // 任务应该只执行一次，使用第二次的参数
+      expect(job).toHaveBeenCalledTimes(1)
+      expect(job).toHaveBeenCalledWith('second')
+    })
+
+    it('应该能够移除多个不同的任务', () => {
+      const job1 = vi.fn()
+      const job2 = vi.fn()
+      const job3 = vi.fn()
+
+      Scheduler.queueJob(job1)
+      Scheduler.queueJob(job2)
+      Scheduler.queueJob(job3)
+
+      // 移除 job1 和 job3
+      Scheduler.removeJob(job1)
+      Scheduler.removeJob(job3)
+
+      Scheduler.flushSync()
+
+      // 只有 job2 应该被执行
+      expect(job1).not.toHaveBeenCalled()
+      expect(job2).toHaveBeenCalledTimes(1)
+      expect(job3).not.toHaveBeenCalled()
+    })
+  })
 })
