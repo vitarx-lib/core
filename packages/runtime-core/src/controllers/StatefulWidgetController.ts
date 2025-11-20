@@ -82,7 +82,8 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
       // 获取更新后的DOM元素
       el = renderNode(widget.cachedChildVNode)
     }
-    node.state = NodeState.Activated
+    // 绑定 ref 引用
+    if (node.ref) node.ref.value = widget.instance
     return el
   }
   /** @inheritDoc */

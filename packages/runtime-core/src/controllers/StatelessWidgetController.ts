@@ -1,4 +1,10 @@
-import type { AnyProps, StatelessWidgetVNode, StatelessWidgetVNodeType } from '../types/index.js'
+import type {
+  AnyProps,
+  NodeElementType,
+  StatelessWidgetVNode,
+  StatelessWidgetVNodeType,
+  WidgetVNode
+} from '../types/index.js'
 import { BaseWidgetController } from './BaseWidgetController.js'
 
 /**
@@ -23,6 +29,13 @@ import { BaseWidgetController } from './BaseWidgetController.js'
  * - 属性更新会触发组件的重新渲染，但不会保留任何状态信息
  */
 export class StatelessWidgetController extends BaseWidgetController<StatelessWidgetVNodeType> {
+  override render(
+    node: WidgetVNode<StatelessWidgetVNodeType>
+  ): NodeElementType<StatelessWidgetVNodeType> {
+    const el = super.render(node)
+    if (node.ref) node.ref.value = node
+    return el
+  }
   /**
    * @inheritDoc
    */

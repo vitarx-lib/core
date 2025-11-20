@@ -1,12 +1,12 @@
 import { NodeState } from '../constants/index.js'
+import { callDirHook } from '../directive/index.js'
 import type {
   AnyProps,
-  DirectiveOptions,
+  HostElements,
   HostNodeElements,
   NodeController,
   NodeElementType,
   OpsType,
-  VNode,
   WidgetTypes,
   WidgetVNode
 } from '../types/index.js'
@@ -54,16 +54,16 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
     const el = renderNode(widget.child)
     node.state = NodeState.Rendered
     // 如果是元素节点，则调用指令钩子
-    if (isElementNode(node.runtimeInstance!.child)) this.callDirsHook(node, 'created')
+    if (isElementNode(node.runtimeInstance!.child)) callDirHook(node, 'created')
     return el as NodeElementType<T>
   }
   /** @inheritDoc */
   mount(node: WidgetVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
     const isElement = isElementNode(node.runtimeInstance!.child)
-    if (isElement) this.callDirsHook(node, 'beforeMount')
+    if (isElement) callDirHook(node, 'beforeMount')
     mountNode(node.runtimeInstance!.child, target, opsType)
     node.state = NodeState.Activated
-    if (isElement) this.callDirsHook(node, 'mounted')
+    if (isElement) callDirHook(node, 'mounted')
   }
   /** @inheritDoc */
   activate(node: WidgetVNode<T>, root: boolean = true): void {
@@ -78,34 +78,12 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
   /** @inheritDoc */
   unmount(node: WidgetVNode<T>): void {
     const isElement = isElementNode(node.runtimeInstance!.child)
-    if (isElement) {
-      this.callDirsHook(node, 'beforeUnmount')
-    }
+    const el = node.el! as HostElements
+    if (isElement) callDirHook(node, 'beforeUnmount')
     unmountNode(node.runtimeInstance!.child)
+    if (isElement) callDirHook(node, 'unmounted', el)
     node.runtimeInstance!.destroy()
     node.state = NodeState.Unmounted
-    if (isElement) this.callDirsHook(node, 'unmounted')
-  }
-  /**
-   * 调用 指令钩子
-   * @param node - 虚拟节点
-   * @param hook - 钩子名称
-   * @private
-   */
-  private callDirsHook(node: VNode, hook: keyof DirectiveOptions): void {
-    node.directives?.forEach(dir => {
-      const [dirObj, dirValue, dirArg] = dir
-      if (typeof dirObj[hook] === 'function') {
-        dirObj[hook](
-          node.el as never,
-          {
-            value: dirValue,
-            oldValue: dirValue,
-            arg: dirArg
-          },
-          node
-        )
-      }
-    })
+    if (node.ref) node.ref.value = null
   }
 }

@@ -1,15 +1,14 @@
+import { callDirHook } from '../directive/index.js'
 import { useRenderer } from '../renderer/index.js'
 import type {
   AnyProps,
-  DirectiveOptions,
   ElementVNode,
   ElementVNodeType,
   HostElements,
   HostNodeElements,
   HostVNode,
   NodeElementType,
-  OpsType,
-  VNode
+  OpsType
 } from '../types/index.js'
 import { HostNodeController } from './HostNodeController.js'
 
@@ -75,45 +74,24 @@ export abstract class ElementController<T extends ElementVNodeType> extends Host
    */
   override render(node: HostVNode<T>): NodeElementType<T> {
     const el = super.render(node)
-    this.callDirsHook(node, 'created')
+    callDirHook(node, 'created')
     return el
   }
   /**
    * @inheritDoc
    */
   override mount(node: HostVNode<T>, target?: HostNodeElements, opsType?: OpsType) {
-    this.callDirsHook(node, 'beforeMount')
+    callDirHook(node, 'beforeMount')
     super.mount(node, target, opsType)
-    this.callDirsHook(node, 'mounted')
+    callDirHook(node, 'mounted')
   }
   /**
    * @inheritDoc
    */
-  override unmount(node: HostVNode<T>) {
-    this.callDirsHook(node, 'beforeUnmount')
+  override unmount(node: ElementVNode<T>) {
+    callDirHook(node, 'beforeUnmount')
+    const el = node.el! as HostElements
     super.unmount(node)
-    this.callDirsHook(node, 'unmounted')
-  }
-  /**
-   * 调用 指令钩子
-   * @param node - 虚拟节点
-   * @param hook - 钩子名称
-   * @private
-   */
-  private callDirsHook(node: VNode, hook: keyof DirectiveOptions): void {
-    node.directives?.forEach(dir => {
-      const [dirObj, dirValue, dirArg] = dir
-      if (typeof dirObj[hook] === 'function') {
-        dirObj[hook](
-          node.el as never,
-          {
-            value: dirValue,
-            oldValue: dirValue,
-            arg: dirArg
-          },
-          node
-        )
-      }
-    })
+    callDirHook(node, 'unmounted', el)
   }
 }
