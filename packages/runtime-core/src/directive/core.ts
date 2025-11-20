@@ -1,14 +1,14 @@
 import { Scheduler } from '@vitarx/responsive'
-import { logger } from '@vitarx/utils/src/index.js'
+import { logger } from '@vitarx/utils'
 import { getCurrentVNode } from '../runtime/index.js'
-import {
-  type Directive,
-  type DirectiveOptions,
-  type ElementVNode,
-  type HostNodeElements,
-  type VNode,
-  type VNodeDirectives,
-  type WidgetVNode
+import type {
+  Directive,
+  DirectiveOptions,
+  ElementVNode,
+  HostNodeElements,
+  VNode,
+  VNodeDirectives,
+  WidgetVNode
 } from '../types/index.js'
 import { __DEV__, isElementNode, isStatefulWidgetNode, isWidgetNode } from '../utils/index.js'
 
@@ -296,4 +296,28 @@ export function diffDirectives(
       oldDirs.delete(name)
     }
   }
+}
+
+/**
+ * 调用 指令钩子
+ *
+ * @param node - 虚拟节点
+ * @param hook - 钩子名称
+ * @private
+ */
+export function callDirHook(node: VNode, hook: keyof DirectiveOptions): void {
+  node.directives?.forEach(dir => {
+    const [dirObj, dirValue, dirArg] = dir
+    if (typeof dirObj[hook] === 'function') {
+      dirObj[hook](
+        node.el as never,
+        {
+          value: dirValue,
+          oldValue: dirValue,
+          arg: dirArg
+        },
+        node
+      )
+    }
+  })
 }
