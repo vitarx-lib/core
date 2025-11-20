@@ -86,11 +86,7 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
     return el
   }
   /** @inheritDoc */
-  override mount(
-    node: StatefulWidgetVNode,
-    target: HostNodeElements,
-    opsType: OpsType = 'appendChild'
-  ): void {
+  override mount(node: StatefulWidgetVNode, target?: HostNodeElements, opsType?: OpsType): void {
     const widget = node.runtimeInstance!
     widget.callHook(LifecycleHooks.beforeMount)
     super.mount(node, target, opsType)

@@ -46,11 +46,7 @@ export function renderNode<T extends VNodeTypes>(node: VNode<T>): NodeElementTyp
  * @param container - 父容器元素
  * @param opsType - 操作类型
  */
-export function mountNode(
-  node: VNode,
-  container: HostParentElement,
-  opsType: OpsType = 'appendChild'
-): void {
+export function mountNode(node: VNode, container?: HostParentElement, opsType?: OpsType): void {
   if (node.state === NodeState.Created) {
     renderNode(node)
   }

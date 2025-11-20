@@ -58,7 +58,7 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
     return el as NodeElementType<T>
   }
   /** @inheritDoc */
-  mount(node: WidgetVNode<T>, target: HostNodeElements, opsType: OpsType = 'appendChild'): void {
+  mount(node: WidgetVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
     const isElement = isElementNode(node.runtimeInstance!.child)
     if (isElement) this.callDirsHook(node, 'beforeMount')
     mountNode(node.runtimeInstance!.child, target, opsType)

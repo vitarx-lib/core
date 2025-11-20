@@ -44,8 +44,8 @@ export abstract class HostNodeController<T extends HostVNodeType> implements Nod
   /**
    * @inheritDoc
    */
-  mount(node: HostVNode<T>, target: HostNodeElements, opsType: OpsType = 'appendChild'): void {
-    this.dom[opsType](node.el!, target)
+  mount(node: HostVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
+    if (target) this.dom[opsType || 'appendChild'](node.el!, target)
     this.mountChildren?.(node)
     node.state = NodeState.Activated
   }

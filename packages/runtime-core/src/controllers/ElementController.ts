@@ -81,7 +81,7 @@ export abstract class ElementController<T extends ElementVNodeType> extends Host
   /**
    * @inheritDoc
    */
-  override mount(node: HostVNode<T>, target: HostNodeElements, opsType: OpsType = 'appendChild') {
+  override mount(node: HostVNode<T>, target?: HostNodeElements, opsType?: OpsType) {
     this.callDirsHook(node, 'beforeMount')
     super.mount(node, target, opsType)
     this.callDirsHook(node, 'mounted')
