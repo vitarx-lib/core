@@ -36,13 +36,19 @@ export interface NodeController<T extends VNodeTypes> {
    */
   mount(node: VNode<T>, container: HostParentElement, opsType?: 'appendChild'): void
   /**
+   * 挂载节点 - 不处理dom挂载
+   *
+   * @param node - 虚拟节点对象
+   */
+  mount(node: VNode<T>): void
+  /**
    * 挂载节点
    *
    * @param node - 虚拟节点对象
    * @param target - 挂载目标
    * @param [opsType='appendChild'] - 默认追加
    */
-  mount(node: VNode<T>, target: HostNodeElements, opsType?: OpsType): void
+  mount(node: VNode<T>, target?: HostNodeElements, opsType?: OpsType): void
   /**
    * 节点被激活
    *
