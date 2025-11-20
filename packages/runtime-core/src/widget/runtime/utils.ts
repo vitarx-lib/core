@@ -79,7 +79,7 @@ export function getWidgetRuntime<T extends WidgetVNodeType>(
  *   const forceUpdate = useForceUpdate()
  *   const toggle = () => {
  *     show = !show
- *     forceUpdate() // 传入true，可以同步更新，否则使用调度器更新
+ *     forceUpdate()
  *   }
  *   return <div>
  *     {show && <div>Hello World</div>}
