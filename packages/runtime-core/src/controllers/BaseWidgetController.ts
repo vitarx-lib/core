@@ -81,9 +81,9 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
     const el = node.el! as HostElements
     if (isElement) callDirHook(node, 'beforeUnmount')
     unmountNode(node.runtimeInstance!.child)
-    if (isElement) callDirHook(node, 'unmounted', el)
     node.runtimeInstance!.destroy()
-    node.state = NodeState.Unmounted
     if (node.ref) node.ref.value = null
+    node.state = NodeState.Unmounted
+    if (isElement) callDirHook(node, 'unmounted', el)
   }
 }
