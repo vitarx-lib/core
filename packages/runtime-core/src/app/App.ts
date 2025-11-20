@@ -1,10 +1,18 @@
 import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
-import type { Directive, DirectiveOptions } from '../directive/index.js'
+import { __VITARX_VERSION__ } from '../constants/index.js'
+import { useRenderer } from '../renderer/index.js'
 import { runInAppContext } from '../runtime/index.js'
-import type { ErrorInfo, WidgetType } from '../types/index.js'
-import { isStatefulWidgetNode } from '../utils/index.js'
-import { createVNode, StatefulWidgetNode } from '../vnode/index.js'
+import type {
+  Directive,
+  DirectiveOptions,
+  ErrorInfo,
+  HostParentElement,
+  StatefulWidgetVNode,
+  WidgetTypes,
+  WidgetVNode
+} from '../types/index.js'
+import { createVNode, mountNode, unmountNode } from '../vnode/index.js'
 
 /** 应用配置 */
 export type AppConfig = Vitarx.AppConfig
@@ -55,10 +63,8 @@ export type AppPlugin<T extends {} = {}> = AppObjectPlugin<T> | AppPluginInstall
  */
 const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
   logger.error('there are unhandled exceptions', error, info)
-/**
- * Vitarx App 基类
- */
-export abstract class App {
+
+export class App {
   readonly [NON_SIGNAL_SYMBOL] = true
   /** 配置选项 */
   public readonly config: Required<AppConfig>
@@ -66,7 +72,7 @@ export abstract class App {
    * 根节点
    * @private
    */
-  readonly #rootNode: StatefulWidgetNode
+  readonly #rootNode: WidgetVNode
   /**
    * 提供数据
    * @private
@@ -80,32 +86,67 @@ export abstract class App {
   /**
    * 构建应用实例
    *
-   * @param node - 根节点/小部件
+   * @param root
    * @param config - 配置选项
    */
-  protected constructor(node: WidgetType, config?: AppConfig) {
-    if (typeof node === 'function') {
-      this.#rootNode = createVNode(node) as StatefulWidgetNode
-    } else if (isStatefulWidgetNode(node)) {
-      this.#rootNode = node
+  constructor(root: WidgetTypes, config?: AppConfig) {
+    if (typeof root === 'function') {
+      this.#rootNode = this.runInContext(() => createVNode(root))
     } else {
       throw new Error('The root node must be a widget')
     }
     // 使用展开运算符合并配置，提供默认错误处理
     this.config = this.initConfig(config)
     this.#rootNode.appContext = this
-    this.#rootNode.provide('App', this)
   }
-
   /**
    * 获取当前应用的根节点
    *
-   * @returns {StatefulWidgetNode} 返回根组件节点
+   * @returns {StatefulWidgetVNode} 返回根组件节点
    */
-  get rootNode(): StatefulWidgetNode {
+  get rootNode(): WidgetVNode {
     return this.#rootNode
   }
-
+  /**
+   * 获取版本号
+   *
+   * @returns {string} - 版本号
+   */
+  get version(): string {
+    return __VITARX_VERSION__
+  }
+  /**
+   * 将组件挂载到指定的DOM容器中
+   *
+   * @param container 可以是DOM元素节点或选择器字符串
+   * @returns {this} 返回当前App实例，支持链式调用
+   * @example
+   * const app = createApp(YourAppHomeWidget)
+   * app.mount('#app') // 挂载到id为#app的元素
+   */
+  mount(container: HostParentElement | string): this {
+    // 如果传入的是字符串，则通过querySelector获取对应的DOM元素
+    if (typeof container === 'string') {
+      container = useRenderer().querySelector(container)!
+      // 如果找不到对应的DOM元素，抛出错误
+      if (!container) {
+        throw new Error(
+          `[Vitarx.createApp][ERROR]: The element corresponding to the specified selector ${container} was not found.`
+        )
+      }
+    }
+    // 调用组件的mount方法，将组件挂载到指定的容器中
+    mountNode(this.rootNode, container)
+    // 返回当前组件实例，支持链式调用
+    return this
+  }
+  /**
+   * 卸载应用的方法
+   * 该方法用于执行组件的卸载操作，清理相关资源
+   */
+  unmount(): void {
+    unmountNode(this.rootNode)
+  }
   /**
    * 初始化应用配置
    *
@@ -121,7 +162,6 @@ export abstract class App {
       ...config // 展开传入的配置对象，覆盖默认值
     }
   }
-
   /**
    * 在App上下文中执行函数
    *
@@ -285,4 +325,24 @@ export abstract class App {
     install(this, options!)
     return this
   }
+}
+
+/**
+ * 创建一个Vitarx应用实例
+ *
+ * @param root - 根组件
+ * @param config - 应用配置
+ * @returns {App} - 返回一个Vitarx应用实例
+ *
+ * @example
+ * ```js
+ * // 创建一个Vitarx应用实例
+ * const app = createApp(YourAppHomeWidget);
+ *
+ * // 挂载应用
+ * app.mount('#app');
+ * ```
+ */
+export function createApp(root: WidgetTypes, config?: AppConfig): App {
+  return new App(root, config)
 }
