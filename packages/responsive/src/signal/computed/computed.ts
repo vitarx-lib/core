@@ -347,29 +347,8 @@ export class Computed<T> implements RefSignal<T> {
     if (deps.size > 0) {
       // 当依赖变化时的智能处理
       const onDependencyChange = () => {
-        // 检查是否有订阅者关注这个computed（检查'value'属性和全局订阅）
-        const hasValueSubscribers = SubManager.hasSubscribers(this, 'value')
-        const hasGlobalSubscribers = SubManager.hasSubscribers(
-          this,
-          SubManager.ALL_PROPERTIES_SYMBOL
-        )
-        const hasSubscribers = hasValueSubscribers || hasGlobalSubscribers
-
-        if (hasSubscribers) {
-          // 有订阅者：立即重新计算并比较值
-          const oldValue = this._value
-          const newValue = this._getter(oldValue)
-
-          // 只有值真正变化时才更新并通知
-          if (newValue !== oldValue) {
-            this._value = newValue
-            SignalManager.notifySubscribers(this, 'value')
-          }
-          // 注意：这里不标脏，因为已经计算过了
-        } else {
-          // 没有订阅者：只标脏，等待下次访问时再计算（懒计算）
-          this._dirty = true
-        }
+        this._dirty = true
+        SignalManager.notifySubscribers(this, 'value')
       }
 
       // 创建订阅处理器，使用同步模式立即响应依赖变化
