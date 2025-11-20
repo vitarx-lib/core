@@ -20,13 +20,13 @@ import { __DEV__ } from '../../utils/index.js'
  * @template DefaultProps - `this.props`的类型，默认=InputProps
  *
  * @remarks
- * `DefaultProps` 泛型详细说明：假设`InputProps`中有一个属性类型是可选的string，
- * 但在组件内通过 `defineProps` 定义了默认值，调用`this.props.name`获取数据时，`this.props.name`的类型是string|undefined，
+ * `DefaultProps` 泛型详细说明：假设`InputProps`中有一个name属性类型是可选的string，
+ * 但在组件内通过 `defineProps` 定义了默认值，调用`this.props.name`推断类型`string|undefined`，
  * 这是TS类型推导的问题，满屏的错误提示需使用`!`强制断言不为空，为了解决这个问题我们可以传入`DefaultProps`泛型来重载`this.props`的类型，
  *
  * @example `DefaultProps` 泛型使用
  * ```tsx
- * import {defineProps} from 'vitarx'
+ * import { defineProps } from 'vitarx'
  * nodes MyProps {
  *   name?:string,
  *   age?:number
@@ -73,7 +73,7 @@ export abstract class Widget<
    * @param props - 传入的组件属性对象
    * @returns {string | false | unknown} 校验结果
    */
-  static validateProps?: (props: AnyProps) => string | false | unknown
+  static validateProps?: (props: Record<string, any>) => string | false | unknown
   /**
    * Props默认值
    *
@@ -107,7 +107,7 @@ export abstract class Widget<
    * }
    * ```
    */
-  static defaultProps?: AnyProps
+  static defaultProps?: Record<string, any>
   /**
    * 存储小部件的传入属性
    *
