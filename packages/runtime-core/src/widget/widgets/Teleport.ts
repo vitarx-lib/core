@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils/src/index.js'
+import { logger } from '@vitarx/utils'
 import { useRenderer } from '../../renderer/index.js'
 import type { HostNodeElements, HostParentElement, VNode } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'

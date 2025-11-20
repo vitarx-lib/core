@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils/src/index.js'
+import { logger } from '@vitarx/utils'
 import { getAppContext } from '../runtime/context.js'
 
 let globalId = 0
