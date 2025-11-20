@@ -61,10 +61,9 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
     // 如果有属性变化，触发更新
     if (changedKeys.length > 0) {
       SubManager.notify(node.runtimeInstance!.props, changedKeys)
+      node.runtimeInstance!.update()
       // 同步执行所有队列中的任务
       Scheduler.flushSync()
-      // 使用同步更新，在patch过程中不需要异步调度
-      node.runtimeInstance!.update(true)
     }
   }
   /** @inheritDoc */
