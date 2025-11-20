@@ -36,8 +36,8 @@ export abstract class HostNodeController<T extends HostVNodeType> implements Nod
   render(node: HostVNode<T>): NodeElementType<T> {
     if (node.el) return node.el
     node.el = this.createElement(node)
-    this.renderChildren?.(node)
     if (node.ref) node.ref.value = node.el
+    this.renderChildren?.(node)
     node.state = NodeState.Rendered
     return node.el
   }
