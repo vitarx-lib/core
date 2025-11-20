@@ -7,7 +7,6 @@
 
 import { type Fragment, FRAGMENT_NODE_TYPE } from '../../constants/index.js'
 import { diffDirectives } from '../../directive/index.js'
-import { getNodeElement } from '../../internal/utils.js'
 import { useRenderer } from '../../renderer/index.js'
 import type {
   ContainerVNode,
@@ -18,7 +17,7 @@ import type {
   VNodeChild,
   WithNodeProps
 } from '../../types/index.js'
-import { isContainerNode } from '../../utils/index.js'
+import { getNodeElement, isContainerNode } from '../../utils/index.js'
 import { createVNode } from '../../vnode/index.js'
 import { type ChildNodeUpdateHooks, NodeUpdater } from '../../vnode/nodeUpdater.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'

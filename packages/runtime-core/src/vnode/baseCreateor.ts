@@ -1,10 +1,9 @@
 import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { isObject, logger, popProperty } from '@vitarx/utils'
 import { NodeKind, NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
-import { __DEV__, popNodeDevInfo } from '../internal/dev.js'
 import { getAppContext } from '../runtime/index.js'
 import type { AnyProps, VNode, VNodeTypes } from '../types/index.js'
-import { isRefEl } from '../utils/index.js'
+import { __DEV__, isRefEl, popNodeDevInfo } from '../utils/index.js'
 import { bindProps } from './propsNormalizer.js'
 
 // 支持 ref 的节点类型

@@ -1,6 +1,5 @@
 import { Scheduler } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils/src/index.js'
-import { __DEV__ } from '../internal/dev.js'
 import { getCurrentVNode } from '../runtime/index.js'
 import {
   type Directive,
@@ -11,7 +10,7 @@ import {
   type VNodeDirectives,
   type WidgetVNode
 } from '../types/index.js'
-import { isElementNode, isStatefulWidgetNode, isWidgetNode } from '../utils/index.js'
+import { __DEV__, isElementNode, isStatefulWidgetNode, isWidgetNode } from '../utils/index.js'
 
 const globalDirectives = new Map<string, Directive>()
 

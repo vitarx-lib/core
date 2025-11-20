@@ -1,6 +1,5 @@
 import { NON_SIGNAL_SYMBOL, Scheduler } from '@vitarx/responsive'
 import { CLASS_WIDGET_BASE_SYMBOL } from '../../constants/index.js'
-import { __DEV__ } from '../../internal/dev.js'
 import { getCurrentVNode } from '../../runtime/index.js'
 import type {
   AnyProps,
@@ -12,6 +11,7 @@ import type {
   VNode,
   VNodeChild
 } from '../../types/index.js'
+import { __DEV__ } from '../../utils/index.js'
 
 /**
  * 所有小部件的基类

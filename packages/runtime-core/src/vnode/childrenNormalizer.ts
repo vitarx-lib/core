@@ -1,7 +1,6 @@
 import { unref } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { NodeKind } from '../constants/index.js'
-import { __DEV__ } from '../internal/dev.js'
 import type {
   RegularElementVNode,
   UniqueKey,
@@ -10,7 +9,7 @@ import type {
   VNodeChildren,
   VNodeNormalizedChildren
 } from '../types/index.js'
-import { isElementNode, isVNode } from '../utils/index.js'
+import { __DEV__, isElementNode, isVNode } from '../utils/index.js'
 import { createTextNode } from './hostNodeCreator.js'
 import { linkParentNode } from './relations.js'
 

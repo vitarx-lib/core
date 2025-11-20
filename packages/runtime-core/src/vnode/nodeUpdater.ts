@@ -1,9 +1,13 @@
 import { NodeState } from '../constants/index.js'
 import { diffDirectives, type DiffDirectivesOptions } from '../directive/index.js'
-import { getNodeDomOpsTarget } from '../internal/utils.js'
 import { useRenderer } from '../renderer/index.js'
 import type { ContainerVNode, ElementVNode, VNode, WidgetVNode } from '../types/index.js'
-import { isContainerNode, isElementNode, isWidgetNode } from '../utils/index.js'
+import {
+  getNodeDomOpsTarget,
+  isContainerNode,
+  isElementNode,
+  isWidgetNode
+} from '../utils/index.js'
 import { mountNode, renderNode, unmountNode, updateNodeProps } from './driver.js'
 
 export interface ChildNodeUpdateHooks {

@@ -6,7 +6,6 @@ import {
   FRAGMENT_NODE_TYPE,
   TEXT_NODE_TYPE
 } from '../constants/index.js'
-import { __DEV__, getNodeDevInfo } from '../internal/dev.js'
 import type {
   TextVNodeType,
   ValidNodeProps,
@@ -14,7 +13,7 @@ import type {
   VNode,
   VNodeInstanceType
 } from '../types/index.js'
-import { isWidget } from '../utils/index.js'
+import { __DEV__, getNodeDevInfo, isWidget } from '../utils/index.js'
 import {
   createCommentNode,
   createFragmentNode,

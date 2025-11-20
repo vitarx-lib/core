@@ -1,4 +1,3 @@
-import { getNodeDomOpsTarget } from '../../internal/utils.js'
 import { useRenderer } from '../../renderer/index.js'
 import type {
   AnyProps,
@@ -10,7 +9,7 @@ import type {
   WidgetTypes,
   WidgetVNode
 } from '../../types/index.js'
-import { isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
+import { getNodeDomOpsTarget, isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
 import {
   activateNode,
   createVNode,

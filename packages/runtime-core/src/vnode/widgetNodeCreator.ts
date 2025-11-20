@@ -1,6 +1,5 @@
 import { isRecordObject } from '@vitarx/utils'
 import { NodeKind } from '../constants/index.js'
-import { __DEV__ } from '../internal/dev.js'
 import { getAppContext, validateProps } from '../runtime/index.js'
 import type {
   StatefulWidget,
@@ -10,7 +9,7 @@ import type {
   ValidNodeProps,
   WidgetTypes
 } from '../types/index.js'
-import { isStatelessWidget } from '../utils/index.js'
+import { __DEV__, isStatelessWidget } from '../utils/index.js'
 import { createBaseVNode } from './baseCreateor.js'
 
 /**

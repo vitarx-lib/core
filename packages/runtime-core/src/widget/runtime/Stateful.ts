@@ -7,7 +7,6 @@ import {
 } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { LifecycleHooks, NodeState } from '../../constants/index.js'
-import { __DEV__ } from '../../internal/dev.js'
 import { proxyWidgetProps } from '../../runtime/index.js'
 import type {
   ErrorSource,
@@ -17,7 +16,7 @@ import type {
   StatefulWidgetVNodeType,
   VNode
 } from '../../types/index.js'
-import { isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
+import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import {
   createCommentNode,
   createTextNode,
