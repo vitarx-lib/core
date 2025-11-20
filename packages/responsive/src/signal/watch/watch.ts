@@ -245,10 +245,11 @@ export function watch<
     const prop = isRefSignal(target) ? ('value' as keyof T) : undefined
     cacheValue = copyValue(target, prop, clone)
     const subscriber = new Subscriber(() => {
-      clean()
       const newValue = copyValue(target, prop, clone)
       const oldValue = cacheValue!
       cacheValue = newValue
+      if (prop && newValue === oldValue) return
+      clean()
       callback(newValue, oldValue, onCleanup)
     }, subscriptionOptions)
     if (immediate) subscriber.trigger()
