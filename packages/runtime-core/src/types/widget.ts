@@ -96,7 +96,7 @@ export interface LazyLoadModule {
  * - `NodeBuilder`：视图节点构建器
  * - `Promise<VNodeChild>`：异步返回受支持的VNodeChild，如字符串，元素节点等
  * - `Promise<VNodeBuilder>`：异步返回视图节点构建器
- * - `Promise<{ default: WidgetConstructorType }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
+ * - `Promise<{ default: WidgetTypes }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
  */
 export type ValidBuildResult =
   | VNodeChild
