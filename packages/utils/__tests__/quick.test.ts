@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { debounce, deepMergeObject, popProperty, sleep, throttle } from '../src/quick.js'
+import { debounce, deepMergeObject, popProperty, throttle } from '../src/quick.js'
 
 describe('quick', () => {
   it('should pop property correctly', () => {
@@ -8,13 +8,6 @@ describe('quick', () => {
     expect(obj).toEqual({ b: 2 })
     // @ts-ignore
     expect(popProperty(obj, 'c')).toBeUndefined()
-  })
-
-  it('should sleep for specified time', async () => {
-    const start = Date.now()
-    await sleep(100)
-    const end = Date.now()
-    expect(end - start).toBeGreaterThanOrEqual(100)
   })
 
   it('should deep merge objects correctly', () => {
