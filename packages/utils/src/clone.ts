@@ -1,59 +1,123 @@
+type Cloneable = {
+  [key: string]: any
+  [index: number]: any
+}
+
+type WorkItem = {
+  source: any
+  parent: any
+  key: string | number | symbol | 'set' | 'map'
+  mapKey?: any
+}
+
+// 预定义的克隆处理函数
+const cloneHandlers = {
+  Date: (source: Date) => new Date(source.getTime()),
+  RegExp: (source: RegExp) => new RegExp(source.source, source.flags),
+  Set: () => new Set(),
+  Map: () => new Map(),
+  Array: () => [],
+  Object: (source: Cloneable) => Object.create(Object.getPrototypeOf(source))
+}
+
+// 类型检查函数
+const isPrimitive = (value: any): boolean => !value || typeof value !== 'object'
+
+// 创建克隆对象
+const createClone = (source: any): any => {
+  if (source instanceof Date) return cloneHandlers.Date(source)
+  if (source instanceof RegExp) return cloneHandlers.RegExp(source)
+  if (source instanceof Set) return cloneHandlers.Set()
+  if (source instanceof Map) return cloneHandlers.Map()
+  if (Array.isArray(source)) return cloneHandlers.Array()
+  return cloneHandlers.Object(source)
+}
+
+// 处理子元素入队
+const enqueueChildren = (source: any, cloned: any, queue: WorkItem[]) => {
+  if (source instanceof Set) {
+    source.forEach(item => queue.push({ source: item, parent: cloned, key: 'set' }))
+  } else if (source instanceof Map) {
+    source.forEach((value, mapKey) =>
+      queue.push({ source: value, parent: cloned, key: 'map', mapKey })
+    )
+  } else if (Array.isArray(source)) {
+    source.forEach((item, index) => queue.push({ source: item, parent: cloned, key: index }))
+  } else {
+    Reflect.ownKeys(source).forEach(objKey =>
+      queue.push({ source: source[objKey], parent: cloned, key: objKey })
+    )
+  }
+}
+
+// 添加值到父容器
+const addToParent = (
+  parent: any,
+  key: string | number | symbol | 'set' | 'map',
+  value: any,
+  mapKey?: any
+) => {
+  if (key === 'set') {
+    parent.add(value)
+  } else if (key === 'map') {
+    parent.set(mapKey, value)
+  } else {
+    parent[key] = value
+  }
+}
+
 /**
- * 深拷贝函数
+ * 深度克隆函数
  *
- * 支持处理循环引用、内置对象和普通对象的深度克隆
+ * 可以克隆任意类型的对象，包括循环引用
  *
- * @param obj - 要克隆的对象
- * @param hash - 用于检测循环引用的WeakMap
- * @returns - 克隆后的对象
+ * @param obj 需要克隆的对象
+ * @returns 克隆后的新对象
  */
-export function deepClone<T>(obj: T, hash = new WeakMap<object, any>()): T {
-  // 处理null和基本数据类型
-  if (!obj || typeof obj !== 'object') return obj
+export function deepClone<T>(obj: T): T {
+  // 处理基本类型，直接返回
+  if (isPrimitive(obj)) return obj
 
-  // 检测循环引用
-  if (hash.has(obj as object)) {
-    return hash.get(obj as object)
+  // 使用 WeakMap 存储已克隆的对象，用于处理循环引用
+  const hash = new WeakMap<object, any>()
+  // 使用队列实现广度优先遍历
+  const queue: WorkItem[] = []
+
+  // 创建根对象克隆
+  const root = createClone(obj)
+  // 将原始对象和克隆对象的映射关系存入 WeakMap
+  hash.set(obj as object, root)
+  // 将根对象的子元素加入队列
+  enqueueChildren(obj, root, queue)
+
+  // 处理队列中的所有元素
+  while (queue.length) {
+    // 取出队列中的第一个元素
+    const { source, parent, key, mapKey } = queue.shift()!
+
+    // 处理基本类型
+    if (isPrimitive(source)) {
+      addToParent(parent, key, source, mapKey)
+      continue
+    }
+
+    // 处理循环引用
+    if (hash.has(source)) {
+      addToParent(parent, key, hash.get(source), mapKey)
+      continue
+    }
+
+    // 创建新克隆
+    const cloned = createClone(source)
+    hash.set(source, cloned)
+    addToParent(parent, key, cloned, mapKey)
+
+    // 跳过 Date 和 RegExp 的子元素处理
+    if (source instanceof Date || source instanceof RegExp) continue
+
+    // 处理子元素
+    enqueueChildren(source, cloned, queue)
   }
 
-  // 处理内置对象类型
-  if (obj instanceof Date) {
-    return new Date(obj.getTime()) as unknown as T
-  }
-  if (obj instanceof RegExp) {
-    return new RegExp(obj.source, obj.flags) as unknown as T
-  }
-  if (obj instanceof Set) {
-    const clonedSet = new Set()
-    hash.set(obj as object, clonedSet)
-    obj.forEach(item => clonedSet.add(deepClone(item, hash)))
-    return clonedSet as unknown as T
-  }
-  if (obj instanceof Map) {
-    const clonedMap = new Map()
-    hash.set(obj as object, clonedMap)
-    obj.forEach((value, key) => clonedMap.set(deepClone(key, hash), deepClone(value, hash)))
-    return clonedMap as unknown as T
-  }
-
-  // 处理数组
-  if (Array.isArray(obj)) {
-    const clonedArr = [] as unknown[]
-    hash.set(obj, clonedArr)
-    obj.forEach((item, index) => {
-      clonedArr[index] = deepClone(item, hash)
-    })
-    return clonedArr as unknown as T
-  }
-
-  // 处理普通对象
-  const clonedObj = Object.create(Object.getPrototypeOf(obj))
-  hash.set(obj as object, clonedObj)
-
-  // 使用Reflect.ownKeys获取所有属性，包括Symbol类型的key
-  Reflect.ownKeys(obj as object).forEach(key => {
-    clonedObj[key] = deepClone((obj as any)[key], hash)
-  })
-
-  return clonedObj as T
+  return root as T
 }
