@@ -1,10 +1,12 @@
 import { Scheduler } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
+import { useRenderer } from '../renderer/index.js'
 import { getCurrentVNode } from '../runtime/index.js'
 import type {
   Directive,
   DirectiveOptions,
   ElementVNode,
+  HostElements,
   HostNodeElements,
   VNode,
   VNodeDirectives,
@@ -301,16 +303,19 @@ export function diffDirectives(
 /**
  * 调用 指令钩子
  *
+ * @internal
  * @param node - 虚拟节点
  * @param hook - 钩子名称
- * @private
+ * @param [el] - DOM 元素
  */
-export function callDirHook(node: VNode, hook: keyof DirectiveOptions): void {
+export function callDirHook(node: VNode, hook: keyof DirectiveOptions, el?: HostElements): void {
+  el ??= node.el! as HostElements
+  if (!el || !useRenderer().isElement(el)) return
   node.directives?.forEach(dir => {
     const [dirObj, dirValue, dirArg] = dir
     if (typeof dirObj[hook] === 'function') {
       dirObj[hook](
-        node.el as never,
+        el!,
         {
           value: dirValue,
           oldValue: dirValue,
