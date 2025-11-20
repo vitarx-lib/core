@@ -30,8 +30,7 @@ const log = {
 async function checkForCircularDependencies(distPath: string): Promise<void> {
   // 构建命令
   const command = `madge --extensions js --circular ${distPath} --warning --exclude '.*\\.d\\.ts$'`
-  log.warn(`\nChecking for circular dependencies`)
-  log.warn(`\n${command}`)
+  log.info(`\nChecking for circular dependencies`)
   try {
     // 执行命令
     // 注意：madge 在发现循环依赖时，会将信息输出到 stdout，但退出码为 1
@@ -178,9 +177,9 @@ async function buildPackage(
     if (!isRemoveTempTsConfig) rmSync(tempTsConfig)
   }
 
-  // vitarx 特殊版本替换处理
-  if (packageDirName === 'vitarx') {
-    const distPath = join(dist, 'constant.js')
+  // 版本替换处理
+  if (packageDirName === 'runtime-core') {
+    const distPath = join(dist, '/constants/version.js')
     // 检查文件是否存在
     if (existsSync(distPath)) {
       // 读取文件内容
