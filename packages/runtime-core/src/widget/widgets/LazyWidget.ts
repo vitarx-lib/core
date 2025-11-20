@@ -185,7 +185,7 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
    */
   private _updateBuild(builder: () => VNodeChild): void {
     this.build = builder
-    this.$forceUpdate(true)
+    this.$forceUpdate()
     if (this.suspenseCounter) this.suspenseCounter.value--
   }
 }
