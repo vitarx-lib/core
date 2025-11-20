@@ -240,9 +240,6 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
     // 释放作用域资源
     this.scope.dispose()
     super.destroy()
-    if (this.node.ref) {
-      this.node.ref.value = null
-    }
   }
   /**
    * 重新构建子虚拟节点并建立依赖追踪
@@ -353,8 +350,6 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
             onResolveCallback?.(initPromise)
           }
         }
-        // 绑定 ref 引用
-        if (this.node.ref) this.node.ref.value = instance
         return instance
       })
     )
