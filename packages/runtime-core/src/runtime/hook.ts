@@ -6,9 +6,9 @@ import type {
   FunctionWidget,
   LifecycleHookParameter,
   LifecycleHookReturnType,
-  ValidBuildElement
+  StatefulWidgetVNode,
+  ValidBuildResult
 } from '../types/index.js'
-import type { StatefulWidgetNode } from '../vnode/index.js'
 import type { Widget } from '../widget/index.js'
 
 interface CollectContext {
@@ -20,10 +20,10 @@ interface CollectContext {
  * 收集结果
  */
 export interface HookCollectResult extends CollectContext {
-  buildResult: ValidBuildElement
+  buildResult: ValidBuildResult
 }
 
-const HOOK_COLLECTOR_CONTEXT = Symbol('HookCollectorContext')
+const HOOK_COLLECTOR_CONTEXT = Symbol.for('__v_hook_context')
 /**
  * HookCollector 是一个用于收集和管理组件钩子的工具类。
  * 该类主要负责收集函数式组件中的生命周期钩子和暴露的数据，并提供统一的访问接口。
@@ -97,7 +97,7 @@ export class HookCollector {
    * @param instance - 实例
    * @returns {HookCollectResult} - 同步收集结果
    */
-  static collect(vnode: StatefulWidgetNode<FunctionWidget>, instance: Widget): HookCollectResult {
+  static collect(vnode: StatefulWidgetVNode<FunctionWidget>, instance: Widget): HookCollectResult {
     // 创建新的上下文
     const context: HookCollectResult = {
       exposed: {},
