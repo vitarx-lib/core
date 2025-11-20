@@ -252,7 +252,7 @@ export function watch<
       callback(newValue, oldValue, onCleanup)
     }, subscriptionOptions)
     if (immediate) subscriber.trigger()
-    return SubManager.subscribe(target, subscriber, subscriptionOptions).onDispose(clean)
+    return SubManager.subscribe(target, subscriber).onDispose(clean)
   }
   // 处理多数组监听源
   if (isArray(target)) {
