@@ -1,12 +1,7 @@
 import { Ref } from '@vitarx/responsive'
+import { SUSPENSE_COUNTER_SYMBOL } from '../constants/index.js'
 import { inject } from './provide.js'
 
-/**
- * `Suspense` 计数器标识符
- *
- * 用于在组件树中跟踪当前组件的挂起状态。
- */
-export const SUSPENSE_COUNTER_SYMBOL = Symbol('SUSPENSE_COUNTER_SYMBOL')
 /**
  * 获取上级 `Suspense` 计数器
  *
