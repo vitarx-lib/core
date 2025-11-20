@@ -13,7 +13,6 @@
  * - v-show: 条件显示
  * - v-memo: 记忆化优化
  * - v-static: 静态标记
- * - v-parent: 父节点绑定
  */
 export const INTRINSIC_ATTRIBUTES = new Set<string>([
   'children',
@@ -23,6 +22,5 @@ export const INTRINSIC_ATTRIBUTES = new Set<string>([
   'v-bind',
   'v-show',
   'v-memo',
-  'v-static',
-  'v-parent'
+  'v-static'
 ])
