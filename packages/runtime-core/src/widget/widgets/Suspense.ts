@@ -114,7 +114,7 @@ export class Suspense extends Widget<SuspenseProps> {
         // 计数器增加且 persistent 模式开启，重新显示 fallback
         if (this.props.persistent) {
           this.showFallback = true
-          this.$forceUpdate(true)
+          this.$forceUpdate()
         }
       } else if (!shouldShowFallback && this.showFallback) {
         // 首次或计数器归零，停止 fallback
@@ -156,14 +156,23 @@ export class Suspense extends Widget<SuspenseProps> {
     return new Promise(resolve => (this.ssrPromise = resolve))
   }
   override onActivated() {
+    this.complete()
+  }
+  /**
+   * 完成状态处理方法
+   * 当状态更新完成时调用此方法，处理等待中的回调函数
+   */
+  private complete() {
     // 如果是等待更新状态，则调用onUpdated钩子触发onResolved回调
-    if (this.pendingOnResolved && typeof this.props.onResolved === 'function') {
-      this.pendingOnResolved = false
+    if (this.pendingOnResolved) {
+      this.pendingOnResolved = false // 将等待状态标记为已完成
       if (this.ssrPromise) {
-        this.ssrPromise()
-        this.ssrPromise = undefined
+        this.ssrPromise() // 执行服务端渲染相关的Promise回调
+        this.ssrPromise = undefined // 清除服务端渲染Promise引用
       }
-      this.props.onResolved()
+      if (typeof this.props.onResolved === 'function') {
+        this.props.onResolved() // 执行onResolved回调函数
+      }
     }
   }
   build(): VNodeChild {
@@ -182,10 +191,11 @@ export class Suspense extends Widget<SuspenseProps> {
         this.listener = undefined
       }
       this.showFallback = false
-      this.pendingOnResolved = true
-      if (this.$vnode.state !== NodeState.Deactivated) {
-        this.$forceUpdate(true)
-        this.onActivated()
+      if (this.$vnode.state === NodeState.Deactivated) {
+        this.pendingOnResolved = true
+      } else {
+        this.$forceUpdate()
+        this.complete()
       }
     }
   }
