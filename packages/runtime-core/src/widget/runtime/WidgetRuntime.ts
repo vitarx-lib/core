@@ -78,6 +78,7 @@ export abstract class WidgetRuntime<W extends WidgetVNodeType> {
     this.cachedChildVNode = null
     delete this.node.el
     delete this.node.anchor
+    delete this.node.runtimeInstance
   }
   /**
    * 构建子虚拟节点
