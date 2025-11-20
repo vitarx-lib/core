@@ -418,9 +418,9 @@ export abstract class Widget<
   /**
    * 强制更新小部件
    *
-   * @param [sync=false] - 是否同步更新
+   * @param [sync=true] - 是否同步更新，默认是
    */
-  $forceUpdate(sync?: boolean): void {
+  $forceUpdate(sync: boolean = true): void {
     this.$vnode.runtimeInstance!.update()
     if (sync) Scheduler.flushSync()
   }
