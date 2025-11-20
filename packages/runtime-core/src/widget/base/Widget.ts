@@ -1,4 +1,4 @@
-import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
+import { NON_SIGNAL_SYMBOL, Scheduler } from '@vitarx/responsive'
 import { CLASS_WIDGET_BASE_SYMBOL } from '../../constants/index.js'
 import { __DEV__ } from '../../internal/dev.js'
 import { getCurrentVNode } from '../../runtime/index.js'
@@ -421,6 +421,7 @@ export abstract class Widget<
    * @param [sync=false] - 是否同步更新
    */
   $forceUpdate(sync?: boolean): void {
-    this.$vnode.runtimeInstance!.update(sync)
+    this.$vnode.runtimeInstance!.update()
+    if (sync) Scheduler.flushSync()
   }
 }
