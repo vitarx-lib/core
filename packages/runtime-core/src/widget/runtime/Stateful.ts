@@ -77,8 +77,6 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
   }
   /** 组件实例 */
   public readonly instance: Widget
-  /** 是否正在处理更新任务 */
-  private isUpdating: boolean = false
   /** 是否有待处理的更新任务 */
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
@@ -194,28 +192,9 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    * 默认为异步批量更新，多次调用会合并为一次更新，避免重复渲染
    * 仅在组件处于活跃状态时才会执行更新
    *
-   * @param sync - 是否同步更新
    * @returns Promise，在更新完成后 resolve
    */
-  public override update(sync: boolean = false): void {
-    // patch 中禁止重入
-    if (this.isUpdating) return
-
-    // ---------- 同步更新 ----------
-    if (sync) {
-      const removed = Scheduler.removeJob(this.finishUpdate)
-
-      if (removed || this.hasPendingUpdate) {
-        // 已经触发过 beforeUpdate，因此不能再触发
-        this.finishUpdate()
-        return
-      }
-      // 完全没有 pending，这是首次 update
-      this.hasPendingUpdate = true
-      this.callHook(LifecycleHooks.beforeUpdate)
-      this.finishUpdate()
-      return
-    }
+  public override update(): void {
     // ---------- 异步更新 ----------
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
@@ -230,29 +209,21 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    * 在 update 内部调用的渲染执行函数
    */
   private finishUpdate(): void {
-    // 防止重复执行
-    if (this.isUpdating) return
-
+    this.hasPendingUpdate = false
     if (this.node.state === NodeState.Unmounted) {
-      this.hasPendingUpdate = false
       return
     }
 
     if (this.node.state === NodeState.Deactivated) {
       this.dirty = true
-      this.hasPendingUpdate = false
       return
     }
-
-    this.isUpdating = true
-    this.hasPendingUpdate = false
 
     try {
       this.cachedChildVNode = this.patch()
     } catch (err) {
       this.reportError(err, 'update')
     } finally {
-      this.isUpdating = false
       this.callHook(LifecycleHooks.updated)
     }
   }
