@@ -79,17 +79,16 @@ export function getWidgetRuntime<T extends WidgetVNodeType>(
  *   const forceUpdate = useForceUpdate()
  *   const toggle = () => {
  *     show = !show
- *     //
- *     forceUpdate()
+ *     forceUpdate() // 传入true，可以同步更新，否则使用调度器更新
  *   }
  *   return <div>
- *     <button onClick={toggle}>Toggle</button>
  *     {show && <div>Hello World</div>}
+ *     <button onClick={toggle}>Toggle</button>
  *   </div>
  * }
  * ```
  */
-export function useForceUpdater(): () => void {
+export function useForceUpdater(): (sync?: boolean) => void {
   const instance = getCurrentInstance()
   if (!instance) {
     logger.warn(
@@ -97,5 +96,5 @@ export function useForceUpdater(): () => void {
     )
     return () => void 0
   }
-  return () => instance.$forceUpdate()
+  return instance.$forceUpdate.bind(instance)
 }
