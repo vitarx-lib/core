@@ -25,11 +25,3 @@ export const __WIDGET_INTRINSIC_KEYWORDS__: ReadonlySet<string> = new Set([
   ...__WIDGET_INTRINSIC_PROPERTY_KEYWORDS__,
   ...__WIDGET_INTRINSIC_METHOD_KEYWORDS__
 ])
-/**
- * 无状态函数组件的标识符
- */
-export const STATELESS_FUNCTION_WIDGET_SYMBOL = Symbol('STATELESS_FUNCTION_WIDGET_SYMBOL')
-/**
- * 类小部件的标识符
- */
-export const CLASS_WIDGET_BASE_SYMBOL = Symbol('CLASS_WIDGET_SYMBOL')
