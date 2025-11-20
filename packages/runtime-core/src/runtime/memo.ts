@@ -1,4 +1,4 @@
-import type { VNode } from '../vnode/index.js'
+import type { VNode } from '../types/index.js'
 import { getCurrentVNode } from './context.js'
 
 /**
