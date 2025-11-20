@@ -15,6 +15,7 @@ import {
   Subscriber,
   type SubscriberOptions
 } from '../../observer/index.js'
+import { isComputed } from '../computed/index.js'
 import { SignalManager } from '../manager.js'
 import type { ProxySignal, RefSignal } from '../types/index.js'
 import { isRefSignal, isSignal, type SignalToRaw } from '../utils/index.js'
@@ -243,12 +244,13 @@ export function watch<
   if (isSignal(target)) {
     // 处理值类型代理，让其返回value
     const prop = isRefSignal(target) ? ('value' as keyof T) : undefined
+    const isComputedSignal = isComputed(target)
     cacheValue = copyValue(target, prop, clone)
     const subscriber = new Subscriber(() => {
       const newValue = copyValue(target, prop, clone)
       const oldValue = cacheValue!
+      if (isComputedSignal && newValue === oldValue) return
       cacheValue = newValue
-      if (prop && newValue === oldValue) return
       clean()
       callback(newValue, oldValue, onCleanup)
     }, subscriptionOptions)
