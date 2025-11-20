@@ -1,24 +1,11 @@
 import { type AnyRecord, popProperty } from '@vitarx/utils'
+import { VNODE_PROPS_DEV_INFO_KEY_SYMBOL } from '../constants/index.js'
 import type { NodeDevInfo } from '../types/index.js'
 
 /**
  * 是否处于开发模式
  */
-export let __DEV__: boolean = import.meta?.env?.DEV === true
-
-/**
- * 设置开发模式
- *
- * @param isDev
- */
-const setDev = (isDev: boolean) => {
-  __DEV__ = isDev
-}
-
-/**
- * props中用于存放devInfo的属性名
- */
-const VNODE_PROPS_DEV_INFO_KEY_SYMBOL = Symbol('VNODE_DEV_INFO_SYMBOL')
+export const __DEV__: boolean = import.meta?.env?.DEV === true
 /**
  * 从属性对象中弹出开发模式下的节点调试信息
  *
@@ -38,7 +25,6 @@ export const popNodeDevInfo = (props: AnyRecord): NodeDevInfo | undefined => {
 export const getNodeDevInfo = (props: AnyRecord): NodeDevInfo | undefined => {
   return props[VNODE_PROPS_DEV_INFO_KEY_SYMBOL]
 }
-
 /**
  * 将开发环境信息写入节点的属性中
  * @param props 节点的属性对象
