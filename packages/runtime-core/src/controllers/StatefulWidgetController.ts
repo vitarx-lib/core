@@ -104,7 +104,10 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
     super.activate(node, root)
     widget.scope.resume()
     widget.callHook(LifecycleHooks.activated)
-    if (widget.dirty) widget.update()
+    if (widget.dirty) {
+      widget.update()
+      Scheduler.flushSync()
+    }
   }
   /** @inheritDoc */
   override deactivate(node: StatefulWidgetVNode, root: boolean): void {
