@@ -1,4 +1,4 @@
-import { SubManager } from '@vitarx/responsive'
+import { Scheduler, SubManager } from '@vitarx/responsive'
 import { LifecycleHooks, NodeState } from '../constants/index.js'
 import type {
   AnyProps,
@@ -61,6 +61,8 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
     // 如果有属性变化，触发更新
     if (changedKeys.length > 0) {
       SubManager.notify(node.runtimeInstance!.props, changedKeys)
+      // 同步执行所有队列中的任务
+      Scheduler.flushSync()
       // 使用同步更新，在patch过程中不需要异步调度
       node.runtimeInstance!.update(true)
     }
