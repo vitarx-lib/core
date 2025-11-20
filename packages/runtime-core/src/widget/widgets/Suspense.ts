@@ -3,7 +3,7 @@ import { NodeState, SUSPENSE_COUNTER_SYMBOL } from '../../constants/index.js'
 import { provide } from '../../runtime/index.js'
 import type { AnyProps, ErrorHandler, VNode, VNodeChild } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
-import { linkParentNode, renderNode } from '../../vnode/index.js'
+import { cloneVNode, createCommentNode, linkParentNode, renderNode } from '../../vnode/index.js'
 import { Widget } from '../base/Widget.js'
 
 /**
@@ -96,16 +96,15 @@ export class Suspense extends Widget<SuspenseProps> {
   protected showFallback = true
   private listener?: Subscriber
   private pendingOnResolved: boolean = false
-  /**
-   * 服务端渲染时触发的回调
-   *
-   * @private
-   */
   private ssrPromise?: (value: void) => void
+  private fallback: VNode
   constructor(props: SuspenseProps) {
     super(props)
     provide(SUSPENSE_COUNTER_SYMBOL, this.counter)
     if (typeof props.onError === 'function') this.onError = props.onError
+    this.fallback = isVNode(props.fallback)
+      ? props.fallback
+      : createCommentNode({ value: 'suspense fallback' })
     // 监听计数器变化，手动管理视图更新，优化性能
     this.listener = watch(this.counter, newValue => {
       // 如果为true则显示回退内容
@@ -114,6 +113,9 @@ export class Suspense extends Widget<SuspenseProps> {
         // 计数器增加且 persistent 模式开启，重新显示 fallback
         if (this.props.persistent) {
           this.showFallback = true
+          if (this.fallback.state !== NodeState.Created) {
+            this.fallback = cloneVNode(this.fallback)
+          }
           this.$forceUpdate()
         }
       } else if (!shouldShowFallback && this.showFallback) {
@@ -176,7 +178,7 @@ export class Suspense extends Widget<SuspenseProps> {
     }
   }
   build(): VNodeChild {
-    return this.showFallback ? this.props.fallback : this.children
+    return this.showFallback ? this.fallback : this.children
   }
   /**
    * 停止挂起状态
