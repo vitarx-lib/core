@@ -227,9 +227,7 @@ const initializeAsyncWidget = async (
 
   instance.$vnode.isAsyncWidget = true
 
-  if (suspenseCounter) {
-    suspenseCounter.value++
-  }
+  if (suspenseCounter) suspenseCounter.value++
 
   try {
     registerCriticalHooks(instance, hooks)
@@ -245,9 +243,7 @@ const initializeAsyncWidget = async (
       injectExposedMembers(exposed, instance)
     }
     completeAsyncRender(instance)
-    if (suspenseCounter) {
-      suspenseCounter.value--
-    }
+    if (suspenseCounter) suspenseCounter.value--
   }
 }
 
