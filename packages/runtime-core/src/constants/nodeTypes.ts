@@ -1,5 +1,4 @@
-import type { ValidNodeType, VNodeChildren } from '../types/index.js'
-import type { VNode } from '../vnode/index.js'
+import type { ValidNodeType, VNode, VNodeChildren } from '../types/index.js'
 
 /**
  * 片段节点标签常量
