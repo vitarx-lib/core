@@ -18,3 +18,5 @@ export * from './widgetNodeCreator.js'
 export * from './driver.js'
 // 节点关系
 export * from './relations.js'
+// 克隆节点
+export * from './clone.js'
