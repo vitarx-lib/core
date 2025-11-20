@@ -14,10 +14,9 @@ import type {
   MergeProps,
   NodeDevInfo,
   ValidNodeProps,
-  WidgetType
+  WidgetTypes
 } from '../types/index.js'
 import { getWidgetName } from '../utils/index.js'
-import { CommentNode } from '../vnode/index.js'
 import { getCurrentVNode } from './context.js'
 
 const VNODE_PROPS_DEFAULT_DATA_SYMBOL = Symbol('VNODE_PROPS_DEFAULT_DATA_SYMBOL')
@@ -139,13 +138,34 @@ export function proxyWidgetProps<T extends Record<string | symbol, any>>(
   return new PropsProxyHandler<T>(props, defaultProps).proxy as Readonly<T>
 }
 /**
- * 校验组件属性
- * @param widget 组件类型
- * @param props 组件属性
- * @param devInfo 开发信息（可选）
- * @returns {CommentNode|void} 如果校验失败，返回一个包含错误信息的注释节点；否则返回undefined
+ * 校验组件属性，确保传入的属性符合组件定义的约束条件
+ *
+ * 此函数会在开发环境下执行，用于检查组件的属性是否有效。如果组件定义了validateProps方法，
+ * 则会调用该方法进行校验，并根据校验结果输出相应的警告或错误信息。
+ *
+ * @param widget - 组件类型，可能包含validateProps方法
+ * @param props - 组件属性对象，需要被校验的属性
+ * @param devInfo - 开发信息，可选参数，包含源码位置等调试信息
+ * @returns {string|void} 如果校验失败，返回错误信息；否则返回undefined
+ *
+ * @example
+ * ```typescript
+ * // 组件定义
+ * class MyWidget {
+ *   static validateProps(props) {
+ *     if (props.value < 0) {
+ *       return 'Value must be positive';
+ *     }
+ *     return true;
+ *   }
+ * }
+ *
+ * // 使用校验函数
+ * const result = validateProps(MyWidget, { value: -1 }, { source: 'App.js:10' });
+ * // 控制台将输出警告: "Widget <MyWidget>: Value must be positive"
+ * ```
  */
-export function validateProps<T extends WidgetType>(
+export function validateProps<T extends WidgetTypes>(
   widget: T,
   props: ValidNodeProps<T>,
   devInfo?: NodeDevInfo
@@ -172,7 +192,7 @@ export function validateProps<T extends WidgetType>(
  *
  * @example 在函数式组件中使用
  * ```tsx
- * interface Props {
+ * nodes Props {
  *   name: string
  *   gender?: number
  * }
@@ -202,7 +222,7 @@ export function validateProps<T extends WidgetType>(
  *
  * @example 在类组件中使用
  * ```tsx
- * interface Props {
+ * nodes Props {
  *   name: string
  *   gender?: number
  * }
@@ -229,7 +249,7 @@ export function defineProps<D extends AnyProps>(defaultProps: D): Readonly<D>
  *
  * @example 在函数式组件中传入第二个参数优化类型推导
  * ```tsx
- * interface Props {
+ * nodes Props {
  *   name: string
  *   gender?: number
  * }
