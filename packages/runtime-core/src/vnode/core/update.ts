@@ -1,13 +1,13 @@
-import { NodeState } from '../constants/index.js'
-import { diffDirectives, type DiffDirectivesOptions } from '../directive/index.js'
-import { useRenderer } from '../renderer/index.js'
-import type { ContainerVNode, ElementVNode, VNode, WidgetVNode } from '../types/index.js'
+import { NodeState } from '../../constants/index.js'
+import { diffDirectives, type DiffDirectivesOptions } from '../../directive/index.js'
+import { useRenderer } from '../../renderer/index.js'
+import type { ContainerVNode, ElementVNode, VNode, WidgetVNode } from '../../types/index.js'
 import {
   getNodeDomOpsTarget,
   isContainerNode,
   isElementNode,
   isWidgetNode
-} from '../utils/index.js'
+} from '../../utils/index.js'
 import { mountNode, renderNode, unmountNode, updateNodeProps } from './driver.js'
 
 export interface ChildNodeUpdateHooks {
@@ -43,7 +43,7 @@ export interface ChildNodeUpdateHooks {
  * 负责处理虚拟节点(VNode)的更新、替换和子节点管理等操作。
  * 实现了高效的 diff 算法，以最小化 DOM 操作。
  */
-export class NodeUpdater {
+export class PatchUpdate {
   /**
    * 比较并更新两个虚拟节点
    *
@@ -390,5 +390,5 @@ export function patchUpdate(n1: VNode, n2: VNode): VNode {
   if (n1.state !== NodeState.Activated) {
     throw new Error(`The node state (${n1.state}) is also not in the patchable stage`)
   }
-  return NodeUpdater.patch(n1, n2)
+  return PatchUpdate.patch(n1, n2)
 }

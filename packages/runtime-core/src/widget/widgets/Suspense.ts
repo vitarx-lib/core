@@ -1,9 +1,9 @@
 import { shallowRef, Subscriber, watch } from '@vitarx/responsive'
 import { NodeState, SUSPENSE_COUNTER_SYMBOL } from '../../constants/index.js'
-import { provide } from '../../runtime/index.js'
+import { linkParentNode, provide } from '../../runtime/index.js'
 import type { AnyProps, ErrorHandler, VNode, VNodeChild } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
-import { cloneVNode, createCommentNode, linkParentNode, renderNode } from '../../vnode/index.js'
+import { cloneVNode, createCommentNode, renderNode } from '../../vnode/index.js'
 import { Widget } from '../base/Widget.js'
 
 /**

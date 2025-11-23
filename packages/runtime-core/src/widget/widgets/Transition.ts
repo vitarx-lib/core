@@ -5,8 +5,8 @@ import { useRenderer } from '../../renderer/index.js'
 import type { ElementVNode, HostNodeElements, VNode } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'
 import { getNodeDomOpsTarget, getNodeElement, isNonElementNode } from '../../utils/index.js'
+import { PatchUpdate } from '../../vnode/core/update.js'
 import { mountNode, unmountNode } from '../../vnode/index.js'
-import { NodeUpdater } from '../../vnode/nodeUpdater.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 interface TransitionProps extends BaseTransitionProps {
@@ -185,17 +185,17 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
       const newShow = newChild.directives?.get('show')?.[1]
       if (oldShow !== newShow) {
         if (oldShow) {
-          NodeUpdater.patchUpdateNode(oldChild, newChild, { skip: ['show'] })
+          PatchUpdate.patchUpdateNode(oldChild, newChild, { skip: ['show'] })
           // 离场动画执行完成后才更新节点
           this.runTransition(getNodeElement(oldChild), 'leave', () => {
             diffDirectives(oldChild as ElementVNode, newChild as ElementVNode, { only: ['show'] })
           })
         } else {
-          NodeUpdater.patchUpdateNode(oldChild, newChild)
+          PatchUpdate.patchUpdateNode(oldChild, newChild)
           this.runTransition(getNodeElement(newChild), 'enter')
         }
       } else {
-        NodeUpdater.patchUpdateNode(oldChild, newChild)
+        PatchUpdate.patchUpdateNode(oldChild, newChild)
       }
       return oldChild
     }

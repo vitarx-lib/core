@@ -5,24 +5,20 @@ import {
   DYNAMIC_RENDER_TYPE,
   FRAGMENT_NODE_TYPE,
   TEXT_NODE_TYPE
-} from '../constants/index.js'
+} from '../../constants/index.js'
 import type {
   TextVNodeType,
   ValidNodeProps,
   ValidNodeType,
   VNode,
   VNodeInstanceType
-} from '../types/index.js'
-import { __DEV__, getNodeDevInfo, isWidget } from '../utils/index.js'
-import {
-  createCommentNode,
-  createFragmentNode,
-  createRegularElementNode,
-  createTextNode,
-  createVoidElementNode
-} from './hostNodeCreator.js'
-import { isSupportChildren } from './propsNormalizer.js'
-import { createWidgetNode } from './widgetNodeCreator.js'
+} from '../../types/index.js'
+import { __DEV__, getNodeDevInfo, isWidget } from '../../utils/index.js'
+import { createRegularElementNode, createVoidElementNode } from '../createor/element.js'
+import { createFragmentNode } from '../createor/fragment.js'
+import { createCommentNode, createTextNode } from '../createor/special.js'
+import { createWidgetNode } from '../createor/widget.js'
+import { isSupportChildren } from '../normalizer/props.js'
 
 /**
  * 处理动态组件（DYNAMIC_RENDER_TYPE）

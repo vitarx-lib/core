@@ -1,7 +1,8 @@
+import { linkParentNode } from '../../runtime/index.js'
 import type { StatelessWidgetVNodeType, VNode } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
-import { createCommentNode, createTextNode, linkParentNode } from '../../vnode/index.js'
-import { patchUpdate } from '../../vnode/nodeUpdater.js'
+import { patchUpdate } from '../../vnode/core/update.js'
+import { createCommentNode, createTextNode } from '../../vnode/index.js'
 import { WidgetRuntime } from './WidgetRuntime.js'
 
 /**

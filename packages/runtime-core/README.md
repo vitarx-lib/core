@@ -42,6 +42,7 @@ Widget 是组件系统的核心，支持创建函数组件和类组件。
 
 组件具有完整的生命周期钩子：
 
+- `onRender`: 小部件渲染时触发
 - `onCreate`：小部件实例创建时触发
 - `onBeforeMount`：小部件挂载之前触发，可以返回一个 DOM 元素作为挂载目标容器
 - `onMounted`：小部件挂载完成后触发
@@ -69,28 +70,19 @@ const MyComponent = (props) => {
 类组件通过继承 Widget 类来实现，提供更多功能：
 
 ```typescript
-import { Widget, createVNode } from '@vitarx/runtime-core' // vitarx
+import { Widget, createVNode } from '@vitarx/runtime-base' // vitarx
 
 class MyComponent extends Widget {
   build() {
-    return createVNode('div', { className: 'my-component' }, 'Hello World') // 使用 createVNode 创建虚拟节点
+    return createVNode('div', { className: 'my-component' , children: 'Hello Vitarx!'}) // 使用 createVNode 创建虚拟节点
   }
 }
 ```
 
-### HostAdapter
-
-定义了 不同平台 DOM Adapter 相关接口，包括：
-
-- createElement
-- setAttribute
-- addEventListener
-- ... 具体方法请查看源码
-
 ## 安装
 
 ```bash
-npm install @vitarx/runtime-core
+npm install @vitarx/runtime-base
 ```
 
 ## 使用示例
@@ -114,4 +106,3 @@ app.mount('#app')
 
 - [VNode API](./src/vnode/)
 - [Widget API](./src/widget/)
-- [DOM Adapter API](./src/adapter/)

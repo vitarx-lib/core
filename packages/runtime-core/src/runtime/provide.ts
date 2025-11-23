@@ -1,8 +1,8 @@
 import type { AnyFunction } from '@vitarx/utils'
 import type { VNode } from '../types/index.js'
 import { isStatefulWidgetNode } from '../utils/vnode.js'
-import { findParentNode } from '../vnode/index.js'
 import { getCurrentVNode } from './context.js'
+import { findParentNode } from './relations.js'
 
 /**
  * 提供依赖数据,实现小部件间的依赖注入

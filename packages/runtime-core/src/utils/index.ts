@@ -1,4 +1,3 @@
-export * from './id.js'
 export * from './props.js'
 export * from './style.js'
 export * from './ref.js'

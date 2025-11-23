@@ -7,7 +7,7 @@ import {
 } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { LifecycleHooks, NodeState } from '../../constants/index.js'
-import { proxyWidgetProps } from '../../runtime/index.js'
+import { findParentNode, linkParentNode, proxyWidgetProps } from '../../runtime/index.js'
 import type {
   ErrorSource,
   LifecycleHookParameter,
@@ -17,13 +17,8 @@ import type {
   VNode
 } from '../../types/index.js'
 import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
-import {
-  createCommentNode,
-  createTextNode,
-  findParentNode,
-  linkParentNode
-} from '../../vnode/index.js'
-import { patchUpdate } from '../../vnode/nodeUpdater.js'
+import { patchUpdate } from '../../vnode/core/update.js'
+import { createCommentNode, createTextNode } from '../../vnode/index.js'
 import { FnWidget, initializeFnWidget } from '../base/FnWidget.js'
 import { Widget } from '../base/index.js'
 import { WidgetRuntime } from './WidgetRuntime.js'

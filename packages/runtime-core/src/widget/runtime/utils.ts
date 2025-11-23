@@ -1,5 +1,4 @@
 import { logger } from '@vitarx/utils'
-import { getCurrentInstance } from '../../runtime/index.js'
 import type {
   StatefulWidgetVNode,
   StatelessWidgetVNode,
@@ -7,6 +6,7 @@ import type {
   WidgetVNodeType
 } from '../../types/index.js'
 import { isStatelessWidget } from '../../utils/index.js'
+import { getCurrentInstance } from './context.js'
 import { type StatefulManagerOptions, StatefulWidgetRuntime } from './Stateful.js'
 import { StatelessWidgetRuntime } from './Stateless.js'
 import type { WidgetRuntime } from './WidgetRuntime.js'

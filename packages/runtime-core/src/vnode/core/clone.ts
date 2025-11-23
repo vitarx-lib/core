@@ -1,7 +1,7 @@
 import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
-import { NodeState, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
-import type { VNode } from '../types/index.js'
-import { isElementNode, isFragmentNode, isWidgetNode } from '../utils/index.js'
+import { NodeState, VIRTUAL_NODE_SYMBOL } from '../../constants/index.js'
+import type { VNode } from '../../types/index.js'
+import { isElementNode, isFragmentNode, isWidgetNode } from '../../utils/index.js'
 
 /**
  * 克隆虚拟节点

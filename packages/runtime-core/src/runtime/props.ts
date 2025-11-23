@@ -9,14 +9,7 @@ import {
 } from '@vitarx/responsive'
 import type { AnyRecord } from '@vitarx/utils'
 import { isRecordObject, logger, LogLevel } from '@vitarx/utils'
-import type {
-  AnyProps,
-  MergeProps,
-  NodeDevInfo,
-  ValidNodeProps,
-  WidgetTypes
-} from '../types/index.js'
-import { getWidgetName } from '../utils/index.js'
+import type { AnyProps, MergeProps } from '../types/index.js'
 import { getCurrentVNode } from './context.js'
 
 const VNODE_PROPS_DEFAULT_DATA_SYMBOL = Symbol('VNODE_PROPS_DEFAULT_DATA_SYMBOL')
@@ -136,55 +129,6 @@ export function proxyWidgetProps<T extends Record<string | symbol, any>>(
     return props as Readonly<T>
   }
   return new PropsProxyHandler<T>(props, defaultProps).proxy as Readonly<T>
-}
-/**
- * 校验组件属性，确保传入的属性符合组件定义的约束条件
- *
- * 此函数会在开发环境下执行，用于检查组件的属性是否有效。如果组件定义了validateProps方法，
- * 则会调用该方法进行校验，并根据校验结果输出相应的警告或错误信息。
- *
- * @param widget - 组件类型，可能包含validateProps方法
- * @param props - 组件属性对象，需要被校验的属性
- * @param devInfo - 开发信息，可选参数，包含源码位置等调试信息
- * @returns {string|void} 如果校验失败，返回错误信息；否则返回undefined
- *
- * @example
- * ```typescript
- * // 组件定义
- * class MyWidget {
- *   static validateProps(props) {
- *     if (props.value < 0) {
- *       return 'Value must be positive';
- *     }
- *     return true;
- *   }
- * }
- *
- * // 使用校验函数
- * const result = validateProps(MyWidget, { value: -1 }, { source: 'App.js:10' });
- * // 控制台将输出警告: "Widget <MyWidget>: Value must be positive"
- * ```
- */
-export function validateProps<T extends WidgetTypes>(
-  widget: T,
-  props: ValidNodeProps<T>,
-  devInfo?: NodeDevInfo
-): void {
-  // 在开发环境下，如果组件提供了validateProps方法，则执行属性校验
-  if (typeof widget.validateProps === 'function') {
-    // 获取组件名称
-    const name = getWidgetName(widget)
-    // 执行组件的属性校验方法
-    const result = widget.validateProps(props)
-    // 校验失败处理
-    if (result === false) {
-      // 记录错误日志，包含源信息
-      logger.error(`Widget <${name}> props validation failed.`, devInfo?.source)
-    } else if (typeof result === 'string') {
-      // 如果返回的是字符串，则记录警告日志
-      logger.warn(`Widget <${name}>: ${result}`, devInfo?.source)
-    }
-  }
 }
 
 /**

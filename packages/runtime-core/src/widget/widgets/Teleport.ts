@@ -3,8 +3,8 @@ import { useRenderer } from '../../renderer/index.js'
 import type { HostNodeElements, HostParentElement, VNode } from '../../types/index.js'
 import { VNodeChild } from '../../types/vnode.js'
 import { __DEV__, isVNode, onPropChange } from '../../utils/index.js'
+import { patchUpdate } from '../../vnode/core/update.js'
 import { createCommentNode, mountNode, renderNode, unmountNode } from '../../vnode/index.js'
-import { patchUpdate } from '../../vnode/nodeUpdater.js'
 import { Widget } from '../base/index.js'
 
 interface TeleportProps {

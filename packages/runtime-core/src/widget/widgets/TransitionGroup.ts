@@ -18,8 +18,8 @@ import type {
   WithNodeProps
 } from '../../types/index.js'
 import { getNodeElement, isContainerNode } from '../../utils/index.js'
+import { type ChildNodeUpdateHooks, PatchUpdate } from '../../vnode/core/update.js'
 import { createVNode } from '../../vnode/index.js'
-import { type ChildNodeUpdateHooks, NodeUpdater } from '../../vnode/nodeUpdater.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 /**
@@ -157,12 +157,12 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
 
     // 根节点类型或 key 不同 → 替换节点
     if (currentVNode.type !== nextVNode.type || currentVNode.key !== nextVNode.key) {
-      NodeUpdater.replace(currentVNode, nextVNode)
+      PatchUpdate.replace(currentVNode, nextVNode)
       return nextVNode
     }
 
     // 更新节点属性
-    NodeUpdater.patchUpdateProps(currentVNode, nextVNode)
+    PatchUpdate.patchUpdateProps(currentVNode, nextVNode)
 
     if (isContainerNode(currentVNode)) {
       const container = currentVNode as ContainerVNode
@@ -179,7 +179,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
 
       // === 2️⃣ 更新子节点 ===
       // 使用自定义的更新钩子处理子节点的进入、离开和显示状态变化
-      NodeUpdater.patchUpdateChildren(container, nextVNode as ContainerVNode, {
+      PatchUpdate.patchUpdateChildren(container, nextVNode as ContainerVNode, {
         onMount: child => this.runEnter(child),
         onUnmount: (child, done) => this.runLeave(child, done),
         onUpdate: this.handleChildUpdate

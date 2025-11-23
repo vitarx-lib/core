@@ -1,6 +1,7 @@
 import { unref } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
-import { NodeKind } from '../constants/index.js'
+import { NodeKind } from '../../constants/index.js'
+import { linkParentNode } from '../../runtime/index.js'
 import type {
   RegularElementVNode,
   UniqueKey,
@@ -8,10 +9,9 @@ import type {
   VNodeChild,
   VNodeChildren,
   VNodeNormalizedChildren
-} from '../types/index.js'
-import { __DEV__, isElementNode, isVNode } from '../utils/index.js'
-import { createTextNode } from './hostNodeCreator.js'
-import { linkParentNode } from './relations.js'
+} from '../../types/index.js'
+import { __DEV__, isElementNode, isVNode } from '../../utils/index.js'
+import { createTextNode } from '../createor/special.js'
 
 /**
  * 递归处理SVG子节点

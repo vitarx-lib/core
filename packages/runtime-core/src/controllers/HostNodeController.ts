@@ -1,5 +1,6 @@
 import { NodeState } from '../constants/index.js'
 import { useRenderer } from '../renderer/index.js'
+import { findParentNode } from '../runtime/index.js'
 import type {
   AnyProps,
   HostCommentElement,
@@ -11,7 +12,6 @@ import type {
   OpsType
 } from '../types/index.js'
 import { isWidgetNode } from '../utils/index.js'
-import { findParentNode } from '../vnode/index.js'
 
 /**
  * 宿主节点控制器抽象基类

@@ -1,5 +1,5 @@
 import { logger } from '@vitarx/utils'
-import { getAppContext } from '../runtime/context.js'
+import { getAppContext } from '../runtime/index.js'
 
 let globalId = 0
 
@@ -15,7 +15,7 @@ let globalId = 0
  * @returns 唯一 ID 字符串
  */
 export const useId = (prefix?: string): string => {
-  const appContext = getAppContext?.()
+  const appContext = getAppContext()
 
   // 若无 APP 实例，使用全局 ID
   if (!appContext) {

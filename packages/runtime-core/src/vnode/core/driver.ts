@@ -1,15 +1,15 @@
-import { NodeKind, NodeState } from '../constants/index.js'
-import type { HostParentElement } from '../types/element.js'
+import { NodeKind, NodeState } from '../../constants/index.js'
+import { unlinkParentNode } from '../../runtime/index.js'
 import type {
   AnyProps,
+  HostParentElement,
   NodeController,
   NodeElementType,
   NodeKindToNodeType,
   OpsType,
-  VNode
-} from '../types/index.js'
-import type { VNodeTypes } from '../types/vnode.js'
-import { unlinkParentNode } from './relations.js'
+  VNode,
+  VNodeTypes
+} from '../../types/index.js'
 
 type Controllers = {
   [key in NodeKind]: NodeController<NodeKindToNodeType[key]>

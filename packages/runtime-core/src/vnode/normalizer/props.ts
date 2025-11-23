@@ -6,16 +6,16 @@ import {
   FRAGMENT_NODE_TYPE,
   INTRINSIC_ATTRIBUTES,
   TEXT_NODE_TYPE
-} from '../constants/index.js'
-import { useRenderer } from '../renderer/index.js'
+} from '../../constants/index.js'
+import { useRenderer } from '../../renderer/index.js'
 import type {
   AnyProps,
   BindAttributes,
   ClassProperties,
   StyleRules,
   ValidNodeType
-} from '../types/index.js'
-import { StyleUtils } from '../utils/index.js'
+} from '../../types/index.js'
+import { StyleUtils } from '../../utils/index.js'
 
 /**
  * 处理 v-bind 属性绑定，将绑定对象的属性合并到目标 props 中
@@ -95,7 +95,7 @@ export const bindProps = (props: AnyProps, bind: BindAttributes): void => {
  * @param props 原始属性对象
  * @returns 处理后的标准化属性对象
  */
-export const NormalizerStyleAndClassProp = (props: AnyProps): AnyProps => {
+export const normalizerStyleAndClassProp = (props: AnyProps): AnyProps => {
   // 步骤2: 处理 style 属性，确保为统一的对象格式
   if ('style' in props) {
     // 将各种形式的样式值（字符串、对象、数组）转换为标准对象格式
