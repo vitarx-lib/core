@@ -1,10 +1,12 @@
 import {
-  type Source,
+  type CodeSourceInfo,
+  setNodeDevInfo,
   type UniqueKey,
-  VNode,
-  type VNodeProps,
-  type VNodeType
+  type ValidNodeProps,
+  type ValidNodeType,
+  type VNodeInstanceType
 } from '@vitarx/runtime-core'
+import type { AnyRecord } from '@vitarx/utils'
 import { jsx } from './jsx-runtime.js'
 
 export { Fragment } from './jsx-runtime.js'
@@ -15,24 +17,28 @@ export { Fragment } from './jsx-runtime.js'
  * @param type - 类型
  * @param props - 属性
  * @param key - 唯一标识
- * @param _isStatic - 是否静态
+ * @param isStatic - 是否静态
  * @param source - 源码位置信息
- * @param _self - 组件实例
+ * @param self - 组件实例
  */
-export function jsxDEV<T extends VNodeType>(
+export function jsxDEV<T extends ValidNodeType>(
   type: T,
-  props: VNodeProps<T> | null,
+  props: ValidNodeProps<T> | null,
   key: UniqueKey | undefined,
-  _isStatic: boolean,
-  source: Source,
-  _self: any
-): VNode<T> {
+  isStatic: boolean,
+  source: CodeSourceInfo,
+  self: any
+): VNodeInstanceType<T> {
   if (typeof type === 'function' && typeof window !== 'undefined') {
     // 获取最新模块
     const newModule = (window as any).__$VITARX_HMR$__?.replaceNewModule?.(type)
     if (newModule) type = newModule
   }
   const vnode = jsx(type, props, key)
-  vnode.source = source
+  setNodeDevInfo(props as AnyRecord, {
+    source,
+    isStatic,
+    self
+  })
   return vnode
 }
