@@ -143,10 +143,8 @@ export class PatchUpdate {
     const oldElement = getNodeDomOpsTarget(currentVNode)
     // 如果旧节点有父元素，则创建锚点进行替换
     if (dom.getParentElement(oldElement)) {
-      const anchorElement = dom.createText('')
-      dom.insertBefore(anchorElement, oldElement)
+      mountNode(nextVNode, oldElement, 'insertBefore')
       unmountNode(currentVNode)
-      mountNode(nextVNode, anchorElement, 'replace')
       return nextVNode
     }
     throw new Error('NodeUpdate.replace(): the old node is not mounted and cannot be replaced')
