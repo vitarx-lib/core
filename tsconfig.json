@@ -43,7 +43,9 @@
   },
   "include": [
     "**/src",
-    "**/tests"
+    "**/tests",
+    "**/__tests__",
+    "./scripts"
   ],
   "exclude": [
     "**/node_modules",
