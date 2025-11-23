@@ -30,7 +30,7 @@ const log = {
 async function checkForCircularDependencies(distPath: string): Promise<void> {
   // 构建命令
   const command = `madge --extensions js --circular ${distPath} --warning --exclude '.*\\.d\\.ts$'`
-  log.info(`\nChecking for circular dependencies`)
+  log.warn(`\n⭕️ Checking for circular dependencies`)
   try {
     // 执行命令
     // 注意：madge 在发现循环依赖时，会将信息输出到 stdout，但退出码为 1
@@ -153,10 +153,18 @@ async function buildPackage(
 
   // 如果需要运行测试
   if (runTest) {
-    log.warn('🧪 Running vitest tests...')
-    // 使用 vitest 运行测试
-    await runCommand(`vitest run --dir ${packagePath}`)
-    log.success('  ✓ Tests passed successfully')
+    const testDir1 = join(packagePath, '__tests__')
+    const testDir2 = join(packagePath, 'tests')
+
+    // 检查是否存在测试目录
+    if (!existsSync(testDir1) && !existsSync(testDir2)) {
+      log.warn('⚠️  No test directory found (__tests__ or tests)')
+    } else {
+      log.warn('🧪 Running vitest tests...')
+      // 使用 vitest 运行测试
+      await runCommand(`vitest run --dir ${packagePath}`)
+      log.success('  ✓ Tests passed successfully')
+    }
   }
 
   // 解析 dist 目录路径
