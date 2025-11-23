@@ -31,7 +31,6 @@ function createDynamicVNode(props: Record<string, any>): VNode {
   }
   return createVNode(renderNodeType, dynamicProps)
 }
-
 /**
  * 创建虚拟节点
  *
