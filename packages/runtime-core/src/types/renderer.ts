@@ -7,9 +7,8 @@ import type {
   HostParentElement,
   HostRegularElements,
   HostTextElement,
-  HostVoidElementNames,
-  StyleRules
-} from '../types/index.js'
+  HostVoidElementNames
+} from './element.js'
 
 /**
  * DOMRect 接口，表示一个矩形区域，
@@ -166,12 +165,6 @@ export interface HostRenderer {
     parent: HostParentElement | HostRegularElements | HostFragmentElement
   ): void
   /**
-   * 设置元素的样式
-   * @param el - 元素实例
-   * @param style - 样式规则对象
-   */
-  setStyle(el: HostElements, style: StyleRules): void
-  /**
    * 添加样式
    * @param el - 元素实例
    * @param key - 样式属性名
@@ -241,13 +234,6 @@ export interface HostRenderer {
    */
   cancelAnimationFrame(id: number): void
   /**
-   * 设置元素显示模式
-   *
-   * @param el - 元素实例
-   * @param visible - 是否显示元素
-   */
-  setDisplay(el: HostElements, visible: boolean): void
-  /**
    * 设置元素的属性
    * @param el - 元素实例
    * @param key - 属性名
@@ -263,31 +249,11 @@ export interface HostRenderer {
    */
   removeAttribute(el: HostElements, key: string, prevValue?: any): void
   /**
-   * 设置元素的属性
-   * @param el - 元素实例
-   * @param attrs - 属性对象
-   */
-  setAttributes(el: HostElements, attrs: Record<string, any>): void
-  /**
    * 设置元素的文本内容
    * @param el - 元素实例
    * @param value - 文本内容
    */
   setText(el: HostTextElement | HostCommentElement, value: string): void
-  /**
-   * 为元素添加事件监听器
-   * @param el - 元素实例
-   * @param name - 事件名称
-   * @param handler - 事件处理函数
-   */
-  addEventListener(el: HostElements, name: string, handler: (...args: any[]) => any): void
-  /**
-   * 移除元素的事件监听器
-   * @param el - 元素实例
-   * @param name - 事件名称
-   * @param handler - 要移除的事件处理函数
-   */
-  removeEventListener(el: HostElements, name: string, handler: (...args: any[]) => any): void
   /**
    * 查询元素
    *
@@ -296,13 +262,6 @@ export interface HostRenderer {
    * @returns { HostElements | null } 查询到的元素实例，或者null
    */
   querySelector(selector: string, container?: HostParentElement): HostElements | null
-  /**
-   * 查询元素下的指定选择器的所有元素
-   * @param selector - 选择器字符串
-   * @param [container] - 可选的容器元素实例，不传入时，默认为body
-   * @returns { HostElements[] } 查询到的元素实例数组
-   */
-  querySelectorAll(selector: string, container?: HostParentElement): Iterable<HostElements>
   /**
    * 获取元素的父元素
    * @param el - 元素实例
