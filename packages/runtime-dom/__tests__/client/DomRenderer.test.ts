@@ -17,9 +17,10 @@ describe('DomRenderer', () => {
 
   describe('元素创建', () => {
     it('应该创建普通 HTML 元素', () => {
+      // @ts-ignore
       const vnode = createVNode('div', { id: 'test' })
 
-      const el = renderer.createElement(vnode as any)
+      const el = renderer.createElement(vnode)
 
       expect(el.tagName.toLowerCase()).toBe('div')
       expect(el.id).toBe('test')
