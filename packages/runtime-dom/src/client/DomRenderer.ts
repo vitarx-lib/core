@@ -58,7 +58,7 @@ const DEFAULT_PROPERTIES_CACHE = new Map<string, Record<string, any>>()
  * - 提供了完善的错误处理机制
  * - 此类实例注册在运行时核心中，用于处理浏览器环境下的DOM操作和渲染。
  */
-export class ClientRenderer implements HostRenderer {
+export class DomRenderer implements HostRenderer {
   /** @inheritDoc */
   createElement<T extends HostElementNames>(vnode: ElementVNode<T>): HostElements<T> {
     let el: HostElements<T>
