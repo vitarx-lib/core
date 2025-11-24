@@ -1,18 +1,15 @@
 import { getCurrentVNode } from '../../runtime/index.js'
-import { isStatefulWidgetNode } from '../../utils/index.js'
-import { Widget } from '../base/index.js'
+import type { WidgetRuntime } from './WidgetRuntime.js'
 
 /**
- * 获取当前组件实例
+ * 获取当前组件运行时实例
  *
- * 注意：无状态组件没有实例！
- *
- * @template T - 组件实例的类型
- * @returns 返回当前活动的 Widget 实例，如果没有则返回 undefined
+ * @returns {WidgetRuntime} 返回当前活动的组件运行时实例，如果没有则返回 undefined
  */
-export function getCurrentInstance<T extends Widget = Widget>(): T | undefined {
+export function getCurrentInstance(): WidgetRuntime {
   const node = getCurrentVNode()
-  if (isStatefulWidgetNode(node)) {
-    return node.runtimeInstance?.instance as T
+  if (!node || !node.runtimeInstance) {
+    throw new Error('No active widget instance found.')
   }
+  return node.runtimeInstance
 }
