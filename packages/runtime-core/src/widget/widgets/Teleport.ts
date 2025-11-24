@@ -4,7 +4,7 @@ import type { HostNodeElements, HostParentElement, VNode } from '../../types/ind
 import { VNodeChild } from '../../types/vnode.js'
 import { __DEV__, isVNode, onPropChange } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
-import { createCommentNode, mountNode, renderNode, unmountNode } from '../../vnode/index.js'
+import { createCommentVNode, mountNode, renderNode, unmountNode } from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 
 interface TeleportProps {
@@ -145,7 +145,7 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
   }
 
   override build(): VNodeChild {
-    return this.disabled ? this.children : createCommentNode({ value: 'teleport anchor' })
+    return this.disabled ? this.children : createCommentVNode({ value: 'teleport anchor' })
   }
 
   private getTarget(): HostParentElement | null {

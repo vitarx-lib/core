@@ -3,7 +3,7 @@ import { NodeState, SUSPENSE_COUNTER_SYMBOL } from '../../constants/index.js'
 import { linkParentNode, provide } from '../../runtime/index.js'
 import type { AnyProps, ErrorHandler, VNode, VNodeChild } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
-import { cloneVNode, createCommentNode, renderNode } from '../../vnode/index.js'
+import { cloneVNode, createCommentVNode, renderNode } from '../../vnode/index.js'
 import { Widget } from '../base/Widget.js'
 
 /**
@@ -104,7 +104,7 @@ export class Suspense extends Widget<SuspenseProps> {
     if (typeof props.onError === 'function') this.onError = props.onError
     this.fallback = isVNode(props.fallback)
       ? props.fallback
-      : createCommentNode({ value: 'suspense fallback' })
+      : createCommentVNode({ value: 'suspense fallback' })
     // 监听计数器变化，手动管理视图更新，优化性能
     this.listener = watch(this.counter, newValue => {
       // 如果为true则显示回退内容

@@ -18,7 +18,7 @@ import type {
 } from '../../types/index.js'
 import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
-import { createCommentNode, createTextNode } from '../../vnode/index.js'
+import { createCommentVNode, createTextVNode } from '../../vnode/index.js'
 import { FnWidget, initializeFnWidget } from '../base/FnWidget.js'
 import { Widget } from '../base/index.js'
 import { WidgetRuntime } from './WidgetRuntime.js'
@@ -284,9 +284,9 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
       } else {
         const resultType = typeof buildResult
         if (resultType === 'string' || resultType === 'number') {
-          vnode = createTextNode({ value: String(buildResult) })
+          vnode = createTextVNode({ value: String(buildResult) })
         } else {
-          vnode = createCommentNode({
+          vnode = createCommentVNode({
             value: `StatefulWidget<${this.name}> build() returned invalid type: ${resultType}`
           })
         }
@@ -295,7 +295,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
       const errorVNode = this.reportError(error, 'build')
       vnode = isVNode(errorVNode)
         ? errorVNode
-        : createCommentNode({ value: `StatefulWidget<${this.name}> build failed` })
+        : createCommentVNode({ value: `StatefulWidget<${this.name}> build failed` })
     }
     linkParentNode(vnode, this.node)
     return vnode

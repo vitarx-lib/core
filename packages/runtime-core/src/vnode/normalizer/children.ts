@@ -11,7 +11,7 @@ import type {
   VNodeNormalizedChildren
 } from '../../types/index.js'
 import { __DEV__, isElementNode, isVNode } from '../../utils/index.js'
-import { createTextNode } from '../createor/special.js'
+import { createTextVNode } from '../creator/special.js'
 
 /**
  * 递归处理SVG子节点
@@ -77,7 +77,7 @@ const normalizeChild = (current: unknown, keySet: Set<UniqueKey>): VNode | undef
 
   // 对于非虚拟节点值，将其转换为文本节点
   // 使用String()确保所有类型的值都能转换为字符串
-  return createTextNode({ value: String(current) })
+  return createTextVNode({ value: String(current) })
 }
 
 /**

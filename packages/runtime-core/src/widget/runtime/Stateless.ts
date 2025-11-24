@@ -2,7 +2,7 @@ import { linkParentNode } from '../../runtime/index.js'
 import type { StatelessWidgetVNodeType, VNode } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
-import { createCommentNode, createTextNode } from '../../vnode/index.js'
+import { createCommentVNode, createTextVNode } from '../../vnode/index.js'
 import { WidgetRuntime } from './WidgetRuntime.js'
 
 /**
@@ -47,9 +47,9 @@ export class StatelessWidgetRuntime extends WidgetRuntime<StatelessWidgetVNodeTy
         throw new Error(`StatelessWidget<${this.name}> cannot return a function`)
       // 如果构建结果是字符串或数字，创建并返回文本节点
       if (t === 'string' || t === 'number') {
-        child = createTextNode({ value: String(buildResult) })
+        child = createTextVNode({ value: String(buildResult) })
       } else {
-        child = createCommentNode({
+        child = createCommentVNode({
           value: `StatelessWidget<${this.name}> returned invalid type ${t}`
         })
       }

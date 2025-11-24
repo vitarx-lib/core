@@ -14,10 +14,10 @@ import type {
   VNodeInstanceType
 } from '../../types/index.js'
 import { __DEV__, getNodeDevInfo, isWidget } from '../../utils/index.js'
-import { createRegularElementNode, createVoidElementNode } from '../createor/element.js'
-import { createFragmentNode } from '../createor/fragment.js'
-import { createCommentNode, createTextNode } from '../createor/special.js'
-import { createWidgetNode } from '../createor/widget.js'
+import { createRegularElementVNode, createVoidElementVNode } from '../creator/element.js'
+import { createFragmentVNode } from '../creator/fragment.js'
+import { createCommentVNode, createTextVNode } from '../creator/special.js'
+import { createWidgetVNode } from '../creator/widget.js'
 import { isSupportChildren } from '../normalizer/props.js'
 
 /**
@@ -56,27 +56,27 @@ export function createVNode<T extends ValidNodeType>(
       case DYNAMIC_RENDER_TYPE:
         return createDynamicVNode(props) as VNodeInstanceType<T>
       case TEXT_NODE_TYPE:
-        return createTextNode(
+        return createTextVNode(
           props as unknown as ValidNodeProps<TextVNodeType>
         ) as VNodeInstanceType<T>
       case COMMENT_NODE_TYPE:
-        return createCommentNode(
+        return createCommentVNode(
           props as unknown as ValidNodeProps<TextVNodeType>
         ) as VNodeInstanceType<T>
       case FRAGMENT_NODE_TYPE:
-        return createFragmentNode(props) as VNodeInstanceType<T>
+        return createFragmentVNode(props) as VNodeInstanceType<T>
       default:
         if (supportChildren) {
-          return createRegularElementNode(type, props as never) as VNodeInstanceType<T>
+          return createRegularElementVNode(type, props as never) as VNodeInstanceType<T>
         } else {
-          return createVoidElementNode(type, props as never) as VNodeInstanceType<T>
+          return createVoidElementVNode(type, props as never) as VNodeInstanceType<T>
         }
     }
   }
 
   // 处理组件节点
   if (isWidget(type)) {
-    return createWidgetNode(type, props) as VNodeInstanceType<T>
+    return createWidgetVNode(type, props) as VNodeInstanceType<T>
   }
 
   throw new Error('createVNode(): invalid node type')

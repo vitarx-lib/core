@@ -14,8 +14,8 @@ import type {
 } from '../../types/index.js'
 import { isWidget } from '../../utils/widget.js'
 import {
-  createCommentNode,
-  createWidgetNode,
+  createCommentVNode,
+  createWidgetVNode,
   mountNode,
   renderNode,
   unmountNode
@@ -164,7 +164,7 @@ const parseAsyncBuildResult = (
   }
 
   if (isLazyLoadModule(buildResult)) {
-    return () => createWidgetNode(buildResult.default, instance.props)
+    return () => createWidgetVNode(buildResult.default, instance.props)
   }
 
   return () => buildResult as VNodeChild
@@ -218,7 +218,7 @@ const initializeAsyncWidget = async (
 ) => {
   // 创建一个占位符构建器
   instance.build = () => {
-    return createCommentNode({
+    return createCommentVNode({
       value: `AsyncWidget<${instance.$vnode.runtimeInstance!.name}> loading ...`
     })
   }
