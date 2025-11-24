@@ -30,19 +30,23 @@ import type { VNode, WidgetVNode, WidgetVNodeType } from '../../types/index.js'
  * - 组件销毁时需要调用destroy()方法释放资源
  * - 组件属性(props)是只读的，修改需要通过update()方法
  */
-export abstract class WidgetRuntime<W extends WidgetVNodeType> {
+export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType> {
   /** 组件名称，用于调试和错误追踪 */
   public readonly name: string
   /** 组件属性（只读） */
   public props: Readonly<Record<string, any>>
-  /** 缓存的子虚拟节点 */
-  cachedChildVNode: VNode | null = null
-  constructor(public node: WidgetVNode<W>) {
-    node.runtimeInstance = this as unknown as WidgetVNode<W>['runtimeInstance']
-    this.name = node.type.displayName || node.type.name || 'anonymous'
-    this.props = node.props
+  /**
+   * 缓存的子虚拟节点
+   *
+   * @internal 不要随意修改！！！
+   */
+  public cachedChildVNode: VNode | null = null
+  constructor(public vnode: WidgetVNode<T>) {
+    vnode.runtimeInstance = this as unknown as WidgetVNode<T>['runtimeInstance']
+    this.name = vnode.type.displayName || vnode.type.name || 'anonymous'
+    this.props = vnode.props
     // 关联子节点的 el 和 anchor 属性
-    Object.defineProperty(node, 'el', {
+    Object.defineProperty(vnode, 'el', {
       get() {
         return this.runtimeInstance?.child.el
       },
@@ -50,7 +54,7 @@ export abstract class WidgetRuntime<W extends WidgetVNodeType> {
       enumerable: true,
       writable: true
     })
-    Object.defineProperty(node, 'anchor', {
+    Object.defineProperty(vnode, 'anchor', {
       get() {
         return this.runtimeInstance?.child.anchor
       },
@@ -66,8 +70,9 @@ export abstract class WidgetRuntime<W extends WidgetVNodeType> {
     }
     return this.cachedChildVNode
   }
-  get type(): W {
-    return this.node.type
+  /** 获取虚拟节点的类型 */
+  get type(): T {
+    return this.vnode.type
   }
   /**
    * 销毁实例资源
@@ -76,9 +81,9 @@ export abstract class WidgetRuntime<W extends WidgetVNodeType> {
   public destroy(): void {
     // 清空缓存的子虚拟节点
     this.cachedChildVNode = null
-    delete this.node.el
-    delete this.node.anchor
-    delete this.node.runtimeInstance
+    delete this.vnode.el
+    delete this.vnode.anchor
+    delete this.vnode.runtimeInstance
   }
   /**
    * 构建子虚拟节点
@@ -105,9 +110,9 @@ export abstract class WidgetRuntime<W extends WidgetVNodeType> {
    * @returns 函数执行结果
    */
   public runInContext<R>(fn: () => R): R {
-    if (this.node.appContext) {
-      return this.node.appContext.runInContext(() => runInNodeContext(this.node, fn))
+    if (this.vnode.appContext) {
+      return this.vnode.appContext.runInContext(() => runInNodeContext(this.vnode, fn))
     }
-    return runInNodeContext(this.node, fn)
+    return runInNodeContext(this.vnode, fn)
   }
 }

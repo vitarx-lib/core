@@ -54,7 +54,7 @@ export class StatelessWidgetRuntime extends WidgetRuntime<StatelessWidgetVNodeTy
         })
       }
     }
-    linkParentNode(child, this.node)
+    linkParentNode(child, this.vnode)
     return child
   }
 }

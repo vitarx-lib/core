@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils'
+import { Scheduler } from '@vitarx/responsive'
 import type {
   StatefulWidgetVNode,
   StatelessWidgetVNode,
@@ -20,9 +20,7 @@ import type { WidgetRuntime } from './WidgetRuntime.js'
  * @param node - 无状态组件节点
  * @returns 管理器实例
  */
-export function getWidgetRuntime<T extends StatelessWidgetVNode>(
-  node: StatelessWidgetVNode
-): StatelessWidgetRuntime
+export function createWidgetRuntime(node: StatelessWidgetVNode): StatelessWidgetRuntime
 /**
  * 获取或创建有状态组件运行时实例
  *
@@ -33,7 +31,7 @@ export function getWidgetRuntime<T extends StatelessWidgetVNode>(
  * @param options - 运行时实例配置选项
  * @returns 运行时实例
  */
-export function getWidgetRuntime<T extends StatefulWidgetVNode>(
+export function createWidgetRuntime(
   node: StatefulWidgetVNode,
   options?: StatefulManagerOptions
 ): StatefulWidgetRuntime
@@ -42,16 +40,18 @@ export function getWidgetRuntime<T extends StatefulWidgetVNode>(
  *
  * @param node
  */
-export function getWidgetRuntime<T extends WidgetVNodeType>(node: WidgetVNode<T>): WidgetRuntime<T>
+export function createWidgetRuntime<T extends WidgetVNodeType>(
+  node: WidgetVNode<T>
+): WidgetRuntime<T>
 /**
  * 获取或创建组件运行时实例
  * @param node - 组件节点
  * @param options - 运行时实例配置选项
  */
-export function getWidgetRuntime<T extends WidgetVNodeType>(
-  node: WidgetVNode<T>,
+export function createWidgetRuntime(
+  node: WidgetVNode,
   options?: StatefulManagerOptions
-): WidgetRuntime<T> {
+): WidgetRuntime {
   if (!node.runtimeInstance) {
     if (isStatelessWidget(node.type)) {
       new StatelessWidgetRuntime(node as StatelessWidgetVNode)
@@ -59,7 +59,7 @@ export function getWidgetRuntime<T extends WidgetVNodeType>(
       new StatefulWidgetRuntime(node as StatefulWidgetVNode, options)
     }
   }
-  return node.runtimeInstance as unknown as WidgetRuntime<T>
+  return node.runtimeInstance!
 }
 
 /**
@@ -74,7 +74,7 @@ export function getWidgetRuntime<T extends WidgetVNodeType>(
  * @throws {Error} - 非组件上下文中使用会抛出错误
  * @example
  * ```tsx
- * function FuncComponent() {
+ * function FuncWidget() {
  *   let show = true
  *   const forceUpdate = useForceUpdate()
  *   const toggle = () => {
@@ -90,11 +90,13 @@ export function getWidgetRuntime<T extends WidgetVNodeType>(
  */
 export function useForceUpdater(): (sync?: boolean) => void {
   const instance = getCurrentInstance()
-  if (!instance) {
-    logger.warn(
-      'The useForceUpdater() API function can only be used in the top-level scope of the function component!'
-    )
-    return () => void 0
+  if (instance) {
+    return sync => {
+      instance.update()
+      if (sync) {
+        Scheduler.flushSync()
+      }
+    }
   }
-  return instance.$forceUpdate.bind(instance)
+  throw new Error('useForceUpdate must be used in widget context')
 }

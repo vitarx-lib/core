@@ -85,7 +85,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
       }
     })
     this.options = Object.assign(this.options, options)
-    this.props = proxyWidgetProps(this.node.props, this.type['defaultProps'])
+    this.props = proxyWidgetProps(this.vnode.props, this.type['defaultProps'])
     this.instance = this.createWidgetInstance()
   }
 
@@ -117,7 +117,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
       }
 
       // 2. 向上查找最近的有状态父组件
-      let parentNode = findParentNode(this.node)
+      let parentNode = findParentNode(this.vnode)
       while (parentNode && !isStatefulWidgetNode(parentNode)) {
         parentNode = findParentNode(parentNode)
       }
@@ -128,8 +128,8 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
       }
 
       // 4. 如果没有父组件，尝试使用应用级错误处理器
-      if (this.node.appContext?.config?.errorHandler) {
-        return this.node.appContext.config.errorHandler.apply(this.instance, [
+      if (this.vnode.appContext?.config?.errorHandler) {
+        return this.vnode.appContext.config.errorHandler.apply(this.instance, [
           error,
           {
             source,
@@ -204,11 +204,11 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    */
   private finishUpdate(): void {
     this.hasPendingUpdate = false
-    if (this.node.state === NodeState.Unmounted) {
+    if (this.vnode.state === NodeState.Unmounted) {
       return
     }
 
-    if (this.node.state === NodeState.Deactivated) {
+    if (this.vnode.state === NodeState.Deactivated) {
       this.dirty = true
       return
     }
@@ -297,7 +297,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
         ? errorVNode
         : createCommentVNode({ value: `StatefulWidget<${this.name}> build failed` })
     }
-    linkParentNode(vnode, this.node)
+    linkParentNode(vnode, this.vnode)
     return vnode
   }
   /**
@@ -309,7 +309,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
   private patch(): VNode {
     this.dirty = false
     const newChild = this.build()
-    if (this.node.state === NodeState.Created) {
+    if (this.vnode.state === NodeState.Created) {
       return newChild
     }
     if (typeof this.instance.$patchUpdate === 'function') {
