@@ -4,7 +4,11 @@
  * 测试目标：验证元素类型映射和 JSX 类型定义
  */
 import { describe, expect, it } from 'vitest'
-import type { HTMLElementTagMap, HTMLVoidElementMap, HTMLIntrinsicElement } from '../../src/index.js'
+import type {
+  HTMLElementTagMap,
+  HTMLIntrinsicElement,
+  HTMLVoidElementMap
+} from '../../src/index.js'
 
 describe('types/element', () => {
   describe('元素标签映射', () => {
@@ -112,7 +116,7 @@ describe('types/element', () => {
       const props: FormProps = {
         action: '/submit',
         method: 'post',
-        onSubmit: (e) => e.preventDefault(),
+        onSubmit: e => e.preventDefault(),
         children: []
       }
 
