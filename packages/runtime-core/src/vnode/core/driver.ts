@@ -22,7 +22,7 @@ const controllers: Controllers = {} as Controllers
  * @param kind - 节点类型
  * @param controller - 节点控制器实例
  */
-export function registerNodeController<K extends NodeKind>(
+export function registerController<K extends NodeKind>(
   kind: K,
   controller: NodeController<NodeKindToNodeType[K]>
 ): void {
