@@ -12,7 +12,7 @@ import type {
 } from '../types/index.js'
 import { isElementNode } from '../utils/index.js'
 import { activateNode, deactivateNode, mountNode, renderNode, unmountNode } from '../vnode/index.js'
-import { getWidgetRuntime } from '../widget/runtime/utils.js'
+import { createWidgetRuntime } from '../widget/runtime/utils.js'
 
 /**
  * 基础 Widget 控制器抽象类，实现了 NodeController 接口。
@@ -49,7 +49,7 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
   abstract updateProps(node: WidgetVNode<T>, newProps: AnyProps): void
   /** @inheritDoc */
   render(node: WidgetVNode<T>): NodeElementType<T> {
-    const widget = getWidgetRuntime(node)
+    const widget = createWidgetRuntime(node)
     // 从根节点获取元素并转换为宿主元素实例类型
     const el = renderNode(widget.child)
     node.state = NodeState.Rendered
