@@ -118,7 +118,7 @@ export type FC<P extends AnyProps = any> = FunctionWidget<P>
  *
  * - ClassWidget：类小部件
  * - FunctionWidget：函数小部件
- * - SimpleWidget：简单小部件
+ * - StatelessWidget：无状态小部件
  */
 export type WidgetTypes<P extends AnyProps = any> = StatefulWidget<P> | StatelessWidget<P>
 /**
