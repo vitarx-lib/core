@@ -13,6 +13,7 @@ dist
 package-lock.json
 pnpm-lock.yaml
 coverage
+.qoder
 
 # Test
 test.ts
