@@ -10,7 +10,7 @@ import type {
 } from '../types/index.js'
 import { isVNode } from '../utils/index.js'
 import { createCommentVNode, renderNode } from '../vnode/index.js'
-import { getWidgetRuntime } from '../widget/runtime/utils.js'
+import { createWidgetRuntime } from '../widget/runtime/utils.js'
 import { BaseWidgetController } from './BaseWidgetController.js'
 
 /**
@@ -68,7 +68,7 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
   }
   /** @inheritDoc */
   override render(node: VNode<StatefulWidgetVNodeType>): HostNodeElements {
-    const widget = getWidgetRuntime(node)
+    const widget = createWidgetRuntime(node)
     // 触发render生命周期钩子
     widget.callHook(LifecycleHooks.render)
     let el: HostNodeElements
