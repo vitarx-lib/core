@@ -23,7 +23,7 @@ import { createBaseVNode } from './base.js'
  * @returns 创建的空元素虚拟节点
  * @template T 空元素节点类型
  */
-export const createVoidElementNode = <T extends VoidElementVNodeType>(
+export const createVoidElementVNode = <T extends VoidElementVNodeType>(
   type: T,
   props: ValidNodeProps<T>
 ): VoidElementVNode<T> => {
@@ -44,7 +44,7 @@ export const createVoidElementNode = <T extends VoidElementVNodeType>(
  * @returns 创建的常规元素虚拟节点
  * @template T 常规元素节点类型
  */
-export const createRegularElementNode = <T extends RegularElementVNodeType>(
+export const createRegularElementVNode = <T extends RegularElementVNodeType>(
   type: T,
   props: ValidNodeProps<T>
 ): RegularElementVNode<T> => {

@@ -82,7 +82,7 @@ function validateProps<T extends WidgetTypes>(
  * // node 是 StatelessWidgetNode 类型
  * ```
  */
-export function createWidgetNode<T extends StatelessWidget>(
+export function createWidgetVNode<T extends StatelessWidget>(
   widget: T,
   props: ValidNodeProps<T>
 ): StatelessWidgetVNode
@@ -108,7 +108,7 @@ export function createWidgetNode<T extends StatelessWidget>(
  * // node 是 StatefulWidgetNode 类型
  * ```
  */
-export function createWidgetNode<T extends StatefulWidget>(
+export function createWidgetVNode<T extends StatefulWidget>(
   widget: T,
   props: ValidNodeProps<T>
 ): StatefulWidgetVNode
@@ -146,7 +146,7 @@ export function createWidgetNode<T extends StatefulWidget>(
  * const statefulNode = createWidgetNode(StatefulComponent, { text: 'Hello' });
  * ```
  */
-export function createWidgetNode<T extends WidgetTypes>(
+export function createWidgetVNode<T extends WidgetTypes>(
   widget: T,
   props: ValidNodeProps<T>
 ): StatelessWidgetVNode | StatefulWidgetVNode {

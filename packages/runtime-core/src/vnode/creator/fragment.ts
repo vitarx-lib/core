@@ -12,7 +12,7 @@ import { createBaseVNode } from './base.js'
  * @param props 包含子节点的属性对象，必须包含 children 属性
  * @returns 创建的片段虚拟节点
  */
-export const createFragmentNode = (props: ValidNodeProps<FragmentVNodeType>): FragmentVNode => {
+export const createFragmentVNode = (props: ValidNodeProps<FragmentVNodeType>): FragmentVNode => {
   // 获取子节点数组
   const children = props.children as VNode[]
   // 创建基础片段节点
