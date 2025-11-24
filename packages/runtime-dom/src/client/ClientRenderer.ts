@@ -58,7 +58,7 @@ const DEFAULT_PROPERTIES_CACHE = new Map<string, Record<string, any>>()
  * - 提供了完善的错误处理机制
  * - 此类实例注册在运行时核心中，用于处理浏览器环境下的DOM操作和渲染。
  */
-export class WebRenderer implements HostRenderer {
+export class ClientRenderer implements HostRenderer {
   /** @inheritDoc */
   createElement<T extends HostElementNames>(vnode: ElementVNode<T>): HostElements<T> {
     let el: HostElements<T>
@@ -234,6 +234,23 @@ export class WebRenderer implements HostRenderer {
       return
     }
     try {
+      // 处理事件属性
+      if (typeof nextValue === 'function') {
+        if (prevValue === nextValue) return
+        // 清除旧事件
+        if (typeof prevValue === 'function') {
+          this.removeEventListener(el, name, prevValue)
+        }
+        // 绑定新事件
+        this.addEventListener(el, name, nextValue)
+        return
+      }
+
+      // 处理 data 属性
+      if (name.startsWith('data-')) {
+        el.dataset[name.slice(5)] = nextValue
+        return
+      }
       // 特殊处理xmlns:xlink
       if (name === 'xmlns:xlink') {
         el.setAttributeNS(XMLNS_NAMESPACE, name, String(nextValue))
@@ -401,7 +418,32 @@ export class WebRenderer implements HostRenderer {
     useCapture = options.capture ?? useCapture
     el.removeEventListener(event, handler as any, useCapture)
   }
-
+  /**
+   * 为元素添加事件监听器
+   *
+   * @param el - 元素实例
+   * @param {string} name - 事件名称
+   * @param {Function} handler - 事件处理函数
+   * @param {object} [options] - 事件监听器的配置选项
+   * @property {boolean} [options.capture=false] - 是否在捕获阶段触发事件监听器
+   * @property {boolean} [options.once=false] - 是否只触发一次事件监听器
+   * @property {boolean} [options.passive=false] - 是否使用passive模式注册事件监听器
+   * @returns {void}
+   * @description 为元素添加指定类型的事件监听器
+   * @example
+   * // 添加点击事件监听器
+   * element.addEventListener("click", (e) => console.log("clicked"), { capture: true });
+   */
+  private addEventListener(
+    el: HTMLElement | SVGElement,
+    name: string,
+    handler: (...args: any[]) => any,
+    options?: HTMLEventOptions
+  ): void {
+    const { event, options: eventOptions } = this.extractEventOptions(name)
+    Object.assign(eventOptions, options)
+    el.addEventListener(event, handler as any, eventOptions)
+  }
   /**
    * 将 "0.3s" / "120ms" 转换为毫秒数字
    */
