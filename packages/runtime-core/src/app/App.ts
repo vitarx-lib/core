@@ -9,10 +9,11 @@ import type {
   ErrorInfo,
   HostParentElement,
   StatefulWidgetVNode,
-  WidgetTypes,
-  WidgetVNode
+  VNode,
+  WidgetTypes
 } from '../types/index.js'
-import { createVNode, mountNode, unmountNode } from '../vnode/index.js'
+import { isContainerNode } from '../utils/index.js'
+import { createWidgetVNode, mountNode, unmountNode } from '../vnode/index.js'
 
 /** 应用配置 */
 export type AppConfig = Vitarx.AppConfig
@@ -72,7 +73,7 @@ export class App {
    * 根节点
    * @private
    */
-  readonly #rootNode: WidgetVNode
+  readonly #rootNode: VNode
   /**
    * 提供数据
    * @private
@@ -86,27 +87,47 @@ export class App {
   /**
    * 构建应用实例
    *
-   * @param root
+   * @param root - 根组件 / 根节点
    * @param config - 配置选项
    */
-  constructor(root: WidgetTypes, config?: AppConfig) {
+  constructor(root: VNode | WidgetTypes, config?: AppConfig) {
     if (typeof root === 'function') {
-      this.#rootNode = this.runInContext(() => createVNode(root))
+      this.#rootNode = createWidgetVNode(root, {})
     } else {
-      throw new Error('The root node must be a widget')
+      this.#rootNode = root
     }
     // 使用展开运算符合并配置，提供默认错误处理
     this.config = this.initConfig(config)
-    this.#rootNode.appContext = this
+    this.injectAppContext(this.#rootNode)
   }
+
   /**
    * 获取当前应用的根节点
    *
    * @returns {StatefulWidgetVNode} 返回根组件节点
    */
-  get rootNode(): WidgetVNode {
+  get rootNode(): VNode {
     return this.#rootNode
   }
+
+  /**
+   * 为虚拟节点树注入应用上下文
+   * @param node - 要注入应用上下文的根虚拟节点
+   * @private
+   */
+  private injectAppContext(node: VNode) {
+    // 递归遍历节点树，为每个节点设置应用作用域
+    const traverse = (node: VNode) => {
+      node.appContext = this
+      if (isContainerNode(node)) {
+        for (const child of node.children) {
+          traverse(child)
+        }
+      }
+    }
+    traverse(node)
+  }
+
   /**
    * 获取版本号
    *
@@ -325,24 +346,4 @@ export class App {
     install(this, options!)
     return this
   }
-}
-
-/**
- * 创建一个Vitarx应用实例
- *
- * @param root - 根组件
- * @param config - 应用配置
- * @returns {App} - 返回一个Vitarx应用实例
- *
- * @example
- * ```js
- * // 创建一个Vitarx应用实例
- * const app = createApp(YourAppHomeWidget);
- *
- * // 挂载应用
- * app.mount('#app');
- * ```
- */
-export function createApp(root: WidgetTypes, config?: AppConfig): App {
-  return new App(root, config)
 }
