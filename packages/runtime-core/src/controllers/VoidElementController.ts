@@ -1,10 +1,9 @@
-import { useRenderer } from '../renderer/index.js'
-import type { NodeElementType, VoidElementVNode, VoidElementVNodeType } from '../types/index.js'
-import { NonElementController } from './NonElementController.js'
+import type { VoidElementVNodeType } from '../types/index.js'
+import { ElementController } from './ElementController.js'
 
 /**
  * VoidElementController 是一个专门用于处理虚拟空元素（void elements）的控制器类。
- * 它继承自 NonElementController，主要负责创建和管理不需要子节点的 HTML 元素，
+ * 它继承自 ElementController，主要负责创建和管理不需要子节点的 HTML 元素，
  * 如 <img>、<br>、<input> 等自闭合标签。
  *
  * 核心功能：
@@ -28,10 +27,4 @@ import { NonElementController } from './NonElementController.js'
  * - 不支持包含子节点的元素
  * - 创建的元素类型必须符合 VoidElementVNodeType 接口规范
  */
-export class VoidElementController extends NonElementController<VoidElementVNodeType> {
-  protected createElement<T extends VoidElementVNodeType>(
-    node: VoidElementVNode<T>
-  ): NodeElementType<T> {
-    return useRenderer().createElement(node.type, node, node.props)
-  }
-}
+export class VoidElementController extends ElementController<VoidElementVNodeType> {}

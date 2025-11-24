@@ -9,7 +9,7 @@ import type {
   VNode
 } from '../types/index.js'
 import { isVNode } from '../utils/index.js'
-import { createCommentNode, renderNode } from '../vnode/index.js'
+import { createCommentVNode, renderNode } from '../vnode/index.js'
 import { getWidgetRuntime } from '../widget/runtime/utils.js'
 import { BaseWidgetController } from './BaseWidgetController.js'
 
@@ -78,7 +78,7 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
       const errVNode = widget.reportError(e, 'render')
       widget.cachedChildVNode = isVNode(errVNode)
         ? errVNode
-        : createCommentNode({ value: `StatefulWidget<${widget.name}> render fail` })
+        : createCommentVNode({ value: `StatefulWidget<${widget.name}> render fail` })
       // 获取更新后的DOM元素
       el = renderNode(widget.cachedChildVNode)
     }

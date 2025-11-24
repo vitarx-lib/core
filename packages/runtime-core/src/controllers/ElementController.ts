@@ -8,7 +8,8 @@ import type {
   HostNodeElements,
   HostVNode,
   NodeElementType,
-  OpsType
+  OpsType,
+  RegularElementVNodeType
 } from '../types/index.js'
 import { HostNodeController } from './HostNodeController.js'
 
@@ -93,5 +94,13 @@ export abstract class ElementController<T extends ElementVNodeType> extends Host
     const el = node.el! as HostElements
     super.unmount(node)
     callDirHook(node, 'unmounted', el)
+  }
+  /**
+   * @inheritDoc
+   */
+  protected createElement<T extends RegularElementVNodeType>(
+    node: ElementVNode<T>
+  ): NodeElementType<T> {
+    return this.dom.createElement(node)
   }
 }

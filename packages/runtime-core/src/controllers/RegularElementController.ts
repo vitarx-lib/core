@@ -1,8 +1,4 @@
-import type {
-  NodeElementType,
-  RegularElementVNode,
-  RegularElementVNodeType
-} from '../types/index.js'
+import type { RegularElementVNodeType } from '../types/index.js'
 import { mixinContainerController } from './ContainerController.js'
 import { ElementController } from './ElementController.js'
 
@@ -32,15 +28,5 @@ export class RegularElementController extends ElementController<RegularElementVN
   constructor() {
     super()
     mixinContainerController(this)
-  }
-  protected createElement<T extends RegularElementVNodeType>(
-    node: RegularElementVNode<T>
-  ): NodeElementType<T> {
-    const isSVGElement = node.isSVGElement
-    return this.dom[isSVGElement ? 'createElement' : 'createSVGElement'](
-      node.type,
-      node,
-      node.props
-    )
   }
 }
