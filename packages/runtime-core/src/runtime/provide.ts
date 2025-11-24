@@ -113,11 +113,15 @@ export function inject<T>(
   let parentNode: VNode | undefined = findParentNode(currentVNode)
   while (parentNode) {
     if (isStatefulWidgetNode(parentNode) && parentNode.injectionStore?.has(name)) {
-      return parentNode.injectionStore.get(name) as T
+      const value = parentNode.injectionStore.get(name)
+      if (value !== undefined) return value
     }
     parentNode = findParentNode(parentNode)
   }
-
+  // 尝试从 appContext 中获取数据
+  if (currentVNode.appContext?.hasProvide(name)) {
+    return currentVNode.appContext.inject(name, defaultValue)
+  }
   // 处理默认值
   if (typeof defaultValue === 'function' && treatDefaultAsFactory) {
     return defaultValue()
