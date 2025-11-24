@@ -5,7 +5,10 @@ declare global {
   namespace Vitarx {
     interface IntrinsicElements extends HTMLIntrinsicElement {}
     interface HostParentNode extends HTMLElement {}
-    interface HostFragmentNode extends DocumentFragment {}
+    interface HostFragmentNode extends DocumentFragment {
+      $startAnchor: HostCommentNode
+      $endAnchor: HostCommentNode
+    }
     interface HostTextNode extends Text {}
     interface HostCommentNode extends Comment {}
     interface HostNodeMap extends HTMLElementTagMap {}
