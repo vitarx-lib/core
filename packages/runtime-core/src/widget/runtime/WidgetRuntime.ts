@@ -1,5 +1,6 @@
 import { runInNodeContext } from '../../runtime/index.js'
 import type { VNode, WidgetVNode, WidgetVNodeType } from '../../types/index.js'
+import { getWidgetName } from '../../utils/index.js'
 
 /**
  * Widget组件运行时基类，提供组件生命周期管理和虚拟节点构建功能。
@@ -43,7 +44,7 @@ export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType>
   public cachedChildVNode: VNode | null = null
   constructor(public vnode: WidgetVNode<T>) {
     vnode.runtimeInstance = this as unknown as WidgetVNode<T>['runtimeInstance']
-    this.name = vnode.type.displayName || vnode.type.name || 'anonymous'
+    this.name = getWidgetName(vnode.type)
     this.props = vnode.props
     // 关联子节点的 el 和 anchor 属性
     Object.defineProperty(vnode, 'el', {
