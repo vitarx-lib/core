@@ -65,6 +65,41 @@ export type AppPlugin<T extends {} = {}> = AppObjectPlugin<T> | AppPluginInstall
 const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
   logger.error('there are unhandled exceptions', error, info)
 
+/**
+ * 应用程序主类，负责管理整个应用的生命周期和核心功能
+ *
+ * 主要功能：
+ * - 管理应用配置和根节点
+ * - 提供依赖注入机制
+ * - 支持自定义指令注册
+ * - 提供插件系统
+ * - 处理应用的挂载和卸载
+ *
+ * @example
+ * ```typescript
+ * // 创建应用实例
+ * const app = new App(YourRootWidget, {
+ *   errorHandler: customErrorHandler,
+ *   idPrefix: 'my-app'
+ * });
+ *
+ * // 注册指令
+ * app.directive('focus', {
+ *   mounted(el) {
+ *     el.focus();
+ *   }
+ * });
+ *
+ * // 使用插件
+ * app.use(SomePlugin);
+ *
+ * // 挂载到DOM
+ * app.mount('#app');
+ * ```
+ *
+ * @param root - 根组件或根虚拟节点
+ * @param config - 可选的应用配置对象，包含错误处理器和ID前缀等配置
+ */
 export class App {
   readonly [NON_SIGNAL_SYMBOL] = true
   /** 配置选项 */
