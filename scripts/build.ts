@@ -101,12 +101,10 @@ function createTempTsConfig(packagePath: string): string {
 
 /**
  * 创建一个用于类型检查的临时TypeScript配置文件（包含测试目录）
- * @param packagePath - 项目包的路径
+ * @param tsconfigPath - 临时配置文件的完整路径
  * @returns {string} 返回临时配置文件的完整路径
  */
-function createTempTsConfigForTypeCheck(packagePath: string): string {
-  // 定义临时配置文件的完整路径
-  const tsconfigPath = join(packagePath, 'tsconfig.typecheck.json')
+function createTempTsConfigForTypeCheck(tsconfigPath: string): string {
   // 定义临时配置文件的内容结构（包含测试目录）
   const tsconfigJson = {
     extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
@@ -186,10 +184,9 @@ async function buildPackage(
       log.warn('🔍 Running TypeScript type check...')
       const tsconfigPath = join(packagePath, 'tsconfig.test.json')
       const hasTsconfig = existsSync(tsconfigPath)
-
       if (!hasTsconfig) {
         // 如果没有 tsconfig.json，创建临时配置
-        createTempTsConfigForTypeCheck(packagePath)
+        createTempTsConfigForTypeCheck(tsconfigPath)
       }
 
       try {
