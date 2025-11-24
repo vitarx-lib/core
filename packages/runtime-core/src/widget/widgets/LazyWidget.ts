@@ -10,6 +10,7 @@ import type {
   WidgetTypes,
   WithNodeProps
 } from '../../types/index.js'
+import { isVNode } from '../../utils/index.js'
 import { createVNode } from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 
@@ -107,14 +108,6 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
       this.suspenseCounter.value++
     }
   }
-  override onRender(): Promise<unknown> {
-    return this._loadAsyncWidget()
-  }
-
-  override onBeforeUnmount(): void {
-    this._isUnmounting = true
-    this._cancelTask?.()
-  }
   /**
    * 验证组件属性是否符合要求
    *
@@ -127,15 +120,30 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
         `[LazyWidget]: children 期望得到一个异步函数，实际类型为 ${typeof props.children}`
       )
     }
+    if (props.loading && !isVNode(props.loading)) {
+      throw new TypeError(
+        `[LazyWidget]: loading 期望得到一个节点对象，实际类型为 ${typeof props.loading}`
+      )
+    }
     if (props.onError && typeof props.onError !== 'function') {
       throw new TypeError(
         `[LazyWidget]: onError 期望得到一个回调函数，实际类型为 ${typeof props.onError}`
       )
     }
   }
+
+  override onBeforeUnmount(): void {
+    this._isUnmounting = true
+    this._cancelTask?.()
+  }
+
+  override onRender(): Promise<void> {
+    return this._loadAsyncWidget()
+  }
   build(): VNodeChild {
     return undefined
   }
+
   /**
    * 加载异步组件
    *
@@ -149,7 +157,7 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
       timeout,
       signal: () => this._isUnmounting,
       onDelay: () => {
-        if (loading) {
+        if (isVNode(loading)) {
           this._updateBuild(() => loading)
         }
       },
