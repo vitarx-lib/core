@@ -233,7 +233,7 @@ export class DomRenderer implements HostRenderer {
       el.innerHTML = nextValue
       return
     }
-    if (nextValue === undefined) {
+    if (nextValue === undefined || nextValue === null) {
       this.removeAttribute(el, name, prevValue)
       return
     }
