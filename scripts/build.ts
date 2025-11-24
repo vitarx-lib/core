@@ -78,7 +78,7 @@ function cleanDist(dist: string) {
 }
 
 /**
- * 创建一个临时的TypeScript配置文件
+ * 创建一个临时的TypeScript配置文件（用于构建）
  * @param packagePath - 项目包的路径
  * @returns {string} 返回临时配置文件的完整路径
  */
@@ -91,7 +91,30 @@ function createTempTsConfig(packagePath: string): string {
     extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
     compilerOptions: { outDir: 'dist' }, // 设置编译输出目录为dist
     include: ['src'], // 包含的文件和目录
-    exclude: ['dist', 'node_modules', '__tests__'] // 排除的文件和目录
+    exclude: ['dist', 'node_modules', '__tests__', 'tests'] // 排除的文件和目录
+  }
+  // 将配置对象写入JSON文件，使用2个空格进行格式化
+  writeFileSync(tsconfigPath, JSON.stringify(tsconfigJson, null, 2))
+  // 返回创建的临时配置文件路径
+  return tsconfigPath
+}
+
+/**
+ * 创建一个用于类型检查的临时TypeScript配置文件（包含测试目录）
+ * @param packagePath - 项目包的路径
+ * @returns {string} 返回临时配置文件的完整路径
+ */
+function createTempTsConfigForTypeCheck(packagePath: string): string {
+  // 定义临时配置文件的完整路径
+  const tsconfigPath = join(packagePath, 'tsconfig.typecheck.json')
+  // 定义临时配置文件的内容结构（包含测试目录）
+  const tsconfigJson = {
+    extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
+    compilerOptions: {
+      noEmit: true // 不生成输出文件
+    },
+    include: ['src', '__tests__', 'tests'], // 包含源码和测试目录
+    exclude: ['dist', 'node_modules'] // 排除的文件和目录
   }
   // 将配置对象写入JSON文件，使用2个空格进行格式化
   writeFileSync(tsconfigPath, JSON.stringify(tsconfigJson, null, 2))
@@ -160,6 +183,26 @@ async function buildPackage(
     if (!existsSync(testDir1) && !existsSync(testDir2)) {
       log.warn('⚠️  No test directory found (__tests__ or tests)')
     } else {
+      log.warn('🔍 Running TypeScript type check...')
+      const tsconfigPath = join(packagePath, 'tsconfig.test.json')
+      const hasTsconfig = existsSync(tsconfigPath)
+
+      if (!hasTsconfig) {
+        // 如果没有 tsconfig.json，创建临时配置
+        createTempTsConfigForTypeCheck(packagePath)
+      }
+
+      try {
+        // 运行 TypeScript 类型检查（不生成输出文件）
+        await runCommand(`tsc --noEmit -p ${tsconfigPath}`, packagePath)
+        log.success('  ✓ Type check passed successfully')
+      } finally {
+        // 清理临时配置文件
+        if (!hasTsconfig) {
+          rmSync(tsconfigPath, { force: true })
+        }
+      }
+
       log.warn('🧪 Running vitest tests...')
       // 使用 vitest 运行测试
       await runCommand(`vitest run --dir ${packagePath}`)
