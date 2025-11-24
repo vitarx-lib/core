@@ -1,14 +1,14 @@
 /** 生命周期钩子枚举 */
 export enum LifecycleHooks {
+  error = 'onError',
   create = 'onCreate',
-  beforeMount = 'onBeforeMount',
   render = 'onRender',
+  beforeMount = 'onBeforeMount',
   mounted = 'onMounted',
-  deactivated = 'onDeactivated',
   activated = 'onActivated',
+  deactivated = 'onDeactivated',
   beforeUpdate = 'onBeforeUpdate',
   updated = 'onUpdated',
-  error = 'onError',
-  unmounted = 'onUnmounted',
-  beforeUnmount = 'onBeforeUnmount'
+  beforeUnmount = 'onBeforeUnmount',
+  unmounted = 'onUnmounted'
 }
