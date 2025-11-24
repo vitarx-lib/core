@@ -81,30 +81,10 @@ export interface HostRenderer {
    * 创建指定类型的DOM元素
    *
    * @template T - 元素类型
-   * @param type - 元素类型，如 'div', 'span' 等
    * @param vnode - 虚拟节点对象
-   * @param initAttributes - 初始属性对象
    * @returns { HostElements<T> } 返回创建的元素实例
    */
-  createElement<T extends HostElementNames>(
-    type: T,
-    vnode: ElementVNode<T>,
-    initAttributes?: Record<string, any>
-  ): HostElements<T>
-  /**
-   * 创建SVG元素
-   *
-   * @template T - 元素类型
-   * @param type - 元素类型，如 'svg', 'path' 等
-   * @param vnode - 虚拟节点对象
-   * @param initAttributes - 初始属性对象
-   * @returns { HostElements<T> } 创建的元素实例
-   */
-  createSVGElement<T extends HostElementNames>(
-    type: T,
-    vnode: ElementVNode<T>,
-    initAttributes?: Record<string, any>
-  ): HostElements<T>
+  createElement<T extends HostElementNames>(vnode: ElementVNode<T>): HostElements<T>
   /**
    * 判断是否为容器元素
    *
