@@ -37,6 +37,10 @@ export class RegularElementController extends ElementController<RegularElementVN
     node: RegularElementVNode<T>
   ): NodeElementType<T> {
     const isSVGElement = node.isSVGElement
-    return this.dom[isSVGElement ? 'createElement' : 'createSVGElement'](node.type, node.props)
+    return this.dom[isSVGElement ? 'createElement' : 'createSVGElement'](
+      node.type,
+      node,
+      node.props
+    )
   }
 }

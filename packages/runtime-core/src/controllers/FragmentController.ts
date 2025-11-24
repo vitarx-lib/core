@@ -1,5 +1,10 @@
 import { useRenderer } from '../renderer/index.js'
-import { type FragmentVNodeType, type HostFragmentElement, HostVNode } from '../types/index.js'
+import {
+  type FragmentVNode,
+  type FragmentVNodeType,
+  type HostFragmentElement,
+  HostVNode
+} from '../types/index.js'
 import { AnyProps } from '../types/widget.js'
 import { mixinContainerController } from './ContainerController.js'
 import { HostNodeController } from './HostNodeController.js'
@@ -30,7 +35,7 @@ export class FragmentController extends HostNodeController<FragmentVNodeType> {
     return
   }
   /** @inheritDoc */
-  protected createElement(): HostFragmentElement {
-    return useRenderer().createFragment()
+  protected createElement(node: FragmentVNode): HostFragmentElement {
+    return useRenderer().createFragment(node)
   }
 }

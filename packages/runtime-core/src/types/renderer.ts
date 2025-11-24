@@ -9,6 +9,7 @@ import type {
   HostTextElement,
   HostVoidElementNames
 } from './element.js'
+import type { ElementVNode, FragmentVNode } from './nodes/index.js'
 
 /**
  * DOMRect 接口，表示一个矩形区域，
@@ -81,11 +82,13 @@ export interface HostRenderer {
    *
    * @template T - 元素类型
    * @param type - 元素类型，如 'div', 'span' 等
+   * @param vnode - 虚拟节点对象
    * @param initAttributes - 初始属性对象
    * @returns { HostElements<T> } 返回创建的元素实例
    */
   createElement<T extends HostElementNames>(
     type: T,
+    vnode: ElementVNode<T>,
     initAttributes?: Record<string, any>
   ): HostElements<T>
   /**
@@ -93,11 +96,13 @@ export interface HostRenderer {
    *
    * @template T - 元素类型
    * @param type - 元素类型，如 'svg', 'path' 等
+   * @param vnode - 虚拟节点对象
    * @param initAttributes - 初始属性对象
    * @returns { HostElements<T> } 创建的元素实例
    */
   createSVGElement<T extends HostElementNames>(
     type: T,
+    vnode: ElementVNode<T>,
     initAttributes?: Record<string, any>
   ): HostElements<T>
   /**
@@ -112,7 +117,7 @@ export interface HostRenderer {
    * 创建文档片段，用于批量DOM操作提高性能
    * @returns { HostFragmentElement } 返回文档片段实例
    */
-  createFragment(): HostFragmentElement
+  createFragment(vnode: FragmentVNode): HostFragmentElement
   /**
    * 创建文本节点
    * @param text - 文本内容

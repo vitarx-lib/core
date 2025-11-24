@@ -32,6 +32,6 @@ export class VoidElementController extends NonElementController<VoidElementVNode
   protected createElement<T extends VoidElementVNodeType>(
     node: VoidElementVNode<T>
   ): NodeElementType<T> {
-    return useRenderer().createElement(node.type, node.props)
+    return useRenderer().createElement(node.type, node, node.props)
   }
 }
