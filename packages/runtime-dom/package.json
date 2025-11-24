@@ -17,8 +17,6 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "dist/index.d.ts",
-  "unpkg": "dist/index.iife.js",
-  "jsdelivr": "dist/index.iife.js",
   "files": [
     "dist",
     "LICENSE",
@@ -31,8 +29,12 @@
         "default": "./dist/index.js"
       }
     },
-    "./unpkg": "./dist/index.iife.js",
-    "./jsdelivr": "./dist/index.iife.js"
+    "./client": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
   },
   "dependencies": {
     "@vitarx/runtime-core": "workspace:^",
