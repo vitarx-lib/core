@@ -321,7 +321,10 @@ export class DomRenderer implements HostRenderer {
 
   /** @inheritDoc */
   getParentElement(el: HostNodeElements): HostParentElement | null {
-    return el.parentElement
+    if (this.isFragment(el)) {
+      return el.$startAnchor.parentNode as HostParentElement | null
+    }
+    return el.parentNode as HostParentElement | null
   }
 
   /** @inheritDoc */
