@@ -38,7 +38,52 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  * @param type - 节点类型
  * @param props - 节点属性
  * @param children - 子节点，会合并到props.children中
- * @returns VNode实例
+ * @returns VNode对象
+ *
+ * @example
+ * ```js
+ * // 创建普通HTML元素
+ * const divNode = createVNode('div', { class: 'container' })
+ * ```
+ *
+ * @example
+ * ```js
+ * // 创建带子节点的元素
+ * const listNode = createVNode('ul', null,
+ *   createVNode('li', null, 'Item 1'),
+ *   createVNode('li', null, 'Item 2')
+ * )
+ * ```
+ *
+ * @example
+ * ```js
+ * // 创建组件节点
+ * const MyWidget = () => createVNode('div', null, 'Hello')
+ * const widgetNode = createVNode(MyWidget, { name: 'world' })
+ * ```
+ *
+ * @example
+ * ```js
+ * // 创建文本节点
+ * const textNode = createVNode('text', { value: 'Hello World' })
+ * ```
+ *
+ * @example
+ * ```js
+ * // 创建Fragment节点
+ * const fragmentNode = createVNode('fragment', {
+ *   children: [textNode1, textNode2]
+ * })
+ * ```
+ *
+ * @example
+ * ```js
+ * // 创建动态组件
+ * const dynamicNode = createVNode('render', {
+ *   is: ref(MyWidget),
+ *   someProp: 'value'
+ * })
+ * ```
  */
 export function createVNode<T extends ValidNodeType>(
   type: T,
