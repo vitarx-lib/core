@@ -185,6 +185,7 @@ type AttributeNames =
   | 'value'
   | 'width'
   | 'wrap'
+  | 'children'
 
 /**
  * 判断一个属性P是否存在于W3C标准属性中
