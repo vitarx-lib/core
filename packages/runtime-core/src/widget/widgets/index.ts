@@ -1,6 +1,6 @@
 export * from './Suspense.js'
 export * from './KeepAlive.js'
-export * from './LazyWidget.js'
+export * from './Lazy.js'
 export * from './PropBind.js'
 export * from './Transition.js'
 export * from './TransitionGroup.js'

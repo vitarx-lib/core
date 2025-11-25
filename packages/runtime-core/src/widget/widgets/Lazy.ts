@@ -48,7 +48,7 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
    * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
    * @param info - 捕获异常的阶段，可以是`build`或`render`
    */
-  onError?: ErrorHandler<LazyWidget<any>>
+  onError?: ErrorHandler<Lazy<any>>
   /**
    * 展示加载组件前的延迟时间
    *
@@ -74,18 +74,18 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
  * ```jsx
  * const YourWidget = () => import('./YourWidget.js')
  * // 通过属性传入
- * <LazyWidget children={YourWidget} />
+ * <Lazy children={YourWidget} />
  * // 通过插槽传入
- * <LazyWidget>{YourWidget}</LazyWidget>
+ * <Lazy>{YourWidget}</LazyWidget>
  * // 自定义loading态备用小部件
- * <LazyWidget loading={<div>加载中...</div>}/>
+ * <Lazy loading={<div>加载中...</div>}/>
  * // onError钩子接管异常
- * <LazyWidget onError={()=><div>加载失败...</div>}/>
+ * <Lazy onError={()=><div>加载失败...</div>}/>
  * // 2.0 版本开始框架支持直接渲染异步组件模块
  * <YourWidget data="数据会透传给最终渲染的组件"/>
  * ```
  */
-export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>> {
+export class Lazy<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>> {
   static defaultProps = {
     delay: 200,
     timeout: 0
