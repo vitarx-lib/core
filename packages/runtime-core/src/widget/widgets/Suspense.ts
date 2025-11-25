@@ -131,7 +131,7 @@ export class Suspense extends Widget<SuspenseProps> {
    * @param {AnyProps} props 需要验证的属性对象
    * @throws {TypeError} 当属性不符合预期时抛出类型错误
    */
-  static override validateProps(props: AnyProps) {
+  static validateProps(props: AnyProps) {
     // 检查children属性是否存在且为VNode对象
     if (!isVNode(props.children)) {
       throw new TypeError(`Suspense.children属性期望得到一个节点对象，给定${typeof props.children}`)

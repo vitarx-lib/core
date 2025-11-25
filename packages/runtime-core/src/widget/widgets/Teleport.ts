@@ -82,7 +82,7 @@ interface TeleportProps {
  * - 目标元素必须是支持插入子元素的容器元素
  */
 export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
-  static override defaultProps = { defer: false, disabled: false } as const
+  static defaultProps = { defer: false, disabled: false } as const
   private teleported: boolean = false
   private readonly disabled: boolean
 
@@ -103,7 +103,7 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
     }
   }
 
-  static override validateProps(props: Record<string, any>): void {
+  static validateProps(props: Record<string, any>): void {
     if (!isVNode(props.children)) {
       throw new TypeError(
         `Teleport.children property expects to get a node object, given ${typeof props.children}`

@@ -233,7 +233,7 @@ export abstract class BaseTransition<
   D extends Partial<P> = {}
 > extends Widget<P, D & typeof DEFAULT_PROPS> {
   /** 组件默认属性 */
-  static override defaultProps = DEFAULT_PROPS
+  static defaultProps = DEFAULT_PROPS
 
   /**
    * 存储正在进行中的过渡动画定时器

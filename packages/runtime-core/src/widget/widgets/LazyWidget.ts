@@ -86,7 +86,7 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
  * ```
  */
 export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>> {
-  static override defaultProps = {
+  static defaultProps = {
     delay: 200,
     timeout: 0
   }
@@ -114,7 +114,7 @@ export class LazyWidget<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>
    * @param props - 组件属性对象
    * @throws {TypeError} 当属性不符合要求时抛出类型错误
    */
-  static override validateProps(props: AnyProps): void {
+  static validateProps(props: AnyProps): void {
     if (typeof props.children !== 'function') {
       throw new TypeError(
         `[LazyWidget]: children 期望得到一个异步函数，实际类型为 ${typeof props.children}`

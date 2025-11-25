@@ -117,7 +117,7 @@ export interface KeepAliveProps {
  * - 在组件卸载时会自动清理所有缓存的实例
  */
 export class KeepAlive extends Widget<KeepAliveProps> {
-  static override defaultProps = {
+  static defaultProps = {
     max: 10,
     include: [],
     exclude: []
@@ -167,7 +167,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    * @param props - 需要验证的属性对象
    * @throws Error 当缺少children属性时抛出错误
    */
-  static override validateProps(props: AnyProps) {
+  static validateProps(props: AnyProps) {
     // 检查是否存在children属性
     if (!props.children) throw new TypeError('KeepAlive children is required')
     if (!isWidgetNode(props.children) && typeof props.children !== 'function') {
