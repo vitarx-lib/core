@@ -121,13 +121,14 @@ describe('runtime/hook', () => {
     })
 
     it('应该接受多个属性', () => {
-      const exposed = {
-        value: 1,
-        method1: () => {},
-        method2: () => {},
-        data: { nested: true }
-      }
-      expect(() => defineExpose(exposed)).not.toThrow()
+      expect(() =>
+        defineExpose({
+          value: 1,
+          method1: () => {},
+          method2: () => {},
+          data: { nested: true }
+        })
+      ).not.toThrow()
     })
 
     it('应该处理保留关键词', () => {
