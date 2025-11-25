@@ -48,7 +48,7 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
    * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
    * @param info - 捕获异常的阶段，可以是`build`或`render`
    */
-  onError?: ErrorHandler<Lazy<any>>
+  onError?: ErrorHandler<Lazy<T>>
   /**
    * 展示加载组件前的延迟时间
    *
@@ -85,7 +85,7 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
  * <YourWidget data="数据会透传给最终渲染的组件"/>
  * ```
  */
-export class Lazy<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>> {
+export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidgetProps<T>> {
   static defaultProps = {
     delay: 200,
     timeout: 0
@@ -140,7 +140,8 @@ export class Lazy<T extends WidgetTypes> extends Widget<LazyWidgetProps<T>> {
   override onRender(): Promise<void> {
     return this._loadAsyncWidget()
   }
-  build(): VNodeChild {
+
+  override build(): VNodeChild {
     return undefined
   }
 
