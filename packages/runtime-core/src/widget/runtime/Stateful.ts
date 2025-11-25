@@ -188,7 +188,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    *
    * @returns Promise，在更新完成后 resolve
    */
-  public override update(): void {
+  public override update = (): void => {
     // ---------- 异步更新 ----------
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
