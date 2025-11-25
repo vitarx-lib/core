@@ -16,7 +16,7 @@ export type VNodeBuilder = Widget['build']
  *
  * @template P - 组件的 props 类型
  */
-export type WidgetOptions<P extends AnyProps> = {
+export type WidgetOptions = {
   /**
    * 定义组件的默认属性。
    *
@@ -46,7 +46,7 @@ export type WidgetOptions<P extends AnyProps> = {
    * };
    * ```
    */
-  defaultProps?: Partial<P>
+  defaultProps?: Record<string, any>
   /**
    * 属性验证函数。
    *
@@ -81,7 +81,7 @@ export type WidgetOptions<P extends AnyProps> = {
  */
 export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget> = {
   new (props: P): I
-} & WidgetOptions<P>
+} & WidgetOptions
 /**
  * 模块小部件类型
  */
@@ -108,7 +108,7 @@ export type ValidBuildResult =
  */
 export type FunctionWidget<P extends AnyProps = any> = {
   (props: P): ValidBuildResult
-} & WidgetOptions<P>
+} & WidgetOptions
 /**
  * 函数小部件类型别名
  */
@@ -157,7 +157,7 @@ export type AsyncWidget<P extends AnyProps = any> = (props: P) => Promise<VNodeC
 export type StatelessWidget<P extends AnyProps = any, R extends VNodeChild = VNodeChild> = {
   readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
   (props: P): R
-} & WidgetOptions<P>
+} & WidgetOptions
 
 export interface StatelessWidgetSymbol {
   readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
