@@ -28,7 +28,8 @@ import type {
   StatefulWidgetVNode,
   StatelessWidgetVNode,
   TextVNode,
-  VNode
+  VNode,
+  VoidElementVNode
 } from './nodes/index.js'
 import type { StatefulWidget, StatelessWidget, WidgetTypes } from './widget.js'
 
@@ -143,13 +144,15 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | Dyna
       ? TextVNode
       : T extends CommentVNodeType
         ? CommentVNode
-        : T extends RegularElementVNodeType
-          ? RegularElementVNode<T>
-          : T extends StatelessWidget
-            ? StatelessWidgetVNode
-            : T extends WidgetTypes
-              ? StatefulWidgetVNode
-              : VNode
+        : T extends VoidElementVNodeType
+          ? VoidElementVNode<T>
+          : T extends RegularElementVNodeType
+            ? RegularElementVNode<T>
+            : T extends StatelessWidget
+              ? StatelessWidgetVNode
+              : T extends WidgetTypes
+                ? StatefulWidgetVNode
+                : VNode
 
 /**
  * 运行时元素实例类型
