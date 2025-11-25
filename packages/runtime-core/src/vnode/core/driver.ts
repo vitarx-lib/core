@@ -1,3 +1,4 @@
+import { logger } from '@vitarx/utils'
 import { NodeKind, NodeState } from '../../constants/index.js'
 import { unlinkParentNode } from '../../runtime/index.js'
 import type {
@@ -10,6 +11,7 @@ import type {
   VNode,
   VNodeTypes
 } from '../../types/index.js'
+import { __DEV__ } from '../../utils/index.js'
 
 type Controllers = {
   [key in NodeKind]: NodeController<NodeKindToNodeType[key]>
@@ -52,7 +54,7 @@ export function mountNode(node: VNode, container?: HostParentElement, opsType?: 
   }
   if (node.state === NodeState.Rendered) {
     controllers[node.kind].mount(node as VNode<never>, container, opsType)
-    node.state = NodeState.Activated
+    return
   }
   throw new Error(`The node state (${node.state}) is also not in the mountable stage`)
 }
@@ -66,7 +68,7 @@ export function mountNode(node: VNode, container?: HostParentElement, opsType?: 
 export function activateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Deactivated) {
     controllers[node.kind].activate(node as VNode<never>, root)
-    node.state = NodeState.Activated
+    return
   }
   throw new Error(`The node state (${node.state}) is also not in the activatable stage`)
 }
@@ -80,7 +82,7 @@ export function activateNode(node: VNode, root: boolean = true): void {
 export function deactivateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Activated) {
     controllers[node.kind].deactivate(node as VNode<never>, root)
-    node.state = NodeState.Deactivated
+    return
   }
   throw new Error(`The node state (${node.state}) is also not in the deactivatable stage`)
 }
@@ -91,8 +93,10 @@ export function deactivateNode(node: VNode, root: boolean = true): void {
  * @param node - 虚拟节点
  */
 export function unmountNode(node: VNode): void {
-  if (node.state === NodeState.Unmounted) {
-    throw new Error(`The node state (${node.state}) is also not in the unmountable stage`)
+  if (__DEV__ && node.state === NodeState.Unmounted) {
+    logger.warn(
+      `unmountNode() - The node state (${node.state}) is also not in the unmountable stage`
+    )
   }
   controllers[node.kind].unmount(node as VNode<never>)
   unlinkParentNode(node)
