@@ -362,6 +362,10 @@ export class DomRenderer implements HostRenderer {
           el.appendChild(this.recoveryFragmentChildren(getNodeDomOpsTarget(child)))
         }
         el.appendChild(el.$endAnchor)
+      } else if (!el.contains(el.$startAnchor)) {
+        // 兼容片段首次插入到父节点时的恢复操作操作
+        el.insertBefore(el.$startAnchor, el.childNodes[0])
+        el.appendChild(el.$endAnchor)
       }
     }
     return el
