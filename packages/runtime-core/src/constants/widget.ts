@@ -13,9 +13,9 @@ export const __WIDGET_INTRINSIC_METHOD_KEYWORDS__ = [
  * 组件内部保留属性
  */
 export const __WIDGET_INTRINSIC_PROPERTY_KEYWORDS__ = [
-  '$scope',
   '$el',
   '$vnode',
+  'props',
   'children'
 ] as const
 /**
