@@ -52,16 +52,14 @@ export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType>
         return this.runtimeInstance?.child.el
       },
       configurable: true,
-      enumerable: true,
-      writable: true
+      enumerable: true
     })
     Object.defineProperty(vnode, 'anchor', {
       get() {
         return this.runtimeInstance?.child.anchor
       },
       configurable: true,
-      enumerable: true,
-      writable: true
+      enumerable: true
     })
   }
   /** 获取子虚拟节点（懒构建） */
