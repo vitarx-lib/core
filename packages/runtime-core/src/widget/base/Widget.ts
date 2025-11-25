@@ -75,40 +75,6 @@ export abstract class Widget<
    */
   static validateProps?: (props: Record<string, any>) => string | false | unknown
   /**
-   * Props默认值
-   *
-   * 会在创建组件实例时自动注入到props中
-   *
-   * 需注意：props在组件实例中是一个只读响应式代理，
-   * defaultProps 中的属性通过 in props 判断是无效的，它只在获取属性时有效
-   *
-   * @since 4.0.0
-   * @example defaultProps 静态属性的使用
-   * ```tsx
-   * nodes UserInfoProps {
-   *   name:string,
-   *   age:number
-   * }
-   * class UserInfo extends Widget<UserInfoProps> {
-   *   static defaultProps = {
-   *     age:18
-   *   }
-   *   onCreate() {
-   *    console.log(this.props.name,this.props.age) // 小明 18
-   *   }
-   *   build() {
-   *    return <div>{this.props.name}-{this.props.age}</div>
-   *   }
-   * }
-   *
-   * function App() {
-   *  // age 会被推导为可选的，不传入不会报错
-   *  return <UserInfo name="小明"/>
-   * }
-   * ```
-   */
-  static defaultProps?: Record<string, any>
-  /**
    * 存储小部件的传入属性
    *
    * @private
