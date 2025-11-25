@@ -11,6 +11,7 @@ import type {
   ValidNodeProps,
   ValidNodeType,
   VNode,
+  VNodeChild,
   VNodeInstanceType
 } from '../../types/index.js'
 import { __DEV__, getNodeDevInfo, isWidget } from '../../utils/index.js'
@@ -36,11 +37,13 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  *
  * @param type - 节点类型
  * @param props - 节点属性
+ * @param children - 子节点，会合并到props.children中
  * @returns VNode实例
  */
 export function createVNode<T extends ValidNodeType>(
   type: T,
-  props: ValidNodeProps<T> = {} as ValidNodeProps<T>
+  props: ValidNodeProps<T> = {} as ValidNodeProps<T>,
+  ...children: VNodeChild[]
 ): VNodeInstanceType<T> {
   const supportChildren = isSupportChildren(type)
   // 检查不支持children的节点
@@ -49,7 +52,14 @@ export function createVNode<T extends ValidNodeType>(
     logger.warn(`<${type}> children prop will be ignored`, devInfo?.source)
     delete props.children
   }
-
+  if (supportChildren && children.length) {
+    const existing = (props as Record<string, any>).children
+    ;(props as Record<string, any>).children = Array.isArray(existing)
+      ? [...existing, ...children]
+      : existing
+        ? [existing, ...children]
+        : children
+  }
   // 处理字符串类型节点
   if (typeof type === 'string') {
     switch (type) {
