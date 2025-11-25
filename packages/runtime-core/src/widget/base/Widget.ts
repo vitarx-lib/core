@@ -55,26 +55,6 @@ export abstract class Widget<
    */
   readonly [NON_SIGNAL_SYMBOL] = true
   /**
-   * 属性验证函数。
-   *
-   * 用于校验传入的 props 是否符合预期
-   *
-   * 校验时机：仅开发模式下节点创建之前进行校验
-   *
-   * 校验结果说明：
-   * - `string`：校验失败但不影响节点运行，打印该自定义异常提示。
-   * - `false`：打印默认的参数错误信息。
-   * - throw new Error('自定义异常')：如果不希望继续渲染组件，则可以抛出异常，异常将会由父级捕获并处理。
-   * - 其他值/void：校验通过。
-   *
-   * 框架在开发模式下会自动捕获异常并将其转换为校验错误。
-   *
-   * @since 4.0.0
-   * @param props - 传入的组件属性对象
-   * @returns {string | false | unknown} 校验结果
-   */
-  static validateProps?: (props: Record<string, any>) => string | false | unknown
-  /**
    * 存储小部件的传入属性
    *
    * @private
