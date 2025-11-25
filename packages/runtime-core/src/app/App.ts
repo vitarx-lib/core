@@ -1,6 +1,7 @@
 import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { __VITARX_VERSION__ } from '../constants/index.js'
+import { normalizeDirective } from '../directive/index.js'
 import { useRenderer } from '../renderer/index.js'
 import { runInAppContext } from '../runtime/index.js'
 import type {
@@ -276,23 +277,28 @@ export class App {
    *   .directive('lazy-load', lazyLoadDirective);
    * ```
    */
-  directive(name: string, directive: DirectiveOptions): this
+  directive(
+    name: string,
+    directive: DirectiveOptions | DirectiveOptions['mounted'] | DirectiveOptions['updated']
+  ): this
   /**
    * 注册或获取指令的方法
    *
    * @param name - 指令名称，会自动去除前后空格
-   * @param [directive] - 可选，指令配置对象
+   * @param [directive] - 可选，指令配置对象/函数
    * @returns 如果传入 directive 参数，返回 this 实例以支持链式调用；
    *          如果未传入 directive 参数，返回获取到的指令对象或 undefined
    */
-  directive(name: string, directive?: DirectiveOptions): Directive | undefined | this {
+  directive(
+    name: string,
+    directive?: DirectiveOptions | DirectiveOptions['mounted'] | DirectiveOptions['updated']
+  ): Directive | undefined | this {
     // 去除指令名称前后的空格
     name = name.trim()
     if (directive) {
       // 如果没有提供指令名称，抛出类型错误
       if (!name) throw new TypeError('The directive name cannot be empty')
-      ;(directive as Directive).name = name
-      this.#directives.set(name, directive as Directive)
+      this.#directives.set(name, normalizeDirective(directive, name))
       return this
     } else {
       return this.#directives.get(name)

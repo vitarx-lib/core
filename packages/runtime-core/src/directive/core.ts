@@ -59,7 +59,7 @@ export function defineDirective(
  * @param name - 指令名称
  * @returns 标准化的指令对象
  */
-function normalizeDirective(
+export function normalizeDirective(
   directive: DirectiveOptions | DirectiveOptions['mounted'] | DirectiveOptions['updated'],
   name: string
 ): Directive {
