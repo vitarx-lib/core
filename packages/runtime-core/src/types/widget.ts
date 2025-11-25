@@ -152,7 +152,9 @@ export type LazyLoadWidget<
 /**
  * 异步函数小部件类型
  */
-export type AsyncWidget<P extends AnyProps = any> = (props: P) => Promise<VNodeChild>
+export type AsyncWidget<P extends AnyProps = any> = (
+  props: P
+) => Promise<VNodeChild | LazyLoadModule | VNodeBuilder>
 
 /**
  * 无状态小部件
