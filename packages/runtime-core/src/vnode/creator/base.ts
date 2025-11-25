@@ -7,12 +7,7 @@ import { __DEV__, isRefEl, popNodeDevInfo } from '../../utils/index.js'
 import { bindProps } from '../normalizer/props.js'
 
 // 支持 ref 的节点类型
-const nonSupportRefKind = new Set([
-  NodeKind.TEXT,
-  NodeKind.COMMENT,
-  NodeKind.FRAGMENT,
-  NodeKind.STATELESS_WIDGET
-])
+const nonSupportRefKind = new Set([NodeKind.TEXT, NodeKind.COMMENT, NodeKind.FRAGMENT])
 /**
  * 创建基础的虚拟节点
  *
