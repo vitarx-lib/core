@@ -202,7 +202,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
   /**
    * 在 update 内部调用的渲染执行函数
    */
-  private finishUpdate(): void {
+  private finishUpdate = (): void => {
     this.hasPendingUpdate = false
     if (this.vnode.state === NodeState.Unmounted) {
       return
