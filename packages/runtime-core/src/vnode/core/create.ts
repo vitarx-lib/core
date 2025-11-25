@@ -42,9 +42,10 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  */
 export function createVNode<T extends ValidNodeType>(
   type: T,
-  props: ValidNodeProps<T> = {} as ValidNodeProps<T>,
+  props: ValidNodeProps<T> | null = null,
   ...children: VNodeChild[]
 ): VNodeInstanceType<T> {
+  props ??= {} as ValidNodeProps<T>
   const supportChildren = isSupportChildren(type)
   // 检查不支持children的节点
   if (__DEV__ && !supportChildren && 'children' in props) {
