@@ -40,24 +40,7 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
   /** @inheritDoc */
   override updateProps(node: StatefulWidgetVNode, newProps: AnyProps): void {
     const oldProps = node.props
-    const changedKeys: string[] = []
-
-    // 删除不存在于 newProps 中的属性
-    for (const key in oldProps) {
-      if (!(key in newProps)) {
-        delete oldProps[key]
-        changedKeys.push(key)
-      }
-    }
-
-    // 新增或更新存在于 newProps 中的属性
-    for (const key in newProps) {
-      if (oldProps[key] !== newProps[key]) {
-        oldProps[key] = newProps[key]
-        changedKeys.push(key)
-      }
-    }
-
+    const changedKeys: string[] = this.diffProps(oldProps, newProps)
     // 如果有属性变化，触发更新
     if (changedKeys.length > 0) {
       SubManager.notify(node.runtimeInstance!.props, changedKeys)

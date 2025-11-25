@@ -41,11 +41,8 @@ export class StatelessWidgetController extends BaseWidgetController<StatelessWid
    */
   override updateProps(node: StatelessWidgetVNode, newProps: AnyProps): void {
     const oldProps = node.props // 保存节点的旧属性
-    // 获取所有属性的键的并集，包括旧属性和新属性的所有键
-    const allKeys = new Set([...Object.keys(oldProps), ...Object.keys(newProps)])
-    // 检查是否有属性值发生变化，通过比较新旧属性值
-    const isChanged = Array.from(allKeys).some(key => oldProps[key] !== newProps[key])
+    const change = this.diffProps(oldProps, newProps)
     // 如果有属性值发生变化，则更新节点的运行时实例
-    if (isChanged) node.runtimeInstance!.update()
+    if (change.length) node.runtimeInstance!.update()
   }
 }

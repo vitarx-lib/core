@@ -47,6 +47,32 @@ import { createWidgetRuntime } from '../widget/runtime/utils.js'
 export abstract class BaseWidgetController<T extends WidgetTypes> implements NodeController<T> {
   /** @inheritDoc */
   abstract updateProps(node: WidgetVNode<T>, newProps: AnyProps): void
+  /**
+   * 比较新旧属性对象的差异，并更新旧属性对象以匹配新属性对象
+   * @param oldProps 旧的属性对象
+   * @param newProps 新的属性对象
+   * @return 发生变化的属性键名数组
+   */
+  protected diffProps(oldProps: AnyProps, newProps: AnyProps): string[] {
+    const changedKeys: string[] = [] // 用于存储发生变化的属性键名
+
+    // 删除不存在于 newProps 中的属性
+    for (const key in oldProps) {
+      if (!(key in newProps)) {
+        delete oldProps[key]
+        changedKeys.push(key)
+      }
+    }
+
+    // 新增或更新存在于 newProps 中的属性
+    for (const key in newProps) {
+      if (oldProps[key] !== newProps[key]) {
+        oldProps[key] = newProps[key]
+        changedKeys.push(key)
+      }
+    }
+    return changedKeys
+  }
   /** @inheritDoc */
   render(node: WidgetVNode<T>): NodeElementType<T> {
     const widget = createWidgetRuntime(node)
