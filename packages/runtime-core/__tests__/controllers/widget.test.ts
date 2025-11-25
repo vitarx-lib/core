@@ -21,6 +21,35 @@ const TestStatelessWidget = defineStatelessWidget((props: { text?: string }) => 
   return createVNode('div', {}, props.text || 'test')
 })
 
+// 测试辅助函数
+function createContainer() {
+  return document.createElement('div')
+}
+
+function renderAndMount(controller: any, vnode: any) {
+  controller.render(vnode)
+  const container = createContainer()
+  controller.mount(vnode, container)
+  return container
+}
+
+function expectActivatedState(vnode: any, container: HTMLElement, expectedText: string) {
+  expect(vnode.state).toBe(NodeState.Activated)
+  expect(vnode.anchor).toBeUndefined()
+  expect(container.textContent).toBe(expectedText)
+}
+
+function expectDeactivatedState(vnode: any, container: HTMLElement) {
+  expect(vnode.state).toBe(NodeState.Deactivated)
+  expect(vnode.anchor).toBeDefined()
+  expect(container.textContent).toBe('')
+}
+
+function expectUnmountedState(vnode: any, container: HTMLElement) {
+  expect(vnode.state).toBe(NodeState.Unmounted)
+  expect(container.childNodes.length).toBe(0)
+}
+
 describe('StatefulWidgetController', () => {
   let controller: StatefulWidgetController
 
@@ -57,10 +86,7 @@ describe('StatefulWidgetController', () => {
   describe('mount', () => {
     it('应该挂载有状态 Widget', () => {
       const vnode = createVNode(TestStatefulWidget, {})
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
+      const container = renderAndMount(controller, vnode)
 
       expect(container.textContent).toBe('test')
       expect(vnode.state).toBe(NodeState.Activated)
@@ -75,10 +101,7 @@ describe('StatefulWidgetController', () => {
         }
       }
       const vnode = createVNode<typeof PropWidget>(PropWidget, { text: 'Old' })
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
+      const container = renderAndMount(controller, vnode)
 
       expect(container.textContent).toBe('Old')
 
@@ -92,38 +115,25 @@ describe('StatefulWidgetController', () => {
   describe('unmount', () => {
     it('应该卸载 Widget', () => {
       const vnode = createVNode(TestStatefulWidget, {})
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
+      const container = renderAndMount(controller, vnode)
 
       controller.unmount(vnode)
 
-      expect(vnode.state).toBe(NodeState.Unmounted)
-      expect(container.childNodes.length).toBe(0)
+      expectUnmountedState(vnode, container)
     })
   })
 
   describe('activate/deactivate', () => {
     it('应该激活和停用 Widget', () => {
       const vnode = createVNode(TestStatefulWidget, {})
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
-      expect(vnode.state).toBe(NodeState.Activated)
-      expect(vnode.anchor).toBeUndefined()
-      expect(container.textContent).toBe('test')
+      const container = renderAndMount(controller, vnode)
+      expectActivatedState(vnode, container, 'test')
 
       controller.deactivate(vnode, true)
-      expect(vnode.state).toBe(NodeState.Deactivated)
-      expect(vnode.anchor).toBeDefined()
-      expect(container.textContent).toBe('')
+      expectDeactivatedState(vnode, container)
 
       controller.activate(vnode, true)
-      expect(vnode.state).toBe(NodeState.Activated)
-      expect(vnode.anchor).toBeUndefined()
-      expect(container.textContent).toBe('test')
+      expectActivatedState(vnode, container, 'test')
     })
   })
 })
@@ -164,10 +174,7 @@ describe('StatelessWidgetController', () => {
   describe('mount', () => {
     it('应该挂载无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'Content' })
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
+      const container = renderAndMount(controller, vnode)
 
       expect(container.textContent).toBe('Content')
       expect(vnode.state).toBe(NodeState.Activated)
@@ -177,10 +184,7 @@ describe('StatelessWidgetController', () => {
   describe('updateProps', () => {
     it('应该在属性改变时触发更新', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'Old' })
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
+      const container = renderAndMount(controller, vnode)
 
       controller.updateProps(vnode, { text: 'New' })
 
@@ -191,25 +195,17 @@ describe('StatelessWidgetController', () => {
   describe('unmount', () => {
     it('应该卸载无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, {})
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
+      const container = renderAndMount(controller, vnode)
 
       controller.unmount(vnode)
 
-      expect(vnode.state).toBe(NodeState.Unmounted)
-      expect(container.childNodes.length).toBe(0)
+      expectUnmountedState(vnode, container)
     })
 
     it('应该清除 ref 引用', () => {
       const widgetRef = ref<any>(null)
       const vnode = createVNode(TestStatelessWidget, { ref: widgetRef })
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
-
+      renderAndMount(controller, vnode)
       expect(widgetRef.value).not.toBeNull()
 
       controller.unmount(vnode)
@@ -221,23 +217,14 @@ describe('StatelessWidgetController', () => {
   describe('activate/deactivate', () => {
     it('应该激活和停用无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'test' })
-      controller.render(vnode)
-
-      const container = document.createElement('div')
-      controller.mount(vnode, container)
-      expect(vnode.state).toBe(NodeState.Activated)
-      expect(vnode.anchor).toBeUndefined()
-      expect(container.textContent).toBe('test')
+      const container = renderAndMount(controller, vnode)
+      expectActivatedState(vnode, container, 'test')
 
       controller.deactivate(vnode, true)
-      expect(vnode.state).toBe(NodeState.Deactivated)
-      expect(vnode.anchor).toBeDefined()
-      expect(container.textContent).toBe('')
+      expectDeactivatedState(vnode, container)
 
       controller.activate(vnode, true)
-      expect(vnode.state).toBe(NodeState.Activated)
-      expect(vnode.anchor).toBeUndefined()
-      expect(container.textContent).toBe('test')
+      expectActivatedState(vnode, container, 'test')
     })
   })
 })
