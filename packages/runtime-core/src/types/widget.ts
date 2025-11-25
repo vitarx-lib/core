@@ -106,8 +106,11 @@ export type ValidBuildResult =
 /**
  * 函数小部件类型
  */
-export type FunctionWidget<P extends AnyProps = any> = {
-  (props: P): ValidBuildResult
+export type FunctionWidget<
+  P extends AnyProps = any,
+  R extends ValidBuildResult = ValidBuildResult
+> = {
+  (props: P): R
 } & WidgetOptions
 /**
  * 函数小部件类型别名
