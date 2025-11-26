@@ -7,7 +7,7 @@ import { Subscriber, type SubscriberOptions } from './subscriber.js'
  * 用于订阅对象的所有属性变更，作为通配符使用。
  * 当使用此标识符订阅时，对象的任何属性变更都会触发通知。
  */
-export const ALL_PROPERTIES_SYMBOL = Symbol('ALL_PROPERTIES_SYMBOL')
+export const ALL_PROPERTIES_SYMBOL = Symbol.for('ALL_PROPERTIES_SYMBOL')
 export type ALL_PROPERTIES_SYMBOL = typeof ALL_PROPERTIES_SYMBOL
 
 /**
