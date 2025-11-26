@@ -207,11 +207,11 @@ export class StatefulWidgetRuntime<
    */
   private finishUpdate = (): void => {
     this.hasPendingUpdate = false
-    if (this.vnode.state === NodeState.Unmounted) {
+    if (this.state === NodeState.Unmounted) {
       return
     }
 
-    if (this.vnode.state === NodeState.Deactivated) {
+    if (this.state === NodeState.Deactivated) {
       this.dirty = true
       return
     }
@@ -312,7 +312,7 @@ export class StatefulWidgetRuntime<
   private patch(): VNode {
     this.dirty = false
     const newChild = this.build()
-    if (this.vnode.state === NodeState.Created) {
+    if (this.state === NodeState.Created) {
       return newChild
     }
     if (typeof this.instance.$patchUpdate === 'function') {

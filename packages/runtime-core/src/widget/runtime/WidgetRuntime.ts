@@ -1,3 +1,4 @@
+import { NodeState } from '../../constants/index.js'
 import { runInNodeContext } from '../../runtime/index.js'
 import type { VNode, WidgetVNode, WidgetVNodeType } from '../../types/index.js'
 import { getWidgetName } from '../../utils/index.js'
@@ -72,6 +73,10 @@ export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType>
   /** 获取虚拟节点的类型 */
   get type(): T {
     return this.vnode.type
+  }
+  /** 获取虚拟节点的运行时状态 */
+  get state(): NodeState {
+    return this.vnode.state
   }
   /**
    * 销毁实例资源
