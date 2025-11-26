@@ -15,7 +15,7 @@ import { createVNode, mountNode, renderNode, Widget } from '../../src/index.js'
  * @returns Widget 类
  */
 export function createTestWidget<P extends Record<string, any> = Record<string, any>>(
-  options?: Partial<Widget>
+  options?: Partial<Widget<P>>
 ): ClassWidget<P> {
   /**
    * TestWidget 类，继承自 Widget 基类
