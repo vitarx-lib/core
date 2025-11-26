@@ -7,7 +7,7 @@ import { Subscriber, type SubscriberOptions } from './subscriber.js'
  * 用于订阅对象的所有属性变更，作为通配符使用。
  * 当使用此标识符订阅时，对象的任何属性变更都会触发通知。
  */
-export const ALL_PROPERTIES_SYMBOL = Symbol.for('ALL_PROPERTIES_SYMBOL')
+export const ALL_PROPERTIES_SYMBOL = Symbol.for('__v_observer_all_prop')
 export type ALL_PROPERTIES_SYMBOL = typeof ALL_PROPERTIES_SYMBOL
 
 /**
@@ -27,7 +27,7 @@ export type ChangeCallback<T extends AnyObject> = (properties: Array<keyof T>, t
  * 用于在代理对象上标识原始目标对象的Symbol。
  * 可将此标识符作为对象的属性，属性值为实际用于订阅的原始目标对象。
  */
-const OBS_TARGET_SYMBOL = Symbol('OBSERVER_TARGET_SYMBOL')
+const OBS_TARGET_SYMBOL = Symbol.for('__v_observer_target')
 export type OBS_TARGET_SYMBOL = typeof OBS_TARGET_SYMBOL
 
 // 订阅者集合
