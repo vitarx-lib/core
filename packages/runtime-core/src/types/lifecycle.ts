@@ -104,7 +104,7 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  * @template T 生命周期钩子类型
  */
 export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error
-  ? VNode | false | void
+  ? any
   : T extends LifecycleHooks.render
     ? Promise<unknown> | void
     : void

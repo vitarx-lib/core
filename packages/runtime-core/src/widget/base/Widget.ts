@@ -287,7 +287,7 @@ export abstract class Widget<
    *
    * @param error - 捕获到的错误
    * @param info - 错误的详细信息
-   * @returns {VNode | false | void} 如果返回备用ui或false，事件都不会继续冒泡！
+   * @returns {any} 如果返回备用ui或false，都会停止向上报告异常！
    *
    * @example
    * ```tsx
@@ -302,7 +302,7 @@ export abstract class Widget<
    * }
    * ```
    */
-  onError?(error: unknown, info: ErrorInfo): VNode | false | void
+  onError?(error: unknown, info: ErrorInfo): any
 
   /**
    * 小部件渲染前触发钩子
