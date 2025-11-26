@@ -137,7 +137,9 @@ describe('StatefulWidgetRuntime', () => {
     it('应该正确调用 onBeforeUpdate', () => {
       const onBeforeUpdate = vi.fn()
       class UpdateWidget extends Widget {
-        override onBeforeUpdate = onBeforeUpdate
+        override onBeforeUpdate() {
+          onBeforeUpdate()
+        }
         build() {
           return createVNode('div')
         }
@@ -154,7 +156,9 @@ describe('StatefulWidgetRuntime', () => {
     it('应该正确调用 onUpdated', () => {
       const onUpdated = vi.fn()
       class UpdateWidget extends Widget {
-        override onUpdated = onUpdated
+        override onUpdated() {
+          onUpdated()
+        }
         build() {
           return createVNode('div')
         }
@@ -364,7 +368,9 @@ describe('StatefulWidgetRuntime', () => {
     it('应该优先调用组件实例的 onError', () => {
       const onError = vi.fn(() => false)
       class ErrorHandlerWidget extends Widget {
-        override onError = onError
+        override onError() {
+          return onError()
+        }
         build() {
           return createVNode('div')
         }
@@ -379,8 +385,11 @@ describe('StatefulWidgetRuntime', () => {
     })
 
     it('onError 返回 false 应该停止错误冒泡', () => {
+      const onError = vi.fn(() => false)
       class ParentWidget extends Widget {
-        override onError = vi.fn(() => false)
+        override onError() {
+          return onError()
+        }
         build() {
           return createVNode('div')
         }
@@ -392,12 +401,15 @@ describe('StatefulWidgetRuntime', () => {
       const result = runtime.reportError(new Error('test'), 'build')
 
       expect(result).toBeUndefined()
+      expect(onError).toHaveBeenCalled()
     })
 
     it('onError 返回 VNode 应该渲染错误视图', () => {
       const errorVNode = createVNode('div', {}, 'Error!')
       class ErrorWidget extends Widget {
-        override onError = () => errorVNode
+        override onError() {
+          return errorVNode
+        }
         build() {
           return createVNode('div')
         }
@@ -414,7 +426,9 @@ describe('StatefulWidgetRuntime', () => {
     it('应该向上冒泡到父组件的 onError', () => {
       const parentOnError = vi.fn(() => false)
       class ParentWidget extends Widget {
-        override onError = parentOnError
+        override onError() {
+          return parentOnError()
+        }
         build() {
           return createVNode(ChildWidget, {})
         }
@@ -595,7 +609,9 @@ describe('StatefulWidgetRuntime', () => {
     it('存在 $patchUpdate 时应该调用自定义更新', () => {
       const customPatch = vi.fn((_old, newNode) => newNode)
       class CustomPatchWidget extends Widget {
-        override $patchUpdate = customPatch
+        override $patchUpdate(old: any, newNode: any) {
+          return customPatch(old, newNode)
+        }
         build() {
           return createVNode('div')
         }
