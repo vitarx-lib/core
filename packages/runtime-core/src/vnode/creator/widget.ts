@@ -156,17 +156,14 @@ export function createWidgetVNode<T extends WidgetTypes>(
   props: ValidNodeProps<T>
 ): StatelessWidgetVNode | StatefulWidgetVNode {
   // 判断组件是否为无状态组件
-  const isStateless = isStatelessWidget(widget)
-  if (isStateless && isRecordObject(widget.defaultProps)) {
+  if (isRecordObject(widget.defaultProps)) {
     props = { ...widget.defaultProps, ...props }
   }
   // 创建基础虚拟节点，根据组件类型设置不同的节点类型
   const node = createBaseVNode(
     widget,
-    isStateless ? NodeKind.STATELESS_WIDGET : NodeKind.STATEFUL_WIDGET,
-    props,
-    // 对于无状态组件，需要解除属性的响应式引用
-    !!isStateless
+    isStatelessWidget(widget) ? NodeKind.STATELESS_WIDGET : NodeKind.STATEFUL_WIDGET,
+    props
   ) as StatefulWidgetVNode | StatelessWidgetVNode
   node.appContext = getAppContext()
   // 开发模式下执行属性校验
