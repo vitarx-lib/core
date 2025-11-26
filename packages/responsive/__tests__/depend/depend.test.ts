@@ -41,11 +41,11 @@ describe('依赖收集器', () => {
       const target = { value: 0 }
       const collector1 = depCollect(() => {
         depTrack(target, 'value')
-      }, 'shared')
+      })
 
       const collector2 = depCollect(() => {
         depTrack(target, 'value')
-      }, 'shared')
+      })
 
       expect(collector1.deps.has(target)).toBe(true)
       expect(collector2.deps.has(target)).toBe(true)
@@ -59,7 +59,7 @@ describe('依赖收集器', () => {
         depTrack(target, 'outer')
         const innerCollector = depCollect(() => {
           depTrack(target, 'inner')
-        }, 'exclusive')
+        })
 
         expect(innerCollector.deps.get(target)?.has('inner')).toBe(true)
         expect(innerCollector.deps.get(target)?.has('outer')).toBe(false)

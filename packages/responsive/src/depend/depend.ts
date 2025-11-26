@@ -1,4 +1,5 @@
 import { type AnyKey, type AnyObject, isFunction, type VoidCallback } from '@vitarx/utils'
+import { Context } from '../context/index.js'
 import { SubManager, Subscriber, type SubscriberOptions } from '../observer/index.js'
 
 /**
@@ -29,6 +30,8 @@ export type CollectionResult<T> = {
 export interface DependSubscribeResult<T> extends CollectionResult<T> {
   subscriber: Subscriber<VoidCallback> | undefined
 }
+
+const CONTEXT_SYMBOL = Symbol('__v_depend_ctx')
 /**
  * # 依赖管理器
  *
@@ -42,10 +45,6 @@ export class Depend {
    * 如果将此属性修改为true，则依赖跟踪将被禁用。
    */
   public static disableTracking = false
-  // 全局收集器映射表
-  private static _collectorRegistry = new Map<symbol, DependencyMap>()
-  // 当前活跃的收集器
-  private static _activeCollector: undefined | DependencyMap
 
   /**
    * ## 跟踪依赖关系
@@ -60,48 +59,23 @@ export class Depend {
   static track<T extends object>(target: T, property: keyof T): void {
     // 如果禁用跟踪直接返回
     if (this.disableTracking) return
-    // 如果有活跃的收集器，优先使用活跃收集器
-    if (this._activeCollector) {
-      this._recordDependency(this._activeCollector, target, property)
-    }
-    // 否则使用注册的所有收集器
-    else if (this._collectorRegistry.size) {
-      this._collectorRegistry.forEach(collector => {
-        this._recordDependency(collector, target, property)
-      })
-    }
+    const ctx = Context.get<DependencyMap>(CONTEXT_SYMBOL)
+    if (ctx) this._recordDependency(ctx, target, property)
   }
 
   /**
-   * ## 收集函数执行过程中的所有依赖
+   * 收集函数执行过程中的所有依赖
    *
    * 执行提供的函数，并记录其访问的所有响应式对象及其属性。
    *
    * @template T - 函数返回值的类型
    * @param {Function} fn - 要执行的函数
-   * @param {CollectionMode} mode - 收集模式，'shared'(共享)或'exclusive'(独占)
    * @returns {CollectionResult<T>} - 包含函数执行结果和依赖映射的对象
    */
-  static collect<T>(fn: () => T, mode: 'shared' | 'exclusive' = 'shared'): CollectionResult<T> {
-    // 独占模式直接使用专用收集器
-    if (mode === 'exclusive') {
-      return this._collectExclusive(fn)
-    }
-
-    // 共享模式使用注册表
-    const collectorId = Symbol('collector-id')
+  static collect<T>(fn: () => T): CollectionResult<T> {
     const dependencies: DependencyMap = new Map()
-
-    // 注册新收集器
-    this._collectorRegistry.set(collectorId, dependencies)
-
-    try {
-      const result = fn()
-      return { result, deps: dependencies }
-    } finally {
-      // 清理收集器
-      this._collectorRegistry.delete(collectorId)
-    }
+    const result = Context.run(CONTEXT_SYMBOL, dependencies, fn)
+    return { result, deps: dependencies }
   }
 
   /**
@@ -120,26 +94,6 @@ export class Depend {
     } else {
       // 否则创建新的属性集合
       collector.set(target, new Set([property as keyof typeof target]))
-    }
-  }
-
-  /**
-   * ## 使用独占模式收集依赖
-   *
-   * 临时禁用其他收集器，专注于收集当前函数的依赖
-   *
-   * @private
-   */
-  private static _collectExclusive<T>(fn: () => T): CollectionResult<T> {
-    const previousCollector = this._activeCollector
-    this._activeCollector = new Map()
-
-    try {
-      const result = fn()
-      return { result, deps: this._activeCollector }
-    } finally {
-      // 恢复之前的收集器
-      this._activeCollector = previousCollector
     }
   }
 

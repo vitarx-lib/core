@@ -337,7 +337,7 @@ export class Computed<T> implements RefSignal<T> {
     this._isSetup = true
 
     // 收集依赖并缓存结果（只执行一次getter）
-    const { result, deps } = Depend.collect(() => this._getter(this._value), 'exclusive')
+    const { result, deps } = Depend.collect(() => this._getter(this._value))
 
     // 缓存结果并清除dirty标记，避免首次访问时重复计算
     this._value = result

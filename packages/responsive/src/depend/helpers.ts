@@ -33,12 +33,11 @@ export function depTrack<T extends object>(target: T, property: keyof T): void {
 }
 
 /**
- * ## 收集函数依赖
+ * 收集函数依赖
  *
  * 执行函数并收集其中访问的所有响应式依赖。
  *
  * @param fn - 要执行的函数
- * @param mode - 收集模式，'shared' (共享) 或 'exclusive' (独占)
  * @returns - 包含函数执行结果和依赖映射的对象
  * @example
  * ```ts
@@ -53,20 +52,10 @@ export function depTrack<T extends object>(target: T, property: keyof T): void {
  * })
  * // result: 25
  * // dependencies: Map { user => Set {'name', 'age'}, profile => Set {'bio'} }
- *
- * // 使用独占模式收集依赖
- * const exclusive = depCollect(
- *   () => user.name + ' - ' + profile.bio,
- *   'exclusive'
- * )
- * // 独占模式下，只收集当前函数的依赖，不受其他收集器影响
  * ```
  */
-export function depCollect<T>(
-  fn: () => T,
-  mode: 'shared' | 'exclusive' = 'shared'
-): CollectionResult<T> {
-  return Depend.collect(fn, mode)
+export function depCollect<T>(fn: () => T): CollectionResult<T> {
+  return Depend.collect(fn)
 }
 
 /**
