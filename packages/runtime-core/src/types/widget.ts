@@ -1,6 +1,7 @@
 import { STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
 import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
+import type { VNode } from './nodes/index.js'
 import type { VNodeChild } from './vnode.js'
 
 /**
@@ -72,6 +73,19 @@ export type WidgetOptions = {
    * 如果匿名组件不定义此名称，则默认使用 `AnonymousWidget` 作为名称。
    */
   displayName?: string
+  /**
+   * 加载状态时展示的节点 - 仅异步函数组件支持
+   *
+   * @example
+   * ```jsx
+   * async function MyWidget(props) {
+   *    await new Promise((resolve) => setTimeout(resolve, 1000));
+   *    return <div>Hello World</div>;
+   * }
+   * MyWidget.loading = <div>Loading...</div>
+   * ```
+   */
+  loading?: VNode
 }
 /**
  * 类小部件构造器类型
@@ -151,6 +165,18 @@ export type LazyLoadWidget<
 
 /**
  * 异步函数小部件类型
+ *
+ * @example
+ * ```tsx
+ * async function MyWidget(props) {
+ *   // withAsyncContext 用于待异步解析完毕后恢复组件上下文，编译时通常会自动添加（必须是具名组件，且符合驼峰命名规范）
+ *   await withAsyncContext(new Promise((resolve) => setTimeout(resolve, 1000)));
+ *   onMount(() => {
+ *     console.log('mounted');
+ *   })
+ *   return <div>Hello World</div>;
+ * }
+ * ```
  */
 export type AsyncWidget<P extends AnyProps = any> = (
   props: P
