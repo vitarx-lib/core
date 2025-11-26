@@ -73,7 +73,6 @@ export abstract class Widget<
       throw new Error('The Widget instance must be created in the context of the WidgetVNode')
     }
     this.#props = props
-    this.onCreate?.call(this)
   }
 
   /**
