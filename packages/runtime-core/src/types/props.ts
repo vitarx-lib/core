@@ -304,14 +304,12 @@ export type ExtractChildrenPropType<P> = P extends { children: infer U }
  * // }
  * ```
  */
-export type WithDefaultProps<
-  P extends AnyProps,
-  D extends AnyProps | undefined
-> = D extends undefined
-  ? P
-  : Omit<P, keyof D> & {
-      [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
-    }
+export type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = Omit<
+  P,
+  keyof D
+> & {
+  [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
+}
 
 /**
  * createVNode 支持的属性类型推导
