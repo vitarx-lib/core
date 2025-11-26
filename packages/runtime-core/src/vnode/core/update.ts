@@ -386,7 +386,7 @@ export class PatchUpdate {
  */
 export function patchUpdate(n1: VNode, n2: VNode): VNode {
   if (n1.state !== NodeState.Activated) {
-    throw new Error(`The node state (${n1.state}) is also not in the patchable stage`)
+    throw new Error(`The node state (${n1.state}) cannot be updated`)
   }
   return PatchUpdate.patch(n1, n2)
 }
