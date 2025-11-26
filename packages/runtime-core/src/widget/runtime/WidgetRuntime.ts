@@ -36,7 +36,7 @@ export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType>
   /** 组件名称，用于调试和错误追踪 */
   public readonly name: string
   /** 组件属性（只读） */
-  public props: Readonly<Record<string, any>>
+  public readonly props: Readonly<Record<string, any>>
   /**
    * 缓存的子虚拟节点
    *
