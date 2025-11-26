@@ -99,12 +99,12 @@ export function withDelayAndTimeout<T>(
     }
 
     // 处理超时逻辑
-    if (timeout > 0 && onTimeout) {
+    if (timeout > 0) {
       timeoutTimer = setTimeout(() => {
         if (isSettled || signal?.()) return
         isSettled = true
         const err = new Error(`task timeout (${timeout}ms)`)
-        onTimeout(err)
+        onTimeout?.(err)
         reject(err)
         clearTimers()
       }, timeout) as unknown as number
