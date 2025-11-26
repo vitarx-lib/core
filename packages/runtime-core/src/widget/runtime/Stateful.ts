@@ -257,7 +257,8 @@ export class StatefulWidgetRuntime<
     }
     // 构建虚拟节点并订阅依赖变化
     const { result, subscriber, deps } = depSubscribe(this.buildChildVNode, this.update, {
-      flush: 'sync'
+      flush: 'sync',
+      scope: false
     })
     // 开发模式下记录依赖用于调试
     if (__DEV__) {
