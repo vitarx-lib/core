@@ -133,17 +133,19 @@ export class PatchUpdate {
    * @throws {Error} 当旧节点未挂载且无法替换时抛出错误
    */
   static replace(currentVNode: VNode, nextVNode: VNode): VNode {
-    // 如果节点仅渲染完成，则不进行dom替换
-    if (currentVNode.state === NodeState.Rendered) {
-      unmountNode(currentVNode)
-      renderNode(nextVNode)
-      return nextVNode
-    }
     const dom = useRenderer()
     const oldElement = getNodeDomOpsTarget(currentVNode)
     // 如果旧节点有父元素，则创建锚点进行替换
     if (dom.getParentElement(oldElement)) {
-      mountNode(nextVNode, oldElement, 'insertBefore')
+      if (currentVNode.state === NodeState.Rendered) {
+        dom.insertBefore(oldElement, renderNode(nextVNode))
+      } else {
+        mountNode(nextVNode, oldElement, 'insertBefore')
+      }
+      unmountNode(currentVNode)
+      return nextVNode
+    } else if (currentVNode.state === NodeState.Rendered) {
+      renderNode(nextVNode)
       unmountNode(currentVNode)
       return nextVNode
     }
@@ -385,8 +387,5 @@ export class PatchUpdate {
  * @returns 更新后的虚拟节点
  */
 export function patchUpdate(n1: VNode, n2: VNode): VNode {
-  if (n1.state !== NodeState.Activated) {
-    throw new Error(`The node state (${n1.state}) cannot be updated`)
-  }
   return PatchUpdate.patch(n1, n2)
 }
