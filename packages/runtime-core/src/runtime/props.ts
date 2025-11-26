@@ -4,8 +4,7 @@ import {
   PROXY_SIGNAL_SYMBOL,
   SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL,
-  SignalManager,
-  unref
+  SignalManager
 } from '@vitarx/responsive'
 import type { AnyRecord } from '@vitarx/utils'
 import { isRecordObject, logger, LogLevel } from '@vitarx/utils'
@@ -64,7 +63,7 @@ class PropsProxyHandler<T extends Record<string, any>> implements ProxyHandler<T
       }
     }
     this.track(prop)
-    return unref(value)
+    return value
   }
   set(target: T, prop: string | symbol, value: any): boolean {
     // 设置默认属性
