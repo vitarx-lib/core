@@ -142,7 +142,7 @@ export class StatefulWidgetRuntime<
       }
 
       // 5. 最后，输出未处理的异常到控制台
-      logger.error('Unhandled exception in component:', error, { source, instance })
+      logger.error('Unhandled exception in component - ', error, { source, instance })
       return void 0
     } catch (error) {
       logger.error(
