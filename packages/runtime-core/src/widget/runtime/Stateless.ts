@@ -1,3 +1,4 @@
+import { NodeState } from '../../constants/index.js'
 import { linkParentNode } from '../../runtime/index.js'
 import type { StatelessWidgetVNodeType, VNode } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
@@ -24,6 +25,10 @@ export class StatelessWidgetRuntime extends WidgetRuntime<StatelessWidgetVNodeTy
   public update(): void {
     // 如果有变化，重新构建子节点，并进行patch更新
     const newNode = this.build()
+    if (this.state === NodeState.Created) {
+      this.cachedChildVNode = newNode
+      return
+    }
     this.cachedChildVNode = patchUpdate(this.child, newNode)
   }
   /**
