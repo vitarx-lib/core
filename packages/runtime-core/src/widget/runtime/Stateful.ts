@@ -78,7 +78,6 @@ export class StatefulWidgetRuntime<
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
   private renderDepsSubscriber: Subscriber | null = null
-
   constructor(node: StatefulWidgetVNode<T>, options?: StatefulManagerOptions) {
     super(node)
     this.scope = new EffectScope({
@@ -88,6 +87,7 @@ export class StatefulWidgetRuntime<
       }
     })
     this.options = Object.assign(this.options, options)
+    // @ts-ignore
     this.props = proxyWidgetProps(this.vnode.props, this.type['defaultProps'])
     this.instance = this.createWidgetInstance()
   }
@@ -339,6 +339,10 @@ export class StatefulWidgetRuntime<
           // 创建类组件实例
           instance = new this.type(this.props)
           instance.$vnode.isAsyncWidget = false
+          /**
+           * 调用组件的onCreate生命周期钩子
+           */
+          instance.onCreate?.()
         } else {
           // 创建函数组件实例
           instance = new FnWidget(this.props)
