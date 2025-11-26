@@ -14,14 +14,8 @@ const nonSupportRefKind = new Set([NodeKind.TEXT, NodeKind.COMMENT, NodeKind.FRA
  * @param type
  * @param kind
  * @param props
- * @param autoUnref
  */
-export const createBaseVNode = (
-  type: VNodeTypes,
-  kind: NodeKind,
-  props: AnyProps,
-  autoUnref: boolean = true
-): VNode => {
+export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProps): VNode => {
   props = { ...props }
   const node: VNode = {
     [NON_SIGNAL_SYMBOL]: true,
@@ -65,10 +59,8 @@ export const createBaseVNode = (
   // --------- 执行 v-bind 合并 ---------
   const bind = popProperty(props, 'v-bind')
   if (isObject(bind)) bindProps(props, bind)
-  if (autoUnref) {
-    for (const [key, value] of Object.entries(props)) {
-      props[key] = unref(value)
-    }
+  for (const [key, value] of Object.entries(props)) {
+    props[key] = unref(value)
   }
   return node
 }
