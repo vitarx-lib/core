@@ -4,7 +4,9 @@ import {
   shallowRef,
   SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL,
+  SubManager,
   Subscriber,
+  toRaw,
   type WatchOptions,
   watchProperty
 } from '@vitarx/responsive'
@@ -78,9 +80,11 @@ export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
   readonly [SIGNAL_SYMBOL] = true
   private readonly _ref: RefSignal
   private readonly _props: T
+  private readonly _propName: K
   private readonly _eventName: string
   constructor(props: T, propName: K, defaultValue?: D) {
     this._props = props
+    this._propName = propName
     this._eventName = `$onUpdate:${propName.toString()}`
     this._ref = shallowRef(props[propName])
     // 双向绑定的关键，监听属性值的变化，如果改变，则更新_ref.value
@@ -119,6 +123,9 @@ export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
     // 如果新值和旧值相同，则不进行更新
     if (newValue === this._ref.value) return
     this._ref.value = newValue
+    const originalProps = toRaw(this._props) as T
+    originalProps[this._propName] = newValue
+    SubManager.notify(this._props, this._propName)
     this._notify(newValue)
   }
 
