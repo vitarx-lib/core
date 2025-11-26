@@ -216,5 +216,5 @@ export interface WidgetVNode<T extends WidgetVNodeType = WidgetVNodeType> extend
    */
   runtimeInstance?: T extends StatelessWidgetVNodeType
     ? StatelessWidgetRuntime
-    : StatefulWidgetRuntime
+    : StatefulWidgetRuntime<T>
 }

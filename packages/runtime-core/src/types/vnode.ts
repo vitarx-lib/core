@@ -149,9 +149,9 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | Dyna
           : T extends RegularElementVNodeType
             ? RegularElementVNode<T>
             : T extends StatelessWidget
-              ? StatelessWidgetVNode
+              ? StatelessWidgetVNode<T>
               : T extends WidgetTypes
-                ? StatefulWidgetVNode
+                ? StatefulWidgetVNode<T>
                 : VNode
 
 /**

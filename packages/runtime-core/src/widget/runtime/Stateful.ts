@@ -14,7 +14,8 @@ import type {
   LifecycleHookReturnType,
   StatefulWidgetVNode,
   StatefulWidgetVNodeType,
-  VNode
+  VNode,
+  WidgetInstance
 } from '../../types/index.js'
 import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
@@ -57,7 +58,9 @@ export interface StatefulManagerOptions {
  *
  * 负责管理有状态组件的生命周期、依赖追踪、视图更新等功能
  */
-export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType> {
+export class StatefulWidgetRuntime<
+  T extends StatefulWidgetVNodeType = StatefulWidgetVNodeType
+> extends WidgetRuntime<T> {
   /** 响应式作用域，管理所有副作用 */
   public readonly scope: EffectScope
   /** 依赖映射表，仅在开发模式下使用 */
@@ -70,13 +73,13 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
     enableScheduler: true
   }
   /** 组件实例 */
-  public readonly instance: Widget<Record<string, any>>
+  public readonly instance: WidgetInstance<T>
   /** 是否有待处理的更新任务 */
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
   private renderDepsSubscriber: Subscriber | null = null
 
-  constructor(node: StatefulWidgetVNode, options?: StatefulManagerOptions) {
+  constructor(node: StatefulWidgetVNode<T>, options?: StatefulManagerOptions) {
     super(node)
     this.scope = new EffectScope({
       name: this.name,
@@ -327,7 +330,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
    *
    * @returns 创建的组件实例
    */
-  private createWidgetInstance(): Widget {
+  private createWidgetInstance(): WidgetInstance<T> {
     const onResolveCallback = this.options.onResolve
     return this.scope.run(() =>
       this.runInContext(() => {
@@ -345,7 +348,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
             onResolveCallback?.(initPromise)
           }
         }
-        return instance
+        return instance as WidgetInstance<T>
       })
     )
   }
