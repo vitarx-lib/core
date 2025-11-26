@@ -97,9 +97,6 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
   /** 取消异步加载任务的函数 */
   private _cancelTask?: () => void
 
-  /** 组件是否正在卸载 */
-  private _isUnmounting = false
-
   constructor(props: LazyWidgetProps<T>) {
     super(props)
     this.onError = props.onError
@@ -133,7 +130,6 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
   }
 
   override onBeforeUnmount(): void {
-    this._isUnmounting = true
     this._cancelTask?.()
   }
 
@@ -156,31 +152,20 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
     const task = withDelayAndTimeout(this.children, {
       delay,
       timeout,
-      signal: () => this._isUnmounting,
       onDelay: () => {
         if (isVNode(loading)) {
           this._updateBuild(() => loading)
         }
-      },
-      onTimeout: error => {
-        this._updateBuild(() => {
-          throw error
-        })
-      },
-      onResolve: ({ default: widget }) => {
-        this._updateBuild(() => createVNode(widget, this.props.injectProps))
-      },
-      onReject: error => {
-        this._updateBuild(() => {
-          throw error
-        })
       }
     })
-
     this._cancelTask = task.cancel
-
     try {
-      await task
+      const { default: widget } = await task
+      this._updateBuild(() => createVNode(widget, this.props.injectProps))
+    } catch (e) {
+      this._updateBuild(() => {
+        throw e
+      })
     } finally {
       this._cancelTask = undefined
     }
