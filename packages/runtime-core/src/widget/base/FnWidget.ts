@@ -12,8 +12,10 @@ import type {
   VNodeBuilder,
   VNodeChild
 } from '../../types/index.js'
+import { isVNode } from '../../utils/index.js'
 import { isWidget } from '../../utils/widget.js'
 import {
+  cloneVNode,
   createCommentVNode,
   createWidgetVNode,
   mountNode,
@@ -216,15 +218,21 @@ const initializeAsyncWidget = async (
   exposed: HookCollectResult['exposed'],
   buildResult: Promise<any>
 ) => {
-  // 创建一个占位符构建器
-  instance.build = () => {
-    return createCommentVNode({
+  let loadingNode = instance.$vnode.type.loading
+  if (isVNode(loadingNode)) {
+    loadingNode = cloneVNode(loadingNode)
+  } else {
+    loadingNode = createCommentVNode({
       value: `AsyncWidget<${instance.$vnode.runtimeInstance!.name}> loading ...`
     })
   }
+  // 默认使用loading节点
+  instance.build = () => loadingNode
+
   const suspenseCounter = useSuspense()
   const initialExposedCount = Object.keys(exposed).length
 
+  // 标记节点为异步组件
   instance.$vnode.isAsyncWidget = true
 
   if (suspenseCounter) suspenseCounter.value++
