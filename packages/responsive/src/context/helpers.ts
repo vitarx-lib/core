@@ -68,6 +68,6 @@ export { runInContext as runContext }
  * runInContext('user', { id: 123 }, App)
  * ```
  */
-export async function withAsyncContext<T>(asyncTask: AsyncContextTask<T>): Promise<T> {
+export function withAsyncContext<T>(asyncTask: AsyncContextTask<T>): Promise<T> {
   return Context.withAsyncContext(asyncTask)
 }
