@@ -38,7 +38,13 @@ export function registerController<K extends NodeKind>(
  * @returns 创建的 DOM 元素
  */
 export function renderNode<T extends VNodeTypes>(node: VNode<T>): NodeElementType<T> {
-  return controllers[node.kind].render(node as VNode<never>) as NodeElementType<T>
+  if (node.state === NodeState.Rendered) {
+    return node.el!
+  }
+  if (node.state === NodeState.Created) {
+    return controllers[node.kind].render(node as VNode<never>) as NodeElementType<T>
+  }
+  throw new Error(`The node state (${node.state}) cannot be rendered`)
 }
 
 /**
@@ -49,14 +55,9 @@ export function renderNode<T extends VNodeTypes>(node: VNode<T>): NodeElementTyp
  * @param opsType - 操作类型
  */
 export function mountNode(node: VNode, container?: HostParentElement, opsType?: OpsType): void {
-  if (node.state === NodeState.Created) {
-    renderNode(node)
-  }
-  if (node.state === NodeState.Rendered) {
-    controllers[node.kind].mount(node as VNode<never>, container, opsType)
-    return
-  }
-  throw new Error(`The node state (${node.state}) is also not in the mountable stage`)
+  if (node.state !== NodeState.Rendered) renderNode(node)
+  controllers[node.kind].mount(node as VNode<never>, container, opsType)
+  return
 }
 
 /**
@@ -70,7 +71,7 @@ export function activateNode(node: VNode, root: boolean = true): void {
     controllers[node.kind].activate(node as VNode<never>, root)
     return
   }
-  throw new Error(`The node state (${node.state}) is also not in the activatable stage`)
+  throw new Error(`The node state (${node.state}) cannot be activated`)
 }
 
 /**
@@ -84,7 +85,7 @@ export function deactivateNode(node: VNode, root: boolean = true): void {
     controllers[node.kind].deactivate(node as VNode<never>, root)
     return
   }
-  throw new Error(`The node state (${node.state}) is also not in the deactivatable stage`)
+  throw new Error(`The node state (${node.state}) cannot be deactivated`)
 }
 
 /**
@@ -95,8 +96,9 @@ export function deactivateNode(node: VNode, root: boolean = true): void {
 export function unmountNode(node: VNode): void {
   if (__DEV__ && node.state === NodeState.Unmounted) {
     logger.warn(
-      `unmountNode() - The node state (${node.state}) is also not in the unmountable stage`
+      `unmountNode() - the node is already uninstalled, so there is no need to uninstall it repeatedly`
     )
+    return
   }
   controllers[node.kind].unmount(node as VNode<never>)
   unlinkParentNode(node)
