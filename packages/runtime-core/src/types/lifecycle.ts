@@ -1,6 +1,5 @@
 import type { LifecycleHooks } from '../constants/index.js'
 import type { Widget } from '../widget/index.js'
-import type { VNode } from './nodes/index.js'
 
 /**
  * 错误来源联合类型
@@ -136,4 +135,4 @@ export type ErrorHandler<T extends Widget = Widget> = (
   this: T,
   error: unknown,
   info: ErrorInfo
-) => void | VNode
+) => any
