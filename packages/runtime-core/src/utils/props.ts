@@ -71,13 +71,15 @@ export function onPropChange<T extends Record<string, any>, K extends keyof T>(
  * - 会自动处理原始值是否为 RefSignal 的情况
  * - 当属性值未改变时，不会触发更新
  */
-export class PropModel<T extends AnyProps, K extends keyof T> implements RefSignal<T[K]> {
+export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
+  implements RefSignal<T[K]>
+{
   readonly [REF_SIGNAL_SYMBOL] = true
   readonly [SIGNAL_SYMBOL] = true
   private readonly _ref: RefSignal
   private readonly _props: T
   private readonly _eventName: string
-  constructor(props: T, propName: K, defaultValue?: T[K]) {
+  constructor(props: T, propName: K, defaultValue?: D) {
     this._props = props
     this._eventName = `$onUpdate:${propName.toString()}`
     this._ref = shallowRef(props[propName])
@@ -100,7 +102,7 @@ export class PropModel<T extends AnyProps, K extends keyof T> implements RefSign
    *
    * @returns {any} 属性的当前值
    */
-  get value(): T[K] {
+  get value(): D extends undefined ? T[K] : Exclude<T[K], undefined> {
     return this._ref.value
   }
 
@@ -172,11 +174,11 @@ export class PropModel<T extends AnyProps, K extends keyof T> implements RefSign
  * ```
  * @see {@linkcode PropModel} - 实现双向绑定的属性代理的类
  */
-export function usePropModel<T extends AnyProps, K extends Extract<keyof T, string>>(
+export function usePropModel<T extends AnyProps, K extends keyof T, D extends T[K]>(
   props: T,
   propName: K,
-  defaultValue?: T[K]
-): PropModel<T, K> {
+  defaultValue?: D
+): PropModel<T, K, D> {
   return new PropModel(props, propName, defaultValue)
 }
 
