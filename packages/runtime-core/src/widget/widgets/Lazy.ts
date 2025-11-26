@@ -62,7 +62,7 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
    *
    * @default 0
    */
-  timeout: 0
+  timeout: number
 }
 
 /**
