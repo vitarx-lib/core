@@ -1,3 +1,4 @@
+import { unref } from '@vitarx/responsive'
 import { isRecordObject, logger } from '@vitarx/utils'
 import { NodeKind } from '../../constants/index.js'
 import { getAppContext } from '../../runtime/index.js'
@@ -47,11 +48,15 @@ function validateProps<T extends WidgetTypes>(
   devInfo?: NodeDevInfo
 ): void {
   // 在开发环境下，如果组件提供了validateProps方法，则执行属性校验
-  if (typeof widget.validateProps === 'function') {
+  if (__DEV__ && typeof widget.validateProps === 'function') {
     // 获取组件名称
     const name = getWidgetName(widget)
+    const p: Record<string, any> = {}
+    for (const [key, value] of Object.entries(props)) {
+      p[key] = unref(value)
+    }
     // 执行组件的属性校验方法
-    const result = widget.validateProps(props)
+    const result = widget.validateProps(p)
     // 校验失败处理
     if (result === false) {
       // 记录错误日志，包含源信息
