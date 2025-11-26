@@ -103,7 +103,7 @@ export function withDelayAndTimeout<T>(
       timeoutTimer = setTimeout(() => {
         if (isSettled || signal?.()) return
         isSettled = true
-        const err = new Error(`withDelayAndTimeout() - task timeout (${timeout}ms)`)
+        const err = new Error(`task timeout (${timeout}ms)`)
         onTimeout(err)
         reject(err)
         clearTimers()
