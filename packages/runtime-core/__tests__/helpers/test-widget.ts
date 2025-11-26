@@ -5,7 +5,7 @@
  */
 
 import { Scheduler } from '@vitarx/responsive'
-import type { ClassWidget, VNodeChild, WidgetTypes } from '../../src/index.js'
+import type { ClassWidget, VNodeChild, VNodeInstanceType, WidgetTypes } from '../../src/index.js'
 import { createVNode, mountNode, renderNode, Widget } from '../../src/index.js'
 
 /**
@@ -99,10 +99,10 @@ export function renderAndMount<T extends WidgetTypes>(
   widget: T,
   props?: any,
   container?: HTMLElement
-): HTMLElement {
+): VNodeInstanceType<T> {
   const vnode = createVNode(widget, props)
   const el = container || createContainer()
   renderNode(vnode)
   mountNode(vnode, el)
-  return el
+  return vnode
 }
