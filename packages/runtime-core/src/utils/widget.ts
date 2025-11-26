@@ -29,12 +29,17 @@ import type {
  *
  * @since 4.0.0
  * @param build - 视图构建器，通过函数返回要渲染的视图虚拟节点
+ * @param [displayName] - 组件名称，给匿名函数设置一个显示名称
  * @returns { StatelessWidget } - 无状态小部件
  */
 export function defineStatelessWidget<T extends (props: any) => VNodeChild>(
-  build: T
+  build: T,
+  displayName?: string
 ): T & StatelessWidgetSymbol {
   Object.defineProperty(build, STATELESS_FUNCTION_WIDGET_SYMBOL, { value: true })
+  if (typeof displayName === 'string') {
+    ;(build as unknown as { displayName: string }).displayName = displayName
+  }
   return build as T & StatelessWidgetSymbol
 }
 export { defineStatelessWidget as stateless }
