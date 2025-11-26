@@ -70,7 +70,7 @@ export function cloneVNode<T extends VNode>(node: T): T {
     const elementNode = node as any
     const clonedElement = cloned as any
 
-    if ('isSVGElement' in elementNode.isSVGElement) {
+    if ('isSVGElement' in elementNode) {
       clonedElement.isSVGElement = elementNode.isSVGElement
     }
 
