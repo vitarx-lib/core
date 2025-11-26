@@ -1,17 +1,14 @@
 import {
-  isReadonlyRef,
-  isRefSignal,
   REF_SIGNAL_SYMBOL,
   type RefSignal,
   shallowRef,
   SIGNAL_RAW_VALUE_SYMBOL,
   SIGNAL_SYMBOL,
-  SubManager,
   Subscriber,
-  toRaw,
   type WatchOptions,
   watchProperty
 } from '@vitarx/responsive'
+import type { AnyProps } from '../types/index.js'
 
 /**
  * 监听props属性变化的函数
@@ -24,7 +21,7 @@ import {
  * @param {boolean | Omit<WatchOptions, 'scope'>} [immediateOrWatchOptions=false] - 监听选项，可以是布尔值或WatchOptions对象
  * @returns {Subscriber} 返回订阅者对象，可用于取消订阅
  */
-export function onPropChange<T extends {}, K extends keyof T>(
+export function onPropChange<T extends Record<string, any>, K extends keyof T>(
   props: T,
   propName: K,
   callback: (newValue: T[K], oldValue: T[K]) => void,
@@ -74,15 +71,15 @@ export function onPropChange<T extends {}, K extends keyof T>(
  * - 会自动处理原始值是否为 RefSignal 的情况
  * - 当属性值未改变时，不会触发更新
  */
-export class PropModel<T extends {}, K extends keyof T> implements RefSignal<T[K]> {
+export class PropModel<T extends AnyProps, K extends keyof T> implements RefSignal<T[K]> {
   readonly [REF_SIGNAL_SYMBOL] = true
   readonly [SIGNAL_SYMBOL] = true
   private readonly _ref: RefSignal
   private readonly _props: T
-  private readonly _propName: K
+  private readonly _eventName: string
   constructor(props: T, propName: K, defaultValue?: T[K]) {
     this._props = props
-    this._propName = propName
+    this._eventName = `$onUpdate:${propName.toString()}`
     this._ref = shallowRef(props[propName])
     // 双向绑定的关键，监听属性值的变化，如果改变，则更新_ref.value
     watchProperty(props, propName as any, () => {
@@ -91,11 +88,13 @@ export class PropModel<T extends {}, K extends keyof T> implements RefSignal<T[K
       }
     })
     // 为了解决父组件传入的是 ref() , 所以初始化默认值通过 this.value 来使传入的ref更新
-    if (defaultValue !== undefined && this._ref.value === undefined) this.value = defaultValue
+    if (defaultValue !== undefined && this._ref.value === undefined) this._ref.value = defaultValue
   }
+
   get [SIGNAL_RAW_VALUE_SYMBOL]() {
     return this._ref.value
   }
+
   /**
    * 获取属性的当前值
    *
@@ -118,14 +117,16 @@ export class PropModel<T extends {}, K extends keyof T> implements RefSignal<T[K
     // 如果新值和旧值相同，则不进行更新
     if (newValue === this._ref.value) return
     this._ref.value = newValue
-    const originalProps = toRaw(this._props) as T
-    const originalValue = originalProps[this._propName as keyof typeof originalProps]
-    if (isRefSignal(originalValue) && !isReadonlyRef(originalValue)) {
-      // 如果外部传入的原始值是一个ref，则更新ref的值
-      originalValue.value = newValue
-      // 通知依赖更新
-      SubManager.notify(this._props, this._propName)
-    }
+    this._notify(newValue)
+  }
+
+  /**
+   * 私有方法：通知属性值的变化
+   * @param newValue 新的属性值，类型为泛型T的键K对应的类型
+   */
+  private _notify(newValue: T[K]) {
+    // 私有方法，接收一个泛型参数newValue
+    this._props[this._eventName](newValue) // 通过事件名称触发事件，并将新值作为参数传递
   }
 }
 /**
@@ -171,7 +172,7 @@ export class PropModel<T extends {}, K extends keyof T> implements RefSignal<T[K
  * ```
  * @see {@linkcode PropModel} - 实现双向绑定的属性代理的类
  */
-export function usePropModel<T extends {}, K extends keyof T>(
+export function usePropModel<T extends AnyProps, K extends Extract<keyof T, string>>(
   props: T,
   propName: K,
   defaultValue?: T[K]
