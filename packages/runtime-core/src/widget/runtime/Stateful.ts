@@ -48,7 +48,7 @@ export interface StatefulManagerOptions {
    * 是否启用调度更新
    *
    * @default true
-   * - true: 在 nextTick 中批量执行更新，避免重复渲染
+   * - true: 使用 Scheduler.queueJob 进行调度，避免重复渲染
    * - false: 立即同步更新，可能导致性能问题
    */
   enableScheduler?: boolean
