@@ -237,6 +237,115 @@ describe('Widget 基类', () => {
 
       expect(calls).toEqual(['onCreate', 'onBeforeMount', 'onMounted'])
     })
+
+    it('嵌套组件生命周期钩子应该按正确顺序调用（与Vue一致）', () => {
+      const calls: string[] = []
+
+      // 子组件
+      const ChildWidget = class extends Widget {
+        override onCreate() {
+          calls.push('child-onCreate')
+        }
+        override onBeforeMount() {
+          calls.push('child-onBeforeMount')
+        }
+        override onMounted() {
+          calls.push('child-onMounted')
+        }
+        build() {
+          return createVNode('span', {}, 'child')
+        }
+      }
+
+      // 父组件
+      const ParentWidget = class extends Widget {
+        override onCreate() {
+          calls.push('parent-onCreate')
+        }
+        override onBeforeMount() {
+          calls.push('parent-onBeforeMount')
+        }
+        override onMounted() {
+          calls.push('parent-onMounted')
+        }
+        build() {
+          return createVNode('div', {}, createVNode(ChildWidget, {}))
+        }
+      }
+
+      const vnode = createVNode(ParentWidget, {})
+      renderNode(vnode)
+      mountNode(vnode, container)
+      // 生命周期顺序：
+      // 1. 父 onCreate
+      // 2. 子 onCreate
+      // 3. 父 onBeforeMount
+      // 4. 子 onBeforeMount
+      // 5. 子 onMounted
+      // 6. 父 onMounted
+      expect(calls).toEqual([
+        'parent-onCreate',
+        'child-onCreate',
+        'parent-onBeforeMount',
+        'child-onBeforeMount',
+        'child-onMounted',
+        'parent-onMounted'
+      ])
+    })
+
+    it('嵌套组件激活和停用生命周期应该按正确顺序调用（与Vue一致）', () => {
+      const calls: string[] = []
+
+      // 子组件
+      const ChildWidget = class extends Widget {
+        override onActivated() {
+          calls.push('child-onActivated')
+        }
+        override onDeactivated() {
+          calls.push('child-onDeactivated')
+        }
+        build() {
+          return createVNode('span', {}, 'child')
+        }
+      }
+
+      // 父组件
+      const ParentWidget = class extends Widget {
+        override onActivated() {
+          calls.push('parent-onActivated')
+        }
+        override onDeactivated() {
+          calls.push('parent-onDeactivated')
+        }
+        build() {
+          return createVNode('div', {}, createVNode(ChildWidget, {}))
+        }
+      }
+
+      const vnode = createVNode(ParentWidget, {})
+      renderNode(vnode)
+      mountNode(vnode, container)
+
+      calls.length = 0 // 清空挂载时的调用记录
+
+      // 先停用
+      deactivateNode(vnode, true)
+
+      // Vue 的停用顺序：从子到父
+      // 1. 子 onDeactivated
+      // 2. 父 onDeactivated
+      expect(calls).toEqual(['child-onDeactivated', 'parent-onDeactivated'])
+
+      calls.length = 0 // 清空记录
+
+      // 再激活
+      activateNode(vnode)
+
+      // Vue 的激活顺序：从父到子
+      // 1. 子 onActivated
+      // 2. 父 onActivated
+      expect(calls).toEqual(['child-onActivated', 'parent-onActivated'])
+    })
   })
 
   describe('错误处理', () => {
