@@ -70,7 +70,7 @@ export class StatefulWidgetRuntime extends WidgetRuntime<StatefulWidgetVNodeType
     enableScheduler: true
   }
   /** 组件实例 */
-  public readonly instance: Widget
+  public readonly instance: Widget<Record<string, any>>
   /** 是否有待处理的更新任务 */
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
