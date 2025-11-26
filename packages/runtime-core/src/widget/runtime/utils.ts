@@ -1,9 +1,9 @@
 import { Scheduler } from '@vitarx/responsive'
 import type {
   StatefulWidgetVNode,
+  StatefulWidgetVNodeType,
   StatelessWidgetVNode,
-  WidgetVNode,
-  WidgetVNodeType
+  WidgetVNode
 } from '../../types/index.js'
 import { isStatelessWidget } from '../../utils/index.js'
 import { getCurrentInstance } from './context.js'
@@ -22,6 +22,14 @@ import type { WidgetRuntime } from './WidgetRuntime.js'
  */
 export function createWidgetRuntime(node: StatelessWidgetVNode): StatelessWidgetRuntime
 /**
+ * 获取或创建组件运行时实例
+ *
+ * @param node
+ */
+export function createWidgetRuntime<T extends StatefulWidgetVNodeType>(
+  node: StatefulWidgetVNode<T>
+): StatefulWidgetRuntime<T>
+/**
  * 获取或创建有状态组件运行时实例
  *
  * 这是一个工厂函数，用于获取节点关联的运行时实例
@@ -31,18 +39,10 @@ export function createWidgetRuntime(node: StatelessWidgetVNode): StatelessWidget
  * @param options - 运行时实例配置选项
  * @returns 运行时实例
  */
-export function createWidgetRuntime(
-  node: StatefulWidgetVNode,
-  options?: StatefulManagerOptions
-): StatefulWidgetRuntime
-/**
- * 获取或创建组件运行时实例
- *
- * @param node
- */
-export function createWidgetRuntime<T extends WidgetVNodeType>(
-  node: WidgetVNode<T>
-): WidgetRuntime<T>
+export function createWidgetRuntime<T extends StatefulWidgetVNodeType>(
+  node: StatefulWidgetVNode<T>,
+  options: StatefulManagerOptions
+): StatefulWidgetRuntime<T>
 /**
  * 获取或创建组件运行时实例
  * @param node - 组件节点
