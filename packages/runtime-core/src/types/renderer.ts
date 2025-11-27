@@ -177,8 +177,8 @@ export interface HostRenderer {
   setClass(el: HostElements, classValue: string[]): void
   /**
    * 添加样式类
-   * @param el
-   * @param className
+   * @param el - 元素实例
+   * @param className - 样式类名，支持多个类名，用空格隔开
    */
   addClass(el: HostElements, className: string): void
   /**
