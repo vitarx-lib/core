@@ -1,6 +1,6 @@
 import { toCapitalize } from '@vitarx/utils'
 import { useRenderer } from '../../renderer/index.js'
-import type { AnyChild, HostElements, HostNodeElements, VNode } from '../../types/index.js'
+import type { HostElements, HostNodeElements, VNode } from '../../types/index.js'
 import { Widget } from '../base/index.js'
 
 /**
@@ -73,21 +73,6 @@ export interface TransitionCssClass {
  * 过渡模式、持续时间等设置。
  */
 export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass {
-  /**
-   * 子节点
-   *
-   * 可以是单个，也可以是多个
-   * 仅元素类型/组件类型节点支持过渡。
-   *
-   * @example
-   * ```tsx
-   * <Transition>
-   *   <div v-if="show">内容</div>
-   *   <div v-else>内容</div>
-   * </Transition>
-   * ```
-   */
-  children: AnyChild
   /** 过渡名称前缀，用于生成 CSS 类名，默认为 'v' */
   name?: string
   /** 是否在初始渲染时触发过渡，默认为 false */
@@ -120,25 +105,7 @@ const DEFAULT_PROPS = {
   /** 默认使用 CSS 过渡类 */
   css: true,
   /** 默认使用自动计算 */
-  type: 'default',
-  /** 默认进入动画开始状态类名 */
-  enterFromClass: 'enter-from',
-  /** 默认进入动画进行中类名 */
-  enterActiveClass: 'enter-active',
-  /** 默认进入动画结束状态类名 */
-  enterToClass: 'enter-to',
-  /** 默认首次出现动画开始状态类名 */
-  appearFromClass: 'appear-from',
-  /** 默认首次出现动画进行中类名 */
-  appearActiveClass: 'appear-active',
-  /** 默认首次出现动画结束状态类名 */
-  appearToClass: 'appear-to',
-  /** 默认离开动画开始状态类名 */
-  leaveFromClass: 'leave-from',
-  /** 默认离开动画进行中类名 */
-  leaveActiveClass: 'leave-active',
-  /** 默认离开动画结束状态类名 */
-  leaveToClass: 'leave-to'
+  type: 'default'
 } as const satisfies Omit<BaseTransitionProps, 'children'>
 
 /**
