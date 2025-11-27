@@ -22,3 +22,4 @@ export const SPECIAL_NODE_KINDS = new Set([NodeKind.TEXT, NodeKind.COMMENT, Node
 export const CONTAINER_NODE_KINDS = new Set([NodeKind.REGULAR_ELEMENT, NodeKind.FRAGMENT])
 export const ELEMENT_NODE_KINDS = new Set([NodeKind.REGULAR_ELEMENT, NodeKind.VOID_ELEMENT])
 export const WIDGET_NODE_KINDS = new Set([NodeKind.STATELESS_WIDGET, NodeKind.STATEFUL_WIDGET])
+export const NON_ELEMENT_NODE_KINDS = new Set([NodeKind.TEXT, NodeKind.COMMENT])
