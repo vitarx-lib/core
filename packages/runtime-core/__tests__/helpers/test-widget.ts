@@ -5,8 +5,17 @@
  */
 
 import { Scheduler } from '@vitarx/responsive'
-import type { ClassWidget, VNodeChild, VNodeInstanceType, WidgetTypes } from '../../src/index.js'
-import { createVNode, mountNode, renderNode, Widget } from '../../src/index.js'
+import {
+  type ClassWidget,
+  createVNode,
+  mountNode,
+  type Renderable,
+  renderNode,
+  type VNodeInstanceType,
+  Widget,
+  type WidgetTypes,
+  type WidgetVNode
+} from '../../src/index.js'
 
 /**
  * 创建测试用的有状态 Widget 类
@@ -36,7 +45,7 @@ export function createTestWidget<P extends Record<string, any> = Record<string, 
     override onRender = options?.onRender
     override $patchUpdate = options?.$patchUpdate
 
-    override build(): VNodeChild {
+    override build(): Renderable {
       return options?.build ? options?.build.call(this) : createVNode('div')
     }
   }
@@ -105,4 +114,19 @@ export function renderAndMount<T extends WidgetTypes>(
   renderNode(vnode)
   mountNode(vnode, el)
   return vnode
+}
+
+/**
+ * 更新组件属性并触发重新渲染
+ * @param node 虚拟DOM节点对象
+ * @param key 要更新的属性名
+ * @param value 新的属性值
+ */
+export function updateProps(node: WidgetVNode, key: string, value: any): void {
+  // 更新节点的属性值
+  node.props[key] = value
+  // 通知运行时实例进行更新
+  node.runtimeInstance!.update()
+  // 刷新调度器，确保所有更新按顺序执行
+  flushScheduler()
 }
