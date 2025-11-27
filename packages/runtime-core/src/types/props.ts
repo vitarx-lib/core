@@ -262,7 +262,7 @@ export type MergeProps<Input extends {}, Default extends {}> = Input & {
  *
  * @template P - 输入的属性类型
  */
-export type ExtractChildrenPropType<P> = P extends { children: infer U }
+export type ExtractChildrenType<P> = P extends { children: infer U }
   ? U
   : P extends { children?: infer U }
     ? U | undefined

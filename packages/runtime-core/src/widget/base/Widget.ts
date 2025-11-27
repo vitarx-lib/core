@@ -4,7 +4,7 @@ import { getCurrentVNode } from '../../runtime/index.js'
 import type {
   AnyProps,
   ErrorInfo,
-  ExtractChildrenPropType,
+  ExtractChildrenType,
   MergeProps,
   NodeElementType,
   StatefulWidgetVNode,
@@ -88,12 +88,10 @@ export abstract class Widget<
    *
    * 这是一个getter方法，用于返回当前小部件的子节点列表
    *
-   * @returns {ExtractChildrenPropType<InputProps>} 返回子节点列表
+   * @returns {ExtractChildrenType<this['props']>} 返回子节点列表
    */
-  get children(): ExtractChildrenPropType<MergeProps<InputProps, DefaultProps>> {
-    return (this.props as unknown as Record<'children', any>).children as ExtractChildrenPropType<
-      MergeProps<InputProps, DefaultProps>
-    >
+  get children(): ExtractChildrenType<this['props']> {
+    return (this.props as unknown as Record<'children', any>).children as any
   }
 
   /**
