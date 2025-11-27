@@ -56,7 +56,8 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
   }
   // --------- 提取 key ---------
   if ('key' in props) {
-    node.key = popProperty(props, 'key')
+    const key = popProperty(props, 'key')
+    if (key !== null && key !== undefined) node.key = key
   }
   // --------- 特殊属性：v-static ---------
   if ('v-static' in props) node.static = popProperty(props, 'v-static')
