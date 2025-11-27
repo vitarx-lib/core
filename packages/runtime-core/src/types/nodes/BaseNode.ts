@@ -192,11 +192,6 @@ export interface ContainerVNode<T extends ContainerVNodeType = ContainerVNodeTyp
  * @template T 元素节点类型，默认为ElementVNodeType
  */
 export interface ElementVNode<T extends ElementVNodeType = ElementVNodeType> extends HostVNode<T> {
-  props: {
-    style?: Vitarx.HostStyleRules
-    class?: string[]
-    [key: string]: any
-  }
   /**
    * 是否是SVG元素
    *
