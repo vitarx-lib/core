@@ -6,12 +6,10 @@
  */
 
 import { type Fragment, FRAGMENT_NODE_TYPE } from '../../constants/index.js'
-import { diffDirectives } from '../../directive/index.js'
 import { useRenderer } from '../../renderer/index.js'
 import type {
   AnyChild,
   ContainerVNode,
-  ElementVNode,
   FragmentVNodeType,
   HostRegularElementNames,
   Renderable,
@@ -19,10 +17,11 @@ import type {
   WithNodeProps
 } from '../../types/index.js'
 import { getNodeElement, isContainerNode } from '../../utils/index.js'
-import { type ChildNodeUpdateHooks, PatchUpdate } from '../../vnode/core/update.js'
+import { PatchUpdate } from '../../vnode/core/update.js'
 import { createVNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
+type AllowTag = HostRegularElementNames | Fragment | FragmentVNodeType
 /**
  * TransitionGroup 组件属性接口
  *
@@ -31,9 +30,16 @@ import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
  *
  * @template T - 包裹元素的标签类型，默认为 FragmentNodeType
  */
-interface TransitionGroupProps<
-  T extends HostRegularElementNames | Fragment | FragmentVNodeType = FragmentVNodeType
-> extends BaseTransitionProps {
+interface TransitionGroupProps<T extends AllowTag = AllowTag> extends BaseTransitionProps {
+  /**
+   * @example
+   * ```tsx
+   * <TransitionGroup tag="ul">
+   *   { list.map(item => <li>{item}</li>) }
+   * </TransitionGroup>
+   * ```
+   */
+  children: AnyChild
   /** 包裹子节点的标签名，默认为 fragment */
   tag?: T
   /** 元素移动时使用的类名，默认为 `${name}-move` */
@@ -183,7 +189,15 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
       PatchUpdate.patchUpdateChildren(container, nextVNode as ContainerVNode, {
         onMount: child => this.runEnter(child),
         onUnmount: (child, done) => this.runLeave(child, done),
-        onUpdate: this.handleChildUpdate
+        onUpdate: (oldChild, newChild, done) => {
+          const oldShow = oldChild.directives?.get('show')?.[1]
+          const newShow = newChild.directives?.get('show')?.[1]
+          done()
+          // 处理显示状态变化
+          if (oldShow !== newShow) {
+            this.runTransition(oldChild.el!, oldShow ? 'leave' : 'enter')
+          }
+        }
       })
 
       // === 3️⃣ 计算并执行 move 动画 ===
@@ -256,36 +270,5 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
     }
 
     return currentVNode
-  }
-
-  /**
-   * 处理子节点更新
-   *
-   * 在现实状态变化时为其执行过渡动画
-   *
-   * @param oldChild - 旧子节点
-   * @param newChild - 新子节点
-   * @param done - 完成回调函数
-   */
-  private handleChildUpdate: ChildNodeUpdateHooks['onUpdate'] = (oldChild, newChild, done) => {
-    const oldShow = oldChild.directives?.get('show')?.[1]
-    const newShow = newChild.directives?.get('show')?.[1]
-    // 处理显示状态变化
-    if (oldShow !== newShow) {
-      if (oldShow) {
-        done({ skip: ['show'] })
-        // 从显示变为隐藏，执行离开动画
-        this.runTransition(oldChild.el!, 'leave', () =>
-          diffDirectives(oldChild as ElementVNode, newChild as ElementVNode, { only: ['show'] })
-        )
-      } else {
-        // 从隐藏变为显示，先完成更新再执行进入动画
-        done()
-        this.runTransition(oldChild.el!, 'enter')
-      }
-    } else {
-      // 显示状态未变化，直接完成更新
-      done()
-    }
   }
 }
