@@ -39,7 +39,7 @@ export const propagateSVGNamespace = (node: VNode) => {
  */
 const checkDuplicateKey = (vnode: VNode, keySet: Set<UniqueKey>): void => {
   // 如果节点没有key值，直接返回，无需检查
-  if (vnode.key == null) return
+  if (vnode.key == null || keySet == undefined) return
 
   // 检查key是否已存在于集合中
   if (keySet.has(vnode.key)) {
