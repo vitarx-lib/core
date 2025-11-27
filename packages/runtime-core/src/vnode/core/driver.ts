@@ -48,30 +48,6 @@ export function renderNode<T extends VNodeTypes>(node: VNode<T>): NodeElementTyp
   throw new Error(`The node state (${node.state}) cannot be rendered`)
 }
 /**
- * 挂载节点 - 替换元素
- *
- * @param node - 虚拟节点对象
- * @param anchor - 锚点元素
- * @param opsType - 替换
- */
-export function mountNode(node: VNode, anchor: HostNodeElements, opsType: 'replace'): void
-/**
- * 挂载节点 - 在锚点之前插入
- *
- * @param node - 虚拟节点对象
- * @param anchor - 目标容器元素
- * @param opsType - 插入之前
- */
-export function mountNode(node: VNode, anchor: HostParentElement, opsType: 'insertBefore'): void
-/**
- * 挂载节点 - 追加到容器
- *
- * @param node - 虚拟节点对象
- * @param container - 目标容器元素
- * @param opsType - 追加
- */
-export function mountNode(node: VNode, container: HostParentElement, opsType?: 'appendChild'): void
-/**
  * 挂载节点到容器
  *
  * @param node - 虚拟节点
