@@ -119,8 +119,9 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
    * 为所有子元素触发进入动画。
    */
   override onMounted() {
-    if (this.props.appear && isContainerNode(this.$vnode)) {
-      for (const child of this.$vnode.children) {
+    const subTree = this.$vnode.runtimeInstance!.child
+    if (this.props.appear && isContainerNode(subTree)) {
+      for (const child of subTree.children) {
         this.runEnter(child)
       }
     }
