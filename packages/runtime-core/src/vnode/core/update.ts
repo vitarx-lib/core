@@ -31,11 +31,7 @@ export interface ChildNodeUpdateHooks {
    * @param newChild - 新节点
    * @param done - 完成回调函数，务必调用！
    */
-  onUpdate?: (
-    oldChild: VNode,
-    newChild: VNode,
-    done: (options?: DiffDirectivesOptions) => void
-  ) => void
+  onUpdate?: (oldChild: VNode, newChild: VNode, done: () => void) => void
 }
 /**
  * VNode 更新管理器
