@@ -3,7 +3,7 @@ import { NodeState, SUSPENSE_COUNTER_SYMBOL } from '../../constants/index.js'
 import { linkParentNode, provide } from '../../runtime/index.js'
 import type { AnyProps, ErrorHandler, VNode, VNodeChild } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
-import { cloneVNode, createCommentVNode, renderNode } from '../../vnode/index.js'
+import { createCommentVNode, renderNode } from '../../vnode/index.js'
 import { Widget } from '../base/Widget.js'
 
 /**
@@ -36,15 +36,6 @@ interface SuspenseProps {
    * 该钩子会在子节点全部渲染完成后执行
    */
   onResolved?: () => void
-  /**
-   * 是否持续监听异步子节点
-   *
-   * 默认为 false。若为 true，则即使首次异步完成，Suspense 仍保持监听，
-   * 当计数器再次增加时，会重新显示 fallback。
-   *
-   * @defaultValue false
-   */
-  persistent?: boolean
 }
 
 /**
@@ -56,7 +47,6 @@ interface SuspenseProps {
  * 特性：
  * - 首次异步加载显示 fallback，完成后显示子节点
  * - 支持一次性回调 onResolved，在子节点首次渲染完成后触发
- * - 可选 persistent 模式，持续监听子节点异步加载，子节点再次异步渲染时重新显示 fallback 并，渲染完成重新触发 onResolved
  * - 安全处理卸载状态，避免已卸载组件更新
  *
  * @example 基本用法
@@ -95,9 +85,9 @@ export class Suspense extends Widget<SuspenseProps> {
   protected counter = shallowRef(0)
   protected showFallback = true
   private listener?: Subscriber
-  private pendingOnResolved: boolean = false
+  private pendingOnResolved: boolean = true
   private ssrPromise?: (value: void) => void
-  private fallback: VNode
+  private readonly fallback: VNode
   constructor(props: SuspenseProps) {
     super(props)
     provide(SUSPENSE_COUNTER_SYMBOL, this.counter)
@@ -109,16 +99,7 @@ export class Suspense extends Widget<SuspenseProps> {
     this.listener = watch(this.counter, newValue => {
       // 如果为true则显示回退内容
       const shouldShowFallback = newValue >= 1
-      if (shouldShowFallback && !this.showFallback) {
-        // 计数器增加且 persistent 模式开启，重新显示 fallback
-        if (this.props.persistent) {
-          this.showFallback = true
-          if (this.fallback.state !== NodeState.Created) {
-            this.fallback = cloneVNode(this.fallback)
-          }
-          this.$forceUpdate()
-        }
-      } else if (!shouldShowFallback && this.showFallback) {
+      if (!shouldShowFallback && this.showFallback) {
         // 首次或计数器归零，停止 fallback
         this.stopSuspense()
       }
@@ -188,10 +169,6 @@ export class Suspense extends Widget<SuspenseProps> {
   private stopSuspense() {
     if (this.showFallback) {
       if (this.$vnode.state === NodeState.Unmounted) return
-      if (!this.props.persistent) {
-        this.listener?.dispose()
-        this.listener = undefined
-      }
       this.showFallback = false
       if (this.$vnode.state === NodeState.Deactivated) {
         this.pendingOnResolved = true
