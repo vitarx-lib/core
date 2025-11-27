@@ -12,43 +12,13 @@ export interface NodeController<T extends VNodeTypes> {
    */
   render(node: VNode<T>): NodeElementType<T>
   /**
-   * 挂载节点 - 替换元素
-   *
-   * @param node - 虚拟节点对象
-   * @param anchor - 锚点元素
-   * @param opsType - 替换
-   */
-  mount(node: VNode<T>, anchor: HostNodeElements, opsType: 'replace'): void
-  /**
-   * 挂载节点 - 在锚点之前插入
-   *
-   * @param node - 虚拟节点对象
-   * @param anchor - 目标容器元素
-   * @param opsType - 插入之前
-   */
-  mount(node: VNode<T>, anchor: HostParentElement, opsType: 'insertBefore'): void
-  /**
-   * 挂载节点 - 追加到容器
-   *
-   * @param node - 虚拟节点对象
-   * @param container - 目标容器元素
-   * @param opsType - 追加
-   */
-  mount(node: VNode<T>, container: HostParentElement, opsType?: 'appendChild'): void
-  /**
-   * 挂载节点 - 不处理dom挂载
-   *
-   * @param node - 虚拟节点对象
-   */
-  mount(node: VNode<T>): void
-  /**
    * 挂载节点
    *
    * @param node - 虚拟节点对象
    * @param target - 挂载目标
    * @param [opsType='appendChild'] - 默认追加
    */
-  mount(node: VNode<T>, target?: HostNodeElements, opsType?: OpsType): void
+  mount(node: VNode<T>, target?: HostNodeElements | HostParentElement, opsType?: OpsType): void
   /**
    * 节点被激活
    *
