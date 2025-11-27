@@ -189,6 +189,8 @@ export class DomRenderer implements HostRenderer {
   /** @inheritDoc */
   removeStyle(el: HostElements, key: string): void {
     el.style.removeProperty(key)
+    // 如果没有有效样式，移除 style 属性
+    if (el.style.length === 0) el.removeAttribute('style')
   }
 
   /** @inheritDoc */
@@ -211,9 +213,10 @@ export class DomRenderer implements HostRenderer {
       StyleUtils.cssClassValueToArray(className).forEach(className => {
         el.classList.add(className)
       })
-      return
+    } else {
+      el.classList.add(className)
     }
-    el.classList.add(className)
+    if (el.classList.length === 0) el.removeAttribute('class')
   }
 
   /** @inheritDoc */
@@ -319,6 +322,9 @@ export class DomRenderer implements HostRenderer {
       el.removeAttribute('class')
       return
     }
+    if (key === 'style') {
+      el.removeAttribute('style')
+    }
     // --- 2. 事件属性 ---
     if (typeof prevValue === 'function' && key.startsWith('on')) {
       this.removeEventListener(el, key, prevValue)
@@ -329,7 +335,10 @@ export class DomRenderer implements HostRenderer {
       try {
         // --- 3. 还原属性到默认值 ---
         const tag = el.tagName.toLowerCase()
-        ;(el as any)[key] = this.getDefaultValue(tag, key)
+        const defaultValue = this.getDefaultValue(tag, key)
+        if (defaultValue !== undefined) {
+          ;(el as any as Record<string, any>)[key] = defaultValue
+        }
       } catch {
         // 一些只读属性（如 innerHTML）会抛异常，退回到 removeAttribute
         el.removeAttribute(key)
@@ -543,17 +552,21 @@ export class DomRenderer implements HostRenderer {
     if (!tagCache) {
       tagCache = DEFAULT_PROPERTIES_CACHE.set(tag, Object.create(null))
     }
-
+    let value: any
     // 缓存命中
     if (prop in tagCache) {
-      return tagCache[prop]
+      value = tagCache[prop]
+    } else {
+      // 未命中 → 创建元素获取默认值
+      const el = document.createElement(tag)
+      value = (el as any)[prop]
+      tagCache[prop] = value
     }
 
-    // 未命中 → 创建元素获取默认值
-    const el = document.createElement(tag)
-    const value = (el as any)[prop]
-    tagCache[prop] = value
+    if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
+      return value
+    }
 
-    return value
+    return undefined
   }
 }
