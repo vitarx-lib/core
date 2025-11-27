@@ -209,11 +209,23 @@ export class DomRenderer implements HostRenderer {
 
   /** @inheritDoc */
   addClass(el: HostElements, className: string): void {
+    if (className.includes(' ')) {
+      StyleUtils.cssClassValueToArray(className).forEach(className => {
+        el.classList.add(className)
+      })
+      return
+    }
     el.classList.add(className)
   }
 
   /** @inheritDoc */
   removeClass(el: HostElements, className: string): void {
+    if (className.includes(' ')) {
+      StyleUtils.cssClassValueToArray(className).forEach(className => {
+        el.classList.remove(className)
+      })
+      return
+    }
     el.classList.remove(className)
   }
 
