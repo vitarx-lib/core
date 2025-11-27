@@ -128,3 +128,16 @@ export function isContainerNode(val: any): val is ContainerVNode {
 export function isNonElementNode(val: any): val is TextVNode | CommentVNode {
   return isVNode(val) && (val.kind === NodeKind.TEXT || val.kind === NodeKind.COMMENT)
 }
+
+/**
+ * 检查给定的值是否为特殊节点(TextNode|CommentNode|FragmentNode)
+ *
+ * @param val - 需要检查的值
+ * @returns {boolean} 如果值是特殊节点则返回true，否则返回false
+ */
+export function isSpecialNode(val: any): val is TextVNode | CommentVNode | FragmentVNode {
+  return (
+    isVNode(val) &&
+    (val.kind === NodeKind.TEXT || val.kind === NodeKind.COMMENT || val.kind === NodeKind.FRAGMENT)
+  )
+}
