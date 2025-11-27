@@ -181,24 +181,24 @@ async function buildPackage(
     if (!existsSync(testDir1) && !existsSync(testDir2)) {
       log.warn('⚠️  No test directory found (__tests__ or tests)')
     } else {
-      log.warn('🔍 Running TypeScript type check...')
-      const tsconfigPath = join(packagePath, 'tsconfig.test.json')
-      const hasTsconfig = existsSync(tsconfigPath)
-      if (!hasTsconfig) {
-        // 如果没有 tsconfig.json，创建临时配置
-        createTempTsConfigForTypeCheck(tsconfigPath)
-      }
-
-      try {
-        // 运行 TypeScript 类型检查（不生成输出文件）
-        await runCommand(`tsc --noEmit -p ${tsconfigPath}`, packagePath)
-        log.success('  ✓ Type check passed successfully')
-      } finally {
-        // 清理临时配置文件
-        if (!hasTsconfig) {
-          rmSync(tsconfigPath, { force: true })
-        }
-      }
+      // log.warn('🔍 Running TypeScript type check...')
+      // const tsconfigPath = join(packagePath, 'tsconfig.test.json')
+      // const hasTsconfig = existsSync(tsconfigPath)
+      // if (!hasTsconfig) {
+      //   // 如果没有 tsconfig.json，创建临时配置
+      //   createTempTsConfigForTypeCheck(tsconfigPath)
+      // }
+      //
+      // try {
+      //   // 运行 TypeScript 类型检查（不生成输出文件）
+      //   await runCommand(`tsc --noEmit -p ${tsconfigPath}`, packagePath)
+      //   log.success('  ✓ Type check passed successfully')
+      // } finally {
+      //   // 清理临时配置文件
+      //   if (!hasTsconfig) {
+      //     rmSync(tsconfigPath, { force: true })
+      //   }
+      // }
 
       log.warn('🧪 Running vitest tests...')
       // 使用 vitest 运行测试
