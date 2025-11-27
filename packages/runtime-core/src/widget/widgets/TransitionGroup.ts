@@ -218,7 +218,6 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
         const newRect = dom.getBoundingClientRect(el)
         const dx = oldRect.left - newRect.left
         const dy = oldRect.top - newRect.top
-
         // 如果没有移动，跳过
         if (!dx && !dy) continue
 
@@ -226,22 +225,30 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
         const prevCancel = (el as any)._moveCancel
         if (prevCancel) prevCancel()
 
+        const rawTransform = dom.getStyle(el, 'transform')
+        const rawTransitionDuration = dom.getStyle(el, 'transitionDuration')
         // 初始化到旧位置
-        const recoverTransform = dom.addStyle(el, 'transform', `translate(${dx}px, ${dy}px)`)
-        const recoverTransitionDuration = dom.addStyle(el, 'transitionDuration', '0s')
+        dom.addStyle(el, 'transform', `translate(${dx}px, ${dy}px)`)
+        dom.addStyle(el, 'transitionDuration', '0s')
 
         // 强制 reflow，确保动画触发
         if ('offsetWidth' in el) void (el as { offsetWidth: number }).offsetWidth
 
         // 添加 moveClass，启用过渡
         dom.addClass(el, moveClass)
-
         // 下一帧恢复到目标位置
         dom.requestAnimationFrame(() => {
-          recoverTransform()
-          recoverTransitionDuration()
+          if (rawTransform) {
+            dom.addStyle(el, 'transform', rawTransform)
+          } else {
+            dom.removeStyle(el, 'transform')
+          }
+          if (rawTransitionDuration) {
+            dom.addStyle(el, 'transitionDuration', rawTransitionDuration)
+          } else {
+            dom.removeStyle(el, 'transitionDuration')
+          }
         })
-
         // 检查动画时长，无动画则直接清理
         const duration = this.getDuration(el, 'enter')
         if (duration <= 0) {
