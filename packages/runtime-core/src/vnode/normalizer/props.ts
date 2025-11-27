@@ -16,7 +16,13 @@ import type {
   ValidNodeType
 } from '../../types/index.js'
 import { StyleUtils } from '../../utils/index.js'
-
+// 定义特殊属性的自定义合并逻辑，确保样式和类名正确合并而不是覆盖
+const SPECIAL_MERGERS = {
+  style: StyleUtils.mergeCssStyle, // 样式对象合并
+  class: StyleUtils.mergeCssClass, // 类名数组合并
+  className: StyleUtils.mergeCssClass, // 支持大写形式的类名属性
+  classname: StyleUtils.mergeCssClass // 支持全小写形式的类名属性
+} as const
 /**
  * 处理 v-bind 属性绑定，将绑定对象的属性合并到目标 props 中
  *
@@ -59,13 +65,6 @@ export const bindProps = (props: AnyProps, bind: BindAttributes): void => {
     const existing = props[key] // 当前 props 中已有的值，用于判断是否需要合并
     const value = unref(rawValue) // 解包可能的 ref/reactive 值，获取实际值
 
-    // 定义特殊属性的自定义合并逻辑，确保样式和类名正确合并而不是覆盖
-    const SPECIAL_MERGERS = {
-      style: StyleUtils.mergeCssStyle, // 样式对象合并
-      class: StyleUtils.mergeCssClass, // 类名数组合并
-      className: StyleUtils.mergeCssClass, // 支持大写形式的类名属性
-      classname: StyleUtils.mergeCssClass // 支持全小写形式的类名属性
-    } as const
     // ---- 特殊属性处理（class/style）----
     // 对于样式和类名等特殊属性，需要进行智能合并而不是简单覆盖
     if (key in SPECIAL_MERGERS) {
