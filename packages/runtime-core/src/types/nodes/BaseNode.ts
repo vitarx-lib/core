@@ -160,7 +160,9 @@ export interface HostVNode<T extends HostVNodeType = HostVNodeType> extends VNod
  * @template T 非元素节点类型，默认为NonElementVNodeType
  */
 export interface NonElementVNode<T extends NonElementVNodeType = NonElementVNodeType>
-  extends HostVNode<T> {}
+  extends HostVNode<T> {
+  props: { value: string }
+}
 
 /**
  * 容器节点接口
@@ -190,6 +192,11 @@ export interface ContainerVNode<T extends ContainerVNodeType = ContainerVNodeTyp
  * @template T 元素节点类型，默认为ElementVNodeType
  */
 export interface ElementVNode<T extends ElementVNodeType = ElementVNodeType> extends HostVNode<T> {
+  props: {
+    style?: Vitarx.HostStyleRules
+    class?: string[]
+    [key: string]: any
+  }
   /**
    * 是否是SVG元素
    *
