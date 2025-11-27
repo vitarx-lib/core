@@ -8,8 +8,7 @@ import type {
   HostNodeElements,
   HostVNode,
   NodeElementType,
-  OpsType,
-  RegularElementVNodeType
+  OpsType
 } from '../types/index.js'
 import { HostNodeController } from './HostNodeController.js'
 
@@ -98,9 +97,7 @@ export abstract class ElementController<T extends ElementVNodeType> extends Host
   /**
    * @inheritDoc
    */
-  protected createElement<T extends RegularElementVNodeType>(
-    node: ElementVNode<T>
-  ): NodeElementType<T> {
-    return this.dom.createElement(node)
+  protected createElement(node: HostVNode<T>): NodeElementType<T> {
+    return this.dom.createElement(node) as NodeElementType<T>
   }
 }
