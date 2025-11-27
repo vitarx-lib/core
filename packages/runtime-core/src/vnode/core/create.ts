@@ -8,11 +8,13 @@ import {
 } from '../../constants/index.js'
 import type {
   AnyChild,
+  RegularElementVNodeType,
   TextVNodeType,
   ValidNodeProps,
   ValidNodeType,
   VNode,
-  VNodeInstanceType
+  VNodeInstanceType,
+  VoidElementVNodeType
 } from '../../types/index.js'
 import { __DEV__, getNodeDevInfo, isWidget } from '../../utils/index.js'
 import { createRegularElementVNode, createVoidElementVNode } from '../creator/element.js'
@@ -123,9 +125,15 @@ export function createVNode<T extends ValidNodeType>(
         return createFragmentVNode(props) as VNodeInstanceType<T>
       default:
         if (supportChildren) {
-          return createRegularElementVNode(type, props as never) as VNodeInstanceType<T>
+          return createRegularElementVNode(
+            type as RegularElementVNodeType,
+            props as any
+          ) as VNodeInstanceType<T>
         } else {
-          return createVoidElementVNode(type, props as never) as VNodeInstanceType<T>
+          return createVoidElementVNode(
+            type as VoidElementVNodeType,
+            props as any
+          ) as VNodeInstanceType<T>
         }
     }
   }
