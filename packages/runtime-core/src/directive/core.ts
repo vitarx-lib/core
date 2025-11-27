@@ -126,7 +126,7 @@ export function withDirectives<T extends VNode>(
     | Array<Directive>
 ): T {
   if (!isElementNode(vnode) && !isWidgetNode(vnode)) return vnode
-  vnode.directives = vnode.directives || new Map()
+  vnode.directives ??= new Map()
   for (const item of directives) {
     let dir: Directive
     let value: any
