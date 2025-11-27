@@ -23,7 +23,7 @@ describe('常量定义', () => {
       expect(TEXT_NODE_TYPE).toBe('plain-text')
       expect(COMMENT_NODE_TYPE).toBe('comment')
       expect(FRAGMENT_NODE_TYPE).toBe('fragment')
-      expect(DYNAMIC_RENDER_TYPE).toBe('render')
+      expect(DYNAMIC_RENDER_TYPE).toBe('dynamic')
     })
   })
 
