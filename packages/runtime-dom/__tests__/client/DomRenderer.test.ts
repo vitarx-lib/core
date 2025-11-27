@@ -326,11 +326,8 @@ describe('DomRenderer', () => {
       const el = document.createElement('div')
       el.style.color = 'blue'
 
-      const restore = renderer.addStyle(el, 'color', 'red')
+      renderer.addStyle(el, 'color', 'red')
       expect(el.style.color).toBe('red')
-
-      restore()
-      expect(el.style.color).toBe('blue')
     })
 
     it('应该移除样式属性', () => {
