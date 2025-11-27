@@ -187,7 +187,7 @@ export class App {
   mount(container: HostParentElement | string): this {
     // 如果传入的是字符串，则通过querySelector获取对应的DOM元素
     if (typeof container === 'string') {
-      container = useRenderer().querySelector(container)!
+      container = useRenderer().querySelector(container)! as HostParentElement
       // 如果找不到对应的DOM元素，抛出错误
       if (!container) {
         throw new Error(
@@ -196,7 +196,7 @@ export class App {
       }
     }
     // 调用组件的mount方法，将组件挂载到指定的容器中
-    mountNode(this.rootNode, container)
+    mountNode(this.rootNode, container as HostParentElement)
     // 返回当前组件实例，支持链式调用
     return this
   }
