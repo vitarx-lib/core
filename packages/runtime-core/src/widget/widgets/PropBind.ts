@@ -1,12 +1,12 @@
 import { Fragment } from '../../constants/index.js'
-import type { AnyProps, FragmentVNode, VNodeChildren } from '../../types/index.js'
+import type { AnyChild, AnyProps, FragmentVNode } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
 import { defineStatelessWidget } from '../../utils/widget.js'
 import { createVNode } from '../../vnode/index.js'
 import { bindProps } from '../../vnode/normalizer/props.js'
 
 interface PropBindProps {
-  children: VNodeChildren
+  children: AnyChild
   [key: string]: any
 }
 

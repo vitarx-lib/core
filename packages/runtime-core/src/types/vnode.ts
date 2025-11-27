@@ -7,11 +7,11 @@
 
 import {
   COMMENT_NODE_TYPE,
+  type Dynamic,
   type DynamicRenderType,
   type Fragment,
   FRAGMENT_NODE_TYPE,
   NodeKind,
-  type Render,
   TEXT_NODE_TYPE
 } from '../constants/index.js'
 import type {
@@ -98,28 +98,36 @@ export type VNodeTypes =
  * 它是 `HostNodeNames` 的子集，表示运行时元素类型。
  */
 export type HostVNodeType = Exclude<VNodeTypes, WidgetVNodeType>
+
 /**
- * 支持渲染的元素类型定义
+ * 归一化后的虚拟节点类型
+ */
+export type NormalizedRenderable = VNode
+/**
+ * 可渲染的数据类型
  *
- * `VNodeChild` 表示框架可渲染的最小单元节点类型：
+ * `Renderable` 表示框架可渲染的最小单元节点类型：
  * - null / undefined / boolean：条件渲染占位（注释节点）
  * - string / number / bigint：文本节点
- * - VNode：虚拟节点
+ * - VNode：任意类型的虚拟节点
  */
-export type VNodeChild = null | undefined | boolean | number | string | bigint | VNode
+export type Renderable =
+  | null
+  | undefined
+  | boolean
+  | number
+  | string
+  | bigint
+  | NormalizedRenderable
 /**
- * 支持渲染的子节点列表类型
- *
- * `VNodeChildren` 表示 createVNode 可接受的子节点输入，
- * 可以是单个 VNodeChild 或可迭代的 VNodeChild 集合。
+ * 任意可作为 children 的结构
  */
-export type VNodeChildren = VNodeChild | Iterable<VNodeChild>
+export type AnyChild = Renderable | Iterable<AnyChild>
+
 /**
- * 运行时子节点列表类型
- *
- * `VNodeNormalizedChildren` 仅代表节点内部规范化后的子节点列表类型
+ * 归一化后的 children 列表
  */
-export type VNodeNormalizedChildren = Array<VNode>
+export type VNodeNormalizedChildren = NormalizedRenderable[]
 /**
  * createVNode支持的节点类型
  *
@@ -131,12 +139,12 @@ export type VNodeNormalizedChildren = Array<VNode>
  *
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的虚拟节点类型是 `VNodeType`
  */
-export type ValidNodeType = JSXElementNames | Fragment | Render | WidgetTypes
+export type ValidNodeType = JSXElementNames | Fragment | Dynamic | WidgetTypes
 
 /**
  * 节点实例类型重载
  */
-export type VNodeInstanceType<T extends ValidNodeType> = T extends Render | DynamicRenderType
+export type VNodeInstanceType<T extends ValidNodeType> = T extends Dynamic | DynamicRenderType
   ? VNode
   : T extends Fragment | FragmentVNodeType
     ? FragmentVNode

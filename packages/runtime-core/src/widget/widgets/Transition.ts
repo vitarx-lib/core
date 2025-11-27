@@ -2,9 +2,9 @@ import { computed } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils'
 import { diffDirectives } from '../../directive/index.js'
 import { useRenderer } from '../../renderer/index.js'
-import type { ElementVNode, HostNodeElements, VNode } from '../../types/index.js'
-import { VNodeChild } from '../../types/vnode.js'
-import { getNodeDomOpsTarget, getNodeElement, isNonElementNode } from '../../utils/index.js'
+import type { ElementVNode, HostNodeElements, Renderable, VNode } from '../../types/index.js'
+import { AnyChild } from '../../types/vnode.js'
+import { getNodeDomOpsTarget, getNodeElement, isVNode } from '../../utils/index.js'
 import { PatchUpdate } from '../../vnode/core/update.js'
 import { mountNode, unmountNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
@@ -135,9 +135,7 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
    */
   protected child = computed(() => {
     if (isArray(this.children)) {
-      const rootChild = this.children.find(item => {
-        return !isNonElementNode(item)
-      })
+      const rootChild = this.children.find(item => isVNode(item))
       if (!rootChild) {
         logger.warn(
           '<Transition> When multiple nodes are passed, one node must be displayed',
@@ -154,9 +152,9 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
   /**
    * 构建组件渲染内容
    *
-   * @returns {VNodeChild} 当前子节点的 VNode
+   * @returns {AnyChild} 当前子节点的 VNode
    */
-  override build(): VNodeChild {
+  override build(): Renderable {
     return this.child.value
   }
   /**

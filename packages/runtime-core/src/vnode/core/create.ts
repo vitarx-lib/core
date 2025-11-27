@@ -7,11 +7,11 @@ import {
   TEXT_NODE_TYPE
 } from '../../constants/index.js'
 import type {
+  AnyChild,
   TextVNodeType,
   ValidNodeProps,
   ValidNodeType,
   VNode,
-  VNodeChild,
   VNodeInstanceType
 } from '../../types/index.js'
 import { __DEV__, getNodeDevInfo, isWidget } from '../../utils/index.js'
@@ -88,7 +88,7 @@ function createDynamicVNode(props: Record<string, any>): VNode {
 export function createVNode<T extends ValidNodeType>(
   type: T,
   props: ValidNodeProps<T> | null = null,
-  ...children: VNodeChild[]
+  ...children: AnyChild[]
 ): VNodeInstanceType<T> {
   props ??= {} as ValidNodeProps<T>
   const supportChildren = isSupportChildren(type)

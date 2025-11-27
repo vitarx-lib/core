@@ -1,4 +1,4 @@
-import { DYNAMIC_RENDER_TYPE, type Render } from '../constants/index.js'
+import { type Dynamic, DYNAMIC_RENDER_TYPE } from '../constants/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
 import type { ErrorHandler } from './lifecycle.js'
 import type {
@@ -71,7 +71,7 @@ declare global {
        * <Render is={currentWidget}/>
        * ```
        */
-      [DYNAMIC_RENDER_TYPE]: WidgetPropsType<Render>
+      [DYNAMIC_RENDER_TYPE]: WidgetPropsType<Dynamic>
     }
 
     /**

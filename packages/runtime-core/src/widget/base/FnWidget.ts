@@ -7,10 +7,10 @@ import type {
   FunctionWidget,
   LazyLoadModule,
   LifecycleHookMethods,
+  Renderable,
   StatefulWidgetVNode,
   VNode,
-  VNodeBuilder,
-  VNodeChild
+  VNodeBuilder
 } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
 import { isWidget } from '../../utils/widget.js'
@@ -42,7 +42,7 @@ import { Widget } from './Widget.js'
  * @template T - 组件属性类型，继承自 Widget 基类
  */
 export class FnWidget extends Widget<Record<string, any>> {
-  override build(): VNodeChild {
+  override build(): Renderable {
     return undefined
   }
 }
@@ -158,7 +158,7 @@ const isLazyLoadModule = (result: any): result is LazyLoadModule => {
  * 解析异步构建结果为构建器函数
  */
 const parseAsyncBuildResult = (
-  buildResult: VNodeChild | LazyLoadModule | VNodeBuilder,
+  buildResult: Renderable | LazyLoadModule | VNodeBuilder,
   instance: FnWidget
 ): VNodeBuilder => {
   if (typeof buildResult === 'function') {
@@ -169,7 +169,7 @@ const parseAsyncBuildResult = (
     return () => createWidgetVNode(buildResult.default, instance.props)
   }
 
-  return () => buildResult as VNodeChild
+  return () => buildResult as Renderable
 }
 /**
  * 初始化同步函数组件
@@ -177,7 +177,7 @@ const parseAsyncBuildResult = (
 const initializeSyncWidget = (
   instance: FnWidget,
   hooks: HookCollectResult['hooks'],
-  buildResult: VNodeChild | VNodeBuilder
+  buildResult: Renderable | VNodeBuilder
 ) => {
   const hasHooks = Object.keys(hooks).length > 0
 

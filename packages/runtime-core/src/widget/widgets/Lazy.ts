@@ -5,8 +5,8 @@ import type {
   AnyProps,
   ErrorHandler,
   LazyLoadWidget,
+  Renderable,
   VNode,
-  VNodeChild,
   WidgetTypes,
   WithNodeProps
 } from '../../types/index.js'
@@ -137,7 +137,7 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
     return this._loadAsyncWidget()
   }
 
-  override build(): VNodeChild {
+  override build(): Renderable {
     return undefined
   }
 
@@ -177,7 +177,7 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
    * @param builder - 新的构建函数
    * @private
    */
-  private _updateBuild(builder: () => VNodeChild): void {
+  private _updateBuild(builder: () => Renderable): void {
     this.build = builder
     this.$forceUpdate()
     if (this.suspenseCounter) this.suspenseCounter.value--

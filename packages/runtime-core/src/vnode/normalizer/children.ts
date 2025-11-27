@@ -1,13 +1,12 @@
-import { Ref, unref } from '@vitarx/responsive'
+import { unref } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { NodeKind } from '../../constants/index.js'
 import { linkParentNode } from '../../runtime/index.js'
 import type {
+  AnyChild,
   RegularElementVNode,
   UniqueKey,
   VNode,
-  VNodeChild,
-  VNodeChildren,
   VNodeNormalizedChildren
 } from '../../types/index.js'
 import { __DEV__, isElementNode, isVNode } from '../../utils/index.js'
@@ -99,7 +98,7 @@ const normalizeChild = (current: unknown, keySet: Set<UniqueKey>): VNode | undef
  * @returns 标准化后的子节点数组
  */
 export const initChildren = (
-  children: VNodeChild | any[] | Ref<any[] | VNodeChild>,
+  children: AnyChild,
   parent: VNode,
   handler?: (node: VNode) => void
 ): VNodeNormalizedChildren => {
@@ -109,7 +108,7 @@ export const initChildren = (
   const childList: VNode[] = []
   // 初始化栈结构，用于迭代处理嵌套数组
   // 首先将顶层子节点解包后压入栈中
-  const stack: Array<VNodeChild | VNodeChildren> = [unref(children)]
+  const stack: Array<AnyChild> = [unref(children)]
 
   // 使用迭代方式处理栈中的元素，直到栈为空
   while (stack.length > 0) {

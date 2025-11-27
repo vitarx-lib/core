@@ -2,14 +2,15 @@ import { NON_SIGNAL_SYMBOL, Scheduler } from '@vitarx/responsive'
 import { CLASS_WIDGET_BASE_SYMBOL } from '../../constants/index.js'
 import { getCurrentVNode } from '../../runtime/index.js'
 import type {
+  AnyChild,
   AnyProps,
   ErrorInfo,
   ExtractChildrenType,
   MergeProps,
   NodeElementType,
+  Renderable,
   StatefulWidgetVNode,
-  VNode,
-  VNodeChild
+  VNode
 } from '../../types/index.js'
 import { __DEV__ } from '../../utils/index.js'
 
@@ -339,9 +340,9 @@ export abstract class Widget<
    * }
    * ```
    * @remarks 该方法应由子类实现，且该方法仅供内部渲染逻辑使用。
-   * @returns { VNodeChild } - 返回VNode节点或null
+   * @returns { AnyChild } - 返回VNode节点或null
    */
-  abstract build(): VNodeChild
+  abstract build(): Renderable
 
   /**
    * 对组件渲染的根节点执行打补丁（Patch）更新操作。

@@ -1,4 +1,4 @@
-import type { ValidNodeType, VNode, VNodeChildren } from '../types/index.js'
+import type { AnyChild, ValidNodeType, VNode } from '../types/index.js'
 
 /**
  * 片段节点标签常量
@@ -42,7 +42,7 @@ export const FRAGMENT_NODE_TYPE = 'fragment'
  * ```
  */
 export const Fragment = FRAGMENT_NODE_TYPE as unknown as {
-  (props: { children?: VNodeChildren }): VNode
+  (props: { children?: AnyChild }): VNode
   __isFragment__: true
 }
 export type Fragment = typeof Fragment
@@ -68,15 +68,15 @@ export const COMMENT_NODE_TYPE = 'comment'
  * 定义了动态渲染节点的标识符，用于在虚拟DOM中表示需要动态计算和渲染的内容。
  * 动态渲染节点通常用于实现条件渲染、循环渲染等高级功能。
  */
-export const DYNAMIC_RENDER_TYPE = 'render'
+export const DYNAMIC_RENDER_TYPE = 'dynamic'
 export type DynamicRenderType = typeof DYNAMIC_RENDER_TYPE
 /**
  * 动态渲染组件
  *
- * Render 是一个特殊的组件，用于标记需要动态计算和渲染的内容。
- * 它的实现通过类型重载将 `render` 转换为函数组件形式。
+ * Dynamic 是一个特殊的组件，用于标记需要动态计算和渲染的内容。
+ * 它的实现通过类型重载将 `dynamic` 转换为函数组件形式。
  *
- * 动态渲染节点在渲染过程中会被特殊处理，允许在运行时动态计算其内容。
+ * 动态渲染在节点构建时会被特殊处理，允许在运行时动态计算其内容。
  * 这对于实现条件渲染、异步内容加载等高级功能非常有用。
  *
  * @example
@@ -87,12 +87,12 @@ export type DynamicRenderType = typeof DYNAMIC_RENDER_TYPE
  * );
  * ```
  */
-export const Render = DYNAMIC_RENDER_TYPE as unknown as {
+export const Dynamic = DYNAMIC_RENDER_TYPE as unknown as {
   (props: {
-    is: Exclude<ValidNodeType, Render | DynamicRenderType>
-    children?: VNodeChildren
+    is: Exclude<ValidNodeType, Dynamic | DynamicRenderType>
+    children?: AnyChild
     [key: string]: any
   }): VNode
   __isDynamicRender__: true
 }
-export type Render = typeof Render
+export type Dynamic = typeof Dynamic

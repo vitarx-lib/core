@@ -9,12 +9,13 @@ import { type Fragment, FRAGMENT_NODE_TYPE } from '../../constants/index.js'
 import { diffDirectives } from '../../directive/index.js'
 import { useRenderer } from '../../renderer/index.js'
 import type {
+  AnyChild,
   ContainerVNode,
   ElementVNode,
   FragmentVNodeType,
   HostRegularElementNames,
+  Renderable,
   VNode,
-  VNodeChild,
   WithNodeProps
 } from '../../types/index.js'
 import { getNodeElement, isContainerNode } from '../../utils/index.js'
@@ -125,9 +126,9 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
    * 创建指定标签类型的容器节点，并将子节点和绑定属性传递给它。
    * 默认使用 fragment 作为容器，可以通过 tag 属性自定义。
    *
-   * @returns {VNodeChild} 创建的容器节点
+   * @returns {AnyChild} 创建的容器节点
    */
-  override build(): VNodeChild {
+  override build(): Renderable {
     return createVNode(this.props.tag || FRAGMENT_NODE_TYPE, {
       children: this.props.children,
       'v-bind': this.props.bindProps

@@ -1,5 +1,5 @@
 import type { RefSignal } from '@vitarx/responsive'
-import type { Fragment, Render } from '../constants/index.js'
+import type { Dynamic, Fragment } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
 import type { JSXElementNames, JSXInternalElements } from './element.js'
 import type { ValidNodeType } from './vnode.js'
@@ -354,8 +354,8 @@ export type ValidNodeProps<T extends ValidNodeType> = WithNodeProps<T, never> & 
 export type WithNodeProps<T extends ValidNodeType, K extends keyof any = 'children'> = Omit<
   T extends JSXElementNames
     ? JSXInternalElements[T]
-    : T extends Render
-      ? WithRefProps<WidgetPropsType<Render>>
+    : T extends Dynamic
+      ? WithRefProps<WidgetPropsType<Dynamic>>
       : T extends Fragment
         ? WithRefProps<WidgetPropsType<Fragment>>
         : T extends WidgetTypes

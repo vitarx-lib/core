@@ -2,7 +2,7 @@ import { STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
 import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
 import type { VNode } from './nodes/index.js'
-import type { VNodeChild } from './vnode.js'
+import type { AnyChild, Renderable } from './vnode.js'
 
 /**
  * 任意组件属性类型
@@ -108,14 +108,14 @@ export interface LazyLoadModule {
  * - `null | false | undefined`：不渲染任何内容（但存在注释节点做为定位的锚点）
  * - `string | number`：渲染为文本节点
  * - `NodeBuilder`：视图节点构建器
- * - `Promise<VNodeChild>`：异步返回受支持的VNodeChild，如字符串，元素节点等
+ * - `Promise<Renderable>`：异步返回受支持的Renderable，如字符串，元素节点等
  * - `Promise<VNodeBuilder>`：异步返回视图节点构建器
  * - `Promise<{ default: WidgetTypes }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
  */
 export type ValidBuildResult =
-  | VNodeChild
+  | Renderable
   | VNodeBuilder
-  | Promise<VNodeChild | LazyLoadModule | VNodeBuilder>
+  | Promise<Renderable | LazyLoadModule | VNodeBuilder>
 
 /**
  * 函数小部件类型
@@ -180,12 +180,12 @@ export type LazyLoadWidget<
  */
 export type AsyncWidget<P extends AnyProps = any> = (
   props: P
-) => Promise<VNodeChild | LazyLoadModule | VNodeBuilder>
+) => Promise<AnyChild | LazyLoadModule | VNodeBuilder>
 
 /**
  * 无状态小部件
  */
-export type StatelessWidget<P extends AnyProps = any, R extends VNodeChild = VNodeChild> = {
+export type StatelessWidget<P extends AnyProps = any, R extends Renderable = Renderable> = {
   readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
   (props: P): R
 } & WidgetOptions

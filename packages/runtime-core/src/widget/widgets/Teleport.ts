@@ -1,7 +1,6 @@
 import { logger } from '@vitarx/utils'
 import { useRenderer } from '../../renderer/index.js'
-import type { HostNodeElements, HostParentElement, VNode } from '../../types/index.js'
-import { VNodeChild } from '../../types/vnode.js'
+import type { HostNodeElements, HostParentElement, Renderable, VNode } from '../../types/index.js'
 import { __DEV__, isVNode, onPropChange } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
 import { createCommentVNode, mountNode, renderNode, unmountNode } from '../../vnode/index.js'
@@ -144,7 +143,7 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
     if (this.teleported) unmountNode(this.children)
   }
 
-  override build(): VNodeChild {
+  override build(): Renderable {
     return this.disabled ? this.children : createCommentVNode({ value: 'teleport anchor' })
   }
 

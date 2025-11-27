@@ -1,9 +1,9 @@
 import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
 import type {
+  AnyChild,
   ClassWidget,
   StatelessWidget,
   StatelessWidgetSymbol,
-  VNodeChild,
   WidgetTypes
 } from '../types/index.js'
 
@@ -32,7 +32,7 @@ import type {
  * @param [displayName] - 组件名称，给匿名函数设置一个显示名称
  * @returns { StatelessWidget } - 无状态小部件
  */
-export function defineStatelessWidget<T extends (props: any) => VNodeChild>(
+export function defineStatelessWidget<T extends (props: any) => AnyChild>(
   build: T,
   displayName?: string
 ): T & StatelessWidgetSymbol {
