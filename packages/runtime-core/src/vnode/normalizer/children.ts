@@ -1,4 +1,4 @@
-import { unref } from '@vitarx/responsive'
+import { Ref, unref } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { NodeKind } from '../../constants/index.js'
 import { linkParentNode } from '../../runtime/index.js'
@@ -98,7 +98,7 @@ const normalizeChild = (current: unknown, keySet: Set<UniqueKey>): VNode | undef
  * @returns 标准化后的子节点数组
  */
 export const initChildren = (
-  children: AnyChild,
+  children: AnyChild | Ref<AnyChild>,
   parent: VNode,
   handler?: (node: VNode) => void
 ): VNodeNormalizedChildren => {
