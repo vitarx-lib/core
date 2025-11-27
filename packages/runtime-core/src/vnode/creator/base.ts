@@ -64,6 +64,10 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
   const bind = popProperty(props, 'v-bind')
   if (isObject(bind)) bindProps(props, bind)
   if (SPECIAL_NODE_KINDS.has(kind)) {
+    for (const [key, value] of Object.entries(props)) {
+      props[key] = unref(value)
+    }
+  } else {
     const directives: VNodeDirectives = new Map()
     for (const [key, value] of Object.entries(props)) {
       props[key] = unref(value)
@@ -81,10 +85,6 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
       }
     }
     if (directives.size) node.directives = directives
-  } else {
-    for (const [key, value] of Object.entries(props)) {
-      props[key] = unref(value)
-    }
   }
 
   return node
