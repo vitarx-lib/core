@@ -1,4 +1,11 @@
-import { NodeKind, VIRTUAL_NODE_SYMBOL } from '../constants/index.js'
+import {
+  CONTAINER_NODE_KINDS,
+  ELEMENT_NODE_KINDS,
+  NodeKind,
+  NON_ELEMENT_NODE_KINDS,
+  SPECIAL_NODE_KINDS,
+  VIRTUAL_NODE_SYMBOL
+} from '../constants/index.js'
 import type {
   CommentVNode,
   ContainerVNode,
@@ -85,11 +92,7 @@ export function isVoidElementNode(val: any): val is VoidElementVNode {
  * @returns {boolean} 如果是元素节点返回true，否则返回false
  */
 export function isElementNode(val: any): val is ElementVNode {
-  return (
-    isVNode(val) && // 首先判断是否为虚拟节点
-    (val.kind === NodeKind.REGULAR_ELEMENT || // 判断是否为普通元素节点
-      val.kind === NodeKind.FRAGMENT) // 或者片段节点
-  )
+  return isVNode(val) && ELEMENT_NODE_KINDS.has(val.kind)
 }
 /**
  * 检查给定的值是否为文本虚拟节点(TextNode)
@@ -117,7 +120,7 @@ export function isCommentNode(val: any): val is CommentVNode {
  * @returns {boolean} 如果值是容器虚拟节点则返回true，否则返回false
  */
 export function isContainerNode(val: any): val is ContainerVNode {
-  return isVNode(val) && (val.kind === NodeKind.REGULAR_ELEMENT || val.kind === NodeKind.FRAGMENT)
+  return isVNode(val) && CONTAINER_NODE_KINDS.has(val.kind)
 }
 /**
  * 检查给定的值是否为非元素节点(TextNode|CommentNode)
@@ -126,7 +129,7 @@ export function isContainerNode(val: any): val is ContainerVNode {
  * @returns {boolean} 如果值是非元素节点则返回true，否则返回false
  */
 export function isNonElementNode(val: any): val is TextVNode | CommentVNode {
-  return isVNode(val) && (val.kind === NodeKind.TEXT || val.kind === NodeKind.COMMENT)
+  return isVNode(val) && NON_ELEMENT_NODE_KINDS.has(val.kind)
 }
 
 /**
@@ -136,8 +139,5 @@ export function isNonElementNode(val: any): val is TextVNode | CommentVNode {
  * @returns {boolean} 如果值是特殊节点则返回true，否则返回false
  */
 export function isSpecialNode(val: any): val is TextVNode | CommentVNode | FragmentVNode {
-  return (
-    isVNode(val) &&
-    (val.kind === NodeKind.TEXT || val.kind === NodeKind.COMMENT || val.kind === NodeKind.FRAGMENT)
-  )
+  return isVNode(val) && SPECIAL_NODE_KINDS.has(val.kind)
 }
