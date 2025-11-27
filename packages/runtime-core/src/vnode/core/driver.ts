@@ -43,7 +43,7 @@ export function renderNode<T extends VNodeTypes>(node: VNode<T>): NodeElementTyp
     return node.el!
   }
   if (node.state === NodeState.Created) {
-    return controllers[node.kind].render(node as VNode<never>) as NodeElementType<T>
+    return controllers[node.kind].render(node as any) as NodeElementType<T>
   }
   throw new Error(`The node state (${node.state}) cannot be rendered`)
 }
@@ -60,7 +60,7 @@ export function mountNode(
   opsType?: OpsType
 ): void {
   if (node.state !== NodeState.Rendered) renderNode(node)
-  controllers[node.kind].mount(node as VNode<never>, container, opsType)
+  controllers[node.kind].mount(node as any, container, opsType)
   return
 }
 
@@ -72,7 +72,7 @@ export function mountNode(
  */
 export function activateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Deactivated) {
-    controllers[node.kind].activate(node as VNode<never>, root)
+    controllers[node.kind].activate(node as any, root)
     return
   }
   throw new Error(`The node state (${node.state}) cannot be activated`)
@@ -86,7 +86,7 @@ export function activateNode(node: VNode, root: boolean = true): void {
  */
 export function deactivateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Activated) {
-    controllers[node.kind].deactivate(node as VNode<never>, root)
+    controllers[node.kind].deactivate(node as any, root)
     return
   }
   throw new Error(`The node state (${node.state}) cannot be deactivated`)
@@ -104,7 +104,7 @@ export function unmountNode(node: VNode): void {
     )
     return
   }
-  controllers[node.kind].unmount(node as VNode<never>)
+  controllers[node.kind].unmount(node as any)
   unlinkParentNode(node)
   node.state = NodeState.Unmounted
 }
@@ -119,5 +119,5 @@ export function updateNodeProps(node: VNode, newProps: AnyProps, newNode: VNode)
   // 根据节点类型调用对应的控制器更新属性
   // 这里使用节点 kind 属性来查找对应的控制器
   // 将节点类型断言为 VNode<never> 以满足控制器类型要求
-  controllers[node.kind].updateProps(node as VNode<never>, newProps, newNode as VNode<never>)
+  controllers[node.kind].updateProps(node as any, newProps, newNode as any)
 }
