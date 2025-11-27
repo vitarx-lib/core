@@ -13,6 +13,7 @@ import {
   type HostRenderer,
   type HostTextElement,
   type HostVoidElementNames,
+  type StyleProperties,
   StyleUtils
 } from '@vitarx/runtime-core'
 import type { HTMLEventOptions } from '../types/index.js'
@@ -181,11 +182,8 @@ export class DomRenderer implements HostRenderer {
   }
 
   /** @inheritDoc */
-  addStyle(el: HostElements, key: string, value: string): () => void {
-    const oldStyle = el.style.getPropertyValue(key)
+  addStyle(el: HostElements, key: string, value: string): void {
     el.style.setProperty(key, value)
-    if (oldStyle) return () => el.style.setProperty(key, oldStyle)
-    return () => el.style.removeProperty(key)
   }
 
   /** @inheritDoc */
@@ -240,16 +238,26 @@ export class DomRenderer implements HostRenderer {
   }
 
   /** @inheritDoc */
+  setStyle(el: HostElements, style: StyleProperties): void {
+    const cssText = StyleUtils.cssStyleValueToString(style)
+    if (el.style.cssText !== cssText) {
+      el.style.cssText = cssText
+    }
+    // 如果没有有效样式，移除 style 属性
+    if (el.style.length === 0) el.removeAttribute('style')
+  }
+  /** @inheritDoc */
+  getStyle(el: HostElements, key: string): string | null {
+    return el.style.getPropertyValue(key) || null
+  }
+
+  /** @inheritDoc */
   setAttribute(el: HostElements, name: string, nextValue: any, prevValue?: any): void {
-    if (name === 'v-html') {
-      el.innerHTML = nextValue
-      return
-    }
-    if (nextValue === undefined || nextValue === null) {
-      this.removeAttribute(el, name, prevValue)
-      return
-    }
     try {
+      if (nextValue === undefined || nextValue === null) {
+        this.removeAttribute(el, name, prevValue)
+        return
+      }
       // 处理事件属性
       if (typeof nextValue === 'function') {
         if (prevValue === nextValue) return
@@ -261,21 +269,34 @@ export class DomRenderer implements HostRenderer {
         this.addEventListener(el, name, nextValue)
         return
       }
-
       // 处理 data 属性
       if (name.startsWith('data-')) {
         el.dataset[name.slice(5)] = nextValue
-        return
-      }
-      // 特殊处理xmlns:xlink
-      if (name === 'xmlns:xlink') {
-        el.setAttributeNS(XMLNS_NAMESPACE, name, String(nextValue))
         return
       }
       // 处理 xlink 属性
       if (name.startsWith('xlink:')) {
         el.setAttributeNS(XLINK_NAMESPACE, name, String(nextValue))
         return
+      }
+      switch (name) {
+        case 'style':
+          this.setStyle(el, nextValue)
+          return
+        case 'class':
+        case 'className':
+        case 'classname':
+          this.setClass(el, nextValue)
+          return
+        case 'v-html':
+          el.innerHTML = nextValue
+          return
+        case 'autoFocus':
+          el.autofocus = Boolean(nextValue)
+          return
+        case 'xmlns:xlink':
+          el.setAttributeNS(XMLNS_NAMESPACE, name, String(nextValue))
+          return
       }
       // 尝试直接设置属性
       if (this.trySetDirectProperty(el, name, nextValue)) {
@@ -291,7 +312,6 @@ export class DomRenderer implements HostRenderer {
       )
     }
   }
-
   /** @inheritDoc */
   removeAttribute(el: HostElements, key: string, prevValue?: any): void {
     // --- 1. class 特殊处理 ---
@@ -330,7 +350,10 @@ export class DomRenderer implements HostRenderer {
     if (container) return container.querySelector(selector)
     return document.querySelector(selector)
   }
-
+  /** @inheritDoc */
+  querySelectorAll(selector: string, container?: HostParentElement): Iterable<HostElements> {
+    return container ? container.querySelectorAll(selector) : document.querySelectorAll(selector)
+  }
   /** @inheritDoc */
   getParentElement(el: HostNodeElements): HostParentElement | null {
     if (this.isFragment(el)) {
