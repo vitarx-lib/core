@@ -60,14 +60,14 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
   }
   // --------- 特殊属性：v-static ---------
   if ('v-static' in props) node.static = popProperty(props, 'v-static')
-  // --------- 执行 v-bind 合并 ---------
-  const bind = popProperty(props, 'v-bind')
-  if (isObject(bind)) bindProps(props, bind)
   if (SPECIAL_NODE_KINDS.has(kind)) {
     for (const [key, value] of Object.entries(props)) {
       props[key] = unref(value)
     }
   } else {
+    // --------- 执行 v-bind 合并 ---------
+    const bind = popProperty(props, 'v-bind')
+    if (isObject(bind)) bindProps(props, bind)
     const directives: VNodeDirectives = new Map()
     for (const [key, value] of Object.entries(props)) {
       props[key] = unref(value)
