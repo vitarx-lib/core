@@ -1,5 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it } from 'vitest'
+import { DYNAMIC_RENDER_TYPE } from '../../../src/index.js'
 import {
   bindProps,
   isSupportChildren,
@@ -209,7 +210,7 @@ describe('vnode/normalizer/props', () => {
     })
 
     it('应该返回 true 对于 DYNAMIC_RENDER_TYPE', () => {
-      expect(isSupportChildren('render')).toBe(true)
+      expect(isSupportChildren(DYNAMIC_RENDER_TYPE)).toBe(true)
     })
 
     it('应该返回 true 对于常规元素', () => {
