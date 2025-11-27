@@ -15,10 +15,10 @@ import {
   LifecycleHooks,
   mountNode,
   NodeState,
+  type Renderable,
   renderNode,
   type StatefulManagerOptions,
   StatefulWidgetRuntime,
-  type VNodeChild,
   Widget
 } from '../../../src/index.js'
 import { flushScheduler, renderAndMount } from '../../helpers/test-widget.js'
@@ -435,7 +435,7 @@ describe('StatefulWidgetRuntime', () => {
       }
 
       class ChildWidget extends Widget {
-        build(): VNodeChild {
+        build(): Renderable {
           throw new Error('child error')
         }
       }
