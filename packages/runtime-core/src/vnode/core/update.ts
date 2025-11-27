@@ -51,6 +51,8 @@ export class PatchUpdate {
    * @returns {VNode} 更新后的虚拟节点
    */
   static patch(currentVNode: VNode, nextVNode: VNode): VNode {
+    // 如果两个节点相同，则返回旧节点
+    if (currentVNode === nextVNode) return currentVNode
     // 如果类型或 key 不同，需要替换节点
     if (currentVNode.type !== nextVNode.type || currentVNode.key !== nextVNode.key) {
       this.replace(currentVNode, nextVNode)
