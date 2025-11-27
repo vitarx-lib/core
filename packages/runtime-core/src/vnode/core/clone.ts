@@ -1,6 +1,6 @@
 import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { NodeState, VIRTUAL_NODE_SYMBOL } from '../../constants/index.js'
-import type { VNode } from '../../types/index.js'
+import type { VNode, VNodeDirectives } from '../../types/index.js'
 import { isElementNode, isFragmentNode, isWidgetNode } from '../../utils/index.js'
 
 /**
@@ -81,7 +81,8 @@ export function cloneVNode<T extends VNode>(node: T): T {
 
     // 复制指令（如果有）
     if (elementNode.directives) {
-      clonedElement.directives = new Map(elementNode.directives)
+      // 需要深拷贝 Map 中的数组，避免修改克隆节点的指令值时影响原节点
+      clonedElement.directives = cloneDirectives(elementNode.directives)
     }
   }
 
@@ -103,9 +104,27 @@ export function cloneVNode<T extends VNode>(node: T): T {
 
     // 复制指令（如果有）
     if (widgetNode.directives) {
-      clonedWidget.directives = new Map(widgetNode.directives)
+      // 需要深拷贝 Map 中的数组，避免修改克隆节点的指令值时影响原节点
+      clonedWidget.directives = cloneDirectives(widgetNode.directives)
     }
   }
 
   return cloned as T
+}
+
+/**
+ * 克隆指令函数
+ * 该函数用于创建一个与传入的指令映射具有相同内容和结构的新映射
+ * @param directives - 需要克隆的VNode指令映射，包含指令名称及其相关信息
+ * @returns 返回一个新的Map对象，包含与原始指令映射相同的内容
+ */
+function cloneDirectives(directives: VNodeDirectives) {
+  // 使用Array.from将原始指令映射转换为数组，然后通过map方法处理每个元素
+  // 每个指令元素包含名称和[dir, value, arg]数组
+  // 然后创建一个新的Map，保持原始结构不变
+  return new Map(
+    Array.from(directives.entries()).map(
+      ([name, [dir, value, arg]]) => [name, [dir, value, arg]] as const
+    )
+  )
 }
