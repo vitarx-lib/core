@@ -1,4 +1,4 @@
-import type { AnyProps, NonElementVNode, NonElementVNodeType } from '../types/index.js'
+import type { AnyProps, HostVNode, NonElementVNodeType } from '../types/index.js'
 import { HostNodeController } from './HostNodeController.js'
 
 /**
@@ -28,7 +28,7 @@ import { HostNodeController } from './HostNodeController.js'
 export abstract class NonElementController<
   T extends NonElementVNodeType
 > extends HostNodeController<T> {
-  override updateProps(node: NonElementVNode, newProps: AnyProps): void {
+  override updateProps(node: HostVNode<T>, newProps: AnyProps): void {
     const oldProps = node.props
     if (oldProps.value !== newProps.value) {
       oldProps.value = newProps.value
