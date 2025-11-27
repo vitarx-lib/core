@@ -52,7 +52,7 @@ export const createRegularElementVNode = <T extends RegularElementVNodeType>(
   const node = createBaseVNode(type, NodeKind.REGULAR_ELEMENT, props) as RegularElementVNode<T>
   // 处理样式和类属性
   normalizerStyleAndClassProp(node.props)
-  node.isSVGElement = type === 'svg'
+  node.isSVGElement = type === ('svg' as RegularElementVNodeType)
   // 从属性中提取并移除 children 属性
   // 使用 popProperty 可以同时获取属性值并从原对象中删除该属性
   const children = popProperty(node.props as AnyProps, 'children')
