@@ -138,7 +138,7 @@ export class PatchUpdate {
     // 如果旧节点有父元素，则创建锚点进行替换
     if (dom.getParentElement(oldElement)) {
       if (currentVNode.state === NodeState.Rendered) {
-        dom.insertBefore(oldElement, renderNode(nextVNode))
+        dom.insertBefore(renderNode(nextVNode), oldElement)
       } else {
         mountNode(nextVNode, oldElement, 'insertBefore')
       }
