@@ -289,7 +289,7 @@ describe('Lazy 组件', () => {
         children: async () => {
           throw new Error('Failed')
         },
-        onError: onError as () => false
+        onError: onError as unknown as () => false
       })
       renderNode(vnode)
       mountNode(vnode, container)
