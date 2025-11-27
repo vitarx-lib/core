@@ -83,7 +83,7 @@ export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass
    * ```tsx
    * <Transition>
    *   <div v-if="show">内容</div>
-   *   <div v-if="!show">内容</div>
+   *   <div v-else>内容</div>
    * </Transition>
    * ```
    */
