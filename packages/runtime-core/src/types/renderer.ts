@@ -183,8 +183,8 @@ export interface HostRenderer {
   addClass(el: HostElements, className: string): void
   /**
    * 移除样式类
-   * @param el
-   * @param className
+   * @param el - 元素实例
+   * @param className - 样式类名，支持多个类名，用空格隔开
    */
   removeClass(el: HostElements, className: string): void
   /**
