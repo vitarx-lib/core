@@ -93,7 +93,7 @@ export type WidgetOptions = {
  * @template P - 小部件的属性类型
  * @template I - 小部件实例类型
  */
-export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget<P>> = {
+export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget<P, any>> = {
   new (props: P): I
 } & WidgetOptions
 /**
