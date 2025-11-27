@@ -216,7 +216,6 @@ export class DomRenderer implements HostRenderer {
     } else {
       el.classList.add(className)
     }
-    if (el.classList.length === 0) el.removeAttribute('class')
   }
 
   /** @inheritDoc */
@@ -225,9 +224,10 @@ export class DomRenderer implements HostRenderer {
       StyleUtils.cssClassValueToArray(className).forEach(className => {
         el.classList.remove(className)
       })
-      return
+    } else {
+      el.classList.remove(className)
     }
-    el.classList.remove(className)
+    if (el.classList.length === 0) el.removeAttribute('class')
   }
 
   /** @inheritDoc */
