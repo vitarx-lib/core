@@ -3,9 +3,13 @@
  */
 
 import { ref } from '@vitarx/responsive'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createVNode, mountNode, renderNode, Transition } from '../../../src/index.js'
-import { mockRAFSync, mockTransitionDuration } from '../../helpers/test-transition.js'
+import {
+  mockRAFSync,
+  mockTransitionDuration,
+  waitForTransition
+} from '../../helpers/test-transition.js'
 import { createContainer, flushScheduler, updateProps } from '../../helpers/test-widget.js'
 
 describe('Transition 组件', () => {
@@ -71,7 +75,6 @@ describe('Transition 组件', () => {
       const onBeforeAppear = vi.fn()
 
       const vnode = createVNode(Transition, {
-        name: 'fade',
         appear: true,
         onBeforeAppear,
         children: createVNode('div', {}, 'initial')
@@ -79,38 +82,22 @@ describe('Transition 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
       const element = container.querySelector('div')! as HTMLDivElement
-      expect(element.classList.contains('fade-appear-active')).toBe(true)
-    })
-
-    it('应该使用自定义 name 属性生成正确类名', () => {
-      const element = document.createElement('div')
-      container.appendChild(element)
-
-      mockTransitionDuration(element, 300)
-
-      const vnode = createVNode(Transition, {
-        name: 'custom',
-        children: createVNode('div', { el: element })
-      })
-      renderNode(vnode)
-      mountNode(vnode, container)
-
-      // 类名应该以 'custom-' 为前缀
+      expect(element.classList.contains('v-appear-active')).toBe(true)
     })
 
     it('应该在 key 变化时触发元素替换过渡', () => {
-      const key = ref('key1')
+      const childVNode = createVNode('div', { key: 'key1' }, `content`)
       const vnode = createVNode(Transition, {
         name: 'fade',
-        children: createVNode('div', { key: key.value }, `content-${key.value}`)
+        children: childVNode
       })
       renderNode(vnode)
       mountNode(vnode, container)
 
-      key.value = 'key2'
-      flushScheduler()
-
-      // 应该触发替换过渡
+      updateProps(vnode, 'children', createVNode('div', { key: 'key2' }, 'content2'))
+      const element = container.querySelector('div')! as HTMLDivElement
+      console.log(element.outerHTML)
+      expect(element.classList.contains('fade-enter-active')).toBe(true)
     })
 
     it('应该在 type 相同且 key 相同时执行普通更新', () => {
@@ -172,7 +159,6 @@ describe('Transition 组件', () => {
       const onAfterEnter = vi.fn()
       const onBeforeLeave = vi.fn()
 
-      const show = ref(true)
       const child1 = createVNode('div', { key: '1' }, 'child1')
       const child2 = createVNode('div', { key: '2' }, 'child2')
 
@@ -181,15 +167,16 @@ describe('Transition 组件', () => {
         mode: 'in-out',
         onAfterEnter,
         onBeforeLeave,
-        children: show.value ? child1 : child2
+        children: child1
       })
       renderNode(vnode)
       mountNode(vnode, container)
 
-      show.value = false
-      flushScheduler()
-
-      // 应该先完成 enter，再开始 leave
+      const child1Element = child1.el!
+      updateProps(vnode, 'children', child2)
+      const child2Element = child2.el!
+      expect(child2Element.classList.contains('fade-enter-active')).toBe(true)
+      expect(child1Element.classList.contains('fade-leave-active')).toBe(false)
     })
   })
 
@@ -205,32 +192,7 @@ describe('Transition 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-
-      // onMounted 应该触发 appear
-      const instance = vnode.runtimeInstance?.instance
-      if (instance) {
-        ;(instance as any).onMounted?.()
-      }
-    })
-
-    it('应该在过渡完成后执行回调', () => {
-      const done = vi.fn()
-
-      const element = document.createElement('div')
-      container.appendChild(element)
-
-      mockTransitionDuration(element, 300)
-
-      const vnode = createVNode(Transition, {
-        name: 'fade',
-        children: createVNode('div', { el: element })
-      })
-      renderNode(vnode)
-      mountNode(vnode, container)
-
-      vi.advanceTimersByTime(320)
-
-      // 过渡完成后应该执行回调
+      expect(onAppear).toHaveBeenCalled()
     })
   })
 
@@ -238,7 +200,7 @@ describe('Transition 组件', () => {
     it('应该处理子节点为 null 或 undefined', () => {
       const vnode = createVNode(Transition, {
         name: 'fade',
-        children: null as any
+        children: null
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -246,35 +208,34 @@ describe('Transition 组件', () => {
       expect(container.textContent).toBe('')
     })
 
-    it('应该在快速切换时取消动画', () => {
-      const key = ref('key1')
+    it('应该在快速切换时取消动画', async () => {
       const vnode = createVNode(Transition, {
         name: 'fade',
-        children: createVNode('div', { key: key.value }, key.value)
+        children: createVNode('div', { 'v-show': true }, '1')
       })
       renderNode(vnode)
       mountNode(vnode, container)
-
+      const element = container.querySelector('div')! as HTMLDivElement
       // 快速切换
-      key.value = 'key2'
-      flushScheduler()
-      key.value = 'key3'
-      flushScheduler()
-
-      // 应该取消前一个动画
+      updateProps(vnode, 'children', createVNode('div', { 'v-show': false }, '2'))
+      expect(element.classList.contains('fade-leave-active')).toBe(true)
+      updateProps(vnode, 'children', createVNode('div', { 'v-show': true }, '3'))
+      expect(element.classList.contains('fade-leave-active')).toBe(false)
+      expect(element.classList.contains('fade-enter-active')).toBe(true)
+      await waitForTransition(300)
     })
 
     it('应该跳过静态节点的更新', () => {
-      const staticChild = createVNode('div', { static: true }, 'static')
+      const staticChild = createVNode('div', { 'v-static': true }, 'static')
       const vnode = createVNode(Transition, {
         name: 'fade',
         children: staticChild
       })
       renderNode(vnode)
       mountNode(vnode, container)
-
+      updateProps(vnode, 'children', createVNode('div', {}, 'updated'))
       // 静态节点不应该触发更新
-      expect(container.querySelector('div')).toBeTruthy()
+      expect(container.querySelector('div')?.textContent).toBe('static')
     })
   })
 })
