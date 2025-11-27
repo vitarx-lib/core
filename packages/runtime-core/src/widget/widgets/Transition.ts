@@ -135,16 +135,21 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
    */
   protected child = computed(() => {
     if (isArray(this.children)) {
-      const rootChild = this.children.find(item => !isNonElementNode(item) && item.show)
+      const rootChild = this.children.find(item => {
+        return !isNonElementNode(item)
+      })
       if (!rootChild) {
-        logger.warn('<Transition> No child node found', this.$vnode.devInfo?.source)
+        logger.warn(
+          '<Transition> When multiple nodes are passed, one node must be displayed',
+          this.$vnode.devInfo?.source
+        )
       }
       return rootChild
     }
     if (!this.children) {
       logger.warn('<Transition> No child node found', this.$vnode.devInfo?.source)
     }
-    return this.children
+    return this.children as VNode
   })
   /**
    * 构建组件渲染内容

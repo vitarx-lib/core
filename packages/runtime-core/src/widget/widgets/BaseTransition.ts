@@ -1,12 +1,6 @@
 import { toCapitalize } from '@vitarx/utils'
 import { useRenderer } from '../../renderer/index.js'
-import type {
-  HostElements,
-  HostNodeElements,
-  VNode,
-  VNodeChild,
-  VNodeChildren
-} from '../../types/index.js'
+import type { HostElements, HostNodeElements, VNode } from '../../types/index.js'
 import { Widget } from '../base/index.js'
 
 /**
@@ -93,7 +87,7 @@ export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass
    * </Transition>
    * ```
    */
-  children: VNodeChild | VNodeChildren
+  children: VNode | VNode[] | ReadonlyArray<VNode>
   /** 过渡名称前缀，用于生成 CSS 类名，默认为 'v' */
   name?: string
   /** 是否在初始渲染时触发过渡，默认为 false */
