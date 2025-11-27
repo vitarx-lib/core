@@ -4,7 +4,8 @@ import {
   NodeKind,
   NON_ELEMENT_NODE_KINDS,
   SPECIAL_NODE_KINDS,
-  VIRTUAL_NODE_SYMBOL
+  VIRTUAL_NODE_SYMBOL,
+  WIDGET_NODE_KINDS
 } from '../constants/index.js'
 import type {
   CommentVNode,
@@ -54,10 +55,7 @@ export function isStatelessWidgetNode(val: any): val is StatelessWidgetVNode {
  */
 export function isWidgetNode(val: any): val is WidgetVNode {
   // 首先检查值是否为VNode，然后检查其kind是否为STATEFUL_WIDGET或STATELESS_WIDGET
-  return (
-    isVNode(val) &&
-    (val.kind === NodeKind.STATEFUL_WIDGET || val.kind === NodeKind.STATELESS_WIDGET)
-  )
+  return isVNode(val) && WIDGET_NODE_KINDS.has(val.kind)
 }
 /**
  * 检查给定的值是否为片段虚拟节点(FragmentNode)
