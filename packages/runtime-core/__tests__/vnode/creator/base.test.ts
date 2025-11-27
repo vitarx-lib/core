@@ -1,5 +1,6 @@
 import { ref } from '@vitarx/responsive'
-import { describe, expect, it } from 'vitest'
+import { logger } from '@vitarx/utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   type NodeDevInfo,
   NodeKind,
@@ -57,15 +58,6 @@ describe('vnode/creator/base - createBaseVNode', () => {
       // 自动解包是默认行为
       expect(vnode.props).toBeDefined()
     })
-
-    it('应该支持禁用自动解包', () => {
-      const idRef = ref('test-id')
-      const props = { id: idRef }
-      const vnode = createBaseVNode('div', NodeKind.REGULAR_ELEMENT, props, false)
-
-      // 禁用解包时，值应该保持为 ref
-      expect(vnode.props).toBeDefined()
-    })
   })
 
   describe('key 属性处理', () => {
@@ -91,6 +83,16 @@ describe('vnode/creator/base - createBaseVNode', () => {
   })
 
   describe('ref 属性处理', () => {
+    let warnSpy: ReturnType<typeof vi.spyOn>
+  
+    beforeEach(() => {
+      warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    })
+  
+    afterEach(() => {
+      warnSpy.mockRestore()
+    })
+      
     it('应该提取并设置 ref 属性', () => {
       const myRef = ref<HTMLElement | null>(null)
       const vnode = createBaseVNode('div', NodeKind.REGULAR_ELEMENT, { ref: myRef })
@@ -105,6 +107,7 @@ describe('vnode/creator/base - createBaseVNode', () => {
 
       // TEXT 节点不支持 ref
       expect(vnode.ref).toBeUndefined()
+      expect(warnSpy).toHaveBeenCalled()
     })
 
     it('应该在 COMMENT 节点上忽略 ref', () => {
@@ -112,6 +115,7 @@ describe('vnode/creator/base - createBaseVNode', () => {
       const vnode = createBaseVNode('comment', NodeKind.COMMENT, { ref: myRef })
 
       expect(vnode.ref).toBeUndefined()
+      expect(warnSpy).toHaveBeenCalled()
     })
 
     it('应该在 FRAGMENT 节点上忽略 ref', () => {
@@ -119,6 +123,7 @@ describe('vnode/creator/base - createBaseVNode', () => {
       const vnode = createBaseVNode('fragment', NodeKind.FRAGMENT, { ref: myRef })
 
       expect(vnode.ref).toBeUndefined()
+      expect(warnSpy).toHaveBeenCalled()
     })
   })
 
