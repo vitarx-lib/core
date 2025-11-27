@@ -1,15 +1,38 @@
-import { computed } from '@vitarx/responsive'
-import { isArray, logger } from '@vitarx/utils'
-import { diffDirectives } from '../../directive/index.js'
 import { useRenderer } from '../../renderer/index.js'
-import type { ElementVNode, HostNodeElements, Renderable, VNode } from '../../types/index.js'
+import type { HostNodeElements, Renderable, VNode } from '../../types/index.js'
 import { AnyChild } from '../../types/vnode.js'
-import { getNodeDomOpsTarget, getNodeElement, isVNode } from '../../utils/index.js'
+import { getNodeDomOpsTarget, getNodeElement } from '../../utils/index.js'
 import { PatchUpdate } from '../../vnode/core/update.js'
 import { mountNode, unmountNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 interface TransitionProps extends BaseTransitionProps {
+  /**
+   * 子节点
+   *
+   * 可以是单个，也可以是多个
+   * 仅元素类型/组件类型节点支持过渡。
+   *
+   * @example
+   * ```tsx
+   * <Transition>
+   *   {show && <div>内容</div>}
+   * </Transition>
+   *
+   * <Transition>
+   *   {show ? <div>内容1</div> : <div>内容2</div>}
+   * </Transition>
+   *
+   * <Transition>
+   *   <div v-if="show">内容</div>
+   * </Transition>
+   *
+   * <Transition>
+   *   <div v-show="show">内容</div>
+   * </Transition>
+   * ```
+   */
+  children: Renderable
   /** 过渡模式：
    * - 'out-in': 当前元素先离开，新元素后进入
    * - 'in-out': 新元素先进入，当前元素后离开
@@ -128,34 +151,12 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
   /** 组件默认属性 */
   static override defaultProps = { ...BaseTransition.defaultProps, mode: 'default' } as const
   /**
-   * 计算当前要渲染的子节点
-   *
-   * 从子节点数组中找到第一个非元素节点且显示的节点作为当前子节点。
-   * 如果找不到子节点，会记录警告日志。
-   */
-  protected child = computed(() => {
-    if (isArray(this.children)) {
-      const rootChild = this.children.find(item => isVNode(item))
-      if (!rootChild) {
-        logger.warn(
-          '<Transition> When multiple nodes are passed, one node must be displayed',
-          this.$vnode.devInfo?.source
-        )
-      }
-      return rootChild
-    }
-    if (!this.children) {
-      logger.warn('<Transition> No child node found', this.$vnode.devInfo?.source)
-    }
-    return this.children as VNode
-  })
-  /**
    * 构建组件渲染内容
    *
    * @returns {AnyChild} 当前子节点的 VNode
    */
   override build(): Renderable {
-    return this.child.value
+    return this.children
   }
   /**
    * 组件挂载后的生命周期钩子
@@ -186,23 +187,17 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
       if (oldChild.static) return oldChild
       const oldShow = oldChild.directives?.get('show')?.[1]
       const newShow = newChild.directives?.get('show')?.[1]
+
+      // 兼容 v-show 切换，移除了复杂的指令跳过处理，提升性能和稳定性
+      // 要求用户在css中使用 display: block !important 来保证动画可见
       if (oldShow !== newShow) {
-        if (oldShow) {
-          PatchUpdate.patchUpdateNode(oldChild, newChild, { skip: ['show'] })
-          // 离场动画执行完成后才更新节点
-          this.runTransition(getNodeElement(oldChild), 'leave', () => {
-            diffDirectives(oldChild as ElementVNode, newChild as ElementVNode, { only: ['show'] })
-          })
-        } else {
-          PatchUpdate.patchUpdateNode(oldChild, newChild)
-          this.runTransition(getNodeElement(newChild), 'enter')
-        }
+        PatchUpdate.patchUpdateNode(oldChild, newChild)
+        this.runTransition(getNodeElement(oldChild), oldShow ? 'leave' : 'enter')
       } else {
         PatchUpdate.patchUpdateNode(oldChild, newChild)
       }
       return oldChild
     }
-
     // 创建锚点元素，用于新节点的插入位置
     const dom = useRenderer()
     const anchor = dom.createText('')
