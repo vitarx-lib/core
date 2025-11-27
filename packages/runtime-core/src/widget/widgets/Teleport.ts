@@ -93,8 +93,8 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
       onPropChange(
         props,
         'children',
-        newValue => {
-          if (this.teleported) patchUpdate(this.children, newValue)
+        (newChild, oldChild) => {
+          if (this.teleported) patchUpdate(oldChild, newChild)
         },
         {
           flush: 'sync'
