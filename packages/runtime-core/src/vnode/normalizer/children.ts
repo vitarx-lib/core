@@ -4,6 +4,7 @@ import { NodeKind } from '../../constants/index.js'
 import { linkParentNode } from '../../runtime/index.js'
 import type {
   AnyChild,
+  HostElementNames,
   RegularElementVNode,
   UniqueKey,
   VNode,
@@ -18,7 +19,11 @@ import { createTextVNode } from '../creator/special.js'
  * @param node - 当前节点
  */
 export const propagateSVGNamespace = (node: VNode) => {
-  if (isElementNode(node) && !node.isSVGElement && node.type !== 'foreignObject') {
+  if (
+    isElementNode(node) &&
+    !node.isSVGElement &&
+    node.type !== ('foreignObject' as unknown as HostElementNames)
+  ) {
     node.isSVGElement = true
     if (node.kind === NodeKind.REGULAR_ELEMENT) {
       for (const child of (node as RegularElementVNode).children) {
