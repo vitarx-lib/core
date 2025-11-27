@@ -10,6 +10,7 @@ import type {
   HostVoidElementNames
 } from './element.js'
 import type { ElementVNode, FragmentVNode } from './nodes/index.js'
+import type { StyleProperties } from './props.js'
 
 /**
  * DOMRect 接口，表示一个矩形区域，
@@ -156,13 +157,27 @@ export interface HostRenderer {
    * @param value - 样式属性值
    * @returns {()=>void} - 移除/恢复到之前的样式
    */
-  addStyle(el: HostElements, key: string, value: string): () => void
+  addStyle(el: HostElements, key: string, value: string): void
+  /**
+   * 获取样式
+   * @param el - 元素实例
+   * @param key - 样式属性名
+   * @returns {string | null} - 样式属性值, 如果样式不存在则返回 null
+   */
+  getStyle(el: HostElements, key: string): string | null
   /**
    * 移除样式
    * @param el - 元素实例
    * @param key - 样式属性名
    */
   removeStyle(el: HostElements, key: string): void
+  /**
+   * 设置样式
+   *
+   * @param el - 元素实例
+   * @param style - 样式对象
+   */
+  setStyle(el: HostElements, style: StyleProperties): void
   /**
    * 获取元素的计算样式
    * @param el - 元素实例
@@ -247,6 +262,14 @@ export interface HostRenderer {
    * @returns { HostElements | null } 查询到的元素实例，或者null
    */
   querySelector(selector: string, container?: HostParentElement): HostElements | null
+  /**
+   * 查询多个元素
+   *
+   * @param selector - 选择器字符串
+   * @param [container] - 可选的容器元素实例，不传入时，默认为body
+   * @returns { HostElements[] } 查询到的元素实例数组
+   */
+  querySelectorAll(selector: string, container?: HostParentElement): Iterable<HostElements>
   /**
    * 获取元素的父元素
    * @param el - 元素实例
