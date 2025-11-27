@@ -96,7 +96,6 @@ describe('App 应用模块', () => {
       app.mount(container)
       expect(container.childNodes.length).toBe(1)
       expect(text.state).toBe(NodeState.Activated)
-      console.log('容器内容', container.textContent)
       expect(container.textContent).toContain('Hello')
     })
 

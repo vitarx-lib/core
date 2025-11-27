@@ -96,7 +96,6 @@ describe('Transition 组件', () => {
 
       updateProps(vnode, 'children', createVNode('div', { key: 'key2' }, 'content2'))
       const element = container.querySelector('div')! as HTMLDivElement
-      console.log(element.outerHTML)
       expect(element.classList.contains('fade-enter-active')).toBe(true)
     })
 

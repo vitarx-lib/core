@@ -5,6 +5,7 @@
  */
 
 import { ref, Scheduler } from '@vitarx/responsive'
+import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
 import {
   activateNode,
@@ -165,8 +166,8 @@ describe('StatefulWidgetRuntime', () => {
       }
 
       const vnode = createVNode(UpdateWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any)
-      vnode.state = NodeState.Activated
+      mountNode(vnode)
+      const runtime = vnode.runtimeInstance!
 
       runtime.update()
       flushScheduler()
@@ -195,6 +196,9 @@ describe('StatefulWidgetRuntime', () => {
       class ErrorWidget extends Widget {
         override onBeforeUpdate() {
           throw error
+        }
+        override onError(error: unknown, info: ErrorInfo): unknown {
+          return false
         }
         build() {
           return createVNode('div')
@@ -280,10 +284,8 @@ describe('StatefulWidgetRuntime', () => {
   describe('更新调度机制', () => {
     it('enableScheduler 为 true 时应该异步批量更新', () => {
       const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any, {
-        enableScheduler: true
-      })
-      vnode.state = NodeState.Activated
+      mountNode(vnode)
+      const runtime = vnode.runtimeInstance!
 
       const queueJobSpy = vi.spyOn(Scheduler, 'queueJob')
 
@@ -294,15 +296,14 @@ describe('StatefulWidgetRuntime', () => {
 
     it('enableScheduler 为 false 时应该同步更新', () => {
       const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any, {
-        enableScheduler: false
-      })
-      vnode.state = NodeState.Activated
+      mountNode(vnode)
+      const runtime = vnode.runtimeInstance!
       runtime.build()
 
       const buildSpy = vi.spyOn(runtime, 'build')
 
       runtime.update()
+      flushScheduler()
 
       // 同步更新，立即执行
       expect(buildSpy).toHaveBeenCalled()
@@ -310,14 +311,15 @@ describe('StatefulWidgetRuntime', () => {
 
     it('多次调用 update 应该合并为一次更新', () => {
       const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any)
-      vnode.state = NodeState.Activated
+      mountNode(vnode)
+      const runtime = vnode.runtimeInstance!
 
       const queueJobSpy = vi.spyOn(Scheduler, 'queueJob')
 
       runtime.update()
       runtime.update()
       runtime.update()
+      flushScheduler()
 
       // queueJob 应该只被调用一次（因为 hasPendingUpdate 标志）
       expect(queueJobSpy).toHaveBeenCalledTimes(1)
@@ -466,6 +468,8 @@ describe('StatefulWidgetRuntime', () => {
     })
 
     it('onError 钩子本身抛错应该防止无限循环', () => {
+      const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
+
       class InfiniteErrorWidget extends Widget {
         override onError() {
           throw new Error('Error in onError')
@@ -482,6 +486,7 @@ describe('StatefulWidgetRuntime', () => {
       expect(() => {
         runtime.reportError(new Error('test'), 'build')
       }).not.toThrow('Error in onError')
+      errorSpy.mockRestore()
     })
 
     it('build 失败应该返回注释节点', () => {
@@ -580,6 +585,9 @@ describe('StatefulWidgetRuntime', () => {
 
     it('build 抛错应该被捕获并处理', () => {
       class ThrowWidget extends Widget {
+        override onError(): any {
+          return false
+        }
         build(): any {
           throw new Error('Build error')
         }
