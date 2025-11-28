@@ -1,4 +1,4 @@
-import { isRefSignal, NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
+import { isRef, NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { isObject, logger, popProperty } from '@vitarx/utils'
 import {
   NodeKind,
@@ -85,11 +85,11 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
       if (key.startsWith('v-')) {
         if (key === 'v-model') {
           props['modelValue'] = props[key]
-          if (isRefSignal(value)) {
-            props['onUpdate:modelValue'] = (v: any) => (value.value = v)
+          if (isRef(value)) {
+            props['onUpdate:modelValue'] = value.update
           } else if (__DEV__) {
             logger.warn(
-              `v-model only supports passing in RefSignal type values, otherwise automatic updates cannot be completed`,
+              `v-model only supports passing in Ref type values, otherwise automatic updates cannot be completed`,
               node.devInfo?.source
             )
           }
