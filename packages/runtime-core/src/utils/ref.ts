@@ -5,7 +5,7 @@ import type {
   NodeElementType,
   StatelessWidget,
   StatelessWidgetVNode,
-  WidgetInstance,
+  WidgetInstanceType,
   WidgetTypes
 } from '../types/index.js'
 
@@ -19,7 +19,7 @@ export type ComputedRefElType<T> = T extends NodeElementType
     : T extends StatelessWidget
       ? StatelessWidgetVNode
       : T extends WidgetTypes
-        ? ExcludeWidgetIntrinsicMethods<WidgetInstance<T>>
+        ? ExcludeWidgetIntrinsicMethods<WidgetInstanceType<T>>
         : null
 /** 引用元素类型 */
 export type RefEl<T> = Ref<ComputedRefElType<T> | null>

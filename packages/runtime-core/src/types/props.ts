@@ -333,7 +333,7 @@ type ExtractVNodeProps<T extends ValidNodeType> = WithRefProps<
       : T extends Fragment
         ? WidgetPropsType<Fragment>
         : T extends WidgetTypes
-          ? WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>
+          ? WidgetPropsType<T>
           : {}
 >
 /**

@@ -15,7 +15,7 @@ import type {
   StatefulWidgetVNode,
   StatefulWidgetVNodeType,
   VNode,
-  WidgetInstance
+  WidgetInstanceType
 } from '../../types/index.js'
 import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
@@ -73,7 +73,7 @@ export class StatefulWidgetRuntime<
     enableScheduler: true
   }
   /** 组件实例 */
-  public readonly instance: WidgetInstance<T>
+  public readonly instance: WidgetInstanceType<T>
   /** 是否有待处理的更新任务 */
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
@@ -331,7 +331,7 @@ export class StatefulWidgetRuntime<
    *
    * @returns 创建的组件实例
    */
-  private createWidgetInstance(): WidgetInstance<T> {
+  private createWidgetInstance(): WidgetInstanceType<T> {
     const onResolveCallback = this.options.onResolve
     return this.scope.run(() =>
       this.runInContext(() => {
@@ -353,7 +353,7 @@ export class StatefulWidgetRuntime<
             onResolveCallback?.(initPromise)
           }
         }
-        return instance as WidgetInstance<T>
+        return instance as WidgetInstanceType<T>
       })
     )
   }
