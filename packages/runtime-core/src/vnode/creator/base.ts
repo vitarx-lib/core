@@ -61,18 +61,27 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
   }
   // --------- 特殊属性：v-static ---------
   if ('v-static' in props) node.static = popProperty(props, 'v-static')
+  // 处理特殊节点类型
   if (SPECIAL_NODE_KINDS.has(kind)) {
+    // 对所有属性进行解包
     for (const [key, value] of Object.entries(props)) {
       props[key] = unref(value)
     }
   } else {
-    // --------- 执行 v-bind 合并 ---------
+    // 处理普通节点
+    // 1. 执行 v-bind 合并
     const bind = popProperty(props, 'v-bind')
     if (isObject(bind)) bindProps(props, bind)
+
+    // 2. 提取并处理指令
     const directives: VNodeDirectives = new Map()
+
+    // 3. 遍历处理属性
     for (const [key, value] of Object.entries(props)) {
       props[key] = unref(value)
-      if (key.startsWith('v-') && !SPECIAL_NODE_KINDS.has(kind)) {
+
+      // 处理指令
+      if (key.startsWith('v-')) {
         // 删除 v- 前缀
         const raw = key.slice(2)
         // 解析参数（只支持一个冒号）
@@ -85,6 +94,8 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
         }
       }
     }
+
+    // 4. 添加指令到节点（如果有）
     if (directives.size) node.directives = directives
   }
 
