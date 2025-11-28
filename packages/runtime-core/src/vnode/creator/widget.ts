@@ -8,7 +8,7 @@ import type {
   StatefulWidgetVNode,
   StatelessWidget,
   StatelessWidgetVNode,
-  ValidNodeProps,
+  VNodeInputProps,
   WidgetTypes
 } from '../../types/index.js'
 import { __DEV__, getWidgetName, isStatelessWidget } from '../../utils/index.js'
@@ -44,7 +44,7 @@ import { createBaseVNode } from './base.js'
  */
 function validateProps<T extends WidgetTypes>(
   widget: T,
-  props: ValidNodeProps<T>,
+  props: VNodeInputProps<T>,
   devInfo?: NodeDevInfo
 ): void {
   // 在开发环境下，如果组件提供了validateProps方法，则执行属性校验
@@ -89,7 +89,7 @@ function validateProps<T extends WidgetTypes>(
  */
 export function createWidgetVNode<T extends StatelessWidget>(
   widget: T,
-  props: ValidNodeProps<T>
+  props: VNodeInputProps<T>
 ): StatelessWidgetVNode
 
 /**
@@ -115,7 +115,7 @@ export function createWidgetVNode<T extends StatelessWidget>(
  */
 export function createWidgetVNode<T extends StatefulWidget>(
   widget: T,
-  props: ValidNodeProps<T>
+  props: VNodeInputProps<T>
 ): StatefulWidgetVNode
 
 /**
@@ -153,7 +153,7 @@ export function createWidgetVNode<T extends StatefulWidget>(
  */
 export function createWidgetVNode<T extends WidgetTypes>(
   widget: T,
-  props: ValidNodeProps<T>
+  props: VNodeInputProps<T>
 ): StatelessWidgetVNode | StatefulWidgetVNode {
   // 判断组件是否为无状态组件
   if (isRecordObject(widget.defaultProps)) {

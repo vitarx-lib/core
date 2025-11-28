@@ -4,7 +4,7 @@ import type {
   CommentVNodeType,
   TextVNode,
   TextVNodeType,
-  ValidNodeProps
+  VNodeInputProps
 } from '../../types/index.js'
 import { createBaseVNode } from './base.js'
 
@@ -16,7 +16,7 @@ import { createBaseVNode } from './base.js'
  * @param props - 节点属性对象
  * @returns 创建的文本虚拟节点
  */
-export const createTextVNode = (props: ValidNodeProps<TextVNodeType>): TextVNode => {
+export const createTextVNode = (props: VNodeInputProps<TextVNodeType>): TextVNode => {
   return createBaseVNode(TEXT_NODE_TYPE, NodeKind.TEXT, props) as TextVNode
 }
 
@@ -30,6 +30,6 @@ export const createTextVNode = (props: ValidNodeProps<TextVNodeType>): TextVNode
  * @param props - 节点属性对象
  * @returns 创建的注释虚拟节点
  */
-export const createCommentVNode = (props: ValidNodeProps<CommentVNodeType>): CommentVNode => {
+export const createCommentVNode = (props: VNodeInputProps<CommentVNodeType>): CommentVNode => {
   return createBaseVNode(COMMENT_NODE_TYPE, NodeKind.COMMENT, props) as CommentVNode
 }

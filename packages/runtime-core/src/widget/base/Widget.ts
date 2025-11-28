@@ -6,8 +6,8 @@ import type {
   AnyProps,
   ErrorInfo,
   ExtractChildrenType,
-  MergeProps,
   NodeElementType,
+  ReadonlyProps,
   Renderable,
   StatefulWidgetVNode,
   VNode
@@ -80,8 +80,8 @@ export abstract class Widget<
    * 获取小部件的属性
    * @returns {Readonly<InputProps & DefaultProps>}
    */
-  get props(): Readonly<MergeProps<InputProps, DefaultProps>> {
-    return this.#props as unknown as MergeProps<InputProps, DefaultProps>
+  get props(): ReadonlyProps<InputProps, DefaultProps> {
+    return this.#props as unknown as ReadonlyProps<InputProps, DefaultProps>
   }
 
   /**

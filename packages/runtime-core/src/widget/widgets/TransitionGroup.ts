@@ -14,7 +14,7 @@ import type {
   HostRegularElementNames,
   Renderable,
   VNode,
-  WithNodeProps
+  WithProps
 } from '../../types/index.js'
 import { getNodeElement, isContainerNode } from '../../utils/index.js'
 import { PatchUpdate } from '../../vnode/core/update.js'
@@ -45,7 +45,7 @@ interface TransitionGroupProps<T extends AllowTag = AllowTag> extends BaseTransi
   /** 元素移动时使用的类名，默认为 `${name}-move` */
   moveClass?: string
   /** 传递给包裹元素的属性 */
-  bindProps?: WithNodeProps<T>
+  bindProps?: WithProps<T>
 }
 
 /**

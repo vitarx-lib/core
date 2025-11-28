@@ -4,7 +4,7 @@ import type {
   AnyProps,
   RegularElementVNode,
   RegularElementVNodeType,
-  ValidNodeProps,
+  VNodeInputProps,
   VoidElementVNode,
   VoidElementVNodeType
 } from '../../types/index.js'
@@ -25,7 +25,7 @@ import { createBaseVNode } from './base.js'
  */
 export const createVoidElementVNode = <T extends VoidElementVNodeType>(
   type: T,
-  props: ValidNodeProps<T>
+  props: VNodeInputProps<T>
 ): VoidElementVNode<T> => {
   // 创建基础空元素节点，并初始化元素属性
   const node = createBaseVNode(type, NodeKind.VOID_ELEMENT, props) as VoidElementVNode<T>
@@ -46,7 +46,7 @@ export const createVoidElementVNode = <T extends VoidElementVNodeType>(
  */
 export const createRegularElementVNode = <T extends RegularElementVNodeType>(
   type: T,
-  props: ValidNodeProps<T>
+  props: VNodeInputProps<T>
 ): RegularElementVNode<T> => {
   // 创建基础常规元素节点，并初始化元素属性
   const node = createBaseVNode(type, NodeKind.REGULAR_ELEMENT, props) as RegularElementVNode<T>

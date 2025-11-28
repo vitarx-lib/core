@@ -8,7 +8,7 @@ import type {
   Renderable,
   VNode,
   WidgetTypes,
-  WithNodeProps
+  WithProps
 } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
 import { createVNode } from '../../vnode/index.js'
@@ -31,7 +31,7 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
   /**
    * 需要透传给小部件的属性
    */
-  injectProps?: WithNodeProps<T>
+  injectProps?: WithProps<T>
   /**
    * 加载成功之前要显示的元素
    *

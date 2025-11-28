@@ -10,9 +10,9 @@ import type {
   AnyChild,
   RegularElementVNodeType,
   TextVNodeType,
-  ValidNodeProps,
   ValidNodeType,
   VNode,
+  VNodeInputProps,
   VNodeInstanceType,
   VoidElementVNodeType
 } from '../../types/index.js'
@@ -89,10 +89,10 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  */
 export function createVNode<T extends ValidNodeType>(
   type: T,
-  props: ValidNodeProps<T> | null = null,
+  props: VNodeInputProps<T> | null = null,
   ...children: AnyChild[]
 ): VNodeInstanceType<T> {
-  props ??= {} as ValidNodeProps<T>
+  props ??= {} as VNodeInputProps<T>
   const supportChildren = isSupportChildren(type)
   // 检查不支持children的节点
   if (__DEV__ && !supportChildren && 'children' in props) {
@@ -115,11 +115,11 @@ export function createVNode<T extends ValidNodeType>(
         return createDynamicVNode(props) as VNodeInstanceType<T>
       case TEXT_NODE_TYPE:
         return createTextVNode(
-          props as unknown as ValidNodeProps<TextVNodeType>
+          props as unknown as VNodeInputProps<TextVNodeType>
         ) as VNodeInstanceType<T>
       case COMMENT_NODE_TYPE:
         return createCommentVNode(
-          props as unknown as ValidNodeProps<TextVNodeType>
+          props as unknown as VNodeInputProps<TextVNodeType>
         ) as VNodeInstanceType<T>
       case FRAGMENT_NODE_TYPE:
         return createFragmentVNode(props) as VNodeInstanceType<T>

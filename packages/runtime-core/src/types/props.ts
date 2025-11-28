@@ -256,6 +256,15 @@ export type ClassProperties = string | Array<any> | Record<string, boolean>
 export type MergeProps<Input extends {}, Default extends {}> = Input & {
   [P in keyof Default]: P extends keyof Input ? Exclude<Input[P], undefined> : Default[P]
 }
+/**
+ * 组件属性规范化
+ *
+ * @template Input - 可选的属性对象
+ * @template Default - 默认的属性对象
+ */
+export type ReadonlyProps<Input extends {}, Default extends {} = {}> = Readonly<
+  UnwrapRefProps<MergeProps<Input, Default>>
+>
 
 /**
  * 从props中提取出children的类型
@@ -304,13 +313,29 @@ export type ExtractChildrenType<P> = P extends { children: infer U }
  * // }
  * ```
  */
-export type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = Omit<
-  P,
-  keyof D
-> & {
-  [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
-}
+export type WithDefaultProps<
+  P extends AnyProps,
+  D extends AnyProps | undefined
+> = D extends undefined
+  ? P
+  : Omit<P, keyof D> & {
+      [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
+    }
 
+/**
+ * 提取节点属性类型
+ */
+type ExtractVNodeProps<T extends ValidNodeType> = WithRefProps<
+  T extends JSXElementNames
+    ? JSXInternalElements[T]
+    : T extends Dynamic
+      ? WidgetPropsType<Dynamic>
+      : T extends Fragment
+        ? WidgetPropsType<Fragment>
+        : T extends WidgetTypes
+          ? WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>
+          : {}
+>
 /**
  * createVNode 支持的属性类型推导
  *
@@ -318,7 +343,7 @@ export type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined>
  * - 元素或组件定义的属性
  * - 全局属性（如key、ref、v-show等）
  */
-export type ValidNodeProps<T extends ValidNodeType> = WithNodeProps<T, never> & IntrinsicAttributes
+export type VNodeInputProps<T extends ValidNodeType> = ExtractVNodeProps<T> & IntrinsicAttributes
 
 /**
  * 根据节点类型推断其对应的属性类型
@@ -351,15 +376,7 @@ export type ValidNodeProps<T extends ValidNodeType> = WithNodeProps<T, never> & 
  * @template T - 节点类型，必须继承自 ValidNodeType
  * @template K - 忽略的属性名称，默认为 'children'
  */
-export type WithNodeProps<T extends ValidNodeType, K extends keyof any = 'children'> = Omit<
-  T extends JSXElementNames
-    ? JSXInternalElements[T]
-    : T extends Dynamic
-      ? WithRefProps<WidgetPropsType<Dynamic>>
-      : T extends Fragment
-        ? WithRefProps<WidgetPropsType<Fragment>>
-        : T extends WidgetTypes
-          ? WithRefProps<WithDefaultProps<WidgetPropsType<T>, T['defaultProps']>>
-          : {},
+export type WithProps<T extends ValidNodeType, K extends keyof any = 'children'> = Omit<
+  ExtractVNodeProps<T>,
   K
 >
