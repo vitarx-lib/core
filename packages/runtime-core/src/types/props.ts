@@ -264,7 +264,7 @@ export type MergeProps<Input extends {}, Default extends {}> = Input & {
  * @template Default - 默认的属性对象
  */
 export type ReadonlyProps<Input extends {}, Default extends {} = {}> = Readonly<
-  UnwrapRefProps<MergeProps<Input, Default>>
+  MergeProps<Input, Default>
 >
 
 type VModelValue<T> = T extends RefSignal<infer U> ? Ref<U, boolean> : Ref<T, boolean>
