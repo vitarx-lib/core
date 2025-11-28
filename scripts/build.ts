@@ -203,7 +203,7 @@ async function buildPackage(
       log.warn('🧪 Running vitest tests...')
       const vitestConfig = join(packagePath, 'vitest.config.ts')
       let cmd = `vitest run --dir ${packagePath}`
-      if (!existsSync(vitestConfig)) cmd = `${cmd} --config ${vitestConfig}`
+      if (existsSync(vitestConfig)) cmd = `${cmd} --config ${vitestConfig}`
       // 使用 vitest 运行测试
       await runCommand(cmd)
       log.success('  ✓ Tests passed successfully')
