@@ -118,13 +118,13 @@ export function isComputed(val: unknown): val is Computed<any> {
  * console.log(double.value) // 4
  *
  * // 停止监听并获取最终值
- * const finalValue = stopCompute(double) // 4
+ * const finalValue = stopComputed(double) // 4
  *
  * // 依赖变化不再触发更新
  * count.value = 10
  * console.log(double.value) // 仍然是4
  * ```
  */
-export function stopCompute<T>(computed: T | Computed<T>): T {
+export function stopComputed<T>(computed: T | Computed<T>): T {
   return isComputed(computed) ? computed.stop() : (computed as T)
 }
