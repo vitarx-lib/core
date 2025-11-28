@@ -53,8 +53,23 @@ export type SignalOptions<Deep extends boolean = boolean> = {
  * @template Deep - 是否启用深层响应式转换
  */
 export interface BaseSignal<Raw = any, Deep extends boolean = boolean> {
+  /**
+   * 响应式信号标识符
+   */
   readonly [SIGNAL_SYMBOL]: true
+  /**
+   * 信号包装的原始值
+   *
+   * toRaw 通过此属性获取原始值
+   *
+   * 不要触发依赖跟踪 ！！！
+   */
   readonly [SIGNAL_RAW_VALUE_SYMBOL]: Raw
+  /**
+   * 标记是否深度响应式
+   *
+   * 这是isDeepSignal判断的依据
+   */
   readonly [DEEP_SIGNAL_SYMBOL]?: Deep
 }
 
@@ -66,5 +81,8 @@ export interface BaseSignal<Raw = any, Deep extends boolean = boolean> {
  * @template T - 对象的类型
  */
 export type NonSignal<T extends AnyObject = AnyObject> = T & {
+  /**
+   * 非响应式信号标识符
+   */
   readonly [NON_SIGNAL_SYMBOL]: true
 }
