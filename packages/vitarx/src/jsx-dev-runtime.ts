@@ -2,8 +2,8 @@ import {
   type CodeSourceInfo,
   setNodeDevInfo,
   type UniqueKey,
-  type ValidNodeProps,
   type ValidNodeType,
+  type VNodeInputProps,
   type VNodeInstanceType
 } from '@vitarx/runtime-core'
 import type { AnyRecord } from '@vitarx/utils'
@@ -23,7 +23,7 @@ export { Fragment } from './jsx-runtime.js'
  */
 export function jsxDEV<T extends ValidNodeType>(
   type: T,
-  props: ValidNodeProps<T> | null,
+  props: VNodeInputProps<T> | null,
   key: UniqueKey | undefined,
   isStatic: boolean,
   source: CodeSourceInfo,
