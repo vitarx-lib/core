@@ -2,7 +2,6 @@ import { STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
 import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
 import type { VNode } from './nodes/index.js'
-import type { WithDefaultProps } from './props.js'
 import type { AnyChild, Renderable } from './vnode.js'
 
 /**
@@ -104,16 +103,17 @@ export interface LazyLoadModule {
   default: WidgetTypes
 }
 /**
- * 函数小部件有效地返回值，会提供给 `JSX.Element` 使用，让 tsx 能够兼容 vitarx 特有的函数组件返回值类型
+ * 函数小部件有效地返回值
  *
  * - `null | false | undefined`：不渲染任何内容（但存在注释节点做为定位的锚点）
  * - `string | number`：渲染为文本节点
- * - `NodeBuilder`：视图节点构建器
+ * - `VNode`：虚拟节点
+ * - `VNodeBuilder`：虚拟节点构建器 依赖跟踪的关键，一般由编译器自动生成
  * - `Promise<Renderable>`：异步返回受支持的Renderable，如字符串，元素节点等
  * - `Promise<VNodeBuilder>`：异步返回视图节点构建器
  * - `Promise<{ default: WidgetTypes }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
  */
-export type ValidBuildResult =
+export type FWBuildType =
   | Renderable
   | VNodeBuilder
   | Promise<Renderable | LazyLoadModule | VNodeBuilder>
@@ -121,16 +121,17 @@ export type ValidBuildResult =
 /**
  * 函数小部件类型
  */
-export type FunctionWidget<
-  P extends AnyProps = any,
-  R extends ValidBuildResult = ValidBuildResult
-> = {
+export type FunctionWidget<P extends AnyProps = any, R extends FWBuildType = FWBuildType> = {
   (props: P): R
 } & WidgetOptions
 /**
  * 函数小部件类型别名
  */
 export type FC<P extends AnyProps = any> = FunctionWidget<P>
+/**
+ * 函数小部件类型别名
+ */
+export type FW<P extends AnyProps = any> = FunctionWidget<P>
 /**
  * 小部件结构类型
  *
@@ -148,7 +149,58 @@ export type WidgetInstanceType<T extends ClassWidget | FunctionWidget> =
   T extends ClassWidget<any, infer I> ? I : T extends FunctionWidget<infer P> ? Widget<P> : Widget
 
 /**
- * Widget节点Props类型重载
+ * 组件children类型提取
+ */
+export type ExtractChildrenType<P extends AnyProps> = P extends { children: infer U }
+  ? U
+  : P extends { children?: infer U }
+    ? U | undefined
+    : never
+
+/**
+ * 带默认值的属性类型
+ *
+ * 根据默认值定义 D，将属性类型 P 中具有默认值的属性转换为可选属性。
+ * 这对于组件的 defaultProps 特别有用，可以自动将具有默认值的属性标记为可选。
+ *
+ * 如果默认值定义 D 是属性类型 P 的部分类型，则将 D 中存在的属性转换为可选属性；
+ * 否则，保持原始属性类型不变。
+ *
+ * @template P - 原始属性类型
+ * @template D - 默认值定义类型
+ *
+ * @example
+ * ```ts
+ * nodes ButtonProps {
+ *   text: string;
+ *   disabled: boolean;
+ *   size: 'small' | 'medium' | 'large';
+ * }
+ *
+ * // 组件默认值定义
+ * const defaultProps = {
+ *   disabled: false,
+ *   size: 'medium'
+ * };
+ *
+ * // 使用 WithDefaultProps 转换属性类型
+ * type ButtonPropsWithDefaults = WithDefaultProps<ButtonProps, typeof defaultProps>;
+ * // 等价于:
+ * // {
+ * //   text: string; // 必需属性
+ * //   disabled?: boolean; // 可选属性，因为有默认值
+ * //   size?: 'small' | 'medium' | 'large'; // 可选属性，因为有默认值
+ * // }
+ * ```
+ */
+type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = D extends undefined
+  ? P
+  : Omit<P, keyof D> & {
+      [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
+    }
+
+/**
+ * 组件props类型重载
  */
 export type WidgetPropsType<T extends WidgetTypes> =
   T extends WidgetTypes<infer P> ? WithDefaultProps<P, T['defaultProps']> : {}
