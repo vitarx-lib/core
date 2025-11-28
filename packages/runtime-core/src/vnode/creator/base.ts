@@ -1,4 +1,4 @@
-import { NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
+import { isRefSignal, NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
 import { isObject, logger, popProperty } from '@vitarx/utils'
 import {
   NodeKind,
@@ -78,10 +78,24 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
 
     // 3. 遍历处理属性
     for (const [key, value] of Object.entries(props)) {
+      // 解包
       props[key] = unref(value)
 
       // 处理指令
       if (key.startsWith('v-')) {
+        if (key === 'v-model') {
+          props['modelValue'] = props[key]
+          if (isRefSignal(value)) {
+            props['onUpdate:modelValue'] = (v: any) => (value.value = v)
+          } else if (__DEV__) {
+            logger.warn(
+              `v-model only supports passing in RefSignal type values, otherwise automatic updates cannot be completed`,
+              node.devInfo?.source
+            )
+          }
+          delete props[key]
+          continue
+        }
         // 删除 v- 前缀
         const raw = key.slice(2)
         // 解析参数（只支持一个冒号）
