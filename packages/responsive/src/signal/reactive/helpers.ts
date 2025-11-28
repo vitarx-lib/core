@@ -81,9 +81,8 @@ export function shallowReactive<T extends AnyObject>(
 export function isReactive(val: any): boolean {
   return typeof val === 'object' && val !== null && !!Reflect.get(val, REACTIVE_PROXY_SYMBOL)
 }
-
 /**
- * ## 获取响应式对象的原始值
+ * 获取响应式对象的原始值
  *
  * 该函数用于获取一个响应式对象的原始未代理状态。这在以下场景特别有用：
  * - 需要绕过响应式系统直接操作原始数据时
