@@ -1,4 +1,4 @@
-import { isRecordObject } from '@vitarx/utils/src/index.js'
+import { isRecordObject } from '@vitarx/utils'
 import type { RefSignal } from '../types/index.js'
 import { isProxySignal, isRefSignal, type SignalToRaw } from '../utils/index.js'
 import { PropertyRef } from './property.js'
