@@ -8,7 +8,7 @@ import {
 } from '@vitarx/responsive'
 import type { AnyRecord } from '@vitarx/utils'
 import { isRecordObject, logger, LogLevel } from '@vitarx/utils'
-import type { AnyProps, MergeProps } from '../types/index.js'
+import type { AnyProps, MergeProps, ReadonlyProps } from '../types/index.js'
 import { getCurrentVNode } from './context.js'
 
 const VNODE_PROPS_DEFAULT_DATA_SYMBOL = Symbol('VNODE_PROPS_DEFAULT_DATA_SYMBOL')
@@ -119,7 +119,7 @@ class PropsProxyHandler<T extends Record<string, any>> implements ProxyHandler<T
 export function proxyWidgetProps<T extends Record<string | symbol, any>>(
   props: T,
   defaultProps?: Partial<T>
-): Readonly<T> {
+): ReadonlyProps<T> {
   // 避免重复代理
   if (props[VNODE_PROPS_PROXY_SYMBOL]) {
     if (isRecordObject(defaultProps)) {
@@ -186,7 +186,7 @@ export function proxyWidgetProps<T extends Record<string | symbol, any>>(
  * @param {D} defaultProps - 默认属性对象
  * @return {Readonly<D>} - 返回只读的Props对象
  */
-export function defineProps<D extends AnyProps>(defaultProps: D): Readonly<D>
+export function defineProps<D extends AnyProps>(defaultProps: D): ReadonlyProps<D>
 /**
  * 动态定义默认Props
  *
@@ -221,11 +221,11 @@ export function defineProps<D extends AnyProps>(defaultProps: D): Readonly<D>
 export function defineProps<D extends AnyProps, I extends AnyProps>(
   defaultProps: D,
   inputProps: I
-): Readonly<MergeProps<I, D>>
+): ReadonlyProps<I, D>
 export function defineProps<D extends AnyProps, I extends AnyProps = {}>(
   defaultProps: D,
   inputProps?: I
-): Readonly<MergeProps<I, D>> {
+): ReadonlyProps<I, D> {
   // 验证defaultProps参数类型
   if (!isRecordObject(defaultProps)) {
     throw new TypeError(
