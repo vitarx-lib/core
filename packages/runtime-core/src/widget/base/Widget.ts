@@ -2,7 +2,6 @@ import { NON_SIGNAL_SYMBOL, Scheduler } from '@vitarx/responsive'
 import { CLASS_WIDGET_BASE_SYMBOL } from '../../constants/index.js'
 import { getCurrentVNode } from '../../runtime/index.js'
 import type {
-  AnyChild,
   AnyProps,
   ErrorInfo,
   ExtractChildrenType,
