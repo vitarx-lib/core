@@ -2,10 +2,13 @@ import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from '../c
 import type {
   AnyChild,
   ClassWidget,
+  FWBuildType,
   StatelessWidget,
   StatelessWidgetSymbol,
+  VNode,
   WidgetTypes
 } from '../types/index.js'
+import { isVNode } from './vnode.js'
 
 /**
  * 标记/定义一个无状态的小部件
@@ -89,4 +92,39 @@ export function isWidget(val: any): val is WidgetTypes {
 export function getWidgetName(widget: WidgetTypes) {
   // 首先检查 displayName 是否为字符串且存在
   return widget.displayName || widget.name || 'anonymous'
+}
+
+/**
+ * 视图构建器。
+ *
+ * > 注意：在类组件中无需使用`build`函数，build方法就是构建器。
+ *
+ * 一般情况编译器会自动添加`()=>`，但是使用了三元运算符或包裹在了if块中则无法添加，
+ * 所以需要使用返回 `()=>VNode` 来保证响应式，
+ * 但tsx不接受返回 `()=>VNode` 的函数做为组件，所以需要使用 build 来重载类型。
+ *
+ * 在编译时会自动去除build调用表达式
+ *
+ * ```tsx
+ * const App = () => {
+ *  const show = ref(true)
+ *  // ❌ 这样写编译器不会自动添加 () => 会导致视图是静态的，丢失响应式
+ *  return state.value ? <div>真</div> : <div>假</div>
+ *  // ✅ 这样写只是强制转换了类型，在编译时 build会被自动去除
+ *  return build(() => show.value ? <div>真</div> : <div>假</div>)
+ * }
+ * export default App
+ * ```
+ *
+ * @param builder - 虚拟节点对象|视图构建器函数|null
+ * @returns - 为了符合TSX类型校验，会将视图构建器函数重载为VNode类型
+ * @throws TypeError - 如果传入的参数不符合要求，则会抛出TypeError异常
+ */
+export function build<T extends FWBuildType>(builder: T): VNode {
+  if (isVNode(builder)) return builder as any
+  const allowTypes = ['boolean', 'number', 'string', 'bigint', 'undefined']
+  if (builder === null) return null as any
+  if (allowTypes.includes(typeof builder)) return builder as any
+  if (typeof builder) if (typeof builder === 'function') return builder as any
+  throw new TypeError('build() 函数组件返回值只能是 null| VNode | (() => VNode | null)')
 }
