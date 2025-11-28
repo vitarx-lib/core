@@ -288,28 +288,6 @@ export class Computed<T> implements RefSignal<T> {
   }
 
   /**
-   * 设置作用域
-   *
-   * 此方法仅在副作用设置之前调用有效
-   *
-   * @param {boolean | EffectScope} scope - 作用域或boolean值
-   * @returns {this} 当前实例，支持链式调用
-   */
-  public setScope(scope: boolean | EffectScope): this {
-    if (this._isSetup) return this
-
-    if (scope instanceof EffectScope) {
-      this._scope = scope
-    } else if (scope) {
-      this._scope = EffectScope.getCurrentScope()
-    } else {
-      this._scope = undefined
-    }
-
-    return this
-  }
-
-  /**
    * 执行计算
    *
    * Vue风格的懒计算：仅在dirty为true时才执行getter并缓存结果
