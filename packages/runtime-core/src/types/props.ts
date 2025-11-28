@@ -1,4 +1,5 @@
-import type { RefSignal } from '@vitarx/responsive'
+import { Ref, type RefSignal } from '@vitarx/responsive'
+import type { PickRequired } from '@vitarx/utils/src/index.js'
 import type { Dynamic, Fragment } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
 import type { JSXElementNames, JSXInternalElements } from './element.js'
@@ -63,7 +64,7 @@ export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | RefSig
  * });
  * ```
  */
-export type WithRefProps<T extends {}> = {
+export type WithRefProps<T extends AnyProps> = {
   [K in keyof T]: MaybeRef<T[K]>
 }
 /**
@@ -91,7 +92,7 @@ export type WithRefProps<T extends {}> = {
  * // }
  * ```
  */
-export type UnwrapRefProps<T extends {}> = {
+export type UnwrapRefProps<T extends AnyProps> = {
   [K in keyof T]: T[K] extends RefSignal<infer U> ? U : T[K]
 }
 /**
@@ -266,76 +267,72 @@ export type ReadonlyProps<Input extends {}, Default extends {} = {}> = Readonly<
   UnwrapRefProps<MergeProps<Input, Default>>
 >
 
-/**
- * 从props中提取出children的类型
- *
- * @template P - 输入的属性类型
- */
-export type ExtractChildrenType<P> = P extends { children: infer U }
-  ? U
-  : P extends { children?: infer U }
-    ? U | undefined
-    : never
-
-/**
- * 带默认值的属性类型
- *
- * 根据默认值定义 D，将属性类型 P 中具有默认值的属性转换为可选属性。
- * 这对于组件的 defaultProps 特别有用，可以自动将具有默认值的属性标记为可选。
- *
- * 如果默认值定义 D 是属性类型 P 的部分类型，则将 D 中存在的属性转换为可选属性；
- * 否则，保持原始属性类型不变。
- *
- * @template P - 原始属性类型
- * @template D - 默认值定义类型
- *
- * @example
- * ```ts
- * nodes ButtonProps {
- *   text: string;
- *   disabled: boolean;
- *   size: 'small' | 'medium' | 'large';
- * }
- *
- * // 组件默认值定义
- * const defaultProps = {
- *   disabled: false,
- *   size: 'medium'
- * };
- *
- * // 使用 WithDefaultProps 转换属性类型
- * type ButtonPropsWithDefaults = WithDefaultProps<ButtonProps, typeof defaultProps>;
- * // 等价于:
- * // {
- * //   text: string; // 必需属性
- * //   disabled?: boolean; // 可选属性，因为有默认值
- * //   size?: 'small' | 'medium' | 'large'; // 可选属性，因为有默认值
- * // }
- * ```
- */
-export type WithDefaultProps<
-  P extends AnyProps,
-  D extends AnyProps | undefined
-> = D extends undefined
-  ? P
-  : Omit<P, keyof D> & {
-      [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
-    }
+type VModelValue<T> = T extends RefSignal<infer U> ? Ref<U, boolean> : Ref<T, boolean>
+type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
+  ? 'modelValue' extends keyof PickRequired<T>
+    ?
+        | T
+        | (Omit<T, 'modelValue' | 'onUpdate:modelValue'> & {
+            /**
+             * v-model 双向绑定
+             *
+             * `v-model` 模仿 Vue 的 `v-model` 双向绑定，具有相同效果，
+             * 仅支持 `v-model <-> modelValue`，不兼容 `v-model:propName`。
+             *
+             * 示例：
+             * ```tsx
+             * const modelValue = ref('test')
+             * <Test v-model={modelValue} />
+             * // 运行时等效于如下语法
+             * <Test modelValue={modelValue} onUpdate:modelValue={ v => modelValue.value = v }/>
+             * ```
+             */
+            'v-model': VModelValue<T['modelValue']>
+          })
+    :
+        | T
+        | (Omit<T, 'modelValue' | 'onUpdate:modelValue'> & {
+            /**
+             * v-model 双向绑定
+             *
+             * `v-model` 模仿 Vue 的 `v-model` 双向绑定，具有相同效果，
+             * 仅支持 `v-model <-> modelValue`，不兼容 `v-model:propName`。
+             *
+             * 示例：
+             * ```tsx
+             * const modelValue = ref('test')
+             * <Test v-model={modelValue} />
+             * // 运行时等效于如下语法
+             * <Test modelValue={modelValue} onUpdate:modelValue={ v => modelValue.value = v }/>
+             * ```
+             */
+            'v-model'?: VModelValue<T['modelValue']>
+          })
+  : T
+type WithVModelUpdate<T extends AnyProps> = T & {
+  /**
+   * 双向绑定属性更新事件
+   *
+   * 组件内部使用 `useModel` | `usePropModel` 绑定属性时，值变化会自动触发事件。
+   *
+   * @param v - 新的值
+   */
+  [K in keyof T & string as T extends `on${string}` ? never : `onUpdate:${K}`]?: (v: T[K]) => void
+}
 
 /**
  * 提取节点属性类型
  */
-type ExtractVNodeProps<T extends ValidNodeType> = WithRefProps<
-  T extends JSXElementNames
-    ? JSXInternalElements[T]
-    : T extends Dynamic
-      ? WidgetPropsType<Dynamic>
-      : T extends Fragment
-        ? WidgetPropsType<Fragment>
-        : T extends WidgetTypes
-          ? WidgetPropsType<T>
-          : {}
->
+type ExtractVNodeProps<T extends ValidNodeType> = T extends JSXElementNames
+  ? JSXInternalElements[T]
+  : T extends Dynamic
+    ? WithRefProps<WidgetPropsType<Dynamic>>
+    : T extends Fragment
+      ? WithRefProps<WidgetPropsType<Fragment>>
+      : T extends WidgetTypes
+        ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<T>>>>
+        : {}
+
 /**
  * createVNode 支持的属性类型推导
  *
@@ -380,3 +377,9 @@ export type WithProps<T extends ValidNodeType, K extends keyof any = 'children'>
   ExtractVNodeProps<T>,
   K
 >
+
+export type JSXAttributes<C, P> = C extends WidgetTypes
+  ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<C>>>>
+  : P extends object
+    ? WithRefProps<P>
+    : {}
