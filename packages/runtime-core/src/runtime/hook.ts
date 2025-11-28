@@ -4,10 +4,10 @@ import { LifecycleHooks } from '../constants/hook.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__ } from '../constants/widget.js'
 import type {
   FunctionWidget,
+  FWBuildType,
   LifecycleHookParameter,
   LifecycleHookReturnType,
-  StatefulWidgetVNode,
-  ValidBuildResult
+  StatefulWidgetVNode
 } from '../types/index.js'
 import type { Widget } from '../widget/index.js'
 
@@ -20,7 +20,7 @@ interface CollectContext {
  * 收集结果
  */
 export interface HookCollectResult extends CollectContext {
-  buildResult: ValidBuildResult
+  buildResult: FWBuildType
 }
 
 const HOOK_COLLECTOR_CONTEXT = Symbol.for('__v_hook_context')
