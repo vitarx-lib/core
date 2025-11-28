@@ -278,7 +278,7 @@ export type MakePartial<T extends {}, K extends keyof T> = Omit<T, K> & Partial<
  * ```
  */
 export type OptionalKeys<T extends {}> = {
-  [K in keyof T]: undefined extends T[K] ? K : never
+  [K in keyof T]-?: undefined extends T[K] ? K : never
 }[keyof T]
 /**
  * 挑选出对象类型中所有可选属性，并将它们转换为必选属性
@@ -308,7 +308,7 @@ export type PickOptional<T extends {}> = {
  * @template T - 要被提取的对象类型
  */
 export type RequiredKeys<T extends {}> = {
-  [K in keyof T]: undefined extends T[K] ? never : K
+  [K in keyof T]-?: undefined extends T[K] ? never : K
 }[keyof T]
 
 /**
