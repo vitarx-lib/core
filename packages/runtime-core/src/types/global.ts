@@ -1,18 +1,13 @@
 import { type Dynamic, DYNAMIC_RENDER_TYPE } from '../constants/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
 import type { ErrorHandler } from './lifecycle.js'
+import type { VNode } from './nodes/index.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
-  WithDefaultProps,
+  JSXAttributes,
   WithRefProps
 } from './props.js'
-import type {
-  AnyProps,
-  FunctionWidget,
-  ValidBuildResult,
-  WidgetPropsType,
-  WidgetTypes
-} from './widget.js'
+import type { AnyProps, FunctionWidget, WidgetPropsType } from './widget.js'
 
 declare global {
   namespace Vitarx {
@@ -184,12 +179,11 @@ declare global {
     /**
      * JSX 元素类型
      *
-     * 定义了 JSX 表达式返回值的类型，对应于有效的子节点类型。
-     * 这使得 JSX 表达式可以直接用作组件的子元素。
+     * Element控制了组件的返回值类型，也是元素的类型。
      */
-    type Element = ValidBuildResult
+    type Element = VNode
     /**
-     * JSX 支持的固有属性
+     * Vitarx框架支持的固有属性
      */
     type IntrinsicAttributes = Vitarx.IntrinsicAttributes
     /**
@@ -204,7 +198,7 @@ declare global {
      * declare global {
      *   namespace Vitarx {
      *     nodes IntrinsicElements {
-     *       div: Partial<HTMLDivElement>, // 伪代码，具体实现需根据实际需求进行修改
+     *       div: Partial<HTMLDivElement>, // 伪代码
      *       span: Partial<HTMLSpanElement>,
      *       // 其他元素映射...
      *     }
@@ -229,11 +223,6 @@ declare global {
      * @template C 组件类型
      * @param P 原始属性类型
      */
-    type LibraryManagedAttributes<C, P> =
-      C extends WidgetTypes<infer WP>
-        ? WithRefProps<WithDefaultProps<WP, C['defaultProps']>>
-        : P extends object
-          ? WithRefProps<P>
-          : {}
+    type LibraryManagedAttributes<C, P> = JSXAttributes<C, P>
   }
 }
