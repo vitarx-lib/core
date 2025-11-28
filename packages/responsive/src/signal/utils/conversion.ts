@@ -42,7 +42,7 @@ export type SignalToRaw<T> =
  */
 export function toRaw<T>(signal: T): SignalToRaw<T> {
   if (isSignal(signal)) {
-    return (signal as any)[SIGNAL_RAW_VALUE_SYMBOL]
+    return signal[SIGNAL_RAW_VALUE_SYMBOL]
   }
   return signal as SignalToRaw<T>
 }
