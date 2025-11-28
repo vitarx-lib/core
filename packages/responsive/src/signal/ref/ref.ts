@@ -255,6 +255,35 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefV
   public forceUpdate(): void {
     SignalManager.notifySubscribers(this, 'value')
   }
+  /**
+   * 设置 Ref 的值
+   * 
+   * 这是一个便捷方法，等同于直接设置 value 属性
+   * 
+   * @example
+   * ```typescript
+   * const count = ref(0);
+   * count.set(5); // 设置值为5
+   * ```
+   * 
+   * @param value - 要设置的新值
+   */
+  set = (value: T) => (this.value = value)
+
+  /**
+   * 更新 Ref 的值
+   * 
+   * 与 set 方法功能相同，提供更语义化的方法名
+   * 
+   * @example
+   * ```typescript
+   * const message = ref('Hello');
+   * message.update('World'); // 更新值为'World'
+   * ```
+   * 
+   * @param value - 要更新的新值
+   */
+  update = (value: T) => (this.value = value)
 }
 
 /**
