@@ -85,7 +85,7 @@ export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
   constructor(props: T, propName: K, defaultValue?: D) {
     this._props = props
     this._propName = propName
-    this._eventName = `$onUpdate:${propName.toString()}`
+    this._eventName = `onUpdate:${propName.toString()}`
     this._ref = shallowRef(props[propName])
     // 双向绑定的关键，监听属性值的变化，如果改变，则更新_ref.value
     watchProperty(props, propName as any, () => {
@@ -134,8 +134,9 @@ export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
    * @param newValue 新的属性值，类型为泛型T的键K对应的类型
    */
   private _notify(newValue: T[K]) {
-    // 私有方法，接收一个泛型参数newValue
-    this._props[this._eventName](newValue) // 通过事件名称触发事件，并将新值作为参数传递
+    if (typeof this._props[this._eventName] === 'function') {
+      this._props[this._eventName](newValue) // 通过事件名称触发事件，并将新值作为参数传递
+    }
   }
 }
 /**
