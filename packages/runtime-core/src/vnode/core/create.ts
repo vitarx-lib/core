@@ -126,13 +126,13 @@ export function createVNode<T extends ValidNodeType>(
       default:
         if (supportChildren) {
           return createRegularElementVNode(
-            type as RegularElementVNodeType,
-            props as any
+            type as unknown as RegularElementVNodeType,
+            props as unknown as VNodeInputProps<RegularElementVNodeType>
           ) as VNodeInstanceType<T>
         } else {
           return createVoidElementVNode(
-            type as VoidElementVNodeType,
-            props as any
+            type as unknown as VoidElementVNodeType,
+            props as unknown as VNodeInputProps<VoidElementVNodeType>
           ) as VNodeInstanceType<T>
         }
     }
