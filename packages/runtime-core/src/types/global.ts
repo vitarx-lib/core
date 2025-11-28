@@ -174,6 +174,10 @@ declare global {
      * 函数式组件类型别名
      */
     type FC<P extends AnyProps = any> = FunctionWidget<P>
+    /**
+     * 函数式组件类型别名
+     */
+    type FW<P extends AnyProps = any> = FunctionWidget<P>
   }
   namespace JSX {
     /**
