@@ -10,28 +10,29 @@
  */
 export const VIRTUAL_NODE_SYMBOL = Symbol.for('__v_node__')
 /**
- * 无状态函数组件的标识符
+ * props中用于存放devInfo的属性名
  */
-export const STATELESS_FUNCTION_WIDGET_SYMBOL = Symbol.for('__v_fn_widget__')
+export const VNODE_PROPS_DEV_INFO_SYMBOL = Symbol.for('__v_vnode_dev__')
+/**
+ * 虚拟节点的context属性的Symbol
+ */
+export const VNODE_CONTEXT_SYMBOL = Symbol.for('__v_vnode_context__')
 /**
  * 类小部件的标识符
  */
 export const CLASS_WIDGET_BASE_SYMBOL = Symbol.for('__v_class_widget__')
 /**
- * props中用于存放devInfo的属性名
+ * 无状态函数组件的标识符
  */
-export const VNODE_PROPS_DEV_INFO_KEY_SYMBOL = Symbol.for('__v_vnode_dev__')
-/**
- * 虚拟节点的context属性的Symbol
- */
-export const VNODE_CONTEXT_SYMBOL = Symbol.for('__v_vnode_context')
+export const STATELESS_F_WIDGET_SYMBOL = Symbol.for('__v_stateless_widget__')
+export const VNODE_BUILDER_SYMBOL = Symbol.for('__v_vnode_builder__')
 /**
  * 应用上下文的Symbol
  */
-export const APP_CONTEXT_SYMBOL = Symbol.for('__v_app_context')
+export const APP_CONTEXT_SYMBOL = Symbol.for('__v_app_context__')
 /**
  * `Suspense` 计数器标识符
  *
  * 用于在组件树中跟踪当前组件的挂起状态。
  */
-export const SUSPENSE_COUNTER_SYMBOL = Symbol.for('__v_suspense_counter')
+export const SUSPENSE_COUNTER_SYMBOL = Symbol.for('__v_suspense_counter__')
