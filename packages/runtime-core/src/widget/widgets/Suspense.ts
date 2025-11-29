@@ -102,6 +102,8 @@ export class Suspense extends Widget<SuspenseProps> {
       if (!shouldShowFallback && this.showFallback) {
         // 首次或计数器归零，停止 fallback
         this.stopSuspense()
+        this.listener?.dispose()
+        this.listener = undefined
       }
     })
   }
