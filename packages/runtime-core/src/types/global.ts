@@ -1,11 +1,11 @@
 import { type Dynamic, DYNAMIC_RENDER_TYPE } from '../constants/index.js'
+import { Widget } from '../widget/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
 import type { ErrorHandler } from './lifecycle.js'
 import type { VNode } from './nodes/index.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
   JSXAttributes,
-  MaybeRef,
   WithRefProps
 } from './props.js'
 import type { AnyProps, FunctionWidget, WidgetPropsType } from './widget.js'
@@ -181,70 +181,12 @@ declare global {
     type FW<P extends AnyProps = any> = FunctionWidget<P>
   }
   namespace JSX {
-    /**
-     * JSX 元素类型
-     *
-     * Element控制了组件的返回值类型，也是元素的类型。
-     */
     type Element = VNode
-    /**
-     * Vitarx框架支持的固有属性
-     */
-    interface IntrinsicAttributes extends Vitarx.IntrinsicAttributes {
-      /**
-       * 条件渲染指令
-       *
-       * 如果是`v-if`的`value`==`false`，则会使用 CommonNode 做为锚点代替原始节点，
-       * CommonNode节点的开销非常小，通过开发者工具可以看见 `<!--v-if-->` 注释。
-       *
-       * 我们更推荐使用 jsx 语法的条件渲染，如：
-       * ```tsx
-       * const show = ref(false)
-       * // v-if 语法
-       * <div v-if={show}>要显示的元素</div>
-       * // jsx 条件判断语法
-       * { show.value && <div>要显示的元素</div> }
-       * ```
-       */
-      'v-if'?: MaybeRef<boolean>
-    }
-    /**
-     * JSX 支持的固有元素
-     *
-     * 定义了 JSX 中可以直接使用的标签及其属性类型。
-     * 这些元素是框架内置的，不需要额外导入即可使用。
-     *
-     * @example
-     * ```ts
-     * // 在平台渲染包中扩展
-     * declare global {
-     *   namespace Vitarx {
-     *     interface IntrinsicElements {
-     *       div: Partial<HTMLDivElement>, // 伪代码
-     *       span: Partial<HTMLSpanElement>,
-     *       // 其他元素映射...
-     *     }
-     *   }
-     * }
-     * ```
-     */
+    type ElementClass = Widget
+    interface IntrinsicAttributes extends Vitarx.IntrinsicAttributes {}
     type IntrinsicElements = {
       [tagName in keyof Vitarx.IntrinsicElements]: WithRefProps<Vitarx.IntrinsicElements[tagName]>
     }
-    /**
-     * 组件属性类型转换
-     *
-     * 通过重载组件 Props 类型，为所有组件属性添加 `ref` 支持，
-     * 并处理默认值的合并。这使得所有组件都可以支持 忽略 `.value` 使用 ref
-     *
-     * 根据组件类型（类组件或函数组件）进行不同的类型处理：
-     * - 类组件：提取 Props 类型并合并默认值
-     * - 函数组件：提取 Props 类型并合并默认值
-     * - 其他对象类型：直接添加 ref 支持
-     *
-     * @template C 组件类型
-     * @param P 原始属性类型
-     */
     type LibraryManagedAttributes<C, P> = JSXAttributes<C, P>
   }
 }
