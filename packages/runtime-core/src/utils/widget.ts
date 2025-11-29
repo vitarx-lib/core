@@ -1,8 +1,8 @@
-import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
+import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
 import type {
-  AnyChild,
   ClassWidget,
   FWBuildType,
+  Renderable,
   StatelessWidget,
   StatelessWidgetSymbol,
   VNode,
@@ -16,7 +16,7 @@ import { isVNode } from './vnode.js'
  * 无状态小部件必须是内部逻辑不存在副作用的函数式组件。
  *
  * ```tsx
- * nodes Props {
+ * interface Props {
  *   title: string,
  *   color?: string
  * }
@@ -35,11 +35,11 @@ import { isVNode } from './vnode.js'
  * @param [displayName] - 组件名称，给匿名函数设置一个显示名称
  * @returns { StatelessWidget } - 无状态小部件
  */
-export function defineStatelessWidget<T extends (props: any) => AnyChild>(
+export function defineStatelessWidget<T extends (props: any) => Renderable>(
   build: T,
   displayName?: string
 ): T & StatelessWidgetSymbol {
-  Object.defineProperty(build, STATELESS_FUNCTION_WIDGET_SYMBOL, { value: true })
+  Object.defineProperty(build, STATELESS_F_WIDGET_SYMBOL, { value: true })
   if (typeof displayName === 'string') {
     ;(build as unknown as { displayName: string }).displayName = displayName
   }
@@ -54,7 +54,7 @@ export { defineStatelessWidget as stateless }
  * @returns {boolean} - true 表示为简单小部件
  */
 export function isStatelessWidget(fn: any): fn is StatelessWidget {
-  return typeof fn === 'function' && fn[STATELESS_FUNCTION_WIDGET_SYMBOL] === true
+  return typeof fn === 'function' && fn[STATELESS_F_WIDGET_SYMBOL] === true
 }
 
 /**
