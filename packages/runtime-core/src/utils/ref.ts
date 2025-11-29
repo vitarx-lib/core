@@ -1,11 +1,10 @@
 import { isRefSignal, Ref, shallowRef } from '@vitarx/responsive'
 import type {
-  ExcludeWidgetIntrinsicMethods,
   HostNodeNames,
+  ImpostWidget,
   NodeElementType,
   StatelessWidget,
   StatelessWidgetVNode,
-  WidgetInstanceType,
   WidgetTypes
 } from '../types/index.js'
 
@@ -19,7 +18,7 @@ export type ComputedRefElType<T> = T extends NodeElementType
     : T extends StatelessWidget
       ? StatelessWidgetVNode
       : T extends WidgetTypes
-        ? ExcludeWidgetIntrinsicMethods<WidgetInstanceType<T>>
+        ? ImpostWidget<T>
         : null
 /** 引用元素类型 */
 export type RefEl<T> = Ref<ComputedRefElType<T> | null>
