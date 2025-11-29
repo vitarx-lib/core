@@ -7,10 +7,10 @@ import {
   TEXT_NODE_TYPE
 } from '../../constants/index.js'
 import type {
+  AllowCreatedNodeType,
   AnyChild,
   RegularElementVNodeType,
   TextVNodeType,
-  ValidNodeType,
   VNode,
   VNodeInputProps,
   VNodeInstanceType,
@@ -88,7 +88,7 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  * })
  * ```
  */
-export function createVNode<T extends ValidNodeType>(
+export function createVNode<T extends AllowCreatedNodeType>(
   type: T,
   props: VNodeInputProps<T> | null = null,
   ...children: AnyChild[]
