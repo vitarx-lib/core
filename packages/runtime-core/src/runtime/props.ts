@@ -135,7 +135,7 @@ export function proxyWidgetProps<T extends Record<string | symbol, any>>(
  *
  * @example 在函数式组件中使用
  * ```tsx
- * nodes Props {
+ * interface Props {
  *   name: string
  *   gender?: number
  * }
@@ -165,7 +165,7 @@ export function proxyWidgetProps<T extends Record<string | symbol, any>>(
  *
  * @example 在类组件中使用
  * ```tsx
- * nodes Props {
+ * interface Props {
  *   name: string
  *   gender?: number
  * }
@@ -192,7 +192,7 @@ export function defineProps<D extends AnyProps>(defaultProps: D): ReadonlyProps<
  *
  * @example 在函数式组件中传入第二个参数优化类型推导
  * ```tsx
- * nodes Props {
+ * interface Props {
  *   name: string
  *   gender?: number
  * }
