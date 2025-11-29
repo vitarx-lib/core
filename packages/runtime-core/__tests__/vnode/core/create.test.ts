@@ -8,14 +8,15 @@ import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
 import {
   COMMENT_NODE_TYPE,
+  createVNode,
   defineStatelessWidget,
   DYNAMIC_RENDER_TYPE,
   FRAGMENT_NODE_TYPE,
+  h,
   NodeKind,
   TEXT_NODE_TYPE,
   type VoidElementVNodeType
 } from '../../../src/index.js'
-import { createVNode, h } from '../../../src/vnode/core/create.js'
 import { createTestWidget } from '../../helpers/test-widget.js'
 
 describe('VNode 创建 (createVNode)', () => {
@@ -191,16 +192,13 @@ describe('VNode 创建 (createVNode)', () => {
     })
   })
 
-  describe('h 函数别名', () => {
-    it('h 应该是 createVNode 的别名', () => {
-      expect(h).toBe(createVNode)
-    })
-
+  describe('h 函数', () => {
     it('应该能够通过 h 创建节点', () => {
-      const vnode = h('div', { id: 'test' })
+      const vnode = h('div', { id: 'test' }, 'test')
 
       expect(vnode.type).toBe('div')
       expect(vnode.props.id).toBe('test')
+      expect(vnode.children).toHaveLength(1)
     })
   })
 
