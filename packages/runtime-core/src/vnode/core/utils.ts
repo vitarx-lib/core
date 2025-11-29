@@ -1,5 +1,5 @@
 import { VNODE_BUILDER_SYMBOL } from '../../constants/index.js'
-import type { VNode, VNodeBuilder, VNodeInputProps, WidgetTypes } from '../../types/index.js'
+import type { AnyProps, VNode, VNodeBuilder } from '../../types/index.js'
 
 /**
  * 定义/标记一个节点构建器
@@ -22,13 +22,13 @@ import type { VNode, VNodeBuilder, VNodeInputProps, WidgetTypes } from '../../ty
  * @param builder - 节点构建函数
  * @returns {VNodeBuilder<T>} - 返回节点构建函数
  */
-export const defineNodeBuilder = <T extends WidgetTypes>(
-  builder: (props: VNodeInputProps<T>) => VNode<T>
-): VNodeBuilder<T> => {
+export function defineNodeBuilder<P extends AnyProps, R extends VNode>(
+  builder: (props: P) => R
+): VNodeBuilder<P, R> {
   Object.defineProperty(builder, VNODE_BUILDER_SYMBOL, {
     value: true
   })
-  return builder as VNodeBuilder<T>
+  return builder as VNodeBuilder<P, R>
 }
 
 /**
@@ -37,6 +37,6 @@ export const defineNodeBuilder = <T extends WidgetTypes>(
  * @param val - 需要检查的值
  * @returns {boolean} - 如果是节点构建器则返回true，否则返回false
  */
-export const isNodeBuilder = (val: any): val is VNodeBuilder => {
+export function isNodeBuilder(val: any): val is VNodeBuilder {
   return typeof val === 'function' && val?.[VNODE_BUILDER_SYMBOL]
 }
