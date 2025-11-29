@@ -32,8 +32,7 @@ import type {
   VNode,
   VoidElementVNode
 } from './nodes/index.js'
-import type { VNodeInputProps } from './props.js'
-import type { StatefulWidget, StatelessWidget, WidgetTypes } from './widget.js'
+import type { AnyProps, StatefulWidget, StatelessWidget, WidgetTypes } from './widget.js'
 
 /**
  * 代码位置信息
@@ -136,33 +135,37 @@ export type VNodeNormalizedChildren = NormalizedRenderable[]
  * 此节点类型是JSX中可用的所有元素类型的联合类型，包括：
  * - 内置元素名称（如div、span等HTML标签）和 固有的特殊元素（如fragment、text、comment等）
  * - Fragment类型，用于包装多个子元素而不产生额外DOM节点
- * - Render类型，表示动态渲染
- * - 组件结构类型，表示自定义组件
+ * - Dynamic类型，表示动态渲染
+ * - 函数组件，类组件等等组件类型
+ * - VNodeBuilder类型，特殊的节点构建器，用于创建虚拟节点
  *
- * 注意：此元素类型仅提供给 `createVNode` 使用，实际的虚拟节点类型是 `VNodeType`
+ * 注意：此元素类型仅提供给 `createVNode` 使用，实际的运行时虚拟节点类型是 `VNodeType` 类型所定义的。
  */
-export type ValidNodeType = JSXElementNames | Fragment | Dynamic | WidgetTypes
+export type AllowCreatedNodeType = JSXElementNames | Fragment | Dynamic | WidgetTypes | VNodeBuilder
 
 /**
  * 节点实例类型重载
  */
-export type VNodeInstanceType<T extends ValidNodeType> = T extends Dynamic | DynamicRenderType
-  ? VNode
-  : T extends Fragment | FragmentVNodeType
-    ? FragmentVNode
-    : T extends TextVNodeType
-      ? TextVNode
-      : T extends CommentVNodeType
-        ? CommentVNode
-        : T extends VoidElementVNodeType
-          ? VoidElementVNode<T>
-          : T extends RegularElementVNodeType
-            ? RegularElementVNode<T>
-            : T extends StatelessWidget
-              ? StatelessWidgetVNode<T>
-              : T extends WidgetTypes
-                ? StatefulWidgetVNode<T>
-                : VNode
+export type VNodeInstanceType<T extends AllowCreatedNodeType> =
+  T extends VNodeBuilder<any, infer R>
+    ? R
+    : T extends Dynamic | DynamicRenderType
+      ? VNode
+      : T extends Fragment | FragmentVNodeType
+        ? FragmentVNode
+        : T extends TextVNodeType
+          ? TextVNode
+          : T extends CommentVNodeType
+            ? CommentVNode
+            : T extends VoidElementVNodeType
+              ? VoidElementVNode<T>
+              : T extends RegularElementVNodeType
+                ? RegularElementVNode<T>
+                : T extends StatelessWidget
+                  ? StatelessWidgetVNode<T>
+                  : T extends WidgetTypes
+                    ? StatefulWidgetVNode<T>
+                    : VNode
 
 /**
  * 运行时元素实例类型
@@ -176,6 +179,7 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Dynamic | Dyn
 export type NodeElementType<T extends VNodeTypes = VNodeTypes> = T extends HostNodeNames
   ? HostNodeElements<T>
   : HostNodeElements
+
 /**
  * 节点构建器类型定义
  *
@@ -185,7 +189,7 @@ export type NodeElementType<T extends VNodeTypes = VNodeTypes> = T extends HostN
  *
  * @template T 虚拟节点类型
  */
-export type VNodeBuilder<T extends VNodeTypes = VNodeTypes> = {
-  (props: VNodeInputProps<T>): VNode<T>
+export type VNodeBuilder<P extends AnyProps = AnyProps, R extends VNode = VNode> = {
+  (props: P): R
   [VNODE_BUILDER_SYMBOL]: true
 }
