@@ -1,3 +1,4 @@
+import type { RequiredKeys } from '@vitarx/utils'
 import { STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
 import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
@@ -198,7 +199,11 @@ type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = D ex
  * 组件props类型重载
  */
 export type WidgetPropsType<T extends WidgetTypes> =
-  T extends WidgetTypes<infer P> ? WithDefaultProps<P, T['defaultProps']> : {}
+  T extends WidgetTypes<infer P>
+    ? 'defaultProps' extends RequiredKeys<P>
+      ? WithDefaultProps<P, T['defaultProps']>
+      : P
+    : {}
 
 /**
  * 懒加载小部件类型
