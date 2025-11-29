@@ -1,4 +1,4 @@
-import type { AnyChild, ValidNodeType, VNode } from '../types/index.js'
+import type { AllowCreatedNodeType, AnyChild, VNode } from '../types/index.js'
 
 /**
  * 片段节点标签常量
@@ -89,7 +89,7 @@ export type DynamicRenderType = typeof DYNAMIC_RENDER_TYPE
  */
 export const Dynamic = DYNAMIC_RENDER_TYPE as unknown as {
   (props: {
-    is: Exclude<ValidNodeType, Dynamic | DynamicRenderType>
+    is: Exclude<AllowCreatedNodeType, Dynamic | DynamicRenderType>
     children?: AnyChild
     [key: string]: any
   }): VNode
