@@ -27,7 +27,7 @@ import { __DEV__ } from '../../utils/index.js'
  * @example `DefaultProps` 泛型使用
  * ```tsx
  * import { defineProps } from 'vitarx'
- * nodes MyProps {
+ * interface MyProps {
  *   name?:string,
  *   age?:number
  * }
@@ -44,7 +44,7 @@ import { __DEV__ } from '../../utils/index.js'
  */
 export abstract class Widget<
   InputProps extends AnyProps = {},
-  DefaultProps extends AnyProps | Partial<InputProps> = InputProps
+  DefaultProps extends AnyProps | Partial<InputProps> = {}
 > {
   /**
    * 类小部件标识符符
