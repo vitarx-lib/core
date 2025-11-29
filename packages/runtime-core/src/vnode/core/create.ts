@@ -22,6 +22,7 @@ import { createFragmentVNode } from '../creator/fragment.js'
 import { createCommentVNode, createTextVNode } from '../creator/special.js'
 import { createWidgetVNode } from '../creator/widget.js'
 import { isSupportChildren } from '../normalizer/props.js'
+import { isNodeBuilder } from './utils.js'
 
 /**
  * 处理动态组件（DYNAMIC_RENDER_TYPE）
@@ -93,6 +94,9 @@ export function createVNode<T extends ValidNodeType>(
   ...children: AnyChild[]
 ): VNodeInstanceType<T> {
   props ??= {} as VNodeInputProps<T>
+  if (isNodeBuilder(type)) {
+    return type(props) as VNodeInstanceType<T>
+  }
   const supportChildren = isSupportChildren(type)
   // 检查不支持children的节点
   if (__DEV__ && !supportChildren && 'children' in props) {
