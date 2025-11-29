@@ -369,7 +369,7 @@ export type WithProps<T extends AllowCreatedNodeType, K extends keyof any = 'chi
 /**
  * 此类型工具用于提供给 JSX.LibraryManagedAttributes 使用，确保类型推导正确。
  */
-export type JSXAttributes<C, P> = C extends WidgetTypes
+export type JSXElementAttributes<C, P> = C extends WidgetTypes
   ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<C>>>>
   : P extends object
     ? WithRefProps<P>

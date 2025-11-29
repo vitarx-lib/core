@@ -5,10 +5,10 @@ import type { ErrorHandler } from './lifecycle.js'
 import type { VNode } from './nodes/index.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
-  JSXAttributes,
+  JSXElementAttributes,
   WithRefProps
 } from './props.js'
-import type { AnyProps, FunctionWidget, WidgetPropsType } from './widget.js'
+import type { AnyProps, FunctionWidget, JSXElementConstructor, WidgetPropsType } from './widget.js'
 
 declare global {
   namespace Vitarx {
@@ -180,13 +180,49 @@ declare global {
      */
     type FW<P extends AnyProps = any> = FunctionWidget<P>
   }
+  /**
+   * JSX 命名空间定义了 JSX 语法在 Vitarx 框架中的类型支持
+   * 这些类型使 TypeScript 能够正确理解和使用 JSX 语法
+   */
   namespace JSX {
+    /**
+     * 定义 JSX 元素的类型，可以是字符串（原生 HTML 标签）或组件构造函数
+     * 例如：'div'、MyComponent 等
+     */
+    type ElementType = string | JSXElementConstructor<any>
+
+    /**
+     * JSX 元素的类型，对应 Vitarx 框架中的 VNode
+     * 所有 JSX 元素在编译后都会转换为 VNode
+     */
     type Element = VNode
+
+    /**
+     * JSX 元素类的类型，对应 Vitarx 框架中的 Widget
+     * 用于定义类组件的实例类型
+     */
     type ElementClass = Widget
+
+    /**
+     * JSX 内置属性接口，扩展了 Vitarx 的内置属性
+     * 包含所有 JSX 元素都可以使用的通用属性
+     */
     interface IntrinsicAttributes extends Vitarx.IntrinsicAttributes {}
+
+    /**
+     * JSX 内置元素类型定义
+     * 将原生 HTML 标签名映射到对应的属性类型，并添加 ref 支持
+     * 例如：div、span、button 等标签的属性类型
+     */
     type IntrinsicElements = {
       [tagName in keyof Vitarx.IntrinsicElements]: WithRefProps<Vitarx.IntrinsicElements[tagName]>
     }
-    type LibraryManagedAttributes<C, P> = JSXAttributes<C, P>
+
+    /**
+     * 库管理的属性类型
+     * 用于处理组件属性的类型转换和验证
+     * C: 组件类型，P: 属性类型
+     */
+    type LibraryManagedAttributes<C, P> = JSXElementAttributes<C, P>
   }
 }
