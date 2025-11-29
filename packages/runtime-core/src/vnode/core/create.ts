@@ -8,6 +8,8 @@ import {
 } from '../../constants/index.js'
 import type {
   AllowCreatedNodeType,
+  AnyChild,
+  AnyProps,
   RegularElementVNodeType,
   TextVNodeType,
   VNode,
@@ -37,9 +39,12 @@ function createDynamicVNode(props: Record<string, any>): VNode {
 /**
  * 创建虚拟节点
  *
+ * 仅支持从props.children属性定义子节点，
+ * 如需从第三个参数传递子节点需使用 `h()`
+ *
  * @param type - 节点类型
  * @param props - 节点属性
- * @returns VNode对象
+ * @returns {VNode} VNode对象
  *
  * @example
  * ```js
@@ -130,4 +135,24 @@ export function createVNode<T extends AllowCreatedNodeType>(
   throw new Error('createVNode(): invalid node type')
 }
 
-export { createVNode as h }
+/**
+ * 创建虚拟DOM节点的函数
+ *
+ * @param type - 节点类型，可以是字符串、组件函数或类组件
+ * @param props - 节点属性对象，可选参数，默认为null
+ * @param children - 子节点，可以是任意数量的子节点
+ * @returns {VNode} 返回创建的虚拟DOM节点实例
+ */
+export function h<T extends AllowCreatedNodeType>(
+  type: T, // 节点类型，受到AllowCreatedNodeType类型的约束
+  props: VNodeInputProps<T> | null = null, // 节点属性，默认为null，类型为VNodeInputProps<T>或null
+  ...children: AnyChild[] // 子节点，使用剩余参数语法接受任意数量的子节点
+): VNodeInstanceType<T> {
+  // 返回类型为VNodeInstanceType<T>，依赖于传入的type类型
+  if (children.length) {
+    // 如果有子节点
+    props ??= {} as VNodeInputProps<T> // 如果props为null，则初始化为空对象
+    ;(props as AnyProps).children = children.length === 1 ? children[0] : children // 将子节点赋值给props的children属性，如果只有一个子节点则直接赋值，否则将子节点数组赋值
+  }
+  return createVNode(type, props) // 调用createVNode函数创建并返回虚拟DOM节点
+}
