@@ -9,11 +9,11 @@ import {
 } from '../../constants/index.js'
 import { useRenderer } from '../../renderer/index.js'
 import type {
+  AllowCreatedNodeType,
   AnyProps,
   BindAttributes,
   ClassProperties,
-  StyleRules,
-  ValidNodeType
+  StyleRules
 } from '../../types/index.js'
 import { StyleUtils } from '../../utils/index.js'
 // 定义特殊属性的自定义合并逻辑，确保样式和类名正确合并而不是覆盖
@@ -128,7 +128,7 @@ export const normalizerStyleAndClassProp = (props: AnyProps): AnyProps => {
  * @param type - 节点类型
  * @returns {boolean} 是否支持子节点
  */
-export function isSupportChildren(type: ValidNodeType): boolean {
+export function isSupportChildren(type: AllowCreatedNodeType): boolean {
   if (typeof type === 'string') {
     switch (type) {
       case COMMENT_NODE_TYPE:
