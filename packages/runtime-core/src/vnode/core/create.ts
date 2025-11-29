@@ -49,15 +49,6 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  *
  * @example
  * ```js
- * // 创建带子节点的元素
- * const listNode = createVNode('ul', null,
- *   createVNode('li', null, 'Item 1'),
- *   createVNode('li', null, 'Item 2')
- * )
- * ```
- *
- * @example
- * ```js
  * // 创建组件节点
  * const MyWidget = () => createVNode('div', null, 'Hello')
  * const widgetNode = createVNode(MyWidget, { name: 'world' })
@@ -71,7 +62,7 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  *
  * @example
  * ```js
- * // 创建Fragment节点
+ * // 子节点创建
  * const fragmentNode = createVNode('fragment', {
  *   children: [textNode1, textNode2]
  * })
@@ -80,8 +71,9 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  * @example
  * ```js
  * // 创建动态组件
- * const dynamicNode = createVNode('render', {
- *   is: ref(MyWidget),
+ * const w = ref(MyWidget)
+ * const dynamicNode = createVNode('dynamic ', {
+ *   is: w,
  *   someProp: 'value'
  * })
  * ```
