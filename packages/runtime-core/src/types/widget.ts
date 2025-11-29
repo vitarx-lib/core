@@ -1,7 +1,7 @@
-import { STATELESS_FUNCTION_WIDGET_SYMBOL } from '../constants/index.js'
+import { STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
 import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
-import type { VNode } from './nodes/index.js'
+import type { StatelessWidgetVNode, VNode } from './nodes/index.js'
 import type { AnyChild, Renderable } from './vnode.js'
 
 /**
@@ -9,9 +9,9 @@ import type { AnyChild, Renderable } from './vnode.js'
  */
 export type AnyProps = Record<string, any>
 /**
- * 视图构建器类型
+ * 组件的子节点构建器
  */
-export type VNodeBuilder = Widget['build']
+export type ChildBuilder = Widget['build']
 /**
  * 组件可选配置项。
  *
@@ -74,16 +74,9 @@ export type WidgetOptions = {
    */
   displayName?: string
   /**
-   * 加载状态时展示的节点 - 仅异步函数组件支持
+   * 加载状态呈现的占位节点
    *
-   * @example
-   * ```jsx
-   * async function MyWidget(props) {
-   *    await new Promise((resolve) => setTimeout(resolve, 1000));
-   *    return <div>Hello World</div>;
-   * }
-   * MyWidget.loading = <div>Loading...</div>
-   * ```
+   * 仅异步组件支持
    */
   loading?: VNode
 }
@@ -96,6 +89,7 @@ export type WidgetOptions = {
 export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget<P, any>> = {
   new (props: P): I
 } & WidgetOptions
+
 /**
  * 模块小部件类型
  */
@@ -115,8 +109,8 @@ export interface LazyLoadModule {
  */
 export type FWBuildType =
   | Renderable
-  | VNodeBuilder
-  | Promise<Renderable | LazyLoadModule | VNodeBuilder>
+  | ChildBuilder
+  | Promise<Renderable | LazyLoadModule | ChildBuilder>
 
 /**
  * 函数小部件类型
@@ -124,6 +118,7 @@ export type FWBuildType =
 export type FunctionWidget<P extends AnyProps = any, R extends FWBuildType = FWBuildType> = {
   (props: P): R
 } & WidgetOptions
+
 /**
  * 函数小部件类型别名
  */
@@ -171,7 +166,7 @@ export type ExtractChildrenType<P extends AnyProps> = P extends { children: infe
  *
  * @example
  * ```ts
- * nodes ButtonProps {
+ * interface ButtonProps {
  *   text: string;
  *   disabled: boolean;
  *   size: 'small' | 'medium' | 'large';
@@ -206,16 +201,15 @@ export type WidgetPropsType<T extends WidgetTypes> =
   T extends WidgetTypes<infer P> ? WithDefaultProps<P, T['defaultProps']> : {}
 
 /**
- * 懒加载组件
+ * 懒加载小部件类型
  *
- * 通常用于代码分块加载，vite 不会将其构建在入口js文件中，而是单独分包，在需要时才会加载。
+ * 懒加载小部件也被视为异步函数组件的一种变体
  */
-export type LazyLoadWidget<
-  P extends AnyProps = any,
-  T extends WidgetTypes = WidgetTypes<P>
-> = () => Promise<{
-  default: T
-}>
+export type LazyLoadWidget<P extends AnyProps = any, T extends WidgetTypes = WidgetTypes<P>> = {
+  (): Promise<{
+    default: T
+  }>
+} & WidgetOptions
 
 /**
  * 异步函数小部件类型
@@ -232,20 +226,20 @@ export type LazyLoadWidget<
  * }
  * ```
  */
-export type AsyncWidget<P extends AnyProps = any> = (
-  props: P
-) => Promise<AnyChild | LazyLoadModule | VNodeBuilder>
+export type AsyncWidget<P extends AnyProps = any> = {
+  (props: P): Promise<AnyChild | LazyLoadModule | ChildBuilder>
+} & WidgetOptions
 
 /**
  * 无状态小部件
  */
 export type StatelessWidget<P extends AnyProps = any, R extends Renderable = Renderable> = {
-  readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
+  readonly [STATELESS_F_WIDGET_SYMBOL]: true
   (props: P): R
 } & WidgetOptions
 
 export interface StatelessWidgetSymbol {
-  readonly [STATELESS_FUNCTION_WIDGET_SYMBOL]: true
+  readonly [STATELESS_F_WIDGET_SYMBOL]: true
 }
 
 /**
@@ -260,3 +254,51 @@ export type ExcludeWidgetIntrinsicMethods<T> = Omit<
   T,
   (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
 >
+
+/**
+ * 兼容tsx函数小部件类型
+ */
+export type TsFunctionWidget<P extends AnyProps = any> = (props: P) => VNode | null
+
+/**
+ * TSX 类型支持工具
+ *
+ * 将不被TSX支持的组件类型（如：异步组件，懒加载组件），重载为受支持的TSX组件类型，提供友好的参数类型校验。
+ *
+ * @example
+ * ```tsx
+ * async function AsyncWidget() {
+ *   await new Promise((resolve) => setTimeout(resolve, 1000))
+ *   return <div>Hello World</div>
+ * }
+ * export default AsyncWidget
+ * // ❌ TSX 语法校验不通过！
+ * <AsyncWidget />
+ *
+ * export default AsyncWidget as unknown as TSWidget<typeof AsyncWidget>
+ * // ✅ TSX 语法校验通过！
+ * <AsyncWidget />
+ * ```
+ */
+export type TSWidget<T extends LazyLoadWidget | FunctionWidget> = TsFunctionWidget<
+  T extends LazyLoadWidget<infer P> ? P : T extends WidgetTypes<infer P> ? P : AnyProps
+>
+
+/**
+ * 引用小部件类型
+ *
+ * 此工具会排除实例中的固有方法。
+ *
+ * @example
+ * ```ts
+ * class Test extends Widget {
+ *   name = 'Test'
+ * }
+ * const refTest:ImpostWidget<Test> = {} as any
+ * refTest.name // ✅ TS 语法校验通过！
+ * refTest.onMount() // ❌ TS 语法校验不通过！
+ * ```
+ */
+export type ImpostWidget<T extends ClassWidget | FunctionWidget> = T extends StatelessWidget
+  ? StatelessWidgetVNode<T>
+  : ExcludeWidgetIntrinsicMethods<WidgetInstanceType<T>>
