@@ -12,7 +12,8 @@ import {
   type Fragment,
   FRAGMENT_NODE_TYPE,
   NodeKind,
-  TEXT_NODE_TYPE
+  TEXT_NODE_TYPE,
+  VNODE_BUILDER_SYMBOL
 } from '../constants/index.js'
 import type {
   HostNodeElements,
@@ -31,6 +32,7 @@ import type {
   VNode,
   VoidElementVNode
 } from './nodes/index.js'
+import type { VNodeInputProps } from './props.js'
 import type { StatefulWidget, StatelessWidget, WidgetTypes } from './widget.js'
 
 /**
@@ -174,3 +176,16 @@ export type VNodeInstanceType<T extends ValidNodeType> = T extends Dynamic | Dyn
 export type NodeElementType<T extends VNodeTypes = VNodeTypes> = T extends HostNodeNames
   ? HostNodeElements<T>
   : HostNodeElements
+/**
+ * 节点构建器类型定义
+ *
+ * 节点构建器是一个函数，用于创建虚拟节点。
+ * 它接收一个参数 props，表示节点的属性。
+ * 返回一个虚拟节点对象。
+ *
+ * @template T 虚拟节点类型
+ */
+export type VNodeBuilder<T extends VNodeTypes = VNodeTypes> = {
+  (props: VNodeInputProps<T>): VNode<T>
+  [VNODE_BUILDER_SYMBOL]: true
+}
