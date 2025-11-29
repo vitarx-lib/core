@@ -1,8 +1,8 @@
 import {
+  type AllowCreatedNodeType,
   type CodeSourceInfo,
   setNodeDevInfo,
   type UniqueKey,
-  type ValidNodeType,
   type VNodeInputProps,
   type VNodeInstanceType
 } from '@vitarx/runtime-core'
@@ -21,7 +21,7 @@ export { Fragment } from './jsx-runtime.js'
  * @param source - 源码位置信息
  * @param self - 组件实例
  */
-export function jsxDEV<T extends ValidNodeType>(
+export function jsxDEV<T extends AllowCreatedNodeType>(
   type: T,
   props: VNodeInputProps<T> | null,
   key: UniqueKey | undefined,
