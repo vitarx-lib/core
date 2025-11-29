@@ -1,37 +1,26 @@
 import { Ref } from '@vitarx/responsive'
-import { withDelayAndTimeout } from '@vitarx/utils'
+import { isFunction, isRecordObject, withDelayAndTimeout } from '@vitarx/utils'
 import { useSuspense } from '../../runtime/index.js'
 import type {
+  AnyChild,
   AnyProps,
   ErrorHandler,
-  LazyLoadWidget,
   Renderable,
+  StatefulWidgetVNode,
   VNode,
+  VNodeBuilder,
+  VNodeInputProps,
   WidgetTypes,
   WithProps
 } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
-import { createVNode } from '../../vnode/index.js'
+import { createCommentVNode, createVNode, defineNodeBuilder } from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 
 /**
- * 惰性加载小部件配置选项
+ * 惰性加载配置选项
  */
-export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = WidgetTypes> {
-  /**
-   * 接收一个惰性加载器
-   *
-   * @example
-   * ```ts
-   * // 小部件必须使用`export default`导出，否则会报错。
-   * () => import('./YourWidget.js')
-   * ```
-   */
-  children: LazyLoadWidget<P, T>
-  /**
-   * 需要透传给小部件的属性
-   */
-  injectProps?: WithProps<T>
+export interface LazyLoadOptions<T extends WidgetTypes = WidgetTypes> {
   /**
    * 加载成功之前要显示的元素
    *
@@ -43,18 +32,11 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
    */
   loading?: VNode
   /**
-   * 异常处理钩子
-   *
-   * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
-   * @param info - 捕获异常的阶段，可以是`build`或`render`
-   */
-  onError?: ErrorHandler<Lazy<T>>
-  /**
    * 展示加载组件前的延迟时间
    *
    * @default 200
    */
-  delay: number
+  delay?: number
   /**
    * 超时时间
    *
@@ -62,7 +44,37 @@ export interface LazyWidgetProps<P extends AnyProps, T extends WidgetTypes = Wid
    *
    * @default 0
    */
-  timeout: number
+  timeout?: number
+  /**
+   * 异常处理钩子
+   *
+   * @param error - 捕获到的异常，通常是Error对象，也有可能是子组件抛出的其他异常
+   * @param info - 捕获异常的阶段，可以是`build`或`render`
+   */
+  onError?: ErrorHandler<Lazy<T>>
+}
+/**
+ * Lazy 支持的属性
+ */
+export interface LazyWidgetProps<T extends WidgetTypes = WidgetTypes> extends LazyLoadOptions<T> {
+  /**
+   * 接收一个惰性加载器
+   *
+   * @example
+   * ```ts
+   * // 小部件必须使用`export default`导出，否则会报错。
+   * () => import('./YourWidget.js')
+   * ```
+   */
+  loader: () => Promise<{ default: T }>
+  /**
+   * 需要透传给小部件的属性
+   */
+  inject?: WithProps<T>
+  /**
+   * 原样透传给加载完成后的组件
+   */
+  children?: AnyChild
 }
 
 /**
@@ -101,9 +113,7 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
     super(props)
     this.onError = props.onError
     this.suspenseCounter = useSuspense()
-    if (this.suspenseCounter) {
-      this.suspenseCounter.value++
-    }
+    if (this.suspenseCounter) this.suspenseCounter.value++
   }
   /**
    * 验证组件属性是否符合要求
@@ -138,7 +148,7 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
   }
 
   override build(): Renderable {
-    return undefined
+    return createCommentVNode({ value: '<Lazy> loading ...' })
   }
 
   /**
@@ -148,8 +158,7 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
    */
   protected async _loadAsyncWidget(): Promise<void> {
     const { delay, timeout, loading } = this.props
-
-    const task = withDelayAndTimeout(this.children, {
+    const task = withDelayAndTimeout(this.props.loader, {
       delay,
       timeout,
       onDelay: () => {
@@ -160,8 +169,21 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
     })
     this._cancelTask = task.cancel
     try {
-      const { default: widget } = await task
-      this._updateBuild(() => createVNode(widget, this.props.injectProps))
+      const module = await task
+      if (isRecordObject(module) && isFunction(module.default)) {
+        this._updateBuild(() =>
+          createVNode(module.default, {
+            children: this.children,
+            ...this.props.inject
+          } as VNodeInputProps<T>)
+        )
+      } else {
+        this._updateBuild(() => {
+          throw Error(
+            'lazy loading widget module fail, a standard esModule must be returned and the widget is exported by default'
+          )
+        })
+      }
     } catch (e) {
       this._updateBuild(() => {
         throw e
@@ -182,4 +204,31 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
     this.$forceUpdate()
     if (this.suspenseCounter) this.suspenseCounter.value--
   }
+}
+
+/**
+ * 辅助定义一个懒加载小部件
+ *
+ * @example
+ * ```ts
+ * const Button = lazy(() => import('./Button.js'))
+ *
+ * function App() {
+ *   // color,children都会透传给最终渲染的Button组件
+ *   return <Button color="red">按钮</Button>
+ * }
+ * // 上面的用法等效于
+ * // <Lazy loader={() => import('./Button.js')} inject={color="red"}>按钮</Lazy>
+ * ```
+ *
+ * @param loader - 加载器
+ * @param [options] - 懒加载组件选项
+ */
+export function lazy<T extends WidgetTypes>(
+  loader: () => Promise<{ default: T }>,
+  options?: LazyLoadOptions
+): VNodeBuilder<VNodeInputProps<T>, StatefulWidgetVNode<typeof Lazy<T>>> {
+  return defineNodeBuilder((props: VNodeInputProps<T>): StatefulWidgetVNode<typeof Lazy<T>> => {
+    return createVNode(Lazy, { loader, ...options, inject: props })
+  })
 }
