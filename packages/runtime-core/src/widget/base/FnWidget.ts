@@ -4,13 +4,13 @@ import { useRenderer } from '../../renderer/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
 import { useSuspense } from '../../runtime/index.js'
 import type {
+  ChildBuilder,
   FunctionWidget,
   LazyLoadModule,
   LifecycleHookMethods,
   Renderable,
   StatefulWidgetVNode,
-  VNode,
-  VNodeBuilder
+  VNode
 } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
 import { isWidget } from '../../utils/widget.js'
@@ -158,9 +158,9 @@ const isLazyLoadModule = (result: any): result is LazyLoadModule => {
  * 解析异步构建结果为构建器函数
  */
 const parseAsyncBuildResult = (
-  buildResult: Renderable | LazyLoadModule | VNodeBuilder,
+  buildResult: Renderable | LazyLoadModule | ChildBuilder,
   instance: FnWidget
-): VNodeBuilder => {
+): ChildBuilder => {
   if (typeof buildResult === 'function') {
     return buildResult
   }
@@ -177,7 +177,7 @@ const parseAsyncBuildResult = (
 const initializeSyncWidget = (
   instance: FnWidget,
   hooks: HookCollectResult['hooks'],
-  buildResult: Renderable | VNodeBuilder
+  buildResult: Renderable | ChildBuilder
 ) => {
   const hasHooks = Object.keys(hooks).length > 0
 
@@ -203,7 +203,7 @@ const registerCriticalHooks = (instance: FnWidget, hooks: HookCollectResult['hoo
 /**
  * 处理异步构建失败
  */
-const createErrorBuilder = (error: unknown): VNodeBuilder => {
+const createErrorBuilder = (error: unknown): ChildBuilder => {
   return () => {
     throw error
   }
