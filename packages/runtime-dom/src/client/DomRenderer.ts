@@ -1,8 +1,11 @@
 import {
+  CommentController,
   type DOMRect,
   type ElementVNode,
+  FragmentController,
   type FragmentVNode,
   getNodeDomOpsTarget,
+  getRenderer,
   type HostCommentElement,
   type HostElementNames,
   type HostElements,
@@ -13,8 +16,16 @@ import {
   type HostRenderer,
   type HostTextElement,
   type HostVoidElementNames,
+  NodeKind,
+  registerController,
+  RegularElementController,
+  setRenderer,
+  StatefulWidgetController,
+  StatelessWidgetController,
   type StyleProperties,
-  StyleUtils
+  StyleUtils,
+  TextController,
+  VoidElementController
 } from '@vitarx/runtime-core'
 import type { HTMLEventOptions } from '../types/index.js'
 
@@ -569,4 +580,23 @@ export class DomRenderer implements HostRenderer {
 
     return undefined
   }
+}
+
+/**
+ * 创建并设置渲染器
+ *
+ * 该函数用于初始化渲染环境，注册不同类型节点的控制器
+ */
+export function createRenderer(): void {
+  if (getRenderer() instanceof DomRenderer) return
+  // 设置运行时渲染器，使用DOM渲染器
+  setRenderer(new DomRenderer())
+  // 注册节点控制器
+  registerController(NodeKind.REGULAR_ELEMENT, new RegularElementController())
+  registerController(NodeKind.VOID_ELEMENT, new VoidElementController())
+  registerController(NodeKind.FRAGMENT, new FragmentController())
+  registerController(NodeKind.TEXT, new TextController())
+  registerController(NodeKind.COMMENT, new CommentController())
+  registerController(NodeKind.STATELESS_WIDGET, new StatelessWidgetController())
+  registerController(NodeKind.STATEFUL_WIDGET, new StatefulWidgetController())
 }
