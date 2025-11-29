@@ -34,8 +34,7 @@ export abstract class HostNodeController<T extends HostVNodeType> implements Nod
    * @returns 创建的 DOM 元素
    */
   render(node: HostVNode<T>): NodeElementType<T> {
-    if (node.el) return node.el
-    node.el = this.createElement(node)
+    if (!node.el) node.el = this.createElement(node)
     if (node.ref) node.ref.value = node.el
     this.renderChildren?.(node)
     node.state = NodeState.Rendered
