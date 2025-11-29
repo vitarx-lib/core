@@ -76,13 +76,13 @@ describe('RegularElementController', () => {
     })
 
     it('应该渲染多个子节点', () => {
-      const vnode = createVNode(
-        'ul',
-        {},
-        createVNode('li', {}, 'Item 1'),
-        createVNode('li', {}, 'Item 2'),
-        createVNode('li', {}, 'Item 3')
-      )
+      const vnode = createVNode('ul', {
+        children: [
+          createVNode('li', { children: 'Item 1' }),
+          createVNode('li', { children: 'Item 2' }),
+          createVNode('li', { children: 'Item 3' })
+        ]
+      })
       const el = controller.render(vnode)
 
       expect(el.childNodes.length).toBe(3)
@@ -113,7 +113,7 @@ describe('RegularElementController', () => {
     })
 
     it('应该挂载包含子节点的元素', () => {
-      const vnode = createVNode('div', {}, 'Child')
+      const vnode = createVNode('div', { children: 'Child' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -230,7 +230,7 @@ describe('RegularElementController', () => {
     })
 
     it('应该卸载包含子节点的元素', () => {
-      const vnode = createVNode('div', {}, 'Child')
+      const vnode = createVNode('div', { children: 'Child' })
       controller.render(vnode)
 
       const container = document.createElement('div')
