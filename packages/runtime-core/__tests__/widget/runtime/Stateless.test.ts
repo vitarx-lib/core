@@ -16,7 +16,7 @@ import {
 
 // 测试用无状态组件
 const StatelessWidget = defineStatelessWidget((props: { text?: string }) => {
-  return createVNode('div', {}, props.text || 'default')
+  return createVNode('div', { children: props.text || 'default' })
 })
 
 function NumberWidget() {
@@ -70,7 +70,7 @@ describe('StatelessWidgetRuntime', () => {
     })
 
     it('返回 VNode 应该直接使用', () => {
-      const expectedVNode = createVNode('span', {}, 'content')
+      const expectedVNode = createVNode('span', { children: 'content' })
       function VNodeWidget() {
         return expectedVNode
       }

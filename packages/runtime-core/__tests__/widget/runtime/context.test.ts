@@ -11,7 +11,7 @@ import { createWidgetRuntime } from '../../../src/widget/runtime/utils.js'
 // 测试用组件
 class TestWidget extends Widget {
   build() {
-    return createVNode('div', {}, 'test')
+    return createVNode('div', { children: 'test' })
   }
 }
 

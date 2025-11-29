@@ -40,7 +40,7 @@ describe('Suspense 组件', () => {
       expect(() => {
         Suspense.validateProps({
           children: createVNode('div'),
-          fallback: createVNode('div', {}, 'loading')
+          fallback: createVNode('div', { children: 'loading' })
         })
       }).not.toThrow()
 
@@ -72,11 +72,11 @@ describe('Suspense 组件', () => {
   describe('基础功能', () => {
     it('应该在异步子节点加载期间显示 fallback', async () => {
       const AsyncWidget = createTestWidget()
-      const fallback = createVNode('div', {}, 'Loading...')
+      const fallback = createVNode('div', { children: 'Loading...' })
       const vnode = createVNode(Suspense, {
         fallback,
         children: createVNode(Lazy, {
-          children: () => createAsyncWidget(AsyncWidget, 50)
+          loader: () => createAsyncWidget(AsyncWidget, 50)
         })
       })
       renderNode(vnode)
@@ -88,14 +88,14 @@ describe('Suspense 组件', () => {
     it('应该在异步完成后显示子节点', async () => {
       const AsyncWidget = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Loaded Content')
+          return createVNode('div', { children: 'Loaded Content' })
         }
       })
-      const fallback = createVNode('div', {}, 'Loading...')
+      const fallback = createVNode('div', { children: 'Loading...' })
       const vnode = createVNode(Suspense, {
         fallback,
         children: createVNode(Lazy, {
-          children: () => createAsyncWidget(AsyncWidget, 50)
+          loader: () => createAsyncWidget(AsyncWidget, 50)
         })
       })
       renderNode(vnode)
@@ -108,9 +108,9 @@ describe('Suspense 组件', () => {
     })
 
     it('应该在 counter 为 0 时直接显示子节点', () => {
-      const childVNode = createVNode('div', {}, 'Immediate Content')
+      const childVNode = createVNode('div', { children: 'Immediate Content' })
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
+        fallback: createVNode('div', { children: 'Loading' }),
         children: childVNode
       })
       renderNode(vnode)
@@ -124,7 +124,7 @@ describe('Suspense 组件', () => {
       const onResolved = vi.fn()
       const AsyncWidget = createTestWidget()
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
+        fallback: createVNode('div', { children: 'Loading' }),
         onResolved,
         children: createVNode(() => createAsyncWidget(AsyncWidget, 50))
       })
@@ -182,17 +182,17 @@ describe('Suspense 组件', () => {
 
       const ParentWidget = class extends Widget {
         build() {
-          return createVNode(
-            'div',
-            {},
-            createVNode(Lazy, { children: () => createAsyncWidget(AsyncWidget1, 50) }),
-            createVNode(Lazy, { children: () => createAsyncWidget(AsyncWidget2, 50) })
-          )
+          return createVNode('div', {
+            children: [
+              createVNode(Lazy, { loader: () => createAsyncWidget(AsyncWidget1, 50) }),
+              createVNode(Lazy, { loader: () => createAsyncWidget(AsyncWidget2, 50) })
+            ]
+          })
         }
       }
 
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
+        fallback: createVNode('div', { children: 'Loading' }),
         children: createVNode(ParentWidget, {})
       })
       renderNode(vnode)
@@ -205,9 +205,9 @@ describe('Suspense 组件', () => {
     it('应该在计数归零时停止 Suspense', async () => {
       const AsyncWidget = createTestWidget()
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
+        fallback: createVNode('div', { children: 'Loading' }),
         children: createVNode(Lazy, {
-          children: () => createAsyncWidget(AsyncWidget, 50)
+          loader: () => createAsyncWidget(AsyncWidget, 50)
         })
       })
       renderNode(vnode)
@@ -227,10 +227,10 @@ describe('Suspense 组件', () => {
     it('应该通过 onError 捕获子节点错误', async () => {
       const onError = vi.fn(() => false) as () => false
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
+        fallback: createVNode('div', { children: 'Loading' }),
         onError,
         children: createVNode(Lazy, {
-          children: async () => {
+          loader: async () => {
             throw new Error('Load failed')
           }
         })
@@ -245,14 +245,14 @@ describe('Suspense 组件', () => {
 
     it('应该在错误时也触发 onResolved', async () => {
       const onResolved = vi.fn()
-      const onError = vi.fn(() => createVNode('div', {}, 'Error'))
+      const onError = vi.fn(() => createVNode('div', { children: 'Error' }))
 
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
+        fallback: createVNode('div', { children: 'Loading' }),
         onResolved,
         onError,
         children: createVNode(Lazy, {
-          children: async () => {
+          loader: async () => {
             throw new Error('Load failed')
           }
         })
@@ -270,7 +270,7 @@ describe('Suspense 组件', () => {
 
   describe('生命周期', () => {
     it('应该在 onRender 链接父子关系并渲染子节点', () => {
-      const childVNode = createVNode('div', {}, 'Child')
+      const childVNode = createVNode('div', { children: 'Child' })
       const vnode = createVNode(Suspense, {
         children: childVNode
       })
@@ -283,7 +283,7 @@ describe('Suspense 组件', () => {
       const onResolved = vi.fn()
       const vnode = createVNode(Suspense, {
         onResolved,
-        children: createVNode('div', {}, 'Child')
+        children: createVNode('div', { children: 'Child' })
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -296,7 +296,7 @@ describe('Suspense 组件', () => {
 
     it('应该在卸载状态不执行 stopSuspense', () => {
       const vnode = createVNode(Suspense, {
-        children: createVNode('div', {}, 'Child')
+        children: createVNode('div', { children: 'Child' })
       })
       renderNode(vnode)
 
@@ -308,7 +308,7 @@ describe('Suspense 组件', () => {
   describe('边界场景', () => {
     it('不存在异步时不显示fallback', () => {
       const vnode = createVNode(Suspense, {
-        children: createVNode('div', {}, 'Child')
+        children: createVNode('div', { children: 'Child' })
       })
       renderNode(vnode)
 
@@ -317,8 +317,8 @@ describe('Suspense 组件', () => {
 
     it('应该在已卸载组件不触发更新', () => {
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
-        children: createVNode('div', {}, 'Content')
+        fallback: createVNode('div', { children: 'Loading' }),
+        children: createVNode('div', { children: 'Content' })
       })
       renderNode(vnode)
       mountNode(vnode, container)

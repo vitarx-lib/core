@@ -36,8 +36,8 @@ describe('TransitionGroup 组件', () => {
   describe('属性验证', () => {
     it('应该验证默认 tag 为 fragment', () => {
       const children = [
-        createVNode('div', { key: '1' }, 'item1'),
-        createVNode('div', { key: '2' }, 'item2')
+        createVNode('div', { key: '1', children: 'item1' }),
+        createVNode('div', { key: '2', children: 'item2' })
       ]
       const vnode = createVNode(TransitionGroup, {
         children
@@ -51,9 +51,9 @@ describe('TransitionGroup 组件', () => {
   describe('基础功能', () => {
     it('应该渲染多个子元素', () => {
       const children = [
-        createVNode('div', { key: '1' }, 'item1'),
-        createVNode('div', { key: '2' }, 'item2'),
-        createVNode('div', { key: '3' }, 'item3')
+        createVNode('div', { key: '1', children: 'item1' }),
+        createVNode('div', { key: '2', children: 'item2' }),
+        createVNode('div', { key: '3', children: 'item3' })
       ]
       const vnode = createVNode(TransitionGroup, {
         children
@@ -67,8 +67,8 @@ describe('TransitionGroup 组件', () => {
 
     it('应该使用 tag 属性自定义包裹元素', () => {
       const children = [
-        createVNode('li', { key: '1' }, 'item1'),
-        createVNode('li', { key: '2' }, 'item2')
+        createVNode('li', { key: '1', children: 'item1' }),
+        createVNode('li', { key: '2', children: 'item2' })
       ]
       const vnode = createVNode(TransitionGroup, {
         tag: 'ul',
@@ -83,7 +83,7 @@ describe('TransitionGroup 组件', () => {
     })
 
     it('应该将 bindProps 传递给包裹元素', () => {
-      const children = [createVNode('div', { key: '1' }, 'item')]
+      const children = [createVNode('div', { key: '1', children: 'item' })]
       const vnode = createVNode(TransitionGroup, {
         tag: 'div',
         bindProps: { className: 'list-container', id: 'my-list' },
@@ -98,7 +98,7 @@ describe('TransitionGroup 组件', () => {
     })
 
     it('应该在子元素添加时触发 enter 动画', () => {
-      const children = [createVNode('div', { key: 1 }, 'test1')]
+      const children = [createVNode('div', { key: 1, children: 'test1' })]
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children
@@ -106,15 +106,15 @@ describe('TransitionGroup 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const newChild = createVNode('div', { key: 2 }, 'test2')
+      const newChild = createVNode('div', { key: 2, children: 'test2' })
       updateProps(vnode, 'children', [...children, newChild])
       const element = newChild.el! as HTMLDivElement
       expect(element.classList.contains('list-enter-active')).toBe(true)
     })
 
     it('应该在子元素移除时触发 leave 动画', () => {
-      const removeChild = createVNode('div', { key: 2 }, 'test2')
-      const children = [createVNode('div', { key: 1 }, 'test1'), removeChild]
+      const removeChild = createVNode('div', { key: 2, children: 'test2' })
+      const children = [createVNode('div', { key: 1, children: 'test1' }), removeChild]
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children
@@ -129,8 +129,8 @@ describe('TransitionGroup 组件', () => {
 
     it('应该在 appear 属性时为所有初始子元素触发动画', () => {
       const children = [
-        createVNode('div', { key: '1' }, 'item1'),
-        createVNode('div', { key: '2' }, 'item2')
+        createVNode('div', { key: '1', children: 'item1' }),
+        createVNode('div', { key: '2', children: 'item2' })
       ]
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
@@ -155,7 +155,7 @@ describe('TransitionGroup 组件', () => {
       ]
 
       const children = items.map(item =>
-        createVNode('div', { key: item.id, 'data-id': item.id }, item.text)
+        createVNode('div', { key: item.id, 'data-id': item.id, children: item.text })
       )
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
@@ -198,7 +198,7 @@ describe('TransitionGroup 组件', () => {
         })
       const getTransitionDuration = vi
         .spyOn(dom, 'getTransitionDuration')
-        .mockImplementation(cb => {
+        .mockImplementation(_cb => {
           return 100
         })
       // 反转顺序
@@ -218,7 +218,9 @@ describe('TransitionGroup 组件', () => {
         { id: 2, text: 'item2' }
       ])
 
-      const children = items.value.map(item => createVNode('div', { key: item.id }, item.text))
+      const children = items.value.map(item =>
+        createVNode('div', { key: item.id, children: item.text })
+      )
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         moveClass: 'custom-move',
@@ -243,8 +245,8 @@ describe('TransitionGroup 组件', () => {
       mockBoundingRect(el2, { left: 0, top: 50, width: 100, height: 50 })
 
       const children = [
-        createVNode('div', { key: '1', el: el1 }, 'item1'),
-        createVNode('div', { key: '2', el: el2 }, 'item2')
+        createVNode('div', { key: '1', el: el1, children: 'item1' }),
+        createVNode('div', { key: '2', el: el2, children: 'item2' })
       ]
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
@@ -263,7 +265,7 @@ describe('TransitionGroup 组件', () => {
       mockTransitionDuration(element, 300)
       mockBoundingRect(element, { left: 0, top: 0, width: 100, height: 50 })
 
-      const children = [createVNode('div', { key: '1', el: element }, 'item')]
+      const children = [createVNode('div', { key: '1', el: element, children: 'item' })]
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children
@@ -282,7 +284,9 @@ describe('TransitionGroup 组件', () => {
         { id: 2, text: 'item2' }
       ])
 
-      const children = items.value.map(item => createVNode('div', { key: item.id }, item.text))
+      const children = items.value.map(item =>
+        createVNode('div', { key: item.id, children: item.text })
+      )
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children
@@ -302,14 +306,11 @@ describe('TransitionGroup 组件', () => {
 
   describe('v-show 指令集成', () => {
     it('应该在 v-show 从 true 到 false 时触发 leave', () => {
-      const childVNode = createVNode(
-        'div',
-        {
-          key: '1',
-          'v-show': true
-        },
-        'item'
-      )
+      const childVNode = createVNode('div', {
+        key: '1',
+        'v-show': true,
+        children: 'item'
+      })
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children: [childVNode]
@@ -326,14 +327,11 @@ describe('TransitionGroup 组件', () => {
     })
 
     it('应该在 v-show 从 false 到 true 时触发 enter', () => {
-      const childVNode = createVNode(
-        'div',
-        {
-          key: '1',
-          'v-show': false
-        },
-        'item'
-      )
+      const childVNode = createVNode('div', {
+        key: '1',
+        'v-show': false,
+        children: 'item'
+      })
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children: [childVNode]
@@ -352,7 +350,10 @@ describe('TransitionGroup 组件', () => {
 
   describe('边界场景', () => {
     it('应该处理子元素无 key 的情况', () => {
-      const children = [createVNode('div', {}, 'item1'), createVNode('div', {}, 'item2')]
+      const children = [
+        createVNode('div', { children: 'item1' }),
+        createVNode('div', { children: 'item2' })
+      ]
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children
@@ -378,7 +379,7 @@ describe('TransitionGroup 组件', () => {
     })
 
     it('应该跳过非元素节点的动画', () => {
-      const children = ['text', createVNode('div', { key: '1' }, 'item'), null, undefined]
+      const children = ['text', createVNode('div', { key: '1', children: 'item' }), null, undefined]
       const vnode = createVNode(TransitionGroup, {
         name: 'list',
         children

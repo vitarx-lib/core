@@ -37,8 +37,8 @@ describe('Lazy 组件', () => {
     it('应该接受 loading 为 VNode 或 undefined', () => {
       expect(() => {
         Lazy.validateProps({
-          children: async () => ({ default: createTestWidget() }),
-          loading: createVNode('div', {}, 'Loading')
+          loader: async () => ({ default: createTestWidget() }),
+          loading: createVNode('div', { children: 'Loading' })
         })
       }).not.toThrow()
     })
@@ -46,7 +46,7 @@ describe('Lazy 组件', () => {
     it('应该验证 loading 必须为 VNode 或 undefined', () => {
       expect(() => {
         Lazy.validateProps({
-          children: async () => ({ default: createTestWidget() }),
+          loader: async () => ({ default: createTestWidget() }),
           loading: 'not a vnode' as any
         })
       }).toThrow('节点对象')
@@ -55,7 +55,7 @@ describe('Lazy 组件', () => {
     it('应该验证 onError 必须为函数或 undefined', () => {
       expect(() => {
         Lazy.validateProps({
-          children: async () => ({ default: createTestWidget() }),
+          loader: async () => ({ default: createTestWidget() }),
           onError: 'not a function' as any
         })
       }).toThrow('回调函数')
@@ -66,12 +66,12 @@ describe('Lazy 组件', () => {
     it('应该成功加载异步组件', async () => {
       const AsyncWidget = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Async Content')
+          return createVNode('div', { children: 'Async Content' })
         }
       })
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 50)
+        loader: () => createAsyncWidget(AsyncWidget, 50)
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -85,12 +85,12 @@ describe('Lazy 组件', () => {
     it('应该在加载完成后渲染组件', async () => {
       const AsyncWidget = createTestWidget({
         build() {
-          return createVNode('div', { className: 'loaded' }, 'Loaded')
+          return createVNode('div', { className: 'loaded', children: 'Loaded' })
         }
       })
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 30)
+        loader: () => createAsyncWidget(AsyncWidget, 30)
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -106,13 +106,13 @@ describe('Lazy 组件', () => {
     it('应该正确透传 injectProps', async () => {
       const AsyncWidget = createTestWidget<{ color: string; size: string }>({
         build() {
-          return createVNode('div', {}, `${this.props!.color}-${this.props!.size}`)
+          return createVNode('div', { children: `${this.props!.color}-${this.props!.size}` })
         }
       })
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 30),
-        injectProps: { color: 'red', size: 'large' }
+        loader: () => createAsyncWidget(AsyncWidget, 30),
+        inject: { color: 'red', size: 'large' }
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -126,10 +126,10 @@ describe('Lazy 组件', () => {
     it('应该在延迟后显示 loading', async () => {
       vi.useFakeTimers()
       const AsyncWidget = createTestWidget()
-      const loadingVNode = createVNode('div', {}, 'Loading...')
+      const loadingVNode = createVNode('div', { children: 'Loading...' })
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 500),
+        loader: () => createAsyncWidget(AsyncWidget, 500),
         loading: loadingVNode,
         delay: 200
       })
@@ -152,10 +152,10 @@ describe('Lazy 组件', () => {
     it('应该正确渲染 loading 节点', async () => {
       vi.useFakeTimers()
       const AsyncWidget = createTestWidget()
-      const loadingVNode = createVNode('div', { className: 'loading' }, 'Please wait')
+      const loadingVNode = createVNode('div', { className: 'loading', children: 'Please wait' })
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 500),
+        loader: () => createAsyncWidget(AsyncWidget, 500),
         loading: loadingVNode,
         delay: 100
       })
@@ -179,7 +179,7 @@ describe('Lazy 组件', () => {
       const onError = vi.fn(() => false)
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 1000),
+        loader: () => createAsyncWidget(AsyncWidget, 1000),
         timeout: 500,
         onError: onError as () => false
       })
@@ -200,14 +200,14 @@ describe('Lazy 组件', () => {
     it('应该与 Suspense 组件配合使用', async () => {
       const AsyncWidget = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Async')
+          return createVNode('div', { children: 'Async' })
         }
       })
 
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Suspense Loading'),
+        fallback: createVNode('div', { children: 'Suspense Loading' }),
         children: createVNode(Lazy, {
-          children: () => createAsyncWidget(AsyncWidget, 50)
+          loader: () => createAsyncWidget(AsyncWidget, 50)
         })
       })
       renderNode(vnode)
@@ -248,9 +248,9 @@ describe('Lazy 组件', () => {
       const AsyncWidget = createTestWidget()
 
       const vnode = createVNode(Suspense, {
-        fallback: createVNode('div', {}, 'Loading'),
+        fallback: createVNode('div', { children: 'Loading' }),
         children: createVNode(Lazy, {
-          children: () => createAsyncWidget(AsyncWidget, 30)
+          loader: () => createAsyncWidget(AsyncWidget, 30)
         })
       })
       renderNode(vnode)
@@ -269,7 +269,7 @@ describe('Lazy 组件', () => {
       const onError = vi.fn(() => false)
 
       const vnode = createVNode(Lazy, {
-        children: async () => {
+        loader: async () => {
           throw new Error('Load failed')
         },
         onError
@@ -283,10 +283,10 @@ describe('Lazy 组件', () => {
     })
 
     it('应该在 onError 返回备用 UI', async () => {
-      const onError = vi.fn(() => createVNode('div', {}, 'Load Error'))
+      const onError = vi.fn(() => createVNode('div', { children: 'Load Error' }))
 
       const vnode = createVNode(Lazy, {
-        children: async () => {
+        loader: async () => {
           throw new Error('Failed')
         },
         onError: onError as unknown as () => false
@@ -305,7 +305,7 @@ describe('Lazy 组件', () => {
       const onError = vi.fn(() => false)
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(createTestWidget(), 1000),
+        loader: () => createAsyncWidget(createTestWidget(), 1000),
         timeout: 300,
         onError: onError as () => false
       })
@@ -324,7 +324,7 @@ describe('Lazy 组件', () => {
       const AsyncWidget = createTestWidget()
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 100)
+        loader: () => createAsyncWidget(AsyncWidget, 100)
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -344,7 +344,7 @@ describe('Lazy 组件', () => {
       const AsyncWidget = createTestWidget()
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 100)
+        loader: () => createAsyncWidget(AsyncWidget, 100)
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -359,10 +359,10 @@ describe('Lazy 组件', () => {
   describe('边界场景', () => {
     it('应该在 delay=0 时立即显示 loading', async () => {
       const AsyncWidget = createTestWidget()
-      const loadingVNode = createVNode('div', {}, 'Immediate Loading')
+      const loadingVNode = createVNode('div', { children: 'Immediate Loading' })
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 100),
+        loader: () => createAsyncWidget(AsyncWidget, 100),
         loading: loadingVNode,
         delay: 0
       })
@@ -379,7 +379,7 @@ describe('Lazy 组件', () => {
       const AsyncWidget = createTestWidget()
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 100),
+        loader: () => createAsyncWidget(AsyncWidget, 100),
         timeout: 0
       })
       renderNode(vnode)
@@ -396,7 +396,7 @@ describe('Lazy 组件', () => {
       const AsyncWidget = createTestWidget()
 
       const vnode = createVNode(Lazy, {
-        children: () => createAsyncWidget(AsyncWidget, 50)
+        loader: () => createAsyncWidget(AsyncWidget, 50)
       })
       renderNode(vnode)
       mountNode(vnode, container)

@@ -17,13 +17,13 @@ import {
 // 测试用有状态组件
 class TestStatefulWidget extends Widget {
   build() {
-    return createVNode('div', {}, 'stateful')
+    return createVNode('div', { children: 'stateful' })
   }
 }
 
 // 测试用无状态组件
 const TestStatelessWidget = stateless(() => {
-  return createVNode('div', {}, 'stateless')
+  return createVNode('div', { children: 'stateless' })
 }, 'TestStatelessWidget')
 describe('WidgetRuntime 基类', () => {
   describe('基础属性', () => {

@@ -38,7 +38,7 @@ describe('KeepAlive 组件', () => {
     it('应该缓存单个组件实例', async () => {
       const Widget1 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Widget 1')
+          return createVNode('div', { children: 'Widget 1' })
         }
       })
 
@@ -63,13 +63,13 @@ describe('KeepAlive 组件', () => {
         onDeactivated: onDeactivated1,
         onActivated: onActivated1,
         build() {
-          return createVNode('div', {}, 'Widget 1')
+          return createVNode('div', { children: 'Widget 1' })
         }
       })
 
       const Widget2 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Widget 2')
+          return createVNode('div', { children: 'Widget 2' })
         }
       })
       const vnode = createVNode(KeepAlive, {
@@ -100,13 +100,13 @@ describe('KeepAlive 组件', () => {
       const Widget1 = createTestWidget({
         onDeactivated,
         build() {
-          return createVNode('div', {}, 'W1')
+          return createVNode('div', { children: 'W1' })
         }
       })
 
       const Widget2 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'W2')
+          return createVNode('div', { children: 'W2' })
         }
       })
 
@@ -128,13 +128,13 @@ describe('KeepAlive 组件', () => {
       const Widget1 = createTestWidget({
         onActivated,
         build() {
-          return createVNode('div', {}, 'W1')
+          return createVNode('div', { children: 'W1' })
         }
       })
 
       const Widget2 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'W2')
+          return createVNode('div', { children: 'W2' })
         }
       })
 
@@ -163,13 +163,13 @@ describe('KeepAlive 组件', () => {
     it('应该使用 include 属性限制缓存范围', () => {
       const Widget1 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'W1')
+          return createVNode('div', { children: 'W1' })
         }
       })
 
       const Widget2 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'W2')
+          return createVNode('div', { children: 'W2' })
         }
       })
 
@@ -231,7 +231,7 @@ describe('KeepAlive 组件', () => {
         widgets.push(
           createTestWidget({
             build() {
-              return createVNode('div', {}, `Widget ${i}`)
+              return createVNode('div', { children: `Widget ${i}` })
             }
           })
         )
@@ -362,13 +362,13 @@ describe('KeepAlive 组件', () => {
       const Widget1 = createTestWidget({
         build() {
           count.value++
-          return createVNode('div', {}, `Count: ${count.value}`)
+          return createVNode('div', { children: `Count: ${count.value}` })
         }
       })
 
       const Widget2 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Widget 2')
+          return createVNode('div', { children: 'Widget 2' })
         }
       })
 
@@ -439,13 +439,13 @@ describe('KeepAlive 组件', () => {
     it('应该在 children 属性变化时触发组件切换', () => {
       const Widget1 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'W1')
+          return createVNode('div', { children: 'W1' })
         }
       })
 
       const Widget2 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'W2')
+          return createVNode('div', { children: 'W2' })
         }
       })
 
@@ -519,13 +519,13 @@ describe('KeepAlive 组件', () => {
     it('应该正确跟踪 props.children 的响应式变化', () => {
       const Widget1 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Dynamic W1')
+          return createVNode('div', { children: 'Dynamic W1' })
         }
       })
 
       const Widget2 = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Dynamic W2')
+          return createVNode('div', { children: 'Dynamic W2' })
         }
       })
 

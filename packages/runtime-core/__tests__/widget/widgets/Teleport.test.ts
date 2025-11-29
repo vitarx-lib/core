@@ -68,7 +68,7 @@ describe('Teleport 组件', () => {
 
   describe('基础传送功能', () => {
     it('应该传送到字符串选择器指定的目标', () => {
-      const childVNode = createVNode('div', {}, 'teleported content')
+      const childVNode = createVNode('div', { children: 'teleported content' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         children: childVNode
@@ -81,7 +81,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该传送到 DOM 元素', () => {
-      const childVNode = createVNode('span', {}, 'content')
+      const childVNode = createVNode('span', { children: 'content' })
       const vnode = createVNode(Teleport, {
         to: targetContainer,
         children: childVNode
@@ -93,7 +93,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 disabled=true 时渲染到原地', () => {
-      const childVNode = createVNode('div', {}, 'local content')
+      const childVNode = createVNode('div', { children: 'local content' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         disabled: true,
@@ -107,7 +107,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 defer=false 时在 onBeforeMount 挂载', () => {
-      const childVNode = createVNode('div', {}, 'immediate')
+      const childVNode = createVNode('div', { children: 'immediate' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         defer: false,
@@ -121,7 +121,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 defer=true 时在 onMounted 挂载', () => {
-      const childVNode = createVNode('div', {}, 'deferred')
+      const childVNode = createVNode('div', { children: 'deferred' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         defer: true,
@@ -134,7 +134,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在目标容器中渲染子节点', () => {
-      const childVNode = createVNode('div', { className: 'teleported' }, 'child')
+      const childVNode = createVNode('div', { className: 'teleported', children: 'child' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         children: childVNode
@@ -150,7 +150,7 @@ describe('Teleport 组件', () => {
 
   describe('动态更新', () => {
     it('应该在 children 属性变化时更新传送内容', async () => {
-      const childVNode1 = createVNode('div', {}, 'content 1')
+      const childVNode1 = createVNode('div', { children: 'content 1' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         children: childVNode1
@@ -161,14 +161,14 @@ describe('Teleport 组件', () => {
       expect(targetContainer.textContent).toBe('content 1')
 
       // 修改 children（通过 props）
-      vnode.props.children = createVNode('div', {}, 'content 2')
+      vnode.props.children = createVNode('div', { children: 'content 2' })
       notify(vnode.runtimeInstance!.props, 'children')
       flushScheduler()
       expect(targetContainer.textContent).toBe('content 2')
     })
 
     it('应该在 disabled=true 时不响应 children 变化', () => {
-      const childVNode = createVNode('div', {}, 'original')
+      const childVNode = createVNode('div', { children: 'original' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         disabled: true,
@@ -182,7 +182,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该使用 patchUpdate 同步更新子节点', () => {
-      const childVNode = createVNode('div', {}, 'initial')
+      const childVNode = createVNode('div', { children: 'initial' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         children: childVNode
@@ -196,7 +196,7 @@ describe('Teleport 组件', () => {
 
   describe('生命周期', () => {
     it('应该在 onRender 中渲染子节点（非 disabled）', () => {
-      const childVNode = createVNode('div', {}, 'rendered')
+      const childVNode = createVNode('div', { children: 'rendered' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         children: childVNode
@@ -207,7 +207,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 onBeforeMount 执行传送（非 defer）', () => {
-      const childVNode = createVNode('div', {}, 'before-mount')
+      const childVNode = createVNode('div', { children: 'before-mount' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         defer: false,
@@ -220,7 +220,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 onMounted 执行传送（defer 模式）', () => {
-      const childVNode = createVNode('div', {}, 'on-mounted')
+      const childVNode = createVNode('div', { children: 'on-mounted' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         defer: true,
@@ -235,7 +235,7 @@ describe('Teleport 组件', () => {
 
   describe('卸载处理', () => {
     it('应该在 onBeforeUnmount 卸载传送的子节点', () => {
-      const childVNode = createVNode('div', {}, 'to unmount')
+      const childVNode = createVNode('div', { children: 'to unmount' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         children: childVNode
@@ -251,7 +251,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 disabled 模式不执行卸载', () => {
-      const childVNode = createVNode('div', {}, 'local')
+      const childVNode = createVNode('div', { children: 'local' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         disabled: true,
@@ -270,7 +270,7 @@ describe('Teleport 组件', () => {
   describe('边界场景', () => {
     it('应该在目标选择器不存在时发出警告', () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const childVNode = createVNode('div', {}, 'content')
+      const childVNode = createVNode('div', { children: 'content' })
       const vnode = createVNode(Teleport, {
         to: '#non-existent',
         children: childVNode
@@ -287,7 +287,7 @@ describe('Teleport 组件', () => {
       const textNode = document.createTextNode('text')
       document.body.appendChild(textNode)
 
-      const childVNode = createVNode('div', {}, 'content')
+      const childVNode = createVNode('div', { children: 'content' })
       const vnode = createVNode(Teleport, {
         to: textNode as any,
         children: childVNode
@@ -299,7 +299,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 build 返回注释节点（非 disabled）', () => {
-      const childVNode = createVNode('div', {}, 'content')
+      const childVNode = createVNode('div', { children: 'content' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         children: childVNode
@@ -311,7 +311,7 @@ describe('Teleport 组件', () => {
     })
 
     it('应该在 build 返回子节点（disabled）', () => {
-      const childVNode = createVNode('div', {}, 'content')
+      const childVNode = createVNode('div', { children: 'content' })
       const vnode = createVNode(Teleport, {
         to: '#teleport-target',
         disabled: true,

@@ -26,7 +26,7 @@ describe('PropBind 组件', () => {
       const vnode = createVNode(PropBind, {
         color: 'red',
         size: 'large',
-        children: createVNode('div', {}, 'content')
+        children: createVNode('div', { children: 'content' })
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -39,9 +39,9 @@ describe('PropBind 组件', () => {
       const vnode = createVNode(PropBind, {
         color: 'blue',
         children: [
-          createVNode('div', {}, 'child1'),
-          createVNode('span', {}, 'child2'),
-          createVNode('p', {}, 'child3')
+          createVNode('div', { children: 'child1' }),
+          createVNode('span', { children: 'child2' }),
+          createVNode('p', { children: 'child3' })
         ]
       })
       renderNode(vnode)
@@ -53,7 +53,10 @@ describe('PropBind 组件', () => {
     })
 
     it('应该绑定属性到数组形式的 children', () => {
-      const childNodes = [createVNode('div', {}, 'A'), createVNode('div', {}, 'B')]
+      const childNodes = [
+        createVNode('div', { children: 'A' }),
+        createVNode('div', { children: 'B' })
+      ]
       const vnode = createVNode(PropBind, {
         className: 'bound',
         children: childNodes
@@ -69,7 +72,7 @@ describe('PropBind 组件', () => {
     it('应该保留子节点原有属性', () => {
       const vnode = createVNode(PropBind, {
         color: 'green',
-        children: createVNode('div', { id: 'test', title: 'original' }, 'content')
+        children: createVNode('div', { id: 'test', title: 'original', children: 'content' })
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -83,7 +86,7 @@ describe('PropBind 组件', () => {
     it('应该不覆盖子节点同名属性', () => {
       const vnode = createVNode(PropBind, {
         color: 'red',
-        children: createVNode('div', { color: 'blue' }, 'content')
+        children: createVNode('div', { color: 'blue', children: 'content' })
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -95,7 +98,7 @@ describe('PropBind 组件', () => {
     it('应该返回 Fragment 包裹子节点', () => {
       const vnode = createVNode(PropBind, {
         test: 'value',
-        children: createVNode('div', {}, 'content')
+        children: createVNode('div', { children: 'content' })
       })
       renderNode(vnode)
 
@@ -108,7 +111,7 @@ describe('PropBind 组件', () => {
     it('应该跳过非 VNode 子节点', () => {
       const vnode = createVNode(PropBind, {
         color: 'red',
-        children: ['text', null, undefined, createVNode('div', {}, 'vnode')]
+        children: ['text', null, undefined, createVNode('div', { children: 'vnode' })]
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -126,7 +129,7 @@ describe('PropBind 组件', () => {
       }
       const vnode = createVNode(PropBind, {
         ...bindProps,
-        children: createVNode('button', {}, 'Click')
+        children: createVNode('button', { children: 'Click' })
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -141,7 +144,7 @@ describe('PropBind 组件', () => {
       const color = ref('red')
       const vnode = createVNode(PropBind, {
         color,
-        children: createVNode('div', {}, 'content')
+        children: createVNode('div', { children: 'content' })
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -157,7 +160,7 @@ describe('PropBind 组件', () => {
         disabled: true,
         className: 'test',
         style: { margin: '10px' },
-        children: createVNode('div', {}, 'content')
+        children: createVNode('div', { children: 'content' })
       })
       renderNode(vnode)
       mountNode(vnode, container)
@@ -206,9 +209,9 @@ describe('PropBind 组件', () => {
         color: 'red',
         children: [
           'text',
-          createVNode('div', {}, 'vnode1'),
+          createVNode('div', { children: 'vnode1' }),
           42,
-          createVNode('span', {}, 'vnode2'),
+          createVNode('span', { children: 'vnode2' }),
           true,
           null
         ]

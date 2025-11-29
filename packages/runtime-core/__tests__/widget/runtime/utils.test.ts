@@ -18,12 +18,12 @@ import { createWidgetRuntime, useForceUpdater } from '../../../src/widget/runtim
 // 测试用组件
 class TestStatefulWidget extends Widget {
   build() {
-    return createVNode('div', {}, 'stateful')
+    return createVNode('div', { children: 'stateful' })
   }
 }
 
 const TestStatelessWidget = defineStatelessWidget(() => {
-  return createVNode('div', {}, 'stateless')
+  return createVNode('div', { children: 'stateless' })
 })
 
 describe('createWidgetRuntime', () => {
@@ -284,7 +284,7 @@ describe('useForceUpdater', () => {
         }
         build() {
           renderCount++
-          return createVNode('div', {}, renderCount.toString())
+          return createVNode('div', { children: renderCount.toString() })
         }
       }
 

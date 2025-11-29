@@ -27,7 +27,7 @@ import { flushScheduler, renderAndMount } from '../../helpers/test-widget.js'
 // 测试用组件
 class TestWidget extends Widget {
   build() {
-    return createVNode('div', {}, 'test')
+    return createVNode('div', { children: 'test' })
   }
 }
 
@@ -35,7 +35,7 @@ class ReactiveWidget extends Widget {
   count = ref(0)
 
   build() {
-    return createVNode('div', {}, this.count.value.toString())
+    return createVNode('div', { children: this.count.value.toString() })
   }
 }
 
@@ -407,7 +407,7 @@ describe('StatefulWidgetRuntime', () => {
     })
 
     it('onError 返回 VNode 应该渲染错误视图', () => {
-      const errorVNode = createVNode('div', {}, 'Error!')
+      const errorVNode = createVNode('div', { children: 'Error!' })
       class ErrorWidget extends Widget {
         override onError() {
           return errorVNode

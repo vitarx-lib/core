@@ -47,7 +47,7 @@ describe('Widget 基类', () => {
 
     it('应该正确访问 children', () => {
       const TestWidget = createTestWidget<{ children: any }>()
-      const child = createVNode('span', {}, 'child')
+      const child = createVNode('span', { children: 'child' })
       const vnode = createVNode(TestWidget, { children: child })
       renderNode(vnode)
 
@@ -132,7 +132,7 @@ describe('Widget 基类', () => {
       const TestWidget = createTestWidget({
         onBeforeUpdate,
         build() {
-          return createVNode('div', {}, count.value.toString())
+          return createVNode('div', { children: count.value.toString() })
         }
       })
       const vnode = createVNode(TestWidget, {})
@@ -151,7 +151,7 @@ describe('Widget 基类', () => {
       const TestWidget = createTestWidget({
         onUpdated,
         build() {
-          return createVNode('div', {}, count.value.toString())
+          return createVNode('div', { children: count.value.toString() })
         }
       })
       const vnode = createVNode(TestWidget, {})
@@ -253,7 +253,7 @@ describe('Widget 基类', () => {
           calls.push('child-onMounted')
         }
         build() {
-          return createVNode('span', {}, 'child')
+          return createVNode('span', { children: 'child' })
         }
       }
 
@@ -269,7 +269,7 @@ describe('Widget 基类', () => {
           calls.push('parent-onMounted')
         }
         build() {
-          return createVNode('div', {}, createVNode(ChildWidget, {}))
+          return createVNode('div', { children: createVNode(ChildWidget, {}) })
         }
       }
 
@@ -305,7 +305,7 @@ describe('Widget 基类', () => {
           calls.push('child-onDeactivated')
         }
         build() {
-          return createVNode('span', {}, 'child')
+          return createVNode('span', { children: 'child' })
         }
       }
 
@@ -318,7 +318,7 @@ describe('Widget 基类', () => {
           calls.push('parent-onDeactivated')
         }
         build() {
-          return createVNode('div', {}, createVNode(ChildWidget, {}))
+          return createVNode('div', { children: createVNode(ChildWidget, {}) })
         }
       }
 
@@ -367,7 +367,7 @@ describe('Widget 基类', () => {
     })
 
     it('onError 返回 VNode 应该渲染备用 UI', () => {
-      const fallbackVNode = createVNode('div', {}, 'Error occurred')
+      const fallbackVNode = createVNode('div', { children: 'Error occurred' })
       const onError = vi.fn(() => fallbackVNode)
 
       const TestWidget = createTestWidget({ onError })
@@ -405,7 +405,7 @@ describe('Widget 基类', () => {
 
   describe('更新机制', () => {
     it('$forceUpdate(true) 应该同步触发更新', () => {
-      const buildSpy = vi.fn(() => createVNode('div', {}, 'updated'))
+      const buildSpy = vi.fn(() => createVNode('div', { children: 'updated' }))
       const TestWidget = createTestWidget({ build: buildSpy })
       const vnode = createVNode(TestWidget, {})
       renderNode(vnode)
@@ -418,7 +418,7 @@ describe('Widget 基类', () => {
     })
 
     it('$forceUpdate(false) 应该异步触发更新', () => {
-      const buildSpy = vi.fn(() => createVNode('div', {}, 'updated'))
+      const buildSpy = vi.fn(() => createVNode('div', { children: 'updated' }))
       const TestWidget = createTestWidget({ build: buildSpy })
       const vnode = createVNode(TestWidget, {})
       renderNode(vnode)
@@ -436,7 +436,7 @@ describe('Widget 基类', () => {
 
     it('build 方法应该在组件更新时被调用', () => {
       const count = ref(0)
-      const buildSpy = vi.fn(() => createVNode('div', {}, count.value.toString()))
+      const buildSpy = vi.fn(() => createVNode('div', { children: count.value.toString() }))
       const TestWidget = createTestWidget({ build: buildSpy })
       const vnode = createVNode(TestWidget, {})
       renderNode(vnode)
@@ -452,7 +452,7 @@ describe('Widget 基类', () => {
     it('build 返回 VNode 应该正确渲染', () => {
       const TestWidget = createTestWidget({
         build() {
-          return createVNode('div', {}, 'Hello')
+          return createVNode('div', { children: 'Hello' })
         }
       })
       const vnode = createVNode(TestWidget, {})
@@ -492,11 +492,11 @@ describe('Widget 基类', () => {
   describe('自定义补丁更新', () => {
     it('实现 $patchUpdate 应该使用自定义更新逻辑', () => {
       const count = ref(0)
-      const customPatch = vi.fn((oldVNode, newVNode) => newVNode)
+      const customPatch = vi.fn((_oldVNode, newVNode) => newVNode)
       const TestWidget = createTestWidget({
         $patchUpdate: customPatch,
         build() {
-          return createVNode('div', {}, count.value.toString())
+          return createVNode('div', { children: count.value.toString() })
         }
       })
       const vnode = createVNode(TestWidget, {})
