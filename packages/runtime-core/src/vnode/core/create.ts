@@ -8,7 +8,6 @@ import {
 } from '../../constants/index.js'
 import type {
   AllowCreatedNodeType,
-  AnyChild,
   RegularElementVNodeType,
   TextVNodeType,
   VNode,
@@ -40,7 +39,6 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  *
  * @param type - 节点类型
  * @param props - 节点属性
- * @param children - 子节点，会合并到props.children中
  * @returns VNode对象
  *
  * @example
@@ -90,27 +88,11 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  */
 export function createVNode<T extends AllowCreatedNodeType>(
   type: T,
-  props: VNodeInputProps<T> | null = null,
-  ...children: AnyChild[]
+  props: VNodeInputProps<T> | null = null
 ): VNodeInstanceType<T> {
   props ??= {} as VNodeInputProps<T>
   if (isNodeBuilder(type)) {
     return type(props) as VNodeInstanceType<T>
-  }
-  const supportChildren = isSupportChildren(type)
-  // 检查不支持children的节点
-  if (__DEV__ && !supportChildren && 'children' in props) {
-    const devInfo = getNodeDevInfo(props)
-    logger.warn(`<${type}> children prop will be ignored`, devInfo?.source)
-    delete props.children
-  }
-  if (supportChildren && children.length) {
-    const existing = (props as Record<string, any>).children
-    ;(props as Record<string, any>).children = Array.isArray(existing)
-      ? [...existing, ...children]
-      : existing
-        ? [existing, ...children]
-        : children
   }
   // 处理字符串类型节点
   if (typeof type === 'string') {
@@ -128,6 +110,12 @@ export function createVNode<T extends AllowCreatedNodeType>(
       case FRAGMENT_NODE_TYPE:
         return createFragmentVNode(props) as VNodeInstanceType<T>
       default:
+        const supportChildren = isSupportChildren(type)
+        // 检查不支持children的节点
+        if (__DEV__ && !supportChildren && 'children' in props) {
+          const devInfo = getNodeDevInfo(props)
+          logger.warn(`<${type}> children prop will be ignored`, devInfo?.source)
+        }
         if (supportChildren) {
           return createRegularElementVNode(
             type as unknown as RegularElementVNodeType,
