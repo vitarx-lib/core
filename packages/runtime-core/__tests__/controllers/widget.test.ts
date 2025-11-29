@@ -12,13 +12,13 @@ import {
 // 测试用有状态 Widget
 class TestStatefulWidget extends Widget {
   build() {
-    return createVNode('div', {}, 'test')
+    return createVNode('div', { children: 'test' })
   }
 }
 
 // 测试用无状态 Widget
 const TestStatelessWidget = defineStatelessWidget((props: { text?: string }) => {
-  return createVNode('div', {}, props.text || 'test')
+  return createVNode('div', { children: props.text || 'test' })
 })
 
 // 测试辅助函数
@@ -97,7 +97,7 @@ describe('StatefulWidgetController', () => {
     it('应该更新 Widget 属性', () => {
       class PropWidget extends Widget<{ text: string }> {
         build() {
-          return createVNode('div', {}, this.props.text)
+          return createVNode('div', { children: this.props.text })
         }
       }
       const vnode = createVNode<typeof PropWidget>(PropWidget, { text: 'Old' })
