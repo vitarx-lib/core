@@ -5,6 +5,7 @@ import type { VNode } from './nodes/index.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
   JSXAttributes,
+  MaybeRef,
   WithRefProps
 } from './props.js'
 import type { AnyProps, FunctionWidget, WidgetPropsType } from './widget.js'
@@ -21,7 +22,7 @@ declare global {
      * declare global {
      *   namespace Vitarx {
      *     // 重写 DOM 平台的支持做为父元素的元素类型
-     *     nodes HostParentNode extends ParentNode {
+     *     interface HostParentNode extends ParentNode {
      *
      *     }
      *   }
@@ -189,7 +190,24 @@ declare global {
     /**
      * Vitarx框架支持的固有属性
      */
-    type IntrinsicAttributes = Vitarx.IntrinsicAttributes
+    interface IntrinsicAttributes extends Vitarx.IntrinsicAttributes {
+      /**
+       * 条件渲染指令
+       *
+       * 如果是`v-if`的`value`==`false`，则会使用 CommonNode 做为锚点代替原始节点，
+       * CommonNode节点的开销非常小，通过开发者工具可以看见 `<!--v-if-->` 注释。
+       *
+       * 我们更推荐使用 jsx 语法的条件渲染，如：
+       * ```tsx
+       * const show = ref(false)
+       * // v-if 语法
+       * <div v-if={show}>要显示的元素</div>
+       * // jsx 条件判断语法
+       * { show.value && <div>要显示的元素</div> }
+       * ```
+       */
+      'v-if'?: MaybeRef<boolean>
+    }
     /**
      * JSX 支持的固有元素
      *
@@ -201,7 +219,7 @@ declare global {
      * // 在平台渲染包中扩展
      * declare global {
      *   namespace Vitarx {
-     *     nodes IntrinsicElements {
+     *     interface IntrinsicElements {
      *       div: Partial<HTMLDivElement>, // 伪代码
      *       span: Partial<HTMLSpanElement>,
      *       // 其他元素映射...
