@@ -23,6 +23,7 @@ test.ts
 .vscode/*
 !.vscode/extensions.json
 .idea
+.trae
 .lingma
 .DS_Store
 *.suo
