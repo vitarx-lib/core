@@ -1,31 +1,9 @@
-import {
-  App,
-  type AppConfig,
-  CommentController,
-  FragmentController,
-  NodeKind,
-  registerController,
-  RegularElementController,
-  setRenderer,
-  StatefulWidgetController,
-  StatelessWidgetController,
-  TextController,
-  type VNode,
-  VoidElementController,
-  type WidgetTypes
-} from '@vitarx/runtime-core'
-import { DomRenderer } from './DomRenderer.js'
+import { App, type AppConfig, type VNode, type WidgetTypes } from '@vitarx/runtime-core'
+import { createRenderer } from './DomRenderer.js'
 
-// 设置运行时渲染器
-setRenderer(new DomRenderer())
-// 注册节点控制器
-registerController(NodeKind.REGULAR_ELEMENT, new RegularElementController())
-registerController(NodeKind.VOID_ELEMENT, new VoidElementController())
-registerController(NodeKind.FRAGMENT, new FragmentController())
-registerController(NodeKind.TEXT, new TextController())
-registerController(NodeKind.COMMENT, new CommentController())
-registerController(NodeKind.STATELESS_WIDGET, new StatelessWidgetController())
-registerController(NodeKind.STATEFUL_WIDGET, new StatefulWidgetController())
+// 自动创建渲染器
+createRenderer()
+
 /**
  * 创建一个新的应用实例
  *
