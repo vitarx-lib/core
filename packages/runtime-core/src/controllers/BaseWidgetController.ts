@@ -1,3 +1,4 @@
+import { isDeepEqual } from '@vitarx/utils'
 import { NodeState } from '../constants/index.js'
 import { callDirHook } from '../directive/index.js'
 import type {
@@ -66,7 +67,9 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
 
     // 新增或更新存在于 newProps 中的属性
     for (const key in newProps) {
-      if (oldProps[key] !== newProps[key]) {
+      const oldValue = oldProps[key]
+      const newValue = newProps[key]
+      if (oldProps[key] !== newProps[key] || !isDeepEqual(oldValue, newValue, 1)) {
         oldProps[key] = newProps[key]
         changedKeys.push(key)
       }
