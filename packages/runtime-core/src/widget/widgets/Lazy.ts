@@ -122,9 +122,9 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
    * @throws {TypeError} 当属性不符合要求时抛出类型错误
    */
   static validateProps(props: AnyProps): void {
-    if (typeof props.children !== 'function') {
+    if (typeof props.loader !== 'function') {
       throw new TypeError(
-        `[LazyWidget]: children 期望得到一个异步函数，实际类型为 ${typeof props.children}`
+        `[LazyWidget]: loader 期望得到一个异步函数，实际类型为 ${typeof props.loader}`
       )
     }
     if (props.loading && !isVNode(props.loading)) {
