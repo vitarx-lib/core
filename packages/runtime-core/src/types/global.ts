@@ -224,5 +224,13 @@ declare global {
      * C: 组件类型，P: 属性类型
      */
     type LibraryManagedAttributes<C, P> = JSXElementAttributes<C, P>
+
+    interface ElementAttributesProperty {
+      props: {}
+    }
+
+    interface ElementChildrenAttribute {
+      children: {}
+    }
   }
 }
