@@ -8,7 +8,6 @@
  * - children: 子元素
  * - key: 节点的唯一标识，用于diff算法
  * - ref: 节点引用，用于直接访问DOM元素或组件实例
- * - v-if: 条件渲染
  * - v-bind: 属性绑定
  * - v-show: 条件显示
  * - v-memo: 记忆化优化
@@ -18,7 +17,6 @@ export const INTRINSIC_ATTRIBUTES = new Set<string>([
   'children',
   'key',
   'ref',
-  'v-if',
   'v-bind',
   'v-show',
   'v-memo',
