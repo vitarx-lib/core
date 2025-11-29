@@ -1,9 +1,9 @@
 import { Ref, type RefSignal } from '@vitarx/responsive'
-import type { PickRequired } from '@vitarx/utils/src/index.js'
+import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils/src/index.js'
 import type { Dynamic, Fragment } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
 import type { JSXElementNames, JSXInternalElements } from './element.js'
-import type { ValidNodeType } from './vnode.js'
+import type { AllowCreatedNodeType } from './vnode.js'
 import type { AnyProps, WidgetPropsType, WidgetTypes } from './widget.js'
 
 /**
@@ -39,9 +39,9 @@ export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | RefSig
  *
  * @example
  * ```ts
- * nodes ButtonProps {
+ * interface ButtonProps {
  *   text: string;
- *   disabled: boolean;
+ *   disabled?: boolean;
  *   onClick: () => void;
  * }
  *
@@ -65,8 +65,11 @@ export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | RefSig
  * ```
  */
 export type WithRefProps<T extends AnyProps> = {
-  [K in keyof T]: MaybeRef<T[K]>
+  [K in RequiredKeys<T>]: MaybeRef<T[K]>
+} & {
+  [K in OptionalKeys<T>]?: MaybeRef<T[K]>
 }
+
 /**
  * 解包引用属性类型
  *
@@ -77,7 +80,7 @@ export type WithRefProps<T extends AnyProps> = {
  *
  * @example
  * ```ts
- * nodes Props {
+ * interface Props {
  *   count: RefSignal<number>;
  *   name: string;
  *   visible: RefSignal<boolean>;
@@ -131,22 +134,6 @@ export interface IntrinsicAttributes {
    * 引用组件/元素实例
    */
   ref?: RefEl<any>
-  /**
-   * 条件渲染指令
-   *
-   * 如果是`v-if`的`value`==`false`，则会使用 CommonNode 做为锚点代替原始节点，
-   * CommonNode节点的开销非常小，通过开发者工具可以看见 `<!--v-if-->` 注释。
-   *
-   * 我们更推荐使用 jsx 语法的条件渲染，如：
-   * ```tsx
-   * const show = ref(false)
-   * // v-if 语法
-   * <div v-if={show}>要显示的元素</div>
-   * // jsx 条件判断语法
-   * { show.value && <div>要显示的元素</div> }
-   * ```
-   */
-  'v-if'?: MaybeRef<boolean>
   /**
    * 显示/隐藏节点
    *
@@ -323,7 +310,7 @@ type WithVModelUpdate<T extends AnyProps> = T & {
 /**
  * 提取节点属性类型
  */
-type ExtractVNodeProps<T extends ValidNodeType> = T extends JSXElementNames
+export type ExtractVNodeProps<T extends AllowCreatedNodeType> = T extends JSXElementNames
   ? JSXInternalElements[T]
   : T extends Dynamic
     ? WithRefProps<WidgetPropsType<Dynamic>>
@@ -340,7 +327,8 @@ type ExtractVNodeProps<T extends ValidNodeType> = T extends JSXElementNames
  * - 元素或组件定义的属性
  * - 全局属性（如key、ref、v-show等）
  */
-export type VNodeInputProps<T extends ValidNodeType> = ExtractVNodeProps<T> & IntrinsicAttributes
+export type VNodeInputProps<T extends AllowCreatedNodeType = AllowCreatedNodeType> =
+  ExtractVNodeProps<T> & IntrinsicAttributes
 
 /**
  * 根据节点类型推断其对应的属性类型
@@ -357,14 +345,14 @@ export type VNodeInputProps<T extends ValidNodeType> = ExtractVNodeProps<T> & In
  * ```ts
  * // 通过继承 WithNodeProps<div> 可以让组件支持所有div元素的属性，
  * // 在jsx表达式中可以获得良好的类型提示和代码补全。
- * nodes MyWidgetProps extends WithNodeProps<'div'> {
+ * interface MyWidgetProps extends WithNodeProps<'div'> {
  *   children: VNode
  *   // ... 其他自定义属性
  * }
  * const MyWidget = (props: MyWidgetProps) => {
  *   // 使用 v-bind 绑定属性 不支持 children v-show v-if 等特殊的固有属性
  *   // 所以我们需要单独处理 children 属性
- *   // 如果使用 {...props} js原生语法则无需额外传递 children 属性
+ *   // 如果使用 {...props } js原生语法则无需额外传递 children 属性
  *   return <div v-bind={props}>{props.children}</div>
  * }
  * export default MyWidget
@@ -373,11 +361,14 @@ export type VNodeInputProps<T extends ValidNodeType> = ExtractVNodeProps<T> & In
  * @template T - 节点类型，必须继承自 ValidNodeType
  * @template K - 忽略的属性名称，默认为 'children'
  */
-export type WithProps<T extends ValidNodeType, K extends keyof any = 'children'> = Omit<
+export type WithProps<T extends AllowCreatedNodeType, K extends keyof any = 'children'> = Omit<
   ExtractVNodeProps<T>,
   K
 >
 
+/**
+ * 此类型工具用于提供给 JSX.LibraryManagedAttributes 使用，确保类型推导正确。
+ */
 export type JSXAttributes<C, P> = C extends WidgetTypes
   ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<C>>>>
   : P extends object
