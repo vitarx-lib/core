@@ -53,8 +53,9 @@ export class PatchUpdate {
   static patch(currentVNode: VNode, nextVNode: VNode): VNode {
     // 如果两个节点相同，则返回旧节点
     if (currentVNode === nextVNode) return currentVNode
-    // 如果类型或 key 不同，需要替换节点
+    if (currentVNode.state === NodeState.Created) return nextVNode
     if (currentVNode.type !== nextVNode.type || currentVNode.key !== nextVNode.key) {
+      // 如果类型或 key 不同，需要替换节点
       this.replace(currentVNode, nextVNode)
       return nextVNode
     }
