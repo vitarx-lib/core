@@ -1,4 +1,4 @@
-import { useRenderer } from '../renderer/index.js'
+import { getRenderer } from '../renderer/index.js'
 import {
   type FragmentVNode,
   type FragmentVNodeType,
@@ -23,7 +23,7 @@ import { HostNodeController } from './HostNodeController.js'
  * 特殊说明：
  * - updateProps 方法被重写但实际不执行任何操作，因为 Fragment 不需要处理属性更新
  * - 使用了 mixinContainerController 来混入容器控制器的功能
- * - 元素创建依赖于 useRenderer() 返回的渲染器实例
+ * - 元素创建依赖于 getRenderer() 返回的渲染器实例
  */
 export class FragmentController extends HostNodeController<FragmentVNodeType> {
   constructor() {
@@ -36,6 +36,6 @@ export class FragmentController extends HostNodeController<FragmentVNodeType> {
   }
   /** @inheritDoc */
   protected createElement(node: FragmentVNode): HostFragmentElement {
-    return useRenderer().createFragment(node)
+    return getRenderer().createFragment(node)
   }
 }

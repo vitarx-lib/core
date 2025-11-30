@@ -15,7 +15,6 @@ export function setRenderer(hostRenderer: HostRenderer) {
  * 获取已注册的HostRenderer实例
  * 如果HostRenderer尚未注册，则会抛出错误
  *
- * @alias useRenderer
  * @returns {HostRenderer} 返回已注册的HostRenderer实例
  * @throws {Error} 当HostRenderer未注册时抛出错误
  */
@@ -24,4 +23,3 @@ export function getRenderer(): HostRenderer {
   if (globalRenderer) return globalRenderer
   throw new Error('[vitarx][ERROR] Renderer has not been registered.')
 }
-export { getRenderer as useRenderer }

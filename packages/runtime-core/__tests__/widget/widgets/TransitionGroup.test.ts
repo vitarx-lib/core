@@ -8,10 +8,10 @@ import {
   cloneVNode,
   createVNode,
   Fragment,
+  getRenderer,
   mountNode,
   renderNode,
-  TransitionGroup,
-  useRenderer
+  TransitionGroup
 } from '../../../src/index.js'
 import {
   mockBoundingRect,
@@ -189,7 +189,7 @@ describe('TransitionGroup 组件', () => {
           } as DOMRect
         }
       }
-      const dom = useRenderer()
+      const dom = getRenderer()
       const requestAnimationFrame = vi
         .spyOn(dom, 'requestAnimationFrame')
         .mockImplementation(cb => {

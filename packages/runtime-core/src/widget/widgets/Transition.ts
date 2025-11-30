@@ -1,4 +1,4 @@
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import type { HostNodeElements, Renderable, VNode } from '../../types/index.js'
 import { AnyChild } from '../../types/vnode.js'
 import { getNodeDomOpsTarget, getNodeElement } from '../../utils/index.js'
@@ -199,7 +199,7 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
       return oldChild
     }
     // 创建锚点元素，用于新节点的插入位置
-    const dom = useRenderer()
+    const dom = getRenderer()
     const anchor = dom.createText('')
     dom.insertBefore(anchor, getNodeDomOpsTarget(oldChild))
     // 根据不同的过渡模式执行动画

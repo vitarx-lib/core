@@ -6,7 +6,7 @@
  */
 
 import { type Fragment, FRAGMENT_NODE_TYPE } from '../../constants/index.js'
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import type {
   AnyChild,
   ContainerVNode,
@@ -161,7 +161,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
    * @returns {VNode} 更新后的虚拟节点
    */
   override $patchUpdate(currentVNode: VNode, nextVNode: VNode): VNode {
-    const dom = useRenderer()
+    const dom = getRenderer()
 
     // 根节点类型或 key 不同 → 替换节点
     if (currentVNode.type !== nextVNode.type || currentVNode.key !== nextVNode.key) {

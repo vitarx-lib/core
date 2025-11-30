@@ -5,33 +5,31 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { DomRenderer } from '../../../runtime-dom/src/index.js'
+import { DomRenderer } from '../../../runtime-dom/src/client/DomRenderer.js'
 import type { HostRenderer } from '../../src/index.js'
-import { getRenderer, setRenderer, useRenderer } from '../../src/renderer/api.js'
+import { getRenderer, setRenderer } from '../../src/index.js'
 
 describe('渲染器 API', () => {
   describe('渲染器注册和获取', () => {
     it('应该能够设置全局渲染器', () => {
-      const renderer = new DomRenderer() as unknown as HostRenderer
-      setRenderer(renderer)
-
-      expect(getRenderer()).toBe(renderer)
+      const oldRenderer = getRenderer()
+      const mockRenderer = {} as HostRenderer
+      setRenderer(mockRenderer)
+      expect(getRenderer()).toBe(mockRenderer)
+      setRenderer(oldRenderer)
+      expect(getRenderer()).toBe(oldRenderer)
     })
 
     it('应该能够获取当前渲染器', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
 
       expect(renderer).toBeDefined()
       expect(renderer).toBeInstanceOf(DomRenderer)
     })
 
-    it('useRenderer 应该是 getRenderer 的别名', () => {
-      expect(useRenderer).toBe(getRenderer)
-    })
-
     it('应该能够多次获取同一个渲染器实例', () => {
-      const renderer1 = useRenderer()
-      const renderer2 = useRenderer()
+      const renderer1 = getRenderer()
+      const renderer2 = getRenderer()
 
       expect(renderer1).toBe(renderer2)
     })
@@ -39,7 +37,7 @@ describe('渲染器 API', () => {
 
   describe('平台操作接口', () => {
     it('应该能够调用 createElement', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
       const vnode: any = {
         type: 'div',
         props: {},
@@ -53,7 +51,7 @@ describe('渲染器 API', () => {
     })
 
     it('应该能够调用 createText', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
       const text = renderer.createText('Hello')
 
       expect(text).toBeDefined()
@@ -61,7 +59,7 @@ describe('渲染器 API', () => {
     })
 
     it('应该能够调用 createComment', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
       const comment = renderer.createComment('test comment')
 
       expect(comment).toBeDefined()
@@ -69,7 +67,7 @@ describe('渲染器 API', () => {
     })
 
     it('应该能够调用 appendChild', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
       const parent = document.createElement('div')
       const child = document.createElement('span')
 
@@ -80,7 +78,7 @@ describe('渲染器 API', () => {
     })
 
     it('应该能够调用 remove', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
       const parent = document.createElement('div')
       const child = document.createElement('span')
       parent.appendChild(child)
@@ -91,7 +89,7 @@ describe('渲染器 API', () => {
     })
 
     it('应该能够调用 setText', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
       const text = renderer.createText('old')
 
       renderer.setText(text, 'new')
@@ -100,7 +98,7 @@ describe('渲染器 API', () => {
     })
 
     it('应该能够调用 querySelector', () => {
-      const renderer = useRenderer()
+      const renderer = getRenderer()
       const container = document.createElement('div')
       const child = document.createElement('span')
       child.id = 'test-id'

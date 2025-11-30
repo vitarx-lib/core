@@ -1,4 +1,4 @@
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import type {
   AnyProps,
   NodeElementType,
@@ -214,7 +214,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   override $patchUpdate(oldVNode: StatefulWidgetVNode, newVNode: StatefulWidgetVNode): VNode {
     // 提前检查是否需要创建占位符
     let placeholderElement: NodeElementType<TextVNodeType> | null = null
-    const dom = useRenderer()
+    const dom = getRenderer()
     if (newVNode.state !== 'deactivated') {
       placeholderElement = dom.createText('')
       dom.insertBefore(placeholderElement, getNodeDomOpsTarget(oldVNode))

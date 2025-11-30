@@ -1,5 +1,5 @@
 import { toCapitalize } from '@vitarx/utils'
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import type { HostElements, HostNodeElements, VNode } from '../../types/index.js'
 import { Widget } from '../base/index.js'
 
@@ -264,7 +264,7 @@ export abstract class BaseTransition<
     type: 'enter' | 'leave' | 'appear',
     doneCallback?: () => void
   ): void {
-    const dom = useRenderer()
+    const dom = getRenderer()
     // 如果不是元素节点，不执行动画，但离开时需要删除元素
     if (!dom.isElement(el)) return doneCallback?.()
     const capitalizeType = toCapitalize(type)
@@ -373,7 +373,7 @@ export abstract class BaseTransition<
       return this.props.duration[type === 'appear' ? 'enter' : type] || 0
     }
     // 否则从元素的 CSS 中计算持续时间
-    const dom = useRenderer()
+    const dom = getRenderer()
     switch (this.props.type) {
       case 'transition':
         return dom.getTransitionDuration(el)

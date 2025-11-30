@@ -1,4 +1,4 @@
-import { useRenderer } from '../renderer/index.js'
+import { getRenderer } from '../renderer/index.js'
 import type { CommentVNode, CommentVNodeType, HostCommentElement } from '../types/index.js'
 import { NonElementController } from './NonElementController.js'
 
@@ -15,6 +15,6 @@ import { NonElementController } from './NonElementController.js'
 export class CommentController extends NonElementController<CommentVNodeType> {
   /** @inheritDoc */
   protected override createElement(node: CommentVNode): HostCommentElement {
-    return useRenderer().createComment(node.props.value)
+    return getRenderer().createComment(node.props.value)
   }
 }

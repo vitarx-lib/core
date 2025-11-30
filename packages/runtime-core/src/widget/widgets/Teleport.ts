@@ -1,5 +1,5 @@
 import { logger } from '@vitarx/utils'
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import type { HostNodeElements, HostParentElement, Renderable, VNode } from '../../types/index.js'
 import { __DEV__, isVNode, onPropChange } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
@@ -148,7 +148,7 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
   }
 
   private getTarget(): HostParentElement | null {
-    const dom = useRenderer()
+    const dom = getRenderer()
     const to = this.props.to
     const target: HostNodeElements | null = typeof to === 'string' ? dom.querySelector(to) : to
     if (__DEV__ && !target) {

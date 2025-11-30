@@ -7,7 +7,7 @@ import {
   INTRINSIC_ATTRIBUTES,
   TEXT_NODE_TYPE
 } from '../../constants/index.js'
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import type {
   AllowCreatedNodeType,
   AnyProps,
@@ -138,7 +138,7 @@ export function isSupportChildren(type: AllowCreatedNodeType): boolean {
       case DYNAMIC_RENDER_TYPE:
         return true
       default:
-        return !useRenderer().isVoidElement(type)
+        return !getRenderer().isVoidElement(type)
     }
   }
   return true

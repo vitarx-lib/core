@@ -1,6 +1,6 @@
 import { Scheduler } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
-import { useRenderer } from '../renderer/index.js'
+import { getRenderer } from '../renderer/index.js'
 import { getCurrentVNode } from '../runtime/index.js'
 import type {
   Directive,
@@ -310,7 +310,7 @@ export function diffDirectives(
  */
 export function callDirHook(node: VNode, hook: keyof DirectiveOptions, el?: HostElements): void {
   el ??= node.el! as HostElements
-  if (!el || !useRenderer().isElement(el)) return
+  if (!el || !getRenderer().isElement(el)) return
   node.directives?.forEach(dir => {
     const [dirObj, dirValue, dirArg] = dir
     if (typeof dirObj[hook] === 'function') {

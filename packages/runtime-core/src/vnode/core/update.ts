@@ -1,6 +1,6 @@
 import { NodeState } from '../../constants/index.js'
 import { diffDirectives, type DiffDirectivesOptions } from '../../directive/index.js'
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import type { ContainerVNode, ElementVNode, VNode, WidgetVNode } from '../../types/index.js'
 import {
   getNodeDomOpsTarget,
@@ -132,7 +132,7 @@ export class PatchUpdate {
    * @throws {Error} 当旧节点未挂载且无法替换时抛出错误
    */
   static replace(currentVNode: VNode, nextVNode: VNode): VNode {
-    const dom = useRenderer()
+    const dom = getRenderer()
     const oldElement = getNodeDomOpsTarget(currentVNode)
     // 如果旧节点有父元素，则创建锚点进行替换
     if (dom.getParentElement(oldElement)) {
@@ -173,7 +173,7 @@ export class PatchUpdate {
     nextVNode: ContainerVNode,
     hooks?: ChildNodeUpdateHooks
   ): VNode[] {
-    const dom = useRenderer()
+    const dom = getRenderer()
     const oldChildren = currentNode.children
     const newChildren = nextVNode.children
     const parentEl = currentNode.el

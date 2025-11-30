@@ -1,6 +1,6 @@
 import { isPromise } from '@vitarx/utils'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks, NodeState } from '../../constants/index.js'
-import { useRenderer } from '../../renderer/index.js'
+import { getRenderer } from '../../renderer/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
 import { useSuspense } from '../../runtime/index.js'
 import type {
@@ -55,7 +55,7 @@ const performChildReplacement = (
   oldChild: VNode,
   newChild: VNode
 ) => {
-  const renderer = useRenderer()
+  const renderer = getRenderer()
   const anchor = renderer.createText('')
   renderer.insertBefore(anchor, oldChild.el!)
   unmountNode(oldChild)

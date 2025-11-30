@@ -1,5 +1,5 @@
 import { callDirHook } from '../directive/index.js'
-import { useRenderer } from '../renderer/index.js'
+import { getRenderer } from '../renderer/index.js'
 import type {
   AnyProps,
   ElementVNode,
@@ -50,7 +50,7 @@ export abstract class ElementController<T extends ElementVNodeType> extends Host
   override updateProps(node: ElementVNode<T>, newProps: AnyProps): void {
     const oldProps = node.props
     const el = node.el! as HostElements
-    const dom = useRenderer()
+    const dom = getRenderer()
     // 删除不存在于 newProps 中的属性
     for (const key in oldProps) {
       if (!(key in newProps)) {

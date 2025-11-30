@@ -2,7 +2,7 @@ import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { __VITARX_VERSION__ } from '../constants/index.js'
 import { normalizeDirective } from '../directive/index.js'
-import { useRenderer } from '../renderer/index.js'
+import { getRenderer } from '../renderer/index.js'
 import { runInAppContext } from '../runtime/index.js'
 import type {
   Directive,
@@ -187,7 +187,7 @@ export class App {
   mount(container: HostParentElement | string): this {
     // 如果传入的是字符串，则通过querySelector获取对应的DOM元素
     if (typeof container === 'string') {
-      container = useRenderer().querySelector(container)! as HostParentElement
+      container = getRenderer().querySelector(container)! as HostParentElement
       // 如果找不到对应的DOM元素，抛出错误
       if (!container) {
         throw new Error(

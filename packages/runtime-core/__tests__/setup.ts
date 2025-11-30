@@ -8,7 +8,7 @@
  * 这样可以确保 runtime-core 的测试能够正常运行，
  * 因为 runtime-core 本身是平台无关的，需要配合具体平台实现使用。
  */
-import { DomRenderer } from '../../runtime-dom'
+import { DomRenderer } from '../../runtime-dom/src/client/DomRenderer.js'
 import { setRenderer } from '../src/index.js'
 
 setRenderer(new DomRenderer() as any)

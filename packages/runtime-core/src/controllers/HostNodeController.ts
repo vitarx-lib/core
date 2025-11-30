@@ -1,5 +1,5 @@
 import { NodeState } from '../constants/index.js'
-import { useRenderer } from '../renderer/index.js'
+import { getRenderer } from '../renderer/index.js'
 import { findParentNode } from '../runtime/index.js'
 import type {
   AnyProps,
@@ -21,7 +21,7 @@ import { isWidgetNode } from '../utils/index.js'
 export abstract class HostNodeController<T extends HostVNodeType> implements NodeController<T> {
   /** 获取渲染器实例 */
   protected get dom() {
-    return useRenderer()
+    return getRenderer()
   }
   /**
    * @inheritDoc
