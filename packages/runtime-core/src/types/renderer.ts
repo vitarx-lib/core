@@ -81,6 +81,8 @@ export interface HostRenderer {
   /**
    * 创建指定类型的DOM元素
    *
+   * 注意：需根据 vnode.props 初始化属性！
+   *
    * @template T - 元素类型
    * @param vnode - 虚拟节点对象
    * @returns { HostElements<T> } 返回创建的元素实例
@@ -241,6 +243,13 @@ export interface HostRenderer {
    * @param prevValue - 旧属性值（可选）
    */
   setAttribute(el: HostElements, key: string, nextValue: any, prevValue?: any): void
+  /**
+   * 批量设置元素的属性
+   *
+   * @param el - 目标DOM元素
+   * @param attrs - 需要设置的属性键值对对象
+   */
+  setAttributes(el: HostElements, attrs: Record<string, any>): void
   /**
    * 移除元素的属性
    * @param el - 元素实例
