@@ -1,6 +1,6 @@
 import { isDeepEqual } from '@vitarx/utils'
 import { NodeState } from '../constants/index.js'
-import { callDirHook } from '../directive/index.js'
+import { invokeDirHook } from '../directive/index.js'
 import type {
   AnyProps,
   HostElements,
@@ -83,16 +83,16 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
     const el = renderNode(widget.child)
     node.state = NodeState.Rendered
     // 如果是元素节点，则调用指令钩子
-    if (isElementNode(node.runtimeInstance!.child)) callDirHook(node, 'created')
+    if (isElementNode(node.runtimeInstance!.child)) invokeDirHook(node, 'created')
     return el as NodeElementType<T>
   }
   /** @inheritDoc */
   mount(node: WidgetVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
     const isElement = isElementNode(node.runtimeInstance!.child)
-    if (isElement) callDirHook(node, 'beforeMount')
+    if (isElement) invokeDirHook(node, 'beforeMount')
     mountNode(node.runtimeInstance!.child, target, opsType)
     node.state = NodeState.Activated
-    if (isElement) callDirHook(node, 'mounted')
+    if (isElement) invokeDirHook(node, 'mounted')
   }
   /** @inheritDoc */
   activate(node: WidgetVNode<T>, root: boolean = true): void {
@@ -108,11 +108,11 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
   unmount(node: WidgetVNode<T>): void {
     const isElement = isElementNode(node.runtimeInstance!.child)
     const el = node.el! as HostElements
-    if (isElement) callDirHook(node, 'beforeUnmount')
+    if (isElement) invokeDirHook(node, 'beforeUnmount')
     unmountNode(node.runtimeInstance!.child)
     node.runtimeInstance!.destroy()
     if (node.ref) node.ref.value = null
     node.state = NodeState.Unmounted
-    if (isElement) callDirHook(node, 'unmounted', el)
+    if (isElement) invokeDirHook(node, 'unmounted', el)
   }
 }

@@ -1,4 +1,4 @@
-import { callDirHook } from '../directive/index.js'
+import { invokeDirHook } from '../directive/index.js'
 import { getRenderer } from '../renderer/index.js'
 import type {
   AnyProps,
@@ -77,25 +77,25 @@ export abstract class ElementController<T extends ElementVNodeType> extends Host
       this.dom.setAttributes(node.el! as HostElements, node.props)
     }
     const el = super.render(node)
-    callDirHook(node, 'created')
+    invokeDirHook(node, 'created')
     return el
   }
   /**
    * @inheritDoc
    */
   override mount(node: HostVNode<T>, target?: HostNodeElements, opsType?: OpsType) {
-    callDirHook(node, 'beforeMount')
+    invokeDirHook(node, 'beforeMount')
     super.mount(node, target, opsType)
-    callDirHook(node, 'mounted')
+    invokeDirHook(node, 'mounted')
   }
   /**
    * @inheritDoc
    */
   override unmount(node: ElementVNode<T>) {
-    callDirHook(node, 'beforeUnmount')
+    invokeDirHook(node, 'beforeUnmount')
     const el = node.el! as HostElements
     super.unmount(node)
-    callDirHook(node, 'unmounted', el)
+    invokeDirHook(node, 'unmounted', el)
   }
   /**
    * @inheritDoc

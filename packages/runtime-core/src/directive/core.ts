@@ -308,7 +308,7 @@ export function diffDirectives(
  * @param hook - 钩子名称
  * @param [el] - DOM 元素
  */
-export function callDirHook(node: VNode, hook: keyof DirectiveOptions, el?: HostElements): void {
+export function invokeDirHook(node: VNode, hook: keyof DirectiveOptions, el?: HostElements): void {
   el ??= node.el! as HostElements
   if (!el || !getRenderer().isElement(el)) return
   node.directives?.forEach(dir => {
