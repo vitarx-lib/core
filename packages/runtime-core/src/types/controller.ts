@@ -15,7 +15,7 @@ export interface NodeController<T extends VNodeTypes> {
    * 挂载节点
    *
    * @param node - 虚拟节点对象
-   * @param target - 挂载目标
+   * @param [target] - 挂载目标
    * @param [opsType='appendChild'] - 默认追加
    */
   mount(node: VNode<T>, target?: HostNodeElements | HostParentElement, opsType?: OpsType): void
