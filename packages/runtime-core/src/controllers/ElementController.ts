@@ -73,6 +73,9 @@ export abstract class ElementController<T extends ElementVNodeType> extends Host
    * @inheritDoc
    */
   override render(node: HostVNode<T>): NodeElementType<T> {
+    if (node.el) {
+      this.dom.setAttributes(node.el! as HostElements, node.props)
+    }
     const el = super.render(node)
     callDirHook(node, 'created')
     return el
