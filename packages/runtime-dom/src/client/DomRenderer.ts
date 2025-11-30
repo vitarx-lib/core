@@ -326,6 +326,19 @@ export class DomRenderer implements HostRenderer {
       )
     }
   }
+
+  /**
+   * 批量设置元素的属性
+   * @param el - 目标DOM元素
+   * @param attrs - 需要设置的属性键值对对象
+   */
+  setAttributes(el: HostElements, attrs: Record<string, any>): void {
+    // 遍历属性对象的所有键值对
+    Object.entries(attrs).forEach(([key, value]) => {
+      // 为元素设置单个属性
+      this.setAttribute(el, key, value)
+    })
+  }
   /** @inheritDoc */
   removeAttribute(el: HostElements, key: string, prevValue?: any): void {
     // --- 1. class 特殊处理 ---
@@ -424,19 +437,6 @@ export class DomRenderer implements HostRenderer {
       }
     }
     return el
-  }
-
-  /**
-   * 设置元素的属性
-   * @param el - 目标DOM元素
-   * @param attrs - 需要设置的属性键值对对象
-   */
-  private setAttributes(el: HostElements, attrs: Record<string, any>): void {
-    // 遍历属性对象的所有键值对
-    Object.entries(attrs).forEach(([key, value]) => {
-      // 为元素设置单个属性
-      this.setAttribute(el, key, value)
-    })
   }
 
   /**
