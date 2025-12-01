@@ -101,16 +101,18 @@ async function testPackage(packageName: string, watch: boolean, coverage: boolea
   // 记录测试开始信息
   log.info(`\n🧪 Running tests for package: ${chalk.bold(packageName)}`)
   // 构建测试命令
-  const cmdParts = ['vitest', 'run'] // 基础命令
+  const cmdParts = ['vitest', 'run', `--dir ${packagePath}`] // 基础命令
   if (watch) cmdParts.push('--watch') // 添加监视模式参数
   if (coverage) cmdParts.push('--coverage') // 添加覆盖率测试参数
+  const vitestConfig = join(packagePath, 'vitest.config.ts')
+  if (existsSync(vitestConfig)) {
+    cmdParts.push(`--config vitest.config.ts`)
+  }
   const cmd = cmdParts.join(' ') // 合并命令各部分
-
+  console.info(cmd)
   try {
     // 执行测试命令
-    const { stdout, stderr } = await execAsync(cmd, { cwd: packagePath })
-    console.log(stdout) // 输出标准日志
-    if (stderr) console.error(stderr) // 如果有错误则输出错误日志
+    await execAsync(cmd)
     // 记录测试成功信息
     log.success(`✓ Tests passed for ${packageName}`)
   } catch (err: any) {
@@ -120,7 +122,6 @@ async function testPackage(packageName: string, watch: boolean, coverage: boolea
     process.exit(1) // 退出进程
   }
 }
-
 /**
  * 主函数，负责执行测试流程
  * 它会解析命令行参数，获取目标包，然后依次执行每个包的测试
