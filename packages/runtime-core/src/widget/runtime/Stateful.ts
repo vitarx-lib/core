@@ -208,7 +208,6 @@ export class StatefulWidgetRuntime<
    * 执行清理操作，释放内存
    */
   public override destroy(): void {
-    this.invokeHook(LifecycleHooks.destroy)
     if (this.renderDepsSubscriber) {
       this.renderDepsSubscriber.dispose()
       this.renderDepsSubscriber = null

@@ -108,6 +108,7 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
     }
     // 触发onBeforeUnmount生命周期
     widget.invokeHook(LifecycleHooks.beforeUnmount)
+    widget.invokeHook(LifecycleHooks.destroy)
     super.unmount(node)
     // 触发onUnmounted生命周期
     widget.invokeHook(LifecycleHooks.unmounted)
