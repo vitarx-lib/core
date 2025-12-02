@@ -10,5 +10,6 @@ export enum LifecycleHooks {
   beforeUpdate = 'onBeforeUpdate',
   updated = 'onUpdated',
   beforeUnmount = 'onBeforeUnmount',
-  unmounted = 'onUnmounted'
+  unmounted = 'onUnmounted',
+  destroy = 'onDestroy'
 }
