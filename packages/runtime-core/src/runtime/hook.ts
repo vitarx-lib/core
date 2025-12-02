@@ -227,7 +227,12 @@ export const onError = createLifecycleHook(LifecycleHooks.error)
  * @returns {Promise<unknown> | void} - 可返回 Promise 以延迟占位节点替换为真实节点，客户端不会阻塞渲染。
  */
 export const onRender = createLifecycleHook(LifecycleHooks.render)
-
+/**
+ * 小部件运行时实例销毁时触发的钩子
+ *
+ * @param {Function} cb - 回调函数，运行时实例销毁时触发
+ */
+export const onDestroy = createLifecycleHook(LifecycleHooks.destroy)
 /**
  * 暴露函数组件的内部方法或变量，供外部使用。
  *

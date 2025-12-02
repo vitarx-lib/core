@@ -321,6 +321,22 @@ export abstract class Widget<
   onRender?(): Promise<unknown> | void
 
   /**
+   * 运行时实例销毁时触发的钩子
+   *
+   * onDestroy 钩子会在服务端和客户端渲染时都执行，用于清理资源。
+   *
+   * @example
+   * ```tsx
+   * class MyWidget extends Widget {
+   *   onDestroy() {
+   *     // 在服务端渲染时，销毁逻辑
+   *   }
+   * }
+   * ```
+   */
+  onDestroy?(): void
+
+  /**
    * 构建`UI`元素。
    *
    * 该方法会被多次调用，所以在方法内不应该存在任何副作用。
