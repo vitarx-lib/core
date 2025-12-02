@@ -138,7 +138,7 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
     }
   }
 
-  override onBeforeUnmount() {
+  override onDestroy() {
     if (this.disabled) return
     if (this.teleported) unmountNode(this.children)
   }
