@@ -13,7 +13,7 @@ import type {
 } from '../types/index.js'
 import { isElementNode } from '../utils/index.js'
 import { activateNode, deactivateNode, mountNode, renderNode, unmountNode } from '../vnode/index.js'
-import { createWidgetRuntime } from '../widget/runtime/utils.js'
+import { createWidgetRuntime } from '../widget/index.js'
 
 /**
  * 基础 Widget 控制器抽象类，实现了 NodeController 接口。
@@ -82,17 +82,16 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
     // 从根节点获取元素并转换为宿主元素实例类型
     const el = renderNode(widget.child)
     node.state = NodeState.Rendered
-    // 如果是元素节点，则调用指令钩子
-    if (isElementNode(node.runtimeInstance!.child)) invokeDirHook(node, 'created')
+    // 调用指令钩子
+    invokeDirHook(node, 'created')
     return el as NodeElementType<T>
   }
   /** @inheritDoc */
   mount(node: WidgetVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
-    const isElement = isElementNode(node.runtimeInstance!.child)
-    if (isElement) invokeDirHook(node, 'beforeMount')
+    invokeDirHook(node, 'beforeMount')
     mountNode(node.runtimeInstance!.child, target, opsType)
     node.state = NodeState.Activated
-    if (isElement) invokeDirHook(node, 'mounted')
+    invokeDirHook(node, 'mounted')
   }
   /** @inheritDoc */
   activate(node: WidgetVNode<T>, root: boolean = true): void {
