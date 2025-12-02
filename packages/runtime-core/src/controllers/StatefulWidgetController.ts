@@ -53,7 +53,7 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
   override render(node: VNode<StatefulWidgetVNodeType>): HostNodeElements {
     const widget = createWidgetRuntime(node)
     // 触发render生命周期钩子
-    widget.callHook(LifecycleHooks.render)
+    widget.invokeHook(LifecycleHooks.render)
     let el: HostNodeElements
     try {
       el = super.render(node)
@@ -72,18 +72,18 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
   /** @inheritDoc */
   override mount(node: StatefulWidgetVNode, target?: HostNodeElements, opsType?: OpsType): void {
     const widget = node.runtimeInstance!
-    widget.callHook(LifecycleHooks.beforeMount)
+    widget.invokeHook(LifecycleHooks.beforeMount)
     super.mount(node, target, opsType)
     node.state = NodeState.Activated
-    widget.callHook(LifecycleHooks.mounted)
-    widget.callHook(LifecycleHooks.activated)
+    widget.invokeHook(LifecycleHooks.mounted)
+    widget.invokeHook(LifecycleHooks.activated)
   }
   /** @inheritDoc */
   override activate(node: StatefulWidgetVNode, root: boolean): void {
     const widget = node.runtimeInstance!
     super.activate(node, root)
     widget.scope.resume()
-    widget.callHook(LifecycleHooks.activated)
+    widget.invokeHook(LifecycleHooks.activated)
     if (widget.dirty) {
       widget.update()
       Scheduler.flushSync()
@@ -95,7 +95,7 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
     // 先调用根节点的停用逻辑（子 → 父顺序）
     super.deactivate(node, root)
     widget.scope.pause()
-    widget.callHook(LifecycleHooks.deactivated)
+    widget.invokeHook(LifecycleHooks.deactivated)
   }
   /** @inheritDoc */
   override unmount(node: StatefulWidgetVNode): void {
@@ -104,12 +104,12 @@ export class StatefulWidgetController extends BaseWidgetController<StatefulWidge
       // 修改状态为已停用
       node.state = NodeState.Deactivated
       // 触发onDeactivated生命周期
-      widget.callHook(LifecycleHooks.deactivated)
+      widget.invokeHook(LifecycleHooks.deactivated)
     }
     // 触发onBeforeUnmount生命周期
-    widget.callHook(LifecycleHooks.beforeUnmount)
+    widget.invokeHook(LifecycleHooks.beforeUnmount)
     super.unmount(node)
     // 触发onUnmounted生命周期
-    widget.callHook(LifecycleHooks.unmounted)
+    widget.invokeHook(LifecycleHooks.unmounted)
   }
 }

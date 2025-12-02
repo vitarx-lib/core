@@ -160,7 +160,7 @@ export class StatefulWidgetRuntime<
    * @param args - 钩子函数参数
    * @returns 钩子函数的返回值
    */
-  public callHook<T extends LifecycleHooks>(
+  public invokeHook<T extends LifecycleHooks>(
     hookName: T,
     ...args: LifecycleHookParameter<T>
   ): LifecycleHookReturnType<T> | void {
@@ -195,13 +195,31 @@ export class StatefulWidgetRuntime<
     // ---------- 异步更新 ----------
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
-    this.callHook(LifecycleHooks.beforeUpdate)
+    this.invokeHook(LifecycleHooks.beforeUpdate)
     if (this.options.enableScheduler) {
       Scheduler.queueJob(this.finishUpdate)
     } else {
       this.finishUpdate()
     }
   }
+
+  /**
+   * 销毁实例资源
+   * 执行清理操作，释放内存
+   */
+  public override destroy(): void {
+    this.invokeHook(LifecycleHooks.destroy)
+    if (this.renderDepsSubscriber) {
+      this.renderDepsSubscriber.dispose()
+      this.renderDepsSubscriber = null
+    }
+    // 清空依赖数组
+    this.deps = null
+    // 释放作用域资源
+    this.scope.dispose()
+    super.destroy()
+  }
+
   /**
    * 在 update 内部调用的渲染执行函数
    */
@@ -221,24 +239,8 @@ export class StatefulWidgetRuntime<
     } catch (err) {
       this.reportError(err, 'update')
     } finally {
-      this.callHook(LifecycleHooks.updated)
+      this.invokeHook(LifecycleHooks.updated)
     }
-  }
-  /**
-   * 销毁实例资源
-   * 执行清理操作，释放内存
-   */
-  public override destroy(): void {
-    this.callHook(LifecycleHooks.destroy)
-    if (this.renderDepsSubscriber) {
-      this.renderDepsSubscriber.dispose()
-      this.renderDepsSubscriber = null
-    }
-    // 清空依赖数组
-    this.deps = null
-    // 释放作用域资源
-    this.scope.dispose()
-    super.destroy()
   }
   /**
    * 重新构建子虚拟节点并建立依赖追踪

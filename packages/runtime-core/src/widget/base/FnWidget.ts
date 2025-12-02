@@ -59,9 +59,9 @@ const performChildReplacement = (
   const anchor = renderer.createText('')
   renderer.insertBefore(anchor, oldChild.el!)
   unmountNode(oldChild)
-  runtime.callHook(LifecycleHooks.beforeMount)
+  runtime.invokeHook(LifecycleHooks.beforeMount)
   mountNode(newChild, anchor, 'replace')
-  runtime.callHook(LifecycleHooks.mounted)
+  runtime.invokeHook(LifecycleHooks.mounted)
 }
 
 /**
@@ -76,7 +76,7 @@ const isValidNodeState = (state: NodeState): boolean => {
  */
 const handleActivatedState = (runtime: StatefulWidgetRuntime, oldChild: VNode, newChild: VNode) => {
   performChildReplacement(runtime, oldChild, newChild)
-  runtime.callHook(LifecycleHooks.activated)
+  runtime.invokeHook(LifecycleHooks.activated)
 }
 
 /**

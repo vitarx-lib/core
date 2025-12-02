@@ -186,8 +186,8 @@ describe('StatefulWidgetRuntime', () => {
       const runtime = new StatefulWidgetRuntime(vnode as any)
 
       expect(() => {
-        runtime.callHook(LifecycleHooks.beforeUpdate)
-        runtime.callHook(LifecycleHooks.updated)
+        runtime.invokeHook(LifecycleHooks.beforeUpdate)
+        runtime.invokeHook(LifecycleHooks.updated)
       }).not.toThrow()
     })
 
@@ -209,7 +209,7 @@ describe('StatefulWidgetRuntime', () => {
       const runtime = new StatefulWidgetRuntime(vnode as any)
       const reportErrorSpy = vi.spyOn(runtime, 'reportError')
 
-      runtime.callHook(LifecycleHooks.beforeUpdate)
+      runtime.invokeHook(LifecycleHooks.beforeUpdate)
 
       expect(reportErrorSpy).toHaveBeenCalledWith(error, expect.stringContaining('hook:'))
     })
