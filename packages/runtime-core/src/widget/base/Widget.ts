@@ -324,6 +324,7 @@ export abstract class Widget<
    * 运行时实例销毁时触发的钩子
    *
    * onDestroy 钩子会在服务端和客户端渲染时都执行，用于清理资源。
+   * 在客户端运行时，它的触发时机和onBeforeUnmount一致
    *
    * @example
    * ```tsx
