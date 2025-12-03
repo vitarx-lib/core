@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { createVNode, FragmentController, NodeState, TEXT_NODE_TYPE } from '../../src/index.js'
 import type { FragmentVNode } from '../../src/index.js'
+import { createVNode, FragmentController, NodeState, TEXT_NODE_TYPE } from '../../src/index.js'
 
 describe('FragmentController', () => {
   let controller: FragmentController
@@ -31,6 +31,9 @@ describe('FragmentController', () => {
   }
 
   describe('render', () => {
+    beforeEach(() => {
+      document.body.innerHTML = ''
+    })
     it('应该创建 Fragment 元素', () => {
       const vnode = createVNode('fragment', {})
       const el = controller.render(vnode)
@@ -42,14 +45,12 @@ describe('FragmentController', () => {
     it('应该设置节点状态为 Rendered', () => {
       const vnode = createVNode('fragment', {})
       controller.render(vnode)
-
       expect(vnode.state).toBe(NodeState.Rendered)
     })
 
     it('应该将元素存储在 vnode.el 中', () => {
       const vnode = createVNode('fragment', {})
       const el = controller.render(vnode)
-
       expect(vnode.el).toBe(el)
     })
 
@@ -61,35 +62,36 @@ describe('FragmentController', () => {
     })
 
     it('应该渲染包含单个子节点的 Fragment', () => {
-      const child = createVNode(TEXT_NODE_TYPE, { value: 'Hello' })
+      const child = createVNode('span', { children: 'Hello' })
       const vnode = createVNode('fragment', { children: [child] })
-      const el = controller.render(vnode)
-
-      expect(el.childNodes.length).toBe(1)
-      expect(el.textContent).toBe('Hello')
+      controller.render(vnode)
+      controller.mount(vnode, document.body)
+      expect(document.body.children.length).toBe(1)
+      expect(document.body.textContent).toBe('Hello')
     })
 
     it('应该渲染包含多个子节点的 Fragment', () => {
       const children = [
-        createVNode(TEXT_NODE_TYPE, { value: 'Hello' }),
-        createVNode(TEXT_NODE_TYPE, { value: ' ' }),
-        createVNode(TEXT_NODE_TYPE, { value: 'World' })
+        createVNode('span', { value: 'Hello' }),
+        createVNode('span', { value: ' ' }),
+        createVNode('span', { value: 'World' })
       ]
       const vnode = createVNode('fragment', { children })
-      const el = controller.render(vnode)
-
-      expect(el.childNodes.length).toBe(3)
-      expect(el.textContent).toBe('Hello World')
+      controller.render(vnode)
+      controller.mount(vnode, document.body)
+      expect(document.body.children.length).toBe(3)
+      expect(document.body.textContent).toBe('Hello World')
     })
 
     it('应该渲染包含元素子节点的 Fragment', () => {
       const children = [createVNode('div', { id: 'a' }), createVNode('span', { id: 'b' })]
       const vnode = createVNode('fragment', { children })
-      const el = controller.render(vnode)
-
-      expect(el.childNodes.length).toBe(2)
-      expect((el.childNodes[0] as HTMLElement).tagName).toBe('DIV')
-      expect((el.childNodes[1] as HTMLElement).tagName).toBe('SPAN')
+      const el = document.body
+      controller.render(vnode)
+      controller.mount(vnode, document.body)
+      expect(el.children.length).toBe(2)
+      expect((document.body.children[0] as HTMLElement).tagName).toBe('DIV')
+      expect((document.body.children[1] as HTMLElement).tagName).toBe('SPAN')
     })
 
     it('应该渲染嵌套的 Fragment', () => {
@@ -99,7 +101,9 @@ describe('FragmentController', () => {
       const vnode = createVNode('fragment', {
         children: [createVNode(TEXT_NODE_TYPE, { value: 'outer' }), nested]
       })
-      const el = controller.render(vnode)
+      controller.render(vnode)
+      controller.mount(vnode, document.body)
+      const el = document.body
 
       expect(el.textContent).toContain('outer')
       expect(el.textContent).toContain('nested')
@@ -195,7 +199,7 @@ describe('FragmentController', () => {
   describe('activate', () => {
     it('应该激活已停用的 Fragment', () => {
       const { vnode: fragmentNode, container } = setupFragment({ children: 'Test' })
-      
+
       controller.deactivate(fragmentNode, true)
       expect(container.textContent).toBe('')
       expect(fragmentNode.state).toBe(NodeState.Deactivated)
