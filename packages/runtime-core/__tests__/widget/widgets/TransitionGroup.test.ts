@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   cloneVNode,
   createVNode,
-  Fragment,
+  FRAGMENT_NODE_TYPE,
   getRenderer,
   mountNode,
   renderNode,
@@ -44,7 +44,7 @@ describe('TransitionGroup 组件', () => {
       })
       renderNode(vnode)
       // 默认应该使用 fragment
-      expect(vnode.runtimeInstance?.child?.type).toBe(Fragment)
+      expect(vnode.runtimeInstance?.child?.type).toBe(FRAGMENT_NODE_TYPE)
     })
   })
 

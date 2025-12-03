@@ -6,7 +6,7 @@ import { ref } from '@vitarx/responsive'
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createVNode,
-  Fragment,
+  FRAGMENT_NODE_TYPE,
   type FragmentVNode,
   mountNode,
   PropBind,
@@ -103,7 +103,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
 
       expect((vnode.runtimeInstance!.child as FragmentVNode).children).toBeDefined()
-      expect(vnode.runtimeInstance!.child.type).toBe(Fragment)
+      expect(vnode.runtimeInstance!.child.type).toBe(FRAGMENT_NODE_TYPE)
     })
   })
 

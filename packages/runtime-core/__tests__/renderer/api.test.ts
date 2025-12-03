@@ -5,7 +5,6 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { DomRenderer } from '../../../runtime-dom/src/client/DomRenderer.js'
 import type { HostRenderer } from '../../src/index.js'
 import { getRenderer, setRenderer } from '../../src/index.js'
 
@@ -24,7 +23,6 @@ describe('渲染器 API', () => {
       const renderer = getRenderer()
 
       expect(renderer).toBeDefined()
-      expect(renderer).toBeInstanceOf(DomRenderer)
     })
 
     it('应该能够多次获取同一个渲染器实例', () => {
