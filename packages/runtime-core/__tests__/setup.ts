@@ -1,13 +1,21 @@
-/**
- * 测试环境全局初始化
- *
- * 此文件在所有测试运行前执行，用于：
- * 1. 注册全局渲染器（使用 runtime-dom 的 DomRenderer）
- * 2. 注册所有节点控制器
- *
- * 这样可以确保 runtime-core 的测试能够正常运行，
- * 因为 runtime-core 本身是平台无关的，需要配合具体平台实现使用。
- */
-import { createRenderer } from '../../runtime-dom/src/client/DomRenderer.js'
+import {
+  CommentDriver,
+  FragmentDriver,
+  RegularElementDriver,
+  StatefulWidgetDriver,
+  StatelessWidgetDriver,
+  TextDriver,
+  VoidElementDriver
+} from '../../runtime-default-drivers/dist/drivers/index.js'
+import { DomRenderer } from '../../runtime-dom/dist/client/DomRenderer.js'
+import { NodeKind, registerDriver, setRenderer } from '../src/index.js'
 
-createRenderer()
+setRenderer(new DomRenderer() as any)
+// 注册节点控制器
+registerDriver(NodeKind.REGULAR_ELEMENT, new RegularElementDriver() as any)
+registerDriver(NodeKind.VOID_ELEMENT, new VoidElementDriver() as any)
+registerDriver(NodeKind.FRAGMENT, new FragmentDriver() as any)
+registerDriver(NodeKind.TEXT, new TextDriver() as any)
+registerDriver(NodeKind.COMMENT, new CommentDriver() as any)
+registerDriver(NodeKind.STATELESS_WIDGET, new StatelessWidgetDriver() as any)
+registerDriver(NodeKind.STATEFUL_WIDGET, new StatefulWidgetDriver() as any)

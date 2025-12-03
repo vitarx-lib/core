@@ -13,6 +13,7 @@ import {
   TEXT_NODE_TYPE,
   VNODE_BUILDER_SYMBOL
 } from '../constants/index.js'
+import type { Dynamic, Fragment } from '../widget/index.js'
 import type {
   HostNodeElements,
   HostNodeNames,
@@ -147,9 +148,9 @@ export type AllowCreatedNodeType = JSXElementNames | WidgetTypes | VNodeBuilder
 export type VNodeInstanceType<T extends AllowCreatedNodeType> =
   T extends VNodeBuilder<any, infer R>
     ? R
-    : T extends DynamicRenderType
+    : T extends Dynamic | DynamicRenderType
       ? VNode
-      : T extends FragmentVNodeType
+      : T extends Fragment | FragmentVNodeType
         ? FragmentVNode
         : T extends TextVNodeType
           ? TextVNode
