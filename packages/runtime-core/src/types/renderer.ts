@@ -286,3 +286,8 @@ export interface HostRenderer {
    */
   getParentElement(el: HostNodeElements): HostParentElement | null
 }
+
+/**
+ * 渲染上下文接口
+ */
+export type RenderContext = Vitarx.RenderContext

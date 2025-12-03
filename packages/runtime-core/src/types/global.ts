@@ -69,7 +69,12 @@ declare global {
        */
       [DYNAMIC_RENDER_TYPE]: WidgetPropsType<Dynamic>
     }
-
+    /**
+     * 渲染上下文
+     */
+    interface RenderContext {
+      [K: string]: any
+    }
     /**
      * 宿主平台片段节点接口
      *
