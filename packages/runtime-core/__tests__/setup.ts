@@ -1,3 +1,6 @@
+// noinspection ES6PreferShortImport
+import { DomRenderer } from '../../runtime-dom/dist/DomRenderer.js'
+// noinspection ES6PreferShortImport
 import {
   CommentDriver,
   FragmentDriver,
@@ -6,8 +9,7 @@ import {
   StatelessWidgetDriver,
   TextDriver,
   VoidElementDriver
-} from '../../runtime-default-drivers/dist/drivers/index.js'
-import { DomRenderer } from '../../runtime-dom/dist/client/DomRenderer.js'
+} from '../../runtime-drivers/dist/drivers/index.js'
 import { NodeKind, registerDriver, setRenderer } from '../src/index.js'
 
 setRenderer(new DomRenderer() as any)
