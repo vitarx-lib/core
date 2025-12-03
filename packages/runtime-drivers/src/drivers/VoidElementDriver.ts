@@ -1,9 +1,9 @@
-import type { VoidElementVNodeType } from '../types/index.js'
-import { ElementController } from './ElementController.js'
+import type { VoidElementVNodeType } from '@vitarx/runtime-core'
+import { ElementDriver } from './ElementDriver.js'
 
 /**
- * VoidElementController 是一个专门用于处理虚拟空元素（void elements）的控制器类。
- * 它继承自 ElementController，主要负责创建和管理不需要子节点的 HTML 元素，
+ * VoidElementDriver 是一个专门用于处理虚拟空元素（void elements）的驱动器类。
+ * 它继承自 ElementDriver，主要负责创建和管理不需要子节点的 HTML 元素，
  * 如 <img>、<br>、<input> 等自闭合标签。
  *
  * 核心功能：
@@ -12,7 +12,7 @@ import { ElementController } from './ElementController.js'
  *
  * 代码示例：
  * ```typescript
- * const controller = new VoidElementController();
+ * const controller = new VoidElementDriver();
  * const element = controller.createElement({
  *   type: 'img',
  *   props: { src: 'image.jpg' }
@@ -27,4 +27,4 @@ import { ElementController } from './ElementController.js'
  * - 不支持包含子节点的元素
  * - 创建的元素类型必须符合 VoidElementVNodeType 接口规范
  */
-export class VoidElementController extends ElementController<VoidElementVNodeType> {}
+export class VoidElementDriver extends ElementDriver<VoidElementVNodeType> {}

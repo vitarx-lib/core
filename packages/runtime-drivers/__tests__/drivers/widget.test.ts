@@ -1,13 +1,7 @@
 import { ref } from '@vitarx/responsive'
+import { createVNode, defineStatelessWidget, NodeState, Widget } from '@vitarx/runtime-core'
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  createVNode,
-  defineStatelessWidget,
-  NodeState,
-  StatefulWidgetController,
-  StatelessWidgetController,
-  Widget
-} from '../../src/index.js'
+import { StatefulWidgetDriver, StatelessWidgetDriver } from '../../src/index.js'
 
 // 测试用有状态 Widget
 class TestStatefulWidget extends Widget {
@@ -51,10 +45,10 @@ function expectUnmountedState(vnode: any, container: HTMLElement) {
 }
 
 describe('StatefulWidgetDriver', () => {
-  let controller: StatefulWidgetController
+  let controller: StatefulWidgetDriver
 
   beforeEach(() => {
-    controller = new StatefulWidgetController()
+    controller = new StatefulWidgetDriver()
   })
 
   describe('render', () => {
@@ -139,10 +133,10 @@ describe('StatefulWidgetDriver', () => {
 })
 
 describe('StatelessWidgetDriver', () => {
-  let controller: StatelessWidgetController
+  let controller: StatelessWidgetDriver
 
   beforeEach(() => {
-    controller = new StatelessWidgetController()
+    controller = new StatelessWidgetDriver()
   })
 
   describe('render', () => {

@@ -1,17 +1,12 @@
+import { createCommentVNode, createTextVNode, NodeState } from '@vitarx/runtime-core'
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  CommentController,
-  createCommentVNode,
-  createTextVNode,
-  NodeState,
-  TextController
-} from '../../src/index.js'
+import { CommentDriver, TextDriver } from '../../src/index.js'
 
 describe('TextDriver', () => {
-  let controller: TextController
+  let controller: TextDriver
 
   beforeEach(() => {
-    controller = new TextController()
+    controller = new TextDriver()
   })
 
   describe('render', () => {
@@ -150,10 +145,10 @@ describe('TextDriver', () => {
 })
 
 describe('CommentController', () => {
-  let controller: CommentController
+  let controller: CommentDriver
 
   beforeEach(() => {
-    controller = new CommentController()
+    controller = new CommentDriver()
   })
 
   describe('render', () => {

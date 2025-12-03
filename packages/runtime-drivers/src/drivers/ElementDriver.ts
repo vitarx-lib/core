@@ -1,5 +1,3 @@
-import { invokeDirHook } from '../directive/index.js'
-import { getRenderer } from '../renderer/index.js'
 import type {
   AnyProps,
   ElementVNode,
@@ -9,12 +7,13 @@ import type {
   HostVNode,
   NodeElementType,
   OpsType
-} from '../types/index.js'
-import { HostNodeController } from './HostNodeController.js'
+} from '@vitarx/runtime-core'
+import { getRenderer, invokeDirHook } from '@vitarx/runtime-core'
+import { HostNodeDriver } from './HostNodeDriver.js'
 
 /**
- * ElementController 是一个抽象控制器类，用于管理 DOM 元素的生命周期和属性更新。
- * 它继承自 HostNodeController，专门处理元素节点的渲染、挂载、卸载等操作。
+ * ElementDriver 是一个抽象驱动器类，用于管理 DOM 元素的生命周期和属性更新。
+ * 它继承自 HostNodeDriver，专门处理元素节点的渲染、挂载、卸载等操作。
  *
  * 核心功能：
  * - 属性更新：处理元素属性的添加、修改和删除
@@ -25,25 +24,25 @@ import { HostNodeController } from './HostNodeController.js'
  *
  * @example
  * ```typescript
- * // 创建自定义元素控制器
- * class MyElementController extends ElementController<MyElementVNode> {
+ * // 创建自定义元素驱动器
+ * class MyElementDriver extends ElementDriver<MyElementVNode> {
  *   // 实现具体的渲染逻辑
  * }
  *
- * // 使用控制器
- * const controller = new MyElementController();
+ * // 使用驱动器
+ * const controller = new MyElementDriver();
  * const vnode = createVNode('div', { id: 'app' });
  * const element = controller.render(vnode);
  * ```
  *
- * @extends HostNodeController<T>
+ * @extends HostNodeDriver<T>
  *
  * @remarks
  * - 这是一个抽象类，需要通过继承来使用
- * - 控制器会自动处理指令的生命周期钩子
+ * - 驱动器会自动处理指令的生命周期钩子
  * - 属性更新时会自动处理新旧值的比较
  */
-export abstract class ElementController<T extends ElementVNodeType> extends HostNodeController<T> {
+export abstract class ElementDriver<T extends ElementVNodeType> extends HostNodeDriver<T> {
   /**
    * @inheritDoc
    */

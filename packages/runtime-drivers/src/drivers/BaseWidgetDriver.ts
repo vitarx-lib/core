@@ -1,22 +1,26 @@
+import {
+  activateNode,
+  type AnyProps,
+  createWidgetRuntime,
+  deactivateNode,
+  type HostElements,
+  type HostNodeElements,
+  invokeDirHook,
+  isElementNode,
+  mountNode,
+  type NodeDriver,
+  type NodeElementType,
+  NodeState,
+  type OpsType,
+  renderNode,
+  unmountNode,
+  type WidgetTypes,
+  type WidgetVNode
+} from '@vitarx/runtime-core'
 import { isDeepEqual } from '@vitarx/utils'
-import { NodeState } from '../constants/index.js'
-import { invokeDirHook } from '../directive/index.js'
-import type {
-  AnyProps,
-  HostElements,
-  HostNodeElements,
-  NodeController,
-  NodeElementType,
-  OpsType,
-  WidgetTypes,
-  WidgetVNode
-} from '../types/index.js'
-import { isElementNode } from '../utils/index.js'
-import { activateNode, deactivateNode, mountNode, renderNode, unmountNode } from '../vnode/index.js'
-import { createWidgetRuntime } from '../widget/index.js'
 
 /**
- * 基础 Widget 控制器抽象类，实现了 NodeController 接口。
+ * 基础 Widget 驱动抽象类，实现了 NodeDriver 接口。
  * 提供了 Widget 节点的生命周期管理和基本操作方法。
  *
  * 核心功能：
@@ -26,7 +30,7 @@ import { createWidgetRuntime } from '../widget/index.js'
  *
  * 使用示例：
  * ```typescript
- * class MyWidgetController extends BaseWidgetController<WidgetType.Button> {
+ * class MyWidgetDriver extends BaseWidgetDriver<WidgetType.Button> {
  *   updateProps(node: WidgetVNode<WidgetType.Button>, newProps: AnyProps) {
  *     // 实现属性更新逻辑
  *   }
@@ -45,9 +49,53 @@ import { createWidgetRuntime } from '../widget/index.js'
  * - 对于元素节点，会在适当的生命周期节点调用指令钩子
  * - 使用了泛型约束 T extends WidgetTypes 来确保类型安全
  */
-export abstract class BaseWidgetController<T extends WidgetTypes> implements NodeController<T> {
+export abstract class BaseWidgetDriver<T extends WidgetTypes> implements NodeDriver<T> {
   /** @inheritDoc */
   abstract updateProps(node: WidgetVNode<T>, newProps: AnyProps): void
+
+  /** @inheritDoc */
+  render(node: WidgetVNode<T>): NodeElementType<T> {
+    const widget = createWidgetRuntime(node)
+    // 从根节点获取元素并转换为宿主元素实例类型
+    const el = renderNode(widget.child)
+    node.state = NodeState.Rendered
+    // 调用指令钩子
+    invokeDirHook(node, 'created')
+    return el as NodeElementType<T>
+  }
+
+  /** @inheritDoc */
+  mount(node: WidgetVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
+    invokeDirHook(node, 'beforeMount')
+    mountNode(node.runtimeInstance!.child, target, opsType)
+    node.state = NodeState.Activated
+    invokeDirHook(node, 'mounted')
+  }
+
+  /** @inheritDoc */
+  activate(node: WidgetVNode<T>, root: boolean = true): void {
+    activateNode(node.runtimeInstance!.child, root)
+    node.state = NodeState.Activated
+  }
+
+  /** @inheritDoc */
+  deactivate(node: WidgetVNode<T>, root: boolean = true): void {
+    deactivateNode(node.runtimeInstance!.child, root)
+    node.state = NodeState.Deactivated
+  }
+
+  /** @inheritDoc */
+  unmount(node: WidgetVNode<T>): void {
+    const isElement = isElementNode(node.runtimeInstance!.child)
+    const el = node.el! as HostElements
+    if (isElement) invokeDirHook(node, 'beforeUnmount')
+    unmountNode(node.runtimeInstance!.child)
+    node.runtimeInstance!.destroy()
+    if (node.ref) node.ref.value = null
+    node.state = NodeState.Unmounted
+    if (isElement) invokeDirHook(node, 'unmounted', el)
+  }
+
   /**
    * 比较新旧属性对象的差异，并更新旧属性对象以匹配新属性对象
    * @param oldProps 旧的属性对象
@@ -75,43 +123,5 @@ export abstract class BaseWidgetController<T extends WidgetTypes> implements Nod
       }
     }
     return changedKeys
-  }
-  /** @inheritDoc */
-  render(node: WidgetVNode<T>): NodeElementType<T> {
-    const widget = createWidgetRuntime(node)
-    // 从根节点获取元素并转换为宿主元素实例类型
-    const el = renderNode(widget.child)
-    node.state = NodeState.Rendered
-    // 调用指令钩子
-    invokeDirHook(node, 'created')
-    return el as NodeElementType<T>
-  }
-  /** @inheritDoc */
-  mount(node: WidgetVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
-    invokeDirHook(node, 'beforeMount')
-    mountNode(node.runtimeInstance!.child, target, opsType)
-    node.state = NodeState.Activated
-    invokeDirHook(node, 'mounted')
-  }
-  /** @inheritDoc */
-  activate(node: WidgetVNode<T>, root: boolean = true): void {
-    activateNode(node.runtimeInstance!.child, root)
-    node.state = NodeState.Activated
-  }
-  /** @inheritDoc */
-  deactivate(node: WidgetVNode<T>, root: boolean = true): void {
-    deactivateNode(node.runtimeInstance!.child, root)
-    node.state = NodeState.Deactivated
-  }
-  /** @inheritDoc */
-  unmount(node: WidgetVNode<T>): void {
-    const isElement = isElementNode(node.runtimeInstance!.child)
-    const el = node.el! as HostElements
-    if (isElement) invokeDirHook(node, 'beforeUnmount')
-    unmountNode(node.runtimeInstance!.child)
-    node.runtimeInstance!.destroy()
-    if (node.ref) node.ref.value = null
-    node.state = NodeState.Unmounted
-    if (isElement) invokeDirHook(node, 'unmounted', el)
   }
 }

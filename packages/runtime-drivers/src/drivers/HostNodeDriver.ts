@@ -1,24 +1,22 @@
-import { NodeState } from '../constants/index.js'
-import { getRenderer } from '../renderer/index.js'
-import { findParentNode } from '../runtime/index.js'
 import type {
   AnyProps,
   HostCommentElement,
   HostNodeElements,
+  HostParentElement,
   HostVNode,
   HostVNodeType,
-  NodeController,
+  NodeDriver,
   NodeElementType,
   OpsType
-} from '../types/index.js'
-import { isWidgetNode } from '../utils/index.js'
+} from '@vitarx/runtime-core'
+import { findParentNode, getRenderer, isWidgetNode, NodeState } from '@vitarx/runtime-core'
 
 /**
- * 宿主节点控制器抽象基类
+ * 宿主节点驱动器抽象基类
  *
  * 负责管理 DOM 节点的渲染、挂载、激活、停用和卸载等生命周期
  */
-export abstract class HostNodeController<T extends HostVNodeType> implements NodeController<T> {
+export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDriver<T> {
   /** 获取渲染器实例 */
   protected get dom() {
     return getRenderer()
@@ -44,7 +42,7 @@ export abstract class HostNodeController<T extends HostVNodeType> implements Nod
    * @inheritDoc
    */
   mount(node: HostVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
-    if (target) this.dom[opsType || 'appendChild'](node.el!, target)
+    if (target) this.dom[opsType || 'appendChild'](node.el!, target as HostParentElement)
     this.mountChildren?.(node)
     node.state = NodeState.Activated
   }

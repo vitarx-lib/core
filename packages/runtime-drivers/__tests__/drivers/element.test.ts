@@ -1,19 +1,18 @@
 import { ref } from '@vitarx/responsive'
-import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createVNode,
   NodeState,
-  RegularElementController,
   type RegularElementVNodeType,
-  VoidElementController,
   type VoidElementVNodeType
-} from '../../src/index.js'
+} from '@vitarx/runtime-core'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { RegularElementDriver, VoidElementDriver } from '../../src/index.js'
 
 describe('RegularElementDriver', () => {
-  let controller: RegularElementController
+  let controller: RegularElementDriver
 
   beforeEach(() => {
-    controller = new RegularElementController()
+    controller = new RegularElementDriver()
     document.body.innerHTML = ''
   })
 
@@ -293,10 +292,10 @@ describe('RegularElementDriver', () => {
 })
 
 describe('VoidElementDriver', () => {
-  let controller: VoidElementController
+  let controller: VoidElementDriver
 
   beforeEach(() => {
-    controller = new VoidElementController()
+    controller = new VoidElementDriver()
   })
 
   describe('render', () => {

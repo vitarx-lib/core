@@ -1,5 +1,4 @@
 import { Scheduler, SubManager } from '@vitarx/responsive'
-import { LifecycleHooks, NodeState } from '../constants/index.js'
 import type {
   AnyProps,
   HostNodeElements,
@@ -7,15 +6,20 @@ import type {
   StatefulWidgetVNode,
   StatefulWidgetVNodeType,
   VNode
-} from '../types/index.js'
-import { isVNode } from '../utils/index.js'
-import { createCommentVNode, renderNode } from '../vnode/index.js'
-import { createWidgetRuntime } from '../widget/runtime/utils.js'
-import { BaseWidgetController } from './BaseWidgetController.js'
+} from '@vitarx/runtime-core'
+import {
+  createCommentVNode,
+  createWidgetRuntime,
+  isVNode,
+  LifecycleHooks,
+  NodeState,
+  renderNode
+} from '@vitarx/runtime-core'
+import { BaseWidgetDriver } from './BaseWidgetDriver.js'
 
 /**
- * StatefulWidgetController 是用于管理有状态组件(StatefulWidget)生命周期的控制器类。
- * 它继承自 BaseWidgetController，负责处理有状态组件的属性更新、渲染、挂载、激活、停用和卸载等核心操作。
+ * StatefulWidgetDriver 是用于管理有状态组件(StatefulWidget)生命周期的驱动器类。
+ * 它继承自 BaseWidgetDriver，负责处理有状态组件的属性更新、渲染、挂载、激活、停用和卸载等核心操作。
  *
  * 核心功能：
  * - 属性更新管理：处理组件属性的变化并触发相应的更新
@@ -23,11 +27,11 @@ import { BaseWidgetController } from './BaseWidgetController.js'
  * - 生命周期管理：控制组件的挂载、激活、停用和卸载等生命周期状态
  *
  * 构造函数参数：
- * - 无特定构造函数参数，继承自 BaseWidgetController
+ * - 无特定构造函数参数，继承自 BaseWidgetDriver
  *
  * 使用示例：
  * ```typescript
- * const controller = new StatefulWidgetController();
+ * const controller = new StatefulWidgetDriver();
  * // 在框架内部使用，通常不需要直接实例化
  * ```
  *
@@ -36,7 +40,7 @@ import { BaseWidgetController } from './BaseWidgetController.js'
  * - 组件的生命周期钩子会按照特定顺序触发
  * - 错误处理机制会在渲染失败时自动创建错误节点
  */
-export class StatefulWidgetController extends BaseWidgetController<StatefulWidgetVNodeType> {
+export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetVNodeType> {
   /** @inheritDoc */
   override updateProps(node: StatefulWidgetVNode, newProps: AnyProps): void {
     const oldProps = node.props

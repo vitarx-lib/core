@@ -1,12 +1,18 @@
+import {
+  createVNode,
+  Fragment,
+  type FragmentVNode,
+  NodeState,
+  TEXT_NODE_TYPE
+} from '@vitarx/runtime-core'
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { FragmentVNode } from '../../src/index.js'
-import { createVNode, FragmentController, NodeState, TEXT_NODE_TYPE } from '../../src/index.js'
+import { FragmentDriver } from '../../src/index.js'
 
-describe('FragmentController', () => {
-  let controller: FragmentController
+describe('FragmentDriver', () => {
+  let controller: FragmentDriver
 
   beforeEach(() => {
-    controller = new FragmentController()
+    controller = new FragmentDriver()
   })
 
   // 辅助函数：创建容器
@@ -63,7 +69,7 @@ describe('FragmentController', () => {
 
     it('应该渲染包含单个子节点的 Fragment', () => {
       const child = createVNode('span', { children: 'Hello' })
-      const vnode = createVNode('fragment', { children: [child] })
+      const vnode = createVNode(Fragment, { children: [child] })
       controller.render(vnode)
       controller.mount(vnode, document.body)
       expect(document.body.children.length).toBe(1)
@@ -76,7 +82,7 @@ describe('FragmentController', () => {
         createVNode('span', { children: ' ' }),
         createVNode('span', { children: 'World' })
       ]
-      const vnode = createVNode('fragment', { children })
+      const vnode = createVNode(Fragment, { children })
       controller.render(vnode)
       controller.mount(vnode, document.body)
       expect(document.body.children.length).toBe(3)
@@ -95,10 +101,10 @@ describe('FragmentController', () => {
     })
 
     it('应该渲染嵌套的 Fragment', () => {
-      const nested = createVNode('fragment', {
+      const nested = createVNode(Fragment, {
         children: [createVNode(TEXT_NODE_TYPE, { value: 'nested' })]
       })
-      const vnode = createVNode('fragment', {
+      const vnode = createVNode(Fragment, {
         children: [createVNode(TEXT_NODE_TYPE, { value: 'outer' }), nested]
       })
       controller.render(vnode)
