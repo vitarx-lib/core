@@ -1,9 +1,5 @@
-import {
-  COMMENT_NODE_TYPE,
-  type Fragment,
-  FRAGMENT_NODE_TYPE,
-  TEXT_NODE_TYPE
-} from '../constants/index.js'
+import { COMMENT_NODE_TYPE, FRAGMENT_NODE_TYPE, TEXT_NODE_TYPE } from '../constants/index.js'
+import type { Fragment } from '../widget/index.js'
 import type { MaybeRef } from './props.js'
 import type { CommentVNodeType, FragmentVNodeType, TextVNodeType } from './vnode.js'
 import type { WidgetPropsType } from './widget.js'

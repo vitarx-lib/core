@@ -5,7 +5,7 @@
  * 与 Transition 组件不同，TransitionGroup 可以同时处理多个子元素的过渡。
  */
 
-import { type Fragment, FRAGMENT_NODE_TYPE } from '../../constants/index.js'
+import { FRAGMENT_NODE_TYPE } from '../../constants/index.js'
 import { getRenderer } from '../../renderer/index.js'
 import type {
   AnyChild,
@@ -20,6 +20,7 @@ import { getNodeElement, isContainerNode } from '../../utils/index.js'
 import { PatchUpdate } from '../../vnode/core/update.js'
 import { createVNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
+import type { Fragment } from './Fragment.js'
 
 type AllowTag = HostRegularElementNames | Fragment | FragmentVNodeType
 /**

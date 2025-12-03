@@ -1,5 +1,5 @@
-import { type Dynamic, DYNAMIC_RENDER_TYPE } from '../constants/index.js'
-import { Widget } from '../widget/index.js'
+import { DYNAMIC_RENDER_TYPE } from '../constants/index.js'
+import { type Dynamic, Widget } from '../widget/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
 import type { ErrorHandler } from './lifecycle.js'
 import type { VNode } from './nodes/index.js'

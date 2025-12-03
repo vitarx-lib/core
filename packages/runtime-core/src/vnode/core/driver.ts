@@ -5,7 +5,7 @@ import type {
   AnyProps,
   HostNodeElements,
   HostParentElement,
-  NodeController,
+  NodeDriver,
   NodeElementType,
   NodeKindToNodeType,
   OpsType,
@@ -14,10 +14,10 @@ import type {
 } from '../../types/index.js'
 import { __DEV__ } from '../../utils/index.js'
 
-type Controllers = {
-  [key in NodeKind]: NodeController<NodeKindToNodeType[key]>
+type Drivers = {
+  [key in NodeKind]: NodeDriver<NodeKindToNodeType[key]>
 }
-const controllers: Controllers = {} as Controllers
+const drivers: Drivers = {} as Drivers
 
 /**
  * 注册节点控制器
@@ -25,13 +25,32 @@ const controllers: Controllers = {} as Controllers
  * @param kind - 节点类型
  * @param controller - 节点控制器实例
  */
-export function registerController<K extends NodeKind>(
+export function registerDriver<K extends NodeKind>(
   kind: K,
-  controller: NodeController<NodeKindToNodeType[K]>
+  controller: NodeDriver<NodeKindToNodeType[K]>
 ): void {
-  controllers[kind] = controller as Controllers[K]
+  drivers[kind] = controller as Drivers[K]
 }
-
+/**
+ * 根据节点类型获取对应的驱动程序
+ * @param {NodeKind} kind 节点类型，必须是 NodeKind 的子类型
+ * @returns {object} 返回与节点类型对应的驱动程序
+ * @throws Error 如果没有找到对应的驱动程序，抛出错误
+ */
+export function getNodeDriver<K extends NodeKind>(kind: K): Drivers[K] {
+  // 从驱动程序映射表中获取指定类型的驱动程序
+  const driver = drivers[kind] as Drivers[K]
+  // 检查驱动程序是否存在
+  if (!driver) {
+    // 如果不存在，抛出错误并提示用户可能需要导入平台特定的驱动程序
+    throw new Error(
+      `No driver registered for node kind "${kind}". ` +
+        `You may need to import a platform driver (e.g. runtime-dom / runtime-ssr).`
+    )
+  }
+  // 返回找到的驱动程序
+  return driver
+}
 /**
  * 渲染节点 - 创建元素,这是挂载之前的步骤
  *
@@ -43,7 +62,7 @@ export function renderNode<T extends VNodeTypes>(node: VNode<T>): NodeElementTyp
     return node.el!
   }
   if (node.state === NodeState.Created) {
-    return controllers[node.kind].render(node as any) as NodeElementType<T>
+    return getNodeDriver(node.kind).render(node as any) as NodeElementType<T>
   }
   throw new Error(`The node state (${node.state}) cannot be rendered`)
 }
@@ -60,7 +79,7 @@ export function mountNode(
   opsType?: OpsType
 ): void {
   if (node.state !== NodeState.Rendered) renderNode(node)
-  controllers[node.kind].mount(node as any, container, opsType)
+  getNodeDriver(node.kind).mount(node as any, container, opsType)
   return
 }
 
@@ -72,7 +91,7 @@ export function mountNode(
  */
 export function activateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Deactivated) {
-    controllers[node.kind].activate(node as any, root)
+    getNodeDriver(node.kind).activate(node as any, root)
     return
   }
   throw new Error(`The node state (${node.state}) cannot be activated`)
@@ -86,7 +105,7 @@ export function activateNode(node: VNode, root: boolean = true): void {
  */
 export function deactivateNode(node: VNode, root: boolean = true): void {
   if (node.state === NodeState.Activated) {
-    controllers[node.kind].deactivate(node as any, root)
+    getNodeDriver(node.kind).deactivate(node as any, root)
     return
   }
   throw new Error(`The node state (${node.state}) cannot be deactivated`)
@@ -104,7 +123,7 @@ export function unmountNode(node: VNode): void {
     )
     return
   }
-  controllers[node.kind].unmount(node as any)
+  getNodeDriver(node.kind).unmount(node as any)
   unlinkParentNode(node)
   node.state = NodeState.Unmounted
 }
@@ -119,5 +138,5 @@ export function updateNodeProps(node: VNode, newProps: AnyProps, newNode: VNode)
   // 根据节点类型调用对应的控制器更新属性
   // 这里使用节点 kind 属性来查找对应的控制器
   // 将节点类型断言为 VNode<never> 以满足控制器类型要求
-  controllers[node.kind].updateProps(node as any, newProps, newNode as any)
+  getNodeDriver(node.kind).updateProps(node as any, newProps, newNode as any)
 }

@@ -1,5 +1,3 @@
-import type { AllowCreatedNodeType, AnyChild, VNode } from '../types/index.js'
-
 /**
  * 片段节点标签常量
  *
@@ -7,45 +5,6 @@ import type { AllowCreatedNodeType, AnyChild, VNode } from '../types/index.js'
  * 片段节点允许组件返回多个子节点而不需要包裹元素。
  */
 export const FRAGMENT_NODE_TYPE = 'fragment'
-
-/**
- * 片段元素组件
- *
- * Fragment 是一个特殊的组件，用于将多个子元素组合在一起，而不在DOM中创建额外的节点。
- * 它的实现通过类型重载将字符串常量转换为函数组件形式，便于在JSX中使用。
- *
- * 在虚拟节点创建过程中，Fragment 会被识别为 FRAGMENT_NODE_TYPE 类型，
- * 并进行特殊处理以避免创建不必要的DOM元素。
- *
- * 支持三种等价的使用方式：
- * - `<Fragment>...</Fragment>`：显式使用Fragment组件
- * - `<fragment>...</fragment>`：使用小写标签形式
- * - `<>...</>`：使用空标签简写形式
- *
- * @example
- * ```tsx
- * // 使用Fragment
- * return (
- *   <Fragment>
- *     <Child1 />
- *     <Child2 />
- *   </Fragment>
- * );
- *
- * // 使用空标签简写
- * return (
- *   <>
- *     <Child1 />
- *     <Child2 />
- *   </>
- * );
- * ```
- */
-export const Fragment = FRAGMENT_NODE_TYPE as unknown as {
-  (props: { children?: AnyChild }): VNode
-  __isFragment__: true
-}
-export type Fragment = typeof Fragment
 
 /**
  * 纯文本节点标签常量
@@ -70,29 +29,3 @@ export const COMMENT_NODE_TYPE = 'comment'
  */
 export const DYNAMIC_RENDER_TYPE = 'dynamic'
 export type DynamicRenderType = typeof DYNAMIC_RENDER_TYPE
-/**
- * 动态渲染组件
- *
- * Dynamic 是一个特殊的组件，用于标记需要动态计算和渲染的内容。
- * 它的实现通过类型重载将 `dynamic` 转换为函数组件形式。
- *
- * 动态渲染在节点构建时会被特殊处理，允许在运行时动态计算其内容。
- * 这对于实现条件渲染、异步内容加载等高级功能非常有用。
- *
- * @example
- * ```tsx
- * // 使用Dynamic组件动态加载内容
- * return (
- *   <Dynamic is={currentWidget}/>
- * );
- * ```
- */
-export const Dynamic = DYNAMIC_RENDER_TYPE as unknown as {
-  (props: {
-    is: Exclude<AllowCreatedNodeType, Dynamic | DynamicRenderType>
-    children?: AnyChild
-    [key: string]: any
-  }): VNode
-  __isDynamicRender__: true
-}
-export type Dynamic = typeof Dynamic

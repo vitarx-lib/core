@@ -7,9 +7,7 @@
 
 import {
   COMMENT_NODE_TYPE,
-  type Dynamic,
   type DynamicRenderType,
-  type Fragment,
   FRAGMENT_NODE_TYPE,
   NodeKind,
   TEXT_NODE_TYPE,
@@ -141,7 +139,7 @@ export type VNodeNormalizedChildren = NormalizedRenderable[]
  *
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的运行时虚拟节点类型是 `VNodeType` 类型所定义的。
  */
-export type AllowCreatedNodeType = JSXElementNames | Fragment | Dynamic | WidgetTypes | VNodeBuilder
+export type AllowCreatedNodeType = JSXElementNames | WidgetTypes | VNodeBuilder
 
 /**
  * 节点实例类型重载
@@ -149,9 +147,9 @@ export type AllowCreatedNodeType = JSXElementNames | Fragment | Dynamic | Widget
 export type VNodeInstanceType<T extends AllowCreatedNodeType> =
   T extends VNodeBuilder<any, infer R>
     ? R
-    : T extends Dynamic | DynamicRenderType
+    : T extends DynamicRenderType
       ? VNode
-      : T extends Fragment | FragmentVNodeType
+      : T extends FragmentVNodeType
         ? FragmentVNode
         : T extends TextVNodeType
           ? TextVNode

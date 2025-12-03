@@ -4,7 +4,7 @@ import type { NodeElementType, VNodeTypes } from './vnode.js'
 import type { AnyProps } from './widget.js'
 
 export type OpsType = 'appendChild' | 'insertBefore' | 'replace'
-export interface NodeController<T extends VNodeTypes> {
+export interface NodeDriver<T extends VNodeTypes> {
   /**
    * 渲染节点 - 创建元素，这是挂载之前的步骤
    *
