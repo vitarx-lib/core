@@ -211,7 +211,6 @@ export class StatefulWidgetRuntime<
       this.finishUpdate()
     }
   }
-
   /**
    * 销毁实例资源
    * 执行清理操作，释放内存
@@ -227,7 +226,6 @@ export class StatefulWidgetRuntime<
     this.scope.dispose()
     super.destroy()
   }
-
   /**
    * 在 update 内部调用的渲染执行函数
    */
