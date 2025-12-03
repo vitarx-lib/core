@@ -50,7 +50,7 @@ function expectUnmountedState(vnode: any, container: HTMLElement) {
   expect(container.childNodes.length).toBe(0)
 }
 
-describe('StatefulWidgetController', () => {
+describe('StatefulWidgetDriver', () => {
   let controller: StatefulWidgetController
 
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe('StatefulWidgetController', () => {
     it('应该渲染有状态 Widget', () => {
       const vnode = createVNode(TestStatefulWidget, {})
       const el = controller.render(vnode)
-
+      controller.mount(vnode)
       expect(el).toBeDefined()
       expect((el as HTMLElement).tagName).toBe('DIV')
       expect(el.textContent).toBe('test')
@@ -138,7 +138,7 @@ describe('StatefulWidgetController', () => {
   })
 })
 
-describe('StatelessWidgetController', () => {
+describe('StatelessWidgetDriver', () => {
   let controller: StatelessWidgetController
 
   beforeEach(() => {
@@ -149,7 +149,7 @@ describe('StatelessWidgetController', () => {
     it('应该渲染无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'Hello' })
       const el = controller.render(vnode)
-
+      controller.mount(vnode)
       expect(el).toBeDefined()
       expect((el as HTMLElement).tagName).toBe('DIV')
       expect(el.textContent).toBe('Hello')

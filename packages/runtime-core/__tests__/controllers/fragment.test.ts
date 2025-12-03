@@ -72,9 +72,9 @@ describe('FragmentController', () => {
 
     it('应该渲染包含多个子节点的 Fragment', () => {
       const children = [
-        createVNode('span', { value: 'Hello' }),
-        createVNode('span', { value: ' ' }),
-        createVNode('span', { value: 'World' })
+        createVNode('span', { children: 'Hello' }),
+        createVNode('span', { children: ' ' }),
+        createVNode('span', { children: 'World' })
       ]
       const vnode = createVNode('fragment', { children })
       controller.render(vnode)

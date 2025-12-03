@@ -9,11 +9,12 @@ import {
   type VoidElementVNodeType
 } from '../../src/index.js'
 
-describe('RegularElementController', () => {
+describe('RegularElementDriver', () => {
   let controller: RegularElementController
 
   beforeEach(() => {
     controller = new RegularElementController()
+    document.body.innerHTML = ''
   })
 
   describe('render', () => {
@@ -69,9 +70,10 @@ describe('RegularElementController', () => {
 
     it('应该渲染子节点', () => {
       const vnode = createVNode('div', { children: 'Hello' })
-      const el = controller.render(vnode)
-
-      expect(el.childNodes.length).toBe(1)
+      const el = document.body
+      controller.render(vnode)
+      controller.mount(vnode, document.body)
+      expect(el.children.length).toBe(1)
       expect(el.textContent).toBe('Hello')
     })
 
@@ -83,9 +85,10 @@ describe('RegularElementController', () => {
           createVNode('li', { children: 'Item 3' })
         ]
       })
-      const el = controller.render(vnode)
-
-      expect(el.childNodes.length).toBe(3)
+      controller.render(vnode)
+      controller.mount(vnode, document.body)
+      const el = document.body.children[0]
+      expect(el.children.length).toBe(3)
       expect(el.textContent).toBe('Item 1Item 2Item 3')
     })
   })
@@ -289,7 +292,7 @@ describe('RegularElementController', () => {
   })
 })
 
-describe('VoidElementController', () => {
+describe('VoidElementDriver', () => {
   let controller: VoidElementController
 
   beforeEach(() => {
