@@ -52,6 +52,14 @@ export interface StatefulManagerOptions {
    * - false: 立即同步更新，可能导致性能问题
    */
   enableScheduler?: boolean
+  /**
+   * 是否启用生命周期钩子
+   *
+   * @default true
+   * - true: 启用生命周期钩子，如 onMounted、onUpdated 等
+   * - false: 禁用生命周期钩子
+   */
+  enableLifecycle?: boolean
 }
 /**
  * 有状态组件运行时管理器
@@ -70,7 +78,8 @@ export class StatefulWidgetRuntime<
   /** 管理器配置选项 */
   public options: StatefulManagerOptions = {
     enableAutoUpdate: true,
-    enableScheduler: true
+    enableScheduler: true,
+    enableLifecycle: true
   }
   /** 组件实例 */
   public readonly instance: WidgetInstanceType<T>
@@ -171,7 +180,7 @@ export class StatefulWidgetRuntime<
           ...(args as unknown as [unknown, ErrorSource, Widget])
         ) as LifecycleHookReturnType<T>
       }
-
+      if (!this.options.enableLifecycle && hookName !== LifecycleHooks.render) return void 0
       const hookMethod = this.instance[hookName] as unknown as (
         ...args: LifecycleHookParameter<T>
       ) => any
@@ -227,12 +236,10 @@ export class StatefulWidgetRuntime<
     if (this.state === NodeState.Unmounted) {
       return
     }
-
     if (this.state === NodeState.Deactivated) {
       this.dirty = true
       return
     }
-
     try {
       this.cachedChildVNode = this.patch()
     } catch (err) {
