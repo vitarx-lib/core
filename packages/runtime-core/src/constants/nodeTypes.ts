@@ -81,9 +81,9 @@ export type DynamicRenderType = typeof DYNAMIC_RENDER_TYPE
  *
  * @example
  * ```tsx
- * // 使用Render组件动态加载内容
+ * // 使用Dynamic组件动态加载内容
  * return (
- *   <Render is={currentWidget}/>
+ *   <Dynamic is={currentWidget}/>
  * );
  * ```
  */
