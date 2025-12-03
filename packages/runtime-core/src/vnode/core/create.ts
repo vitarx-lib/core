@@ -6,6 +6,7 @@ import {
   FRAGMENT_NODE_TYPE,
   TEXT_NODE_TYPE
 } from '../../constants/index.js'
+import { isVoidTag } from '../../renderer/index.js'
 import type {
   AllowCreatedNodeType,
   AnyChild,
@@ -93,6 +94,11 @@ export function createVNode<T extends AllowCreatedNodeType>(
   }
   // 处理字符串类型节点
   if (typeof type === 'string') {
+    // 检查不支持children的节点
+    if (__DEV__ && !isSupportChildren(type) && 'children' in props) {
+      const devInfo = getNodeDevInfo(props)
+      logger.warn(`<${type}> children prop will be ignored`, devInfo?.source)
+    }
     switch (type) {
       case DYNAMIC_RENDER_TYPE:
         return createDynamicVNode(props) as VNodeInstanceType<T>
@@ -107,21 +113,15 @@ export function createVNode<T extends AllowCreatedNodeType>(
       case FRAGMENT_NODE_TYPE:
         return createFragmentVNode(props) as VNodeInstanceType<T>
       default:
-        const supportChildren = isSupportChildren(type)
-        // 检查不支持children的节点
-        if (__DEV__ && !supportChildren && 'children' in props) {
-          const devInfo = getNodeDevInfo(props)
-          logger.warn(`<${type}> children prop will be ignored`, devInfo?.source)
-        }
-        if (supportChildren) {
-          return createRegularElementVNode(
-            type as unknown as RegularElementVNodeType,
-            props as unknown as VNodeInputProps<RegularElementVNodeType>
-          ) as VNodeInstanceType<T>
-        } else {
+        if (isVoidTag(type)) {
           return createVoidElementVNode(
             type as unknown as VoidElementVNodeType,
             props as unknown as VNodeInputProps<VoidElementVNodeType>
+          ) as VNodeInstanceType<T>
+        } else {
+          return createRegularElementVNode(
+            type as unknown as RegularElementVNodeType,
+            props as unknown as VNodeInputProps<RegularElementVNodeType>
           ) as VNodeInstanceType<T>
         }
     }
