@@ -1,9 +1,10 @@
 import { Ref, type RefSignal } from '@vitarx/responsive'
 import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils/src/index.js'
+import type { DynamicRenderType } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
 import type { Dynamic, Fragment } from '../widget/index.js'
 import type { JSXElementNames, JSXInternalElements } from './element.js'
-import type { AllowCreatedNodeType } from './vnode.js'
+import type { AllowCreatedNodeType, FragmentVNodeType } from './vnode.js'
 import type { AnyProps, WidgetPropsType, WidgetTypes } from './widget.js'
 
 /**
@@ -310,15 +311,17 @@ type WithVModelUpdate<T extends AnyProps> = T & {
 /**
  * 提取节点属性类型
  */
-export type ExtractVNodeProps<T extends AllowCreatedNodeType> = T extends JSXElementNames
-  ? JSXInternalElements[T]
-  : T extends Dynamic
-    ? WithRefProps<WidgetPropsType<Dynamic>>
-    : T extends Fragment
-      ? WithRefProps<WidgetPropsType<Fragment>>
+export type ExtractVNodeProps<T extends AllowCreatedNodeType> = T extends
+  | Dynamic
+  | DynamicRenderType
+  ? WithRefProps<WidgetPropsType<Dynamic>>
+  : T extends Fragment | FragmentVNodeType
+    ? WithRefProps<WidgetPropsType<Fragment>>
+    : T extends JSXElementNames
+      ? JSXInternalElements[T]
       : T extends WidgetTypes
         ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<T>>>>
-        : {}
+        : AnyProps
 
 /**
  * createVNode 支持的属性类型推导
