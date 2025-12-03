@@ -1,4 +1,3 @@
-import { getRenderer } from '../renderer/index.js'
 import type { ContainerVNode, ContainerVNodeType } from '../types/index.js'
 import { activateNode, deactivateNode, mountNode, renderNode, unmountNode } from '../vnode/index.js'
 import { HostNodeController } from './HostNodeController.js'
@@ -13,10 +12,8 @@ export function mixinContainerController(controller: HostNodeController<Containe
    * @param node - 容器虚拟节点，包含子节点列表
    */
   controller['renderChildren'] = function (node: ContainerVNode) {
-    const dom = getRenderer()
     for (const child of node.children) {
-      const el = renderNode(child) // 遍历并渲染每个子节点
-      dom.appendChild(el, node.el!)
+      renderNode(child) // 遍历并渲染每个子节点
     }
   }
   /**
@@ -25,7 +22,7 @@ export function mixinContainerController(controller: HostNodeController<Containe
    */
   controller['mountChildren'] = function (node: ContainerVNode) {
     for (const child of node.children) {
-      mountNode(child) // 挂载每个子节点到容器的DOM元素上
+      mountNode(child, node.el) // 挂载每个子节点到容器的DOM元素上
     }
   }
   /**
