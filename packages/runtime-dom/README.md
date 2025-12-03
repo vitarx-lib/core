@@ -112,7 +112,7 @@ import { ref } from '@vitarx/responsive'
 // 创建函数组件
 function App() {
   const count = ref(0)
-  
+
   return (
     <div>
       <h1>Count: {count.value}</h1>
@@ -122,7 +122,7 @@ function App() {
 }
 
 // 创建应用并挂载到 DOM
-const app = createApp(App)
+const app = createApp(SSRApp)
 app.mount('#app')
 ```
 

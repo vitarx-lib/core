@@ -1,9 +1,17 @@
-import { App, type AppConfig, type VNode, type WidgetTypes } from '@vitarx/runtime-core'
-import { createRenderer } from './DomRenderer.js'
+import {
+  App,
+  type AppConfig,
+  setRenderer,
+  type VNode,
+  type WidgetTypes
+} from '@vitarx/runtime-core'
+import { setupDefaultDrivers } from '@vitarx/runtime-drivers'
+import { DomRenderer } from './DomRenderer.js'
 
-// 自动创建渲染器
-createRenderer()
-
+// 设置运行时渲染器，使用DOM渲染器
+setRenderer(new DomRenderer())
+// 使用默认驱动器
+setupDefaultDrivers()
 /**
  * 创建一个新的应用实例
  *
