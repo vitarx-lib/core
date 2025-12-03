@@ -6,8 +6,7 @@ import type {
   HostNodeElements,
   HostParentElement,
   HostRegularElements,
-  HostTextElement,
-  HostVoidElementNames
+  HostTextElement
 } from './element.js'
 import type { ElementVNode, FragmentVNode } from './nodes/index.js'
 import type { StyleProperties } from './props.js'
@@ -113,13 +112,6 @@ export interface HostRenderer {
    * @returns { HostCommentElement } 返回注释节点实例
    */
   createComment(text: string): HostCommentElement
-  /**
-   * 判断给定的标签名是否为 void 元素
-   *
-   * @param tag - 标签名
-   * @returns {boolean} - 如果是 void 元素则返回 true，否则返回 false
-   */
-  isVoidElement(tag: string): tag is HostVoidElementNames
   /**
    * 判断给定的元素实例是否为元素
    * @param el - 元素实例
