@@ -251,6 +251,7 @@ export class DomRenderer implements HostRenderer {
 
   /** @inheritDoc */
   setAttribute(el: HostElements, name: string, nextValue: any, prevValue?: any): void {
+    if (name === 'children') return
     try {
       if (nextValue === undefined || nextValue === null) {
         this.removeAttribute(el, name, prevValue)
