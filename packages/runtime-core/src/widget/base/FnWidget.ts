@@ -223,7 +223,7 @@ const initializeAsyncWidget = async (
     loadingNode = cloneVNode(loadingNode)
   } else {
     loadingNode = createCommentVNode({
-      value: `AsyncWidget<${instance.$vnode.runtimeInstance!.name}> loading ...`
+      text: `AsyncWidget<${instance.$vnode.runtimeInstance!.name}> loading ...`
     })
   }
   // 默认使用loading节点

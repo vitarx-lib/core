@@ -505,7 +505,7 @@ describe('StatefulWidgetRuntime', () => {
       const result = (runtime as any).buildChildVNode()
 
       expect(result.type).toBe('comment')
-      expect(result.props.value).toContain('build failed')
+      expect(result.props.text).toContain('build failed')
     })
   })
 
@@ -539,7 +539,7 @@ describe('StatefulWidgetRuntime', () => {
       const result = (runtime as any).buildChildVNode()
 
       expect(result.type).toBe('plain-text')
-      expect(result.props.value).toBe('Hello')
+      expect(result.props.text).toBe('Hello')
     })
 
     it('build 返回数字应该转换为文本节点', () => {
@@ -555,7 +555,7 @@ describe('StatefulWidgetRuntime', () => {
       const result = (runtime as any).buildChildVNode()
 
       expect(result.type).toBe('plain-text')
-      expect(result.props.value).toBe('123')
+      expect(result.props.text).toBe('123')
     })
 
     it('build 返回其他类型应该创建注释节点', () => {
@@ -571,7 +571,7 @@ describe('StatefulWidgetRuntime', () => {
       const result = (runtime as any).buildChildVNode()
 
       expect(result.type).toBe('comment')
-      expect(result.props.value).toContain('returned invalid type')
+      expect(result.props.text).toContain('returned invalid type')
     })
 
     it('应该正确链接父节点关系', () => {

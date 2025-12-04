@@ -224,8 +224,8 @@ describe('PropBind 组件', () => {
       expect(children[1].props.color).toBe('red')
       expect(children[3].props.color).toBe('red')
       // 其他非 VNode 子节点保持不变
-      expect(children[0].props.value).toBe('text')
-      expect(children[2].props.value).toBe('42')
+      expect(children[0].props.text).toBe('text')
+      expect(children[2].props.text).toBe('42')
       expect(children[4]).toBeUndefined()
       expect(children[5]).toBeUndefined()
     })

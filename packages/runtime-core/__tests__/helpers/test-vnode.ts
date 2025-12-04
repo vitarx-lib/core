@@ -20,21 +20,21 @@ import {
 /**
  * 创建测试用的文本节点
  *
- * @param value 文本内容
  * @returns 文本 VNode
+ * @param text
  */
-export function createTestTextVNode(value: string = 'test text'): TextVNode {
-  return createTextVNode({ value })
+export function createTestTextVNode(text: string = 'test text'): TextVNode {
+  return createTextVNode({ text })
 }
 
 /**
  * 创建测试用的注释节点
  *
- * @param value 注释内容
  * @returns 注释 VNode
+ * @param text
  */
-export function createTestCommentVNode(value: string = 'test comment'): CommentVNode {
-  return createCommentVNode({ value })
+export function createTestCommentVNode(text: string = 'test comment'): CommentVNode {
+  return createCommentVNode({ text })
 }
 
 /**

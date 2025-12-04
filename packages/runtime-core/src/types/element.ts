@@ -19,7 +19,7 @@ export interface IntrinsicSpecialElements {
    *
    * @remarks 开发者无需在视图中使用它，在内部逻辑中会自动转换。
    */
-  [TEXT_NODE_TYPE]: { value: MaybeRef<string> }
+  [TEXT_NODE_TYPE]: { text: MaybeRef<string> }
   /**
    * 注释
    *
@@ -29,7 +29,7 @@ export interface IntrinsicSpecialElements {
    *
    * @remarks 不建议在视图中使用它，除非你真的需要在生产环境中显示一段注释。
    */
-  [COMMENT_NODE_TYPE]: { value: MaybeRef<string> }
+  [COMMENT_NODE_TYPE]: { text: MaybeRef<string> }
 }
 /**
  * JSX 元素接口

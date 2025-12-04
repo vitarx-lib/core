@@ -90,7 +90,7 @@ describe('StatelessWidgetRuntime', () => {
       const result = runtime.build()
 
       expect(result.type).toBe(TEXT_NODE_TYPE)
-      expect(result.props.value).toBe('Hello World')
+      expect(result.props.text).toBe('Hello World')
     })
 
     it('返回数字应该转换为文本节点', () => {
@@ -100,7 +100,7 @@ describe('StatelessWidgetRuntime', () => {
       const result = runtime.build()
 
       expect(result.type).toBe('plain-text')
-      expect(result.props.value).toBe('42')
+      expect(result.props.text).toBe('42')
     })
 
     it('返回函数应该抛出错误', () => {
@@ -119,8 +119,8 @@ describe('StatelessWidgetRuntime', () => {
       const result = runtime.build()
 
       expect(result.type).toBe(COMMENT_NODE_TYPE)
-      expect(result.props.value).toBeDefined()
-      expect(result.props.value).toContain('StatelessWidget<NullWidget>')
+      expect(result.props.text).toBeDefined()
+      expect(result.props.text).toContain('StatelessWidget<NullWidget>')
     })
 
     it('返回 undefined 应该创建注释节点', () => {
@@ -130,8 +130,8 @@ describe('StatelessWidgetRuntime', () => {
       const result = runtime.build()
 
       expect(result.type).toBe('comment')
-      expect(result.props.value).toBeDefined()
-      expect(result.props.value).toContain('StatelessWidget<UndefinedWidget>')
+      expect(result.props.text).toBeDefined()
+      expect(result.props.text).toContain('StatelessWidget<UndefinedWidget>')
     })
 
     it('返回对象应该创建注释节点', () => {
@@ -145,8 +145,8 @@ describe('StatelessWidgetRuntime', () => {
       const result = runtime.build()
 
       expect(result.type).toBe('comment')
-      expect(result.props.value).toBeDefined()
-      expect(result.props.value).toContain('returned invalid type object')
+      expect(result.props.text).toBeDefined()
+      expect(result.props.text).toContain('returned invalid type object')
     })
 
     it('应该正确链接父节点关系', () => {

@@ -52,10 +52,10 @@ export class StatelessWidgetRuntime extends WidgetRuntime<StatelessWidgetVNodeTy
         throw new Error(`StatelessWidget<${this.name}> cannot return a function`)
       // 如果构建结果是字符串或数字，创建并返回文本节点
       if (t === 'string' || t === 'number') {
-        child = createTextVNode({ value: String(buildResult) })
+        child = createTextVNode({ text: String(buildResult) })
       } else {
         child = createCommentVNode({
-          value: `StatelessWidget<${this.name}> returned invalid type ${t}`
+          text: `StatelessWidget<${this.name}> returned invalid type ${t}`
         })
       }
     }

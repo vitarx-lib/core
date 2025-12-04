@@ -94,7 +94,7 @@ export class Suspense extends Widget<SuspenseProps> {
     if (typeof props.onError === 'function') this.onError = props.onError
     this.fallback = isVNode(props.fallback)
       ? props.fallback
-      : createCommentVNode({ value: 'suspense fallback' })
+      : createCommentVNode({ text: 'suspense fallback' })
     // 监听计数器变化，手动管理视图更新，优化性能
     this.listener = watch(this.counter, newValue => {
       // 如果为true则显示回退内容

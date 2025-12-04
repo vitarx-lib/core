@@ -81,7 +81,7 @@ const normalizeChild = (current: unknown, keySet: Set<UniqueKey>): VNode | undef
 
   // 对于非虚拟节点值，将其转换为文本节点
   // 使用String()确保所有类型的值都能转换为字符串
-  return createTextVNode({ value: String(current) })
+  return createTextVNode({ text: String(current) })
 }
 
 /**

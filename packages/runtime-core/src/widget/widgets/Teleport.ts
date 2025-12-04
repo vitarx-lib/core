@@ -144,7 +144,7 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
   }
 
   override build(): Renderable {
-    return this.disabled ? this.children : createCommentVNode({ value: 'teleport anchor' })
+    return this.disabled ? this.children : createCommentVNode({ text: 'teleport anchor' })
   }
 
   private getTarget(): HostParentElement | null {

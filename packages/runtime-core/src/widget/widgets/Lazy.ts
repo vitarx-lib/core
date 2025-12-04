@@ -148,7 +148,7 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
   }
 
   override build(): Renderable {
-    return createCommentVNode({ value: '<Lazy> loading ...' })
+    return createCommentVNode({ text: '<Lazy> loading ...' })
   }
 
   /**

@@ -2,10 +2,10 @@ import { ref } from '@vitarx/responsive'
 import { describe, expect, it } from 'vitest'
 import {
   createRegularElementVNode,
+  h,
   NodeKind,
   type RegularElementVNode
 } from '../../../src/index.js'
-import { h } from '../../../src/vnode/core/create.js'
 import { initChildren, propagateSVGNamespace } from '../../../src/vnode/normalizer/children.js'
 
 describe('vnode/normalizer/children', () => {
@@ -16,7 +16,7 @@ describe('vnode/normalizer/children', () => {
 
       expect(children).toHaveLength(1)
       expect(children[0].kind).toBe(NodeKind.TEXT)
-      expect(children[0].props.value).toBe('Hello')
+      expect(children[0].props.text).toBe('Hello')
     })
 
     it('应该规范化数字子节点', () => {
@@ -25,7 +25,7 @@ describe('vnode/normalizer/children', () => {
 
       expect(children).toHaveLength(1)
       expect(children[0].kind).toBe(NodeKind.TEXT)
-      expect(children[0].props.value).toBe('123')
+      expect(children[0].props.text).toBe('123')
     })
 
     it('应该规范化 VNode 子节点', () => {
@@ -106,8 +106,8 @@ describe('vnode/normalizer/children', () => {
 
       expect(children.length).toBeGreaterThan(0)
       // 应该包含文本节点、数字节点和元素节点
-      const hasTextNode = children.some(c => c.kind === NodeKind.TEXT && c.props.value === 'Text')
-      const hasNumberNode = children.some(c => c.kind === NodeKind.TEXT && c.props.value === '123')
+      const hasTextNode = children.some(c => c.kind === NodeKind.TEXT && c.props.text === 'Text')
+      const hasNumberNode = children.some(c => c.kind === NodeKind.TEXT && c.props.text === '123')
       const hasElementNode = children.some(c => c === vnode)
 
       expect(hasTextNode).toBe(true)
@@ -122,7 +122,7 @@ describe('vnode/normalizer/children', () => {
 
       expect(children).toHaveLength(1)
       expect(children[0].kind).toBe(NodeKind.TEXT)
-      expect(children[0].props.value).toBe('Ref Text')
+      expect(children[0].props.text).toBe('Ref Text')
     })
 
     it('应该处理 ref 包装的数组', () => {
@@ -187,9 +187,9 @@ describe('vnode/normalizer/children', () => {
       const children = initChildren(['First', 'Second', 'Third'], parent)
 
       expect(children).toHaveLength(3)
-      expect(children[0].props.value).toBe('First')
-      expect(children[1].props.value).toBe('Second')
-      expect(children[2].props.value).toBe('Third')
+      expect(children[0].props.text).toBe('First')
+      expect(children[1].props.text).toBe('Second')
+      expect(children[2].props.text).toBe('Third')
     })
   })
 
@@ -248,7 +248,7 @@ describe('vnode/normalizer/children', () => {
     })
 
     it('应该只处理元素节点', () => {
-      const text = h('plain-text', { value: 'Text' })
+      const text = h('plain-text', { text: 'Text' })
 
       // 文本节点不应该有 isSVGElement 属性
       propagateSVGNamespace(text as any)

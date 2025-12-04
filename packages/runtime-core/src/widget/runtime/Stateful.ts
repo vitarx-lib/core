@@ -295,10 +295,10 @@ export class StatefulWidgetRuntime<
       } else {
         const resultType = typeof buildResult
         if (resultType === 'string' || resultType === 'number') {
-          vnode = createTextVNode({ value: String(buildResult) })
+          vnode = createTextVNode({ text: String(buildResult) })
         } else {
           vnode = createCommentVNode({
-            value: `StatefulWidget<${this.name}> build() returned invalid type: ${resultType}`
+            text: `StatefulWidget<${this.name}> build() returned invalid type: ${resultType}`
           })
         }
       }
@@ -306,7 +306,7 @@ export class StatefulWidgetRuntime<
       const errorVNode = this.reportError(error, 'build')
       vnode = isVNode(errorVNode)
         ? errorVNode
-        : createCommentVNode({ value: `StatefulWidget<${this.name}> build failed` })
+        : createCommentVNode({ text: `StatefulWidget<${this.name}> build failed` })
     }
     linkParentNode(vnode, this.vnode)
     return vnode

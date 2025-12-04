@@ -161,7 +161,7 @@ export interface HostVNode<T extends HostVNodeType = HostVNodeType> extends VNod
  */
 export interface NonElementVNode<T extends NonElementVNodeType = NonElementVNodeType>
   extends HostVNode<T> {
-  props: { value: string }
+  props: { text: string }
 }
 
 /**

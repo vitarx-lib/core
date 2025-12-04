@@ -85,7 +85,7 @@ describe('App 应用模块', () => {
 
   describe('挂载和卸载', () => {
     it('应该能够挂载应用到 DOM - 通过 DOM 元素', () => {
-      const text = createVNode(TEXT_NODE_TYPE, { value: 'Hello' })
+      const text = createVNode(TEXT_NODE_TYPE, { text: 'Hello' })
       const TestWidget = createTestWidget({
         build() {
           return createVNode('div', { children: [text] })
