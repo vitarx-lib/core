@@ -1,5 +1,5 @@
 // noinspection ES6PreferShortImport
-import { DomRenderer } from '../../runtime-dom/dist/DomRenderer.js'
+import { DomRenderer, VOID_ELEMENTS } from '../../runtime-dom/dist/DomRenderer.js'
 // noinspection ES6PreferShortImport
 import {
   CommentDriver,
@@ -10,9 +10,10 @@ import {
   TextDriver,
   VoidElementDriver
 } from '../../runtime-drivers/dist/drivers/index.js'
-import { NodeKind, registerDriver, setRenderer } from '../src/index.js'
+import { NodeKind, registerDriver, setHostSchema, setRenderer } from '../src/index.js'
 
 setRenderer(new DomRenderer() as any)
+setHostSchema({ voidElements: VOID_ELEMENTS })
 // 注册节点控制器
 registerDriver(NodeKind.REGULAR_ELEMENT, new RegularElementDriver() as any)
 registerDriver(NodeKind.VOID_ELEMENT, new VoidElementDriver() as any)
