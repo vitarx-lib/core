@@ -12,7 +12,7 @@ import {
   type HostRegularElements,
   type HostRenderer,
   type HostTextElement,
-  type HostVoidElementNames,
+  setHostSchema,
   type StyleProperties,
   StyleUtils
 } from '@vitarx/runtime-core'
@@ -41,7 +41,7 @@ const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
 const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
 
 const DEFAULT_PROPERTIES_CACHE = new Map<string, Record<string, any>>()
-
+setHostSchema({ voidElements: VOID_ELEMENTS })
 /**
  * Web渲染器类，实现了HostRenderer接口，用于在浏览器环境中进行DOM操作和渲染。
  *
@@ -80,7 +80,7 @@ export class DomRenderer implements HostRenderer {
     // 元素节点且非 void 元素才是容器
     if (el.nodeType === Node.ELEMENT_NODE) {
       const tag = (el as HTMLElement).tagName.toLowerCase()
-      return !this.isVoidElement(tag)
+      return !VOID_ELEMENTS.has(tag)
     }
     return false
   }
@@ -102,11 +102,6 @@ export class DomRenderer implements HostRenderer {
   /** @inheritDoc */
   createComment(text: string): HostCommentElement {
     return document.createComment(text)
-  }
-
-  /** @inheritDoc */
-  isVoidElement(tag: string): tag is HostVoidElementNames {
-    return VOID_ELEMENTS.has(tag)
   }
 
   /** @inheritDoc */

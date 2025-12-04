@@ -7,7 +7,6 @@ import {
 } from '@vitarx/runtime-core'
 import { setupDefaultDrivers } from '@vitarx/runtime-drivers'
 import { DomRenderer } from './DomRenderer.js'
-
 // 设置运行时渲染器，使用DOM渲染器
 setRenderer(new DomRenderer())
 // 使用默认驱动器
