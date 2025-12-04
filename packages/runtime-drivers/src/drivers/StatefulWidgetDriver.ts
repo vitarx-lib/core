@@ -65,7 +65,7 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetVNodeTy
       const errVNode = widget.reportError(e, 'render')
       widget.cachedChildVNode = isVNode(errVNode)
         ? errVNode
-        : createCommentVNode({ value: `StatefulWidget<${widget.name}> render fail` })
+        : createCommentVNode({ text: `StatefulWidget<${widget.name}> render fail` })
       // 获取更新后的DOM元素
       el = renderNode(widget.cachedChildVNode)
     }

@@ -11,7 +11,7 @@ describe('TextDriver', () => {
 
   describe('render', () => {
     it('应该创建文本节点元素', () => {
-      const vnode = createTextVNode({ value: 'Hello' })
+      const vnode = createTextVNode({ text: 'Hello' })
       const el = controller.render(vnode)
 
       expect(el).toBeDefined()
@@ -20,28 +20,28 @@ describe('TextDriver', () => {
     })
 
     it('应该设置节点状态为 Rendered', () => {
-      const vnode = createTextVNode({ value: 'Test' })
+      const vnode = createTextVNode({ text: 'Test' })
       controller.render(vnode)
 
       expect(vnode.state).toBe(NodeState.Rendered)
     })
 
     it('应该将元素存储在 vnode.el 中', () => {
-      const vnode = createTextVNode({ value: 'Test' })
+      const vnode = createTextVNode({ text: 'Test' })
       const el = controller.render(vnode)
 
       expect(vnode.el).toBe(el)
     })
 
     it('应该处理空字符串', () => {
-      const vnode = createTextVNode({ value: '' })
+      const vnode = createTextVNode({ text: '' })
       const el = controller.render(vnode)
 
       expect(el.textContent).toBe('')
     })
 
     it('应该处理特殊字符', () => {
-      const vnode = createTextVNode({ value: '<>&"\'test' })
+      const vnode = createTextVNode({ text: '<>&"\'test' })
       const el = controller.render(vnode)
 
       expect(el.textContent).toBe('<>&"\'test')
@@ -50,7 +50,7 @@ describe('TextDriver', () => {
 
   describe('mount', () => {
     it('应该将文本节点挂载到容器', () => {
-      const vnode = createTextVNode({ value: 'Hello' })
+      const vnode = createTextVNode({ text: 'Hello' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -61,7 +61,7 @@ describe('TextDriver', () => {
     })
 
     it('应该设置节点状态为 Activated', () => {
-      const vnode = createTextVNode({ value: 'Test' })
+      const vnode = createTextVNode({ text: 'Test' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -73,31 +73,31 @@ describe('TextDriver', () => {
 
   describe('updateProps', () => {
     it('应该更新文本内容', () => {
-      const vnode = createTextVNode({ value: 'Hello' })
+      const vnode = createTextVNode({ text: 'Hello' })
       controller.render(vnode)
 
-      controller.updateProps(vnode, { value: 'World' })
+      controller.updateProps(vnode, { text: 'World' })
 
-      expect(vnode.props.value).toBe('World')
+      expect(vnode.props.text).toBe('World')
       expect(vnode.el!.textContent).toBe('World')
     })
 
     it('应该更新为空字符串', () => {
-      const vnode = createTextVNode({ value: 'Hello' })
+      const vnode = createTextVNode({ text: 'Hello' })
       controller.render(vnode)
 
-      controller.updateProps(vnode, { value: '' })
+      controller.updateProps(vnode, { text: '' })
 
-      expect(vnode.props.value).toBe('')
+      expect(vnode.props.text).toBe('')
       expect(vnode.el!.textContent).toBe('')
     })
 
     it('应该在值未改变时不做更新', () => {
-      const vnode = createTextVNode({ value: 'Hello' })
+      const vnode = createTextVNode({ text: 'Hello' })
       controller.render(vnode)
       const el = vnode.el
 
-      controller.updateProps(vnode, { value: 'Hello' })
+      controller.updateProps(vnode, { text: 'Hello' })
 
       expect(vnode.el).toBe(el)
     })
@@ -105,7 +105,7 @@ describe('TextDriver', () => {
 
   describe('unmount', () => {
     it('应该从 DOM 中移除文本节点', () => {
-      const vnode = createTextVNode({ value: 'Hello' })
+      const vnode = createTextVNode({ text: 'Hello' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -119,7 +119,7 @@ describe('TextDriver', () => {
     })
 
     it('应该设置节点状态为 Unmounted', () => {
-      const vnode = createTextVNode({ value: 'Test' })
+      const vnode = createTextVNode({ text: 'Test' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -131,7 +131,7 @@ describe('TextDriver', () => {
     })
 
     it('应该清除 el 引用', () => {
-      const vnode = createTextVNode({ value: 'Test' })
+      const vnode = createTextVNode({ text: 'Test' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -153,7 +153,7 @@ describe('CommentController', () => {
 
   describe('render', () => {
     it('应该创建注释节点元素', () => {
-      const vnode = createCommentVNode({ value: 'comment text' })
+      const vnode = createCommentVNode({ text: 'comment text' })
       const el = controller.render(vnode)
 
       expect(el).toBeDefined()
@@ -162,21 +162,21 @@ describe('CommentController', () => {
     })
 
     it('应该设置节点状态为 Rendered', () => {
-      const vnode = createCommentVNode({ value: 'Test' })
+      const vnode = createCommentVNode({ text: 'Test' })
       controller.render(vnode)
 
       expect(vnode.state).toBe(NodeState.Rendered)
     })
 
     it('应该将元素存储在 vnode.el 中', () => {
-      const vnode = createCommentVNode({ value: 'Test' })
+      const vnode = createCommentVNode({ text: 'Test' })
       const el = controller.render(vnode)
 
       expect(vnode.el).toBe(el)
     })
 
     it('应该处理空注释', () => {
-      const vnode = createCommentVNode({ value: '' })
+      const vnode = createCommentVNode({ text: '' })
       const el = controller.render(vnode)
 
       expect(el.textContent).toBe('')
@@ -185,7 +185,7 @@ describe('CommentController', () => {
 
   describe('mount', () => {
     it('应该将注释节点挂载到容器', () => {
-      const vnode = createCommentVNode({ value: 'comment' })
+      const vnode = createCommentVNode({ text: 'comment' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -196,7 +196,7 @@ describe('CommentController', () => {
     })
 
     it('应该设置节点状态为 Activated', () => {
-      const vnode = createCommentVNode({ value: 'Test' })
+      const vnode = createCommentVNode({ text: 'Test' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -208,21 +208,21 @@ describe('CommentController', () => {
 
   describe('updateProps', () => {
     it('应该更新注释内容', () => {
-      const vnode = createCommentVNode({ value: 'old comment' })
+      const vnode = createCommentVNode({ text: 'old comment' })
       controller.render(vnode)
 
-      controller.updateProps(vnode, { value: 'new comment' })
+      controller.updateProps(vnode, { text: 'new comment' })
 
-      expect(vnode.props.value).toBe('new comment')
+      expect(vnode.props.text).toBe('new comment')
       expect(vnode.el!.textContent).toBe('new comment')
     })
 
     it('应该在值未改变时不做更新', () => {
-      const vnode = createCommentVNode({ value: 'comment' })
+      const vnode = createCommentVNode({ text: 'comment' })
       controller.render(vnode)
       const el = vnode.el
 
-      controller.updateProps(vnode, { value: 'comment' })
+      controller.updateProps(vnode, { text: 'comment' })
 
       expect(vnode.el).toBe(el)
     })
@@ -230,7 +230,7 @@ describe('CommentController', () => {
 
   describe('unmount', () => {
     it('应该从 DOM 中移除注释节点', () => {
-      const vnode = createCommentVNode({ value: 'comment' })
+      const vnode = createCommentVNode({ text: 'comment' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -244,7 +244,7 @@ describe('CommentController', () => {
     })
 
     it('应该设置节点状态为 Unmounted', () => {
-      const vnode = createCommentVNode({ value: 'Test' })
+      const vnode = createCommentVNode({ text: 'Test' })
       controller.render(vnode)
 
       const container = document.createElement('div')
@@ -256,7 +256,7 @@ describe('CommentController', () => {
     })
 
     it('应该清除 el 引用', () => {
-      const vnode = createCommentVNode({ value: 'Test' })
+      const vnode = createCommentVNode({ text: 'Test' })
       controller.render(vnode)
 
       const container = document.createElement('div')

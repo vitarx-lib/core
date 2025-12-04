@@ -28,9 +28,9 @@ import { HostNodeDriver } from './HostNodeDriver.js'
 export abstract class NonElementDriver<T extends NonElementVNodeType> extends HostNodeDriver<T> {
   override updateProps(node: HostVNode<T>, newProps: AnyProps): void {
     const oldProps = node.props
-    if (oldProps.value !== newProps.value) {
-      oldProps.value = newProps.value
-      this.dom.setText(node.el!, newProps.value)
+    if (oldProps.text !== newProps.text) {
+      oldProps.text = newProps.text
+      this.dom.setText(node.el!, newProps.text)
     }
   }
 }

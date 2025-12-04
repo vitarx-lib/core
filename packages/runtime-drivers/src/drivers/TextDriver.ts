@@ -25,6 +25,6 @@ import { NonElementDriver } from './NonElementDriver.js'
  */
 export class TextDriver extends NonElementDriver<TextVNodeType> {
   protected override createElement(node: TextVNode): HostTextElement {
-    return this.dom.createText(node.props.value)
+    return this.dom.createText(node.props.text)
   }
 }

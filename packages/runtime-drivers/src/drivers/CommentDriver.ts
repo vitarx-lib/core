@@ -19,6 +19,6 @@ import { NonElementDriver } from './NonElementDriver.js'
 export class CommentDriver extends NonElementDriver<CommentVNodeType> {
   /** @inheritDoc */
   protected override createElement(node: CommentVNode): HostCommentElement {
-    return getRenderer().createComment(node.props.value)
+    return getRenderer().createComment(node.props.text)
   }
 }
