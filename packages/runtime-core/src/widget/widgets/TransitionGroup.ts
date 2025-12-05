@@ -9,8 +9,8 @@ import { FRAGMENT_NODE_TYPE } from '../../constants/index.js'
 import { getRenderer } from '../../renderer/index.js'
 import type {
   AnyChild,
-  ContainerVNode,
-  FragmentVNodeType,
+  ContainerNode,
+  FragmentNodeType,
   HostRegularElementNames,
   Renderable,
   VNode,
@@ -22,7 +22,7 @@ import { createVNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 import type { Fragment } from './Fragment.js'
 
-type AllowTag = HostRegularElementNames | Fragment | FragmentVNodeType
+type AllowTag = HostRegularElementNames | Fragment | FragmentNodeType
 /**
  * TransitionGroup 组件属性接口
  *
@@ -120,7 +120,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
    * 为所有子元素触发进入动画。
    */
   override onMounted() {
-    const subTree = this.$vnode.runtimeInstance!.child
+    const subTree = this.$vnode.instance!.child
     if (this.props.appear && isContainerNode(subTree)) {
       for (const child of subTree.children) {
         this.runEnter(child)
@@ -174,7 +174,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
     PatchUpdate.patchUpdateProps(currentVNode, nextVNode)
 
     if (isContainerNode(currentVNode)) {
-      const container = currentVNode as ContainerVNode
+      const container = currentVNode as ContainerNode
 
       // === 1️⃣ 记录更新前位置 ===
       // 保存所有子元素的当前位置，用于后续计算移动距离
@@ -188,7 +188,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
 
       // === 2️⃣ 更新子节点 ===
       // 使用自定义的更新钩子处理子节点的进入、离开和显示状态变化
-      PatchUpdate.patchUpdateChildren(container, nextVNode as ContainerVNode, {
+      PatchUpdate.patchUpdateChildren(container, nextVNode as ContainerNode, {
         onMount: child => this.runEnter(child),
         onUnmount: (child, done) => this.runLeave(child, done),
         onUpdate: (oldChild, newChild, done) => {

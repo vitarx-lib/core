@@ -162,7 +162,7 @@ describe('Teleport 组件', () => {
 
       // 修改 children（通过 props）
       vnode.props.children = createVNode('div', { children: 'content 2' })
-      notify(vnode.runtimeInstance!.props, 'children')
+      notify(vnode.instance!.props, 'children')
       flushScheduler()
       expect(targetContainer.textContent).toBe('content 2')
     })
@@ -307,7 +307,7 @@ describe('Teleport 组件', () => {
       renderNode(vnode)
 
       // 非 disabled 模式下，build 返回注释节点作为锚点
-      expect(vnode.runtimeInstance!.child.type).toBe(COMMENT_NODE_TYPE)
+      expect(vnode.instance!.child.type).toBe(COMMENT_NODE_TYPE)
     })
 
     it('应该在 build 返回子节点（disabled）', () => {
@@ -320,7 +320,7 @@ describe('Teleport 组件', () => {
       renderNode(vnode)
 
       // disabled 模式下，build 返回 children
-      expect(vnode.runtimeInstance!.child).toBe(childVNode)
+      expect(vnode.instance!.child).toBe(childVNode)
     })
   })
 })

@@ -1,7 +1,7 @@
 import { COMMENT_NODE_TYPE, FRAGMENT_NODE_TYPE, TEXT_NODE_TYPE } from '../constants/index.js'
 import type { Fragment } from '../widget/index.js'
 import type { MaybeRef } from './props.js'
-import type { CommentVNodeType, FragmentVNodeType, TextVNodeType } from './vnode.js'
+import type { CommentNodeType, FragmentNodeType, TextNodeType } from './vnode.js'
 import type { WidgetPropsType } from './widget.js'
 
 /**
@@ -101,15 +101,15 @@ export type HostParentElement = Vitarx.HostParentNode
  *
  * 注释作为锚元素，因为注释在开发者工具中是可见的，
  */
-export type HostCommentElement = HostNodeElements<CommentVNodeType>
+export type HostCommentElement = HostNodeElements<CommentNodeType>
 /**
  * 运行时文本元素
  */
-export type HostTextElement = HostNodeElements<TextVNodeType>
+export type HostTextElement = HostNodeElements<TextNodeType>
 /**
  * 运行时片段元素
  */
-export type HostFragmentElement = HostNodeElements<FragmentVNodeType>
+export type HostFragmentElement = HostNodeElements<FragmentNodeType>
 
 /**
  * 主机节点元素类型，表示所有可能的宿主节点类型

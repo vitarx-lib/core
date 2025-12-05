@@ -3,14 +3,14 @@ import { NodeKind, NodeState } from '../../constants/index.js'
 import { unlinkParentNode } from '../../runtime/index.js'
 import type {
   AnyProps,
+  ElementOf,
   HostNodeElements,
   HostParentElement,
   NodeDriver,
-  NodeElementType,
   NodeKindToNodeType,
+  NodeType,
   OpsType,
-  VNode,
-  VNodeTypes
+  VNode
 } from '../../types/index.js'
 import { __DEV__ } from '../../utils/index.js'
 
@@ -18,7 +18,7 @@ type Drivers = {
   [key in NodeKind]: NodeDriver<NodeKindToNodeType[key]>
 }
 const drivers: Drivers = {} as Drivers
-let defaultDriver: NodeDriver<VNodeTypes> | null = null
+let defaultDriver: NodeDriver<NodeType> | null = null
 /**
  * 注册节点控制器
  *
@@ -39,7 +39,7 @@ export function registerDriver<K extends NodeKind>(
  *
  * @param driver - 默认驱动程序实例
  */
-export function setDefaultDriver(driver: NodeDriver<VNodeTypes>) {
+export function setDefaultDriver(driver: NodeDriver<NodeType>) {
   defaultDriver = driver
 }
 /**
@@ -68,12 +68,12 @@ export function getNodeDriver<K extends NodeKind>(kind: K): Drivers[K] {
  * @param node - 虚拟节点对象
  * @returns 创建的 DOM 元素
  */
-export function renderNode<T extends VNodeTypes>(node: VNode<T>): NodeElementType<T> {
+export function renderNode<T extends NodeType>(node: VNode<T>): ElementOf<T> {
   if (node.state === NodeState.Rendered) {
-    return node.el!
+    return node.el! as ElementOf<T>
   }
   if (node.state === NodeState.Created) {
-    return getNodeDriver(node.kind).render(node as any) as NodeElementType<T>
+    return getNodeDriver(node.kind).render(node as any) as ElementOf<T>
   }
   throw new Error(`The node state (${node.state}) cannot be rendered`)
 }

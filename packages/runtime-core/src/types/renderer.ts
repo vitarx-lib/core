@@ -8,7 +8,7 @@ import type {
   HostRegularElements,
   HostTextElement
 } from './element.js'
-import type { ElementVNode, FragmentVNode } from './nodes/index.js'
+import type { ElementNode, FragmentNode } from './nodes/index.js'
 import type { StyleProperties } from './props.js'
 
 /**
@@ -86,7 +86,7 @@ export interface HostRenderer {
    * @param vnode - 虚拟节点对象
    * @returns { HostElements<T> } 返回创建的元素实例
    */
-  createElement<T extends HostElementNames>(vnode: ElementVNode<T>): HostElements<T>
+  createElement<T extends HostElementNames>(vnode: ElementNode<T>): HostElements<T>
   /**
    * 判断是否为容器元素
    *
@@ -99,7 +99,7 @@ export interface HostRenderer {
    * 创建文档片段，用于批量DOM操作提高性能
    * @returns { HostFragmentElement } 返回文档片段实例
    */
-  createFragment(vnode: FragmentVNode): HostFragmentElement
+  createFragment(vnode: FragmentNode): HostFragmentElement
   /**
    * 创建文本节点
    * @param text - 文本内容

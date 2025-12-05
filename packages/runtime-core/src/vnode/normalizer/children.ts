@@ -5,10 +5,10 @@ import { linkParentNode } from '../../runtime/index.js'
 import type {
   AnyChild,
   HostElementNames,
-  RegularElementVNode,
+  NormalizedChildren,
+  RegularElementNode,
   UniqueKey,
-  VNode,
-  VNodeNormalizedChildren
+  VNode
 } from '../../types/index.js'
 import { __DEV__, isElementNode, isVNode } from '../../utils/index.js'
 import { createTextVNode } from '../creator/special.js'
@@ -26,7 +26,7 @@ export const propagateSVGNamespace = (node: VNode) => {
   ) {
     node.isSVGElement = true
     if (node.kind === NodeKind.REGULAR_ELEMENT) {
-      for (const child of (node as RegularElementVNode).children) {
+      for (const child of (node as RegularElementNode).children) {
         propagateSVGNamespace(child)
       }
     }
@@ -106,7 +106,7 @@ export const initChildren = (
   children: AnyChild | RefSignal<AnyChild>,
   parent: VNode,
   handler?: (node: VNode) => void
-): VNodeNormalizedChildren => {
+): NormalizedChildren => {
   // 初始化key集合，用于检测重复的key值
   const keySet = new Set<UniqueKey>()
   // 初始化子节点列表，用于存储最终结果

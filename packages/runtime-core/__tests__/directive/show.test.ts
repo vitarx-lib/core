@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { show } from '../../src/directive/show.js'
-import type { DirectiveBinding, RegularElementVNode } from '../../src/index.js'
+import type { DirectiveBinding, RegularElementNode } from '../../src/index.js'
 import { createTestElementVNode } from '../helpers/test-vnode.js'
 
 describe('directive/show', () => {
   let mockElement: HTMLElement
-  let vnode: RegularElementVNode
+  let vnode: RegularElementNode
 
   beforeEach(() => {
     // 创建一个真实的 DOM 元素

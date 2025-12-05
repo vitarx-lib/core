@@ -6,7 +6,7 @@ import type {
   AnyProps,
   ErrorHandler,
   Renderable,
-  StatefulWidgetVNode,
+  StatefulWidgetNode,
   VNode,
   VNodeBuilder,
   VNodeInputProps,
@@ -227,8 +227,8 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
 export function lazy<T extends WidgetTypes>(
   loader: () => Promise<{ default: T }>,
   options?: LazyLoadOptions
-): VNodeBuilder<VNodeInputProps<T>, StatefulWidgetVNode<typeof Lazy<T>>> {
-  return defineNodeBuilder((props: VNodeInputProps<T>): StatefulWidgetVNode<typeof Lazy<T>> => {
+): VNodeBuilder<VNodeInputProps<T>, StatefulWidgetNode<typeof Lazy<T>>> {
+  return defineNodeBuilder((props: VNodeInputProps<T>): StatefulWidgetNode<typeof Lazy<T>> => {
     return createVNode(Lazy, { loader, ...options, inject: props })
   })
 }

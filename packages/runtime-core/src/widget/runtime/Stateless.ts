@@ -1,6 +1,6 @@
 import { NodeState } from '../../constants/index.js'
 import { linkParentNode } from '../../runtime/index.js'
-import type { StatelessWidgetVNodeType, VNode } from '../../types/index.js'
+import type { StatelessWidgetNodeType, VNode } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
 import { createCommentVNode, createTextVNode } from '../../vnode/index.js'
@@ -21,7 +21,7 @@ import { WidgetRuntime } from './WidgetRuntime.js'
  * - 只能返回VNode、字符串或数字类型的结果
  * - 其他类型的返回值将被转换为注释节点
  */
-export class StatelessWidgetRuntime extends WidgetRuntime<StatelessWidgetVNodeType> {
+export class StatelessWidgetRuntime extends WidgetRuntime<StatelessWidgetNodeType> {
   public update(): void {
     // 如果有变化，重新构建子节点，并进行patch更新
     const newNode = this.build()

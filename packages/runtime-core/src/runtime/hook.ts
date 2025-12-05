@@ -7,7 +7,7 @@ import type {
   FWBuildType,
   LifecycleHookParameter,
   LifecycleHookReturnType,
-  StatefulWidgetVNode
+  StatefulWidgetNode
 } from '../types/index.js'
 import type { Widget } from '../widget/index.js'
 
@@ -97,7 +97,7 @@ export class HookCollector {
    * @param instance - 实例
    * @returns {HookCollectResult} - 同步收集结果
    */
-  static collect(vnode: StatefulWidgetVNode<FunctionWidget>, instance: Widget): HookCollectResult {
+  static collect(vnode: StatefulWidgetNode<FunctionWidget>, instance: Widget): HookCollectResult {
     // 创建新的上下文
     const context: HookCollectResult = {
       exposed: {},

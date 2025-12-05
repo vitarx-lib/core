@@ -3,12 +3,12 @@ import { CLASS_WIDGET_BASE_SYMBOL } from '../../constants/index.js'
 import { getCurrentVNode } from '../../runtime/index.js'
 import type {
   AnyProps,
+  ElementOf,
   ErrorInfo,
   ExtractChildrenType,
-  NodeElementType,
   ReadonlyProps,
   Renderable,
-  StatefulWidgetVNode,
+  StatefulWidgetNode,
   VNode
 } from '../../types/index.js'
 import { __DEV__ } from '../../utils/index.js'
@@ -65,10 +65,10 @@ export abstract class Widget<
    *
    * @private
    */
-  readonly #vnode: StatefulWidgetVNode
+  readonly #vnode: StatefulWidgetNode
 
   constructor(props: InputProps) {
-    this.#vnode = getCurrentVNode() as StatefulWidgetVNode
+    this.#vnode = getCurrentVNode() as StatefulWidgetNode
     if (__DEV__ && !this.#vnode) {
       throw new Error('The Widget instance must be created in the context of the WidgetVNode')
     }
@@ -97,18 +97,18 @@ export abstract class Widget<
   /**
    * 获取当前虚拟节点对应的 DOM 元素
    * 这是一个 getter 属性，用于返回小部件或虚拟节点挂载后的真实 DOM 元素
-   * @returns { NodeElementType } 返回虚拟节点对应的 DOM 元素实例
+   * @returns { ElementOf } 返回虚拟节点对应的 DOM 元素实例
    */
-  get $el(): NodeElementType {
+  get $el(): ElementOf {
     if (!this.#vnode.el) throw new Error('the component has not been rendered yet')
     return this.#vnode.el!
   }
 
   /**
    * 获取小部件的虚拟DOM节点
-   * @returns {StatefulWidgetVNode} 返回小部件的虚拟DOM节点
+   * @returns {StatefulWidgetNode} 返回小部件的虚拟DOM节点
    */
-  get $vnode(): StatefulWidgetVNode {
+  get $vnode(): StatefulWidgetNode {
     return this.#vnode
   }
 
@@ -381,7 +381,7 @@ export abstract class Widget<
    * @param [sync=true] - 是否同步更新，默认是
    */
   $forceUpdate(sync: boolean = true): void {
-    this.$vnode.runtimeInstance!.update()
+    this.$vnode.instance!.update()
     if (sync) Scheduler.flushSync()
   }
 }

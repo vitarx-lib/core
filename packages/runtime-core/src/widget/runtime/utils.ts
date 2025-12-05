@@ -1,9 +1,9 @@
 import { Scheduler } from '@vitarx/responsive'
 import type {
-  StatefulWidgetVNode,
-  StatefulWidgetVNodeType,
-  StatelessWidgetVNode,
-  WidgetVNode
+  StatefulWidgetNode,
+  StatefulWidgetNodeType,
+  StatelessWidgetNode,
+  WidgetNode
 } from '../../types/index.js'
 import { isStatelessWidget } from '../../utils/index.js'
 import { getCurrentInstance } from './context.js'
@@ -20,14 +20,14 @@ import type { WidgetRuntime } from './WidgetRuntime.js'
  * @param node - 无状态组件节点
  * @returns 管理器实例
  */
-export function createWidgetRuntime(node: StatelessWidgetVNode): StatelessWidgetRuntime
+export function createWidgetRuntime(node: StatelessWidgetNode): StatelessWidgetRuntime
 /**
  * 获取或创建组件运行时实例
  *
  * @param node
  */
-export function createWidgetRuntime<T extends StatefulWidgetVNodeType>(
-  node: StatefulWidgetVNode<T>
+export function createWidgetRuntime<T extends StatefulWidgetNodeType>(
+  node: StatefulWidgetNode<T>
 ): StatefulWidgetRuntime<T>
 /**
  * 获取或创建有状态组件运行时实例
@@ -39,8 +39,8 @@ export function createWidgetRuntime<T extends StatefulWidgetVNodeType>(
  * @param options - 运行时实例配置选项
  * @returns 运行时实例
  */
-export function createWidgetRuntime<T extends StatefulWidgetVNodeType>(
-  node: StatefulWidgetVNode<T>,
+export function createWidgetRuntime<T extends StatefulWidgetNodeType>(
+  node: StatefulWidgetNode<T>,
   options: StatefulManagerOptions
 ): StatefulWidgetRuntime<T>
 /**
@@ -49,17 +49,17 @@ export function createWidgetRuntime<T extends StatefulWidgetVNodeType>(
  * @param options - 运行时实例配置选项
  */
 export function createWidgetRuntime(
-  node: WidgetVNode,
+  node: WidgetNode,
   options?: StatefulManagerOptions
 ): WidgetRuntime {
-  if (!node.runtimeInstance) {
+  if (!node.instance) {
     if (isStatelessWidget(node.type)) {
-      new StatelessWidgetRuntime(node as StatelessWidgetVNode)
+      new StatelessWidgetRuntime(node as StatelessWidgetNode)
     } else {
-      new StatefulWidgetRuntime(node as StatefulWidgetVNode, options)
+      new StatefulWidgetRuntime(node as StatefulWidgetNode, options)
     }
   }
-  return node.runtimeInstance!
+  return node.instance!
 }
 
 /**

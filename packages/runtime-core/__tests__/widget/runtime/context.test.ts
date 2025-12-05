@@ -5,8 +5,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { createVNode, getCurrentInstance, Widget } from '../../../src/index.js'
-import { createWidgetRuntime } from '../../../src/widget/runtime/utils.js'
+import { createVNode, createWidgetRuntime, getCurrentInstance, Widget } from '../../../src/index.js'
 
 // 测试用组件
 class TestWidget extends Widget {
@@ -29,7 +28,7 @@ describe('getCurrentInstance', () => {
       expect(instance).toBe(runtime)
     })
 
-    it('应该与当前 VNode 的 runtimeInstance 一致', () => {
+    it('应该与当前 VNode 的 instance 一致', () => {
       const vnode = createVNode(TestWidget, {})
       const runtime = createWidgetRuntime(vnode as any)
 
@@ -37,7 +36,7 @@ describe('getCurrentInstance', () => {
         return getCurrentInstance()
       })
 
-      expect(instance).toBe(vnode.runtimeInstance)
+      expect(instance).toBe(vnode.instance)
     })
 
     it('有状态组件应该正确获取实例', () => {
@@ -82,7 +81,7 @@ describe('getCurrentInstance', () => {
       }).toThrow('No active widget instance found.')
     })
 
-    it('VNode 没有 runtimeInstance 时应该抛出错误', () => {
+    it('VNode 没有 instance 时应该抛出错误', () => {
       const vnode = createVNode(TestWidget, {})
       // 不创建 runtime instance
 

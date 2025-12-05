@@ -244,7 +244,7 @@ export function defineProps<D extends AnyProps, I extends AnyProps = {}>(
         '[Vitarx.defineProps][ERROR]：Unable to get the current VNode, defineProps must be called under the scope of the widget (initialization phase)'
       )
     }
-    inputProps = currentVNode.runtimeInstance!.props as I
+    inputProps = currentVNode.instance!.props as I
   }
 
   // 处理响应式对象

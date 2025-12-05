@@ -167,7 +167,7 @@ describe('StatefulWidgetRuntime', () => {
 
       const vnode = createVNode(UpdateWidget, {})
       mountNode(vnode)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
 
       runtime.update()
       flushScheduler()
@@ -232,7 +232,7 @@ describe('StatefulWidgetRuntime', () => {
 
     it('响应式数据变化应该自动触发更新', async () => {
       const vnode = renderAndMount(ReactiveWidget)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
       expect(runtime.deps?.size).toBe(1)
       // 修改响应式数据
       runtime.instance.count.value++
@@ -285,7 +285,7 @@ describe('StatefulWidgetRuntime', () => {
     it('enableScheduler 为 true 时应该异步批量更新', () => {
       const vnode = createVNode(TestWidget, {})
       mountNode(vnode)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
 
       const queueJobSpy = vi.spyOn(Scheduler, 'queueJob')
 
@@ -297,7 +297,7 @@ describe('StatefulWidgetRuntime', () => {
     it('enableScheduler 为 false 时应该同步更新', () => {
       const vnode = createVNode(TestWidget, {})
       mountNode(vnode)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
       runtime.build()
 
       const buildSpy = vi.spyOn(runtime, 'build')
@@ -312,7 +312,7 @@ describe('StatefulWidgetRuntime', () => {
     it('多次调用 update 应该合并为一次更新', () => {
       const vnode = createVNode(TestWidget, {})
       mountNode(vnode)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
 
       const queueJobSpy = vi.spyOn(Scheduler, 'queueJob')
 
@@ -679,7 +679,7 @@ describe('StatefulWidgetRuntime', () => {
       runtime.destroy()
 
       expect(runtime.cachedChildVNode).toBeNull()
-      expect(vnode.runtimeInstance).toBeUndefined()
+      expect(vnode.instance).toBeUndefined()
     })
   })
 })

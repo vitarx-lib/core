@@ -1,13 +1,14 @@
 import { unref } from '@vitarx/responsive'
 import type { DynamicRenderType } from '../../constants/index.js'
-import type { AllowCreatedNodeType, AnyChild, VNode, VNodeBuilder } from '../../types/index.js'
+import type { AnyChild, CreatableType, VNode, VNodeBuilder } from '../../types/index.js'
 import { createVNode, defineNodeBuilder } from '../../vnode/index.js'
 
 interface DynamicProps {
-  is: Exclude<AllowCreatedNodeType, DynamicRenderType>
+  is: Exclude<CreatableType, DynamicRenderType>
   children?: AnyChild
   [key: string]: any
 }
+type DynamicWidget = VNodeBuilder<DynamicProps> & { __is_dynamic_render__: true }
 /**
  * 动态组件
  *
@@ -30,14 +31,12 @@ interface DynamicProps {
  * @param props.children - 动态组件的子节点
  * @param props.otherProps - 动态组件的其它属性
  */
-export const Dynamic: VNodeBuilder<DynamicProps> = defineNodeBuilder(
-  (props: DynamicProps): VNode => {
-    const { is: dynamicWidget, ...dynamicProps } = props
-    const renderNodeType = unref(dynamicWidget)
-    if (!renderNodeType) {
-      throw new Error('dynamic render "is" prop is mandatory and cannot be empty.')
-    }
-    return createVNode(renderNodeType, dynamicProps)
+export const Dynamic: DynamicWidget = defineNodeBuilder((props: DynamicProps): VNode => {
+  const { is: dynamicWidget, ...dynamicProps } = props
+  const renderNodeType = unref(dynamicWidget)
+  if (!renderNodeType) {
+    throw new Error('dynamic render "is" prop is mandatory and cannot be empty.')
   }
-)
+  return createVNode(renderNodeType, dynamicProps)
+}) as DynamicWidget
 export type Dynamic = typeof Dynamic

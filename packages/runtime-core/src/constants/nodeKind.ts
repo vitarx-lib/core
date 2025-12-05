@@ -2,9 +2,9 @@
  * 节点类型枚举，用于标识虚拟DOM中不同类型的节点
  */
 export const enum NodeKind {
-  /** 常规元素，如 <div>、<span> 等 */
+  /** 常规元素，如 `<div>`、`<span>` 等 */
   REGULAR_ELEMENT,
-  /** 自闭合元素，如 <img>、<input>、<br> 等 */
+  /** 自闭合元素，如 `<img>`、`<input>`、`<br>` 等 */
   VOID_ELEMENT,
   /** 片段节点，用于包装多个子节点而不创建额外的DOM元素 */
   FRAGMENT,

@@ -15,7 +15,7 @@ import {
   h,
   NodeKind,
   TEXT_NODE_TYPE,
-  type VoidElementVNodeType
+  type VoidElementNodeType
 } from '../../../src/index.js'
 import { createTestWidget } from '../../helpers/test-widget.js'
 
@@ -114,7 +114,7 @@ describe('VNode 创建 (createVNode)', () => {
     })
 
     it('应该验证 void 元素类型', () => {
-      const voidElements: VoidElementVNodeType[] = ['img', 'input', 'br', 'hr']
+      const voidElements: VoidElementNodeType[] = ['img', 'input', 'br', 'hr']
 
       voidElements.forEach(tag => {
         const vnode = createVNode(tag)

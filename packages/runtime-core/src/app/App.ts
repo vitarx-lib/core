@@ -9,7 +9,6 @@ import type {
   DirectiveOptions,
   ErrorInfo,
   HostParentElement,
-  StatefulWidgetVNode,
   VNode,
   WidgetTypes
 } from '../types/index.js'
@@ -143,7 +142,7 @@ export class App {
   /**
    * 获取当前应用的根节点
    *
-   * @returns {StatefulWidgetVNode} 返回根组件节点
+   * @returns {StatefulWidgetNode} 返回根组件节点
    */
   get rootNode(): VNode {
     return this.#rootNode

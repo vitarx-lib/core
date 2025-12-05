@@ -1,16 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import type {
-  RegularElementVNode,
-  RegularElementVNodeType,
-  VoidElementVNodeType
+  RegularElementNode,
+  RegularElementNodeType,
+  VoidElementNodeType
 } from '../../../src/index.js'
-import { createRegularElementVNode, createVoidElementVNode, NodeKind } from '../../../src/index.js'
-import { h } from '../../../src/vnode/core/create.js'
+import {
+  createRegularElementVNode,
+  createVoidElementVNode,
+  h,
+  NodeKind
+} from '../../../src/index.js'
 
 describe('vnode/creator/element', () => {
   describe('createVoidElementVNode - 空元素节点', () => {
     it('应该创建 img 节点', () => {
-      const vnode = createVoidElementVNode('img' as VoidElementVNodeType, {
+      const vnode = createVoidElementVNode('img' as VoidElementNodeType, {
         src: '/test.png',
         alt: 'Test'
       })
@@ -23,7 +27,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该创建 input 节点', () => {
-      const vnode = createVoidElementVNode('input' as VoidElementVNodeType, {
+      const vnode = createVoidElementVNode('input' as VoidElementNodeType, {
         type: 'text',
         placeholder: 'Enter text'
       })
@@ -35,21 +39,21 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该创建 br 节点', () => {
-      const vnode = createVoidElementVNode('br' as VoidElementVNodeType, {})
+      const vnode = createVoidElementVNode('br' as VoidElementNodeType, {})
 
       expect(vnode.type).toBe('br')
       expect(vnode.kind).toBe(NodeKind.VOID_ELEMENT)
     })
 
     it('应该创建 hr 节点', () => {
-      const vnode = createVoidElementVNode('hr' as VoidElementVNodeType, {})
+      const vnode = createVoidElementVNode('hr' as VoidElementNodeType, {})
 
       expect(vnode.type).toBe('hr')
       expect(vnode.kind).toBe(NodeKind.VOID_ELEMENT)
     })
 
     it('应该规范化 class 属性', () => {
-      const vnode = createVoidElementVNode('img' as VoidElementVNodeType, {
+      const vnode = createVoidElementVNode('img' as VoidElementNodeType, {
         class: 'icon large',
         src: '/icon.png'
       })
@@ -58,7 +62,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该规范化 style 属性', () => {
-      const vnode = createVoidElementVNode('img' as VoidElementVNodeType, {
+      const vnode = createVoidElementVNode('img' as VoidElementNodeType, {
         style: { width: '100px', height: '100px' },
         src: '/icon.png'
       })
@@ -71,7 +75,7 @@ describe('vnode/creator/element', () => {
 
   describe('createRegularElementVNode - 常规元素节点', () => {
     it('应该创建 div 节点', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         id: 'container',
         class: 'main'
       })
@@ -83,7 +87,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该创建 span 节点', () => {
-      const vnode = createRegularElementVNode('span' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('span' as RegularElementNodeType, {
         class: 'text'
       })
 
@@ -92,7 +96,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该处理子节点', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         children: [h('span', { children: 'Child 1' }), h('span', { children: 'Child 2' })]
       })
 
@@ -103,7 +107,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该处理文本子节点', () => {
-      const vnode = createRegularElementVNode('p' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('p' as RegularElementNodeType, {
         children: 'Hello World'
       })
 
@@ -113,7 +117,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该处理混合子节点', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         children: ['Text', h('span', { children: 'Element' }), 123]
       })
 
@@ -122,7 +126,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该处理嵌套数组子节点', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         children: [['Text1', 'Text2'], [h('span', { children: 'Text3' })]]
       })
 
@@ -131,7 +135,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该规范化 class 属性', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         class: 'container main'
       })
 
@@ -139,7 +143,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该规范化 style 属性', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         style: { color: 'red', fontSize: '14px' }
       })
 
@@ -149,19 +153,19 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该标记 svg 元素', () => {
-      const vnode = createRegularElementVNode('svg' as RegularElementVNodeType, {})
+      const vnode = createRegularElementVNode('svg' as RegularElementNodeType, {})
 
       expect(vnode.isSVGElement).toBe(true)
     })
 
     it('应该不标记非 svg 元素', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {})
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {})
 
       expect(vnode.isSVGElement).toBe(false)
     })
 
     it('应该从 props 中移除 children', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         children: 'Text',
         id: 'test'
       })
@@ -173,19 +177,19 @@ describe('vnode/creator/element', () => {
 
   describe('SVG 命名空间传播', () => {
     it('应该为 svg 子元素设置 SVG 命名空间', () => {
-      const vnode = createRegularElementVNode('svg' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('svg' as RegularElementNodeType, {
         children: [h('circle', { cx: 50, cy: 50, r: 40 })]
       })
 
       expect(vnode.isSVGElement).toBe(true)
       expect(vnode.children).toBeDefined()
-      expect((vnode.children![0] as RegularElementVNode).isSVGElement).toBe(true)
+      expect((vnode.children![0] as RegularElementNode).isSVGElement).toBe(true)
     })
   })
 
   describe('属性处理', () => {
     it('应该保留所有自定义属性', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         'data-test': 'value',
         'aria-label': 'Label',
         role: 'button'
@@ -198,7 +202,7 @@ describe('vnode/creator/element', () => {
 
     it('应该处理事件监听器', () => {
       const onClick = () => {}
-      const vnode = createRegularElementVNode('button' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('button' as RegularElementNodeType, {
         onClick
       })
 
@@ -206,7 +210,7 @@ describe('vnode/creator/element', () => {
     })
 
     it('应该处理 ref 属性', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         id: 'test'
       })
 
@@ -216,14 +220,14 @@ describe('vnode/creator/element', () => {
 
   describe('空节点处理', () => {
     it('应该创建没有属性的节点', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {})
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {})
 
       expect(vnode.props).toEqual({})
       expect(vnode.children).toEqual([])
     })
 
     it('应该创建没有子节点的节点', () => {
-      const vnode = createRegularElementVNode('div' as RegularElementVNodeType, {
+      const vnode = createRegularElementVNode('div' as RegularElementNodeType, {
         id: 'test'
       })
 

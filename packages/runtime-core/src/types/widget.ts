@@ -2,7 +2,7 @@ import type { RequiredKeys } from '@vitarx/utils'
 import { STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
 import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
-import type { StatelessWidgetVNode, VNode } from './nodes/index.js'
+import type { StatelessWidgetNode, VNode } from './nodes/index.js'
 import type { AnyChild, Renderable } from './vnode.js'
 
 /**
@@ -200,7 +200,7 @@ type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = D ex
  */
 export type WidgetPropsType<T extends WidgetTypes> =
   T extends WidgetTypes<infer P>
-    ? 'defaultProps' extends RequiredKeys<P>
+    ? 'defaultProps' extends RequiredKeys<T>
       ? WithDefaultProps<P, T['defaultProps']>
       : P
     : {}
@@ -276,7 +276,7 @@ export type ExcludeWidgetIntrinsicMethods<T> = Omit<
  * ```
  */
 export type ImpostWidget<T extends ClassWidget | FunctionWidget> = T extends StatelessWidget
-  ? StatelessWidgetVNode<T>
+  ? StatelessWidgetNode<T>
   : ExcludeWidgetIntrinsicMethods<WidgetInstanceType<T>>
 
 /**

@@ -8,7 +8,7 @@ import {
 } from '../../constants/index.js'
 import { resolveDirective } from '../../directive/index.js'
 import { getAppContext } from '../../runtime/index.js'
-import type { AnyProps, VNode, VNodeDirectives, VNodeTypes } from '../../types/index.js'
+import type { AnyProps, NodeDirectives, NodeType, VNode } from '../../types/index.js'
 import { __DEV__, isRefEl, popNodeDevInfo } from '../../utils/index.js'
 import { bindProps } from '../normalizer/props.js'
 
@@ -19,7 +19,7 @@ import { bindProps } from '../normalizer/props.js'
  * @param kind
  * @param props
  */
-export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProps): VNode => {
+export const createBaseVNode = (type: NodeType, kind: NodeKind, props: AnyProps): VNode => {
   props = { ...props }
   const node: VNode = {
     [NON_SIGNAL_SYMBOL]: true,
@@ -74,7 +74,7 @@ export const createBaseVNode = (type: VNodeTypes, kind: NodeKind, props: AnyProp
     if (isObject(bind)) bindProps(props, bind)
 
     // 2. 提取并处理指令
-    const directives: VNodeDirectives = new Map()
+    const directives: NodeDirectives = new Map()
 
     // 3. 遍历处理属性
     for (const [key, value] of Object.entries(props)) {

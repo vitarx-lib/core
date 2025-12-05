@@ -9,7 +9,7 @@ import type {
   LazyLoadModule,
   LifecycleHookMethods,
   Renderable,
-  StatefulWidgetVNode,
+  StatefulWidgetNode,
   VNode
 } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
@@ -113,7 +113,7 @@ const completeAsyncRender = (instance: FnWidget) => {
 
   if (!isValidNodeState(vnode.state)) return
 
-  const runtime = vnode.runtimeInstance!
+  const runtime = vnode.instance!
   const oldChild = runtime.child
   const newChild = runtime.build()
 
@@ -223,7 +223,7 @@ const initializeAsyncWidget = async (
     loadingNode = cloneVNode(loadingNode)
   } else {
     loadingNode = createCommentVNode({
-      text: `AsyncWidget<${instance.$vnode.runtimeInstance!.name}> loading ...`
+      text: `AsyncWidget<${instance.$vnode.instance!.name}> loading ...`
     })
   }
   // 默认使用loading节点
@@ -262,7 +262,7 @@ const initializeAsyncWidget = async (
  * @param instance - 函数组件实例
  */
 export const initializeFnWidget = async (instance: FnWidget): Promise<FnWidget> => {
-  const vnode = instance.$vnode as StatefulWidgetVNode<FunctionWidget>
+  const vnode = instance.$vnode as StatefulWidgetNode<FunctionWidget>
   const { exposed, hooks, buildResult } = HookCollector.collect(vnode, instance)
 
   const hasExposed = Object.keys(exposed).length > 0

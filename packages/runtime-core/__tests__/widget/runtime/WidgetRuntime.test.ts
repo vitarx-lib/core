@@ -39,7 +39,7 @@ describe('WidgetRuntime 基类', () => {
       const runtime = new StatefulWidgetRuntime(vnode)
 
       expect(runtime.vnode).toBe(vnode)
-      expect(vnode.runtimeInstance).toBe(runtime)
+      expect(vnode.instance).toBe(runtime)
     })
 
     it('应该正确设置 props', () => {
@@ -205,12 +205,12 @@ describe('WidgetRuntime 基类', () => {
       expect('anchor' in vnode).toBe(false)
     })
 
-    it('应该删除 vnode 的 runtimeInstance 引用', () => {
-      expect(vnode.runtimeInstance).toBe(runtime)
+    it('应该删除 vnode 的 instance 引用', () => {
+      expect(vnode.instance).toBe(runtime)
 
       runtime.destroy()
 
-      expect(vnode.runtimeInstance).toBeUndefined()
+      expect(vnode.instance).toBeUndefined()
     })
 
     it('无状态组件销毁后应该正确清理', () => {
@@ -221,7 +221,7 @@ describe('WidgetRuntime 基类', () => {
       statelessRuntime.destroy()
 
       expect(statelessRuntime.cachedChildVNode).toBeNull()
-      expect(statelessVNode.runtimeInstance).toBeUndefined()
+      expect(statelessVNode.instance).toBeUndefined()
     })
   })
 })

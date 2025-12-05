@@ -1,5 +1,5 @@
-import type { TextVNodeType } from '../vnode.js'
-import { type NonElementVNode } from './BaseNode.js'
+import type { TextNodeType } from '../vnode.js'
+import { type NonElementNode } from './VNode.js'
 
 /**
  * 文本节点接口
@@ -11,6 +11,6 @@ import { type NonElementVNode } from './BaseNode.js'
  * 文本节点的内容存储在value属性中，可以是任何可转换为字符串的值。
  * 在渲染时，文本节点会被转换为DOM的Text对象。
  *
- * 文本节点继承自NonElementVNode，因为它不能包含子节点。
+ * 文本节点继承自NonElementNode，因为它不能包含子节点。
  */
-export interface TextVNode extends NonElementVNode<TextVNodeType> {}
+export interface TextNode extends NonElementNode<TextNodeType> {}

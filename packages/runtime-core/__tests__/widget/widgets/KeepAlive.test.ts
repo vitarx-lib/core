@@ -47,7 +47,7 @@ describe('KeepAlive 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
       vnode.props.children = createTestWidget()
       notify(runtime.props, 'children')
       flushScheduler()
@@ -77,7 +77,7 @@ describe('KeepAlive 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
       expect(container.textContent).toContain('Widget 1')
 
       // 切换到 Widget2
@@ -117,7 +117,7 @@ describe('KeepAlive 组件', () => {
       mountNode(vnode, container)
 
       vnode.props.children = Widget2
-      notify(vnode.runtimeInstance!.props, 'children')
+      notify(vnode.instance!.props, 'children')
       flushScheduler()
 
       expect(onDeactivated).toHaveBeenCalled()
@@ -143,7 +143,7 @@ describe('KeepAlive 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
       // 首次挂载会触发一次 onActivated
       onActivated.mockClear()
 
@@ -181,7 +181,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       // Widget1 应该被缓存
       expect(instance.isKeep(Widget1)).toBe(true)
@@ -201,7 +201,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       expect(instance.isKeep(Widget1)).toBe(true)
       expect(instance.isKeep(Widget2)).toBe(false)
@@ -219,7 +219,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       // exclude 优先级更高
       expect(instance.isKeep(Widget1)).toBe(false)
@@ -245,7 +245,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       // 切换到不同的组件
       for (let i = 1; i < 4; i++) {
@@ -276,7 +276,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       // 切换到 Widget2
       currentChild.value = createVNode(Widget2, {})
@@ -302,7 +302,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
       const cachedVNode1 = instance['currentChild']
 
       // 切换到另一个组件再切回
@@ -324,8 +324,8 @@ describe('KeepAlive 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-      const runtime = vnode.runtimeInstance!
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const runtime = vnode.instance!
+      const instance = vnode.instance?.instance as KeepAlive
 
       vnode.props.children = createVNode(Widget1, { key: 'different-key' })
       notify(runtime.props, 'children')
@@ -345,7 +345,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       // 切换组件产生缓存
       currentChild.value = createVNode(Widget2, {})
@@ -411,7 +411,7 @@ describe('KeepAlive 组件', () => {
       flushScheduler()
 
       // $patchUpdate 应该处理激活逻辑
-      expect(vnode.runtimeInstance).toBeDefined()
+      expect(vnode.instance).toBeDefined()
     })
 
     it('应该在 $patchUpdate 处理非缓存组件的卸载', () => {
@@ -426,7 +426,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       // 切换到 Widget2
       currentChild.value = createVNode(Widget2, {})
@@ -455,7 +455,7 @@ describe('KeepAlive 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-      const runtime = vnode.runtimeInstance!
+      const runtime = vnode.instance!
 
       expect(container.textContent).toContain('W1')
 
@@ -481,12 +481,12 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       // 切换多个组件
       for (let i = 1; i < 12; i++) {
         vnode.props.children = widgets[i]
-        notify(vnode.runtimeInstance!.props, 'children')
+        notify(vnode.instance!.props, 'children')
         flushScheduler()
       }
 
@@ -510,7 +510,7 @@ describe('KeepAlive 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance?.instance as KeepAlive
+      const instance = vnode.instance?.instance as KeepAlive
 
       expect(instance.isKeep(Widget1)).toBe(true)
       expect(instance.isKeep(Widget2)).toBe(true)
@@ -539,7 +539,7 @@ describe('KeepAlive 组件', () => {
 
       // 响应式变化
       vnode.props.children = Widget2
-      notify(vnode.runtimeInstance!.props, 'children')
+      notify(vnode.instance!.props, 'children')
       flushScheduler()
 
       expect(container.textContent).toContain('Dynamic W2')

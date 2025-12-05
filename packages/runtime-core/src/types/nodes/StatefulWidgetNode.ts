@@ -1,6 +1,6 @@
 import type { Directive } from '../directive.js'
-import type { StatefulWidgetVNodeType } from '../vnode.js'
-import type { WidgetVNode } from './BaseNode.js'
+import type { StatefulWidgetNodeType } from '../vnode.js'
+import type { WidgetNode } from './VNode.js'
 
 /**
  * 有状态组件节点接口
@@ -9,13 +9,10 @@ import type { WidgetVNode } from './BaseNode.js'
  * 并在状态变化时重新渲染。这些组件通常包含用户交互、数据获取等
  * 需要内部状态管理的功能。
  *
- * 与StatefulWidgetVNode不同，StatefulWidgetVNode会维护一个组件实例(instance)，
- * 该实例在组件生命周期内保持不变，用于存储组件的状态和生命周期方法。
- *
- * @template T 组件节点类型，默认为StatefulWidgetVNodeType
+ * @template T 组件节点类型，默认为StatefulWidgetNodeType
  */
-export interface StatefulWidgetVNode<T extends StatefulWidgetVNodeType = StatefulWidgetVNodeType>
-  extends WidgetVNode<T> {
+export interface StatefulWidgetNode<T extends StatefulWidgetNodeType = StatefulWidgetNodeType>
+  extends WidgetNode<T> {
   /**
    * 是否是异步组件
    *

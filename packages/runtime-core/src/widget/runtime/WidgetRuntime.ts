@@ -1,6 +1,6 @@
 import { NodeState } from '../../constants/index.js'
 import { runInNodeContext } from '../../runtime/index.js'
-import type { VNode, WidgetVNode, WidgetVNodeType } from '../../types/index.js'
+import type { VNode, WidgetNode, WidgetNodeType } from '../../types/index.js'
 import { getWidgetName } from '../../utils/index.js'
 
 /**
@@ -24,7 +24,7 @@ import { getWidgetName } from '../../utils/index.js'
  * }
  *
  * @constructor
- * @param {WidgetVNode} node - 组件的虚拟节点实例，包含组件类型和属性信息
+ * @param {WidgetNode} node - 组件的虚拟节点实例，包含组件类型和属性信息
  *
  * 注意事项：
  * - 这是一个抽象类，必须通过继承实现
@@ -32,7 +32,7 @@ import { getWidgetName } from '../../utils/index.js'
  * - 组件销毁时需要调用destroy()方法释放资源
  * - 组件属性(props)是只读的，修改需要通过update()方法
  */
-export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType> {
+export abstract class WidgetRuntime<T extends WidgetNodeType = WidgetNodeType> {
   /** 组件名称，用于调试和错误追踪 */
   public readonly name: string
   /** 组件属性（只读） */
@@ -43,21 +43,21 @@ export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType>
    * @internal 不要随意修改！！！
    */
   public cachedChildVNode: VNode | null = null
-  constructor(public vnode: WidgetVNode<T>) {
-    vnode.runtimeInstance = this as unknown as WidgetVNode<T>['runtimeInstance']
+  constructor(public vnode: WidgetNode<T>) {
+    vnode.instance = this as unknown as WidgetNode<T>['instance']
     this.name = getWidgetName(vnode.type)
     this.props = vnode.props
     // 关联子节点的 el 和 anchor 属性
     Object.defineProperty(vnode, 'el', {
       get() {
-        return this.runtimeInstance?.child.el
+        return this.instance?.child.el
       },
       configurable: true,
       enumerable: true
     })
     Object.defineProperty(vnode, 'anchor', {
       get() {
-        return this.runtimeInstance?.child.anchor
+        return this.instance?.child.anchor
       },
       configurable: true,
       enumerable: true
@@ -87,7 +87,7 @@ export abstract class WidgetRuntime<T extends WidgetVNodeType = WidgetVNodeType>
     this.cachedChildVNode = null
     delete this.vnode.el
     delete this.vnode.anchor
-    delete this.vnode.runtimeInstance
+    delete this.vnode.instance
   }
   /**
    * 构建子虚拟节点

@@ -8,17 +8,17 @@ import {
   WIDGET_NODE_KINDS
 } from '../constants/index.js'
 import type {
-  CommentVNode,
-  ContainerVNode,
-  ElementVNode,
-  FragmentVNode,
-  RegularElementVNode,
-  StatefulWidgetVNode,
-  StatelessWidgetVNode,
-  TextVNode,
+  CommentNode,
+  ContainerNode,
+  ElementNode,
+  FragmentNode,
+  RegularElementNode,
+  StatefulWidgetNode,
+  StatelessWidgetNode,
+  TextNode,
   VNode,
-  VoidElementVNode,
-  WidgetVNode
+  VoidElementNode,
+  WidgetNode
 } from '../types/index.js'
 
 /**
@@ -36,7 +36,7 @@ export function isVNode(val: any): val is VNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是WidgetNode类型则返回true，否则返回false
  */
-export function isStatefulWidgetNode(val: any): val is StatefulWidgetVNode {
+export function isStatefulWidgetNode(val: any): val is StatefulWidgetNode {
   return isVNode(val) && val.kind === NodeKind.STATEFUL_WIDGET
 }
 /**
@@ -45,7 +45,7 @@ export function isStatefulWidgetNode(val: any): val is StatefulWidgetVNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是SimpleWidgetNode类型则返回true，否则返回false
  */
-export function isStatelessWidgetNode(val: any): val is StatelessWidgetVNode {
+export function isStatelessWidgetNode(val: any): val is StatelessWidgetNode {
   return isVNode(val) && val.kind === NodeKind.STATELESS_WIDGET
 }
 /**
@@ -53,7 +53,7 @@ export function isStatelessWidgetNode(val: any): val is StatelessWidgetVNode {
  * @param val - 需要判断的值
  * @returns {boolean} 如果值是Widget节点则返回true，否则返回false
  */
-export function isWidgetNode(val: any): val is WidgetVNode {
+export function isWidgetNode(val: any): val is WidgetNode {
   // 首先检查值是否为VNode，然后检查其kind是否为STATEFUL_WIDGET或STATELESS_WIDGET
   return isVNode(val) && WIDGET_NODE_KINDS.has(val.kind)
 }
@@ -63,7 +63,7 @@ export function isWidgetNode(val: any): val is WidgetVNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果是片段虚拟节点返回true，否则返回false
  */
-export function isFragmentNode(val: any): val is FragmentVNode {
+export function isFragmentNode(val: any): val is FragmentNode {
   return isVNode(val) && val.kind === NodeKind.FRAGMENT
 }
 /**
@@ -72,7 +72,7 @@ export function isFragmentNode(val: any): val is FragmentVNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果是元素虚拟节点返回true，否则返回false
  */
-export function isRegularElementNode(val: any): val is RegularElementVNode {
+export function isRegularElementNode(val: any): val is RegularElementNode {
   return isVNode(val) && typeof val.type === 'string' && val.kind === NodeKind.REGULAR_ELEMENT
 }
 /**
@@ -81,7 +81,7 @@ export function isRegularElementNode(val: any): val is RegularElementVNode {
  * @param val - 要检查的值
  * @returns {boolean} 如果值是空元素虚拟节点则返回true，否则返回false
  */
-export function isVoidElementNode(val: any): val is VoidElementVNode {
+export function isVoidElementNode(val: any): val is VoidElementNode {
   return isVNode(val) && val.kind === NodeKind.VOID_ELEMENT
 }
 /**
@@ -89,7 +89,7 @@ export function isVoidElementNode(val: any): val is VoidElementVNode {
  * @param val 需要判断的值
  * @returns {boolean} 如果是元素节点返回true，否则返回false
  */
-export function isElementNode(val: any): val is ElementVNode {
+export function isElementNode(val: any): val is ElementNode {
   return isVNode(val) && ELEMENT_NODE_KINDS.has(val.kind)
 }
 /**
@@ -98,7 +98,7 @@ export function isElementNode(val: any): val is ElementVNode {
  * @param val - 要检查的值
  * @returns {boolean} 如果值是文本虚拟节点则返回true，否则返回false
  */
-export function isTextNode(val: any): val is TextVNode {
+export function isTextNode(val: any): val is TextNode {
   return isVNode(val) && val.kind === NodeKind.TEXT
 }
 /**
@@ -107,7 +107,7 @@ export function isTextNode(val: any): val is TextVNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是注释虚拟节点则返回true，否则返回false
  */
-export function isCommentNode(val: any): val is CommentVNode {
+export function isCommentNode(val: any): val is CommentNode {
   return isVNode(val) && val.kind === NodeKind.COMMENT
 }
 /**
@@ -117,7 +117,7 @@ export function isCommentNode(val: any): val is CommentVNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是容器虚拟节点则返回true，否则返回false
  */
-export function isContainerNode(val: any): val is ContainerVNode {
+export function isContainerNode(val: any): val is ContainerNode {
   return isVNode(val) && CONTAINER_NODE_KINDS.has(val.kind)
 }
 /**
@@ -126,7 +126,7 @@ export function isContainerNode(val: any): val is ContainerVNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是非元素节点则返回true，否则返回false
  */
-export function isNonElementNode(val: any): val is TextVNode | CommentVNode {
+export function isNonElementNode(val: any): val is TextNode | CommentNode {
   return isVNode(val) && NON_ELEMENT_NODE_KINDS.has(val.kind)
 }
 
@@ -136,6 +136,6 @@ export function isNonElementNode(val: any): val is TextVNode | CommentVNode {
  * @param val - 需要检查的值
  * @returns {boolean} 如果值是特殊节点则返回true，否则返回false
  */
-export function isSpecialNode(val: any): val is TextVNode | CommentVNode | FragmentVNode {
+export function isSpecialNode(val: any): val is TextNode | CommentNode | FragmentNode {
   return isVNode(val) && SPECIAL_NODE_KINDS.has(val.kind)
 }

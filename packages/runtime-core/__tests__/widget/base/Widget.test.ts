@@ -31,8 +31,8 @@ describe('Widget 基类', () => {
       const vnode = createVNode(TestWidget, { name: 'test' })
       renderNode(vnode)
 
-      expect(vnode.runtimeInstance).toBeDefined()
-      expect(vnode.runtimeInstance!.instance).toBeInstanceOf(Widget)
+      expect(vnode.instance).toBeDefined()
+      expect(vnode.instance!.instance).toBeInstanceOf(Widget)
     })
 
     it('应该正确访问 props', () => {
@@ -40,7 +40,7 @@ describe('Widget 基类', () => {
       const vnode = createVNode(TestWidget, { name: 'John', age: ref(30) })
       renderNode(vnode)
 
-      const instance = vnode.runtimeInstance!.instance
+      const instance = vnode.instance!.instance
       expect(instance.props.name).toBe('John')
       expect(instance.props.age).toBe(30)
     })
@@ -51,7 +51,7 @@ describe('Widget 基类', () => {
       const vnode = createVNode(TestWidget, { children: child })
       renderNode(vnode)
 
-      const instance = vnode.runtimeInstance!.instance
+      const instance = vnode.instance!.instance
       expect(instance.children).toBe(child)
     })
 
@@ -61,7 +61,7 @@ describe('Widget 基类', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const instance = vnode.runtimeInstance!.instance
+      const instance = vnode.instance!.instance
       expect(instance.$el).toBeDefined()
       expect(instance.$el).toBeInstanceOf(Element)
     })
@@ -71,7 +71,7 @@ describe('Widget 基类', () => {
       const vnode = createVNode(TestWidget, {})
       renderNode(vnode)
 
-      const instance = vnode.runtimeInstance!.instance
+      const instance = vnode.instance!.instance
       expect(instance.$vnode).toBe(vnode)
     })
   })
@@ -361,7 +361,7 @@ describe('Widget 基类', () => {
       renderNode(vnode)
 
       // 直接调用 reportError 测试
-      vnode.runtimeInstance!.reportError(new Error('Test error'), 'build')
+      vnode.instance!.reportError(new Error('Test error'), 'build')
 
       expect(onError).toHaveBeenCalled()
     })
@@ -374,7 +374,7 @@ describe('Widget 基类', () => {
       const vnode = createVNode(TestWidget, {})
       renderNode(vnode)
 
-      const result = vnode.runtimeInstance!.reportError(new Error('Test'), 'build')
+      const result = vnode.instance!.reportError(new Error('Test'), 'build')
       expect(result).toBe(fallbackVNode)
     })
 
@@ -385,7 +385,7 @@ describe('Widget 基类', () => {
       const vnode = createVNode(TestWidget, {})
       renderNode(vnode)
 
-      const result = vnode.runtimeInstance!.reportError(new Error('Test'), 'build')
+      const result = vnode.instance!.reportError(new Error('Test'), 'build')
       expect(result).toBeUndefined()
       expect(onError).toHaveBeenCalled()
     })
@@ -412,7 +412,7 @@ describe('Widget 基类', () => {
       mountNode(vnode, container)
 
       buildSpy.mockClear()
-      vnode.runtimeInstance!.instance.$forceUpdate(true)
+      vnode.instance!.instance.$forceUpdate(true)
 
       expect(buildSpy).toHaveBeenCalled()
     })
@@ -425,7 +425,7 @@ describe('Widget 基类', () => {
       mountNode(vnode, container)
 
       buildSpy.mockClear()
-      vnode.runtimeInstance!.instance.$forceUpdate(false)
+      vnode.instance!.instance.$forceUpdate(false)
 
       // 异步更新，立即检查不应该被调用
       expect(buildSpy).not.toHaveBeenCalled()

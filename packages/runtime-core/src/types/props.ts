@@ -4,7 +4,7 @@ import type { DynamicRenderType } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
 import type { Dynamic, Fragment } from '../widget/index.js'
 import type { JSXElementNames, JSXInternalElements } from './element.js'
-import type { AllowCreatedNodeType, FragmentVNodeType } from './vnode.js'
+import type { CreatableType, FragmentNodeType } from './vnode.js'
 import type { AnyProps, WidgetPropsType, WidgetTypes } from './widget.js'
 
 /**
@@ -311,11 +311,9 @@ type WithVModelUpdate<T extends AnyProps> = T & {
 /**
  * 提取节点属性类型
  */
-export type ExtractVNodeProps<T extends AllowCreatedNodeType> = T extends
-  | Dynamic
-  | DynamicRenderType
+export type ExtractVNodeProps<T extends CreatableType> = T extends Dynamic | DynamicRenderType
   ? WithRefProps<WidgetPropsType<Dynamic>>
-  : T extends Fragment | FragmentVNodeType
+  : T extends Fragment | FragmentNodeType
     ? WithRefProps<WidgetPropsType<Fragment>>
     : T extends JSXElementNames
       ? JSXInternalElements[T]
@@ -330,8 +328,8 @@ export type ExtractVNodeProps<T extends AllowCreatedNodeType> = T extends
  * - 元素或组件定义的属性
  * - 全局属性（如key、ref、v-show等）
  */
-export type VNodeInputProps<T extends AllowCreatedNodeType = AllowCreatedNodeType> =
-  ExtractVNodeProps<T> & IntrinsicAttributes
+export type VNodeInputProps<T extends CreatableType = CreatableType> = ExtractVNodeProps<T> &
+  IntrinsicAttributes
 
 /**
  * 根据节点类型推断其对应的属性类型
@@ -364,7 +362,7 @@ export type VNodeInputProps<T extends AllowCreatedNodeType = AllowCreatedNodeTyp
  * @template T - 节点类型，必须继承自 ValidNodeType
  * @template K - 忽略的属性名称，默认为 'children'
  */
-export type WithProps<T extends AllowCreatedNodeType, K extends keyof any = 'children'> = Omit<
+export type WithProps<T extends CreatableType, K extends keyof any = 'children'> = Omit<
   ExtractVNodeProps<T>,
   K
 >

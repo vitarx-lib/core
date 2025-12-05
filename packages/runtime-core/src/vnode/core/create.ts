@@ -8,15 +8,15 @@ import {
 } from '../../constants/index.js'
 import { isVoidTag } from '../../renderer/index.js'
 import type {
-  AllowCreatedNodeType,
   AnyChild,
   AnyProps,
-  RegularElementVNodeType,
-  TextVNodeType,
+  CreatableType,
+  RegularElementNodeType,
+  TextNodeType,
   VNode,
   VNodeInputProps,
-  VNodeInstanceType,
-  VoidElementVNodeType
+  VNodeOf,
+  VoidElementNodeType
 } from '../../types/index.js'
 import { __DEV__, getNodeDevInfo, isWidget } from '../../utils/index.js'
 import { createRegularElementVNode, createVoidElementVNode } from '../creator/element.js'
@@ -84,13 +84,13 @@ function createDynamicVNode(props: Record<string, any>): VNode {
  * })
  * ```
  */
-export function createVNode<T extends AllowCreatedNodeType>(
+export function createVNode<T extends CreatableType>(
   type: T,
   props: VNodeInputProps<T> | null = null
-): VNodeInstanceType<T> {
+): VNodeOf<T> {
   props ??= {} as VNodeInputProps<T>
   if (isNodeBuilder(type)) {
-    return type(props) as VNodeInstanceType<T>
+    return type(props) as VNodeOf<T>
   }
   // 处理字符串类型节点
   if (typeof type === 'string') {
@@ -101,35 +101,31 @@ export function createVNode<T extends AllowCreatedNodeType>(
     }
     switch (type) {
       case DYNAMIC_RENDER_TYPE:
-        return createDynamicVNode(props) as VNodeInstanceType<T>
+        return createDynamicVNode(props) as VNodeOf<T>
       case TEXT_NODE_TYPE:
-        return createTextVNode(
-          props as unknown as VNodeInputProps<TextVNodeType>
-        ) as VNodeInstanceType<T>
+        return createTextVNode(props as unknown as VNodeInputProps<TextNodeType>) as VNodeOf<T>
       case COMMENT_NODE_TYPE:
-        return createCommentVNode(
-          props as unknown as VNodeInputProps<TextVNodeType>
-        ) as VNodeInstanceType<T>
+        return createCommentVNode(props as unknown as VNodeInputProps<TextNodeType>) as VNodeOf<T>
       case FRAGMENT_NODE_TYPE:
-        return createFragmentVNode(props) as VNodeInstanceType<T>
+        return createFragmentVNode(props) as VNodeOf<T>
       default:
         if (isVoidTag(type)) {
           return createVoidElementVNode(
-            type as unknown as VoidElementVNodeType,
-            props as unknown as VNodeInputProps<VoidElementVNodeType>
-          ) as VNodeInstanceType<T>
+            type as unknown as VoidElementNodeType,
+            props as unknown as VNodeInputProps<VoidElementNodeType>
+          ) as VNodeOf<T>
         } else {
           return createRegularElementVNode(
-            type as unknown as RegularElementVNodeType,
-            props as unknown as VNodeInputProps<RegularElementVNodeType>
-          ) as VNodeInstanceType<T>
+            type as unknown as RegularElementNodeType,
+            props as unknown as VNodeInputProps<RegularElementNodeType>
+          ) as VNodeOf<T>
         }
     }
   }
 
   // 处理组件节点
   if (isWidget(type)) {
-    return createWidgetVNode(type, props) as VNodeInstanceType<T>
+    return createWidgetVNode(type, props) as VNodeOf<T>
   }
 
   throw new Error('createVNode(): invalid node type')
@@ -143,11 +139,11 @@ export function createVNode<T extends AllowCreatedNodeType>(
  * @param children - 子节点，可以是任意数量的子节点
  * @returns {VNode} 返回创建的虚拟DOM节点实例
  */
-export function h<T extends AllowCreatedNodeType>(
+export function h<T extends CreatableType>(
   type: T, // 节点类型，受到AllowCreatedNodeType类型的约束
   props: VNodeInputProps<T> | null = null, // 节点属性，默认为null，类型为VNodeInputProps<T>或null
   ...children: AnyChild[] // 子节点，使用剩余参数语法接受任意数量的子节点
-): VNodeInstanceType<T> {
+): VNodeOf<T> {
   // 返回类型为VNodeInstanceType<T>，依赖于传入的type类型
   if (children.length) {
     // 如果有子节点

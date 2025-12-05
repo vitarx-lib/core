@@ -4,7 +4,7 @@ import {
   createRegularElementVNode,
   h,
   NodeKind,
-  type RegularElementVNode
+  type RegularElementNode
 } from '../../../src/index.js'
 import { initChildren, propagateSVGNamespace } from '../../../src/vnode/normalizer/children.js'
 
@@ -208,7 +208,7 @@ describe('vnode/normalizer/children', () => {
       propagateSVGNamespace(g)
 
       expect(g.isSVGElement).toBe(true)
-      expect((g.children![0] as RegularElementVNode).isSVGElement).toBe(true)
+      expect((g.children![0] as RegularElementNode).isSVGElement).toBe(true)
     })
 
     it('应该不覆盖已设置的 isSVGElement', () => {
@@ -228,7 +228,7 @@ describe('vnode/normalizer/children', () => {
       propagateSVGNamespace(foreignObject)
 
       // foreignObject 内部应该是 HTML 命名空间
-      expect((foreignObject.children![0] as RegularElementVNode).isSVGElement).toBeFalsy()
+      expect((foreignObject.children![0] as RegularElementNode).isSVGElement).toBeFalsy()
     })
 
     it('应该处理深度嵌套的 SVG 元素', () => {
@@ -243,7 +243,7 @@ describe('vnode/normalizer/children', () => {
       propagateSVGNamespace(g1)
 
       expect(g1.isSVGElement).toBe(true)
-      expect((g1.children![0] as RegularElementVNode).isSVGElement).toBe(true)
+      expect((g1.children![0] as RegularElementNode).isSVGElement).toBe(true)
       expect((g1.children![0] as any).children![0].isSVGElement).toBe(true)
     })
 

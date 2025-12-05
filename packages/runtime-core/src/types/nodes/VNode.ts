@@ -2,22 +2,22 @@ import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
 import { App } from '../../app/index.js'
 import { NodeKind, NodeState, VIRTUAL_NODE_SYMBOL } from '../../constants/index.js'
 import type {
-  ContainerVNodeType,
+  ContainerNodeType,
   Directive,
-  ElementVNodeType,
+  ElementNodeType,
+  ElementOf,
   HostCommentElement,
-  HostVNodeType,
+  HostNodeType,
   NodeDevInfo,
-  NodeElementType,
-  NonElementVNodeType,
-  StatelessWidgetVNodeType,
-  VNodeTypes,
-  WidgetVNodeType
+  NodeType,
+  NonElementNodeType,
+  StatelessWidgetNodeType,
+  WidgetNodeType
 } from '../../types/index.js'
 import type { RefEl } from '../../utils/index.js'
 import type { StatefulWidgetRuntime, StatelessWidgetRuntime } from '../../widget/index.js'
 
-export type VNodeDirectives = Map<
+export type NodeDirectives = Map<
   string,
   [directive: Directive, value: any, arg: string | undefined]
 >
@@ -27,7 +27,7 @@ export type VNodeDirectives = Map<
  * 包含用于diff优化和渲染控制的元数据属性。
  * 这些属性不直接影响渲染结果，但可以优化渲染性能和控制渲染行为。
  */
-export interface VNodeMeta {
+export interface NodeMeta {
   /**
    * diff 优化 key
    *
@@ -62,7 +62,7 @@ export interface VNodeMeta {
   /**
    * 指令列表
    */
-  directives?: VNodeDirectives
+  directives?: NodeDirectives
 }
 
 /**
@@ -71,9 +71,9 @@ export interface VNodeMeta {
  * 所有虚拟节点类型的基础接口，定义了虚拟节点的核心属性和行为。
  * 虚拟节点是框架中用于描述UI结构的轻量级对象，作为真实DOM的抽象表示。
  *
- * @template T 节点类型，默认为VNodeTypes
+ * @template T 节点类型，默认为NodeType
  */
-export interface VNode<T extends VNodeTypes = VNodeTypes> extends VNodeMeta {
+export interface VNode<T extends NodeType = NodeType> extends NodeMeta {
   /**
    * 标记为非信号状态的getter
    *
@@ -125,7 +125,7 @@ export interface VNode<T extends VNodeTypes = VNodeTypes> extends VNodeMeta {
    * 这个属性引用了对应的真实DOM元素，用于直接操作DOM。
    * 在服务端渲染(SSR)时，此属性通常为空。
    */
-  el?: NodeElementType<T>
+  el?: ElementOf<T>
   /**
    * 锚点元素
    *
@@ -150,17 +150,17 @@ export interface VNode<T extends VNodeTypes = VNodeTypes> extends VNodeMeta {
 /**
  * HostVnode 代表的是所有非组件节点
  */
-export interface HostVNode<T extends HostVNodeType = HostVNodeType> extends VNode<T> {}
+export interface HostNode<T extends HostNodeType = HostNodeType> extends VNode<T> {}
 /**
  * 非元素节点接口
  *
  * 表示不能包含子节点的节点类型，如文本节点、注释节点等。
  * 这些节点通常是叶子节点，在DOM树中位于末端。
  *
- * @template T 非元素节点类型，默认为NonElementVNodeType
+ * @template T 非元素节点类型，默认为NonElementNodeType
  */
-export interface NonElementVNode<T extends NonElementVNodeType = NonElementVNodeType>
-  extends HostVNode<T> {
+export interface NonElementNode<T extends NonElementNodeType = NonElementNodeType>
+  extends HostNode<T> {
   props: { text: string }
 }
 
@@ -170,10 +170,10 @@ export interface NonElementVNode<T extends NonElementVNodeType = NonElementVNode
  * 表示可以包含子节点的节点类型，如元素节点、片段节点等。
  * 这些节点在DOM树中可以包含其他节点，形成树形结构。
  *
- * @template T 容器节点类型，默认为ContainerVNodeType
+ * @template T 容器节点类型，默认为ContainerNodeType
  */
-export interface ContainerVNode<T extends ContainerVNodeType = ContainerVNodeType>
-  extends HostVNode<T> {
+export interface ContainerNode<T extends ContainerNodeType = ContainerNodeType>
+  extends HostNode<T> {
   /**
    * 子节点列表
    *
@@ -189,9 +189,9 @@ export interface ContainerVNode<T extends ContainerVNodeType = ContainerVNodeTyp
  * 表示HTML元素的节点，如div、span、p等。
  * 这些节点直接对应DOM中的元素，可以包含属性和子节点。
  *
- * @template T 元素节点类型，默认为ElementVNodeType
+ * @template T 元素节点类型，默认为ElementNodeType
  */
-export interface ElementVNode<T extends ElementVNodeType = ElementVNodeType> extends HostVNode<T> {
+export interface ElementNode<T extends ElementNodeType = ElementNodeType> extends HostNode<T> {
   /**
    * 是否是SVG元素
    *
@@ -206,9 +206,9 @@ export interface ElementVNode<T extends ElementVNodeType = ElementVNodeType> ext
  * 表示自定义组件的节点，这些节点在渲染时会被替换为组件的模板内容。
  * 组件节点是框架中实现组件化开发的基础，允许开发者创建可复用的UI组件。
  *
- * @template T 组件节点类型，默认为WidgetVNodeType
+ * @template T 组件节点类型，默认为WidgetNodeType
  */
-export interface WidgetVNode<T extends WidgetVNodeType = WidgetVNodeType> extends VNode<T> {
+export interface WidgetNode<T extends WidgetNodeType = WidgetNodeType> extends VNode<T> {
   /**
    * 缓存组件的记忆数组
    */
@@ -216,7 +216,5 @@ export interface WidgetVNode<T extends WidgetVNodeType = WidgetVNodeType> extend
   /**
    * 运行时组件实例
    */
-  runtimeInstance?: T extends StatelessWidgetVNodeType
-    ? StatelessWidgetRuntime
-    : StatefulWidgetRuntime<T>
+  instance?: T extends StatelessWidgetNodeType ? StatelessWidgetRuntime : StatefulWidgetRuntime<T>
 }

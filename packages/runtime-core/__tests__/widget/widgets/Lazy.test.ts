@@ -389,7 +389,7 @@ describe('Lazy 组件', () => {
       flushScheduler()
 
       // 不会超时，应该正常加载
-      expect(vnode.runtimeInstance).toBeDefined()
+      expect(vnode.instance).toBeDefined()
     })
 
     it('应该在组件卸载时不更新状态', async () => {

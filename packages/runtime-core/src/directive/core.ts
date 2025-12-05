@@ -5,12 +5,12 @@ import { getCurrentVNode } from '../runtime/index.js'
 import type {
   Directive,
   DirectiveOptions,
-  ElementVNode,
+  ElementNode,
   HostElements,
   HostNodeElements,
+  NodeDirectives,
   VNode,
-  VNodeDirectives,
-  WidgetVNode
+  WidgetNode
 } from '../types/index.js'
 import { __DEV__, isElementNode, isStatefulWidgetNode, isWidgetNode } from '../utils/index.js'
 
@@ -237,8 +237,8 @@ function shouldProcessDirective(name: string, options?: DiffDirectivesOptions): 
  * @param options - 差异更新选项，可指定only或skip来控制更新范围
  */
 export function diffDirectives(
-  oldVNode: ElementVNode | WidgetVNode,
-  newVNode: ElementVNode | WidgetVNode,
+  oldVNode: ElementNode | WidgetNode,
+  newVNode: ElementNode | WidgetNode,
   options?: DiffDirectivesOptions
 ): void {
   // 获取DOM元素引用
@@ -246,8 +246,8 @@ export function diffDirectives(
   if (!el) throw new Error('oldVNode.el is not defined.')
 
   // 获取新旧节点的指令集合，如果不存在则使用空Map
-  const oldDirs: VNodeDirectives = oldVNode?.directives ?? new Map()
-  const newDirs: VNodeDirectives = newVNode?.directives ?? new Map()
+  const oldDirs: NodeDirectives = oldVNode?.directives ?? new Map()
+  const newDirs: NodeDirectives = newVNode?.directives ?? new Map()
 
   // 1. 遍历所有新指令：包含 新增 + 更新
   for (const [name, [dir, newValue, arg]] of newDirs) {

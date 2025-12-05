@@ -9,10 +9,10 @@ import {
 } from '../../constants/index.js'
 import { isVoidTag } from '../../renderer/index.js'
 import type {
-  AllowCreatedNodeType,
   AnyProps,
   BindAttributes,
   ClassProperties,
+  CreatableType,
   StyleRules
 } from '../../types/index.js'
 import { StyleUtils } from '../../utils/index.js'
@@ -128,7 +128,7 @@ export const normalizerStyleAndClassProp = (props: AnyProps): AnyProps => {
  * @param type - 节点类型
  * @returns {boolean} 是否支持子节点
  */
-export function isSupportChildren(type: AllowCreatedNodeType): boolean {
+export function isSupportChildren(type: CreatableType): boolean {
   if (typeof type === 'string') {
     switch (type) {
       case COMMENT_NODE_TYPE:

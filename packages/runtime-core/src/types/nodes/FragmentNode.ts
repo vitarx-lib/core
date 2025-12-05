@@ -1,5 +1,5 @@
-import type { FragmentVNodeType } from '../vnode.js'
-import type { ContainerVNode } from './BaseNode.js'
+import type { FragmentNodeType } from '../vnode.js'
+import type { ContainerNode } from './VNode.js'
 
 /**
  * 片段节点接口
@@ -11,6 +11,6 @@ import type { ContainerVNode } from './BaseNode.js'
  * 而片段节点本身不会产生任何DOM元素。这对于实现某些布局
  * 和组件结构非常有用，可以避免不必要的DOM嵌套。
  *
- * 片段节点继承自ContainerVNode，因为它可以包含多个子节点。
+ * 片段节点继承自ContainerNode，因为它可以包含多个子节点。
  */
-export interface FragmentVNode extends ContainerVNode<FragmentVNodeType> {}
+export interface FragmentNode extends ContainerNode<FragmentNodeType> {}

@@ -1,7 +1,7 @@
 import { NodeState } from '../../constants/index.js'
 import { diffDirectives, type DiffDirectivesOptions } from '../../directive/index.js'
 import { getRenderer } from '../../renderer/index.js'
-import type { ContainerVNode, ElementVNode, VNode, WidgetVNode } from '../../types/index.js'
+import type { ContainerNode, ElementNode, VNode, WidgetNode } from '../../types/index.js'
 import {
   getNodeDomOpsTarget,
   isContainerNode,
@@ -85,12 +85,12 @@ export class PatchUpdate {
     // 静态节点不需要更新
     if (currentVNode.static) return
     if (isWidgetNode(currentVNode)) {
-      if (isElementNode(currentVNode.runtimeInstance!.child)) {
-        diffDirectives(currentVNode, nextVNode as WidgetVNode, options)
+      if (isElementNode(currentVNode.instance!.child)) {
+        diffDirectives(currentVNode, nextVNode as WidgetNode, options)
       }
     } else if (isElementNode(currentVNode)) {
       //  diff 指令
-      diffDirectives(currentVNode, nextVNode as unknown as ElementVNode, options)
+      diffDirectives(currentVNode, nextVNode as unknown as ElementNode, options)
     }
     // 更新节点属性
     this.patchUpdateProps(currentVNode, nextVNode)
@@ -98,7 +98,7 @@ export class PatchUpdate {
     if (isContainerNode(currentVNode)) {
       currentVNode.children = this.patchUpdateChildren(
         currentVNode,
-        nextVNode as unknown as ContainerVNode
+        nextVNode as unknown as ContainerNode
       )
     }
   }
@@ -169,8 +169,8 @@ export class PatchUpdate {
    * @returns {VNode[]} 更新后的子节点数组
    */
   static patchUpdateChildren(
-    currentNode: ContainerVNode,
-    nextVNode: ContainerVNode,
+    currentNode: ContainerNode,
+    nextVNode: ContainerNode,
     hooks?: ChildNodeUpdateHooks
   ): VNode[] {
     const dom = getRenderer()

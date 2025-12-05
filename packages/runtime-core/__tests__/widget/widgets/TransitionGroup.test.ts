@@ -44,7 +44,7 @@ describe('TransitionGroup 组件', () => {
       })
       renderNode(vnode)
       // 默认应该使用 fragment
-      expect(vnode.runtimeInstance?.child?.type).toBe(FRAGMENT_NODE_TYPE)
+      expect(vnode.instance?.child?.type).toBe(FRAGMENT_NODE_TYPE)
     })
   })
 

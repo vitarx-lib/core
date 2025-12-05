@@ -8,8 +8,8 @@ import type { WidgetRuntime } from './WidgetRuntime.js'
  */
 export function getCurrentInstance(): WidgetRuntime {
   const node = getCurrentVNode()
-  if (!node || !node.runtimeInstance) {
+  if (!node || !node.instance) {
     throw new Error('No active widget instance found.')
   }
-  return node.runtimeInstance
+  return node.instance
 }

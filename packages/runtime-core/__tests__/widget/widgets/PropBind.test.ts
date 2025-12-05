@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   createVNode,
   FRAGMENT_NODE_TYPE,
-  type FragmentVNode,
+  type FragmentNode,
   mountNode,
   PropBind,
   renderNode
@@ -30,7 +30,7 @@ describe('PropBind 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-      const childVNode = (vnode.runtimeInstance!.child as FragmentVNode).children[0]
+      const childVNode = (vnode.instance!.child as FragmentNode).children[0]
       expect(childVNode.props.color).toBe('red')
       expect(childVNode.props.size).toBe('large')
     })
@@ -46,7 +46,7 @@ describe('PropBind 组件', () => {
       })
       renderNode(vnode)
       mountNode(vnode, container)
-      const children = (vnode.runtimeInstance!.child as FragmentVNode).children
+      const children = (vnode.instance!.child as FragmentNode).children
       expect(children[0].props.color).toBe('blue')
       expect(children[1].props.color).toBe('blue')
       expect(children[2].props.color).toBe('blue')
@@ -64,7 +64,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const children = (vnode.runtimeInstance!.child as FragmentVNode).children
+      const children = (vnode.instance!.child as FragmentNode).children
       expect(children[0].props.className).toBe('bound')
       expect(children[1].props.className).toBe('bound')
     })
@@ -77,7 +77,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const childVNode = (vnode.runtimeInstance!.child as FragmentVNode).children[0]
+      const childVNode = (vnode.instance!.child as FragmentNode).children[0]
       expect(childVNode.props.id).toBe('test')
       expect(childVNode.props.title).toBe('original')
       expect(childVNode.props.color).toBe('green')
@@ -91,7 +91,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const childVNode = (vnode.runtimeInstance!.child as FragmentVNode).children[0]
+      const childVNode = (vnode.instance!.child as FragmentNode).children[0]
       expect(childVNode.props.color).toBe('blue')
     })
 
@@ -102,8 +102,8 @@ describe('PropBind 组件', () => {
       })
       renderNode(vnode)
 
-      expect((vnode.runtimeInstance!.child as FragmentVNode).children).toBeDefined()
-      expect(vnode.runtimeInstance!.child.type).toBe(FRAGMENT_NODE_TYPE)
+      expect((vnode.instance!.child as FragmentNode).children).toBeDefined()
+      expect(vnode.instance!.child.type).toBe(FRAGMENT_NODE_TYPE)
     })
   })
 
@@ -116,7 +116,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const children = (vnode.runtimeInstance!.child as FragmentVNode).children
+      const children = (vnode.instance!.child as FragmentNode).children
       // 只有 VNode 应该有 props.color
       expect(children[1].props.color).toBe('red')
     })
@@ -134,7 +134,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const childVNode = (vnode.runtimeInstance!.child as FragmentVNode).children[0]
+      const childVNode = (vnode.instance!.child as FragmentNode).children[0]
       expect(childVNode.props.color).toBe('red')
       expect(childVNode.props.size).toBe('large')
       expect(childVNode.props.disabled).toBe(true)
@@ -149,7 +149,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const childVNode = (vnode.runtimeInstance!.child as FragmentVNode).children[0]
+      const childVNode = (vnode.instance!.child as FragmentNode).children[0]
       expect(childVNode.props.color).toBe(color.value)
     })
 
@@ -165,7 +165,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const childVNode = (vnode.runtimeInstance!.child as FragmentVNode).children[0]
+      const childVNode = (vnode.instance!.child as FragmentNode).children[0]
       expect(childVNode.props.color).toBe('red')
       expect(childVNode.props.size).toBe('large')
       expect(childVNode.props.disabled).toBe(true)
@@ -183,7 +183,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const children = (vnode.runtimeInstance!.child as FragmentVNode).children
+      const children = (vnode.instance!.child as FragmentNode).children
       expect(children).toEqual([])
     })
 
@@ -201,7 +201,7 @@ describe('PropBind 组件', () => {
       })
       renderNode(vnode2)
       mountNode(vnode2, container)
-      expect((vnode1.runtimeInstance!.child as FragmentVNode).children.length).toBe(0)
+      expect((vnode1.instance!.child as FragmentNode).children.length).toBe(0)
     })
 
     it('应该处理混合 VNode 和非 VNode 子节点', () => {
@@ -219,7 +219,7 @@ describe('PropBind 组件', () => {
       renderNode(vnode)
       mountNode(vnode, container)
 
-      const children = (vnode.runtimeInstance!.child as FragmentVNode).children
+      const children = (vnode.instance!.child as FragmentNode).children
       // 只有索引 1 和 3 的 VNode 应该有 color 属性
       expect(children[1].props.color).toBe('red')
       expect(children[3].props.color).toBe('red')

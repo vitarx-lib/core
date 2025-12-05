@@ -1,5 +1,5 @@
-import type { CommentVNodeType } from '../vnode.js'
-import { type NonElementVNode } from './BaseNode.js'
+import type { CommentNodeType } from '../vnode.js'
+import { type NonElementNode } from './VNode.js'
 
 /**
  * 注释节点接口
@@ -8,7 +8,7 @@ import { type NonElementVNode } from './BaseNode.js'
  * 注释节点在DOM中不会显示给用户，但在开发模式下可用于
  * 标记模板中的特定位置或提供调试信息。
  *
- * 注释节点继承自NonElementVNode，因为它不能包含子节点，
+ * 注释节点继承自NonElementNode，因为它不能包含子节点，
  * 是DOM树中的叶子节点。
  */
-export interface CommentVNode extends NonElementVNode<CommentVNodeType> {}
+export interface CommentNode extends NonElementNode<CommentNodeType> {}

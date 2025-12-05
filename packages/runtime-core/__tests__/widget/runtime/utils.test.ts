@@ -8,12 +8,13 @@ import { Scheduler } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
 import {
   createVNode,
+  createWidgetRuntime,
   defineStatelessWidget,
   StatefulWidgetRuntime,
   StatelessWidgetRuntime,
+  useForceUpdater,
   Widget
 } from '../../../src/index.js'
-import { createWidgetRuntime, useForceUpdater } from '../../../src/widget/runtime/utils.js'
 
 // 测试用组件
 class TestStatefulWidget extends Widget {
@@ -35,11 +36,11 @@ describe('createWidgetRuntime', () => {
       expect(runtime).toBeInstanceOf(StatelessWidgetRuntime)
     })
 
-    it('应该绑定实例到 vnode.runtimeInstance', () => {
+    it('应该绑定实例到 vnode.instance', () => {
       const vnode = createVNode(TestStatelessWidget, {})
       const runtime = createWidgetRuntime(vnode)
 
-      expect(vnode.runtimeInstance).toBe(runtime)
+      expect(vnode.instance).toBe(runtime)
     })
 
     it('重复调用应该返回已有实例', () => {
@@ -81,11 +82,11 @@ describe('createWidgetRuntime', () => {
       expect((runtime as StatefulWidgetRuntime).options.enableScheduler).toBe(false)
     })
 
-    it('应该绑定实例到 vnode.runtimeInstance', () => {
+    it('应该绑定实例到 vnode.instance', () => {
       const vnode = createVNode(TestStatefulWidget, {})
       const runtime = createWidgetRuntime(vnode)
 
-      expect(vnode.runtimeInstance).toBe(runtime)
+      expect(vnode.instance).toBe(runtime)
     })
 
     it('重复调用应该返回已有实例', () => {

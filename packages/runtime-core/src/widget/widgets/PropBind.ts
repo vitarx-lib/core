@@ -1,4 +1,4 @@
-import type { AnyChild, AnyProps, FragmentVNode } from '../../types/index.js'
+import type { AnyChild, AnyProps, FragmentNode } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
 import { defineStatelessWidget } from '../../utils/widget.js'
 import { createVNode } from '../../vnode/index.js'
@@ -26,9 +26,9 @@ interface PropBindProps {
  * ```
  *
  * @param props - 组件的属性对象
- * @returns {FragmentVNode} 返回一个 Fragment 元素，包含处理后的子组件
+ * @returns {FragmentNode} 返回一个 Fragment 元素，包含处理后的子组件
  */
-const PropBind = defineStatelessWidget(({ children, ...bind }: PropBindProps): FragmentVNode => {
+const PropBind = defineStatelessWidget(({ children, ...bind }: PropBindProps): FragmentNode => {
   // 将 children 转换为数组格式，确保可以统一处理
   const childrenList = Array.isArray(children) ? children : [children]
   // 遍历子组件列表，为每个子组件绑定属性

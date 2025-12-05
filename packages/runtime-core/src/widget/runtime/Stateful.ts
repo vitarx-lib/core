@@ -12,8 +12,8 @@ import type {
   ErrorSource,
   LifecycleHookParameter,
   LifecycleHookReturnType,
-  StatefulWidgetVNode,
-  StatefulWidgetVNodeType,
+  StatefulWidgetNode,
+  StatefulWidgetNodeType,
   VNode,
   WidgetInstanceType
 } from '../../types/index.js'
@@ -67,7 +67,7 @@ export interface StatefulManagerOptions {
  * 负责管理有状态组件的生命周期、依赖追踪、视图更新等功能
  */
 export class StatefulWidgetRuntime<
-  T extends StatefulWidgetVNodeType = StatefulWidgetVNodeType
+  T extends StatefulWidgetNodeType = StatefulWidgetNodeType
 > extends WidgetRuntime<T> {
   /** 响应式作用域，管理所有副作用 */
   public readonly scope: EffectScope
@@ -87,7 +87,7 @@ export class StatefulWidgetRuntime<
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
   private renderDepsSubscriber: Subscriber | null = null
-  constructor(node: StatefulWidgetVNode<T>, options?: StatefulManagerOptions) {
+  constructor(node: StatefulWidgetNode<T>, options?: StatefulManagerOptions) {
     super(node)
     this.scope = new EffectScope({
       name: this.name,
@@ -136,7 +136,7 @@ export class StatefulWidgetRuntime<
 
       // 3. 如果找到父组件，递归向上冒泡错误
       if (isStatefulWidgetNode(parentNode)) {
-        return parentNode.runtimeInstance!.reportError(error, source, instance)
+        return parentNode.instance!.reportError(error, source, instance)
       }
 
       // 4. 如果没有父组件，尝试使用应用级错误处理器

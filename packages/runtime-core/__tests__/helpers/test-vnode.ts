@@ -5,16 +5,16 @@
  */
 
 import {
-  type CommentVNode,
+  type CommentNode,
   createCommentVNode,
   createTextVNode,
   createVNode,
-  type FragmentVNode,
-  type RegularElementVNode,
-  type RegularElementVNodeType,
-  type TextVNode,
+  type FragmentNode,
+  type RegularElementNode,
+  type RegularElementNodeType,
+  type TextNode,
   type VNode,
-  type WidgetVNode
+  type WidgetNode
 } from '../../src/index.js'
 
 /**
@@ -23,7 +23,7 @@ import {
  * @returns 文本 VNode
  * @param text
  */
-export function createTestTextVNode(text: string = 'test text'): TextVNode {
+export function createTestTextVNode(text: string = 'test text'): TextNode {
   return createTextVNode({ text })
 }
 
@@ -33,7 +33,7 @@ export function createTestTextVNode(text: string = 'test text'): TextVNode {
  * @returns 注释 VNode
  * @param text
  */
-export function createTestCommentVNode(text: string = 'test comment'): CommentVNode {
+export function createTestCommentVNode(text: string = 'test comment'): CommentNode {
   return createCommentVNode({ text })
 }
 
@@ -45,9 +45,9 @@ export function createTestCommentVNode(text: string = 'test comment'): CommentVN
  * @returns 元素 VNode
  */
 export function createTestElementVNode(
-  type: RegularElementVNodeType = 'div',
+  type: RegularElementNodeType = 'div',
   props: Record<string, any> = {}
-): RegularElementVNode {
+): RegularElementNode {
   return createVNode(type, props)
 }
 
@@ -57,8 +57,8 @@ export function createTestElementVNode(
  * @param children 子节点
  * @returns Fragment VNode
  */
-export function createTestFragmentVNode(children: VNode[] = []): FragmentVNode {
-  return createVNode('fragment', { children }) as FragmentVNode
+export function createTestFragmentVNode(children: VNode[] = []): FragmentNode {
+  return createVNode('fragment', { children }) as FragmentNode
 }
 
 /**
@@ -68,8 +68,8 @@ export function createTestFragmentVNode(children: VNode[] = []): FragmentVNode {
  * @param props 属性
  * @returns Widget VNode
  */
-export function createTestWidgetVNode(widget: any, props: Record<string, any> = {}): WidgetVNode {
-  return createVNode(widget, props) as WidgetVNode
+export function createTestWidgetVNode(widget: any, props: Record<string, any> = {}): WidgetNode {
+  return createVNode(widget, props) as WidgetNode
 }
 
 /**

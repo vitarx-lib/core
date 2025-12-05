@@ -1,9 +1,10 @@
-import type { AnyChild, FragmentVNode, VNodeBuilder } from '../../types/index.js'
+import type { AnyChild, FragmentNode, VNodeBuilder } from '../../types/index.js'
 import { createFragmentVNode, defineNodeBuilder } from '../../vnode/index.js'
 
 interface FragmentProps {
   children?: AnyChild
 }
+export type FragmentWidget = VNodeBuilder<FragmentProps, FragmentNode> & { __is_fragment__: true }
 /**
  * Fragment 节点构建器
  *
@@ -11,12 +12,10 @@ interface FragmentProps {
  *
  * @param props - Fragment 组件的属性对象
  * @param [props.children] - Fragment 节点的子节点
- * @return {FragmentVNode} Fragment 节点对象
+ * @return {FragmentNode} Fragment 节点对象
  */
-export const Fragment: VNodeBuilder<FragmentProps, FragmentVNode> = defineNodeBuilder(
-  (props: FragmentProps): FragmentVNode => {
-    return createFragmentVNode(props)
-  }
-)
+export const Fragment: FragmentWidget = defineNodeBuilder((props: FragmentProps): FragmentNode => {
+  return createFragmentVNode(props)
+}) as FragmentWidget
 
 export type Fragment = typeof Fragment

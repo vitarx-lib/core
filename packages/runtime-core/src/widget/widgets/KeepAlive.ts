@@ -1,13 +1,13 @@
 import { getRenderer } from '../../renderer/index.js'
 import type {
   AnyProps,
-  NodeElementType,
-  StatefulWidgetVNode,
-  TextVNodeType,
+  ElementOf,
+  StatefulWidgetNode,
+  TextNodeType,
   UniqueKey,
   VNode,
-  WidgetTypes,
-  WidgetVNode
+  WidgetNode,
+  WidgetTypes
 } from '../../types/index.js'
 import { getNodeDomOpsTarget, isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
 import {
@@ -125,12 +125,12 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 缓存的节点实例
    */
-  public readonly cached: Map<WidgetTypes, Map<UniqueKey | undefined, WidgetVNode>> = new Map()
+  public readonly cached: Map<WidgetTypes, Map<UniqueKey | undefined, WidgetNode>> = new Map()
   /**
    * 当前展示的小部件
    * @protected
    */
-  protected currentChild: WidgetVNode
+  protected currentChild: WidgetNode
 
   constructor(props: KeepAliveProps) {
     super(props)
@@ -211,9 +211,9 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * @inheritDoc
    */
-  override $patchUpdate(oldVNode: StatefulWidgetVNode, newVNode: StatefulWidgetVNode): VNode {
+  override $patchUpdate(oldVNode: StatefulWidgetNode, newVNode: StatefulWidgetNode): VNode {
     // 提前检查是否需要创建占位符
-    let placeholderElement: NodeElementType<TextVNodeType> | null = null
+    let placeholderElement: ElementOf<TextNodeType> | null = null
     const dom = getRenderer()
     if (newVNode.state !== 'deactivated') {
       placeholderElement = dom.createText('')
@@ -239,7 +239,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
   /**
    * 生成子节点
    */
-  protected makeChildVNode(children: WidgetTypes | VNode): WidgetVNode {
+  protected makeChildVNode(children: WidgetTypes | VNode): WidgetNode {
     if (isWidgetNode(children)) {
       return children
     } else if (isWidget(children)) {
@@ -286,7 +286,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
    *
    * @param vnode
    */
-  protected addCache(vnode: WidgetVNode) {
+  protected addCache(vnode: WidgetNode) {
     const type = vnode.type
     const key = vnode.key
     if (this.isKeep(type)) {

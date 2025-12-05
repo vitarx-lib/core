@@ -289,8 +289,8 @@ describe('Suspense 组件', () => {
       mountNode(vnode, container)
 
       // onActivated 会触发 complete
-      if (vnode.runtimeInstance?.instance) {
-        ;(vnode.runtimeInstance.instance as any).onActivated?.()
+      if (vnode.instance?.instance) {
+        ;(vnode.instance.instance as any).onActivated?.()
       }
     })
 
@@ -312,7 +312,7 @@ describe('Suspense 组件', () => {
       })
       renderNode(vnode)
 
-      expect(vnode.runtimeInstance!.child.type).toBe('div')
+      expect(vnode.instance!.child.type).toBe('div')
     })
 
     it('应该在已卸载组件不触发更新', () => {

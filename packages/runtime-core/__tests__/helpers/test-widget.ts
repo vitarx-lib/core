@@ -11,10 +11,10 @@ import {
   mountNode,
   type Renderable,
   renderNode,
-  type VNodeInstanceType,
+  type VNodeOf,
   Widget,
-  type WidgetTypes,
-  type WidgetVNode
+  type WidgetNode,
+  type WidgetTypes
 } from '../../src/index.js'
 
 /**
@@ -108,7 +108,7 @@ export function renderAndMount<T extends WidgetTypes>(
   widget: T,
   props?: any,
   container?: HTMLElement
-): VNodeInstanceType<T> {
+): VNodeOf<T> {
   const vnode = createVNode(widget, props)
   const el = container || createContainer()
   renderNode(vnode)
@@ -122,11 +122,11 @@ export function renderAndMount<T extends WidgetTypes>(
  * @param key 要更新的属性名
  * @param value 新的属性值
  */
-export function updateProps(node: WidgetVNode, key: string, value: any): void {
+export function updateProps(node: WidgetNode, key: string, value: any): void {
   // 更新节点的属性值
   node.props[key] = value
   // 通知运行时实例进行更新
-  node.runtimeInstance!.update()
+  node.instance!.update()
   // 刷新调度器，确保所有更新按顺序执行
   flushScheduler()
 }

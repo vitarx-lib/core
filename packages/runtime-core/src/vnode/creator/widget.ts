@@ -4,11 +4,10 @@ import { NodeKind } from '../../constants/index.js'
 import { getAppContext } from '../../runtime/index.js'
 import type {
   NodeDevInfo,
-  StatefulWidget,
-  StatefulWidgetVNode,
-  StatelessWidget,
-  StatelessWidgetVNode,
+  StatefulWidgetNode,
+  StatelessWidgetNode,
   VNodeInputProps,
+  VNodeOf,
   WidgetTypes
 } from '../../types/index.js'
 import { __DEV__, getWidgetName, isStatelessWidget } from '../../utils/index.js'
@@ -69,56 +68,6 @@ function validateProps<T extends WidgetTypes>(
 }
 
 /**
- * 为无状态组件创建虚拟节点
- *
- * 此函数重载用于处理无状态组件的虚拟节点创建，返回特定类型的节点对象。
- *
- * @param widget - 无状态组件类型
- * @param props - 组件的有效属性
- * @returns 创建的无状态组件虚拟节点
- *
- * @example
- * ```tsx
- * const MyStatelessWidget = defineStatelessWidget(({text}:{text:string}) => {
- *   return <div> {text} </div>;
- * });
- *
- * const node = createWidgetNode(MyStatelessWidget, { text: 'Hello' });
- * // node 是 StatelessWidgetNode 类型
- * ```
- */
-export function createWidgetVNode<T extends StatelessWidget>(
-  widget: T,
-  props: VNodeInputProps<T>
-): StatelessWidgetVNode
-
-/**
- * 为有状态组件创建虚拟节点
- *
- * 此函数重载用于处理有状态组件的虚拟节点创建，返回特定类型的节点对象。
- *
- * @param widget - 有状态组件类型
- * @param props - 组件的有效属性
- * @returns 创建的有状态组件虚拟节点
- *
- * @example
- * ```typescript
- * class MyStatefulWidget extends Widget {
- *   build() {
- *     return h('div', { children: this.props.text });
- *   }
- * }
- *
- * const node = createWidgetNode(MyStatefulWidget, { text: 'Hello' });
- * // node 是 StatefulWidgetNode 类型
- * ```
- */
-export function createWidgetVNode<T extends StatefulWidget>(
-  widget: T,
-  props: VNodeInputProps<T>
-): StatefulWidgetVNode
-
-/**
  * 为组件创建虚拟节点
  *
  * 这是核心的组件节点创建函数，根据组件类型自动判断是无状态组件还是有状态组件，
@@ -154,7 +103,7 @@ export function createWidgetVNode<T extends StatefulWidget>(
 export function createWidgetVNode<T extends WidgetTypes>(
   widget: T,
   props: VNodeInputProps<T>
-): StatelessWidgetVNode | StatefulWidgetVNode {
+): VNodeOf<T> {
   // 判断组件是否为无状态组件
   if (isRecordObject(widget.defaultProps)) {
     props = { ...widget.defaultProps, ...props }
@@ -164,10 +113,10 @@ export function createWidgetVNode<T extends WidgetTypes>(
     widget,
     isStatelessWidget(widget) ? NodeKind.STATELESS_WIDGET : NodeKind.STATEFUL_WIDGET,
     props
-  ) as StatefulWidgetVNode | StatelessWidgetVNode
+  ) as StatefulWidgetNode | StatelessWidgetNode
   node.appContext = getAppContext()
   // 开发模式下执行属性校验
   if (__DEV__) validateProps(widget, props, node.devInfo)
   // 返回创建的节点
-  return node
+  return node as VNodeOf<T>
 }

@@ -1,16 +1,16 @@
 import type { HostNodeElements, HostParentElement } from './element.js'
 import type { VNode } from './nodes/index.js'
-import type { NodeElementType, VNodeTypes } from './vnode.js'
+import type { ElementOf, NodeType } from './vnode.js'
 import type { AnyProps } from './widget.js'
 
 export type OpsType = 'appendChild' | 'insertBefore' | 'replace'
-export interface NodeDriver<T extends VNodeTypes> {
+export interface NodeDriver<T extends NodeType> {
   /**
    * 渲染节点 - 创建元素，这是挂载之前的步骤
    *
    * @param node - 虚拟节点对象
    */
-  render(node: VNode<T>): NodeElementType<T>
+  render(node: VNode<T>): ElementOf<T>
   /**
    * 挂载节点
    *
