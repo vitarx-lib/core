@@ -18,18 +18,29 @@ type Drivers = {
   [key in NodeKind]: NodeDriver<NodeKindToNodeType[key]>
 }
 const drivers: Drivers = {} as Drivers
-
+let defaultDriver: NodeDriver<VNodeTypes> | null = null
 /**
  * 注册节点控制器
  *
  * @param kind - 节点类型
- * @param controller - 节点控制器实例
+ * @param driver - 节点控制器实例
  */
 export function registerDriver<K extends NodeKind>(
   kind: K,
-  controller: NodeDriver<NodeKindToNodeType[K]>
+  driver: NodeDriver<NodeKindToNodeType[K]>
 ): void {
-  drivers[kind] = controller as Drivers[K]
+  drivers[kind] = driver as Drivers[K]
+}
+/**
+ * 设置默认驱动程序
+ *
+ * `setDefaultDriver` 可以注册一个默认的驱动程序，
+ * 该驱动程序将用于处理所有未注册的节点类型
+ *
+ * @param driver - 默认驱动程序实例
+ */
+export function setDefaultDriver(driver: NodeDriver<VNodeTypes>) {
+  defaultDriver = driver
 }
 /**
  * 根据节点类型获取对应的驱动程序
@@ -39,7 +50,7 @@ export function registerDriver<K extends NodeKind>(
  */
 export function getNodeDriver<K extends NodeKind>(kind: K): Drivers[K] {
   // 从驱动程序映射表中获取指定类型的驱动程序
-  const driver = drivers[kind] as Drivers[K]
+  const driver = (drivers[kind] as Drivers[K]) || defaultDriver
   // 检查驱动程序是否存在
   if (!driver) {
     // 如果不存在，抛出错误并提示用户可能需要导入平台特定的驱动程序
