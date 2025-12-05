@@ -14,7 +14,7 @@ import {
   type VNode
 } from '@vitarx/runtime-core'
 import { isPromise } from '@vitarx/utils'
-import { useSSRContext } from '../../shared/context.js'
+import { useSSRContext } from '../shared/index.js'
 
 /**
  * SSRRenderDriver 是一个用于服务端渲染(SSR)的节点驱动器实现类。

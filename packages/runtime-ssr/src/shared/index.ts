@@ -3,7 +3,7 @@ export { __IS_SERVER__ } from './constants.js'
 
 // 导出上下文类型和函数
 export type { SSRContext, SSRRenderMode, SSRInternalContext } from './context.js'
-export { useSSRContext, isSSR, getSSRRenderMode } from './context.js'
+export { useSSRContext, isSSR, isHydrating, getSSRRenderMode } from './context.js'
 
 // 导出接收器
 export { StringSink, type Sink } from './sink.js'

@@ -15,7 +15,7 @@ export interface SSRInternalContext {
   /**
    * 渲染模式
    */
-  $renderMode: SSRRenderMode
+  $renderMode?: SSRRenderMode
   /**
    * 异步任务队列（sync 模式使用）
    */
@@ -25,6 +25,18 @@ export interface SSRInternalContext {
    * 将异步任务绑定到对应的节点，序列化时逐个等待
    */
   $nodeAsyncMap?: WeakMap<VNode, Promise<unknown>>
+  /**
+   * 是否处于水合阶段
+   */
+  $isHydrating?: boolean
+  /**
+   * 水合容器元素
+   */
+  $hydrateContainer?: Element
+  /**
+   * 水合路径栈，用于定位 DOM 节点
+   */
+  $hydratePathStack?: number[]
 }
 
 /**
@@ -83,7 +95,17 @@ export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | undefi
  * ```
  */
 export function isSSR(): boolean {
-  return useSSRContext() !== undefined
+  const ctx = useSSRContext()
+  return ctx !== undefined && ctx.$renderMode !== undefined
+}
+
+/**
+ * 检查当前是否在水合阶段
+ *
+ * @returns 如果在水合阶段返回true，否则返回false
+ */
+export function isHydrating(): boolean {
+  return useSSRContext()?.$isHydrating === true
 }
 
 /**

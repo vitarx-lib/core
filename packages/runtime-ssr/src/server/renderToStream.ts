@@ -6,10 +6,16 @@ import {
   type VNode,
   type WidgetNode
 } from '@vitarx/runtime-core'
-import type { SSRApp } from '../../app/SSRApp.js'
-import { escapeHTML, tagClose, tagOpen, tagSelfClosing } from '../../shared/html.js'
-import { type Sink, type SSRContext } from '../../shared/index.js'
-import { SSRRenderDriver } from '../drivers/index.js'
+import { SSRApp } from '../app/index.js'
+import {
+  escapeHTML,
+  type Sink,
+  type SSRContext,
+  tagClose,
+  tagOpen,
+  tagSelfClosing
+} from '../shared/index.js'
+import { SSRRenderDriver } from './SSRRenderDriver.js'
 
 // 节点异步任务映射类型
 type NodeAsyncMap = WeakMap<VNode, Promise<unknown>>

@@ -1,7 +1,7 @@
 import { renderNode, runInRenderContext, setDefaultDriver, type VNode } from '@vitarx/runtime-core'
-import type { SSRApp } from '../../app/SSRApp.js'
-import { serializeVNodeToSink, type SSRContext, StringSink } from '../../shared/index.js'
-import { SSRRenderDriver } from '../drivers/index.js'
+import { SSRApp } from '../app/index.js'
+import { serializeVNodeToSink, type SSRContext, StringSink } from '../shared/index.js'
+import { SSRRenderDriver } from './SSRRenderDriver.js'
 
 /**
  * 将应用渲染为 HTML 字符串（同步模式）
