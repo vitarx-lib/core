@@ -211,13 +211,16 @@ const createErrorBuilder = (error: unknown): ChildBuilder => {
 
 /**
  * 初始化异步函数组件
+ *
+ * 将异步解析逻辑注入到 onRender 钩子中，返回解析 Promise。
+ * 这样 SSR 可以通过 invokeHook(render) 统一收集异步任务。
  */
-const initializeAsyncWidget = async (
+const initializeAsyncWidget = (
   instance: FnWidget,
   hooks: HookCollectResult['hooks'],
   exposed: HookCollectResult['exposed'],
   buildResult: Promise<any>
-) => {
+): void => {
   let loadingNode = instance.$vnode.type.loading
   if (isVNode(loadingNode)) {
     loadingNode = cloneVNode(loadingNode)
@@ -226,32 +229,44 @@ const initializeAsyncWidget = async (
       text: `AsyncWidget<${instance.$vnode.instance!.name}> loading ...`
     })
   }
-  // 默认使用loading节点
+  // 默认使用 loading 节点
   instance.build = () => loadingNode
-
-  const suspenseCounter = useSuspense()
-  const initialExposedCount = Object.keys(exposed).length
 
   // 标记节点为异步组件
   instance.$vnode.isAsyncWidget = true
 
-  if (suspenseCounter) suspenseCounter.value++
+  // 创建解析 Promise（立即开始执行）
+  const initialExposedCount = Object.keys(exposed).length
+  const resolvePromise = (async () => {
+    const suspenseCounter = useSuspense()
+    if (suspenseCounter) suspenseCounter.value++
 
-  try {
-    registerCriticalHooks(instance, hooks)
-
-    const result = await buildResult
-    instance.build = parseAsyncBuildResult(result, instance)
-  } catch (error) {
-    instance.build = createErrorBuilder(error)
-  } finally {
-    injectLifecycleHooks(hooks, instance)
-    const hasExposedChanged = initialExposedCount !== Object.keys(exposed).length
-    if (hasExposedChanged) {
-      injectExposedMembers(exposed, instance)
+    try {
+      registerCriticalHooks(instance, hooks)
+      const result = await buildResult
+      instance.build = parseAsyncBuildResult(result, instance)
+    } catch (error) {
+      instance.build = createErrorBuilder(error)
+    } finally {
+      injectLifecycleHooks(hooks, instance)
+      const hasExposedChanged = initialExposedCount !== Object.keys(exposed).length
+      if (hasExposedChanged) {
+        injectExposedMembers(exposed, instance)
+      }
+      completeAsyncRender(instance)
+      if (suspenseCounter) suspenseCounter.value--
     }
-    completeAsyncRender(instance)
-    if (suspenseCounter) suspenseCounter.value--
+  })()
+
+  // 将解析逻辑注入到 onRender 钩子
+  const userOnRender = hooks.onRender
+  instance.onRender = async () => {
+    // 先执行用户的 onRender
+    if (userOnRender) {
+      await userOnRender.call(instance)
+    }
+    // 等待异步组件解析完成
+    await resolvePromise
   }
 }
 
@@ -261,7 +276,7 @@ const initializeAsyncWidget = async (
  * @internal 内部关键逻辑
  * @param instance - 函数组件实例
  */
-export const initializeFnWidget = async (instance: FnWidget): Promise<FnWidget> => {
+export const initializeFnWidget = (instance: FnWidget): void => {
   const vnode = instance.$vnode as StatefulWidgetNode<FunctionWidget>
   const { exposed, hooks, buildResult } = HookCollector.collect(vnode, instance)
 
@@ -272,9 +287,8 @@ export const initializeFnWidget = async (instance: FnWidget): Promise<FnWidget> 
 
   if (!isPromise(buildResult)) {
     initializeSyncWidget(instance, hooks, buildResult)
-    return instance
+    return
   }
 
-  await initializeAsyncWidget(instance, hooks, exposed, buildResult)
-  return instance
+  initializeAsyncWidget(instance, hooks, exposed, buildResult)
 }

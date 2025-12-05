@@ -29,14 +29,6 @@ import { WidgetRuntime } from './WidgetRuntime.js'
  */
 export interface StatefulManagerOptions {
   /**
-   * 异步组件解析回调
-   *
-   * 当异步组件开始解析时触发，接收一个 Promise 对象用于监听解析完成事件
-   *
-   * @param promise - 异步组件解析的 Promise 对象
-   */
-  onResolve?: (promise: Promise<Widget>) => void
-  /**
    * 是否启用自动更新
    *
    * @default true
@@ -334,12 +326,12 @@ export class StatefulWidgetRuntime<
   /**
    * 创建组件实例
    *
-   * 根据组件类型（类组件或函数组件）创建相应的实例，并处理异步组件的情况
+   * 根据组件类型（类组件或函数组件）创建相应的实例
+   * 异步组件的解析逻辑已移至 onRender 钩子中，SSR 通过 invokeHook(render) 统一收集异步任务
    *
    * @returns 创建的组件实例
    */
   private createWidgetInstance(): WidgetInstanceType<T> {
-    const onResolveCallback = this.options.onResolve
     return this.scope.run(() =>
       this.runInContext(() => {
         let instance: Widget
@@ -354,11 +346,7 @@ export class StatefulWidgetRuntime<
         } else {
           // 创建函数组件实例
           instance = new FnWidget(this.props)
-          const initPromise = initializeFnWidget(instance)
-          // 如果是异步组件，触发解析回调
-          if (instance.$vnode.isAsyncWidget) {
-            onResolveCallback?.(initPromise)
-          }
+          initializeFnWidget(instance)
         }
         return instance as WidgetInstanceType<T>
       })
