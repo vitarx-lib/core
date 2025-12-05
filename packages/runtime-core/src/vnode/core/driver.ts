@@ -20,7 +20,7 @@ type Drivers = {
 const drivers: Drivers = {} as Drivers
 let defaultDriver: NodeDriver<NodeType> | null = null
 /**
- * 注册节点控制器
+ * 注册节点驱动器
  *
  * @param kind - 节点类型
  * @param driver - 节点控制器实例
@@ -37,9 +37,9 @@ export function registerDriver<K extends NodeKind>(
  * `setDefaultDriver` 可以注册一个默认的驱动程序，
  * 该驱动程序将用于处理所有未注册的节点类型
  *
- * @param driver - 默认驱动程序实例
+ * @param driver - 默认驱动程序实例，如果传入null，则清除默认驱动程序
  */
-export function setDefaultDriver(driver: NodeDriver<NodeType>) {
+export function setDefaultDriver(driver: NodeDriver<NodeType> | null) {
   defaultDriver = driver
 }
 /**
