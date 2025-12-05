@@ -1,4 +1,5 @@
 import { popProperty } from '@vitarx/utils'
+import { isArray, logger } from '@vitarx/utils/src/index.js'
 import { NodeKind } from '../../constants/index.js'
 import type {
   AnyProps,
@@ -56,13 +57,21 @@ export const createRegularElementVNode = <T extends RegularElementVNodeType>(
   // 从属性中提取并移除 children 属性
   // 使用 popProperty 可以同时获取属性值并从原对象中删除该属性
   const children = popProperty(node.props as AnyProps, 'children')
+  const hasVHtml = !!(props as AnyProps)['v-html'];
 
+if (hasVHtml) {
+  // 当使用v-html时，子节点将被忽略
+  if (children && (isArray(children) ? children.length > 0 : true)) {
+    logger.warn(`<${type}> children prop will be ignored`, node.devInfo?.source);
+  }
+} else {
   // 初始化子节点，处理可能的嵌套结构和响应式值
   node.children = initChildren(
     children,
     node,
     node.isSVGElement ? propagateSVGNamespace : undefined
-  )
+  );
+}
 
   return node
 }
