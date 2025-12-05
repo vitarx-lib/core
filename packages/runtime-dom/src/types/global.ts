@@ -1,4 +1,4 @@
-import type { FragmentVNode } from '@vitarx/runtime-core'
+import type { FragmentNode } from '@vitarx/runtime-core'
 import type { HTMLStyleRules } from './attributes.js'
 import type { HTMLElementTagMap, HTMLIntrinsicElement, HTMLVoidElementMap } from './element.js'
 
@@ -9,7 +9,7 @@ declare global {
     interface HostFragmentNode extends DocumentFragment {
       $startAnchor: HostCommentNode
       $endAnchor: HostCommentNode
-      $vnode: FragmentVNode
+      $vnode: FragmentNode
     }
     interface HostTextNode extends Text {}
     interface HostCommentNode extends Comment {}

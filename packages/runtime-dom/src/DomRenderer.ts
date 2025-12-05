@@ -1,7 +1,7 @@
 import {
   type DOMRect,
-  type ElementVNode,
-  type FragmentVNode,
+  type ElementNode,
+  type FragmentNode,
   getNodeDomOpsTarget,
   type HostCommentElement,
   type HostElementNames,
@@ -61,7 +61,7 @@ setHostSchema({ voidElements: VOID_ELEMENTS })
  */
 export class DomRenderer implements HostRenderer {
   /** @inheritDoc */
-  createElement<T extends HostElementNames>(vnode: ElementVNode<T>): HostElements<T> {
+  createElement<T extends HostElementNames>(vnode: ElementNode<T>): HostElements<T> {
     let el: HostElements<T>
     const { type, isSVGElement, props } = vnode
     if (isSVGElement) {
@@ -86,7 +86,7 @@ export class DomRenderer implements HostRenderer {
   }
 
   /** @inheritDoc */
-  createFragment(vnode: FragmentVNode): HostFragmentElement {
+  createFragment(vnode: FragmentNode): HostFragmentElement {
     const el = document.createDocumentFragment() as HostFragmentElement
     el.$startAnchor = document.createComment('Fragment start')
     el.$endAnchor = document.createComment('Fragment end')
