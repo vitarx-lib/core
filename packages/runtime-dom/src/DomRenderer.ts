@@ -326,6 +326,11 @@ export class DomRenderer implements HostRenderer {
   }
   /** @inheritDoc */
   removeAttribute(el: HostElements, key: string, prevValue?: any): void {
+    // 特殊处理 v-html属性
+    if (key === 'v-html' || key === 'innerHTML') {
+      el.innerHTML = ''
+      return
+    }
     // --- 1. class 特殊处理 ---
     if (key === 'class' || key === 'className' || key === 'classname') {
       el.removeAttribute('class')
