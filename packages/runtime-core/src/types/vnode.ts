@@ -155,7 +155,7 @@ export type VNodeOf<T extends CreatableType> =
     ? R
     : T extends Dynamic | DynamicRenderType
       ? VNode
-      : T extends Fragment | FragmentNode
+      : T extends Fragment | FragmentNodeType
         ? FragmentNode
         : T extends TextNodeType
           ? TextNode
@@ -169,7 +169,7 @@ export type VNodeOf<T extends CreatableType> =
                   ? StatelessWidgetNode<T>
                   : T extends StatefulWidgetNodeType
                     ? StatefulWidgetNode<T>
-                    : never
+                    : VNode
 
 /**
  * 运行时元素实例类型
