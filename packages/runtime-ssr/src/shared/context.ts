@@ -1,4 +1,31 @@
-import { useRenderContext } from '@vitarx/runtime-core'
+import { useRenderContext, type VNode } from '@vitarx/runtime-core'
+
+/**
+ * SSR 渲染模式
+ *
+ * - `sync`: 同步渲染，等待所有异步任务完成后一次性输出
+ * - `stream`: 流式渲染，遇到异步时阻塞等待完成后继续输出，最终内容与 sync 一致
+ */
+export type SSRRenderMode = 'sync' | 'stream'
+
+/**
+ * SSR 内部上下文（框架内部使用）
+ */
+export interface SSRInternalContext {
+  /**
+   * 渲染模式
+   */
+  $renderMode: SSRRenderMode
+  /**
+   * 异步任务队列（sync 模式使用）
+   */
+  $asyncTasks?: Promise<unknown>[]
+  /**
+   * 节点异步任务映射（stream 模式使用）
+   * 将异步任务绑定到对应的节点，序列化时逐个等待
+   */
+  $nodeAsyncMap?: WeakMap<VNode, Promise<unknown>>
+}
 
 /**
  * SSR 用户上下文类型
@@ -17,22 +44,53 @@ import { useRenderContext } from '@vitarx/runtime-core'
  * runInRenderContext(() => hydrate(...), serverContext)
  * ```
  */
-interface SSRContext {
-  /**
-   * 渲染模式
-   */
-  $renderMode: 'block' | 'ignore' | 'sync'
-  [key: string]: any
+export type SSRContext<T = Record<string, any>> = T & Partial<SSRInternalContext>
+
+/**
+ * 获取 SSR 上下文
+ *
+ * 在组件中调用此函数可以访问服务端渲染时的上下文数据，
+ * 可用于在服务端写入状态，客户端恢复状态。
+ *
+ * @returns SSR上下文对象，如果不在SSR环境中则返回undefined
+ *
+ * @example
+ * ```ts
+ * function MyComponent() {
+ *   const ctx = useSSRContext()
+ *   if (ctx) {
+ *     // 服务端渲染时写入数据
+ *     ctx.myData = fetchedData
+ *   }
+ *   // ...
+ * }
+ * ```
+ */
+export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | undefined {
+  return useRenderContext<SSRContext<T>>()
 }
 
 /**
- * 获取SSR(服务器端渲染)上下文的函数
- * 这个函数允许在组件中访问服务器端渲染时的上下文数据
+ * 检查当前是否在 SSR 环境中
  *
- * @returns {SSRContext | undefined} - 返回SSR上下文对象，如果不在SSR环境中则返回undefined
+ * @returns 如果在SSR环境中返回true，否则返回false
+ *
+ * @example
+ * ```ts
+ * if (isSSR()) {
+ *   // 服务端特定逻辑
+ * }
+ * ```
  */
-export function useSSRContext<T = Record<string, any>>(): (T & SSRContext) | undefined {
-  // 调用useRenderContext函数，指定泛型类型为SSRContext
-  // 这样可以获取到专门用于服务器端渲染的上下文数据
-  return useRenderContext<T & SSRContext>()
+export function isSSR(): boolean {
+  return useSSRContext() !== undefined
+}
+
+/**
+ * 获取当前 SSR 渲染模式
+ *
+ * @returns 渲染模式，如果不在SSR环境中返回undefined
+ */
+export function getSSRRenderMode(): SSRRenderMode | undefined {
+  return useSSRContext()?.$renderMode
 }

@@ -6,8 +6,9 @@ export { SSRApp, createSSRApp } from './app/index.js'
 // ============================================================
 // 共享模块
 // ============================================================
-export type { SSRContext } from './shared/context.js'
-export { StringSink, StreamSink, type Sink } from './shared/sink.js'
+export type { SSRContext, SSRRenderMode, SSRInternalContext } from './shared/context.js'
+export { useSSRContext, isSSR, getSSRRenderMode } from './shared/context.js'
+export { StringSink, type Sink } from './shared/sink.js'
 export {
   escapeHTML,
   serializeAttributes,
@@ -16,12 +17,12 @@ export {
   tagSelfClosing
 } from './shared/html.js'
 export { serializeVNodeToSink } from './shared/serialize.js'
-export { ASYNC_TASKS_KEY, __IS_SERVER__ } from './shared/constants.js'
+export { __IS_SERVER__ } from './shared/constants.js'
 
 // ============================================================
 // 服务端渲染
 // ============================================================
-export { AsyncDriver, setupServerDrivers } from './server/index.js'
+export { SSRRenderDriver } from './server/index.js'
 
 // 字符串渲染
 export { renderToString } from './server/string/index.js'
@@ -29,16 +30,16 @@ export { renderToString } from './server/string/index.js'
 // 流式渲染
 export {
   renderToStream,
+  renderToReadableStream,
   renderToNodeStream,
   pipeToWritable,
-  type StreamRenderOptions,
-  type StreamAsyncStrategy
+  type StreamRenderOptions
 } from './server/stream/index.js'
 
 // ============================================================
-// 客户端水合（预留）
+// 客户端水合
 // ============================================================
-// export { hydrate } from './client/index.js'
+export { hydrate, createHydrateApp, type HydrateOptions } from './client/index.js'
 
 // ============================================================
 // 自动初始化

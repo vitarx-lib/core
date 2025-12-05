@@ -1,1 +1,1 @@
-export * from './SSRRenderDriver.js'
+export { SSRRenderDriver } from './SSRRenderDriver.js'

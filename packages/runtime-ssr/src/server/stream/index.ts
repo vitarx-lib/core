@@ -1,7 +1,7 @@
 export {
   renderToStream,
+  renderToReadableStream,
   renderToNodeStream,
   pipeToWritable,
-  type StreamRenderOptions,
-  type StreamAsyncStrategy
+  type StreamRenderOptions
 } from './renderToStream.js'

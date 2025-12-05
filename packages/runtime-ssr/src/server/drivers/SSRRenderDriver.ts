@@ -15,16 +15,17 @@ import {
 } from '@vitarx/runtime-core'
 import { isPromise } from '@vitarx/utils'
 import { useSSRContext } from '../../shared/context.js'
-import { ASYNC_TASKS_KEY } from '../../shared/index.js'
 
 /**
  * SSRRenderDriver 是一个用于服务端渲染(SSR)的节点驱动器实现类。
  * 该类负责在服务端环境中渲染虚拟节点树，并处理异步任务队列。
  *
- * 主要功能：
- * - 渲染不同类型的节点（常规元素、片段、有状态和无状态组件）
- * - 管理异步渲染任务
- * - 提供服务端环境下的渲染限制和错误处理
+ * 支持两种渲染模式：
+ * - `sync`: 同步渲染，等待所有异步任务完成后一次性输出
+ * - `stream`: 流式阻塞渲染，遇到异步时阻塞等待完成后继续输出
+ *
+ * 异步组件的解析逻辑已统一在 onRender 钩子中处理，
+ * SSR 只需通过 invokeHook(render) 收集返回的 Promise。
  *
  * 使用示例：
  * ```typescript
@@ -33,21 +34,20 @@ import { ASYNC_TASKS_KEY } from '../../shared/index.js'
  * const result = driver.render(vnode);
  * ```
  *
- * 构造函数参数：
- * - 泛型参数 T extends NodeType：指定节点类型
- *
  * 使用限制：
  * - 不支持激活/停用节点操作
  * - 不支持挂载/卸载节点操作
  * - 不支持属性更新操作
- * - 所有上述操作都会抛出错误
  */
 export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
   render(node: VNode<T>): ElementOf<T> {
-    // 从渲染上下文中获取异步任务队列
+    // 从渲染上下文中获取 SSR 上下文
     const ctx = useSSRContext()
     if (!ctx) return node as ElementOf<T>
-    const asyncTasks = ctx[ASYNC_TASKS_KEY] as Promise<unknown>[]
+
+    const isStreamMode = ctx.$renderMode === 'stream'
+    const asyncTasks = ctx.$asyncTasks
+    const nodeAsyncMap = ctx.$nodeAsyncMap
 
     switch (node.kind) {
       case NodeKind.REGULAR_ELEMENT:
@@ -64,20 +64,27 @@ export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
         }
         break
       case NodeKind.STATEFUL_WIDGET: {
+        const widgetNode = node as StatefulWidgetNode
+
+        // 禁用客户端特性，仅用于 SSR
         const options: StatefulManagerOptions = {
           enableAutoUpdate: false,
           enableScheduler: false,
-          enableLifecycle: false,
-          onResolve(promise) {
-            if (ctx.$renderMode !== 'ignore') asyncTasks.push(promise)
-          }
+          enableLifecycle: false
         }
-        const result = createWidgetRuntime(node as StatefulWidgetNode, options).invokeHook(
-          LifecycleHooks.render
-        )
-        // 仅在同步模式下
-        if (ctx.$renderMode !== 'ignore' && isPromise(result)) {
-          asyncTasks.push(result)
+        const runtime = createWidgetRuntime(widgetNode, options)
+
+        // 执行 onRender 钩子，异步组件的解析 Promise 也会在这里返回
+        const result = runtime.invokeHook(LifecycleHooks.render)
+
+        if (isPromise(result)) {
+          if (isStreamMode) {
+            // stream 模式：将异步任务绑定到节点
+            nodeAsyncMap?.set(widgetNode, result)
+          } else {
+            // sync 模式：收集到全局队列
+            asyncTasks?.push(result)
+          }
         }
         break
       }

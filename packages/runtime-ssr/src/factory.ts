@@ -1,7 +1,6 @@
 import { type HostRenderer, setRenderer } from '@vitarx/runtime-core'
 import { DomRenderer } from '@vitarx/runtime-dom/renderer'
-import { __IS_SERVER__ } from './shared/constants.js'
-import { setupServerDrivers } from './server/setup.js'
+import { __IS_SERVER__ } from './shared/index.js'
 
 if (__IS_SERVER__) {
   setRenderer(
@@ -13,8 +12,6 @@ if (__IS_SERVER__) {
       }
     })
   )
-  // Register server-side drivers
-  setupServerDrivers()
 } else {
   setRenderer(new DomRenderer())
 }
