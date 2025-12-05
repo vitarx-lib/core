@@ -1,0 +1,38 @@
+{
+  "name": "@vitarx/runtime-ssr",
+  "version": "0.0.1",
+  "description": "Vitarx runtime-ssr package",
+  "author": "ZhuChongLin <8210856@qq.com>",
+  "license": "MIT",
+  "keywords": [
+    "vitarx",
+    "runtime-ssr"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitarx-lib/core",
+    "directory": "packages/runtime-ssr"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "dependencies": {
+    "@vitarx/utils": "workspace:^",
+    "@vitarx/runtime-core": "workspace:^",
+    "@vitarx/runtime-dom": "workspace:^"
+  }
+}

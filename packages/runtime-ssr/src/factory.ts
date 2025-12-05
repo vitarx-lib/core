@@ -1,6 +1,6 @@
 import { type HostRenderer, setRenderer } from '@vitarx/runtime-core'
 import { DomRenderer } from '@vitarx/runtime-dom/renderer'
-import { __IS_SERVER__ } from './common/constrants.js'
+import { __IS_SERVER__ } from './shared/constants.js'
 import { setupServerDrivers } from './server/setup.js'
 
 if (__IS_SERVER__) {
