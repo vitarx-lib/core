@@ -3,8 +3,7 @@
  *
  * 测试目标：验证 DomRenderer 类的所有公共方法，确保 DOM 操作的正确性
  */
-import type { HostNodeElements } from '@vitarx/runtime-core'
-import { createVNode } from '@vitarx/runtime-core'
+import { createVNode, type HostNodeElements, isVoidTag } from '@vitarx/runtime-core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DomRenderer } from '../../src/index.js'
 
@@ -83,7 +82,7 @@ describe('DomRenderer', () => {
       ]
 
       voidElements.forEach(tag => {
-        expect(renderer.isVoidElement(tag)).toBe(true)
+        expect(isVoidTag(tag)).toBe(true)
       })
     })
 
@@ -91,7 +90,7 @@ describe('DomRenderer', () => {
       const normalElements = ['div', 'span', 'p', 'h1', 'section', 'article']
 
       normalElements.forEach(tag => {
-        expect(renderer.isVoidElement(tag)).toBe(false)
+        expect(isVoidTag(tag)).toBe(false)
       })
     })
 
