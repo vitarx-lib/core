@@ -62,7 +62,7 @@ export const createRegularElementVNode = <T extends RegularElementVNodeType>(
 if (hasVHtml) {
   // 当使用v-html时，子节点将被忽略
   if (children && (isArray(children) ? children.length > 0 : true)) {
-    logger.warn(`<${type}> children prop will be ignored`, node.devInfo?.source);
+    logger.warn(`<${type}> children prop will be ignored because v-html and children are mutually exclusive`, node.devInfo?.source);
   }
 } else {
   // 初始化子节点，处理可能的嵌套结构和响应式值
