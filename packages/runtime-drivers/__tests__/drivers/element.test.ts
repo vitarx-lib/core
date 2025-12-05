@@ -2,8 +2,8 @@ import { ref } from '@vitarx/responsive'
 import {
   createVNode,
   NodeState,
-  type RegularElementVNodeType,
-  type VoidElementVNodeType
+  type RegularElementNodeType,
+  type VoidElementNodeType
 } from '@vitarx/runtime-core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { RegularElementDriver, VoidElementDriver } from '../../src/index.js'
@@ -40,7 +40,7 @@ describe('RegularElementDriver', () => {
     })
 
     it('应该创建不同类型的元素', () => {
-      const types: RegularElementVNodeType[] = ['div', 'span', 'p', 'section', 'article']
+      const types: RegularElementNodeType[] = ['div', 'span', 'p', 'section', 'article']
 
       types.forEach(type => {
         const vnode = createVNode(type, {})
@@ -315,7 +315,7 @@ describe('VoidElementDriver', () => {
     })
 
     it('应该创建不同类型的 void 元素', () => {
-      const types: VoidElementVNodeType[] = ['input', 'br', 'hr', 'img']
+      const types: VoidElementNodeType[] = ['input', 'br', 'hr', 'img']
 
       types.forEach(type => {
         const vnode = createVNode(type)

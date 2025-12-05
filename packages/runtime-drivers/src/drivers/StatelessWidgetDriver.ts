@@ -1,9 +1,9 @@
 import type {
   AnyProps,
-  NodeElementType,
-  StatelessWidgetVNode,
-  StatelessWidgetVNodeType,
-  WidgetVNode
+  ElementOf,
+  StatelessWidgetNode,
+  StatelessWidgetNodeType,
+  WidgetNode
 } from '@vitarx/runtime-core'
 import { BaseWidgetDriver } from './BaseWidgetDriver.js'
 
@@ -28,10 +28,8 @@ import { BaseWidgetDriver } from './BaseWidgetDriver.js'
  * - 该驱动器仅用于无状态组件，不维护组件状态
  * - 属性更新会触发组件的重新渲染，但不会保留任何状态信息
  */
-export class StatelessWidgetDriver extends BaseWidgetDriver<StatelessWidgetVNodeType> {
-  override render(
-    node: WidgetVNode<StatelessWidgetVNodeType>
-  ): NodeElementType<StatelessWidgetVNodeType> {
+export class StatelessWidgetDriver extends BaseWidgetDriver<StatelessWidgetNodeType> {
+  override render(node: WidgetNode<StatelessWidgetNodeType>): ElementOf<StatelessWidgetNodeType> {
     const el = super.render(node)
     if (node.ref) node.ref.value = node
     return el
@@ -39,10 +37,10 @@ export class StatelessWidgetDriver extends BaseWidgetDriver<StatelessWidgetVNode
   /**
    * @inheritDoc
    */
-  override updateProps(node: StatelessWidgetVNode, newProps: AnyProps): void {
+  override updateProps(node: StatelessWidgetNode, newProps: AnyProps): void {
     const oldProps = node.props // 保存节点的旧属性
     const change = this.diffProps(oldProps, newProps)
     // 如果有属性值发生变化，则更新节点的运行时实例
-    if (change.length) node.runtimeInstance!.update()
+    if (change.length) node.instance!.update()
   }
 }

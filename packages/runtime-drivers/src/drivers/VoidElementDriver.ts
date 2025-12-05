@@ -1,4 +1,4 @@
-import type { VoidElementVNodeType } from '@vitarx/runtime-core'
+import type { VoidElementNodeType } from '@vitarx/runtime-core'
 import { ElementDriver } from './ElementDriver.js'
 
 /**
@@ -27,4 +27,4 @@ import { ElementDriver } from './ElementDriver.js'
  * - 不支持包含子节点的元素
  * - 创建的元素类型必须符合 VoidElementVNodeType 接口规范
  */
-export class VoidElementDriver extends ElementDriver<VoidElementVNodeType> {}
+export class VoidElementDriver extends ElementDriver<VoidElementNodeType> {}

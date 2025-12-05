@@ -1,7 +1,7 @@
 import {
   createVNode,
   Fragment,
-  type FragmentVNode,
+  type FragmentNode,
   NodeState,
   TEXT_NODE_TYPE
 } from '@vitarx/runtime-core'
@@ -19,17 +19,17 @@ describe('FragmentDriver', () => {
   const createContainer = (): HTMLDivElement => document.createElement('div')
 
   // 辅助函数：创建文本节点
-  const createTextVNode = (value: string) => createVNode(TEXT_NODE_TYPE, { value })
+  const createTextVNode = (text: string) => createVNode(TEXT_NODE_TYPE, { text })
 
   // 辅助函数：创建并渲染 Fragment
-  const createAndRenderFragment = (props?: any): FragmentVNode => {
+  const createAndRenderFragment = (props?: any): FragmentNode => {
     const vnode = createVNode('fragment', props || {})
     controller.render(vnode)
-    return vnode as FragmentVNode
+    return vnode as FragmentNode
   }
 
   // 辅助函数：创建、渲染并挂载 Fragment
-  const setupFragment = (props?: any): { vnode: FragmentVNode; container: HTMLDivElement } => {
+  const setupFragment = (props?: any): { vnode: FragmentNode; container: HTMLDivElement } => {
     const vnode = createAndRenderFragment(props)
     const container = createContainer()
     controller.mount(vnode, container)
@@ -102,10 +102,10 @@ describe('FragmentDriver', () => {
 
     it('应该渲染嵌套的 Fragment', () => {
       const nested = createVNode(Fragment, {
-        children: [createVNode(TEXT_NODE_TYPE, { value: 'nested' })]
+        children: [createVNode(TEXT_NODE_TYPE, { text: 'nested' })]
       })
       const vnode = createVNode(Fragment, {
-        children: [createVNode(TEXT_NODE_TYPE, { value: 'outer' }), nested]
+        children: [createVNode(TEXT_NODE_TYPE, { text: 'outer' }), nested]
       })
       controller.render(vnode)
       controller.mount(vnode, document.body)

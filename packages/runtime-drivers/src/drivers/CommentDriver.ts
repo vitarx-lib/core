@@ -1,6 +1,6 @@
 import {
-  type CommentVNode,
-  type CommentVNodeType,
+  type CommentNode,
+  type CommentNodeType,
   getRenderer,
   type HostCommentElement
 } from '@vitarx/runtime-core'
@@ -16,9 +16,9 @@ import { NonElementDriver } from './NonElementDriver.js'
  * 构造函数参数：
  * - 继承自 NonElementDriver，无额外参数
  */
-export class CommentDriver extends NonElementDriver<CommentVNodeType> {
+export class CommentDriver extends NonElementDriver<CommentNodeType> {
   /** @inheritDoc */
-  protected override createElement(node: CommentVNode): HostCommentElement {
+  protected override createElement(node: CommentNode): HostCommentElement {
     return getRenderer().createComment(node.props.text)
   }
 }

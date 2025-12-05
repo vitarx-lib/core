@@ -1,12 +1,12 @@
 import type {
   AnyProps,
+  ElementOf,
   HostCommentElement,
+  HostNode,
   HostNodeElements,
+  HostNodeType,
   HostParentElement,
-  HostVNode,
-  HostVNodeType,
   NodeDriver,
-  NodeElementType,
   OpsType
 } from '@vitarx/runtime-core'
 import { findParentNode, getRenderer, isWidgetNode, NodeState } from '@vitarx/runtime-core'
@@ -16,7 +16,7 @@ import { findParentNode, getRenderer, isWidgetNode, NodeState } from '@vitarx/ru
  *
  * 负责管理 DOM 节点的渲染、挂载、激活、停用和卸载等生命周期
  */
-export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDriver<T> {
+export abstract class HostNodeDriver<T extends HostNodeType> implements NodeDriver<T> {
   /** 获取渲染器实例 */
   protected get dom() {
     return getRenderer()
@@ -24,14 +24,14 @@ export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDri
   /**
    * @inheritDoc
    */
-  abstract updateProps(node: HostVNode<T>, newProps: AnyProps): void
+  abstract updateProps(node: HostNode<T>, newProps: AnyProps): void
   /**
    * 渲染节点 - 创建 DOM 元素但不挂载
    *
    * @param node - 虚拟节点
    * @returns 创建的 DOM 元素
    */
-  render(node: HostVNode<T>): NodeElementType<T> {
+  render(node: HostNode<T>): ElementOf<T> {
     if (!node.el) node.el = this.createElement(node)
     if (node.ref) node.ref.value = node.el
     this.renderChildren?.(node)
@@ -41,7 +41,7 @@ export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDri
   /**
    * @inheritDoc
    */
-  mount(node: HostVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
+  mount(node: HostNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
     if (target) this.dom[opsType || 'appendChild'](node.el!, target as HostParentElement)
     this.mountChildren?.(node)
     node.state = NodeState.Activated
@@ -49,7 +49,7 @@ export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDri
   /**
    * @inheritDoc
    */
-  activate(node: HostVNode<T>, root: boolean): void {
+  activate(node: HostNode<T>, root: boolean): void {
     this.activateChildren?.(node)
     const { el, anchor } = node
     if (root) {
@@ -61,7 +61,7 @@ export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDri
   /**
    * @inheritDoc
    */
-  deactivate(node: HostVNode<T>, root: boolean): void {
+  deactivate(node: HostNode<T>, root: boolean): void {
     this.deactivateChildren?.(node)
     const { el } = node // 从节点中解构获取teleportTarget和el属性
     if (root) {
@@ -73,7 +73,7 @@ export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDri
   /**
    * @inheritDoc
    */
-  unmount(node: HostVNode<T>): void {
+  unmount(node: HostNode<T>): void {
     this.unmountChildren?.(node)
     if (node.ref) {
       node.ref.value = null
@@ -94,29 +94,29 @@ export abstract class HostNodeDriver<T extends HostVNodeType> implements NodeDri
    * @param node - 虚拟节点
    * @returns 创建的 DOM 元素
    */
-  protected abstract createElement(node: HostVNode<T>): NodeElementType<T>
+  protected abstract createElement(node: HostNode<T>): ElementOf<T>
   /** 渲染子节点（可选实现） */
-  protected renderChildren?(node: HostVNode<T>): void
+  protected renderChildren?(node: HostNode<T>): void
   /** 挂载子节点（可选实现） */
-  protected mountChildren?(node: HostVNode<T>): void
+  protected mountChildren?(node: HostNode<T>): void
   /** 激活子节点（可选实现） */
-  protected activateChildren?(node: HostVNode<T>): void
+  protected activateChildren?(node: HostNode<T>): void
   /** 停用子节点（可选实现） */
-  protected deactivateChildren?(node: HostVNode<T>): void
+  protected deactivateChildren?(node: HostNode<T>): void
   /** 卸载子节点（可选实现） */
-  protected unmountChildren?(node: HostVNode<T>): void
+  protected unmountChildren?(node: HostNode<T>): void
   /**
    * 创建一个锚点元素，用于在虚拟节点中标记位置
    * @param node - 需要创建锚点的虚拟节点(VNode)
    * @returns {HostCommentElement} 返回创建或已存在的锚点元素(HostCommentElement)
    */
-  protected createAnchor(node: HostVNode): HostCommentElement {
+  protected createAnchor(node: HostNode): HostCommentElement {
     // 如果节点已有锚点，直接返回
     if (node.anchor) return node.anchor
     const parent = findParentNode(node)
     let name: string = node.type
     // 获取父组件的名称
-    if (isWidgetNode(parent)) name = parent.runtimeInstance!.name
+    if (isWidgetNode(parent)) name = parent.instance!.name
     node.anchor = this.dom.createComment(`<${name}> deactivate anchor`)
     return node.anchor
   }

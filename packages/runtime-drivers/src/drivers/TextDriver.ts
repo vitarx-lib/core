@@ -1,4 +1,4 @@
-import type { HostTextElement, TextVNode, TextVNodeType } from '@vitarx/runtime-core'
+import type { HostTextElement, TextNode, TextNodeType } from '@vitarx/runtime-core'
 import { NonElementDriver } from './NonElementDriver.js'
 
 /**
@@ -23,8 +23,8 @@ import { NonElementDriver } from './NonElementDriver.js'
  * - 该类专门用于处理文本节点，不适用于其他类型的节点
  * - 文本节点的值更新会直接修改 DOM，可能触发浏览器的重绘
  */
-export class TextDriver extends NonElementDriver<TextVNodeType> {
-  protected override createElement(node: TextVNode): HostTextElement {
+export class TextDriver extends NonElementDriver<TextNodeType> {
+  protected override createElement(node: TextNode): HostTextElement {
     return this.dom.createText(node.props.text)
   }
 }

@@ -1,10 +1,10 @@
 import {
   AnyProps,
-  type FragmentVNode,
-  type FragmentVNodeType,
+  type FragmentNode,
+  type FragmentNodeType,
   getRenderer,
   type HostFragmentElement,
-  HostVNode
+  HostNode
 } from '@vitarx/runtime-core'
 import { mixinContainerDriver } from './ContainerDriver.js'
 import { HostNodeDriver } from './HostNodeDriver.js'
@@ -25,17 +25,17 @@ import { HostNodeDriver } from './HostNodeDriver.js'
  * - 使用了 mixinContainerDriver 来混入容器驱动器的功能
  * - 元素创建依赖于 getRenderer() 返回的渲染器实例
  */
-export class FragmentDriver extends HostNodeDriver<FragmentVNodeType> {
+export class FragmentDriver extends HostNodeDriver<FragmentNodeType> {
   constructor() {
     super()
     mixinContainerDriver(this)
   }
   /** @inheritDoc */
-  override updateProps(_node: HostVNode<FragmentVNodeType>, _newProps: AnyProps): void {
+  override updateProps(_node: HostNode<FragmentNodeType>, _newProps: AnyProps): void {
     return
   }
   /** @inheritDoc */
-  protected createElement(node: FragmentVNode): HostFragmentElement {
+  protected createElement(node: FragmentNode): HostFragmentElement {
     return getRenderer().createFragment(node)
   }
 }

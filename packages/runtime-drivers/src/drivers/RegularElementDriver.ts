@@ -1,4 +1,4 @@
-import type { RegularElementVNodeType } from '@vitarx/runtime-core'
+import type { RegularElementNodeType } from '@vitarx/runtime-core'
 import { mixinContainerDriver } from './ContainerDriver.js'
 import { ElementDriver } from './ElementDriver.js'
 
@@ -24,7 +24,7 @@ import { ElementDriver } from './ElementDriver.js'
  * - 该类通过 mixinContainerDriver 混入了容器驱动器的功能
  * - 创建元素时会根据 isSVGElement 标志决定创建 HTML 元素还是 SVG 元素
  */
-export class RegularElementDriver extends ElementDriver<RegularElementVNodeType> {
+export class RegularElementDriver extends ElementDriver<RegularElementNodeType> {
   constructor() {
     super()
     mixinContainerDriver(this)

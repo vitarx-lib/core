@@ -3,8 +3,8 @@ import type {
   AnyProps,
   HostNodeElements,
   OpsType,
-  StatefulWidgetVNode,
-  StatefulWidgetVNodeType,
+  StatefulWidgetNode,
+  StatefulWidgetNodeType,
   VNode
 } from '@vitarx/runtime-core'
 import {
@@ -40,21 +40,21 @@ import { BaseWidgetDriver } from './BaseWidgetDriver.js'
  * - 组件的生命周期钩子会按照特定顺序触发
  * - 错误处理机制会在渲染失败时自动创建错误节点
  */
-export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetVNodeType> {
+export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeType> {
   /** @inheritDoc */
-  override updateProps(node: StatefulWidgetVNode, newProps: AnyProps): void {
+  override updateProps(node: StatefulWidgetNode, newProps: AnyProps): void {
     const oldProps = node.props
     const changedKeys: string[] = this.diffProps(oldProps, newProps)
     // 如果有属性变化，触发更新
     if (changedKeys.length > 0) {
-      SubManager.notify(node.runtimeInstance!.props, changedKeys)
-      node.runtimeInstance!.update()
+      SubManager.notify(node.instance!.props, changedKeys)
+      node.instance!.update()
       // 同步执行所有队列中的任务
       Scheduler.flushSync()
     }
   }
   /** @inheritDoc */
-  override render(node: VNode<StatefulWidgetVNodeType>): HostNodeElements {
+  override render(node: VNode<StatefulWidgetNodeType>): HostNodeElements {
     const widget = createWidgetRuntime(node)
     // 触发render生命周期钩子
     widget.invokeHook(LifecycleHooks.render)
@@ -74,8 +74,8 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetVNodeTy
     return el
   }
   /** @inheritDoc */
-  override mount(node: StatefulWidgetVNode, target?: HostNodeElements, opsType?: OpsType): void {
-    const widget = node.runtimeInstance!
+  override mount(node: StatefulWidgetNode, target?: HostNodeElements, opsType?: OpsType): void {
+    const widget = node.instance!
     widget.invokeHook(LifecycleHooks.beforeMount)
     super.mount(node, target, opsType)
     node.state = NodeState.Activated
@@ -83,8 +83,8 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetVNodeTy
     widget.invokeHook(LifecycleHooks.activated)
   }
   /** @inheritDoc */
-  override activate(node: StatefulWidgetVNode, root: boolean): void {
-    const widget = node.runtimeInstance!
+  override activate(node: StatefulWidgetNode, root: boolean): void {
+    const widget = node.instance!
     super.activate(node, root)
     widget.scope.resume()
     widget.invokeHook(LifecycleHooks.activated)
@@ -94,16 +94,16 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetVNodeTy
     }
   }
   /** @inheritDoc */
-  override deactivate(node: StatefulWidgetVNode, root: boolean): void {
-    const widget = node.runtimeInstance!
+  override deactivate(node: StatefulWidgetNode, root: boolean): void {
+    const widget = node.instance!
     // 先调用根节点的停用逻辑（子 → 父顺序）
     super.deactivate(node, root)
     widget.scope.pause()
     widget.invokeHook(LifecycleHooks.deactivated)
   }
   /** @inheritDoc */
-  override unmount(node: StatefulWidgetVNode): void {
-    const widget = node.runtimeInstance!
+  override unmount(node: StatefulWidgetNode): void {
+    const widget = node.instance!
     if (node.state !== NodeState.Deactivated) {
       // 修改状态为已停用
       node.state = NodeState.Deactivated

@@ -3,19 +3,19 @@ import {
   type AnyProps,
   createWidgetRuntime,
   deactivateNode,
+  type ElementOf,
   type HostElements,
   type HostNodeElements,
   invokeDirHook,
   isElementNode,
   mountNode,
   type NodeDriver,
-  type NodeElementType,
   NodeState,
   type OpsType,
   renderNode,
   unmountNode,
-  type WidgetTypes,
-  type WidgetVNode
+  type WidgetNode,
+  type WidgetTypes
 } from '@vitarx/runtime-core'
 import { isDeepEqual } from '@vitarx/utils'
 
@@ -51,46 +51,46 @@ import { isDeepEqual } from '@vitarx/utils'
  */
 export abstract class BaseWidgetDriver<T extends WidgetTypes> implements NodeDriver<T> {
   /** @inheritDoc */
-  abstract updateProps(node: WidgetVNode<T>, newProps: AnyProps): void
+  abstract updateProps(node: WidgetNode<T>, newProps: AnyProps): void
 
   /** @inheritDoc */
-  render(node: WidgetVNode<T>): NodeElementType<T> {
+  render(node: WidgetNode<T>): ElementOf<T> {
     const widget = createWidgetRuntime(node)
     // 从根节点获取元素并转换为宿主元素实例类型
     const el = renderNode(widget.child)
     node.state = NodeState.Rendered
     // 调用指令钩子
     invokeDirHook(node, 'created')
-    return el as NodeElementType<T>
+    return el as ElementOf<T>
   }
 
   /** @inheritDoc */
-  mount(node: WidgetVNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
+  mount(node: WidgetNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
     invokeDirHook(node, 'beforeMount')
-    mountNode(node.runtimeInstance!.child, target, opsType)
+    mountNode(node.instance!.child, target, opsType)
     node.state = NodeState.Activated
     invokeDirHook(node, 'mounted')
   }
 
   /** @inheritDoc */
-  activate(node: WidgetVNode<T>, root: boolean = true): void {
-    activateNode(node.runtimeInstance!.child, root)
+  activate(node: WidgetNode<T>, root: boolean = true): void {
+    activateNode(node.instance!.child, root)
     node.state = NodeState.Activated
   }
 
   /** @inheritDoc */
-  deactivate(node: WidgetVNode<T>, root: boolean = true): void {
-    deactivateNode(node.runtimeInstance!.child, root)
+  deactivate(node: WidgetNode<T>, root: boolean = true): void {
+    deactivateNode(node.instance!.child, root)
     node.state = NodeState.Deactivated
   }
 
   /** @inheritDoc */
-  unmount(node: WidgetVNode<T>): void {
-    const isElement = isElementNode(node.runtimeInstance!.child)
+  unmount(node: WidgetNode<T>): void {
+    const isElement = isElementNode(node.instance!.child)
     const el = node.el! as HostElements
     if (isElement) invokeDirHook(node, 'beforeUnmount')
-    unmountNode(node.runtimeInstance!.child)
-    node.runtimeInstance!.destroy()
+    unmountNode(node.instance!.child)
+    node.instance!.destroy()
     if (node.ref) node.ref.value = null
     node.state = NodeState.Unmounted
     if (isElement) invokeDirHook(node, 'unmounted', el)

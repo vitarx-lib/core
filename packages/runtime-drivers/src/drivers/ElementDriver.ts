@@ -1,11 +1,11 @@
 import type {
   AnyProps,
-  ElementVNode,
-  ElementVNodeType,
+  ElementNode,
+  ElementNodeType,
+  ElementOf,
   HostElements,
+  HostNode,
   HostNodeElements,
-  HostVNode,
-  NodeElementType,
   OpsType
 } from '@vitarx/runtime-core'
 import { getRenderer, invokeDirHook } from '@vitarx/runtime-core'
@@ -42,11 +42,11 @@ import { HostNodeDriver } from './HostNodeDriver.js'
  * - 驱动器会自动处理指令的生命周期钩子
  * - 属性更新时会自动处理新旧值的比较
  */
-export abstract class ElementDriver<T extends ElementVNodeType> extends HostNodeDriver<T> {
+export abstract class ElementDriver<T extends ElementNodeType> extends HostNodeDriver<T> {
   /**
    * @inheritDoc
    */
-  override updateProps(node: ElementVNode<T>, newProps: AnyProps): void {
+  override updateProps(node: ElementNode<T>, newProps: AnyProps): void {
     const oldProps = node.props
     const el = node.el! as HostElements
     const dom = getRenderer()
@@ -71,7 +71,7 @@ export abstract class ElementDriver<T extends ElementVNodeType> extends HostNode
   /**
    * @inheritDoc
    */
-  override render(node: HostVNode<T>): NodeElementType<T> {
+  override render(node: HostNode<T>): ElementOf<T> {
     if (node.el) {
       this.dom.setAttributes(node.el! as HostElements, node.props)
     }
@@ -82,7 +82,7 @@ export abstract class ElementDriver<T extends ElementVNodeType> extends HostNode
   /**
    * @inheritDoc
    */
-  override mount(node: HostVNode<T>, target?: HostNodeElements, opsType?: OpsType) {
+  override mount(node: HostNode<T>, target?: HostNodeElements, opsType?: OpsType) {
     invokeDirHook(node, 'beforeMount')
     super.mount(node, target, opsType)
     invokeDirHook(node, 'mounted')
@@ -90,7 +90,7 @@ export abstract class ElementDriver<T extends ElementVNodeType> extends HostNode
   /**
    * @inheritDoc
    */
-  override unmount(node: ElementVNode<T>) {
+  override unmount(node: ElementNode<T>) {
     invokeDirHook(node, 'beforeUnmount')
     const el = node.el! as HostElements
     super.unmount(node)
@@ -99,7 +99,7 @@ export abstract class ElementDriver<T extends ElementVNodeType> extends HostNode
   /**
    * @inheritDoc
    */
-  protected createElement(node: HostVNode<T>): NodeElementType<T> {
-    return this.dom.createElement(node) as NodeElementType<T>
+  protected createElement(node: HostNode<T>): ElementOf<T> {
+    return this.dom.createElement(node) as ElementOf<T>
   }
 }

@@ -1,4 +1,4 @@
-import type { AnyProps, HostVNode, NonElementVNodeType } from '@vitarx/runtime-core'
+import type { AnyProps, HostNode, NonElementNodeType } from '@vitarx/runtime-core'
 import { HostNodeDriver } from './HostNodeDriver.js'
 
 /**
@@ -25,8 +25,8 @@ import { HostNodeDriver } from './HostNodeDriver.js'
  * - 直接操作 DOM 文本内容，需要注意性能影响
  * - 依赖 HostNodeDriver 提供的基础功能
  */
-export abstract class NonElementDriver<T extends NonElementVNodeType> extends HostNodeDriver<T> {
-  override updateProps(node: HostVNode<T>, newProps: AnyProps): void {
+export abstract class NonElementDriver<T extends NonElementNodeType> extends HostNodeDriver<T> {
+  override updateProps(node: HostNode<T>, newProps: AnyProps): void {
     const oldProps = node.props
     if (oldProps.text !== newProps.text) {
       oldProps.text = newProps.text

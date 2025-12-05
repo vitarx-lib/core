@@ -72,8 +72,8 @@ describe('StatefulWidgetDriver', () => {
       const vnode = createVNode(TestStatefulWidget, {})
       controller.render(vnode)
 
-      expect(vnode.runtimeInstance).toBeDefined()
-      expect(vnode.runtimeInstance?.instance).toBeInstanceOf(TestStatefulWidget)
+      expect(vnode.instance).toBeDefined()
+      expect(vnode.instance?.instance).toBeInstanceOf(TestStatefulWidget)
     })
   })
 
