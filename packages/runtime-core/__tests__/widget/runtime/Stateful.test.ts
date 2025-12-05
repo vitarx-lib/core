@@ -103,17 +103,14 @@ describe('StatefulWidgetRuntime', () => {
       expect(runtime.instance.constructor.name).toBe('FnWidget')
     })
 
-    it('异步组件应该触发 onResolve 回调', () => {
-      const onResolve = vi.fn()
+    it('异步组件应该被正确标记为 isAsyncWidget', () => {
       const AsyncWidget = () => Promise.resolve({ default: () => createVNode('div') })
 
       const vnode = createVNode(AsyncWidget, {})
-      new StatefulWidgetRuntime(vnode, { onResolve })
+      new StatefulWidgetRuntime(vnode)
 
       // 异步组件会标记为 isAsyncWidget
-      if (vnode.isAsyncWidget) {
-        expect(onResolve).toHaveBeenCalled()
-      }
+      expect(vnode.isAsyncWidget).toBe(true)
     })
   })
 
