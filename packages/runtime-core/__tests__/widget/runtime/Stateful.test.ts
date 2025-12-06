@@ -18,7 +18,6 @@ import {
   NodeState,
   type Renderable,
   renderNode,
-  type StatefulManagerOptions,
   StatefulWidgetRuntime,
   Widget
 } from '../../../src/index.js'
@@ -47,26 +46,6 @@ describe('StatefulWidgetRuntime', () => {
 
       expect(runtime.scope).toBeDefined()
       expect(runtime.scope.constructor.name).toBe('EffectScope')
-    })
-
-    it('应该正确合并配置选项', () => {
-      const options: StatefulManagerOptions = {
-        enableAutoUpdate: false,
-        enableScheduler: false
-      }
-      const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any, options)
-
-      expect(runtime.options.enableAutoUpdate).toBe(false)
-      expect(runtime.options.enableScheduler).toBe(false)
-    })
-
-    it('默认配置应该启用自动更新和调度器', () => {
-      const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any)
-
-      expect(runtime.options.enableAutoUpdate).toBe(true)
-      expect(runtime.options.enableScheduler).toBe(true)
     })
 
     it('应该通过 proxyWidgetProps 处理 props', () => {
@@ -144,7 +123,8 @@ describe('StatefulWidgetRuntime', () => {
       }
 
       const vnode = createVNode(UpdateWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any)
+      mountNode(vnode)
+      const runtime = vnode.instance!
 
       runtime.update()
 
@@ -213,20 +193,6 @@ describe('StatefulWidgetRuntime', () => {
   })
 
   describe('响应式依赖追踪', () => {
-    it('enableAutoUpdate 为 true 时应该建立依赖订阅', () => {
-      const vnode = createVNode(ReactiveWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any, {
-        enableAutoUpdate: true
-      })
-
-      runtime.build()
-
-      // 开发模式下应该记录依赖
-      if (process.env.NODE_ENV !== 'production') {
-        expect(runtime.deps).toBeDefined()
-      }
-    })
-
     it('响应式数据变化应该自动触发更新', async () => {
       const vnode = renderAndMount(ReactiveWidget)
       const runtime = vnode.instance!
@@ -247,18 +213,6 @@ describe('StatefulWidgetRuntime', () => {
       if (process.env.NODE_ENV !== 'production') {
         expect(runtime.deps).not.toBeNull()
       }
-    })
-
-    it('enableAutoUpdate 为 false 时不应追踪依赖', () => {
-      const vnode = createVNode(ReactiveWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any, {
-        enableAutoUpdate: false
-      })
-
-      runtime.build()
-
-      // 不应该建立订阅
-      expect((runtime as any).renderDepsSubscriber).toBeNull()
     })
 
     it('build 调用前应该清理旧的订阅器', () => {
@@ -324,23 +278,18 @@ describe('StatefulWidgetRuntime', () => {
 
     it('Unmounted 状态下不应该执行更新', () => {
       const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any, {
-        enableScheduler: false
-      })
+      const runtime = new StatefulWidgetRuntime(vnode as any)
       vnode.state = NodeState.Unmounted
 
       const buildSpy = vi.spyOn(runtime, 'build')
 
-      runtime.update()
-
+      expect(() => runtime.update()).toThrow('Cannot update unmounted widget')
       expect(buildSpy).not.toHaveBeenCalled()
     })
 
     it('Deactivated 状态下应该标记 dirty 而不更新', () => {
       const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode as any, {
-        enableScheduler: false
-      })
+      const runtime = new StatefulWidgetRuntime(vnode)
       vnode.state = NodeState.Deactivated
 
       runtime.update()
@@ -350,9 +299,7 @@ describe('StatefulWidgetRuntime', () => {
 
     it('dirty 为 true 时激活后应该触发更新', () => {
       const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode, {
-        enableScheduler: false
-      })
+      const runtime = new StatefulWidgetRuntime(vnode)
       renderNode(vnode)
       mountNode(vnode, document.createElement('div'))
       deactivateNode(vnode)
@@ -601,14 +548,14 @@ describe('StatefulWidgetRuntime', () => {
   })
 
   describe('补丁更新', () => {
-    it('Created 状态下应该直接返回新节点', () => {
+    it('Created，且没有构建过child时，不会进行更新', () => {
       const vnode = createVNode(TestWidget, {})
       const runtime = new StatefulWidgetRuntime(vnode as any)
       vnode.state = NodeState.Created
 
-      const newChild = (runtime as any).patch()
+      runtime['finishUpdate']()
 
-      expect(newChild).toBeDefined()
+      expect(runtime.cachedChildVNode).toBe(null)
     })
 
     it('存在 $patchUpdate 时应该调用自定义更新', () => {

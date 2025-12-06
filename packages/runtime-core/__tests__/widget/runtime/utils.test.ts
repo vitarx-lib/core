@@ -10,6 +10,7 @@ import {
   createVNode,
   createWidgetRuntime,
   defineStatelessWidget,
+  mountNode,
   StatefulWidgetRuntime,
   StatelessWidgetRuntime,
   useForceUpdater,
@@ -68,18 +69,6 @@ describe('createWidgetRuntime', () => {
       const runtime = createWidgetRuntime(vnode)
 
       expect(runtime).toBeInstanceOf(StatefulWidgetRuntime)
-    })
-
-    it('应该正确传递配置选项', () => {
-      const vnode = createVNode(TestStatefulWidget, {})
-      const options = {
-        enableAutoUpdate: false,
-        enableScheduler: false
-      }
-      const runtime = createWidgetRuntime(vnode, options)
-
-      expect((runtime as StatefulWidgetRuntime).options.enableAutoUpdate).toBe(false)
-      expect((runtime as StatefulWidgetRuntime).options.enableScheduler).toBe(false)
     })
 
     it('应该绑定实例到 vnode.instance', () => {
@@ -290,12 +279,9 @@ describe('useForceUpdater', () => {
       }
 
       const vnode = createVNode(TestWidget, {})
-      const runtime = new StatefulWidgetRuntime(vnode)
-
-      // 初始构建
-      runtime.build()
+      mountNode(vnode)
+      const runtime = vnode.instance!
       expect(renderCount).toBe(1)
-
       // 强制更新
       runtime.instance.forceUpdate(true)
       expect(renderCount).toBe(2)
