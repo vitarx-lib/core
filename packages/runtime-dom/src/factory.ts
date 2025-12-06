@@ -5,12 +5,9 @@ import {
   type VNode,
   type WidgetTypes
 } from '@vitarx/runtime-core'
-import { setupDefaultDrivers } from '@vitarx/runtime-drivers'
+import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
 import { DomRenderer } from './DomRenderer.js'
-// 设置运行时渲染器，使用DOM渲染器
-setRenderer(new DomRenderer())
-// 使用默认驱动器
-setupDefaultDrivers()
+
 /**
  * 创建一个新的应用实例
  *
@@ -19,5 +16,9 @@ setupDefaultDrivers()
  * @returns {App} 返回一个新的App实例
  */
 export function createApp(root: VNode | WidgetTypes, config?: AppConfig): App {
+  // 设置运行时渲染器，使用DOM渲染器
+  setRenderer(new DomRenderer())
+  // 使用默认驱动器
+  registerDefaultDrivers()
   return new App(root, config)
 }
