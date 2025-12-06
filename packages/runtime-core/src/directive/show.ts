@@ -30,5 +30,8 @@ export const show: Directive = {
         getRenderer().removeStyle(el, 'display')
       }
     }
+  },
+  getSSRProps(binding: DirectiveBinding, node: VNode): Record<string, any> {
+    return binding.value ? {} : { style: { display: 'none' } }
   }
 }

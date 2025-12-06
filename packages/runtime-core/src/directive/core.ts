@@ -299,7 +299,6 @@ export function diffDirectives(
     }
   }
 }
-
 /**
  * 调用 指令钩子
  *
@@ -308,21 +307,19 @@ export function diffDirectives(
  * @param hook - 钩子名称
  * @param [el] - DOM 元素
  */
-export function invokeDirHook(node: VNode, hook: keyof DirectiveOptions, el?: HostElements): void {
-  el ??= node.el! as HostElements
-  if (!el || !getRenderer().isElement(el)) return
-  node.directives?.forEach(dir => {
-    const [dirObj, dirValue, dirArg] = dir
-    if (typeof dirObj[hook] === 'function') {
-      dirObj[hook](
-        el!,
-        {
-          value: dirValue,
-          oldValue: dirValue,
-          arg: dirArg
-        },
-        node
-      )
+export function invokeDirHook(
+  node: VNode,
+  hook: Exclude<keyof DirectiveOptions, 'getSSRProps'>,
+  el?: HostElements
+): void {
+  if (!node.directives) return
+  const targetElement = el ?? (node.el! as HostElements)
+  if (!targetElement || !getRenderer().isElement(targetElement)) return
+  for (const [_name, directive] of node.directives.entries()) {
+    const [dirObj, value, arg] = directive
+    const method = dirObj[hook]
+    if (typeof method === 'function') {
+      method(targetElement, { value, oldValue: value, arg }, node)
     }
-  })
+  }
 }

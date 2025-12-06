@@ -79,6 +79,16 @@ export interface DirectiveOptions {
    * @param node - 节点实例
    */
   unmounted?(el: HostElements, binding: DirectiveBinding, node: VNode): void
+  /**
+   * 获取节点的属性对象，用于服务端渲染
+   *
+   * 返回的属性对象会和元素的属性对象合并。
+   *
+   * @param binding - 绑定信息对象
+   * @param node - 节点对象
+   * @return {object} 属性对象
+   */
+  getSSRProps?(binding: DirectiveBinding, node: VNode): Record<string, any> | void
 }
 export interface Directive extends DirectiveOptions {
   /**
