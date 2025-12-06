@@ -183,10 +183,6 @@ export function resolveDirective(name: string): Directive | undefined {
       return vnode.appContext.directive(name)
     }
   }
-  if (!globalDirectives.has(name)) {
-    logger.warn(`resolve directive "${name}" not found.`)
-    return undefined
-  }
   // 获取全局指令
   return globalDirectives.get(name)
 }
