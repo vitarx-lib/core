@@ -12,4 +12,4 @@ export { StringSink, type Sink } from './sink.js'
 export { escapeHTML, serializeAttributes, tagOpen, tagClose, tagSelfClosing } from './html.js'
 
 // 导出序列化工具
-export { serializeVNodeToSink } from './serialize.js'
+export { serializeVNodeToSink, applyShowDirective, inheritShowDirective } from './serialize.js'

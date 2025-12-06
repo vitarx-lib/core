@@ -11,6 +11,31 @@ import { escapeHTML, tagClose, tagOpen, tagSelfClosing } from './html.js'
 import type { Sink } from './sink.js'
 
 /**
+ * 应用 v-show 指令样式到 props
+ * @param node - 虚拟节点
+ * @param props - 节点属性对象
+ */
+export function applyShowDirective(node: VNode, props: Record<string, any>): void {
+  if (node.directives?.get('show')) {
+    const show = node.directives.get('show')![1]
+    if (!show) {
+      props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
+    }
+  }
+}
+
+/**
+ * 将父组件的 show 指令应用到子节点
+ * @param parentNode - 父节点
+ * @param childNode - 子节点
+ */
+export function inheritShowDirective(parentNode: VNode, childNode: VNode): void {
+  if (parentNode.directives?.get('show')) {
+    withDirectives(childNode, [parentNode.directives.get('show')!])
+  }
+}
+
+/**
  * 序列化常规DOM元素为字符串
  * @param node - 常规元素虚拟节点
  * @param sink - 输出接收器
@@ -18,10 +43,7 @@ import type { Sink } from './sink.js'
 function serializeRegular(node: RegularElementNode, sink: Sink) {
   const { type: tagName, props, children } = node
 
-  if (node.directives?.get('show')) {
-    const show = node.directives.get('show')![1]
-    if (!show) props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
-  }
+  applyShowDirective(node, props)
 
   sink.push(tagOpen(tagName, props))
 
@@ -43,10 +65,7 @@ function serializeRegular(node: RegularElementNode, sink: Sink) {
  */
 function serializeVoid(node: VoidElementNode, sink: Sink) {
   const { type: tagName, props } = node
-  if (node.directives?.get('show')) {
-    const show = node.directives.get('show')![1]
-    if (!show) props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
-  }
+  applyShowDirective(node, props)
   sink.push(tagSelfClosing(tagName, props))
 }
 
@@ -82,9 +101,7 @@ export function serializeVNodeToSink(node: VNode, sink: Sink): void {
     case NodeKind.STATEFUL_WIDGET: {
       const child = (node as WidgetNode).instance?.child!
       // 父组件的 show 指令会应用到子组件上
-      if (node.directives?.get('show') && !child.directives?.get('show')) {
-        withDirectives(child, [node.directives?.get('show')!])
-      }
+      inheritShowDirective(node, child)
       serializeVNodeToSink(child, sink)
       break
     }
