@@ -3,7 +3,6 @@ import { NodeKind, NodeState } from '../../constants/index.js'
 import { unlinkParentNode } from '../../runtime/index.js'
 import type {
   AnyProps,
-  ElementOf,
   HostNodeElements,
   HostParentElement,
   NodeDriver,
@@ -68,12 +67,13 @@ export function getNodeDriver<K extends NodeKind>(kind: K): Drivers[K] {
  * @param node - 虚拟节点对象
  * @returns 创建的 DOM 元素
  */
-export function renderNode<T extends NodeType>(node: VNode<T>): ElementOf<T> {
+export function renderNode<T extends NodeType>(node: VNode<T>): void {
   if (node.state === NodeState.Rendered) {
-    return node.el! as ElementOf<T>
+    return
   }
   if (node.state === NodeState.Created) {
-    return getNodeDriver(node.kind).render(node as any) as ElementOf<T>
+    getNodeDriver(node.kind).render(node as any)
+    return
   }
   throw new Error(`The node state (${node.state}) cannot be rendered`)
 }
