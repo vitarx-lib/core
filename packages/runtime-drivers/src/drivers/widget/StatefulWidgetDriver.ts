@@ -13,7 +13,7 @@ import {
   type StatefulWidgetNodeType,
   type VNode
 } from '@vitarx/runtime-core'
-import { BaseWidgetDriver } from './BaseWidgetDriver.js'
+import { BaseWidgetDriver } from '../base/BaseWidgetDriver.js'
 
 /**
  * StatefulWidgetDriver 是用于管理有状态组件(StatefulWidget)生命周期的驱动器类。

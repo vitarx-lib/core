@@ -6,7 +6,6 @@ import {
   type HostElements,
   type HostNodeElements,
   invokeDirHook,
-  isElementNode,
   mountNode,
   type NodeDriver,
   NodeState,
@@ -85,14 +84,13 @@ export abstract class BaseWidgetDriver<T extends WidgetTypes> implements NodeDri
   /** @inheritDoc */
   unmount(node: WidgetNode<T>): void {
     if (!node.instance) return
-    const isElement = isElementNode(node.instance!.child)
     const el = node.el! as HostElements
-    if (isElement) invokeDirHook(node, 'beforeUnmount')
+    invokeDirHook(node, 'beforeUnmount')
     unmountNode(node.instance!.child)
     node.instance!.destroy()
     if (node.ref) node.ref.value = null
     node.state = NodeState.Unmounted
-    if (isElement) invokeDirHook(node, 'unmounted', el)
+    invokeDirHook(node, 'unmounted', el)
   }
 
   /**

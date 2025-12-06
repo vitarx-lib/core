@@ -20,7 +20,7 @@ import {
  * - 特殊节点驱动：Text、Comment
  * - 组件驱动：StatelessWidget、StatefulWidget
  */
-export function setupDefaultDrivers(): void {
+export function registerDefaultDrivers(): void {
   // 注册常规元素驱动程序，用于处理常规DOM元素
   registerDriver(NodeKind.REGULAR_ELEMENT, new RegularElementDriver())
   // 注册空元素驱动程序，用于处理自闭合标签元素
