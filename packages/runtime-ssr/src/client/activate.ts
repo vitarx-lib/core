@@ -17,30 +17,42 @@ import { isArray } from '@vitarx/utils'
 import { normalRender } from './render.js'
 import { getFirstDomNode } from './utils.js'
 
-// 节点异步任务映射类型
 type NodeAsyncMap = WeakMap<VNode, Promise<unknown>>
+
+/** 移除 container 下指定 index 之后的所有多余节点 */
+function cleanupExtraDom(container: Element, expectedCount: number) {
+  while (container.childNodes.length > expectedCount) {
+    const extra = container.childNodes[expectedCount]
+    extra.remove()
+  }
+}
+
+/** 清除 Fragment 范围中过多的真实 DOM */
+function cleanupFragmentRange(start: Comment, end: Comment, usedCount: number) {
+  let n = start.nextSibling
+  let count = 0
+
+  // 跳过已匹配 children 数量
+  while (n && n !== end && count < usedCount) {
+    n = n.nextSibling
+    count++
+  }
+
+  // 删除剩余
+  while (n && n !== end) {
+    const next = n.nextSibling
+    n.remove()
+    n = next
+  }
+}
+
 /**
- * 渐进式激活函数
- *
- * 按照 VNode 树的结构，从服务端渲染的 DOM 中按顺序匹配节点并激活。
- * 遇到有异步任务的 Widget 节点时，等待其完成后再继续处理 child。
- *
- * 核心流程：
- * 1. 按照 VNode 树结构顺序遍历查找 DOM 节点
- * 2. 遇到 Widget 节点时检查是否有异步任务，有则等待
- * 3. 设置 node.el 和 node.state = NodeState.Rendered
- * 4. 绑定事件监听器
- * 5. 递归激活子节点
- *
- * @param node - 虚拟节点
- * @param container - 容器元素或当前激活的父元素
- * @param nodeAsyncMap - 节点异步任务映射
- * @param nodeIndex - 当前节点在父节点中的索引（用于顺序匹配）
- *
- * @example
- * ```ts
- * await hydrateNode(rootNode, containerEl, nodeAsyncMap)
- * ```
+ * 水合节点函数，用于将服务端渲染的DOM与客户端虚拟DOM进行匹配和同步
+ * @param node - 当前需要水合的虚拟DOM节点
+ * @param container - 包含节点的DOM容器
+ * @param nodeAsyncMap - 存储异步任务映射的Map
+ * @param nodeIndex - 当前节点在容器中的索引位置，默认为0
+ * @returns Promise<number> - 返回下一个节点的索引位置
  */
 export async function hydrateNode(
   node: VNode,
@@ -48,121 +60,159 @@ export async function hydrateNode(
   nodeAsyncMap: NodeAsyncMap,
   nodeIndex: number = 0
 ): Promise<number> {
-  let nextIndex = nodeIndex + 1
+  let nextIndex = nodeIndex + 1 // 初始化下一个节点的索引
+
+  // ---------------------------
+  // 1. Widget（包含异步逻辑）
+  // ---------------------------
   if (isWidgetNode(node)) {
-    // 检查该节点是否有绑定的异步任务，有则等待其完成
     const pendingTask = nodeAsyncMap.get(node)
     if (pendingTask) {
       await pendingTask
       nodeAsyncMap.delete(node)
     }
-    // 异步完成后递归激活 Widget 的 child
+
     const child = (node as WidgetNode).instance!.child
     if (child) {
       return await hydrateNode(child, container, nodeAsyncMap, nodeIndex)
     }
+
     invokeDirHook(node, 'created')
     node.state = NodeState.Rendered
     return nextIndex
-  } else {
-    const renderer = new DomRenderer()
-    // 复用元素
-    const reuse = getFirstDomNode(container, nodeIndex)
-    const { type: tagName, props, children, kind } = node as RegularElementNode
-    // 没有复用到元素，节点进行正常渲染
-    if (!reuse) {
-      console.warn(`[Hydration] Cannot find element for <${tagName}>`)
-      normalRender(node)
-      if (nodeIndex > 0) {
-        const preNode = container.childNodes[nodeIndex - 1]
-        const nextSibling = preNode?.nextSibling
-        if (nextSibling) {
-          container.insertBefore(node.el!, nextSibling)
-          return nextIndex
-        }
-      }
-      container.appendChild(node.el!)
-      if (renderer.isFragment(node.el!)) {
-        // 如果插入的是片段元素，也需要重置索引
-        nextIndex += children.length
-      }
-      return nextIndex
-    }
-    // 元素类型 或 标签不匹配
-    if (reuse.kind !== kind || reuse.tag !== tagName) {
-      nextIndex = reuse.nextIndex
-      console.warn(`[Hydration] Cannot find element for <${tagName}>`)
-      normalRender(node)
-      if (isArray(reuse.el)) {
-        // 插入元素到片段之前
-        container.insertBefore(node.el!, reuse.el[0])
-        // 删除片段元素
-        for (const childNode of reuse.el) {
-          childNode.remove()
-        }
-        // 重置下一个索引，因为片段元素被删除
-        nextIndex -= reuse.el.length
-      } else {
-        container.replaceChild(node.el!, reuse.el)
-      }
-      if (renderer.isFragment(node.el!)) {
-        // 如果插入的是片段元素，也需要重置索引
-        nextIndex += children.length
-      }
-      return nextIndex
-    }
-    // 复用到元素，进行属性设置和子节点激活
-    switch (node.kind) {
-      case NodeKind.REGULAR_ELEMENT: {
-        // 设置节点元素和状态
-        node.el = reuse.el as HostElements
-        renderer.setAttributes(reuse.el as HostElements, props)
-        // 递归激活子节点
-        if (children.length > 0) {
-          for (let i = 0; i < children.length; i++) {
-            await hydrateNode(children[i], reuse.el as Element, nodeAsyncMap, i)
-          }
-        }
-        node.state = NodeState.Rendered
-        invokeDirHook(node, 'created')
-        break
-      }
+  }
 
-      case NodeKind.VOID_ELEMENT: {
-        // 设置节点元素和状态
-        node.el = reuse.el as HostElements
-        renderer.setAttributes(reuse.el as HostElements, props)
-        node.state = NodeState.Rendered
-        invokeDirHook(node, 'created')
-        break
-      }
-      case NodeKind.COMMENT:
-      case NodeKind.TEXT: {
-        node.el = reuse.el as unknown as HostTextElement
-        renderer.setText(node.el, props.text)
-        node.state = NodeState.Rendered
-        break
-      }
+  // ---------------------------
+  // 2. 非 Widget
+  // ---------------------------
+  const renderer = new DomRenderer()
+  const reuse = getFirstDomNode(container, nodeIndex)
+  const { type: tagName, props, children, kind } = node as RegularElementNode
 
-      case NodeKind.FRAGMENT: {
-        // 创建 DocumentFragment 并设置锚点
-        const fragment = document.createDocumentFragment() as HostFragmentElement
-        const reuseEl = reuse.el as HostElements[]
-        fragment.$startAnchor = reuseEl[0] as unknown as HostCommentElement
-        fragment.$endAnchor = reuseEl[reuseEl.length - 1] as unknown as HostCommentElement
-        fragment.$vnode = node as FragmentNode
-        // 设置节点元素和状态
-        node.el = fragment
-        // 递归激活子节点
-        for (let i = 0; i < children.length; i++) {
-          nextIndex = await hydrateNode(children[i], container, nodeAsyncMap, nextIndex)
-        }
-        break
+  // ---------------------------
+  // 未找到可复用 DOM → 正常渲染并插入
+  // ---------------------------
+  if (!reuse) {
+    console.warn(`[Hydration] Cannot find element for <${tagName}>`)
+
+    normalRender(node)
+
+    if (nodeIndex > 0) {
+      const pre = container.childNodes[nodeIndex - 1]
+      const next = pre?.nextSibling
+      if (next) {
+        container.insertBefore(node.el!, next)
+        return nextIndex
       }
-      default:
-        throw new Error(`[Hydration] Unknown node kind: ${node.kind}`)
     }
-    node.state = NodeState.Rendered
+
+    container.appendChild(node.el!)
+
+    if (renderer.isFragment(node.el!)) {
+      nextIndex += children.length
+    }
     return nextIndex
   }
+
+  // ---------------------------
+  // 标签 / 类型 不匹配 → fallback 渲染替换
+  // ---------------------------
+  if (reuse.kind !== kind || reuse.tag !== tagName) {
+    console.warn(`[Hydration] Element mismatch for <${tagName}>`)
+    nextIndex = reuse.nextIndex
+
+    normalRender(node)
+
+    if (isArray(reuse.el)) {
+      container.insertBefore(node.el!, reuse.el[0])
+      for (const child of reuse.el) child.remove()
+      nextIndex -= reuse.el.length
+    } else {
+      container.replaceChild(node.el!, reuse.el)
+    }
+
+    if (renderer.isFragment(node.el!)) {
+      nextIndex += children.length
+    }
+    return nextIndex
+  }
+
+  // ---------------------------
+  // 3. 匹配成功，按类型处理
+  // ---------------------------
+  switch (node.kind) {
+    // ---------------------------
+    // Regular Element
+    // ---------------------------
+    case NodeKind.REGULAR_ELEMENT: {
+      const el = reuse.el as HostElements
+      node.el = el
+      renderer.setAttributes(el, props)
+
+      // hydrate children
+      let lastChildIndex = 0
+      for (let i = 0; i < children.length; i++) {
+        lastChildIndex = await hydrateNode(children[i], el as unknown as Element, nodeAsyncMap, i)
+      }
+      // 🔥 清除多余 SSR DOM
+      cleanupExtraDom(el as unknown as Element, children.length)
+
+      node.state = NodeState.Rendered
+      invokeDirHook(node, 'created')
+      break
+    }
+
+    // ---------------------------
+    // Void Element
+    // ---------------------------
+    case NodeKind.VOID_ELEMENT: {
+      node.el = reuse.el as HostElements
+      renderer.setAttributes(reuse.el as HostElements, props)
+      node.state = NodeState.Rendered
+      invokeDirHook(node, 'created')
+      break
+    }
+
+    // ---------------------------
+    // Text / Comment
+    // ---------------------------
+    case NodeKind.TEXT:
+    case NodeKind.COMMENT: {
+      node.el = reuse.el as unknown as HostTextElement
+      renderer.setText(node.el, props.text)
+      node.state = NodeState.Rendered
+      break
+    }
+
+    // ---------------------------
+    // Fragment
+    // ---------------------------
+    case NodeKind.FRAGMENT: {
+      const reuseEl = reuse.el as HostElements[]
+      const fragment = document.createDocumentFragment() as HostFragmentElement
+
+      fragment.$startAnchor = reuseEl[0] as unknown as HostCommentElement
+      fragment.$endAnchor = reuseEl[reuseEl.length - 1] as unknown as HostCommentElement
+      fragment.$vnode = node as FragmentNode
+
+      node.el = fragment
+
+      let cur = reuse.nextIndex
+      for (let i = 0; i < children.length; i++) {
+        cur = await hydrateNode(children[i], container, nodeAsyncMap, cur)
+      }
+
+      // 🔥 清除 Fragment 区间内多余的真实 DOM
+      cleanupFragmentRange(fragment.$startAnchor, fragment.$endAnchor, children.length)
+
+      node.state = NodeState.Rendered
+      break
+    }
+
+    default:
+      throw new Error(`[Hydration] Unknown node kind: ${node.kind}`)
+  }
+
+  node.state = NodeState.Rendered
+  return nextIndex
 }
