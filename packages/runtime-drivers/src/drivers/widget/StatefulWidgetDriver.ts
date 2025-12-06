@@ -70,6 +70,7 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
   /** @inheritDoc */
   override mount(node: StatefulWidgetNode, target?: HostNodeElements, opsType?: OpsType): void {
     const runtimeInstance = node.instance!
+    runtimeInstance.invokeHook(LifecycleHooks.beforeMount)
     // 绑定 ref 引用
     if (node.ref) node.ref.value = runtimeInstance.instance
     super.mount(node, target, opsType)
