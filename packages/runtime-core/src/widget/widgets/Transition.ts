@@ -1,7 +1,7 @@
 import { getRenderer } from '../../renderer/index.js'
 import type { HostNodeElements, Renderable, VNode } from '../../types/index.js'
 import { AnyChild } from '../../types/vnode.js'
-import { getNodeDomOpsTarget, getNodeElement } from '../../utils/index.js'
+import { getDomElement, getDomTarget } from '../../utils/index.js'
 import { PatchUpdate } from '../../vnode/core/update.js'
 import { mountNode, unmountNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
@@ -192,7 +192,7 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
       // 要求用户在css中使用 display: block !important 来保证动画可见
       if (oldShow !== newShow) {
         PatchUpdate.patchUpdateNode(oldChild, newChild)
-        this.runTransition(getNodeElement(oldChild), oldShow ? 'leave' : 'enter')
+        this.runTransition(getDomElement(oldChild), oldShow ? 'leave' : 'enter')
       } else {
         PatchUpdate.patchUpdateNode(oldChild, newChild)
       }
@@ -201,7 +201,7 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
     // 创建锚点元素，用于新节点的插入位置
     const dom = getRenderer()
     const anchor = dom.createText('')
-    dom.insertBefore(anchor, getNodeDomOpsTarget(oldChild))
+    dom.insertBefore(anchor, getDomTarget(oldChild))
     // 根据不同的过渡模式执行动画
     switch (this.props.mode) {
       case 'out-in':

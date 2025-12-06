@@ -175,6 +175,7 @@ export class Suspense extends Widget<SuspenseProps> {
       if (this.$vnode.state === NodeState.Deactivated) {
         this.pendingOnResolved = true
       } else {
+        console.log('Suspense触发更新')
         this.$forceUpdate()
         this.complete()
       }

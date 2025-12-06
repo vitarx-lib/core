@@ -9,7 +9,7 @@ import type {
   WidgetNode,
   WidgetTypes
 } from '../../types/index.js'
-import { getNodeDomOpsTarget, isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
+import { getDomTarget, isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
 import {
   activateNode,
   createVNode,
@@ -217,7 +217,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     const dom = getRenderer()
     if (newVNode.state !== 'deactivated') {
       placeholderElement = dom.createText('')
-      dom.insertBefore(placeholderElement, getNodeDomOpsTarget(oldVNode))
+      dom.insertBefore(placeholderElement, getDomTarget(oldVNode))
     }
 
     // 统一处理旧节点的清理

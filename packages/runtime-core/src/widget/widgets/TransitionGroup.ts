@@ -16,7 +16,7 @@ import type {
   VNode,
   WithProps
 } from '../../types/index.js'
-import { getNodeElement, isContainerNode } from '../../utils/index.js'
+import { getDomElement, isContainerNode } from '../../utils/index.js'
 import { PatchUpdate } from '../../vnode/core/update.js'
 import { createVNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
@@ -180,7 +180,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
       // 保存所有子元素的当前位置，用于后续计算移动距离
       const prevRects = new Map<VNode, DOMRect>()
       for (const child of container.children) {
-        const el = getNodeElement(child)
+        const el = getDomElement(child)
         if (dom.isElement(el)) {
           prevRects.set(child, dom.getBoundingClientRect(el))
         }
@@ -209,7 +209,7 @@ export class TransitionGroup extends BaseTransition<TransitionGroupProps> {
 
       // 遍历所有子元素，检查是否需要移动
       for (const child of container.children) {
-        const el = getNodeElement(child)
+        const el = getDomElement(child)
         const oldRect = prevRects.get(child)
 
         // 跳过非元素节点或没有旧位置的元素
