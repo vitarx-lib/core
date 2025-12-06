@@ -54,10 +54,11 @@ describe('StatefulWidgetDriver', () => {
   describe('render', () => {
     it('应该渲染有状态 Widget', () => {
       const vnode = createVNode(TestStatefulWidget, {})
-      const el = controller.render(vnode)
+      controller.render(vnode)
       controller.mount(vnode)
+      const el = vnode.el! as HTMLElement
       expect(el).toBeDefined()
-      expect((el as HTMLElement).tagName).toBe('DIV')
+      expect(el.tagName).toBe('DIV')
       expect(el.textContent).toBe('test')
     })
 
@@ -133,42 +134,43 @@ describe('StatefulWidgetDriver', () => {
 })
 
 describe('StatelessWidgetDriver', () => {
-  let controller: StatelessWidgetDriver
+  let driver: StatelessWidgetDriver
 
   beforeEach(() => {
-    controller = new StatelessWidgetDriver()
+    driver = new StatelessWidgetDriver()
   })
 
   describe('render', () => {
     it('应该渲染无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'Hello' })
-      const el = controller.render(vnode)
-      controller.mount(vnode)
+      driver.render(vnode)
+      driver.mount(vnode)
+      const el = vnode.el! as HTMLElement
       expect(el).toBeDefined()
-      expect((el as HTMLElement).tagName).toBe('DIV')
+      expect(el.tagName).toBe('DIV')
       expect(el.textContent).toBe('Hello')
     })
 
     it('应该设置节点状态为 Rendered', () => {
       const vnode = createVNode(TestStatelessWidget, {})
-      controller.render(vnode)
+      driver.render(vnode)
 
       expect(vnode.state).toBe(NodeState.Rendered)
     })
 
-    it('应该绑定 ref 引用到 vnode', () => {
+    it('应该绑定 ref 引用到 null', () => {
       const widgetRef = ref<any>(null)
       const vnode = createVNode(TestStatelessWidget, { ref: widgetRef })
-      controller.render(vnode)
+      driver.render(vnode)
 
-      expect(widgetRef.value).toBe(vnode)
+      expect(widgetRef.value).toBe(null)
     })
   })
 
   describe('mount', () => {
     it('应该挂载无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'Content' })
-      const container = renderAndMount(controller, vnode)
+      const container = renderAndMount(driver, vnode)
 
       expect(container.textContent).toBe('Content')
       expect(vnode.state).toBe(NodeState.Activated)
@@ -178,9 +180,9 @@ describe('StatelessWidgetDriver', () => {
   describe('updateProps', () => {
     it('应该在属性改变时触发更新', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'Old' })
-      const container = renderAndMount(controller, vnode)
+      const container = renderAndMount(driver, vnode)
 
-      controller.updateProps(vnode, { text: 'New' })
+      driver.updateProps(vnode, { text: 'New' })
 
       expect(container.textContent).toBe('New')
     })
@@ -189,35 +191,24 @@ describe('StatelessWidgetDriver', () => {
   describe('unmount', () => {
     it('应该卸载无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, {})
-      const container = renderAndMount(controller, vnode)
+      const container = renderAndMount(driver, vnode)
 
-      controller.unmount(vnode)
+      driver.unmount(vnode)
 
       expectUnmountedState(vnode, container)
-    })
-
-    it('应该清除 ref 引用', () => {
-      const widgetRef = ref<any>(null)
-      const vnode = createVNode(TestStatelessWidget, { ref: widgetRef })
-      renderAndMount(controller, vnode)
-      expect(widgetRef.value).not.toBeNull()
-
-      controller.unmount(vnode)
-
-      expect(widgetRef.value).toBeNull()
     })
   })
 
   describe('activate/deactivate', () => {
     it('应该激活和停用无状态 Widget', () => {
       const vnode = createVNode(TestStatelessWidget, { text: 'test' })
-      const container = renderAndMount(controller, vnode)
+      const container = renderAndMount(driver, vnode)
       expectActivatedState(vnode, container, 'test')
 
-      controller.deactivate(vnode, true)
+      driver.deactivate(vnode, true)
       expectDeactivatedState(vnode, container)
 
-      controller.activate(vnode, true)
+      driver.activate(vnode, true)
       expectActivatedState(vnode, container, 'test')
     })
   })

@@ -12,8 +12,8 @@ describe('TextDriver', () => {
   describe('render', () => {
     it('应该创建文本节点元素', () => {
       const vnode = createTextVNode({ text: 'Hello' })
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(el).toBeDefined()
       expect(el.nodeType).toBe(Node.TEXT_NODE)
       expect(el.textContent).toBe('Hello')
@@ -28,22 +28,22 @@ describe('TextDriver', () => {
 
     it('应该将元素存储在 vnode.el 中', () => {
       const vnode = createTextVNode({ text: 'Test' })
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(vnode.el).toBe(el)
     })
 
     it('应该处理空字符串', () => {
       const vnode = createTextVNode({ text: '' })
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(el.textContent).toBe('')
     })
 
     it('应该处理特殊字符', () => {
       const vnode = createTextVNode({ text: '<>&"\'test' })
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(el.textContent).toBe('<>&"\'test')
     })
   })
@@ -154,8 +154,8 @@ describe('CommentController', () => {
   describe('render', () => {
     it('应该创建注释节点元素', () => {
       const vnode = createCommentVNode({ text: 'comment text' })
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(el).toBeDefined()
       expect(el.nodeType).toBe(Node.COMMENT_NODE)
       expect(el.textContent).toBe('comment text')
@@ -170,15 +170,15 @@ describe('CommentController', () => {
 
     it('应该将元素存储在 vnode.el 中', () => {
       const vnode = createCommentVNode({ text: 'Test' })
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(vnode.el).toBe(el)
     })
 
     it('应该处理空注释', () => {
       const vnode = createCommentVNode({ text: '' })
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(el.textContent).toBe('')
     })
   })

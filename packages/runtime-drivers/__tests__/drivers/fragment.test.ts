@@ -42,8 +42,8 @@ describe('FragmentDriver', () => {
     })
     it('应该创建 Fragment 元素', () => {
       const vnode = createVNode('fragment', {})
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(el).toBeDefined()
       expect(el.nodeType).toBe(Node.DOCUMENT_FRAGMENT_NODE)
     })
@@ -56,14 +56,15 @@ describe('FragmentDriver', () => {
 
     it('应该将元素存储在 vnode.el 中', () => {
       const vnode = createVNode('fragment', {})
-      const el = controller.render(vnode)
+      controller.render(vnode)
+      const el = vnode.el!
       expect(vnode.el).toBe(el)
     })
 
     it('应该渲染空 Fragment', () => {
       const vnode = createVNode('fragment', {})
-      const el = controller.render(vnode)
-
+      controller.render(vnode)
+      const el = vnode.el!
       expect(el.childNodes.length).toBe(0)
     })
 
