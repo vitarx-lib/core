@@ -131,9 +131,10 @@ export type FW<P extends AnyProps = any> = FunctionWidget<P>
 /**
  * 小部件结构类型
  *
- * - ClassWidget：类小部件
- * - FunctionWidget：函数小部件
- * - StatelessWidget：无状态小部件
+ * - StatefulWidget
+ *    - ClassWidget：类小部件
+ *    - FunctionWidget：函数小部件
+ * - StatelessWidget：标记为无状态的小部件
  */
 export type WidgetTypes<P extends AnyProps = any> = StatefulWidget<P> | StatelessWidget<P>
 /**
