@@ -4,7 +4,7 @@ import { createSSRApp, renderToStream } from '../../src/index.js'
 import { createMockAsyncComponent } from '../helpers.js'
 
 describe('renderToStream', () => {
-  it('should stream HTML content', async () => {
+  it('应该流式传输HTML内容', async () => {
     const App = () => h('div', null, 'Hello Stream')
     const app = createSSRApp(App)
     const chunks: string[] = []
@@ -27,7 +27,7 @@ describe('renderToStream', () => {
     expect(html).toContain('Hello Stream')
   })
 
-  it('should call close after rendering', async () => {
+  it('渲染后应该调用close', async () => {
     const App = () => h('div', null, 'Hello Stream')
     const app = createSSRApp(App)
     const closeFn = vi.fn()
@@ -45,7 +45,7 @@ describe('renderToStream', () => {
     expect(closeFn).toHaveBeenCalled()
   })
 
-  it('should handle async components', async () => {
+  it('应该处理异步组件', async () => {
     const AsyncComp = createMockAsyncComponent('Async Stream', 10)
     const App = () => h(AsyncComp)
     const app = createSSRApp(App)
@@ -69,7 +69,7 @@ describe('renderToStream', () => {
     expect(html).toContain('Async Stream')
   })
 
-  it('should handle errors', async () => {
+  it('应该处理错误', async () => {
     const errorFn = vi.fn()
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     const ErrorComponent = () => {
