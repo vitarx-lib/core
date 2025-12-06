@@ -112,8 +112,10 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
   constructor(props: LazyWidgetProps<T>) {
     super(props)
     this.onError = props.onError
-    this.suspenseCounter = useSuspense()
-    if (this.suspenseCounter) this.suspenseCounter.value++
+    if (!isVNode(this.props.loading)) {
+      this.suspenseCounter = useSuspense()
+      if (this.suspenseCounter) this.suspenseCounter.value++
+    }
   }
   /**
    * 验证组件属性是否符合要求
