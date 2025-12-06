@@ -1,5 +1,5 @@
 import { Ref, type RefSignal } from '@vitarx/responsive'
-import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils/src/index.js'
+import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils'
 import type { DynamicRenderType } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
 import type { Dynamic, Fragment } from '../widget/index.js'
