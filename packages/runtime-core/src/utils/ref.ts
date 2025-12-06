@@ -1,25 +1,25 @@
 import { isRefSignal, Ref, shallowRef } from '@vitarx/responsive'
 import type {
   ElementOf,
+  HostNodeElements,
   HostNodeNames,
   ImpostWidget,
   StatelessWidget,
-  StatelessWidgetNode,
   WidgetTypes
 } from '../types/index.js'
 
 /**
  * 辅助计算出元素类型
  */
-export type ComputedRefElType<T> = T extends ElementOf
+export type ComputedRefElType<T> = T extends HostNodeElements
   ? T
   : T extends HostNodeNames
     ? ElementOf<T>
     : T extends StatelessWidget
-      ? StatelessWidgetNode
+      ? null
       : T extends WidgetTypes
         ? ImpostWidget<T>
-        : null
+        : T
 /** 引用元素类型 */
 export type RefEl<T> = Ref<ComputedRefElType<T> | null>
 
