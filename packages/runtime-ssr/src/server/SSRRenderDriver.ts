@@ -45,8 +45,6 @@ export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
     const ctx = useSSRContext()
     if (!ctx) return node as ElementOf<T>
 
-    const isStreamMode = ctx.$renderMode === 'stream'
-    const asyncTasks = ctx.$asyncTasks
     const nodeAsyncMap = ctx.$nodeAsyncMap
 
     switch (node.kind) {
@@ -77,14 +75,9 @@ export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
         // 执行 onRender 钩子，异步组件的解析 Promise 也会在这里返回
         const result = runtime.invokeHook(LifecycleHooks.render)
 
-        if (isPromise(result)) {
-          if (isStreamMode) {
-            // stream 模式：将异步任务绑定到节点
-            nodeAsyncMap?.set(widgetNode, result)
-          } else {
-            // sync 模式：收集到全局队列
-            asyncTasks?.push(result)
-          }
+        // 统一将异步任务绑定到节点
+        if (isPromise(result) && nodeAsyncMap) {
+          nodeAsyncMap.set(widgetNode, result)
         }
         break
       }
