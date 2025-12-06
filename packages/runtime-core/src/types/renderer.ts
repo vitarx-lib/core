@@ -119,6 +119,12 @@ export interface HostRenderer {
    */
   isElement(el: HostNodeElements): el is HostElements
   /**
+   * 判断给定的元素实例是否为片段元素
+   *
+   * @param el
+   */
+  isFragment(el: HostNodeElements): el is HostFragmentElement
+  /**
    * 从DOM中移除元素
    * @param el - 要移除的元素实例
    */
