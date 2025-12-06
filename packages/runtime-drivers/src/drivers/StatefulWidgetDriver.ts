@@ -1,19 +1,17 @@
 import { Scheduler, SubManager } from '@vitarx/responsive'
-import type {
-  AnyProps,
-  HostNodeElements,
-  OpsType,
-  StatefulWidgetNode,
-  StatefulWidgetNodeType,
-  VNode
-} from '@vitarx/runtime-core'
 import {
+  type AnyProps,
   createCommentVNode,
   createWidgetRuntime,
+  type HostNodeElements,
   isVNode,
   LifecycleHooks,
   NodeState,
-  renderNode
+  type OpsType,
+  renderNode,
+  type StatefulWidgetNode,
+  type StatefulWidgetNodeType,
+  type VNode
 } from '@vitarx/runtime-core'
 import { BaseWidgetDriver } from './BaseWidgetDriver.js'
 
@@ -54,33 +52,29 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
     }
   }
   /** @inheritDoc */
-  override render(node: VNode<StatefulWidgetNodeType>): HostNodeElements {
+  override render(node: VNode<StatefulWidgetNodeType>): void {
     const widget = createWidgetRuntime(node)
     // 触发render生命周期钩子
     widget.invokeHook(LifecycleHooks.render)
-    let el: HostNodeElements
     try {
-      el = super.render(node)
+      super.render(node)
     } catch (e) {
       const errVNode = widget.reportError(e, 'render')
       widget.cachedChildVNode = isVNode(errVNode)
         ? errVNode
         : createCommentVNode({ text: `StatefulWidget<${widget.name}> render fail` })
       // 获取更新后的DOM元素
-      el = renderNode(widget.cachedChildVNode)
+      renderNode(widget.cachedChildVNode)
     }
-    // 绑定 ref 引用
-    if (node.ref) node.ref.value = widget.instance
-    return el
   }
   /** @inheritDoc */
   override mount(node: StatefulWidgetNode, target?: HostNodeElements, opsType?: OpsType): void {
-    const widget = node.instance!
-    widget.invokeHook(LifecycleHooks.beforeMount)
+    const runtimeInstance = node.instance!
+    // 绑定 ref 引用
+    if (node.ref) node.ref.value = runtimeInstance.instance
     super.mount(node, target, opsType)
-    node.state = NodeState.Activated
-    widget.invokeHook(LifecycleHooks.mounted)
-    widget.invokeHook(LifecycleHooks.activated)
+    runtimeInstance.invokeHook(LifecycleHooks.mounted)
+    runtimeInstance.invokeHook(LifecycleHooks.activated)
   }
   /** @inheritDoc */
   override activate(node: StatefulWidgetNode, root: boolean): void {

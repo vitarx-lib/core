@@ -71,13 +71,9 @@ export abstract class ElementDriver<T extends ElementNodeType> extends HostNodeD
   /**
    * @inheritDoc
    */
-  override render(node: HostNode<T>): ElementOf<T> {
-    if (node.el) {
-      this.dom.setAttributes(node.el! as HostElements, node.props)
-    }
-    const el = super.render(node)
+  override render(node: HostNode<T>): void {
+    super.render(node)
     invokeDirHook(node, 'created')
-    return el
   }
   /**
    * @inheritDoc

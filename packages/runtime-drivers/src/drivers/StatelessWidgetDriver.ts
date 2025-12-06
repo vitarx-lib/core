@@ -1,10 +1,4 @@
-import type {
-  AnyProps,
-  ElementOf,
-  StatelessWidgetNode,
-  StatelessWidgetNodeType,
-  WidgetNode
-} from '@vitarx/runtime-core'
+import type { AnyProps, StatelessWidgetNode, StatelessWidgetNodeType } from '@vitarx/runtime-core'
 import { BaseWidgetDriver } from './BaseWidgetDriver.js'
 
 /**
@@ -29,11 +23,6 @@ import { BaseWidgetDriver } from './BaseWidgetDriver.js'
  * - 属性更新会触发组件的重新渲染，但不会保留任何状态信息
  */
 export class StatelessWidgetDriver extends BaseWidgetDriver<StatelessWidgetNodeType> {
-  override render(node: WidgetNode<StatelessWidgetNodeType>): ElementOf<StatelessWidgetNodeType> {
-    const el = super.render(node)
-    if (node.ref) node.ref.value = node
-    return el
-  }
   /**
    * @inheritDoc
    */

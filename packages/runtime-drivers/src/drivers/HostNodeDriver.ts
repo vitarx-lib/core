@@ -31,17 +31,16 @@ export abstract class HostNodeDriver<T extends HostNodeType> implements NodeDriv
    * @param node - 虚拟节点
    * @returns 创建的 DOM 元素
    */
-  render(node: HostNode<T>): ElementOf<T> {
-    if (!node.el) node.el = this.createElement(node)
-    if (node.ref) node.ref.value = node.el
+  render(node: HostNode<T>): void {
+    node.el = this.createElement(node)
     this.renderChildren?.(node)
     node.state = NodeState.Rendered
-    return node.el
   }
   /**
    * @inheritDoc
    */
   mount(node: HostNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
+    if (node.ref) node.ref.value = node.el
     if (node.el && target && !this.dom.getParentElement(node.el)) {
       this.dom[opsType || 'appendChild'](node.el!, target as HostParentElement)
     }

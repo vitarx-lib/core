@@ -3,7 +3,6 @@ import {
   type AnyProps,
   createWidgetRuntime,
   deactivateNode,
-  type ElementOf,
   type HostElements,
   type HostNodeElements,
   invokeDirHook,
@@ -54,14 +53,13 @@ export abstract class BaseWidgetDriver<T extends WidgetTypes> implements NodeDri
   abstract updateProps(node: WidgetNode<T>, newProps: AnyProps): void
 
   /** @inheritDoc */
-  render(node: WidgetNode<T>): ElementOf<T> {
+  render(node: WidgetNode<T>): void {
     const widget = createWidgetRuntime(node)
     // 从根节点获取元素并转换为宿主元素实例类型
-    const el = renderNode(widget.child)
+    renderNode(widget.child)
     node.state = NodeState.Rendered
     // 调用指令钩子
     invokeDirHook(node, 'created')
-    return el as ElementOf<T>
   }
 
   /** @inheritDoc */
