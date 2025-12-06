@@ -59,24 +59,18 @@ class StreamingSink implements Sink {
 async function streamSerializeNode(
   node: VNode,
   sink: StreamingSink,
-  nodeAsyncMap: NodeAsyncMap,
-  pathStack: number[] = []
+  nodeAsyncMap: NodeAsyncMap
 ): Promise<void> {
   switch (node.kind) {
     case NodeKind.REGULAR_ELEMENT: {
       const { type: tagName, props, children } = node as any
-      const path = pathStack.length ? pathStack.join('-') : ''
-      const propsWithPath = path ? { ...props, 'data-vx-path': path } : props
-
-      sink.push(tagOpen(tagName, propsWithPath))
+      sink.push(tagOpen(tagName, props))
 
       if (props['v-html']) {
         sink.push(String(props['v-html']))
       } else {
         for (let i = 0; i < children.length; i++) {
-          pathStack.push(i)
-          await streamSerializeNode(children[i], sink, nodeAsyncMap, pathStack)
-          pathStack.pop()
+          await streamSerializeNode(children[i], sink, nodeAsyncMap)
         }
       }
 
@@ -85,9 +79,7 @@ async function streamSerializeNode(
     }
     case NodeKind.VOID_ELEMENT: {
       const { type: tagName, props } = node as any
-      const path = pathStack.length ? pathStack.join('-') : ''
-      const propsWithPath = path ? { ...props, 'data-vx-path': path } : props
-      sink.push(tagSelfClosing(tagName, propsWithPath))
+      sink.push(tagSelfClosing(tagName, props))
       break
     }
     case NodeKind.TEXT:
@@ -100,9 +92,7 @@ async function streamSerializeNode(
       sink.push('<!--Fragment start-->')
       const { children } = node as any
       for (let i = 0; i < children.length; i++) {
-        pathStack.push(i)
-        await streamSerializeNode(children[i], sink, nodeAsyncMap, pathStack)
-        pathStack.pop()
+        await streamSerializeNode(children[i], sink, nodeAsyncMap)
       }
       sink.push('<!--Fragment end-->')
       break
@@ -118,7 +108,7 @@ async function streamSerializeNode(
       // 异步完成后继续序列化 child
       const child = (node as WidgetNode).instance?.child
       if (child) {
-        await streamSerializeNode(child, sink, nodeAsyncMap, pathStack)
+        await streamSerializeNode(child, sink, nodeAsyncMap)
       }
       break
     }
@@ -170,7 +160,7 @@ export async function renderToStream(
 
       // 流式输出（逐个节点序列化，遇到异步则等待）
       const sink = new StreamingSink(options)
-      await streamSerializeNode(rootNode, sink, nodeAsyncMap, [])
+      await streamSerializeNode(rootNode, sink, nodeAsyncMap)
 
       // 清理内部状态
       delete context.$nodeAsyncMap
