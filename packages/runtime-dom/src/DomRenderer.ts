@@ -2,7 +2,7 @@ import {
   type DOMRect,
   type ElementNode,
   type FragmentNode,
-  getNodeDomOpsTarget,
+  getDomTarget,
   type HostCommentElement,
   type HostElementNames,
   type HostElements,
@@ -417,7 +417,7 @@ export class DomRenderer implements HostRenderer {
         el.appendChild(el.$startAnchor)
         // 递归恢复片段节点
         for (const child of children) {
-          el.appendChild(this.recoveryFragmentChildren(getNodeDomOpsTarget(child)))
+          el.appendChild(this.recoveryFragmentChildren(getDomTarget(child)))
         }
         el.appendChild(el.$endAnchor)
       } else if (!el.contains(el.$startAnchor)) {
