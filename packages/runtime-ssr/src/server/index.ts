@@ -1,6 +1,3 @@
-// 导出驱动
-export { SSRRenderDriver } from './SSRRenderDriver.js'
-
 // 导出字符串渲染
 export { renderToString } from './renderToString.js'
 

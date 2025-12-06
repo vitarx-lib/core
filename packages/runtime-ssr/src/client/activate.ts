@@ -1,244 +1,166 @@
-import type { HostFragmentElement, VNode } from '@vitarx/runtime-core'
-import { isWidgetNode, NodeKind, NodeState } from '@vitarx/runtime-core'
+import {
+  type FragmentNode,
+  type HostCommentElement,
+  type HostElements,
+  type HostFragmentElement,
+  type HostTextElement,
+  invokeDirHook,
+  isWidgetNode,
+  NodeKind,
+  NodeState,
+  type RegularElementNode,
+  type VNode,
+  type WidgetNode
+} from '@vitarx/runtime-core'
 import { DomRenderer } from '@vitarx/runtime-dom'
+import { isArray } from '@vitarx/utils'
+import { normalRender } from './render.js'
+import { getFirstDomNode } from './utils.js'
 
+// 节点异步任务映射类型
+type NodeAsyncMap = WeakMap<VNode, Promise<unknown>>
 /**
  * 渐进式激活函数
  *
  * 按照 VNode 树的结构，从服务端渲染的 DOM 中按顺序匹配节点并激活。
- * 移除了 path 机制，因为服务端和客户端的渲染顺序可能不一致
- * （服务端 onRender 中可能有异步请求，响应顺序不确定，而客户端数据被缓存复用不会发起请求）。
+ * 遇到有异步任务的 Widget 节点时，等待其完成后再继续处理 child。
  *
  * 核心流程：
  * 1. 按照 VNode 树结构顺序遍历查找 DOM 节点
- * 2. 设置 node.el 和 node.state = NodeState.Rendered
- * 3. 绑定事件监听器
- * 4. 递归激活子节点
+ * 2. 遇到 Widget 节点时检查是否有异步任务，有则等待
+ * 3. 设置 node.el 和 node.state = NodeState.Rendered
+ * 4. 绑定事件监听器
+ * 5. 递归激活子节点
  *
- * @param vnode - 虚拟节点
+ * @param node - 虚拟节点
  * @param container - 容器元素或当前激活的父元素
+ * @param nodeAsyncMap - 节点异步任务映射
  * @param nodeIndex - 当前节点在父节点中的索引（用于顺序匹配）
  *
  * @example
  * ```ts
- * await activateNode(rootNode, document.querySelector('#app')!)
+ * await hydrateNode(rootNode, containerEl, nodeAsyncMap)
  * ```
  */
-export async function activateNode(
-  vnode: VNode,
+export async function hydrateNode(
+  node: VNode,
   container: Element,
-  nodeIndex: { text: number; comment: number; element: number } = {
-    text: 0,
-    comment: 0,
-    element: 0
-  }
-): Promise<void> {
-  const renderer = new DomRenderer()
-
-  switch (vnode.kind) {
-    case NodeKind.REGULAR_ELEMENT: {
-      const { type: tagName, props, children } = vnode as any
-
-      // 按顺序匹配 DOM 元素
-      const elements = Array.from(container.children)
-      const el = elements[nodeIndex.element] || null
-      nodeIndex.element++
-
-      if (!el) {
-        console.warn(`[Hydration] Cannot find element for <${tagName}>`)
-        return
+  nodeAsyncMap: NodeAsyncMap,
+  nodeIndex: number = 0
+): Promise<number> {
+  let nextIndex = nodeIndex + 1
+  if (isWidgetNode(node)) {
+    // 检查该节点是否有绑定的异步任务，有则等待其完成
+    const pendingTask = nodeAsyncMap.get(node)
+    if (pendingTask) {
+      await pendingTask
+      nodeAsyncMap.delete(node)
+    }
+    // 异步完成后递归激活 Widget 的 child
+    const child = (node as WidgetNode).instance!.child
+    if (child) {
+      return await hydrateNode(child, container, nodeAsyncMap, nodeIndex)
+    }
+    return nextIndex
+  } else {
+    const renderer = new DomRenderer()
+    // 复用元素
+    const reuse = getFirstDomNode(container, nodeIndex)
+    const { type: tagName, props, children, kind } = node as RegularElementNode
+    // 没有复用到元素，节点进行正常渲染
+    if (!reuse) {
+      console.warn(`[Hydration] Cannot find element for <${tagName}>`)
+      normalRender(node)
+      if (nodeIndex > 0) {
+        const preNode = container.childNodes[nodeIndex - 1]
+        const nextSibling = preNode?.nextSibling
+        if (nextSibling) {
+          container.insertBefore(node.el!, nextSibling)
+          return nextIndex
+        }
+      }
+      container.appendChild(node.el!)
+      if (renderer.isFragment(node.el!)) {
+        // 如果插入的是片段元素，也需要重置索引
+        nextIndex += children.length
+      }
+      return nextIndex
+    }
+    // 元素类型 或 标签不匹配
+    if (reuse.kind !== kind || reuse.tag !== tagName) {
+      nextIndex = reuse.nextIndex
+      console.warn(`[Hydration] Cannot find element for <${tagName}>`)
+      normalRender(node)
+      if (isArray(reuse.el)) {
+        // 插入元素到片段之前
+        container.insertBefore(node.el!, reuse.el[0])
+        // 删除片段元素
+        for (const childNode of reuse.el) {
+          childNode.remove()
+        }
+        // 重置下一个索引，因为片段元素被删除
+        nextIndex -= reuse.el.length
+      } else {
+        container.replaceChild(node.el!, reuse.el)
+      }
+      if (renderer.isFragment(node.el!)) {
+        // 如果插入的是片段元素，也需要重置索引
+        nextIndex += children.length
+      }
+      return nextIndex
+    }
+    // 复用到元素，进行属性设置和子节点激活
+    switch (node.kind) {
+      case NodeKind.REGULAR_ELEMENT: {
+        // 设置节点元素和状态
+        node.el = reuse.el as HostElements
+        renderer.setAttributes(reuse.el as HostElements, props)
+        // 递归激活子节点
+        if (children.length > 0) {
+          for (let i = 0; i < children.length; i++) {
+            await hydrateNode(children[i], reuse.el as Element, nodeAsyncMap, i)
+          }
+        }
+        node.state = NodeState.Rendered
+        invokeDirHook(node, 'created')
+        break
       }
 
-      // 设置节点元素和状态
-      vnode.el = el as any
-      vnode.state = NodeState.Rendered
+      case NodeKind.VOID_ELEMENT: {
+        // 设置节点元素和状态
+        node.el = reuse.el as HostElements
+        renderer.setAttributes(reuse.el as HostElements, props)
+        node.state = NodeState.Rendered
+        invokeDirHook(node, 'created')
+        break
+      }
+      case NodeKind.COMMENT:
+      case NodeKind.TEXT: {
+        node.el = reuse.el as unknown as HostTextElement
+        renderer.setText(node.el, props.text)
+        node.state = NodeState.Rendered
+        break
+      }
 
-      // 绑定事件监听器（不修改静态属性）
-      bindEventListeners(el, props, renderer)
-
-      // 递归激活子节点
-      if (!props['v-html'] && children && children.length > 0) {
-        const childNodeIndex = { text: 0, comment: 0, element: 0 }
+      case NodeKind.FRAGMENT: {
+        // 创建 DocumentFragment 并设置锚点
+        const fragment = document.createDocumentFragment() as HostFragmentElement
+        const reuseEl = reuse.el as HostElements[]
+        fragment.$startAnchor = reuseEl[0] as unknown as HostCommentElement
+        fragment.$endAnchor = reuseEl[reuseEl.length - 1] as unknown as HostCommentElement
+        fragment.$vnode = node as FragmentNode
+        // 设置节点元素和状态
+        node.el = fragment
+        // 递归激活子节点
         for (let i = 0; i < children.length; i++) {
-          await activateNode(children[i], el, childNodeIndex)
+          nextIndex = await hydrateNode(children[i], container, nodeAsyncMap, nextIndex)
         }
+        break
       }
-
-      break
+      default:
+        throw new Error(`[Hydration] Unknown node kind: ${node.kind}`)
     }
-
-    case NodeKind.VOID_ELEMENT: {
-      const { type: tagName, props } = vnode as any
-
-      // 按顺序匹配 DOM 元素
-      const elements = Array.from(container.children)
-      const el = elements[nodeIndex.element] || null
-      nodeIndex.element++
-
-      if (!el) {
-        console.warn(`[Hydration] Cannot find void element for <${tagName}>`)
-        return
-      }
-
-      // 设置节点元素和状态
-      vnode.el = el as any
-      vnode.state = NodeState.Rendered
-
-      // 绑定事件监听器
-      bindEventListeners(el, props, renderer)
-
-      break
-    }
-
-    case NodeKind.TEXT: {
-      const { props } = vnode as any
-      const expectedText = props.text
-
-      // 按顺序查找文本节点
-      let textNode: Node | null = null
-      let currentIndex = 0
-
-      for (const child of Array.from(container.childNodes)) {
-        if (child.nodeType === Node.TEXT_NODE) {
-          if (currentIndex === nodeIndex.text) {
-            textNode = child
-            break
-          }
-          currentIndex++
-        }
-      }
-
-      nodeIndex.text++
-
-      if (!textNode) {
-        console.warn(`[Hydration] Cannot find text node for "${expectedText}"`)
-        return
-      }
-
-      // 设置节点元素和状态
-      vnode.el = textNode as any
-      vnode.state = NodeState.Rendered
-
-      break
-    }
-
-    case NodeKind.COMMENT: {
-      const { props } = vnode as any
-      const expectedComment = props.text
-
-      // 按顺序查找注释节点（跳过 Fragment 锚点）
-      let commentNode: Node | null = null
-      let currentIndex = 0
-
-      for (const child of Array.from(container.childNodes)) {
-        if (child.nodeType === Node.COMMENT_NODE) {
-          const text = child.textContent || ''
-          // 跳过 Fragment 锚点注释
-          if (text === 'Fragment start' || text === 'Fragment end') {
-            continue
-          }
-          if (currentIndex === nodeIndex.comment) {
-            commentNode = child
-            break
-          }
-          currentIndex++
-        }
-      }
-
-      nodeIndex.comment++
-
-      if (!commentNode) {
-        console.warn(`[Hydration] Cannot find comment node for "<!--${expectedComment}-->"`)
-        return
-      }
-
-      // 设置节点元素和状态
-      vnode.el = commentNode as any
-      vnode.state = NodeState.Rendered
-
-      break
-    }
-
-    case NodeKind.FRAGMENT: {
-      const { children } = vnode as any
-
-      // 查找 Fragment 锚点注释
-      let startAnchor: Comment | null = null
-      let endAnchor: Comment | null = null
-
-      for (const child of Array.from(container.childNodes)) {
-        if (child.nodeType === Node.COMMENT_NODE) {
-          const text = child.textContent || ''
-          if (text === 'Fragment start' && !startAnchor) {
-            startAnchor = child as Comment
-          } else if (text === 'Fragment end' && startAnchor) {
-            endAnchor = child as Comment
-            break
-          }
-        }
-      }
-
-      if (!startAnchor || !endAnchor) {
-        console.warn('[Hydration] Cannot find Fragment anchors')
-        return
-      }
-
-      // 创建 DocumentFragment 并设置锚点
-      const fragment = document.createDocumentFragment() as HostFragmentElement
-      fragment.$startAnchor = startAnchor
-      fragment.$endAnchor = endAnchor
-      fragment.$vnode = vnode as any
-
-      // 设置节点元素和状态
-      vnode.el = fragment as any
-      vnode.state = NodeState.Rendered
-
-      // 递归激活子节点（在 startAnchor 和 endAnchor 之间）
-      const fragmentContainer = startAnchor.parentElement!
-      const childNodeIndex = { text: 0, comment: 0, element: 0 }
-
-      for (let i = 0; i < children.length; i++) {
-        await activateNode(children[i], fragmentContainer, childNodeIndex)
-      }
-
-      break
-    }
-
-    case NodeKind.STATELESS_WIDGET:
-    case NodeKind.STATEFUL_WIDGET: {
-      // 递归激活 Widget 的 child
-      if (isWidgetNode(vnode)) {
-        const child = vnode.instance?.child
-        if (child) {
-          await activateNode(child, container, nodeIndex)
-          // 将 child 的 el 赋值给 Widget 节点
-          vnode.el = child.el
-          vnode.state = NodeState.Rendered
-        }
-      }
-      break
-    }
-
-    default:
-      console.warn(`[Hydration] Unknown node kind: ${vnode.kind}`)
-  }
-}
-
-/**
- * 绑定事件监听器
- *
- * 仅处理事件属性（以 on 开头的函数属性），不修改静态属性。
- *
- * @param el - DOM 元素
- * @param props - 虚拟节点属性
- * @param renderer - DOM 渲染器
- */
-function bindEventListeners(el: Element, props: Record<string, any>, renderer: DomRenderer): void {
-  for (const key in props) {
-    const value = props[key]
-    // 只绑定事件监听器
-    if (typeof value === 'function' && key.startsWith('on')) {
-      renderer.setAttribute(el as any, key, value)
-    }
+    node.state = NodeState.Rendered
+    return nextIndex
   }
 }

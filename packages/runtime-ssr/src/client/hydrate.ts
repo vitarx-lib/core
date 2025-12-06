@@ -4,7 +4,7 @@ import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
 import type { SSRApp } from '../app/index.js'
 import { SSRRenderDriver } from '../server/index.js'
 import type { SSRContext } from '../shared/context.js'
-import { activateNode } from './activate.js'
+import { hydrateNode } from './activate.js'
 
 /**
  * 全局状态注入类型（由服务端注入到客户端的状态）
@@ -23,15 +23,14 @@ declare global {
  * 完整执行流程：
  * 1. 容器解析 - 解析 container 为 DOM 元素
  * 2. 状态恢复 - 合并 window.__VITARX_STATE__ 到 context
- * 3. 上下文设置 - 设置 context.$isHydrating = true, $asyncTasks = []
- * 4. 注册水合驱动 - setDefaultDriver(new HydrateDriver())
+ * 3. 上下文设置 - 设置 context.$isHydrating = true, $nodeAsyncMap
+ * 4. 注册水合驱动 - setDefaultDriver(new SSRRenderDriver())
  * 5. 预渲染 - 在 runInRenderContext 中调用 renderNode(rootNode)
- * 6. 等待异步 - 循环等待 $asyncTasks 中所有 Promise 完成
- * 7. 渐进式激活 - await activateNode(rootNode, container, [])
- * 8. 移除水合驱动 - setDefaultDriver(null)
- * 9. 注册默认驱动 - setupDefaultDrivers()
- * 10. 挂载 - mountNode(rootNode, container)
- * 11. 清理标识 - 清除 $isHydrating, $asyncTasks
+ * 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
+ * 7. 移除水合驱动 - setDefaultDriver(null)
+ * 8. 注册默认驱动 - registerDefaultDrivers()
+ * 9. 挂载 - mountNode(rootNode, container)
+ * 10. 清理标识 - 清除 $isHydrating, $nodeAsyncMap
  *
  * @param app - SSR 应用实例
  * @param container - 挂载容器，可以是 DOM 元素或选择器字符串
@@ -77,58 +76,23 @@ export async function hydrate(
       // 5. 预渲染 - 触发 onRender，收集异步任务到 WeakMap
       renderNode(rootNode)
 
-      // 6. 等待所有异步任务完成（遍历节点树）
-      await waitAllAsyncTasks(rootNode, nodeAsyncMap)
+      // 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
+      await hydrateNode(rootNode, containerEl, nodeAsyncMap)
 
-      // 7. 渐进式激活 - 逐节点激活并匹配 DOM（使用顺序匹配）
-      await activateNode(rootNode, containerEl)
-
-      // 8. 移除水合驱动
+      // 7. 移除水合驱动
       setDefaultDriver(null)
 
-      // 9. 注册默认驱动
+      // 8. 注册默认驱动
       registerDefaultDrivers()
-      // 11. 清理标识
+      // 9. 清理标识
       delete context.$isHydrating
       delete context.$nodeAsyncMap
-      delete context.$hydrateContainer
     }, context)
     // 10. 挂载 - 正常挂载，驱动器会检测 el 已存在
     mountNode(rootNode, containerEl as HostParentElement)
   } catch (error) {
-    // 异常降级 - 清除水合标识，回退到正常渲染
-    console.error('[hydrate] Hydration failed, falling back to normal rendering:', error)
     delete context.$isHydrating
     delete context.$nodeAsyncMap
-    delete context.$hydrateContainer
     throw error
-  }
-}
-
-/**
- * 等待所有异步任务完成
- * 遍历节点树，检查每个节点是否有异步任务，如果有则等待
- */
-async function waitAllAsyncTasks(
-  node: VNode,
-  nodeAsyncMap: WeakMap<VNode, Promise<unknown>>
-): Promise<void> {
-  // 检查当前节点是否有异步任务
-  const asyncTask = nodeAsyncMap.get(node)
-  if (asyncTask) {
-    await asyncTask
-    nodeAsyncMap.delete(node)
-  }
-
-  // 遍历子节点
-  if ('children' in node && Array.isArray((node as any).children)) {
-    for (const child of (node as any).children) {
-      await waitAllAsyncTasks(child, nodeAsyncMap)
-    }
-  }
-
-  // 处理 Widget 的 child
-  if ('instance' in node && (node as any).instance?.child) {
-    await waitAllAsyncTasks((node as any).instance.child, nodeAsyncMap)
   }
 }
