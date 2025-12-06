@@ -1,8 +1,8 @@
 // 导出驱动
-export { SSRRenderDriver } from './drivers/index.js'
+export { SSRRenderDriver } from './SSRRenderDriver.js'
 
 // 导出字符串渲染
-export { renderToString } from './string/index.js'
+export { renderToString } from './renderToString.js'
 
 // 导出流式渲染
 export {
@@ -11,4 +11,4 @@ export {
   renderToNodeStream,
   pipeToWritable,
   type StreamRenderOptions
-} from './stream/index.js'
+} from './renderToStream.js'
