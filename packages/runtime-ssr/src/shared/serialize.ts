@@ -23,7 +23,11 @@ export function applyShowDirective(node: VNode, props: Record<string, any>): voi
       const method = obj.getSSRProps
       if (typeof method === 'function') {
         const ssrProps = method({ value, oldValue: value, arg }, node)
-        if (ssrProps) deepMergeObject(props, ssrProps)
+        if (ssrProps) {
+          const mergedProps = deepMergeObject(props, ssrProps)
+          // 将合并后的属性写入到原props对象中，而不是替换整个props引用
+          Object.assign(props, mergedProps)
+        }
       }
     }
   }
