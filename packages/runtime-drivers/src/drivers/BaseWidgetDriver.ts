@@ -86,6 +86,7 @@ export abstract class BaseWidgetDriver<T extends WidgetTypes> implements NodeDri
 
   /** @inheritDoc */
   unmount(node: WidgetNode<T>): void {
+    if (!node.instance) return
     const isElement = isElementNode(node.instance!.child)
     const el = node.el! as HostElements
     if (isElement) invokeDirHook(node, 'beforeUnmount')
