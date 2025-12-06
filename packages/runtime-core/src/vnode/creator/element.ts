@@ -66,6 +66,7 @@ export const createRegularElementVNode = <T extends RegularElementNodeType>(
         node.devInfo?.source
       )
     }
+    node.children = []
   } else {
     // 初始化子节点，处理可能的嵌套结构和响应式值
     node.children = initChildren(
