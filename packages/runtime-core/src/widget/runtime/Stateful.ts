@@ -25,35 +25,6 @@ import { Widget } from '../base/index.js'
 import { WidgetRuntime } from './WidgetRuntime.js'
 
 /**
- * 有状态组件运行时管理器配置选项
- */
-export interface StatefulManagerOptions {
-  /**
-   * 是否启用自动更新
-   *
-   * @default true
-   * - true: 自动监听依赖变化并更新视图
-   * - false: 需手动调用 update 方法更新视图
-   */
-  enableAutoUpdate?: boolean
-  /**
-   * 是否启用调度更新
-   *
-   * @default true
-   * - true: 使用 Scheduler.queueJob 进行调度，避免重复渲染
-   * - false: 立即同步更新，可能导致性能问题
-   */
-  enableScheduler?: boolean
-  /**
-   * 是否启用生命周期钩子
-   *
-   * @default true
-   * - true: 启用生命周期钩子，如 onMounted、onUpdated 等
-   * - false: 禁用生命周期钩子
-   */
-  enableLifecycle?: boolean
-}
-/**
  * 有状态组件运行时管理器
  *
  * 负责管理有状态组件的生命周期、依赖追踪、视图更新等功能
@@ -67,19 +38,13 @@ export class StatefulWidgetRuntime<
   public deps: DependencyMap | null = null
   /** 是否在非活跃期间被更新 */
   public dirty: boolean = false
-  /** 管理器配置选项 */
-  public options: StatefulManagerOptions = {
-    enableAutoUpdate: true,
-    enableScheduler: true,
-    enableLifecycle: true
-  }
   /** 组件实例 */
   public readonly instance: WidgetInstanceType<T>
   /** 是否有待处理的更新任务 */
   private hasPendingUpdate: boolean = false
   /** 视图依赖订阅器，用于追踪渲染依赖 */
   private renderDepsSubscriber: Subscriber | null = null
-  constructor(node: StatefulWidgetNode<T>, options?: StatefulManagerOptions) {
+  constructor(node: StatefulWidgetNode<T>) {
     super(node)
     this.scope = new EffectScope({
       name: this.name,
@@ -87,7 +52,6 @@ export class StatefulWidgetRuntime<
         this.reportError(error, `effect.${source}`)
       }
     })
-    this.options = Object.assign(this.options, options)
     // @ts-ignore
     this.props = proxyWidgetProps(this.vnode.props, this.type['defaultProps'])
     this.instance = this.createWidgetInstance()
@@ -172,7 +136,6 @@ export class StatefulWidgetRuntime<
           ...(args as unknown as [unknown, ErrorSource, Widget])
         ) as LifecycleHookReturnType<T>
       }
-      if (!this.options.enableLifecycle && hookName !== LifecycleHooks.render) return void 0
       const hookMethod = this.instance[hookName] as unknown as (
         ...args: LifecycleHookParameter<T>
       ) => any
@@ -193,15 +156,21 @@ export class StatefulWidgetRuntime<
    * @returns Promise，在更新完成后 resolve
    */
   public override update = (): void => {
-    // ---------- 异步更新 ----------
+    if (this.state === NodeState.Unmounted) {
+      throw new Error('Cannot update unmounted widget')
+    }
+    if (this.state === NodeState.Created) {
+      if (this.cachedChildVNode) this.cachedChildVNode = this.build()
+      return
+    }
+    if (this.state === NodeState.Deactivated) {
+      this.dirty = true
+      return
+    }
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
     this.invokeHook(LifecycleHooks.beforeUpdate)
-    if (this.options.enableScheduler) {
-      Scheduler.queueJob(this.finishUpdate)
-    } else {
-      this.finishUpdate()
-    }
+    Scheduler.queueJob(this.finishUpdate)
   }
   /**
    * 销毁实例资源
@@ -222,20 +191,29 @@ export class StatefulWidgetRuntime<
    * 在 update 内部调用的渲染执行函数
    */
   private finishUpdate = (): void => {
-    this.hasPendingUpdate = false
-    if (this.state === NodeState.Unmounted) {
-      return
-    }
-    if (this.state === NodeState.Deactivated) {
-      this.dirty = true
-      return
-    }
     try {
-      this.cachedChildVNode = this.patch()
+      this.hasPendingUpdate = false
+      if (this.state === NodeState.Unmounted) return
+      if (this.state === NodeState.Created) {
+        if (this.cachedChildVNode) this.cachedChildVNode = this.build()
+        return
+      }
+      if (this.state === NodeState.Deactivated) {
+        this.dirty = true
+        return
+      }
+      this.dirty = false
+      const newChild = this.build()
+      if (typeof this.instance.$patchUpdate === 'function') {
+        // 如果实例存在自定义的更新方法，则调用该方法进行更新
+        this.cachedChildVNode = this.instance.$patchUpdate(this.child, newChild)
+      } else {
+        // 默认情况下，使用patchUpdate方法进行节点更新
+        this.cachedChildVNode = patchUpdate(this.child, newChild)
+      }
+      this.invokeHook(LifecycleHooks.updated)
     } catch (err) {
       this.reportError(err, 'update')
-    } finally {
-      this.invokeHook(LifecycleHooks.updated)
     }
   }
   /**
@@ -246,10 +224,6 @@ export class StatefulWidgetRuntime<
    * @returns 构建的虚拟节点
    */
   public override build(): VNode {
-    // 禁用自动更新时，直接构建不追踪依赖
-    if (!this.options.enableAutoUpdate) {
-      return this.buildChildVNode()
-    }
     // 清理旧的依赖订阅
     if (this.renderDepsSubscriber) {
       this.renderDepsSubscriber.dispose()
@@ -302,26 +276,6 @@ export class StatefulWidgetRuntime<
     }
     linkParentNode(vnode, this.vnode)
     return vnode
-  }
-  /**
-   * 补丁方法，用于处理节点的更新和重建
-   *
-   * @private
-   * @returns {VNode} 返回处理后的虚拟节点
-   */
-  private patch(): VNode {
-    this.dirty = false
-    const newChild = this.build()
-    if (this.state === NodeState.Created) {
-      return newChild
-    }
-    if (typeof this.instance.$patchUpdate === 'function') {
-      // 如果实例存在自定义的更新方法，则调用该方法进行更新
-      return this.instance.$patchUpdate(this.child, newChild)
-    } else {
-      // 默认情况下，使用patchUpdate方法进行节点更新
-      return patchUpdate(this.child, newChild)
-    }
   }
   /**
    * 创建组件实例
