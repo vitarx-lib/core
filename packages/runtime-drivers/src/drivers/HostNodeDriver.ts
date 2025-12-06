@@ -42,7 +42,9 @@ export abstract class HostNodeDriver<T extends HostNodeType> implements NodeDriv
    * @inheritDoc
    */
   mount(node: HostNode<T>, target?: HostNodeElements, opsType?: OpsType): void {
-    if (target) this.dom[opsType || 'appendChild'](node.el!, target as HostParentElement)
+    if (node.el && target && !this.dom.getParentElement(node.el)) {
+      this.dom[opsType || 'appendChild'](node.el!, target as HostParentElement)
+    }
     this.mountChildren?.(node)
     node.state = NodeState.Activated
   }
