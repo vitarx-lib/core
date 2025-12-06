@@ -2,7 +2,7 @@ import type { HostParentElement, VNode } from '@vitarx/runtime-core'
 import { mountNode, renderNode, runInRenderContext, setDefaultDriver } from '@vitarx/runtime-core'
 import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
 import type { SSRApp } from '../app/index.js'
-import { SSRRenderDriver } from '../server/index.js'
+import { SSRRenderDriver } from '../server/SSRRenderDriver.js'
 import type { SSRContext } from '../shared/context.js'
 import { hydrateNode } from './activate.js'
 
