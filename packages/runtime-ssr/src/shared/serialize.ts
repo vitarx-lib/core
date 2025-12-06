@@ -1,37 +1,47 @@
 import {
+  ELEMENT_NODE_KINDS,
   NodeKind,
   type RegularElementNode,
-  StyleUtils,
   type VNode,
   type VoidElementNode,
-  type WidgetNode,
-  withDirectives
+  WIDGET_NODE_KINDS,
+  type WidgetNode
 } from '@vitarx/runtime-core'
+import { deepMergeObject } from '@vitarx/utils/src/index.js'
 import { escapeHTML, tagClose, tagOpen, tagSelfClosing } from './html.js'
 import type { Sink } from './sink.js'
 
 /**
- * 应用 v-show 指令样式到 props
+ * 应用指令样式到 props
  * @param node - 虚拟节点
  * @param props - 节点属性对象
  */
 export function applyShowDirective(node: VNode, props: Record<string, any>): void {
-  if (node.directives?.get('show')) {
-    const show = node.directives.get('show')![1]
-    if (!show) {
-      props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
+  if (node.directives) {
+    for (const [_name, directive] of node.directives.entries()) {
+      const [obj, value, arg] = directive
+      const method = obj.getSSRProps
+      if (typeof method === 'function') {
+        const ssrProps = method({ value, oldValue: value, arg }, node)
+        if (ssrProps) deepMergeObject(props, ssrProps)
+      }
     }
   }
 }
 
 /**
- * 将父组件的 show 指令应用到子节点
+ * 将父组件的指令应用到子节点
  * @param parentNode - 父节点
  * @param childNode - 子节点
  */
 export function inheritShowDirective(parentNode: VNode, childNode: VNode): void {
-  if (parentNode.directives?.get('show')) {
-    withDirectives(childNode, [parentNode.directives.get('show')!])
+  if (!parentNode.directives) return
+  if (ELEMENT_NODE_KINDS.has(childNode.kind) || WIDGET_NODE_KINDS.has(childNode.kind)) {
+    childNode.directives ??= new Map()
+    const childDirectives = childNode.directives
+    for (const [name, directive] of parentNode.directives.entries()) {
+      childDirectives.set(name, directive)
+    }
   }
 }
 
