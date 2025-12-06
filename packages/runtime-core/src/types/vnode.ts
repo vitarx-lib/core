@@ -70,13 +70,13 @@ export type NonElementNodeType = TextNodeType | CommentNodeType
 export type ContainerNodeType = RegularElementNodeType | FragmentNodeType
 export type FragmentNodeType = typeof FRAGMENT_NODE_TYPE
 export type ElementNodeType = RegularElementNodeType | VoidElementNodeType
-/**
- * 运行时元素类型定义
- *
- * `HostNodeElement` 表示运行时元素类型，
- * 它是 `HostNodeNames` 的子集，表示运行时元素类型。
- */
 export type HostNodeType = Exclude<NodeType, WidgetNodeType>
+/**
+ * 节点类型枚举到节点类型构造函数的映射
+ *
+ * 这个接口定义了NodeKind枚举值与对应的节点类型构造函数之间的映射关系。
+ * 它允许在运行时根据节点类型枚举值动态获取对应的节点类型构造函数。
+ */
 export interface NodeKindToNodeType {
   [NodeKind.REGULAR_ELEMENT]: RegularElementNodeType
   [NodeKind.VOID_ELEMENT]: VoidElementNodeType
@@ -86,6 +86,23 @@ export interface NodeKindToNodeType {
   [NodeKind.STATELESS_WIDGET]: StatelessWidgetNodeType
   [NodeKind.STATEFUL_WIDGET]: StatefulWidgetNodeType
 }
+
+/**
+ * 节点类型枚举到节点实例类型的映射
+ *
+ * 这个接口定义了NodeKind枚举值与对应的节点实例类型之间的映射关系。
+ * 它允许在运行时根据节点类型枚举值动态获取对应的节点实例类型。
+ */
+export interface NodeKindToNode {
+  [NodeKind.REGULAR_ELEMENT]: RegularElementNode
+  [NodeKind.VOID_ELEMENT]: VoidElementNode
+  [NodeKind.FRAGMENT]: FragmentNode
+  [NodeKind.TEXT]: TextNode
+  [NodeKind.COMMENT]: CommentNode
+  [NodeKind.STATELESS_WIDGET]: StatelessWidgetNode
+  [NodeKind.STATEFUL_WIDGET]: StatefulWidgetNode
+}
+
 /**
  * 虚拟节点类型定义
  */
