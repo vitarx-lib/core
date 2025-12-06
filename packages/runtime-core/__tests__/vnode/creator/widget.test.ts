@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createWidgetVNode, NodeKind, Widget } from '../../../src/index.js'
-import { h } from '../../../src/vnode/core/create.js'
+import { createWidgetVNode, h, NodeKind, Widget } from '../../../src/index.js'
 
 describe('vnode/creator/widget - createWidgetVNode', () => {
   describe('StatefulWidget 创建', () => {

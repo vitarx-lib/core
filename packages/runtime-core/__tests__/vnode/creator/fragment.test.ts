@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createFragmentVNode, FRAGMENT_NODE_TYPE, NodeKind } from '../../../src/index.js'
-import { h } from '../../../src/vnode/core/create.js'
+import { createFragmentVNode, FRAGMENT_NODE_TYPE, h, NodeKind } from '../../../src/index.js'
 
 describe('vnode/creator/fragment - createFragmentVNode', () => {
   describe('基础 Fragment 创建', () => {

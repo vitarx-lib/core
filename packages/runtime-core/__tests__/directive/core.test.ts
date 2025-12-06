@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { defineDirective, resolveDirective, withDirectives } from '../../src/index.js'
-import { h } from '../../src/vnode/core/create.js'
+import { defineDirective, h, resolveDirective, withDirectives } from '../../src/index.js'
 
 describe('directive/core', () => {
   describe('defineDirective', () => {
