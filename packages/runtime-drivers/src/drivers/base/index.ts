@@ -1,4 +1,3 @@
-export * from './BaseNodeDriver.js'
 export * from './BaseHostNodeDriver.js'
 export * from './BaseElementDriver.js'
 export * from './BaseTextDriver.js'
