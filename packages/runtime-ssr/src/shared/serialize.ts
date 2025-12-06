@@ -1,9 +1,11 @@
 import {
   NodeKind,
   type RegularElementNode,
+  StyleUtils,
   type VNode,
   type VoidElementNode,
-  type WidgetNode
+  type WidgetNode,
+  withDirectives
 } from '@vitarx/runtime-core'
 import { escapeHTML, tagClose, tagOpen, tagSelfClosing } from './html.js'
 import type { Sink } from './sink.js'
@@ -15,6 +17,11 @@ import type { Sink } from './sink.js'
  */
 function serializeRegular(node: RegularElementNode, sink: Sink) {
   const { type: tagName, props, children } = node
+
+  if (node.directives?.get('show')) {
+    const show = node.directives.get('show')![1]
+    if (!show) props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
+  }
 
   sink.push(tagOpen(tagName, props))
 
@@ -36,6 +43,10 @@ function serializeRegular(node: RegularElementNode, sink: Sink) {
  */
 function serializeVoid(node: VoidElementNode, sink: Sink) {
   const { type: tagName, props } = node
+  if (node.directives?.get('show')) {
+    const show = node.directives.get('show')![1]
+    if (!show) props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
+  }
   sink.push(tagSelfClosing(tagName, props))
 }
 
@@ -69,8 +80,12 @@ export function serializeVNodeToSink(node: VNode, sink: Sink): void {
     }
     case NodeKind.STATELESS_WIDGET:
     case NodeKind.STATEFUL_WIDGET: {
-      const child = (node as WidgetNode).instance?.child
-      if (child) serializeVNodeToSink(child, sink)
+      const child = (node as WidgetNode).instance?.child!
+      // 父组件的 show 指令会应用到子组件上
+      if (node.directives?.get('show') && !child.directives?.get('show')) {
+        withDirectives(child, [node.directives?.get('show')!])
+      }
+      serializeVNodeToSink(child, sink)
       break
     }
     default:

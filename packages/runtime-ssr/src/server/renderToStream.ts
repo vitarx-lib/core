@@ -3,8 +3,10 @@ import {
   renderNode,
   runInRenderContext,
   setDefaultDriver,
+  StyleUtils,
   type VNode,
-  type WidgetNode
+  type WidgetNode,
+  withDirectives
 } from '@vitarx/runtime-core'
 import { SSRApp } from '../app/index.js'
 import {
@@ -64,6 +66,10 @@ async function streamSerializeNode(
   switch (node.kind) {
     case NodeKind.REGULAR_ELEMENT: {
       const { type: tagName, props, children } = node as any
+      if (node.directives?.get('show')) {
+        const show = node.directives.get('show')![1]
+        if (!show) props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
+      }
       sink.push(tagOpen(tagName, props))
 
       if (props['v-html']) {
@@ -79,6 +85,10 @@ async function streamSerializeNode(
     }
     case NodeKind.VOID_ELEMENT: {
       const { type: tagName, props } = node as any
+      if (node.directives?.get('show')) {
+        const show = node.directives.get('show')![1]
+        if (!show) props.style = StyleUtils.mergeCssStyle(props.style || {}, { display: 'none' })
+      }
       sink.push(tagSelfClosing(tagName, props))
       break
     }
@@ -106,10 +116,12 @@ async function streamSerializeNode(
         nodeAsyncMap.delete(node)
       }
       // 异步完成后继续序列化 child
-      const child = (node as WidgetNode).instance?.child
-      if (child) {
-        await streamSerializeNode(child, sink, nodeAsyncMap)
+      const child = (node as WidgetNode).instance?.child!
+      // 父组件的 show 指令会应用到子组件上
+      if (node.directives?.get('show') && !child.directives?.get('show')) {
+        withDirectives(child, [node.directives?.get('show')!])
       }
+      await streamSerializeNode(child, sink, nodeAsyncMap)
       break
     }
   }
