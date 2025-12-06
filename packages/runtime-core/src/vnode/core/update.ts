@@ -2,12 +2,7 @@ import { NodeState } from '../../constants/index.js'
 import { diffDirectives, type DiffDirectivesOptions } from '../../directive/index.js'
 import { getRenderer } from '../../renderer/index.js'
 import type { ContainerNode, ElementNode, VNode, WidgetNode } from '../../types/index.js'
-import {
-  getNodeDomOpsTarget,
-  isContainerNode,
-  isElementNode,
-  isWidgetNode
-} from '../../utils/index.js'
+import { getDomTarget, isContainerNode, isElementNode, isWidgetNode } from '../../utils/index.js'
 import { mountNode, renderNode, unmountNode, updateNodeProps } from './driver.js'
 
 export interface ChildNodeUpdateHooks {
@@ -132,23 +127,14 @@ export class PatchUpdate {
    * @throws {Error} 当旧节点未挂载且无法替换时抛出错误
    */
   static replace(currentVNode: VNode, nextVNode: VNode): VNode {
-    const dom = getRenderer()
-    const oldElement = getNodeDomOpsTarget(currentVNode)
-    // 如果旧节点有父元素，则创建锚点进行替换
-    if (dom.getParentElement(oldElement)) {
-      if (currentVNode.state === NodeState.Rendered) {
-        dom.insertBefore(renderNode(nextVNode), oldElement)
-      } else {
-        mountNode(nextVNode, oldElement, 'insertBefore')
-      }
-      unmountNode(currentVNode)
-      return nextVNode
-    } else if (currentVNode.state === NodeState.Rendered) {
+    if (currentVNode.state === NodeState.Rendered) {
       renderNode(nextVNode)
-      unmountNode(currentVNode)
-      return nextVNode
+    } else if (currentVNode.state === NodeState.Activated) {
+      const oldElement = getDomTarget(currentVNode)
+      mountNode(nextVNode, oldElement, 'insertBefore')
     }
-    throw new Error('NodeUpdate.replace(): the old node is not mounted and cannot be replaced')
+    unmountNode(currentVNode)
+    return nextVNode
   }
   /**
    * 更新容器节点的子节点
@@ -229,8 +215,8 @@ export class PatchUpdate {
         if (seqIndex >= 0 && seq[seqIndex] === i) {
           seqIndex--
         } else {
-          if (anchor) dom.insertBefore(getNodeDomOpsTarget(reuseChild), anchor)
-          else dom.appendChild(parentEl, getNodeDomOpsTarget(reuseChild))
+          if (anchor) dom.insertBefore(getDomTarget(reuseChild), anchor)
+          else dom.appendChild(parentEl, getDomTarget(reuseChild))
         }
         continue
       }
