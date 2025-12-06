@@ -337,7 +337,7 @@ function App() {
   )
 }
 
-createApp(App).mount('#app')
+createApp(SSRApp).mount('#app')
 ```
 
 ### 组件示例
@@ -388,7 +388,7 @@ class TodoList extends Widget {
     return (
       <div>
         <h2>待办事项</h2>
-        <input 
+        <input
           value={this.newTodo.value}
           onInput={(e) => this.newTodo.value = (e.target as HTMLInputElement).value}
           placeholder="添加新待办"
@@ -419,7 +419,7 @@ function App() {
   )
 }
 
-createApp(App).mount('#app')
+createApp(SSRApp).mount('#app')
 ```
 
 ### 响应式示例
@@ -430,7 +430,7 @@ import { createApp, ref, reactive, computed, watch } from 'vitarx'
 function App() {
   // 基本类型响应式
   const count = ref(0)
-  
+
   // 对象响应式
   const user = reactive({
     name: 'John',
@@ -440,18 +440,18 @@ function App() {
       country: 'USA'
     }
   })
-  
+
   // 计算属性
   const doubleCount = computed(() => count.value * 2)
   const fullAddress = computed(() => {
     return `${user.address.city}, ${user.address.country}`
   })
-  
+
   // 监听
   watch(count, (newVal, oldVal) => {
     console.log(`count 从 ${oldVal} 变为 ${newVal}`)
   })
-  
+
   // 监听对象属性变化
   watch(
     () => user.age,
@@ -459,7 +459,7 @@ function App() {
       console.log(`年龄变为 ${newAge}`)
     }
   )
-  
+
   // 监听多个源
   watch(
     [count, user],
@@ -471,14 +471,14 @@ function App() {
   return (
     <div>
       <h1>响应式示例</h1>
-      
+
       <div>
         <h2>基本类型响应式</h2>
         <p>Count: {count.value}</p>
         <p>Double Count: {doubleCount.value}</p>
         <button onClick={() => count.value++}>增加</button>
       </div>
-      
+
       <div>
         <h2>对象响应式</h2>
         <p>Name: {user.name}</p>
@@ -491,7 +491,7 @@ function App() {
   )
 }
 
-createApp(App).mount('#app')
+createApp(SSRApp).mount('#app')
 ```
 
 ### 内置组件示例
@@ -509,13 +509,13 @@ function App() {
   return (
     <div>
       <h1>内置组件示例</h1>
-      
+
       <div>
         <button onClick={() => activeTab.value = 'home'}>首页</button>
         <button onClick={() => activeTab.value = 'profile'}>个人资料</button>
         <button onClick={() => activeTab.value = 'settings'}>设置</button>
       </div>
-      
+
       <KeepAlive>
         {activeTab.value === 'home' && (
           <div>
@@ -524,14 +524,14 @@ function App() {
             <button onClick={() => count.value++}>增加</button>
           </div>
         )}
-        
+
         {activeTab.value === 'profile' && (
           <div>
             <h2>个人资料</h2>
             <p>用户名: John Doe</p>
           </div>
         )}
-        
+
         {activeTab.value === 'settings' && (
           <Suspense fallback={<div>加载中...</div>}>
             <HeavyComponent />
@@ -542,7 +542,7 @@ function App() {
   )
 }
 
-createApp(App).mount('#app')
+createApp(SSRApp).mount('#app')
 ```
 
 ### 依赖注入示例
@@ -553,7 +553,7 @@ import { createApp, provide, inject, ref } from 'vitarx'
 // 提供主题配置
 function App() {
   const theme = ref({ mode: 'dark', color: '#3498db' })
-  
+
   // 提供全局数据
   provide('theme', theme)
   provide('apiBaseUrl', 'https://api.example.com')
@@ -570,12 +570,12 @@ function App() {
 // 注入主题配置
 function ThemeToggle() {
   const theme = inject('theme')
-  
+
   const toggleMode = () => {
     theme.value.mode = theme.value.mode === 'dark' ? 'light' : 'dark'
     theme.value.color = theme.value.color === '#3498db' ? '#e74c3c' : '#3498db'
   }
-  
+
   return (
     <div>
       <p>当前模式: {theme.value.mode}</p>
@@ -588,7 +588,7 @@ function ThemeToggle() {
 function UserProfile() {
   const apiBaseUrl = inject('apiBaseUrl')
   const user = ref({ name: 'John', email: 'john@example.com' })
-  
+
   return (
     <div>
       <h2>用户资料</h2>
@@ -599,7 +599,7 @@ function UserProfile() {
   )
 }
 
-createApp(App).mount('#app')
+createApp(SSRApp).mount('#app')
 ```
 
 ## 许可证

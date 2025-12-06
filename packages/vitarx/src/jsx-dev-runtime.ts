@@ -1,10 +1,10 @@
 import {
-  type AllowCreatedNodeType,
-  type CodeSourceInfo,
+  type CreatableType,
   setNodeDevInfo,
+  type SourceLocation,
   type UniqueKey,
   type VNodeInputProps,
-  type VNodeInstanceType
+  type VNodeOf
 } from '@vitarx/runtime-core'
 import type { AnyRecord } from '@vitarx/utils'
 import { jsx } from './jsx-runtime.js'
@@ -21,14 +21,14 @@ export { Fragment } from './jsx-runtime.js'
  * @param source - 源码位置信息
  * @param self - 组件实例
  */
-export function jsxDEV<T extends AllowCreatedNodeType>(
+export function jsxDEV<T extends CreatableType>(
   type: T,
   props: VNodeInputProps<T> | null,
   key: UniqueKey | undefined,
   isStatic: boolean,
-  source: CodeSourceInfo,
+  source: SourceLocation,
   self: any
-): VNodeInstanceType<T> {
+): VNodeOf<T> {
   if (typeof type === 'function' && typeof window !== 'undefined') {
     // 获取最新模块
     const newModule = (window as any).__$VITARX_HMR$__?.replaceNewModule?.(type)

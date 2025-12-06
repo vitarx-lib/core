@@ -37,12 +37,16 @@
       "types": "./dist/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx-dev-runtime.js"
     },
-    "./unpkg": "./dist/index.iife.js",
-    "./jsdelivr": "./dist/index.iife.js"
+    "./ssr": {
+      "types": "./dist/ssr.d.ts",
+      "default": "./dist/ssr.js"
+    }
   },
   "dependencies": {
     "@vitarx/utils": "workspace:^",
     "@vitarx/responsive": "workspace:^",
-    "@vitarx/runtime-core": "workspace:^"
+    "@vitarx/runtime-core": "workspace:^",
+    "@vitarx/runtime-dom": "workspace:^",
+    "@vitarx/runtime-ssr": "workspace:^"
   }
 }
