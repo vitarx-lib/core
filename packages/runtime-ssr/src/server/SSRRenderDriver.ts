@@ -17,22 +17,19 @@ import { isPromise } from '@vitarx/utils'
 import { useSSRContext } from '../shared/index.js'
 
 /**
- * SSRRenderDriver 是一个用于服务端渲染(SSR)的节点驱动器实现类。
- * 该类负责在服务端环境中渲染虚拟节点树，并处理异步任务队列。
+ * SSRRenderDriver 是一个用于服务端渲染(SSR)和客户端水合的节点驱动器实现类。
+ * 该类负责渲染虚拟节点树并处理异步任务队列。
  *
  * 支持两种渲染模式：
  * - `sync`: 同步渲染，等待所有异步任务完成后一次性输出
  * - `stream`: 流式阻塞渲染，遇到异步时阻塞等待完成后继续输出
  *
  * 异步组件的解析逻辑已统一在 onRender 钩子中处理，
- * SSR 只需通过 invokeHook(render) 收集返回的 Promise。
+ * 只需通过 invokeHook(render) 收集返回的 Promise。
  *
- * 使用示例：
- * ```typescript
- * const driver = new SSRRenderDriver<NodeType>();
- * const vnode = createVNode(...);
- * const result = driver.render(vnode);
- * ```
+ * 使用场景：
+ * - 服务端：renderToString / renderToStream
+ * - 客户端：水合阶段预渲染
  *
  * 使用限制：
  * - 不支持激活/停用节点操作
@@ -88,18 +85,18 @@ export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
     return node as ElementOf<T>
   }
   activate(): void {
-    throw new Error('[SSR] Activation is not allowed when rendering on the server side')
+    throw new Error('[SSRRenderDriver] activate is not supported in this driver')
   }
   deactivate(): void {
-    throw new Error('[SSR] Deactivate is not allowed when rendering on the server side')
+    throw new Error('[SSRRenderDriver] deactivate is not supported in this driver')
   }
   mount(): void {
-    throw new Error('[SSR] Mounting is not allowed when rendering on the server side')
+    throw new Error('[SSRRenderDriver] mount is not supported in this driver')
   }
   unmount(): void {
-    throw new Error('[SSR] Unmount is not allowed when rendering on the server side')
+    throw new Error('[SSRRenderDriver] unmount is not supported in this driver')
   }
   updateProps(): void {
-    throw new Error('[SSR] Update props is not allowed when rendering on the server side')
+    throw new Error('[SSRRenderDriver] updateProps is not supported in this driver')
   }
 }
