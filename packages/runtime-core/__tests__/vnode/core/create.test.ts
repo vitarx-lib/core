@@ -22,38 +22,38 @@ import { createTestWidget } from '../../helpers/test-widget.js'
 describe('VNode 创建 (createVNode)', () => {
   describe('基础节点创建', () => {
     it('应该能够创建文本节点', () => {
-      const vnode = createVNode(TEXT_NODE_TYPE, { value: 'Hello World' })
+      const vnode = createVNode(TEXT_NODE_TYPE, { text: 'Hello World' })
 
       expect(vnode.type).toBe(TEXT_NODE_TYPE)
       expect(vnode.kind).toBe(NodeKind.TEXT)
-      expect(vnode.props.value).toBe('Hello World')
+      expect(vnode.props.text).toBe('Hello World')
     })
 
     it('应该能够创建空文本节点', () => {
-      const vnode = createVNode(TEXT_NODE_TYPE, { value: '' })
+      const vnode = createVNode(TEXT_NODE_TYPE, { text: '' })
 
-      expect(vnode.props.value).toBe('')
+      expect(vnode.props.text).toBe('')
     })
 
     it('应该能够创建特殊字符文本节点', () => {
       const specialText = '<div>特殊字符&nbsp;</div>'
-      const vnode = createVNode(TEXT_NODE_TYPE, { value: specialText })
+      const vnode = createVNode(TEXT_NODE_TYPE, { text: specialText })
 
-      expect(vnode.props.value).toBe(specialText)
+      expect(vnode.props.text).toBe(specialText)
     })
 
     it('应该能够创建注释节点', () => {
-      const vnode = createVNode(COMMENT_NODE_TYPE, { value: 'This is a comment' })
+      const vnode = createVNode(COMMENT_NODE_TYPE, { text: 'This is a comment' })
 
       expect(vnode.type).toBe(COMMENT_NODE_TYPE)
       expect(vnode.kind).toBe(NodeKind.COMMENT)
-      expect(vnode.props.value).toBe('This is a comment')
+      expect(vnode.props.text).toBe('This is a comment')
     })
 
     it('应该能够创建 Fragment 节点', () => {
       const children = [
-        createVNode(TEXT_NODE_TYPE, { value: 'child1' }),
-        createVNode(TEXT_NODE_TYPE, { value: 'child2' })
+        createVNode(TEXT_NODE_TYPE, { text: 'child1' }),
+        createVNode(TEXT_NODE_TYPE, { text: 'child2' })
       ]
       const vnode = createVNode(FRAGMENT_NODE_TYPE, { children })
 
@@ -98,7 +98,7 @@ describe('VNode 创建 (createVNode)', () => {
     })
 
     it('应该能够验证子节点绑定', () => {
-      const children = [createVNode(TEXT_NODE_TYPE, { value: 'text' })]
+      const children = [createVNode(TEXT_NODE_TYPE, { text: 'text' })]
       const vnode = createVNode('div', { children })
 
       expect(vnode.children).toHaveLength(1)

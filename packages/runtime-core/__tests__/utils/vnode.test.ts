@@ -23,7 +23,7 @@ import { createTestWidget } from '../helpers/test-widget.js'
 describe('VNode 工具函数', () => {
   describe('节点类型判断', () => {
     it('isTextNode 应该正确识别文本节点', () => {
-      const textNode = createVNode(TEXT_NODE_TYPE, { value: 'text' })
+      const textNode = createVNode(TEXT_NODE_TYPE, { text: 'text' })
       const divNode = createVNode('div', {})
 
       expect(isTextNode(textNode)).toBe(true)
@@ -31,7 +31,7 @@ describe('VNode 工具函数', () => {
     })
 
     it('isCommentNode 应该正确识别注释节点', () => {
-      const commentNode = createVNode(COMMENT_NODE_TYPE, { value: 'comment' })
+      const commentNode = createVNode(COMMENT_NODE_TYPE, { text: 'comment' })
       const divNode = createVNode('div', {})
 
       expect(isCommentNode(commentNode)).toBe(true)
@@ -40,7 +40,7 @@ describe('VNode 工具函数', () => {
 
     it('isElementNode 应该正确识别元素节点', () => {
       const divNode = createVNode('div', {})
-      const textNode = createVNode(TEXT_NODE_TYPE, { value: 'text' })
+      const textNode = createVNode(TEXT_NODE_TYPE, { text: 'text' })
 
       expect(isElementNode(divNode)).toBe(true)
       // img 是 void 元素，不是常规元素
@@ -78,7 +78,7 @@ describe('VNode 工具函数', () => {
     it('isContainerNode 应该正确识别容器节点', () => {
       const divNode = createVNode('div', {})
       const fragmentNode = createVNode(FRAGMENT_NODE_TYPE, {})
-      const textNode = createVNode(TEXT_NODE_TYPE, { value: 'text' })
+      const textNode = createVNode(TEXT_NODE_TYPE, { text: 'text' })
       const imgNode = createVNode('img', {})
 
       expect(isContainerNode(divNode)).toBe(true)

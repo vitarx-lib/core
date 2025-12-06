@@ -92,7 +92,7 @@ describe('directive/core', () => {
     })
 
     it('应该忽略文本节点的指令', () => {
-      const vnode = h('plain-text', { value: 'Text' })
+      const vnode = h('plain-text', { text: 'Text' })
       defineDirective('test', vi.fn())
       const directive = resolveDirective('test')!
 
@@ -102,7 +102,7 @@ describe('directive/core', () => {
     })
 
     it('应该忽略注释节点的指令', () => {
-      const vnode = h('comment', { value: 'Comment' })
+      const vnode = h('comment', { text: 'Comment' })
       defineDirective('test', vi.fn())
       const directive = resolveDirective('test')!
 
