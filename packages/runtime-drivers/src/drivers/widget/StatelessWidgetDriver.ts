@@ -1,5 +1,5 @@
 import type { AnyProps, StatelessWidgetNode, StatelessWidgetNodeType } from '@vitarx/runtime-core'
-import { BaseWidgetDriver } from '../base/BaseWidgetDriver.js'
+import { BaseWidgetDriver } from '../base/index.js'
 
 /**
  * StatelessWidgetDriver 是一个用于管理无状态组件（StatelessWidget）行为的驱动器类。
