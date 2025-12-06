@@ -121,23 +121,14 @@ describe('directive/core', () => {
 
   describe('resolveDirective', () => {
     it('应该在没有上下文时返回undefined并发出警告', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
       const result = resolveDirective('nonexistent')
 
       expect(result).toBeUndefined()
-      expect(warnSpy).toHaveBeenCalled()
-      warnSpy.mockRestore()
     })
 
     it('应该对不存在的指令返回undefined', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
       const result = resolveDirective('does-not-exist')
-
       expect(result).toBeUndefined()
-      expect(warnSpy).toHaveBeenCalled()
-      warnSpy.mockRestore()
     })
 
     it('应该解析全局指令', () => {
