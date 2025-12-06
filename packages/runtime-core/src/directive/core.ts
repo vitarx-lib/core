@@ -172,6 +172,7 @@ export function withDirectives<T extends VNode>(
  * ```
  */
 export function resolveDirective(name: string): Directive | undefined {
+  if (name.startsWith('v-')) name = name.slice(2)
   const vnode = getCurrentVNode()
   if (isStatefulWidgetNode(vnode)) {
     if (vnode.directiveStore?.has(name)) {
