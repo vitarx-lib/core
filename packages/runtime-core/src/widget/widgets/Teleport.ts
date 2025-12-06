@@ -1,5 +1,6 @@
 import { logger } from '@vitarx/utils'
 import { getRenderer } from '../../renderer/index.js'
+import { linkParentNode } from '../../runtime/index.js'
 import type { HostNodeElements, HostParentElement, Renderable, VNode } from '../../types/index.js'
 import { __DEV__, isVNode, onPropChange } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
@@ -117,6 +118,8 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
 
   override onRender() {
     if (this.disabled) return
+    // 链接父子关系
+    linkParentNode(this.children, this.$vnode)
     renderNode(this.children)
   }
 
