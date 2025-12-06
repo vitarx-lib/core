@@ -7,7 +7,7 @@ import {
   WIDGET_NODE_KINDS,
   type WidgetNode
 } from '@vitarx/runtime-core'
-import { deepMergeObject } from '@vitarx/utils/src/index.js'
+import { deepMergeObject } from '@vitarx/utils'
 import { escapeHTML, tagClose, tagOpen, tagSelfClosing } from './html.js'
 import type { Sink } from './sink.js'
 
