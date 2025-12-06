@@ -222,7 +222,9 @@ const initializeAsyncWidget = (
   buildResult: Promise<any>
 ): void => {
   let loadingNode = instance.$vnode.type.loading
+  let isCustomLoading = false
   if (isVNode(loadingNode)) {
+    isCustomLoading = true
     loadingNode = cloneVNode(loadingNode)
   } else {
     loadingNode = createCommentVNode({
@@ -238,7 +240,7 @@ const initializeAsyncWidget = (
   // 创建解析 Promise（立即开始执行）
   const initialExposedCount = Object.keys(exposed).length
   const resolvePromise = (async () => {
-    const suspenseCounter = useSuspense()
+    const suspenseCounter = !isCustomLoading ? useSuspense() : null
     if (suspenseCounter) suspenseCounter.value++
 
     try {
