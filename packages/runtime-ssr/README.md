@@ -176,7 +176,7 @@ flowchart LR
 
 ### 渲染模式
 
-#### sync 模式 (renderToString)
+#### string 模式 (renderToString)
 
 等待所有异步任务完成后，一次性输出完整的 HTML 字符串。
 
@@ -196,12 +196,12 @@ flowchart LR
 
 **模式对比：**
 
-| 特性   | sync 模式 | stream 模式 |
-|------|---------|-----------|
-| 输出方式 | 一次性输出   | 渐进式输出     |
-| TTFB | 较高      | 较低        |
-| 内存占用 | 较高      | 较低        |
-| 适用场景 | 小页面、缓存  | 大页面、流式响应  |
+| 特性   | string 模式 | stream 模式 |
+|------|-----------|-----------|
+| 输出方式 | 一次性输出     | 渐进式输出     |
+| TTFB | 较高        | 较低        |
+| 内存占用 | 较高        | 较低        |
+| 适用场景 | 小页面、缓存    | 大页面、流式响应  |
 
 ## API 参考
 
@@ -528,10 +528,8 @@ SSR 上下文对象类型，可用于在服务端和客户端之间传递状态�
 
 ```tsx
 type SSRContext<T = Record<string, any>> = T & {
-  $renderMode?: 'sync' | 'stream'  // 内部使用
   $nodeAsyncMap?: WeakMap<VNode, Promise<unknown>>  // 内部使用
   $isHydrating?: boolean  // 内部使用
-  $hydrateContainer?: Element  // 内部使用
 }
 ```
 
