@@ -103,18 +103,19 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
   }
   /** @inheritDoc */
   override unmount(node: StatefulWidgetNode): void {
-    const widget = node.instance!
+    const instance = node.instance
+    if (!instance) return
     if (node.state !== NodeState.Deactivated) {
       // 修改状态为已停用
       node.state = NodeState.Deactivated
       // 触发onDeactivated生命周期
-      widget.invokeHook(LifecycleHooks.deactivated)
+      instance.invokeHook(LifecycleHooks.deactivated)
     }
     // 触发onBeforeUnmount生命周期
-    widget.invokeHook(LifecycleHooks.beforeUnmount)
-    widget.invokeHook(LifecycleHooks.destroy)
+    instance.invokeHook(LifecycleHooks.beforeUnmount)
+    instance.invokeHook(LifecycleHooks.destroy)
     super.unmount(node)
     // 触发onUnmounted生命周期
-    widget.invokeHook(LifecycleHooks.unmounted)
+    instance.invokeHook(LifecycleHooks.unmounted)
   }
 }
