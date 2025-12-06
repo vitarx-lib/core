@@ -11,7 +11,7 @@ import { hydrateNode } from './activate.js'
  */
 declare global {
   interface Window {
-    __VITARX_STATE__?: Record<string, any>
+    __INITIAL_STATE__?: Record<string, any>
   }
 }
 
@@ -22,7 +22,7 @@ declare global {
  *
  * 完整执行流程：
  * 1. 容器解析 - 解析 container 为 DOM 元素
- * 2. 状态恢复 - 合并 window.__VITARX_STATE__ 到 context
+ * 2. 状态恢复 - 合并 window.__INITIAL_STATE__ 到 context
  * 3. 上下文设置 - 设置 context.$isHydrating = true, $nodeAsyncMap
  * 4. 注册水合驱动 - setDefaultDriver(new SSRRenderDriver())
  * 5. 预渲染 - 在 runInRenderContext 中调用 renderNode(rootNode)
@@ -39,7 +39,7 @@ declare global {
  * @example
  * ```ts
  * const app = createSSRApp(App)
- * await hydrate(app, '#app', window.__SSR_CONTEXT__)
+ * await hydrate(app, '#app', window.__INITIAL_STATE__)
  * ```
  */
 export async function hydrate(
@@ -55,8 +55,8 @@ export async function hydrate(
   }
 
   // 2. 状态恢复 - 合并服务端注入的状态
-  if (typeof window !== 'undefined' && window.__VITARX_STATE__) {
-    Object.assign(context, window.__VITARX_STATE__)
+  if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
+    Object.assign(context, window.__INITIAL_STATE__)
   }
 
   // 获取根节点
