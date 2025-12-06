@@ -1,10 +1,12 @@
 import { App, type HostParentElement, type HostRenderer, setRenderer } from '@vitarx/runtime-core'
 import { DomRenderer } from '@vitarx/runtime-dom'
 import { hydrate } from '../client/hydrate.js'
+import { __IS_BROWSER__ } from '../shared/constants.js'
 import type { SSRContext } from '../shared/context.js'
-import { __IS_SERVER__ } from '../shared/index.js'
 
-if (__IS_SERVER__) {
+if (__IS_BROWSER__) {
+  setRenderer(new DomRenderer())
+} else {
   setRenderer(
     new Proxy({} as HostRenderer, {
       get(_target: HostRenderer, p: string | symbol, _receiver: any): any {
@@ -14,8 +16,6 @@ if (__IS_SERVER__) {
       }
     })
   )
-} else {
-  setRenderer(new DomRenderer())
 }
 
 /**
@@ -52,7 +52,7 @@ export class SSRApp extends App {
    */
   override mount(container: HostParentElement | string, context?: SSRContext): this {
     // 服务端不执行挂载
-    if (__IS_SERVER__) {
+    if (!__IS_BROWSER__) {
       throw new Error('[SSRApp.mount] Cannot mount in server environment')
     }
 

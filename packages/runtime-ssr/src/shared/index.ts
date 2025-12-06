@@ -1,6 +1,3 @@
-// 导出常量
-export { __IS_SERVER__ } from './constants.js'
-
 // 导出上下文类型和函数
 export type { SSRContext, SSRRenderMode, SSRInternalContext } from './context.js'
 export { useSSRContext, isSSR, isHydrating, getSSRRenderMode } from './context.js'

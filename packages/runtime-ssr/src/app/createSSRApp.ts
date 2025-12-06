@@ -1,10 +1,5 @@
 import type { AppConfig, VNode, WidgetTypes } from '@vitarx/runtime-core'
-import { setHostSchema } from '@vitarx/runtime-core'
-import { VOID_ELEMENTS } from '@vitarx/runtime-dom/renderer'
 import { SSRApp } from './SSRApp.js'
-
-// Setup host schema for void elements
-setHostSchema({ voidElements: VOID_ELEMENTS })
 
 /**
  * 创建 SSR 应用实例

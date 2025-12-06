@@ -1,5 +1,4 @@
 export { SSRApp, createSSRApp } from './app/index.js'
 export * from './shared/html.js'
-export { __IS_SERVER__ } from './shared/constants.js'
 export * from './server/index.js'
 export * from './client/index.js'
