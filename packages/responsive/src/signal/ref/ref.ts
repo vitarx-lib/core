@@ -330,7 +330,7 @@ export function isRef(val: any): val is Ref {
  * @template Value - 信号值的类型
  * @returns {Ref<Value | undefined, true>} - 创建的响应式引用信号
  */
-export function ref(): Ref<any>
+export function ref(): Ref
 /**
  * 创建一个响应式引用信号
  *
