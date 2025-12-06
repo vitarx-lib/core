@@ -14,15 +14,13 @@ export type SSRRenderMode = 'sync' | 'stream'
 export interface SSRInternalContext {
   /**
    * 渲染模式
+   * - `sync`: 同步渲染，等待所有异步任务完成后一次性输出
+   * - `stream`: 流式渲染，遇到异步时阻塞等待完成后继续输出
    */
   $renderMode?: SSRRenderMode
   /**
-   * 异步任务队列（sync 模式使用）
-   */
-  $asyncTasks?: Promise<unknown>[]
-  /**
-   * 节点异步任务映射（stream 模式使用）
-   * 将异步任务绑定到对应的节点，序列化时逐个等待
+   * 节点异步任务映射
+   * 将异步任务绑定到对应的节点，服务端和客户端统一使用
    */
   $nodeAsyncMap?: WeakMap<VNode, Promise<unknown>>
   /**
@@ -33,10 +31,6 @@ export interface SSRInternalContext {
    * 水合容器元素
    */
   $hydrateContainer?: Element
-  /**
-   * 水合路径栈，用于定位 DOM 节点
-   */
-  $hydratePathStack?: number[]
 }
 
 /**
