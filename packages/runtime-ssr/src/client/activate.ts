@@ -61,6 +61,8 @@ export async function hydrateNode(
     if (child) {
       return await hydrateNode(child, container, nodeAsyncMap, nodeIndex)
     }
+    invokeDirHook(node, 'created')
+    node.state = NodeState.Rendered
     return nextIndex
   } else {
     const renderer = new DomRenderer()
