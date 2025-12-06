@@ -91,12 +91,3 @@ export function isSSR(): boolean {
 export function isHydrating(): boolean {
   return useSSRContext()?.$isHydrating === true
 }
-
-/**
- * 获取当前 SSR 渲染模式
- *
- * @returns 渲染模式，如果不在SSR环境中返回undefined
- */
-export function getSSRRenderMode(): SSRRenderMode | undefined {
-  return useSSRContext()?.$renderMode
-}
