@@ -147,8 +147,6 @@ export async function renderToStream(
   // 注册服务器端驱动
   setDefaultDriver(new SSRRenderDriver())
 
-  // 设置渲染模式为流式
-  context.$renderMode = 'stream'
   // 初始化节点异步任务映射
   const nodeAsyncMap: NodeAsyncMap = new WeakMap()
   context.$nodeAsyncMap = nodeAsyncMap

@@ -69,7 +69,6 @@ export async function hydrate(
       // 初始化节点异步任务映射（与服务端统一使用 WeakMap）
       const nodeAsyncMap = new WeakMap<VNode, Promise<unknown>>()
       context.$nodeAsyncMap = nodeAsyncMap
-      context.$hydrateContainer = containerEl
       // 4. 注册水合驱动
       setDefaultDriver(new SSRRenderDriver())
 

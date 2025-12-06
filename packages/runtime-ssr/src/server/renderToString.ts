@@ -34,8 +34,6 @@ export async function renderToString(
   // 注册服务器端驱动
   setDefaultDriver(new SSRRenderDriver())
 
-  // 设置渲染模式为同步
-  context.$renderMode = 'sync'
   // 初始化节点异步任务映射
   const nodeAsyncMap = new WeakMap<VNode, Promise<unknown>>()
   context.$nodeAsyncMap = nodeAsyncMap

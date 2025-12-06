@@ -13,12 +13,6 @@ export type SSRRenderMode = 'sync' | 'stream'
  */
 export interface SSRInternalContext {
   /**
-   * 渲染模式
-   * - `sync`: 同步渲染，等待所有异步任务完成后一次性输出
-   * - `stream`: 流式渲染，遇到异步时阻塞等待完成后继续输出
-   */
-  $renderMode?: SSRRenderMode
-  /**
    * 节点异步任务映射
    * 将异步任务绑定到对应的节点，服务端和客户端统一使用
    */
@@ -27,10 +21,6 @@ export interface SSRInternalContext {
    * 是否处于水合阶段
    */
   $isHydrating?: boolean
-  /**
-   * 水合容器元素
-   */
-  $hydrateContainer?: Element
 }
 
 /**
