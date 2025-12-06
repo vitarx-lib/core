@@ -69,6 +69,8 @@ export class SSRApp extends App {
       // 执行水合
       hydrate(this, containerEl, context).catch(err => {
         console.error('[SSRApp.mount] Hydration failed:', err)
+        // 清空容器
+        containerEl.innerHTML = ''
         // 水合失败后尝试正常挂载
         super.mount(container)
       })
