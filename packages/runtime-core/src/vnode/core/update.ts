@@ -112,7 +112,7 @@ export class PatchUpdate {
    * @param nextVNode - 新的虚拟节点
    */
   static patchUpdateProps<T extends VNode>(currentVNode: T, nextVNode: T) {
-    updateNodeProps(currentVNode, nextVNode.props, nextVNode)
+    updateNodeProps(currentVNode, nextVNode.props)
   }
   /**
    * 用新节点替换旧节点

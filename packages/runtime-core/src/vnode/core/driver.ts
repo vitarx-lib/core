@@ -143,11 +143,10 @@ export function unmountNode(node: VNode): void {
  * 更新节点属性的函数
  * @param node - 需要更新属性的虚拟节点(VNode)
  * @param newProps - 新的属性对象，包含要更新的属性
- * @param newNode - 新的虚拟节点对象，用于获取新的属性对象
  */
-export function updateNodeProps(node: VNode, newProps: AnyProps, newNode: VNode) {
+export function updateNodeProps(node: VNode, newProps: AnyProps) {
   // 根据节点类型调用对应的控制器更新属性
   // 这里使用节点 kind 属性来查找对应的控制器
   // 将节点类型断言为 VNode<never> 以满足控制器类型要求
-  getNodeDriver(node.kind).updateProps(node as any, newProps, newNode as any)
+  getNodeDriver(node.kind).updateProps(node as any, newProps)
 }

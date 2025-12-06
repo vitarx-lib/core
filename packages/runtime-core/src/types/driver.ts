@@ -44,7 +44,6 @@ export interface NodeDriver<T extends NodeType> {
    *
    * @param node - 当前虚拟节点
    * @param newProps - 新的属性对象
-   * @param newNode - 新的虚拟节点
    */
-  updateProps(node: VNode<T>, newProps: AnyProps, newNode: VNode<T>): void
+  updateProps(node: VNode<T>, newProps: AnyProps): void
 }
