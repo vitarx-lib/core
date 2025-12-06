@@ -8,7 +8,6 @@ import {
   type NodeType,
   type RegularElementNode,
   renderNode,
-  type StatefulManagerOptions,
   type StatefulWidgetNode,
   type StatelessWidgetNode,
   type VNode
@@ -37,7 +36,7 @@ import { useSSRContext } from '../shared/index.js'
  * - 不支持属性更新操作
  */
 export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
-  render(node: VNode<T>): ElementOf<T> {
+  render(node: VNode<T>) {
     // 从渲染上下文中获取 SSR 上下文
     const ctx = useSSRContext()
     if (!ctx) return node as ElementOf<T>
@@ -61,13 +60,7 @@ export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
       case NodeKind.STATEFUL_WIDGET: {
         const widgetNode = node as StatefulWidgetNode
 
-        // 禁用客户端特性，仅用于 SSR
-        const options: StatefulManagerOptions = {
-          enableAutoUpdate: false,
-          enableScheduler: false,
-          enableLifecycle: false
-        }
-        const runtime = createWidgetRuntime(widgetNode, options)
+        const runtime = createWidgetRuntime(widgetNode)
 
         // 执行 onRender 钩子，异步组件的解析 Promise 也会在这里返回
         const result = runtime.invokeHook(LifecycleHooks.render)
@@ -82,7 +75,6 @@ export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
         renderNode(createWidgetRuntime(node as StatelessWidgetNode).child)
         break
     }
-    return node as ElementOf<T>
   }
   activate(): void {
     throw new Error('[SSRRenderDriver] activate is not supported in this driver')

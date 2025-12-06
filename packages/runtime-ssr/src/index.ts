@@ -19,6 +19,9 @@ export {
 export { serializeVNodeToSink } from './shared/serialize.js'
 export { __IS_SERVER__ } from './shared/constants.js'
 
+// ============================================================
+// 服务端渲染
+// ============================================================
 export {
   renderToString,
   renderToStream,
@@ -27,3 +30,8 @@ export {
   pipeToWritable,
   type StreamRenderOptions
 } from './server/index.js'
+
+// ============================================================
+// 客户端水合
+// ============================================================
+export { hydrate, activateNode } from './client/index.js'
