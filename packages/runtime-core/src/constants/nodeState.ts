@@ -9,7 +9,7 @@
  *
  * @enum {string}
  */
-export const enum NodeState {
+export enum NodeState {
   Created = 'created',
   Rendered = 'rendered',
   Activated = 'activated',

@@ -1,7 +1,7 @@
 /**
  * 节点类型枚举，用于标识虚拟DOM中不同类型的节点
  */
-export const enum NodeKind {
+export enum NodeKind {
   /** 常规元素，如 `<div>`、`<span>` 等 */
   REGULAR_ELEMENT,
   /** 自闭合元素，如 `<img>`、`<input>`、`<br>` 等 */
