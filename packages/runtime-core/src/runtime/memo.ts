@@ -1,4 +1,5 @@
-import type { VNode } from '../types/index.js'
+import type { Renderable, VNode } from '../types/index.js'
+import { isVNode } from '../utils/index.js'
 import { getCurrentVNode } from './context.js'
 
 /**
@@ -9,10 +10,12 @@ import { getCurrentVNode } from './context.js'
  * @returns {boolean} 如果两个数组的所有元素经过unref处理后都相等，则返回true，否则返回false
  */
 export function isMemoSame(prevMemo: Array<any>, nextMemo: Array<any>): boolean {
+  // 首先检查长度，长度不同则直接返回false
+  if (prevMemo.length !== nextMemo.length) return false
+
   // 遍历nextMemo数组，比较每个元素与prevMemo中对应元素的值
   for (let i = 0; i < nextMemo.length; i++) {
-    // 使用unref函数获取每个元素的引用值，并进行比较
-    // 如果发现任何一对元素不相等，立即返回false
+    // 使用严格相等比较，如果发现任何一对元素不相等，立即返回false
     if (nextMemo[i] !== prevMemo[i]) return false
   }
   // 如果所有元素都相等，则返回true
@@ -43,32 +46,36 @@ export function isMemoSame(prevMemo: Array<any>, nextMemo: Array<any>): boolean 
  * withMemo([1, 2, 3], () => jsx('div',{children:"此节点..."}),0)
  * ```
  */
-export function withMemo<R extends VNode>(memo: any[], builder: () => R, index: number): R {
+export function withMemo<R extends Renderable>(memo: any[], builder: () => R, index: number): R {
+  // 不是数组，直接构建
   if (!Array.isArray(memo)) return builder()
-  // 获取当前虚拟节点
+
   const vnode = getCurrentVNode()
-  // 无上下文 vnode，直接构建
+  // 无当前上下文 vnode
   if (!vnode) return builder()
 
-  let cache = vnode.memoCache // 获取缓存对象
-
-  // 初始化 cache
+  // 获取或初始化 memoCache
+  let cache = vnode.memoCache
   if (!cache) {
-    const ret = builder() // 构建VNode
-    ret.memo = memo.slice() // 保存记忆值的副本
-    vnode.memoCache = new Map([[index, ret]]) // 创建新的缓存Map并存储
+    const ret = builder()
+    if (!isVNode(ret)) return ret
+
+    ret.memo = [...memo]
+    vnode.memoCache = new Map([[index, ret]])
     return ret
   }
 
-  // 有缓存则尝试命中
-  const cached = cache.get(index) // 从缓存中获取对应索引的VNode
-  // 如果缓存存在且记忆值相同，则返回缓存的VNode
+  // 尝试命中缓存
+  const cached = cache.get(index)
   if (cached && isMemoSame(cached.memo!, memo)) {
     return cached as R
   }
-  // 未命中：重新构建并写入 cache
-  const ret = builder() // 重新构建VNode
-  ret.memo = memo.slice() // 保存记忆值的副本
-  cache.set(index, ret) // 将新构建的VNode存入缓存
+
+  // 缓存未命中或 memo 不同，重建节点
+  const ret = builder()
+  if (!isVNode(ret)) return ret
+
+  ret.memo = [...memo]
+  cache.set(index, ret)
   return ret
 }
