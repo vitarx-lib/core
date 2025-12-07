@@ -203,19 +203,20 @@ class TodoList extends Widget<{ title: string }> {
 
 #### 生命周期钩子
 
-| 钩子名称              | 触发时机           | 可访问 DOM  | 适用场景           |
-|-------------------|----------------|----------|----------------|
-| `onCreate`        | 组件实例创建时        | 否        | 初始化状态、访问 props |
-| `onRender`        | 渲染前（SSR + CSR） | 否        | SSR 数据准备       |
-| `onBeforeMount`   | 挂载前            | 否        | 挂载前的准备工作       |
-| `onMounted`       | 挂载完成后          | 是        | 访问 DOM、初始化第三方库 |
-| `onActivated`     | 组件激活时          | 是        | KeepAlive 激活恢复 |
-| `onDeactivated`   | 组件停用时          | 是        | KeepAlive 停用清理 |
-| `onBeforeUpdate`  | 更新前            | 是（旧 DOM） | 更新前的状态记录       |
-| `onUpdated`       | 更新完成后          | 是（新 DOM） | 操作更新后的 DOM     |
-| `onBeforeUnmount` | 卸载前            | 是        | 清理定时器、事件监听器    |
-| `onUnmounted`     | 卸载完成后          | 否        | 最终清理工作         |
-| `onError`         | 捕获异常时          | 视情况      | 错误边界、降级展示      |
+| 钩子名称              | 触发时机           | 可访问 DOM  | 适用场景            |
+|-------------------|----------------|----------|-----------------|
+| `onCreate`        | 组件实例创建时        | 否        | 初始化状态、访问 props  |
+| `onRender`        | 渲染前（SSR + CSR） | 否        | SSR 数据准备        |
+| `onBeforeMount`   | 挂载前            | 否        | 挂载前的准备工作        |
+| `onMounted`       | 挂载完成后          | 是        | 访问 DOM、初始化第三方库  |
+| `onActivated`     | 组件激活时          | 是        | KeepAlive 激活恢复  |
+| `onDeactivated`   | 组件停用时          | 是        | KeepAlive 停用清理  |
+| `onBeforeUpdate`  | 更新前            | 是（旧 DOM） | 更新前的状态记录        |
+| `onUpdated`       | 更新完成后          | 是（新 DOM） | 操作更新后的 DOM      |
+| `onBeforeUnmount` | 卸载前            | 是        | 清理定时器、事件监听器     |
+| `onUnmounted`     | 卸载完成后          | 否        | 最终清理工作          |
+| `onError`         | 捕获异常时          | 视情况      | 错误边界、降级展示       |
+| `onDestroy`       | 组件实例即将销毁时      | 是        | 兼容SSR渲染服务端副作用销毁 |
 
 ### 虚拟 DOM API
 
@@ -312,6 +313,7 @@ const throttledFn = throttle(() => {
 - [@vitarx/responsive](../responsive/README.md) - 响应式系统
 - [@vitarx/runtime-core](../runtime-core/README.md) - 运行时核心
 - [@vitarx/runtime-dom](../runtime-dom/README.md) - 浏览器端 DOM 渲染适配器
+- [@vitarx/runtime-ssr](../runtime-ssr/README.md) - 服务端渲染能力 需通过 vitarx/ssr 引入
 
 ## 使用示例
 
@@ -497,10 +499,10 @@ createApp(SSRApp).mount('#app')
 ### 内置组件示例
 
 ```tsx
-import { createApp, ref, Suspense, KeepAlive, Lazy } from 'vitarx'
+import { createApp, ref, Suspense, KeepAlive, lazy } from 'vitarx'
 
-// 懒加载组件
-const HeavyComponent = Lazy(() => import('./HeavyComponent'))
+// 懒加载组件，建议使用lazy形式标记，不标记也可正常渲染
+const HeavyComponent = lazy(() => import('./HeavyComponent'))
 
 function App() {
   const activeTab = ref('home')
@@ -604,4 +606,4 @@ createApp(SSRApp).mount('#app')
 
 ## 许可证
 
-[MIT](../../LICENSE)
+[MIT](./LICENSE)
