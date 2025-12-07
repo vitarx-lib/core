@@ -76,7 +76,11 @@ export async function hydrateNode(
 
   // 标签 / 类型 不匹配 → fallback 渲染替换
   if (reuse.kind !== kind || reuse.tag !== tagName) {
-    console.warn(`[Hydration] Element mismatch for <${tagName}>`)
+    console.warn(
+      `[Hydration] Element mismatch: expected <${tagName}> but found ` +
+        `<${reuse.tag}> at index ${nodeIndex}. ` +
+        `This may happen if the server-rendered HTML doesn't match the client-side VNode structure.`
+    )
     nextIndex = reuse.nextIndex
 
     normalRender(node)
