@@ -44,6 +44,7 @@ export function isMemoSame(prevMemo: Array<any>, nextMemo: Array<any>): boolean 
  * ```
  */
 export function withMemo<R extends VNode>(memo: any[], builder: () => R, index: number): R {
+  if (!Array.isArray(memo)) return builder()
   // 获取当前虚拟节点
   const vnode = getCurrentVNode()
   // 无上下文 vnode，直接构建
