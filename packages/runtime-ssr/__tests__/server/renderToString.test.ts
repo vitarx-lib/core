@@ -1,5 +1,13 @@
-import { Fragment, h, resolveDirective, withDirectives } from '@vitarx/runtime-core'
-import { describe, expect, it } from 'vitest'
+import {
+  Fragment,
+  h,
+  onDestroy,
+  type Renderable,
+  resolveDirective,
+  Widget,
+  withDirectives
+} from '@vitarx/runtime-core'
+import { describe, expect, it, vi } from 'vitest'
 import { createSSRApp } from '../../src/app/index.js'
 import { renderToString } from '../../src/server/renderToString.js'
 import {
@@ -195,5 +203,26 @@ describe('renderToString', () => {
     expect(html).toContain('<main>')
     expect(html).toContain('<p>Main content</p>')
     expect(html).toContain('<footer>')
+  })
+  it('应该销毁组件', async () => {
+    const fnDestroy = vi.fn()
+    const WidgetDestroy = vi.fn()
+    class MockClassWidget extends Widget {
+      override onDestroy() {
+        WidgetDestroy()
+      }
+      override build(): Renderable {
+        return undefined
+      }
+    }
+    const MockFunctionWidget = () => {
+      onDestroy(fnDestroy)
+      return h(MockClassWidget)
+    }
+    const App = () => h(MockFunctionWidget)
+    const app = createSSRApp(App)
+    await renderToString(app)
+    expect(fnDestroy).toHaveBeenCalled()
+    expect(WidgetDestroy).toHaveBeenCalled()
   })
 })

@@ -1,4 +1,4 @@
-import { h } from '@vitarx/runtime-core'
+import { h, onDestroy, type Renderable, Widget } from '@vitarx/runtime-core'
 import { describe, expect, it, vi } from 'vitest'
 import { createSSRApp, renderToStream } from '../../src/index.js'
 import { createMockAsyncComponent } from '../helpers.js'
@@ -90,5 +90,35 @@ describe('renderToStream', () => {
     )
     consoleError.mockRestore()
     expect(errorFn).toHaveBeenCalled()
+  })
+
+  it('应该销毁组件', async () => {
+    const fnDestroy = vi.fn()
+    const WidgetDestroy = vi.fn()
+    class MockClassWidget extends Widget {
+      override onDestroy() {
+        WidgetDestroy()
+      }
+      override build(): Renderable {
+        return undefined
+      }
+    }
+    const MockFunctionWidget = () => {
+      onDestroy(fnDestroy)
+      return h(MockClassWidget)
+    }
+    const App = () => h(MockFunctionWidget)
+    const app = createSSRApp(App)
+    await renderToStream(
+      app,
+      {},
+      {
+        push() {},
+        close() {},
+        error() {}
+      }
+    )
+    expect(fnDestroy).toHaveBeenCalled()
+    expect(WidgetDestroy).toHaveBeenCalled()
   })
 })
