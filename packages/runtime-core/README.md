@@ -149,9 +149,10 @@ app.mount('#app')          // 挂载应用
 ### 虚拟节点
 
 ```tsx
-import { createVNode } from '@vitarx/runtime-core'
+import { createVNode, h } from '@vitarx/runtime-core'
 
-const vnode = createVNode('div', { class: 'container' }, 'Hello')
+const vnode = createVNode('div', { class: 'container' , children: 'Hello World'})
+const vnode2 = h('div', { class: 'container' } ,'Hello World') // 使用h函数创建虚拟节点兼容第三个参数传入子节点
 ```
 
 ## 许可证
