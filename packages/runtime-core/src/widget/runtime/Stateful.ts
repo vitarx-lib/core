@@ -283,7 +283,7 @@ export class StatefulWidgetRuntime<
    * 根据组件类型（类组件或函数组件）创建相应的实例
    * 异步组件的解析逻辑已移至 onRender 钩子中，SSR 通过 invokeHook(render) 统一收集异步任务
    *
-   * @returns 创建的组件实例
+   * @returns {Widget} 创建的组件实例
    */
   private createWidgetInstance(): WidgetInstanceType<T> {
     return this.scope.run(() =>
@@ -293,10 +293,10 @@ export class StatefulWidgetRuntime<
           // 创建类组件实例
           instance = new this.type(this.props)
           instance.$vnode.isAsyncWidget = false
-          /**
-           * 调用组件的onCreate生命周期钩子
-           */
-          instance.onCreate?.()
+          if (!import.meta.env?.DEV || !(this.vnode as any).__$HMR_STATE$__) {
+            // 调用组件的onCreate生命周期钩子
+            instance.onCreate?.()
+          }
         } else {
           // 创建函数组件实例
           instance = new FnWidget(this.props)
