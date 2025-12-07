@@ -662,10 +662,7 @@ try {
 import { withDirectives } from '@vitarx/runtime-core'
 
 function App() {
-  const visible = false
-  const vnode = <div>Content</div>
-  withDirectives(vnode, [['show', visible]])
-  return vnode
+  return  <div v-show={false}>Content</div>
 }
 
 // 渲染结果：<div style="display: none;">Content</div>
@@ -813,7 +810,7 @@ app.get('*', async (req, res) => {
 
 在服务端渲染时，避免使用浏览器特有的 API：
 
-```tsx
+```jsx
 function MyComponent() {
   // ✗ 错误：服务端没有 window 对象
   const width = window.innerWidth
