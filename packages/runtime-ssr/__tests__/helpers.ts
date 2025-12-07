@@ -53,7 +53,7 @@ export function createContainer(html?: string): HTMLElement {
   const container = document.createElement('div')
   container.id = 'app'
   if (html) {
-    container.innerHTML = html
+    container.innerHTML = normalizeHTML(html)
   }
   document.body.appendChild(container)
   return container
