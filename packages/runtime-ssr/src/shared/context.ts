@@ -74,13 +74,19 @@ export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | undefi
  */
 export function isSSR(): boolean {
   const ctx = useSSRContext()
-  return ctx !== undefined && ctx.$renderMode !== undefined
+  return Boolean(ctx !== undefined && !ctx.$isHydrating)
 }
-
 /**
  * 检查当前是否在水合阶段
  *
  * @returns 如果在水合阶段返回true，否则返回false
+ *
+ * @example
+ * ```ts
+ * if (isHydrating()) {
+ *   // 客户端水合特定逻辑
+ * }
+ * ```
  */
 export function isHydrating(): boolean {
   return useSSRContext()?.$isHydrating === true
