@@ -13,7 +13,7 @@ import {
   type VNode,
   type WidgetNode
 } from '@vitarx/runtime-core'
-import { isArray } from '@vitarx/utils'
+import { isArray, logger } from '@vitarx/utils'
 import { normalRender } from './render.js'
 import {
   appendChild,
@@ -64,7 +64,7 @@ export async function hydrateNode(
 
   // 未找到可复用 DOM → 正常渲染并插入
   if (!reuse) {
-    console.warn(`[Hydration] Cannot find element for <${tagName}>`)
+    logger.warn(`[Hydration] Cannot find element for <${tagName}>`, node.devInfo?.source)
     normalRender(node)
     const element = node.el!
     appendChild(container, element)
@@ -76,10 +76,11 @@ export async function hydrateNode(
 
   // 标签 / 类型 不匹配 → fallback 渲染替换
   if (reuse.kind !== kind || reuse.tag !== tagName) {
-    console.warn(
+    logger.warn(
       `[Hydration] Element mismatch: expected <${tagName}> but found ` +
         `<${reuse.tag}> at index ${nodeIndex}. ` +
-        `This may happen if the server-rendered HTML doesn't match the client-side VNode structure.`
+        `This may happen if the server-rendered HTML doesn't match the client-side VNode structure.`,
+      node.devInfo?.source
     )
     nextIndex = reuse.nextIndex
 
