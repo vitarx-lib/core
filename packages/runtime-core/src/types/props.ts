@@ -1,4 +1,4 @@
-import { Ref, type RefSignal } from '@vitarx/responsive'
+import { Ref, type RefSignal, type UnwrapRef } from '@vitarx/responsive'
 import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils'
 import type { DynamicRenderType } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
@@ -66,9 +66,9 @@ export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | RefSig
  * ```
  */
 export type WithRefProps<T extends AnyProps> = {
-  [K in RequiredKeys<T>]: MaybeRef<T[K]>
+  [K in keyof T as K extends RequiredKeys<T> ? never : K]?: MaybeRef<T[K]>
 } & {
-  [K in OptionalKeys<T>]?: MaybeRef<T[K]>
+  [K in keyof T as K extends OptionalKeys<T> ? never : K]: MaybeRef<T[K]>
 }
 
 /**
@@ -97,7 +97,9 @@ export type WithRefProps<T extends AnyProps> = {
  * ```
  */
 export type UnwrapRefProps<T extends AnyProps> = {
-  [K in keyof T]: T[K] extends RefSignal<infer U> ? U : T[K]
+  [K in keyof T as K extends RequiredKeys<T> ? never : K]?: UnwrapRef<T[K]>
+} & {
+  [K in keyof T as K extends OptionalKeys<T> ? never : K]: UnwrapRef<T[K]>
 }
 /**
  * 唯一键
