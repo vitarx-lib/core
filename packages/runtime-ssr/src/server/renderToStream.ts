@@ -1,123 +1,10 @@
-import {
-  NodeKind,
-  renderNode,
-  runInRenderContext,
-  setDefaultDriver,
-  type VNode,
-  type WidgetNode
-} from '@vitarx/runtime-core'
+import { renderNode, runInRenderContext, setDefaultDriver, type VNode } from '@vitarx/runtime-core'
 import { SSRApp } from '../app/index.js'
-import {
-  applyShowDirective,
-  escapeHTML,
-  inheritShowDirective,
-  type Sink,
-  type SSRContext,
-  tagClose,
-  tagOpen,
-  tagSelfClosing
-} from '../shared/index.js'
+import type { NodeAsyncMap } from '../shared/context.js'
+import { type SSRContext } from '../shared/index.js'
+import { streamSerializeNode } from '../shared/serialize.js'
+import type { StreamingSink } from '../shared/sink.js'
 import { SSRRenderDriver } from './SSRRenderDriver.js'
-
-// 节点异步任务映射类型
-type NodeAsyncMap = WeakMap<VNode, Promise<unknown>>
-
-/**
- * 流式渲染选项
- */
-export interface StreamRenderOptions {
-  /**
-   * 将内容推送到流
-   * @param content - 要推送的内容
-   */
-  push(content: string): void
-  /**
-   * 关闭流
-   */
-  close(): void
-  /**
-   * 发送错误到流
-   * @param error - 错误对象
-   */
-  error(error: Error): void
-}
-
-/**
- * 内部流式 Sink 实现
- */
-class StreamingSink implements Sink {
-  constructor(private options: StreamRenderOptions) {}
-
-  push(content: string): void {
-    this.options.push(content)
-  }
-}
-
-/**
- * 流式序列化节点（渐进式渲染）
- *
- * 递归渲染节点树，遇到有异步任务的节点时阻塞等待其完成后再继续。
- */
-async function streamSerializeNode(
-  node: VNode,
-  sink: StreamingSink,
-  nodeAsyncMap: NodeAsyncMap
-): Promise<void> {
-  switch (node.kind) {
-    case NodeKind.REGULAR_ELEMENT: {
-      const { type: tagName, props, children } = node as any
-      applyShowDirective(node, props)
-      sink.push(tagOpen(tagName, props))
-
-      if (props['v-html']) {
-        sink.push(String(props['v-html']))
-      } else {
-        for (let i = 0; i < children.length; i++) {
-          await streamSerializeNode(children[i], sink, nodeAsyncMap)
-        }
-      }
-
-      sink.push(tagClose(tagName))
-      break
-    }
-    case NodeKind.VOID_ELEMENT: {
-      const { type: tagName, props } = node as any
-      applyShowDirective(node, props)
-      sink.push(tagSelfClosing(tagName, props))
-      break
-    }
-    case NodeKind.TEXT:
-      sink.push(escapeHTML((node as any).props.text))
-      break
-    case NodeKind.COMMENT:
-      sink.push(`<!--${(node as any).props.text}-->`)
-      break
-    case NodeKind.FRAGMENT: {
-      sink.push('<!--Fragment start-->')
-      const { children } = node as any
-      for (let i = 0; i < children.length; i++) {
-        await streamSerializeNode(children[i], sink, nodeAsyncMap)
-      }
-      sink.push('<!--Fragment end-->')
-      break
-    }
-    case NodeKind.STATELESS_WIDGET:
-    case NodeKind.STATEFUL_WIDGET: {
-      // 检查该节点是否有绑定的异步任务，有则等待其完成
-      const pendingTask = nodeAsyncMap.get(node)
-      if (pendingTask) {
-        await pendingTask
-        nodeAsyncMap.delete(node)
-      }
-      // 异步完成后继续序列化 child
-      const child = (node as WidgetNode).instance?.child!
-      // 父组件的 show 指令会应用到子组件上
-      inheritShowDirective(node, child)
-      await streamSerializeNode(child, sink, nodeAsyncMap)
-      break
-    }
-  }
-}
 
 /**
  * 将应用渲染为流（block 模式）
@@ -142,7 +29,7 @@ async function streamSerializeNode(
 export async function renderToStream(
   root: SSRApp | VNode,
   context: SSRContext = {},
-  options: StreamRenderOptions
+  options: StreamingSink
 ): Promise<void> {
   // 注册服务器端驱动
   setDefaultDriver(new SSRRenderDriver())
@@ -161,16 +48,14 @@ export async function renderToStream(
       renderNode(rootNode)
 
       // 流式输出（逐个节点序列化，遇到异步则等待）
-      const sink = new StreamingSink(options)
-      await streamSerializeNode(rootNode, sink, nodeAsyncMap)
+      await streamSerializeNode(rootNode, options, nodeAsyncMap)
 
       // 清理内部状态
       delete context.$nodeAsyncMap
-
       options.close()
     }, context)
   } catch (err) {
-    options.error(err as Error)
+    options.error(err)
   }
 }
 
@@ -234,7 +119,7 @@ export async function renderToNodeStream(
   const { Readable } = await import('stream')
   const chunks: string[] = []
   let resolveStream: (stream: NodeJS.ReadableStream) => void
-  let rejectStream: (err: Error) => void
+  let rejectStream: (err: unknown) => void
 
   const promise = new Promise<NodeJS.ReadableStream>((resolve, reject) => {
     resolveStream = resolve

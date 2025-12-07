@@ -14,6 +14,7 @@ import {
   type WidgetNode
 } from '@vitarx/runtime-core'
 import { isArray, logger } from '@vitarx/utils'
+import type { NodeAsyncMap } from '../shared/context.js'
 import { normalRender } from './render.js'
 import {
   appendChild,
@@ -24,8 +25,6 @@ import {
   insertBefore,
   replaceChild
 } from './utils.js'
-
-type NodeAsyncMap = WeakMap<VNode, Promise<unknown>>
 
 /**
  * 水合节点函数，用于将服务端渲染的DOM与客户端虚拟DOM进行匹配和同步

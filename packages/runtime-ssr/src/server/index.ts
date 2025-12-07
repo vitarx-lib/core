@@ -6,6 +6,5 @@ export {
   renderToStream,
   renderToReadableStream,
   renderToNodeStream,
-  pipeToWritable,
-  type StreamRenderOptions
+  pipeToWritable
 } from './renderToStream.js'

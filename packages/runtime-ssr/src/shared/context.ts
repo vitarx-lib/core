@@ -1,12 +1,6 @@
 import { useRenderContext, type VNode } from '@vitarx/runtime-core'
 
-/**
- * SSR 渲染模式
- *
- * - `sync`: 同步渲染，等待所有异步任务完成后一次性输出
- * - `stream`: 流式渲染，遇到异步时阻塞等待完成后继续输出，最终内容与 sync 一致
- */
-export type SSRRenderMode = 'sync' | 'stream'
+export type NodeAsyncMap = WeakMap<VNode, Promise<unknown>>
 
 /**
  * SSR 内部上下文（框架内部使用）
@@ -16,7 +10,7 @@ export interface SSRInternalContext {
    * 节点异步任务映射
    * 将异步任务绑定到对应的节点，服务端和客户端统一使用
    */
-  $nodeAsyncMap?: WeakMap<VNode, Promise<unknown>>
+  $nodeAsyncMap?: NodeAsyncMap
   /**
    * 是否处于水合阶段
    */

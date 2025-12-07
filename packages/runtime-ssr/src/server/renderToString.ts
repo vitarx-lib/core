@@ -7,7 +7,8 @@ import {
   type VNode
 } from '@vitarx/runtime-core'
 import { SSRApp } from '../app/index.js'
-import { serializeVNodeToSink, type SSRContext, StringSink } from '../shared/index.js'
+import { type SSRContext, StringSink } from '../shared/index.js'
+import { serializeVNodeToSink } from '../shared/serialize.js'
 import { SSRRenderDriver } from './SSRRenderDriver.js'
 
 /**

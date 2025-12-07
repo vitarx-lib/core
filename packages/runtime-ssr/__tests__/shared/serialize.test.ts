@@ -4,7 +4,7 @@ import {
   applyShowDirective,
   inheritShowDirective,
   serializeVNodeToSink
-} from '../../src/shared/index.js'
+} from '../../src/shared/serialize.js'
 import { StringSink } from '../../src/shared/sink.js'
 
 const showDirective = resolveDirective('show')!
