@@ -28,6 +28,7 @@ import type {
  * ```
  *
  * @since 4.0.0
+ * @alias stateless
  * @param build - 视图构建器，通过函数返回要渲染的视图虚拟节点
  * @param [displayName] - 组件名称，给匿名函数设置一个显示名称
  * @returns { StatelessWidget } - 无状态小部件
