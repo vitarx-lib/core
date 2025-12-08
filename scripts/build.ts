@@ -229,8 +229,8 @@ async function buildPackage(
   }
 
   // 版本替换处理
-  if (packageDirName === 'runtime-core') {
-    const distPath = join(dist, '/constants/version.js')
+  if (packageDirName === 'vitarx') {
+    const distPath = join(dist, '/index.js')
     // 检查文件是否存在
     if (existsSync(distPath)) {
       // 读取文件内容
