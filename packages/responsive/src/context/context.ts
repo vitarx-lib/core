@@ -63,12 +63,7 @@ export interface IContext {
   withAsyncContext<T>(asyncTask: AsyncContextTask<T>): Promise<T>
 }
 let Context: IContext
-/**
- * 判断是否在 Node.js 环境中运行
- *
- * 通过检测 process 对象和 process.versions.node 来确定是否为 Node.js 环境
- */
-if (typeof process !== 'undefined' && !!process.versions?.node) {
+if (import.meta.env?.SSR) {
   /**
    * Node.js 环境下的异步本地存储
    *
