@@ -1,4 +1,4 @@
-import { Ref, type RefSignal, type UnwrapRef } from '@vitarx/responsive'
+import { type Ref, type RefSignal, type UnwrapRef } from '@vitarx/responsive'
 import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils'
 import type { RefEl } from '../utils/index.js'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../widget/index.js'
@@ -26,7 +26,7 @@ import type { AnyProps, WidgetPropsType, WidgetType } from './widget.js'
  * setValue(ref(42)); // 传入响应式引用
  * ```
  */
-export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | RefSignal<T>
+export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | Ref<T> | RefSignal<T>
 
 /**
  * 属性支持引用值的类型
