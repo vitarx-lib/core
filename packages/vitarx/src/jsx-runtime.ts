@@ -6,6 +6,7 @@ import {
   type UniqueKey,
   type VNodeOf
 } from '@vitarx/runtime-core'
+import type { AnyFunction } from '@vitarx/utils'
 
 /**
  * JSX构建VNode
@@ -24,7 +25,7 @@ function jsx<T extends CreatableType>(
       props.key = key
     }
   }
-  return createVNode(type, props as any) as VNodeOf<T>
+  return (createVNode as AnyFunction)(type, props as any) as VNodeOf<T>
 }
 
 export { jsx, Fragment, jsx as jsxs }
