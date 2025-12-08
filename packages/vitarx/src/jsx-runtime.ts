@@ -1,9 +1,9 @@
 import {
+  type AnyProps,
   type CreatableType,
   createVNode,
   Fragment,
   type UniqueKey,
-  type VNodeInputProps,
   type VNodeOf
 } from '@vitarx/runtime-core'
 
@@ -14,7 +14,7 @@ import {
  */
 function jsx<T extends CreatableType>(
   type: T,
-  props: VNodeInputProps<T> | null = null,
+  props: AnyProps | null = null,
   key?: UniqueKey
 ): VNodeOf<T> {
   if (key) {
@@ -24,7 +24,7 @@ function jsx<T extends CreatableType>(
       props.key = key
     }
   }
-  return createVNode(type, props || ({} as VNodeInputProps<T>)) as VNodeOf<T>
+  return createVNode(type, props as any) as VNodeOf<T>
 }
 
 export { jsx, Fragment, jsx as jsxs }

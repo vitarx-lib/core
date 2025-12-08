@@ -1,9 +1,9 @@
 import {
+  type AnyProps,
   type CreatableType,
   setNodeDevInfo,
   type SourceLocation,
   type UniqueKey,
-  type VNodeInputProps,
   type VNodeOf
 } from '@vitarx/runtime-core'
 import type { AnyRecord } from '@vitarx/utils'
@@ -23,7 +23,7 @@ export { Fragment } from './jsx-runtime.js'
  */
 export function jsxDEV<T extends CreatableType>(
   type: T,
-  props: VNodeInputProps<T> | null,
+  props: AnyProps | null,
   key: UniqueKey | undefined,
   isStatic: boolean,
   source: SourceLocation,
