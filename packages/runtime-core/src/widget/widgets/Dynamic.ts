@@ -4,7 +4,7 @@ import type { AnyChild, CreatableType, VNode, VNodeBuilder } from '../../types/i
 import { createVNode, defineNodeBuilder } from '../../vnode/index.js'
 
 interface DynamicProps {
-  is: Exclude<CreatableType, DynamicRenderType>
+  is: Exclude<CreatableType, DynamicRenderType | Dynamic>
   children?: AnyChild
   [key: string]: any
 }
