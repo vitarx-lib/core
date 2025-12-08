@@ -5,7 +5,7 @@ import {
   createWidgetRuntime,
   type HostNodeElements,
   isVNode,
-  LifecycleHooks,
+  LifecycleHook,
   NodeState,
   type OpsType,
   renderNode,
@@ -55,7 +55,7 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
   override render(node: VNode<StatefulWidgetNodeType>): void {
     const widget = createWidgetRuntime(node)
     // 触发render生命周期钩子
-    widget.invokeHook(LifecycleHooks.render)
+    widget.invokeHook(LifecycleHook.render)
     try {
       super.render(node)
     } catch (e) {
@@ -70,19 +70,19 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
   /** @inheritDoc */
   override mount(node: StatefulWidgetNode, target?: HostNodeElements, opsType?: OpsType): void {
     const runtimeInstance = node.instance!
-    runtimeInstance.invokeHook(LifecycleHooks.beforeMount)
+    runtimeInstance.invokeHook(LifecycleHook.beforeMount)
     // 绑定 ref 引用
     if (node.ref) node.ref.value = runtimeInstance.instance
     super.mount(node, target, opsType)
-    runtimeInstance.invokeHook(LifecycleHooks.mounted)
-    runtimeInstance.invokeHook(LifecycleHooks.activated)
+    runtimeInstance.invokeHook(LifecycleHook.mounted)
+    runtimeInstance.invokeHook(LifecycleHook.activated)
   }
   /** @inheritDoc */
   override activate(node: StatefulWidgetNode, root: boolean): void {
     const widget = node.instance!
     super.activate(node, root)
     widget.scope.resume()
-    widget.invokeHook(LifecycleHooks.activated)
+    widget.invokeHook(LifecycleHook.activated)
     if (widget.dirty) {
       widget.update()
       Scheduler.flushSync()
@@ -94,7 +94,7 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
     // 先调用根节点的停用逻辑（子 → 父顺序）
     super.deactivate(node, root)
     widget.scope.pause()
-    widget.invokeHook(LifecycleHooks.deactivated)
+    widget.invokeHook(LifecycleHook.deactivated)
   }
   /** @inheritDoc */
   override unmount(node: StatefulWidgetNode): void {
@@ -104,13 +104,13 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
       // 修改状态为已停用
       node.state = NodeState.Deactivated
       // 触发onDeactivated生命周期
-      instance.invokeHook(LifecycleHooks.deactivated)
+      instance.invokeHook(LifecycleHook.deactivated)
     }
     // 触发onBeforeUnmount生命周期
-    instance.invokeHook(LifecycleHooks.beforeUnmount)
-    instance.invokeHook(LifecycleHooks.destroy)
+    instance.invokeHook(LifecycleHook.beforeUnmount)
+    instance.invokeHook(LifecycleHook.destroy)
     super.unmount(node)
     // 触发onUnmounted生命周期
-    instance.invokeHook(LifecycleHooks.unmounted)
+    instance.invokeHook(LifecycleHook.unmounted)
   }
 }
