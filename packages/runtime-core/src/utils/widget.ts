@@ -4,7 +4,7 @@ import type {
   Renderable,
   StatelessWidget,
   StatelessWidgetSymbol,
-  WidgetTypes
+  WidgetType
 } from '../types/index.js'
 
 /**
@@ -78,7 +78,7 @@ export function isClassWidget(val: any): val is ClassWidget {
  * @param val - 需要检查的任意值
  * @returns {boolean} 如果值是函数类型则返回true，否则返回false
  */
-export function isWidget(val: any): val is WidgetTypes {
+export function isWidget(val: any): val is WidgetType {
   return typeof val === 'function'
 }
 
@@ -87,7 +87,7 @@ export function isWidget(val: any): val is WidgetTypes {
  * @param widget - WidgetType 类型的组件对象，包含 displayName 和 name 属性
  * @returns 返回组件的显示名称，如果不存在则返回名称，如果都不存在则返回 'AnonymousWidget'
  */
-export function getWidgetName(widget: WidgetTypes) {
+export function getWidgetName(widget: WidgetType) {
   // 首先检查 displayName 是否为字符串且存在
   return widget.displayName || widget.name || 'anonymous'
 }

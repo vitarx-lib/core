@@ -13,7 +13,7 @@ import {
   renderNode,
   unmountNode,
   type WidgetNode,
-  type WidgetTypes
+  type WidgetType
 } from '@vitarx/runtime-core'
 import { isDeepEqual } from '@vitarx/utils'
 
@@ -45,9 +45,9 @@ import { isDeepEqual } from '@vitarx/utils'
  * 特殊说明：
  * - 该类会自动管理节点的状态转换
  * - 对于元素节点，会在适当的生命周期节点调用指令钩子
- * - 使用了泛型约束 T extends WidgetTypes 来确保类型安全
+ * - 使用了泛型约束 T extends WidgetType 来确保类型安全
  */
-export abstract class BaseWidgetDriver<T extends WidgetTypes> implements NodeDriver<T> {
+export abstract class BaseWidgetDriver<T extends WidgetType> implements NodeDriver<T> {
   /** @inheritDoc */
   abstract updateProps(node: WidgetNode<T>, newProps: AnyProps): void
 

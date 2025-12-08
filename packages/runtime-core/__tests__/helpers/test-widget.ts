@@ -14,7 +14,7 @@ import {
   type VNodeOf,
   Widget,
   type WidgetNode,
-  type WidgetTypes
+  type WidgetType
 } from '../../src/index.js'
 
 /**
@@ -58,7 +58,7 @@ export function createTestWidget<P extends Record<string, any> = Record<string, 
  * @param delay 延迟时间（毫秒）
  * @returns 返回异步组件的 Promise
  */
-export function createAsyncWidget<T extends WidgetTypes>(
+export function createAsyncWidget<T extends WidgetType>(
   widget: T,
   delay: number = 0
 ): Promise<{ default: T }> {
@@ -104,7 +104,7 @@ export function flushScheduler(): void {
  * @param container 容器元素，不传则自动创建
  * @returns 返回容器元素
  */
-export function renderAndMount<T extends WidgetTypes>(
+export function renderAndMount<T extends WidgetType>(
   widget: T,
   props?: any,
   container?: HTMLElement

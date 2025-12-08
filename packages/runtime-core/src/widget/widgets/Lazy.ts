@@ -10,7 +10,7 @@ import type {
   VNode,
   VNodeBuilder,
   VNodeInputProps,
-  WidgetTypes,
+  WidgetType,
   WithProps
 } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
@@ -20,7 +20,7 @@ import { Widget } from '../base/index.js'
 /**
  * 惰性加载配置选项
  */
-export interface LazyLoadOptions<T extends WidgetTypes = WidgetTypes> {
+export interface LazyLoadOptions<T extends WidgetType = WidgetType> {
   /**
    * 加载成功之前要显示的元素
    *
@@ -56,7 +56,7 @@ export interface LazyLoadOptions<T extends WidgetTypes = WidgetTypes> {
 /**
  * Lazy 支持的属性
  */
-export interface LazyWidgetProps<T extends WidgetTypes = WidgetTypes> extends LazyLoadOptions<T> {
+export interface LazyWidgetProps<T extends WidgetType = WidgetType> extends LazyLoadOptions<T> {
   /**
    * 接收一个惰性加载器
    *
@@ -97,7 +97,7 @@ export interface LazyWidgetProps<T extends WidgetTypes = WidgetTypes> extends La
  * <YourWidget data="数据会透传给最终渲染的组件"/>
  * ```
  */
-export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidgetProps<T>> {
+export class Lazy<T extends WidgetType = WidgetType> extends Widget<LazyWidgetProps<T>> {
   static defaultProps = {
     delay: 200,
     timeout: 0
@@ -226,7 +226,7 @@ export class Lazy<T extends WidgetTypes = WidgetTypes> extends Widget<LazyWidget
  * @param loader - 加载器
  * @param [options] - 懒加载组件选项
  */
-export function lazy<T extends WidgetTypes>(
+export function lazy<T extends WidgetType>(
   loader: () => Promise<{ default: T }>,
   options?: LazyLoadOptions
 ): VNodeBuilder<VNodeInputProps<T>, StatefulWidgetNode<typeof Lazy<T>>> {

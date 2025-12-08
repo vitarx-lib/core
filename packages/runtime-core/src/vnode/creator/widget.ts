@@ -8,7 +8,7 @@ import type {
   StatelessWidgetNode,
   VNodeInputProps,
   VNodeOf,
-  WidgetTypes
+  WidgetType
 } from '../../types/index.js'
 import { __DEV__, getWidgetName, isStatelessWidget } from '../../utils/index.js'
 import { createBaseVNode } from './base.js'
@@ -41,7 +41,7 @@ import { createBaseVNode } from './base.js'
  * // 控制台将输出警告: "Widget <MyWidget>: Value must be positive"
  * ```
  */
-function validateProps<T extends WidgetTypes>(
+function validateProps<T extends WidgetType>(
   widget: T,
   props: VNodeInputProps<T>,
   devInfo?: NodeDevInfo
@@ -100,7 +100,7 @@ function validateProps<T extends WidgetTypes>(
  * const statefulNode = createWidgetNode(StatefulComponent, { text: 'Hello' });
  * ```
  */
-export function createWidgetVNode<T extends WidgetTypes>(
+export function createWidgetVNode<T extends WidgetType>(
   widget: T,
   props: VNodeInputProps<T>
 ): VNodeOf<T> {

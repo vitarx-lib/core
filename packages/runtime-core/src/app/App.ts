@@ -10,7 +10,7 @@ import type {
   ErrorInfo,
   HostParentElement,
   VNode,
-  WidgetTypes
+  WidgetType
 } from '../types/index.js'
 import { isContainerNode } from '../utils/index.js'
 import { createWidgetVNode, mountNode, unmountNode } from '../vnode/index.js'
@@ -128,7 +128,7 @@ export class App {
    * @param root - 根组件 / 根节点
    * @param config - 配置选项
    */
-  constructor(root: VNode | WidgetTypes, config?: AppConfig) {
+  constructor(root: VNode | WidgetType, config?: AppConfig) {
     if (typeof root === 'function') {
       this.#rootNode = createWidgetVNode(root, {})
     } else {

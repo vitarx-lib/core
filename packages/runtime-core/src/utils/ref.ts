@@ -5,7 +5,7 @@ import type {
   HostNodeNames,
   ImpostWidget,
   StatelessWidget,
-  WidgetTypes
+  WidgetType
 } from '../types/index.js'
 
 /**
@@ -17,7 +17,7 @@ export type ComputedRefElType<T> = T extends HostNodeElements
     ? ElementOf<T>
     : T extends StatelessWidget
       ? null
-      : T extends WidgetTypes
+      : T extends WidgetType
         ? ImpostWidget<T>
         : T
 /** 引用元素类型 */

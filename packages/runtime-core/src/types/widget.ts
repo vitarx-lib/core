@@ -1,6 +1,6 @@
 import type { RequiredKeys } from '@vitarx/utils'
-import { STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
-import { type __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
+import type { STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
+import type { __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
 import type { StatelessWidgetNode, VNode } from './nodes/index.js'
 import type { AnyChild, Renderable } from './vnode.js'
@@ -95,7 +95,7 @@ export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget<P, a
  * 模块小部件类型
  */
 export interface LazyLoadModule {
-  default: WidgetTypes
+  default: WidgetType
 }
 /**
  * 函数小部件有效地返回值
@@ -106,7 +106,7 @@ export interface LazyLoadModule {
  * - `VNodeBuilder`：虚拟节点构建器 依赖跟踪的关键，一般由编译器自动生成
  * - `Promise<Renderable>`：异步返回受支持的Renderable，如字符串，元素节点等
  * - `Promise<VNodeBuilder>`：异步返回视图节点构建器
- * - `Promise<{ default: WidgetTypes }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
+ * - `Promise<{ default: WidgetType }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
  */
 export type FWBuildType =
   | Renderable
@@ -128,15 +128,6 @@ export type FC<P extends AnyProps = any> = FunctionWidget<P>
  * 函数小部件类型别名
  */
 export type FW<P extends AnyProps = any> = FunctionWidget<P>
-/**
- * 小部件结构类型
- *
- * - StatefulWidget
- *    - ClassWidget：类小部件
- *    - FunctionWidget：函数小部件
- * - StatelessWidget：标记为无状态的小部件
- */
-export type WidgetTypes<P extends AnyProps = any> = StatefulWidget<P> | StatelessWidget<P>
 /**
  * 小部件结构类型
  *
@@ -208,8 +199,8 @@ type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = D ex
 /**
  * 组件props类型重载
  */
-export type WidgetPropsType<T extends WidgetTypes> =
-  T extends WidgetTypes<infer P>
+export type WidgetPropsType<T extends WidgetType> =
+  T extends WidgetType<infer P>
     ? 'defaultProps' extends RequiredKeys<T>
       ? WithDefaultProps<P, T['defaultProps']>
       : P
@@ -220,7 +211,7 @@ export type WidgetPropsType<T extends WidgetTypes> =
  *
  * 懒加载小部件也被视为异步函数组件的一种变体
  */
-export type LazyLoadWidget<P extends AnyProps = any, T extends WidgetTypes = WidgetTypes<P>> = {
+export type LazyLoadWidget<P extends AnyProps = any, T extends WidgetType = WidgetType<P>> = {
   (): Promise<{
     default: T
   }>
