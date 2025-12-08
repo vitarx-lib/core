@@ -1,6 +1,6 @@
 import {
   ELEMENT_NODE_KINDS,
-  LifecycleHooks,
+  LifecycleHook,
   NodeKind,
   type RegularElementNode,
   type StatefulWidgetNode,
@@ -198,7 +198,7 @@ export async function streamSerializeNode(
 
 function destroyWidget(node: WidgetNode) {
   if (node.kind === NodeKind.STATEFUL_WIDGET) {
-    ;(node as StatefulWidgetNode).instance?.invokeHook(LifecycleHooks.destroy)
+    ;(node as StatefulWidgetNode).instance?.invokeHook(LifecycleHook.destroy)
   }
   node.instance?.destroy()
 }
