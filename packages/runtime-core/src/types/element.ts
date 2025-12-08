@@ -13,7 +13,7 @@ export interface IntrinsicSpecialElements {
   /**
    * 纯文本
    *
-   * 用于处理纯文本节点，如 <div>Hello</div> 中的 "Hello"。
+   * 用于处理纯文本节点，如 `<div>Hello</div>` 中的 "Hello"。
    *
    * @remarks 开发者无需在视图中使用它，在内部逻辑中会自动转换。
    */
