@@ -1,5 +1,5 @@
-import { type Ref, type RefSignal, type UnwrapRef } from '@vitarx/responsive'
-import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils'
+import type { Ref, RefSignal, UnwrapRef } from '@vitarx/responsive'
+import type { PickRequired } from '@vitarx/utils'
 import type { RefEl } from '../utils/index.js'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../widget/index.js'
 import type { JSXElementNames, JSXInternalElements } from './element.js'
@@ -64,11 +64,7 @@ export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | Ref<T>
  * });
  * ```
  */
-export type WithRefProps<T extends AnyProps> = {
-  [K in keyof T as K extends RequiredKeys<T> ? never : K]?: MaybeRef<T[K]>
-} & {
-  [K in keyof T as K extends OptionalKeys<T> ? never : K]: MaybeRef<T[K]>
-}
+export type WithRefProps<T extends AnyProps> = { [K in keyof T]: MaybeRef<T[K]> }
 
 /**
  * 解包引用属性类型
@@ -95,11 +91,7 @@ export type WithRefProps<T extends AnyProps> = {
  * // }
  * ```
  */
-export type UnwrapRefProps<T extends AnyProps> = {
-  [K in keyof T as K extends RequiredKeys<T> ? never : K]?: UnwrapRef<T[K]>
-} & {
-  [K in keyof T as K extends OptionalKeys<T> ? never : K]: UnwrapRef<T[K]>
-}
+export type UnwrapRefProps<T extends AnyProps> = { [K in keyof T]: UnwrapRef<T[K]> }
 /**
  * 唯一键
  *
