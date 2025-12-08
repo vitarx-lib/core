@@ -1,3 +1,46 @@
+## 4.0.0-alpha.1 (2025-12-08)
+
+* fix(build): 修复 vitarx 版本替换路径错误 ([cc9eb24](https://github.com/vitarx-lib/core/commit/cc9eb24))
+* fix(docs): 规范类型名称 WidgetType ([4046de6](https://github.com/vitarx-lib/core/commit/4046de6))
+* fix(runtime-core): 优化 withMemo 函数缓存逻辑 ([9212642](https://github.com/vitarx-lib/core/commit/9212642))
+* fix(runtime-core): 修复 Dynamic 组件属性类型定义 ([fff3792](https://github.com/vitarx-lib/core/commit/fff3792))
+* fix(runtime-core): 修复 Stateful 组件 onCreate 钩子调用问题 ([e482b33](https://github.com/vitarx-lib/core/commit/e482b33))
+* fix(runtime-core): 修复 withMemo 非数组参数处理 ([965b5e3](https://github.com/vitarx-lib/core/commit/965b5e3))
+* fix(runtime-core): 修复 WithRefProps 和 UnwrapRefProps 类型 ([0784080](https://github.com/vitarx-lib/core/commit/0784080))
+* fix(runtime-core): 修正MaybeRef类型定义错误 ([e7a5761](https://github.com/vitarx-lib/core/commit/e7a5761))
+* fix(runtime-core): 修正纯文本节点注释中的代码格式 ([042e542](https://github.com/vitarx-lib/core/commit/042e542))
+* fix(runtime-core): 去除 NodeKind 和 NodeState 的 const enum 声明 ([ce85a55](https://github.com/vitarx-lib/core/commit/ce85a55))
+* fix(runtime-ssr): 修复生命周期钩子名称错误 ([4ab2926](https://github.com/vitarx-lib/core/commit/4ab2926))
+* fix(runtime-ssr): 修正导入类型名称错误 ([70875ea](https://github.com/vitarx-lib/core/commit/70875ea))
+* fix(runtime-ssr): 修正生命周期钩子枚举名称错误 ([4bb4048](https://github.com/vitarx-lib/core/commit/4bb4048))
+* fix(vitarx): 修复jsx-runtime中createVNode调用类型错误 ([87ab362](https://github.com/vitarx-lib/core/commit/87ab362))
+* build(runtime-core): release runtime-core@2.0.0-alpha.1 ([96a8767](https://github.com/vitarx-lib/core/commit/96a8767))
+* build(runtime-core): release runtime-core@2.0.0-alpha.2 ([007c920](https://github.com/vitarx-lib/core/commit/007c920))
+* build(runtime-core): release runtime-core@2.0.0-alpha.3 ([54491fc](https://github.com/vitarx-lib/core/commit/54491fc))
+* build(runtime-dom): release runtime-dom@1.0.0-alpha.1 ([56a6221](https://github.com/vitarx-lib/core/commit/56a6221))
+* build(runtime-dom): release runtime-dom@1.0.0-alpha.2 ([57b3553](https://github.com/vitarx-lib/core/commit/57b3553))
+* build(runtime-drivers): release runtime-drivers@1.0.0-alpha.1 ([a08166d](https://github.com/vitarx-lib/core/commit/a08166d))
+* build(runtime-drivers): release runtime-drivers@1.0.0-alpha.2 ([70a6249](https://github.com/vitarx-lib/core/commit/70a6249))
+* build(runtime-ssr): release runtime-ssr@1.0.0-alpha.1 ([cb2609e](https://github.com/vitarx-lib/core/commit/cb2609e))
+* build(runtime-ssr): release runtime-ssr@1.0.0-alpha.2 ([7de88e0](https://github.com/vitarx-lib/core/commit/7de88e0))
+* chore(deps): 更新依赖项配置 ([06cf2c2](https://github.com/vitarx-lib/core/commit/06cf2c2))
+* chore(tsconfig): 优化 TypeScript 编译文件匹配规则 ([838aa71](https://github.com/vitarx-lib/core/commit/838aa71))
+* refactor(runtime-core): 优化 ExtractVNodeProps 类型顺序和扩展 ([8258cda](https://github.com/vitarx-lib/core/commit/8258cda))
+* refactor(runtime-core): 优化类型定义和导出，清理代码 ([5aefdbf](https://github.com/vitarx-lib/core/commit/5aefdbf))
+* refactor(runtime-core): 将所有 WidgetTypes 重构为 WidgetType 以统一类型名称 ([2ec4317](https://github.com/vitarx-lib/core/commit/2ec4317))
+* refactor(runtime-core): 统一 LifecycleHook 枚举名称及相关类型定义 ([1054570](https://github.com/vitarx-lib/core/commit/1054570))
+* refactor(runtime-core): 重构生命周期钩子类型及函数组件生命周期管理 ([28fc5a4](https://github.com/vitarx-lib/core/commit/28fc5a4))
+* refactor(widget): 统一生命周期钩子命名为单数形式 ([b508c09](https://github.com/vitarx-lib/core/commit/b508c09))
+* test(runtime-core): 优化VNode创建测试用例 ([292a976](https://github.com/vitarx-lib/core/commit/292a976))
+* feat(runtime-core): 添加版本号设置功能 ([805a24e](https://github.com/vitarx-lib/core/commit/805a24e))
+* feat(types): 补充小部件结构类型 ([1a7e650](https://github.com/vitarx-lib/core/commit/1a7e650))
+* feat(vitarx): 设置版本号并更新jsx接口类型 ([97ac858](https://github.com/vitarx-lib/core/commit/97ac858))
+* docs(readme): 重构并丰富README文档 ([374e80e](https://github.com/vitarx-lib/core/commit/374e80e))
+* docs(runtime-core): 更新虚拟节点示例代码 ([6611fe8](https://github.com/vitarx-lib/core/commit/6611fe8))
+* docs(widget): 添加无状态小部件别名说明 ([18f9843](https://github.com/vitarx-lib/core/commit/18f9843))
+
+
+
 ## 4.0.0-alpha.0 (2025-12-07)
 
 * build(responsive): release responsive@1.0.8 ([f202b9f](https://github.com/vitarx-lib/core/commit/f202b9f))
@@ -11,6 +54,7 @@
 * build(tsconfig): 更新 TypeScript 配置中的 ES 版本 ([34474a7](https://github.com/vitarx-lib/core/commit/34474a7))
 * build(utils): release utils@1.0.3 ([9b4512f](https://github.com/vitarx-lib/core/commit/9b4512f))
 * build(vitarx): release vitarx@3.5.0 ([da019d4](https://github.com/vitarx-lib/core/commit/da019d4))
+* build(vitarx): release vitarx@4.0.0-alpha.0 ([bccc847](https://github.com/vitarx-lib/core/commit/bccc847))
 * docs(api): 删除响应式API文档文件 ([5d74e9a](https://github.com/vitarx-lib/core/commit/5d74e9a))
 * docs(api): 新增响应式API文档，详细介绍computed、reactive与ref ([3df02dc](https://github.com/vitarx-lib/core/commit/3df02dc))
 * docs(api): 新增响应式API系列文档 ([dd344de](https://github.com/vitarx-lib/core/commit/dd344de))
@@ -2451,19 +2495,24 @@
 ## 1.1.0 (2025-03-10)
 
 * build: 更新打包路径和文件名 ([a46c0db](https://github.com/vitarx-lib/core/commit/a46c0db))
-* build: 更新项目版本号至1.0.3 ([ab99b80](https://github.com/vitarx-lib/core/commit/ab99b80))
 * build: 更新项目版本并修改仓库地址 ([ee34cf9](https://github.com/vitarx-lib/core/commit/ee34cf9))
 * docs: 更新 LICENSE 文件为中文版本 ([660f687](https://github.com/vitarx-lib/core/commit/660f687))
-* refactor(core): 更新 renderer 类型定义 ([857e73e](https://github.com/vitarx-lib/core/commit/857e73e))
 * refactor(core): 重命名 AppRenderer 为 App 并优化相关结构 ([66819f9](https://github.com/vitarx-lib/core/commit/66819f9))
 * refactor(core): 重命名 hooksCollector 为 _hooksCollector ([ab8412c](https://github.com/vitarx-lib/core/commit/ab8412c))
 * refactor(core): 重命名 hooksCollector 函数为 _hooksCollector ([758e5f5](https://github.com/vitarx-lib/core/commit/758e5f5))
-* refactor(core): 重构 HTML属性类型定义 ([a1332ce](https://github.com/vitarx-lib/core/commit/a1332ce))
 * refactor(web-runtime-dom): 为渲染函数添加返回类型注释 ([8341bd6](https://github.com/vitarx-lib/core/commit/8341bd6))
 * feat(core): 添加 createWidgetRenderer函数 ([5cea0ec](https://github.com/vitarx-lib/core/commit/5cea0ec))
 * feat(core): 添加实例注册和获取功能 ([dfa257c](https://github.com/vitarx-lib/core/commit/dfa257c))
 * feat(core): 添加获取当前组件实例的钩子函数 ([bcf96ad](https://github.com/vitarx-lib/core/commit/bcf96ad))
 * fix(core): 修复 useViewForceUpdating 在非函数组件顶层作用域使用时的错误 ([717c724](https://github.com/vitarx-lib/core/commit/717c724))
+
+
+
+## <small>1.0.3 (2025-03-06)</small>
+
+* build: 更新项目版本号至1.0.3 ([ab99b80](https://github.com/vitarx-lib/core/commit/ab99b80))
+* refactor(core): 更新 renderer 类型定义 ([857e73e](https://github.com/vitarx-lib/core/commit/857e73e))
+* refactor(core): 重构 HTML属性类型定义 ([a1332ce](https://github.com/vitarx-lib/core/commit/a1332ce))
 
 
 
