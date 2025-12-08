@@ -26,11 +26,11 @@
 
 **TypeScript 类型定义**
 ```typescript
-function createApp(root: VNode | WidgetTypes, config?: AppConfig): App
+function createApp(root: VNode | WidgetType, config?: AppConfig): App
 ```
 
 **参数说明**
-- `root`: 应用的根节点，可以是虚拟节点(VNode)或小部件类型(WidgetTypes)
+- `root`: 应用的根节点，可以是虚拟节点(VNode)或小部件类型(WidgetType)
 - `config`: 可选的应用配置参数，用于定制应用的行为
 
 **返回值**
