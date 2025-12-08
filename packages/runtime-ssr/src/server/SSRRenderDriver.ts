@@ -2,7 +2,7 @@ import {
   createWidgetRuntime,
   type ElementOf,
   type FragmentNode,
-  LifecycleHooks,
+  LifecycleHook,
   NodeDriver,
   NodeKind,
   type NodeType,
@@ -63,7 +63,7 @@ export class SSRRenderDriver<T extends NodeType> implements NodeDriver<T> {
         const runtime = createWidgetRuntime(widgetNode)
 
         // 执行 onRender 钩子，异步组件的解析 Promise 也会在这里返回
-        const result = runtime.invokeHook(LifecycleHooks.render)
+        const result = runtime.invokeHook(LifecycleHook.render)
 
         // 统一将异步任务绑定到节点
         if (isPromise(result) && nodeAsyncMap) {
