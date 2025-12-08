@@ -1,11 +1,10 @@
 import { Ref, type RefSignal, type UnwrapRef } from '@vitarx/responsive'
 import type { OptionalKeys, PickRequired, RequiredKeys } from '@vitarx/utils'
-import type { DynamicRenderType } from '../constants/index.js'
 import type { RefEl } from '../utils/index.js'
-import type { Dynamic, Fragment } from '../widget/index.js'
+import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../widget/index.js'
 import type { JSXElementNames, JSXInternalElements } from './element.js'
-import type { CreatableType, FragmentNodeType } from './vnode.js'
-import type { AnyProps, WidgetPropsType, WidgetTypes } from './widget.js'
+import type { CreatableType } from './vnode.js'
+import type { AnyProps, WidgetPropsType, WidgetType } from './widget.js'
 
 /**
  * 可能是引用值的类型
@@ -313,13 +312,13 @@ type WithVModelUpdate<T extends AnyProps> = T & {
 /**
  * 提取节点属性类型
  */
-export type ExtractVNodeProps<T extends CreatableType> = T extends Dynamic | DynamicRenderType
-  ? WithRefProps<WidgetPropsType<Dynamic>>
-  : T extends Fragment | FragmentNodeType
-    ? WithRefProps<WidgetPropsType<Fragment>>
-    : T extends JSXElementNames
-      ? JSXInternalElements[T]
-      : T extends WidgetTypes
+export type ExtractVNodeProps<T extends CreatableType> = T extends JSXElementNames
+  ? JSXInternalElements[T]
+  : T extends Dynamic | 'dynamic'
+    ? WithRefProps<DynamicProps>
+    : T extends Fragment | 'fragment'
+      ? WithRefProps<FragmentProps>
+      : T extends WidgetType
         ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<T>>>>
         : AnyProps
 
@@ -330,8 +329,7 @@ export type ExtractVNodeProps<T extends CreatableType> = T extends Dynamic | Dyn
  * - 元素或组件定义的属性
  * - 全局属性（如key、ref、v-show等）
  */
-export type VNodeInputProps<T extends CreatableType = CreatableType> = ExtractVNodeProps<T> &
-  IntrinsicAttributes
+export type VNodeInputProps<T extends CreatableType> = ExtractVNodeProps<T> & IntrinsicAttributes
 
 /**
  * 根据节点类型推断其对应的属性类型
@@ -372,7 +370,7 @@ export type WithProps<T extends CreatableType, K extends keyof any = 'children'>
 /**
  * 此类型工具用于提供给 JSX.LibraryManagedAttributes 使用，确保类型推导正确。
  */
-export type JSXElementAttributes<C, P> = C extends WidgetTypes
+export type JSXElementAttributes<C, P> = C extends WidgetType
   ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<C>>>>
   : P extends object
     ? WithRefProps<P>

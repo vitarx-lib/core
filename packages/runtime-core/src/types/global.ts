@@ -1,5 +1,4 @@
-import { DYNAMIC_RENDER_TYPE } from '../constants/index.js'
-import { type Dynamic, Widget } from '../widget/index.js'
+import type { DynamicProps, Widget } from '../widget/index.js'
 import type { IntrinsicSpecialElements } from './element.js'
 import type { ErrorHandler } from './lifecycle.js'
 import type { VNode } from './nodes/index.js'
@@ -8,7 +7,7 @@ import type {
   JSXElementAttributes,
   WithRefProps
 } from './props.js'
-import type { AnyProps, FunctionWidget, JSXElementConstructor, WidgetPropsType } from './widget.js'
+import type { AnyProps, FunctionWidget, JSXElementConstructor } from './widget.js'
 
 declare global {
   namespace Vitarx {
@@ -50,24 +49,24 @@ declare global {
        * const currentWidget = computed(() => widgets[current.value])
        *
        * // 1️⃣ 基础用法
-       * <render is={currentWidget} />
+       * <dynamic is={currentWidget} />
        *
        * // 2️⃣ 透传 props
-       * <render is={currentWidget} v-bind={ name: 'John' } style={{background:'red'}}/>
+       * <dynamic is={currentWidget} v-bind={ name: 'John' } style={{background:'red'}}/>
        *
        * // 3️⃣ 通过 children 属性传递子元素
-       * <render is={currentWidget} children={<div>Hello</div>} />
+       * <dynamic is={currentWidget} children={<div>Hello</div>} />
        *
        * // 4️⃣ 通过插槽传递子元素
-       * <render is={currentWidget}>
+       * <dynamic is={currentWidget}>
        *   <div>Hello</div>
-       * </render>
+       * </dynamic>
        *
        * // 5️⃣ 组件方式使用
-       * <Render is={currentWidget}/>
+       * <Dynamic is={currentWidget}/>
        * ```
        */
-      [DYNAMIC_RENDER_TYPE]: WidgetPropsType<Dynamic>
+      dynamic: DynamicProps
     }
     /**
      * 渲染上下文

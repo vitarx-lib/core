@@ -1,10 +1,9 @@
 import { unref } from '@vitarx/responsive'
-import type { DynamicRenderType } from '../../constants/index.js'
 import type { AnyChild, CreatableType, VNode, VNodeBuilder } from '../../types/index.js'
 import { createVNode, defineNodeBuilder } from '../../vnode/index.js'
 
-interface DynamicProps {
-  is: Exclude<CreatableType, DynamicRenderType | Dynamic>
+export interface DynamicProps {
+  is: Exclude<CreatableType, 'dynamic' | Dynamic>
   children?: AnyChild
   [key: string]: any
 }

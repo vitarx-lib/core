@@ -1,7 +1,5 @@
 /**
  * 生命周期钩子枚举
- *
- * @alias LifecycleHooks
  */
 export enum LifecycleHook {
   error = 'onError',
@@ -17,5 +15,3 @@ export enum LifecycleHook {
   unmounted = 'onUnmounted',
   destroy = 'onDestroy'
 }
-
-export { LifecycleHook as LifecycleHooks }

@@ -5,9 +5,9 @@
  * 包括虚拟节点的属性、元素类型以及开发模式下的调试信息。
  */
 
-import {
+import type {
   COMMENT_NODE_TYPE,
-  type DynamicRenderType,
+  DynamicRenderType,
   FRAGMENT_NODE_TYPE,
   NodeKind,
   TEXT_NODE_TYPE,
@@ -31,7 +31,7 @@ import type {
   VNode,
   VoidElementNode
 } from './nodes/index.js'
-import type { AnyProps, StatefulWidget, StatelessWidget, WidgetTypes } from './widget.js'
+import type { AnyProps, StatefulWidget, StatelessWidget, WidgetType } from './widget.js'
 
 /**
  * 代码位置信息
@@ -144,7 +144,7 @@ export type NormalizedChildren = VNode[]
  *
  * 注意：此元素类型仅提供给 `createVNode` 使用，实际的运行时虚拟节点类型是 `VNodeType` 类型所定义的。
  */
-export type CreatableType = JSXElementNames | WidgetTypes | VNodeBuilder
+export type CreatableType = JSXElementNames | WidgetType | VNodeBuilder
 
 /**
  * 获取可创建的VNode类型对应的VNode实例类型

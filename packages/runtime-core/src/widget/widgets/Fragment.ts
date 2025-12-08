@@ -1,7 +1,7 @@
 import type { AnyChild, FragmentNode, VNodeBuilder } from '../../types/index.js'
 import { createFragmentVNode, defineNodeBuilder } from '../../vnode/index.js'
 
-interface FragmentProps {
+export interface FragmentProps {
   children?: AnyChild
 }
 export type FragmentWidget = VNodeBuilder<FragmentProps, FragmentNode> & { __is_fragment__: true }

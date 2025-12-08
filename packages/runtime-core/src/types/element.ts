@@ -1,8 +1,6 @@
 import { COMMENT_NODE_TYPE, FRAGMENT_NODE_TYPE, TEXT_NODE_TYPE } from '../constants/index.js'
-import type { Fragment } from '../widget/index.js'
-import type { MaybeRef } from './props.js'
+import type { FragmentProps } from '../widget/index.js'
 import type { CommentNodeType, FragmentNodeType, TextNodeType } from './vnode.js'
-import type { WidgetPropsType } from './widget.js'
 
 /**
  * 固有的特殊元素
@@ -11,7 +9,7 @@ export interface IntrinsicSpecialElements {
   /**
    * 片段元素
    */
-  [FRAGMENT_NODE_TYPE]: WidgetPropsType<Fragment>
+  [FRAGMENT_NODE_TYPE]: FragmentProps
   /**
    * 纯文本
    *
@@ -19,7 +17,7 @@ export interface IntrinsicSpecialElements {
    *
    * @remarks 开发者无需在视图中使用它，在内部逻辑中会自动转换。
    */
-  [TEXT_NODE_TYPE]: { text: MaybeRef<string> }
+  [TEXT_NODE_TYPE]: { text: string }
   /**
    * 注释
    *
@@ -29,7 +27,7 @@ export interface IntrinsicSpecialElements {
    *
    * @remarks 不建议在视图中使用它，除非你真的需要在生产环境中显示一段注释。
    */
-  [COMMENT_NODE_TYPE]: { text: MaybeRef<string> }
+  [COMMENT_NODE_TYPE]: { text: string }
 }
 /**
  * JSX 元素接口
