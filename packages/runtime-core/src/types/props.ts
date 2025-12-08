@@ -312,12 +312,12 @@ type WithVModelUpdate<T extends AnyProps> = T & {
 /**
  * 提取节点属性类型
  */
-export type ExtractVNodeProps<T extends CreatableType> = T extends JSXElementNames
-  ? JSXInternalElements[T]
-  : T extends Dynamic | 'dynamic'
-    ? WithRefProps<DynamicProps>
-    : T extends Fragment | 'fragment'
-      ? WithRefProps<FragmentProps>
+export type ExtractVNodeProps<T extends CreatableType> = T extends Dynamic | 'dynamic'
+  ? WithRefProps<DynamicProps>
+  : T extends Fragment | 'fragment'
+    ? WithRefProps<FragmentProps>
+    : T extends JSXElementNames
+      ? JSXInternalElements[T]
       : T extends WidgetType
         ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<T>>>>
         : AnyProps
