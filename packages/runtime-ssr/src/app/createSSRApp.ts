@@ -1,4 +1,4 @@
-import type { AppConfig, VNode, WidgetTypes } from '@vitarx/runtime-core'
+import type { AppConfig, VNode, WidgetType } from '@vitarx/runtime-core'
 import { SSRApp } from './SSRApp.js'
 
 /**
@@ -14,6 +14,6 @@ import { SSRApp } from './SSRApp.js'
  * const html = await renderToString(app)
  * ```
  */
-export function createSSRApp(root: VNode | WidgetTypes, config?: AppConfig): SSRApp {
+export function createSSRApp(root: VNode | WidgetType, config?: AppConfig): SSRApp {
   return new SSRApp(root, config)
 }
