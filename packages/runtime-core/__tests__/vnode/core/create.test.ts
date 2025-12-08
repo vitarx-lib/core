@@ -22,7 +22,7 @@ import { createTestWidget } from '../../helpers/test-widget.js'
 describe('VNode 创建 (createVNode)', () => {
   describe('基础节点创建', () => {
     it('应该能够创建文本节点', () => {
-      const vnode = createVNode(TEXT_NODE_TYPE, { text: 'Hello World' })
+      const vnode = createVNode('plain-text', { text: 'Hello World' })
 
       expect(vnode.type).toBe(TEXT_NODE_TYPE)
       expect(vnode.kind).toBe(NodeKind.TEXT)
@@ -98,7 +98,7 @@ describe('VNode 创建 (createVNode)', () => {
     })
 
     it('应该能够验证子节点绑定', () => {
-      const children = [createVNode(TEXT_NODE_TYPE, { text: 'text' })]
+      const children = [createVNode(TEXT_NODE_TYPE, { text: 'text' })] as any
       const vnode = createVNode('div', { children })
 
       expect(vnode.children).toHaveLength(1)
