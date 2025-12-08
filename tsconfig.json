@@ -42,10 +42,10 @@
     ]
   },
   "include": [
-    "**/src",
-    "**/tests",
-    "**/__tests__",
-    "./scripts"
+    "**/src/**/*.ts",
+    "**/tests/**/*.ts",
+    "**/__tests__/**/*.ts",
+    "./scripts/*.ts"
   ],
   "exclude": [
     "**/node_modules",
