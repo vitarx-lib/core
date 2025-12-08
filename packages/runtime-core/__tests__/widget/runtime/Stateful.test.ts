@@ -13,7 +13,7 @@ import {
   deactivateNode,
   type ErrorInfo,
   findParentNode,
-  LifecycleHooks,
+  LifecycleHook,
   mountNode,
   NodeState,
   type Renderable,
@@ -163,8 +163,8 @@ describe('StatefulWidgetRuntime', () => {
       const runtime = new StatefulWidgetRuntime(vnode as any)
 
       expect(() => {
-        runtime.invokeHook(LifecycleHooks.beforeUpdate)
-        runtime.invokeHook(LifecycleHooks.updated)
+        runtime.invokeHook(LifecycleHook.beforeUpdate)
+        runtime.invokeHook(LifecycleHook.updated)
       }).not.toThrow()
     })
 
@@ -186,7 +186,7 @@ describe('StatefulWidgetRuntime', () => {
       const runtime = new StatefulWidgetRuntime(vnode as any)
       const reportErrorSpy = vi.spyOn(runtime, 'reportError')
 
-      runtime.invokeHook(LifecycleHooks.beforeUpdate)
+      runtime.invokeHook(LifecycleHook.beforeUpdate)
 
       expect(reportErrorSpy).toHaveBeenCalledWith(error, expect.stringContaining('hook:'))
     })

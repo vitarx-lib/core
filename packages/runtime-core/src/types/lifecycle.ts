@@ -1,4 +1,5 @@
-import type { LifecycleHooks } from '../constants/index.js'
+import type { AnyCallback } from '@vitarx/utils/src/index.js'
+import type { LifecycleHook } from '../constants/index.js'
 import type { Widget } from '../widget/index.js'
 
 /**
@@ -64,7 +65,7 @@ export interface ErrorInfo {
  * });
  * ```
  */
-export type LifecycleHookNames = keyof typeof LifecycleHooks
+export type LifecycleHookNames = keyof typeof LifecycleHook
 /**
  * 生命周期钩子方法名联合类型
  *
@@ -73,7 +74,7 @@ export type LifecycleHookNames = keyof typeof LifecycleHooks
  *
  * 与 LifecycleHookNames 不同，此类型直接使用枚举值的字符串形式。
  */
-export type LifecycleHookMethods = `${LifecycleHooks}`
+export type LifecycleHookMethods = `${LifecycleHook}`
 /**
  * 生命周期钩子参数类型
  *
@@ -86,7 +87,7 @@ export type LifecycleHookMethods = `${LifecycleHooks}`
  *
  * @template T 生命周期钩子类型
  */
-export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
+export type LifecycleHookParameter<T> = T extends LifecycleHook.error
   ? [error: unknown, info: ErrorInfo]
   : []
 /**
@@ -102,9 +103,9 @@ export type LifecycleHookParameter<T> = T extends LifecycleHooks.error
  *
  * @template T 生命周期钩子类型
  */
-export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error
+export type LifecycleHookReturnType<T extends LifecycleHook> = T extends LifecycleHook.error
   ? any
-  : T extends LifecycleHooks.render
+  : T extends LifecycleHook.render
     ? Promise<unknown> | void
     : void
 
@@ -114,7 +115,10 @@ export type LifecycleHookReturnType<T> = T extends LifecycleHooks.error
  * 定义了错误处理器的函数签名，错误处理器用于捕获和处理组件生命周期中的错误。
  * 错误处理器可以访问组件实例（通过 this），并接收错误对象和错误信息作为参数。
  *
- * 错误处理器可以选择性地返回一个 VNode，用于在错误发生时渲染备用UI。
+ * 返回值说明：
+ * - 返回 VNode：返回一个 VNode，用于在错误发生时渲染备用UI。
+ * - 返回 false：返回 false，表示不继续向上级抛出错误。
+ * - 返回其他值：返回其他值，表示继续向上级抛出错误。
  *
  * @template T 错误处理器的宿主组件类型，默认为 Widget
  *
@@ -136,3 +140,12 @@ export type ErrorHandler<T extends Widget = Widget> = (
   error: unknown,
   info: ErrorInfo
 ) => any
+export type LifecycleHandler<T extends LifecycleHook> = T extends LifecycleHook.error
+  ? ErrorHandler
+  : (this: Widget) => LifecycleHookReturnType<T>
+/**
+ * 组件生命周期钩子映射
+ */
+export type LifecycleHookMap = {
+  [K in LifecycleHook]?: Set<AnyCallback>
+}

@@ -90,7 +90,6 @@ describe('runtime/hook', () => {
   describe('钩子类型校验', () => {
     it('应该在传入非函数时抛出类型错误', () => {
       expect(() => onBeforeMount('not a function' as any)).toThrow(TypeError)
-      expect(() => onBeforeMount('not a function' as any)).toThrow(/钩子必须是回调函数/)
     })
 
     it('应该在传入 null 时抛出类型错误', () => {

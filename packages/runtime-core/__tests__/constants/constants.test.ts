@@ -11,7 +11,7 @@ import {
   COMMENT_NODE_TYPE,
   DYNAMIC_RENDER_TYPE,
   FRAGMENT_NODE_TYPE,
-  LifecycleHooks,
+  LifecycleHook,
   NodeKind,
   NodeState,
   TEXT_NODE_TYPE
@@ -65,16 +65,16 @@ describe('常量定义', () => {
 
   describe('LifecycleHooks 枚举', () => {
     it('应该定义所有生命周期钩子名称', () => {
-      expect(LifecycleHooks.beforeMount).toBe('onBeforeMount')
-      expect(LifecycleHooks.mounted).toBe('onMounted')
-      expect(LifecycleHooks.beforeUpdate).toBe('onBeforeUpdate')
-      expect(LifecycleHooks.updated).toBe('onUpdated')
-      expect(LifecycleHooks.beforeUnmount).toBe('onBeforeUnmount')
-      expect(LifecycleHooks.unmounted).toBe('onUnmounted')
-      expect(LifecycleHooks.activated).toBe('onActivated')
-      expect(LifecycleHooks.deactivated).toBe('onDeactivated')
-      expect(LifecycleHooks.error).toBe('onError')
-      expect(LifecycleHooks.render).toBe('onRender')
+      expect(LifecycleHook.beforeMount).toBe('onBeforeMount')
+      expect(LifecycleHook.mounted).toBe('onMounted')
+      expect(LifecycleHook.beforeUpdate).toBe('onBeforeUpdate')
+      expect(LifecycleHook.updated).toBe('onUpdated')
+      expect(LifecycleHook.beforeUnmount).toBe('onBeforeUnmount')
+      expect(LifecycleHook.unmounted).toBe('onUnmounted')
+      expect(LifecycleHook.activated).toBe('onActivated')
+      expect(LifecycleHook.deactivated).toBe('onDeactivated')
+      expect(LifecycleHook.error).toBe('onError')
+      expect(LifecycleHook.render).toBe('onRender')
     })
   })
 
