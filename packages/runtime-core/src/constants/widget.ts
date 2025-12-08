@@ -1,4 +1,4 @@
-import { LifecycleHooks } from './hook.js'
+import { LifecycleHook } from './hook.js'
 
 /**
  * 组件内部保留方法
@@ -7,7 +7,7 @@ export const __WIDGET_INTRINSIC_METHOD_KEYWORDS__ = [
   'build',
   '$forceUpdate',
   '$patchUpdate',
-  ...Object.values(LifecycleHooks)
+  ...Object.values(LifecycleHook)
 ] as const
 /**
  * 组件内部保留属性

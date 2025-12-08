@@ -6,7 +6,7 @@ import {
   Subscriber
 } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
-import { LifecycleHooks, NodeState } from '../../constants/index.js'
+import { LifecycleHook, NodeState } from '../../constants/index.js'
 import { findParentNode, linkParentNode, proxyWidgetProps } from '../../runtime/index.js'
 import type {
   ErrorSource,
@@ -20,7 +20,7 @@ import type {
 import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import { patchUpdate } from '../../vnode/core/update.js'
 import { createCommentVNode, createTextVNode } from '../../vnode/index.js'
-import { FnWidget, initializeFnWidget } from '../base/FnWidget.js'
+import { FnWidget } from '../base/FnWidget.js'
 import { Widget } from '../base/index.js'
 import { WidgetRuntime } from './WidgetRuntime.js'
 
@@ -125,13 +125,13 @@ export class StatefulWidgetRuntime<
    * @param args - 钩子函数参数
    * @returns 钩子函数的返回值
    */
-  public invokeHook<T extends LifecycleHooks>(
+  public invokeHook<T extends LifecycleHook>(
     hookName: T,
     ...args: LifecycleHookParameter<T>
   ): LifecycleHookReturnType<T> | void {
     try {
       // 错误钩子需要特殊处理，直接调用 reportError
-      if (hookName === LifecycleHooks.error) {
+      if (hookName === LifecycleHook.error) {
         return this.reportError(
           ...(args as unknown as [unknown, ErrorSource, Widget])
         ) as LifecycleHookReturnType<T>
@@ -169,7 +169,7 @@ export class StatefulWidgetRuntime<
     }
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
-    this.invokeHook(LifecycleHooks.beforeUpdate)
+    this.invokeHook(LifecycleHook.beforeUpdate)
     Scheduler.queueJob(this.finishUpdate)
   }
   /**
@@ -211,7 +211,7 @@ export class StatefulWidgetRuntime<
         // 默认情况下，使用patchUpdate方法进行节点更新
         this.cachedChildVNode = patchUpdate(this.child, newChild)
       }
-      this.invokeHook(LifecycleHooks.updated)
+      this.invokeHook(LifecycleHook.updated)
     } catch (err) {
       this.reportError(err, 'update')
     }
@@ -300,7 +300,6 @@ export class StatefulWidgetRuntime<
         } else {
           // 创建函数组件实例
           instance = new FnWidget(this.props)
-          initializeFnWidget(instance)
         }
         return instance as WidgetInstanceType<T>
       })

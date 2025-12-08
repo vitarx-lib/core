@@ -1,18 +1,21 @@
 import { isPromise } from '@vitarx/utils'
-import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHooks, NodeState } from '../../constants/index.js'
-import { getRenderer } from '../../renderer/index.js'
+import type { AnyCallback } from '@vitarx/utils/src/index.js'
+import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHook, NodeState } from '../../constants/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
 import { useSuspense } from '../../runtime/index.js'
 import type {
   ChildBuilder,
+  ErrorHandler,
+  ErrorInfo,
   FunctionWidget,
   LazyLoadModule,
-  LifecycleHookMethods,
+  LifecycleHandler,
+  LifecycleHookMap,
   Renderable,
   StatefulWidgetNode,
   VNode
 } from '../../types/index.js'
-import { isVNode } from '../../utils/index.js'
+import { getDomTarget, isVNode } from '../../utils/index.js'
 import { isWidget } from '../../utils/widget.js'
 import {
   cloneVNode,
@@ -26,7 +29,8 @@ import { StatefulWidgetRuntime } from '../runtime/index.js'
 import { Widget } from './Widget.js'
 
 /**
- * FnWidget 是一个函数式组件小部件类，继承自 Widget 基类，用于支持函数式组件的渲染和生命周期管理。
+ * FnWidget 是函数式组件运行时的代理类，
+ * 继承自 Widget 基类，用于支持函数式组件的渲染和生命周期管理。
  *
  * 该类提供了以下核心功能：
  * - 支持异步初始化函数小部件
@@ -35,18 +39,119 @@ import { Widget } from './Widget.js'
  * - 支持多种构建函数类型（函数、VNode、Promise等）
  *
  * 注意事项：
- * - build 属性支持多种类型，但必须是 VNode、返回 VNode 的函数、Promise<{ default: 函数组件/类组件 }> 或 null
- * - 如果 build 是 Promise，会自动处理异步情况
+ * - 如果函数组件返回的是 Promise，会自动处理异步情况
  * - 内部关键字（__WIDGET_INTRINSIC_KEYWORDS__）不会被注入到实例中
  *
  * @template T - 组件属性类型，继承自 Widget 基类
  */
 export class FnWidget extends Widget<Record<string, any>> {
+  readonly #hooks: LifecycleHookMap
+  #isReady: boolean = false
+  readonly #asyncRender: (() => Promise<void>) | null = null
+  constructor(props: Record<string, any>) {
+    super(props)
+    const { exposed, hooks, buildResult } = HookCollector.collect(
+      this.$vnode as StatefulWidgetNode<FunctionWidget>,
+      this
+    )
+    this.#hooks = hooks
+    injectExposedMembers(exposed, this)
+    mixinHooks(this, hooks, () => this.#isReady)
+    if (isPromise(buildResult)) {
+      // 标记节点为异步组件
+      this.$vnode.isAsyncWidget = true
+      this.#asyncRender = initializeAsyncWidget(
+        this,
+        exposed,
+        buildResult,
+        () => (this.#isReady = true)
+      )
+    } else {
+      this.#isReady = true
+      this.build = typeof buildResult === 'function' ? buildResult : () => buildResult
+    }
+  }
+  override async onRender(): Promise<void> {
+    const userOnRenders = this.#hooks[LifecycleHook.render]
+    if (userOnRenders) {
+      const asyncErrors: unknown[] = []
+      await Promise.allSettled(
+        Array.from(userOnRenders).map(
+          async (userOnRender: LifecycleHandler<LifecycleHook.render>) => {
+            try {
+              await userOnRender.call(this)
+            } catch (e) {
+              asyncErrors.push(e)
+            }
+          }
+        )
+      )
+      if (asyncErrors.length) {
+        throw new AggregateError(asyncErrors, 'Lifecycle hook "onRender" execution failed')
+      }
+    }
+    if (this.#asyncRender) {
+      await this.#asyncRender()
+    }
+  }
+  override onError(error: unknown, info: ErrorInfo): any {
+    const userOnErrors = this.#hooks[LifecycleHook.error] as unknown as ErrorHandler[]
+    if (userOnErrors) {
+      for (const userOnError of userOnErrors) {
+        const result = userOnError.call(this, error, info)
+        if (result === false) return void 0
+        if (isVNode(result)) return result
+      }
+    }
+  }
   override build(): Renderable {
     return undefined
   }
 }
 
+/**
+ * 调用无参的钩子
+ *
+ * @param instance
+ * @param type
+ * @param hooks
+ */
+function invokeVoidHook(
+  instance: FnWidget,
+  hooks: LifecycleHookMap,
+  type: Exclude<LifecycleHook, LifecycleHook.error | LifecycleHook.render>
+) {
+  const useHook = hooks[type]
+  const errors: unknown[] = []
+  if (useHook) {
+    for (const useHookItem of useHook) {
+      try {
+        ;(useHookItem as AnyCallback).call(instance)
+      } catch (e) {
+        errors.push(e)
+      }
+    }
+  }
+  if (errors.length) {
+    throw new AggregateError(errors, `Lifecycle hook "${type}" execution failed`)
+  }
+}
+/**
+ * 为实例混入生命周期钩子函数
+ *
+ * @param instance - 需要混入钩子的函数组件实例
+ * @param hooks - 生命周期钩子映射表，包含各个钩子的具体实现
+ * @param isReady - 函数组件实例的 ready 状态函数
+ */
+function mixinHooks(instance: FnWidget, hooks: LifecycleHookMap, isReady: () => boolean) {
+  // 遍历所有生命周期钩子
+  for (const hook of Object.values(LifecycleHook)) {
+    // 跳过错误处理和渲染钩子，这些钩子可能有特殊处理
+    if (hook === 'onError' || hook === 'onRender' || hook === 'onCreate') continue
+    // 为实例的每个钩子属性赋值，调用通用的钩子触发函数
+    instance[hook] = () => (isReady() ? invokeVoidHook(instance, hooks, hook) : undefined)
+  }
+}
 /**
  * 执行子节点替换流程
  */
@@ -55,44 +160,37 @@ const performChildReplacement = (
   oldChild: VNode,
   newChild: VNode
 ) => {
-  const renderer = getRenderer()
-  const anchor = renderer.createText('')
-  renderer.insertBefore(anchor, oldChild.el!)
+  const anchor = getDomTarget(oldChild)
+  runtime.invokeHook(LifecycleHook.beforeMount)
+  mountNode(newChild, anchor, 'insertBefore')
   unmountNode(oldChild)
-  runtime.invokeHook(LifecycleHooks.beforeMount)
-  mountNode(newChild, anchor, 'replace')
-  runtime.invokeHook(LifecycleHooks.mounted)
-}
-
-/**
- * 检查节点状态是否有效
- */
-const isValidNodeState = (state: NodeState): boolean => {
-  return state !== NodeState.Unmounted && state !== NodeState.Created
+  runtime.invokeHook(LifecycleHook.mounted)
 }
 
 /**
  * 处理激活状态的异步渲染完成
  */
-const handleActivatedState = (runtime: StatefulWidgetRuntime, oldChild: VNode, newChild: VNode) => {
+function handleActivatedState(
+  runtime: StatefulWidgetRuntime,
+  oldChild: VNode,
+  newChild: VNode
+): void {
   performChildReplacement(runtime, oldChild, newChild)
-  runtime.invokeHook(LifecycleHooks.activated)
+  runtime.invokeHook(LifecycleHook.activated)
 }
-
 /**
  * 处理失活状态的异步渲染完成
  */
-const handleDeactivatedState = (
+function handleDeactivatedState(
   instance: FnWidget,
   runtime: StatefulWidgetRuntime,
   oldChild: VNode,
   newChild: VNode
-) => {
+): void {
   const originalOnActivated = instance.onActivated
 
   instance.onActivated = () => {
     performChildReplacement(runtime, oldChild, newChild)
-
     if (originalOnActivated) {
       try {
         originalOnActivated.call(instance)
@@ -110,8 +208,8 @@ const handleDeactivatedState = (
  */
 const completeAsyncRender = (instance: FnWidget) => {
   const vnode = instance.$vnode
-
-  if (!isValidNodeState(vnode.state)) return
+  const state = vnode.state
+  if (state === NodeState.Unmounted || state === NodeState.Created) return
 
   const runtime = vnode.instance!
   const oldChild = runtime.child
@@ -127,22 +225,12 @@ const completeAsyncRender = (instance: FnWidget) => {
   }
 }
 /**
- * 注入生命周期钩子到实例
- */
-const injectLifecycleHooks = (hooks: HookCollectResult['hooks'], instance: FnWidget) => {
-  Object.entries(hooks).forEach(([hookName, hookFn]) => {
-    instance[hookName as LifecycleHookMethods] = hookFn
-  })
-}
-/**
  * 注入暴露的属性和方法到实例
  */
 const injectExposedMembers = (exposed: HookCollectResult['exposed'], instance: FnWidget) => {
   Object.entries(exposed).forEach(([key, value]) => {
     const isReservedKey = __WIDGET_INTRINSIC_KEYWORDS__.has(key)
-    const isExistingKey = key in instance
-
-    if (!isReservedKey && !isExistingKey) {
+    if (!isReservedKey && !(key in instance)) {
       ;(instance as Record<string, any>)[key] = value
     }
   })
@@ -153,7 +241,6 @@ const injectExposedMembers = (exposed: HookCollectResult['exposed'], instance: F
 const isLazyLoadModule = (result: any): result is LazyLoadModule => {
   return result && typeof result === 'object' && 'default' in result && isWidget(result.default)
 }
-
 /**
  * 解析异步构建结果为构建器函数
  */
@@ -171,56 +258,21 @@ const parseAsyncBuildResult = (
 
   return () => buildResult as Renderable
 }
-/**
- * 初始化同步函数组件
- */
-const initializeSyncWidget = (
-  instance: FnWidget,
-  hooks: HookCollectResult['hooks'],
-  buildResult: Renderable | ChildBuilder
-) => {
-  const hasHooks = Object.keys(hooks).length > 0
-
-  if (hasHooks) {
-    injectLifecycleHooks(hooks, instance)
-  }
-
-  instance.build = typeof buildResult === 'function' ? buildResult : () => buildResult
-}
 
 /**
- * 注册关键生命周期钩子
- */
-const registerCriticalHooks = (instance: FnWidget, hooks: HookCollectResult['hooks']) => {
-  if (LifecycleHooks.error in hooks) {
-    instance.onError = hooks.onError
-  }
-  if (LifecycleHooks.render in hooks) {
-    instance.onRender = hooks.onRender
-  }
-}
-
-/**
- * 处理异步构建失败
- */
-const createErrorBuilder = (error: unknown): ChildBuilder => {
-  return () => {
-    throw error
-  }
-}
-
-/**
- * 初始化异步函数组件
+ * 初始化异步组件
  *
- * 将异步解析逻辑注入到 onRender 钩子中，返回解析 Promise。
- * 这样 SSR 可以通过 invokeHook(render) 统一收集异步任务。
+ * @param instance - 函数组件实例
+ * @param exposed - 暴露的属性
+ * @param buildResult - 构建结果
+ * @param buildComplete - 构建完成回调
  */
-const initializeAsyncWidget = (
+function initializeAsyncWidget(
   instance: FnWidget,
-  hooks: HookCollectResult['hooks'],
   exposed: HookCollectResult['exposed'],
-  buildResult: Promise<any>
-): void => {
+  buildResult: Promise<any>,
+  buildComplete: () => void
+): () => Promise<void> {
   let loadingNode = instance.$vnode.type.loading
   let isCustomLoading = false
   if (isVNode(loadingNode)) {
@@ -233,64 +285,24 @@ const initializeAsyncWidget = (
   }
   // 默认使用 loading 节点
   instance.build = () => loadingNode
-
-  // 标记节点为异步组件
-  instance.$vnode.isAsyncWidget = true
-
-  // 创建解析 Promise（立即开始执行）
   const initialExposedCount = Object.keys(exposed).length
-  const resolvePromise = (async () => {
-    const suspenseCounter = !isCustomLoading ? useSuspense() : null
-    if (suspenseCounter) suspenseCounter.value++
-
+  const suspenseCounter = !isCustomLoading ? useSuspense() : null
+  if (suspenseCounter) suspenseCounter.value++
+  return async () => {
     try {
-      registerCriticalHooks(instance, hooks)
       const result = await buildResult
       instance.build = parseAsyncBuildResult(result, instance)
     } catch (error) {
-      instance.build = createErrorBuilder(error)
+      instance.build = () => {
+        throw error
+      }
     } finally {
-      injectLifecycleHooks(hooks, instance)
-      const hasExposedChanged = initialExposedCount !== Object.keys(exposed).length
-      if (hasExposedChanged) {
+      buildComplete()
+      if (initialExposedCount !== Object.keys(exposed).length) {
         injectExposedMembers(exposed, instance)
       }
       completeAsyncRender(instance)
       if (suspenseCounter) suspenseCounter.value--
     }
-  })()
-
-  // 将解析逻辑注入到 onRender 钩子
-  const userOnRender = hooks.onRender
-  instance.onRender = async () => {
-    // 先执行用户的 onRender
-    if (userOnRender) {
-      await userOnRender.call(instance)
-    }
-    // 等待异步组件解析完成
-    await resolvePromise
   }
-}
-
-/**
- * 初始化函数组件
- *
- * @internal 内部关键逻辑
- * @param instance - 函数组件实例
- */
-export const initializeFnWidget = (instance: FnWidget): void => {
-  const vnode = instance.$vnode as StatefulWidgetNode<FunctionWidget>
-  const { exposed, hooks, buildResult } = HookCollector.collect(vnode, instance)
-
-  const hasExposed = Object.keys(exposed).length > 0
-  if (hasExposed) {
-    injectExposedMembers(exposed, instance)
-  }
-
-  if (!isPromise(buildResult)) {
-    initializeSyncWidget(instance, hooks, buildResult)
-    return
-  }
-
-  initializeAsyncWidget(instance, hooks, exposed, buildResult)
 }

@@ -1,19 +1,21 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import { AnyCallback, logger } from '@vitarx/utils'
-import { LifecycleHooks } from '../constants/hook.js'
+import { LifecycleHook } from '../constants/hook.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__ } from '../constants/widget.js'
 import type {
   FunctionWidget,
   FWBuildType,
+  LifecycleHookMap,
   LifecycleHookParameter,
   LifecycleHookReturnType,
   StatefulWidgetNode
 } from '../types/index.js'
 import type { Widget } from '../widget/index.js'
+import { getCurrentVNode } from './context.js'
 
 interface CollectContext {
   exposed: Record<string, any>
-  hooks: Record<LifecycleHooks, AnyCallback>
+  hooks: LifecycleHookMap
 }
 
 /**
@@ -60,7 +62,8 @@ export class HookCollector {
    * @returns {CollectContext|undefined} 返回CollectContext类型的上下文对象
    */
   static get context(): CollectContext | undefined {
-    return getContext<CollectContext>(HOOK_COLLECTOR_CONTEXT) // 调用getContext函数，传入类型参数CollectContext和常量HOOK_COLLECTOR_CONTEXT
+    // 调用getContext函数，传入类型参数CollectContext和常量HOOK_COLLECTOR_CONTEXT
+    return getContext<CollectContext>(HOOK_COLLECTOR_CONTEXT)
   }
 
   /**
@@ -79,13 +82,13 @@ export class HookCollector {
    * @param name
    * @param fn
    */
-  static addLifeCycle(name: LifecycleHooks, fn: AnyCallback) {
+  static addLifeCycle(name: LifecycleHook, fn: AnyCallback) {
     const ctx = this.context
     if (ctx && typeof fn === 'function') {
-      if (!ctx.hooks) {
-        ctx.hooks = { [name]: fn } as any
+      if (ctx.hooks[name]) {
+        ctx.hooks[name]!.add(fn)
       } else {
-        ctx.hooks[name] = fn
+        ctx.hooks[name] = new Set([fn])
       }
     }
   }
@@ -99,7 +102,7 @@ export class HookCollector {
    */
   static collect(vnode: StatefulWidgetNode<FunctionWidget>, instance: Widget): HookCollectResult {
     // 创建新的上下文
-    const context: HookCollectResult = {
+    const context = {
       exposed: {},
       hooks: {}
     } as HookCollectResult
@@ -113,20 +116,20 @@ export class HookCollector {
 /**
  * 生命周期钩子回调函数
  */
-type LifecycleHookCallback<T extends LifecycleHooks> = (
+type LifecycleHookCallback<T extends LifecycleHook> = (
   ...params: LifecycleHookParameter<T>
 ) => LifecycleHookReturnType<T>
 
 /**
  * 钩子工厂函数，返回具体的钩子注册方法
  */
-function createLifecycleHook<T extends LifecycleHooks>(
+function createLifecycleHook<T extends LifecycleHook>(
   hook: T
 ): (cb: LifecycleHookCallback<T>) => void {
   return (cb: LifecycleHookCallback<T>) => {
     if (typeof cb !== 'function') {
       throw new TypeError(
-        `[Vitarx.LifeCycleHook][ERROR]：${hook}钩子必须是回调函数，给定${typeof cb}`
+        `[Vitarx.LifeCycleHook][ERROR]：${hook} hook must be a callback function, given ${typeof cb}`
       )
     }
     HookCollector.addLifeCycle(hook, cb)
@@ -141,7 +144,12 @@ function createLifecycleHook<T extends LifecycleHooks>(
  *
  * @param {Function} cb - 回调函数
  */
-export const onCreate = (cb: () => void) => cb()
+export const onCreate = (cb: () => void) => {
+  const vnode = getCurrentVNode()
+  if (!import.meta.env?.DEV || !(vnode as any)?.__$HMR_STATE$__) {
+    cb()
+  }
+}
 /**
  * 小部件挂载前要触发的钩子
  *
@@ -149,13 +157,13 @@ export const onCreate = (cb: () => void) => cb()
  *
  * @param {Function} cb - 回调函数，小部件挂载之前触发
  */
-export const onBeforeMount = createLifecycleHook(LifecycleHooks.beforeMount)
+export const onBeforeMount = createLifecycleHook(LifecycleHook.beforeMount)
 /**
  * 小部件挂载完成时触发的钩子
  *
  * @param {Function} cb - 回调函数，小部件挂载完成后触发
  */
-export const onMounted = createLifecycleHook(LifecycleHooks.mounted)
+export const onMounted = createLifecycleHook(LifecycleHook.mounted)
 /**
  * 小部件被临时停用触发的钩子
  *
@@ -163,37 +171,37 @@ export const onMounted = createLifecycleHook(LifecycleHooks.mounted)
  *
  * @param {Function} cb - 回调函数，当小部件被临时停用时触发
  */
-export const onDeactivated = createLifecycleHook(LifecycleHooks.deactivated)
+export const onDeactivated = createLifecycleHook(LifecycleHook.deactivated)
 /**
  * 小部件被激活时触发的钩子
  *
  * @param {Function} cb - 回调函数，当小部件从停用状态恢复时触发
  */
-export const onActivated = createLifecycleHook(LifecycleHooks.activated)
+export const onActivated = createLifecycleHook(LifecycleHook.activated)
 /**
  * 小部件实例被销毁前触发的钩子
  *
  * @param {Function} cb - 回调函数，小部件实例销毁前触发
  */
-export const onBeforeUnmount = createLifecycleHook(LifecycleHooks.beforeUnmount)
+export const onBeforeUnmount = createLifecycleHook(LifecycleHook.beforeUnmount)
 /**
  * 小部件被卸载时完成触发的钩子
  *
  * @param {Function} cb - 回调函数，小部件卸载完成后触发
  */
-export const onUnmounted = createLifecycleHook(LifecycleHooks.unmounted)
+export const onUnmounted = createLifecycleHook(LifecycleHook.unmounted)
 /**
  * 小部件更新前触发的钩子
  *
  * @param {Function} cb - 回调函数，在小部件更新之前触发
  */
-export const onBeforeUpdate = createLifecycleHook(LifecycleHooks.beforeUpdate)
+export const onBeforeUpdate = createLifecycleHook(LifecycleHook.beforeUpdate)
 /**
  * 小部件更新完成时触发的钩子
  *
  * @param {Function} cb - 回调函数，小部件更新完成后触发
  */
-export const onUpdated = createLifecycleHook(LifecycleHooks.updated)
+export const onUpdated = createLifecycleHook(LifecycleHook.updated)
 /**
  * 小部件渲染或构建过程中捕获到异常时触发的钩子
  *
@@ -208,7 +216,7 @@ export const onUpdated = createLifecycleHook(LifecycleHooks.updated)
  *
  * @param {Function} cb - 回调函数，遇到错误时触发
  */
-export const onError = createLifecycleHook(LifecycleHooks.error)
+export const onError = createLifecycleHook(LifecycleHook.error)
 /**
  * 小部件渲染前钩子
  *
@@ -226,13 +234,13 @@ export const onError = createLifecycleHook(LifecycleHooks.error)
  *
  * @returns {Promise<unknown> | void} - 可返回 Promise 以延迟占位节点替换为真实节点，客户端不会阻塞渲染。
  */
-export const onRender = createLifecycleHook(LifecycleHooks.render)
+export const onRender = createLifecycleHook(LifecycleHook.render)
 /**
  * 小部件运行时实例销毁时触发的钩子
  *
  * @param {Function} cb - 回调函数，运行时实例销毁时触发
  */
-export const onDestroy = createLifecycleHook(LifecycleHooks.destroy)
+export const onDestroy = createLifecycleHook(LifecycleHook.destroy)
 /**
  * 暴露函数组件的内部方法或变量，供外部使用。
  *
