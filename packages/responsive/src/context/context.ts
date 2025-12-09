@@ -86,7 +86,7 @@ if (import.meta.env?.SSR) {
       return asyncStore.run(store, fn)
     }
     static async withAsyncContext<T>(asyncTask: AsyncContextTask<T>): Promise<T> {
-      return typeof asyncTask === 'function' ? asyncTask() : asyncTask
+      return typeof asyncTask === 'function' ? await asyncTask() : asyncTask
     }
   }
 } else {
