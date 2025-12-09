@@ -1,5 +1,6 @@
 import {
   isContainerNode,
+  isVNode,
   isWidgetNode,
   renderNode,
   runInRenderContext,
@@ -40,8 +41,7 @@ export async function renderToString(
   context.$nodeAsyncMap = nodeAsyncMap
   return await runInRenderContext(async () => {
     // 解析根节点
-    const rootNode: VNode =
-      typeof (root as VNode)?.kind === 'number' ? (root as VNode) : (root as SSRApp).rootNode
+    const rootNode: VNode = isVNode(root) ? root : root.rootNode
 
     // 1) 渲染根节点（仅构建，不输出）
     renderNode(rootNode)

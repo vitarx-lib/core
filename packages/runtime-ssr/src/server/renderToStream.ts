@@ -1,4 +1,10 @@
-import { renderNode, runInRenderContext, setDefaultDriver, type VNode } from '@vitarx/runtime-core'
+import {
+  isVNode,
+  renderNode,
+  runInRenderContext,
+  setDefaultDriver,
+  type VNode
+} from '@vitarx/runtime-core'
 import { SSRApp } from '../app/index.js'
 import type { NodeAsyncMap } from '../shared/context.js'
 import { type SSRContext } from '../shared/index.js'
@@ -40,9 +46,7 @@ export async function renderToStream(
 
   try {
     await runInRenderContext(async () => {
-      // 解析根节点
-      const rootNode: VNode =
-        typeof (root as VNode)?.kind === 'number' ? (root as VNode) : (root as SSRApp).rootNode
+      const rootNode: VNode = isVNode(root) ? root : root.rootNode
 
       // 渲染根节点（构建虚拟节点树，异步任务绑定到节点）
       renderNode(rootNode)
