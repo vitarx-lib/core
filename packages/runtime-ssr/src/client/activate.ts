@@ -36,7 +36,7 @@ import {
  */
 export async function hydrateNode(
   node: VNode,
-  container: Element | HostElements[],
+  container: HostElements | HostElements[],
   nodeAsyncMap: NodeAsyncMap,
   nodeIndex: number = 0
 ): Promise<number> {
@@ -107,7 +107,7 @@ export async function hydrateNode(
 
       // hydrate children
       for (let i = 0; i < children.length; i++) {
-        await hydrateNode(children[i], el as unknown as Element, nodeAsyncMap, i)
+        await hydrateNode(children[i], el, nodeAsyncMap, i)
       }
       // 🔥 清除多余 SSR DOM
       if (!props['v-html']) cleanupExtraDom(node as RegularElementNode)

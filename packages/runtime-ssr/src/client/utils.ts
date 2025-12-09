@@ -212,3 +212,18 @@ export function cleanupFragmentRange(node: FragmentNode): void {
     range.deleteContents()
   }
 }
+
+/**
+ * 解析容器参数，将其转换为DOM元素
+ * @param container - 可以是选择器字符串、DOM元素或宿主元素数组
+ * @returns {Element} 返回解析后的DOM元素
+ * @throws {TypeError} 当container无法解析为有效DOM元素时抛出错误
+ */
+export function resolveContainer(container: HostElements | Element | string): Element {
+  const el = typeof container === 'string' ? document.querySelector(container) : container // 如果是字符串则查询DOM，否则直接使用原参数
+  if (el instanceof Element) {
+    return el // 如果是有效的DOM元素则直接返回
+  } else {
+    throw new TypeError('[resolveContainer]: container must be a selector string or Element') // 否则抛出错误
+  }
+}

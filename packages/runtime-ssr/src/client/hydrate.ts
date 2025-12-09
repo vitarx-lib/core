@@ -1,10 +1,18 @@
-import type { HostParentElement, VNode } from '@vitarx/runtime-core'
-import { mountNode, renderNode, runInRenderContext, setDefaultDriver } from '@vitarx/runtime-core'
+import {
+  type HostElements,
+  isVNode,
+  mountNode,
+  renderNode,
+  runInRenderContext,
+  setDefaultDriver,
+  type VNode
+} from '@vitarx/runtime-core'
 import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
 import type { SSRApp } from '../app/index.js'
 import { SSRRenderDriver } from '../server/SSRRenderDriver.js'
 import type { SSRContext } from '../shared/context.js'
 import { hydrateNode } from './activate.js'
+import { resolveContainer } from './utils.js'
 
 /**
  * 全局状态注入类型（由服务端注入到客户端的状态）
@@ -28,11 +36,11 @@ declare global {
  * 5. 预渲染 - 在 runInRenderContext 中调用 renderNode(rootNode)
  * 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
  * 7. 移除水合驱动 - setDefaultDriver(null)
- * 8. 注册默认驱动 - registerDefaultDrivers()
- * 9. 挂载 - mountNode(rootNode, container)
- * 10. 清理标识 - 清除 $isHydrating, $nodeAsyncMap
+ * 8. 清理标识 - 清除 $isHydrating, $nodeAsyncMap
+ * 9. 注册默认驱动 - registerDefaultDrivers()
+ * 10. 挂载根节点 - mountNode(rootNode, containerEl)
  *
- * @param app - SSR 应用实例
+ * @param root - App实例 / 根节点
  * @param container - 挂载容器，可以是 DOM 元素或选择器字符串
  * @param context - SSR 上下文对象，可选
  *
@@ -42,56 +50,61 @@ declare global {
  * await hydrate(app, '#app', window.__INITIAL_STATE__)
  * ```
  */
-export async function hydrate(
-  app: SSRApp,
-  container: string | Element,
+export function hydrate(
+  root: SSRApp | VNode,
+  container: HostElements | Element | string,
   context: SSRContext = {}
 ): Promise<void> {
   // 1. 容器解析
-  const containerEl = typeof container === 'string' ? document.querySelector(container) : container
-
+  const containerEl = resolveContainer(container)
   if (!containerEl) {
     throw new Error(`[hydrate] Container not found: ${container}`)
   }
-
   // 2. 状态恢复 - 合并服务端注入的状态
   if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
     Object.assign(context, window.__INITIAL_STATE__)
   }
-
   // 获取根节点
-  const rootNode: VNode =
-    typeof (app as any)?.rootNode?.kind === 'number' ? (app as any).rootNode : app.rootNode
-  try {
-    await runInRenderContext(async () => {
-      // 3. 上下文设置
-      context.$isHydrating = true
-      // 初始化节点异步任务映射（与服务端统一使用 WeakMap）
-      const nodeAsyncMap = new WeakMap<VNode, Promise<unknown>>()
-      context.$nodeAsyncMap = nodeAsyncMap
-      // 4. 注册水合驱动
-      setDefaultDriver(new SSRRenderDriver())
+  const rootNode: VNode = isVNode(root) ? root : root.rootNode
+  if (!rootNode) {
+    throw new TypeError('[hydrate] root is not a valid virtual node or App instance')
+  }
+  return new Promise(async resolve => {
+    try {
+      await runInRenderContext(async () => {
+        if (containerEl.childNodes.length > 0) {
+          // 3. 上下文设置
+          context.$isHydrating = true
+          // 初始化节点异步任务映射（与服务端统一使用 WeakMap）
+          const nodeAsyncMap = new WeakMap<VNode, Promise<unknown>>()
+          context.$nodeAsyncMap = nodeAsyncMap
+          // 4. 注册水合驱动
+          setDefaultDriver(new SSRRenderDriver())
 
-      // 5. 预渲染 - 触发 onRender，收集异步任务到 WeakMap
-      renderNode(rootNode)
+          // 5. 预渲染 - 触发 onRender，收集异步任务到 WeakMap
+          renderNode(rootNode)
 
-      // 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
-      await hydrateNode(rootNode, containerEl, nodeAsyncMap)
-
+          // 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
+          await hydrateNode(rootNode, container as HostElements, nodeAsyncMap)
+        } else {
+          renderNode(rootNode)
+        }
+      }, context)
+    } catch (err) {
+      console.error('[hydrate] Hydration failed:', err)
+      // 清空容器
+      containerEl.innerHTML = ''
+    } finally {
       // 7. 移除水合驱动
       setDefaultDriver(null)
-
-      // 8. 注册默认驱动
-      registerDefaultDrivers()
-      // 9. 清理标识
+      // 8. 清理标识
       delete context.$isHydrating
       delete context.$nodeAsyncMap
-    }, context)
-    // 10. 挂载 - 正常挂载，驱动器会检测 el 已存在
-    mountNode(rootNode, containerEl as HostParentElement)
-  } catch (error) {
-    delete context.$isHydrating
-    delete context.$nodeAsyncMap
-    throw error
-  }
+      // 9. 注册默认驱动
+      registerDefaultDrivers()
+      // 10. 挂载根节点
+      mountNode(rootNode, containerEl as HostElements)
+      resolve()
+    }
+  })
 }
