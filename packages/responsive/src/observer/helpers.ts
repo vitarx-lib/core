@@ -1,6 +1,6 @@
 import { AnyObject } from '@vitarx/utils'
 import { Scheduler } from './scheduler.js'
-import { ALL_PROPERTIES_SYMBOL, type ChangeCallback, SubManager } from './subManager.js'
+import { type ChangeCallback, SubManager } from './subManager.js'
 import { Subscriber, type SubscriberOptions } from './subscriber.js'
 
 /**
@@ -58,10 +58,7 @@ export { notify as trigger }
  * @param {keyof T} [property] - 可选的属性名，不传则检查整个对象的订阅情况
  * @returns {boolean} - 如果存在订阅者返回 true，否则返回 false
  */
-export function hasSubscribers<T extends AnyObject>(
-  target: T,
-  property?: keyof T
-): boolean {
+export function hasSubscribers<T extends AnyObject>(target: T, property?: keyof T): boolean {
   return SubManager.hasSubscribers(target, property ?? SubManager.ALL_PROPERTIES_SYMBOL)
 }
 
@@ -217,4 +214,16 @@ export function subscribeProperties<T extends AnyObject, C extends ChangeCallbac
  */
 export function nextTick(fn?: () => void): Promise<void> {
   return Scheduler.nextTick(fn)
+}
+
+/**
+ * 立即同步执行所有队列中的任务
+ *
+ * 注意：
+ * - 此方法会绕过微任务队列，立即同步执行所有任务
+ * - 适用于需要立即看到效果的场景，但可能阻塞主线程
+ * - 如果正在刷新中，则跳过执行以避免并发问题
+ */
+export function flushSync() {
+  Scheduler.flushSync()
 }
