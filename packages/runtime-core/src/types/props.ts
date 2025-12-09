@@ -131,7 +131,8 @@ export interface IntrinsicAttributes {
   /**
    * 显示/隐藏节点
    *
-   * 此属性会给元素添加上 `display: none` 样式，它可能会和元素原有的样式冲突，请自行处理。
+   * 此属性会给元素添加上 `display: none` 样式，
+   * 它可能会和元素原有的样式冲突，请自行处理。
    *
    * @example
    * ```tsx
@@ -178,6 +179,46 @@ export interface IntrinsicAttributes {
    * 注意：此指令不接受动态更新，第一次是true后，不能再改为false
    */
   'v-static'?: MaybeRef<boolean>
+  /**
+   * 条件渲染指令 - v-if
+   *
+   * 用于条件性地渲染元素。
+   * 当表达式的值为真时，元素将被渲染；否则，元素不会被渲染到DOM中。
+   *
+   * ```tsx
+   * const show = ref(true)
+   * // v-if指令不支持 ref 自动解包，必须使用.value
+   * <div v-if={show.value}></div>
+   * ```
+   */
+  'v-if'?: any
+  /**
+   * 条件渲染指令 - v-else
+   *
+   * 用于表示else块。
+   * 必须紧跟在v-if或v-else-if元素后面。
+   *
+   * ```tsx
+   * const show = ref(false)
+   * <div v-if={show.value}></div>
+   * <div v-else></div>
+   * ```
+   */
+  'v-else'?: boolean
+  /**
+   * 条件渲染指令 - v-else-if
+   *
+   * 用于表示else-if块。
+   * 必须紧跟在v-if或v-else-if元素后面。
+   *
+   * ```tsx
+   * const show = ref(1)
+   * <div v-if={show.value === 0}></div>
+   * <div v-else-if={show.value === 1}></div>
+   * <div v-else></div>
+   * ```
+   */
+  'v-else-if'?: any
 }
 
 /**
