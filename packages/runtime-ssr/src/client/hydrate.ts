@@ -85,7 +85,7 @@ export function hydrate(
           renderNode(rootNode)
 
           // 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
-          await hydrateNode(rootNode, container as HostElements, nodeAsyncMap)
+          await hydrateNode(rootNode, containerEl as HostElements, nodeAsyncMap)
         } else {
           renderNode(rootNode)
         }
