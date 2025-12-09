@@ -1,5 +1,6 @@
 import {
   App,
+  hasRenderer,
   type HostElements,
   type HostParentElement,
   type HostRenderer,
@@ -11,7 +12,9 @@ import { hydrate } from '../client/hydrate.js'
 import { __IS_BROWSER__ } from '../shared/constants.js'
 
 if (__IS_BROWSER__) {
-  setRenderer(new DomRenderer())
+  if (!hasRenderer()) {
+    setRenderer(new DomRenderer())
+  }
 } else {
   setRenderer(
     new Proxy({} as HostRenderer, {
