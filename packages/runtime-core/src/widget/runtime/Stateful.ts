@@ -18,8 +18,7 @@ import type {
   WidgetInstanceType
 } from '../../types/index.js'
 import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
-import { patchUpdate } from '../../vnode/core/update.js'
-import { createCommentVNode, createTextVNode } from '../../vnode/index.js'
+import { createCommentVNode, createTextVNode, patchUpdate } from '../../vnode/index.js'
 import { FnWidget } from '../base/FnWidget.js'
 import { Widget } from '../base/index.js'
 import { WidgetRuntime } from './WidgetRuntime.js'
