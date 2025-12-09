@@ -439,8 +439,10 @@ function hydrate(
 import { createSSRApp, hydrate } from '@vitarx/runtime-ssr'
 
 const app = createSSRApp(App)
-await hydrate(app, '#app')
-app.mount('#app')
+app.mount('#app') // app.mount 自动执行水合
+await app.hydrate('#app') // app.hydrate 和 app.mount 一致，只是返回了 Promise
+await hydrate(app,'#app') // 主动调用 hydrate
+// 以上三种方式的结果相同，只能选择其中一种方式使用！！！
 ```
 
 > **注意：** 通常您不需要手动调用 `hydrate`，`SSRApp.mount()` 会自动检测并水合。
@@ -454,9 +456,7 @@ app.mount('#app')
 **函数签名：**
 
 ```tsx
-function useSSRContext<T = Record<string, any>>(): SSRContext<T> | undefined{
-  // ...
-}
+export declare function useSSRContext<T = Record<string, any>>(): SSRContext<T> | undefined
 ```
 
 **返回值：** `SSRContext | undefined` - SSR 上下文对象，非 SSR 环境返回 undefined
@@ -939,22 +939,7 @@ const fullHTML = `
 
 #### 水合失败降级
 
-`SSRApp.mount()` 会自动处理水合失败：
-
-```tsx
-// SSRApp 内部实现
-override mount(container, context) {
-  if (containerEl.childNodes.length > 0) {
-    hydrate(this, containerEl, context).catch(err => {
-      console.error('水合失败:', err)
-      // 清空容器
-      containerEl.innerHTML = ''
-      // 降级为正常挂载
-      super.mount(container)
-    })
-  }
-}
-```
+`hydrate()` 会自动处理水合失败，如果水合失败后，会清空容器内容，并回退到正常渲染模式。
 
 ## 注意事项
 
