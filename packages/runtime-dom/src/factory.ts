@@ -1,4 +1,12 @@
-import { App, type AppConfig, setRenderer, type VNode, type WidgetType } from '@vitarx/runtime-core'
+import {
+  App,
+  type AppConfig,
+  hasNodeDriver,
+  hasRenderer,
+  setRenderer,
+  type VNode,
+  type WidgetType
+} from '@vitarx/runtime-core'
 import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
 import { DomRenderer } from './DomRenderer.js'
 
@@ -11,10 +19,14 @@ import { DomRenderer } from './DomRenderer.js'
  * 无需额外调用，除非你在createApp之前需要操作渲染节点。
  */
 export function setupRuntime() {
-  // 设置运行时渲染器，使用DOM渲染器
-  setRenderer(new DomRenderer())
-  // 使用默认驱动器
-  registerDefaultDrivers()
+  if (!hasRenderer()) {
+    // 设置运行时渲染器，使用DOM渲染器
+    setRenderer(new DomRenderer())
+  }
+  if (!hasNodeDriver()) {
+    // 使用默认驱动器
+    registerDefaultDrivers()
+  }
 }
 
 /**
