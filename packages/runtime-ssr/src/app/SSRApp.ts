@@ -1,8 +1,13 @@
-import { App, type HostParentElement, type HostRenderer, setRenderer } from '@vitarx/runtime-core'
+import {
+  App,
+  type HostElements,
+  type HostRenderer,
+  NodeState,
+  setRenderer
+} from '@vitarx/runtime-core'
 import { DomRenderer } from '@vitarx/runtime-dom'
 import { hydrate } from '../client/hydrate.js'
 import { __IS_BROWSER__ } from '../shared/constants.js'
-import type { SSRContext } from '../shared/context.js'
 
 if (__IS_BROWSER__) {
   setRenderer(new DomRenderer())
@@ -17,7 +22,20 @@ if (__IS_BROWSER__) {
     })
   )
 }
-
+interface MountOptions {
+  /**
+   * SSR上下文
+   *
+   * 会和 window.__INITIAL_STATE__ 进行合并（如果有）
+   */
+  context?: Record<string, any>
+  /**
+   * 是否进行水合（Hydration）
+   *
+   * @default true
+   */
+  isHydrate?: boolean
+}
 /**
  * SSR 应用类
  *
@@ -35,7 +53,10 @@ if (__IS_BROWSER__) {
  *
  * // 客户端
  * const app = createSSRApp(App)
- * app.mount('#app', window.__SSR_CONTEXT__)
+ * app.mount('#root', window.__INITIAL_STATE__)
+ * // 等待应用激活完成
+ * // 注意：app.mount 内也是调用的hydrate，因此使用其中一种方式
+ * await hydrate(app, '#root', window.__INITIAL_STATE__)
  * ```
  */
 export class SSRApp extends App {
@@ -47,38 +68,21 @@ export class SSRApp extends App {
    * - 如果没有 SSR 内容，则进行正常的客户端渲染
    *
    * @param container - 挂载容器，可以是 DOM 元素或选择器字符串
-   * @param context - SSR 上下文对象，可选
+   * @param options
    * @returns {this} 返回当前应用实例，支持链式调用
    */
-  override mount(container: HostParentElement | string, context?: SSRContext): this {
-    // 服务端不执行挂载
-    if (!__IS_BROWSER__) {
-      throw new Error('[SSRApp.mount] Cannot mount in server environment')
-    }
-
-    // 解析容器
-    const containerEl =
-      typeof container === 'string' ? document.querySelector(container) : container
-
-    if (!containerEl) {
-      throw new Error(`[SSRApp.mount] Container not found: ${container}`)
-    }
-
-    // 检测是否需要水合
-    if (containerEl.childNodes.length > 0) {
-      // 执行水合
-      hydrate(this, containerEl, context).catch(err => {
-        console.error('[SSRApp.mount] Hydration failed:', err)
-        // 清空容器
-        containerEl.innerHTML = ''
-        // 水合失败后尝试正常挂载
+  override mount(container: HostElements | Element | string, options: MountOptions = {}): this {
+    const { isHydrate = true, context } = options
+    if (this.rootNode.state === NodeState.Created) {
+      if (isHydrate) {
+        hydrate(this, container as HostElements, context)
+      } else {
         super.mount(container)
-      })
-    } else {
-      // 正常客户端渲染
-      super.mount(container)
+      }
+      return this
     }
-
-    return this
+    throw new Error(
+      `[Vitarx.createSSRApp][ERROR]: rootNode in (${this.rootNode.state})state cannot be mounted.`
+    )
   }
 }
