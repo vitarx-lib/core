@@ -1,6 +1,7 @@
 import {
   App,
   type HostElements,
+  type HostParentElement,
   type HostRenderer,
   NodeState,
   setRenderer
@@ -77,12 +78,28 @@ export class SSRApp extends App {
       if (isHydrate) {
         hydrate(this, container as HostElements, context)
       } else {
-        super.mount(container)
+        super.mount(container as HostParentElement)
       }
       return this
     }
     throw new Error(
       `[Vitarx.createSSRApp][ERROR]: rootNode in (${this.rootNode.state})state cannot be mounted.`
     )
+  }
+  /**
+   * 水合激活应用
+   *
+   * 它和 mount 方法类似，但会返回一个 Promise，表示水合操作的完成。
+   *
+   * @param container - 可以是HostElements、Element或字符串类型的DOM元素选择器
+   * @param context - 可选的上下文对象，包含一些需要传递的上下文数据
+   * @returns {Promise<void>} - 返回一个Promise对象，表示水合操作的完成
+   */
+  async hydrate(
+    container: HostElements | Element | string,
+    context?: Record<string, any>
+  ): Promise<void> {
+    // 调用实际的水合函数，将当前实例、容器元素和上下文传递过去
+    await hydrate(this, container as HostElements, context)
   }
 }
