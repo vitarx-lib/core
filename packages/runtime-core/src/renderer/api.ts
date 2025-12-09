@@ -23,3 +23,12 @@ export function getRenderer(): HostRenderer {
   if (globalRenderer) return globalRenderer
   throw new Error('[vitarx][ERROR] Renderer has not been registered.')
 }
+
+/**
+ * 检查是否存在渲染器实例
+ * 该函数用于判断全局渲染器对象 globalRenderer 是否已初始化
+ * @returns {boolean} - 如果 globalRenderer 存在则返回 true，否则返回 false
+ */
+export function hasRenderer(): boolean {
+  return !!globalRenderer
+}
