@@ -88,7 +88,7 @@ describe('App 应用模块', () => {
       const text = createVNode(TEXT_NODE_TYPE, { text: 'Hello' })
       const TestWidget = createTestWidget({
         build() {
-          return createVNode('div', { children: [text] })
+          return createVNode('div', { children: [text] as any })
         }
       })
       const app = new App(TestWidget)
@@ -239,7 +239,7 @@ describe('App 应用模块', () => {
       const TestWidget = createTestWidget({
         build() {
           return createVNode('div', {
-            children: [createVNode('span', {})]
+            children: [createVNode('span', {})] as any
           })
         }
       })
