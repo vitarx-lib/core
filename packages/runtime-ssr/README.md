@@ -214,9 +214,7 @@ flowchart LR
 **函数签名：**
 
 ```tsx
-function createSSRApp(root: VNode|Widget): SSRApp{
-  //...
-}
+export declare function createSSRApp(root: VNode | WidgetType, config?: AppConfig): SSRApp;
 ```
 
 **参数：**
@@ -275,12 +273,7 @@ app.mount('#app')
 **函数签名：**
 
 ```tsx
-function renderToString(
-  root: SSRApp | VNode,
-  context?: SSRContext
-): Promise<string>{
-  //...
-}
+export declare function renderToString(root: SSRApp | VNode, context?: SSRContext): Promise<string>;
 ```
 
 **参数：**
@@ -311,14 +304,8 @@ console.log(html) // <div>Hello SSR</div>
 
 **函数签名：**
 
-```tsx
-function renderToStream(
-  root: SSRApp | VNode,
-  context: SSRContext,
-  options: StreamRenderOptions
-): Promise<void>{
-  // ...
-}
+```ts
+export declare function renderToStream(root: SSRApp | VNode, context: SSRContext | undefined, options: StreamingSink): Promise<void>;
 ```
 
 **参数：**
@@ -331,7 +318,7 @@ function renderToStream(
 
 **StreamRenderOptions 类型：**
 
-```tsx
+```ts
 interface StreamRenderOptions {
   push(content: string): void  // 推送内容到流
   close(): void                // 关闭流
@@ -341,7 +328,7 @@ interface StreamRenderOptions {
 
 **示例：**
 
-```tsx
+```ts
 import { renderToStream } from '@vitarx/runtime-ssr'
 import { createSSRApp } from '@vitarx/runtime-ssr'
 
@@ -367,18 +354,13 @@ await renderToStream(app, {}, {
 
 **函数签名：**
 
-```tsx
-function renderToReadableStream(
-  root: SSRApp | VNode,
-  context?: SSRContext
-): Promise<ReadableStream>{
-  // ...
-}
+```ts
+export declare function renderToReadableStream(root: SSRApp | VNode, context?: SSRContext): ReadableStream<string>;
 ```
 
 **示例：**
 
-```tsx
+```ts
 const stream = await renderToReadableStream(app)
 return new Response(stream, {
   headers: { 'Content-Type': 'text/html' }
@@ -392,12 +374,7 @@ return new Response(stream, {
 **函数签名：**
 
 ```tsx
-function renderToNodeStream(
-  root: SSRApp | VNode,
-  context?: SSRContext
-): Promise<NodeJS.ReadableStream>{
-  // ...
-}
+export declare function renderToNodeStream(root: SSRApp | VNode, context?: SSRContext): Promise<NodeJS.ReadableStream>;
 ```
 
 **示例：**
@@ -415,14 +392,8 @@ stream.pipe(res)
 
 **函数签名：**
 
-```tsx
-function hydrate(
-  app: SSRApp,
-  container: string | Element,
-  context?: SSRContext
-): Promise<void>{
-  // ...
-}
+```ts
+export declare function hydrate(app: SSRApp, container: string | HostParentElement, context?: SSRContext): Promise<void>;
 ```
 
 **参数：**
@@ -485,9 +456,7 @@ function MyComponent() {
 **函数签名：**
 
 ```tsx
-function isSSR(): boolean{
-  // ...
-}
+export declare function isSSR(): boolean;
 ```
 
 **示例：**
@@ -507,9 +476,7 @@ if (isSSR()) {
 **函数签名：**
 
 ```tsx
-function isHydrating(): boolean{
-  // ...
-}
+export declare function isHydrating(): boolean;
 ```
 
 **示例：**
@@ -542,9 +509,7 @@ type SSRContext<T = Record<string, any>> = T & {
 **函数签名：**
 
 ```tsx
-function escapeHTML(text: string): string{
-  // ...
-}
+export declare function escapeHTML(text: string): string;
 ```
 
 **示例：**
@@ -562,15 +527,13 @@ console.log(safe) // &lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;
 
 **函数签名：**
 
-```tsx
-function serializeAttributes(props: Record<string, any>): string{
-  // ...
-}
+```ts
+export declare function serializeAttributes(props: Record<string, any>): string;
 ```
 
 **示例：**
 
-```tsx
+```ts
 import { serializeAttributes } from '@vitarx/runtime-ssr'
 
 const attrs = serializeAttributes({
@@ -813,7 +776,7 @@ app.get('*', async (req, res) => {
 ```jsx
 function MyComponent() {
   // ✗ 错误：服务端没有 window 对象
-  const width = window.innerWidth
+  // const width = window.innerWidth
   
   // ✓ 正确：检查环境
   const width = typeof window !== 'undefined' ? window.innerWidth : 0
