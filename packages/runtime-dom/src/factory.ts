@@ -3,6 +3,21 @@ import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
 import { DomRenderer } from './DomRenderer.js'
 
 /**
+ * 设置运行时环境
+ *
+ * 该函数用于初始化和配置运行时所需的各种设置
+ * 包括渲染器和驱动器的配置
+ *
+ * 无需额外调用，除非你在createApp之前需要操作渲染节点。
+ */
+export function setupRuntime() {
+  // 设置运行时渲染器，使用DOM渲染器
+  setRenderer(new DomRenderer())
+  // 使用默认驱动器
+  registerDefaultDrivers()
+}
+
+/**
  * 创建一个新的应用实例
  *
  * @param root - 应用的根节点，可以是虚拟节点(VNode)或小部件类型(WidgetType)
@@ -10,9 +25,6 @@ import { DomRenderer } from './DomRenderer.js'
  * @returns {App} 返回一个新的App实例
  */
 export function createApp(root: VNode | WidgetType, config?: AppConfig): App {
-  // 设置运行时渲染器，使用DOM渲染器
-  setRenderer(new DomRenderer())
-  // 使用默认驱动器
-  registerDefaultDrivers()
+  setupRuntime()
   return new App(root, config)
 }
