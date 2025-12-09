@@ -190,7 +190,7 @@ export class App {
       // 如果找不到对应的DOM元素，抛出错误
       if (!container) {
         throw new Error(
-          `[Vitarx.createApp][ERROR]: The element corresponding to the specified selector ${container} was not found.`
+          `[App.mount][ERROR]: The element corresponding to the specified selector ${container} was not found.`
         )
       }
     }
