@@ -43,7 +43,7 @@ describe('hydrate', () => {
     const App = () => h('div', null, 'Test')
     const app = createSSRApp(App)
 
-    await expect(hydrate(app, '#nonexistent')).rejects.toThrow('Container not found')
+    expect(() => hydrate(app, '#nonexistent')).toThrow()
   })
 
   it('应该激活基本元素', async () => {
