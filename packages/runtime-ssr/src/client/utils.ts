@@ -45,7 +45,7 @@ function elToKind(el: HostElements): { kind: NodeKind; tag: HostNodeType } {
  */
 export function getFirstDomNode(el: Element | HostElements[], index: number = 0): FirstNode | null {
   const childNodes = isArray(el) ? el : el.childNodes
-  const firstNode = childNodes[index] as HostElements // 获取指定索引的子节点
+  const firstNode = childNodes?.[index] as HostElements // 获取指定索引的子节点
   if (!firstNode) return null
   // 检查第一个节点是否是Fragment start注释
   if (firstNode.nodeType === Node.COMMENT_NODE && firstNode.nodeValue === 'Fragment start') {
@@ -220,7 +220,7 @@ export function cleanupFragmentRange(node: FragmentNode): void {
  * @throws {TypeError} 当container无法解析为有效DOM元素时抛出错误
  */
 export function resolveContainer(container: HostElements | Element | string): Element {
-  const el = typeof container === 'string' ? document.querySelector(container) : container // 如果是字符串则查询DOM，否则直接使用原参数
+  const el = typeof container === 'string' ? document.body.querySelector(container) : container // 如果是字符串则查询DOM，否则直接使用原参数
   if (el instanceof Element) {
     return el // 如果是有效的DOM元素则直接返回
   } else {
