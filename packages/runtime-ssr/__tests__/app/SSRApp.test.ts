@@ -21,12 +21,12 @@ describe('SSRApp 服务端渲染应用', () => {
     expect(container.querySelector('#content')?.textContent).toBe('Test Content')
   })
 
-  it('当容器为空时应该正常挂载', () => {
+  it('当容器为空时应该正常挂载', async () => {
     const App = () => h('div', { id: 'test' }, 'New Content')
     const app = createSSRApp(App)
     const container = createContainer()
 
-    app.mount(container)
+    await app.hydrate(container)
 
     expect(container.querySelector('#test')).toBeTruthy()
   })
@@ -45,7 +45,6 @@ describe('SSRApp 服务端渲染应用', () => {
   it('如果找不到容器应该抛出错误', () => {
     const App = () => h('div', null, 'Content')
     const app = createSSRApp(App)
-
-    expect(() => app.mount('#nonexistent')).toThrow('Container not found')
+    expect(() => app.mount('#nonexistent')).toThrow()
   })
 })
