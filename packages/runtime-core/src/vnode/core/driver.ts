@@ -62,6 +62,15 @@ export function getNodeDriver<K extends NodeKind>(kind: K): Drivers[K] {
   return driver
 }
 /**
+ * 检查指定类型的节点驱动是否存在
+ * @param [kind] - 要检查的节点类型枚举值，不传入仅检测是否存任意节点驱动
+ * @returns {boolean} 如果存在对应的驱动或存在默认驱动则返回true，否则返回false
+ */
+export function hasNodeDriver(kind?: NodeKind): boolean {
+  if (!kind) return !!defaultDriver && Object.keys(drivers).length > 0
+  return kind in drivers || !!defaultDriver // 检查kind是否在drivers对象中存在，或者是否存在默认驱动
+}
+/**
  * 渲染节点 - 创建元素,这是挂载之前的步骤
  *
  * @param node - 虚拟节点对象
