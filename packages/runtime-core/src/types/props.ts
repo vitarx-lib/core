@@ -219,6 +219,11 @@ export interface IntrinsicAttributes {
    * ```
    */
   'v-else-if'?: any
+
+  /**
+   * 支持传入未知属性
+   */
+  [key: string]: any
 }
 
 /**
