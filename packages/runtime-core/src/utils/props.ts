@@ -7,10 +7,12 @@ import {
   SubManager,
   Subscriber,
   toRaw,
+  unref,
   type WatchOptions,
   watchProperty
 } from '@vitarx/responsive'
 import type { AnyProps } from '../types/index.js'
+import { StyleUtils } from './style.js'
 
 /**
  * 监听props属性变化的函数
@@ -196,3 +198,50 @@ export function usePropModel<T extends AnyProps, K extends keyof T, D extends T[
  * useModel 是 usePropModel 的别名，对齐 vue 的 useModel 命名
  */
 export { usePropModel as useModel }
+
+/**
+ * 合并多个对象属性的工具函数
+ *
+ * @template T - 泛型参数，表示对象的类型，必须为Record<string, any>的子类型
+ * @param props - 要合并的多个对象
+ * @returns {T} 返回合并后的新对象
+ */
+export function mergeProps<T extends Record<string, any>>(...props: T[]): T {
+  // 初始化一个空对象作为合并结果
+  const result: Record<string, any> = {}
+
+  // 遍历所有传入的对象
+  for (const p of props) {
+    // 如果对象不存在，跳过本次循环
+    if (!p) continue
+
+    // 遍历当前对象的每个属性
+    for (const key in p) {
+      const value = p[key]
+
+      // 如果属性值为null或undefined，跳过该属性
+      if (value == null) continue
+
+      // --- 合并 style ---
+      if (key === 'style') {
+        result.style = result.style
+          ? StyleUtils.mergeCssStyle(unref(result.style), unref(value))
+          : value
+        continue
+      }
+
+      // --- 合并类名 ---
+      if (key === 'class' || key.toLowerCase() === 'classname') {
+        result[key] = result[key]
+          ? StyleUtils.mergeCssClass(unref(result[key]), unref(value))
+          : value
+        continue
+      }
+
+      // --- 默认覆盖 ---
+      result[key] = value
+    }
+  }
+
+  return result as T
+}
