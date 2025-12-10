@@ -94,19 +94,17 @@ export class StatefulWidgetRuntime<
         return parentNode.instance!.reportError(error, source, instance)
       }
 
+      const errorInfo = {
+        source,
+        instance
+      }
       // 4. 如果没有父组件，尝试使用应用级错误处理器
       if (this.vnode.appContext?.config?.errorHandler) {
-        return this.vnode.appContext.config.errorHandler.apply(this.instance, [
-          error,
-          {
-            source,
-            instance
-          }
-        ])
+        return this.vnode.appContext.config.errorHandler.apply(this.instance, [error, errorInfo])
       }
 
       // 5. 最后，输出未处理的异常到控制台
-      logger.error('Unhandled exception in component - ', error, { source, instance })
+      logger.error('Unhandled exception in component - ', error, errorInfo)
       return void 0
     } catch (error) {
       logger.error(
