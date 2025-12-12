@@ -1,260 +1,116 @@
-import { AnyCallback, logger, VoidCallback } from '@vitarx/utils'
-import type {
-  EffectCallbackErrorHandler,
-  EffectInterface,
-  EffectState
-} from './effect-interface.js'
+import { EffectScope } from './scope.js'
 
 /**
- * 副作用固有错误来源
+ * 副作用状态枚举
  *
- * @remarks
- * 定义了副作用对象可能触发的三种错误来源：
- * - `dispose`: 销毁事件，表示资源释放
- * - `pause`: 暂停事件，临时停止副作用
- * - `resume`: 恢复事件，重新激活副作用
+ * - active: 活跃状态，表示当前效果正在运行。
+ * - paused: 暂停状态，表示当前效果已暂停。
+ * - deprecated: 弃用状态，表示当前效果已被弃用。
  */
-export type EffectInherentErrorSource = 'dispose' | 'pause' | 'resume'
-
+export type EffectState = 'active' | 'paused' | 'deprecated'
 /**
- * Effect类提供了一个通用的副作用管理实现
+ * 最小化的副作用基类
  *
- * 该类设计用于管理具有生命周期的副作用操作，提供了：
- * - 状态管理：支持active（活跃）、paused（暂停）和deprecated（弃用）三种状态
- * - 生命周期钩子：可监听销毁(dispose)、暂停(pause)和恢复(resume)事件
- * - 错误处理：统一的错误捕获和处理机制
+ * 设计原则：
+ * - 保持非常轻量，仅管理状态与生命周期钩子；
+ * - 提供受保护的 beforeX 钩子供子类实现自定义清理/暂停/恢复逻辑；
+ * - 提供 _prev/_next 链表引用，供 EffectScope 做 O(1) 的添加/删除；
+ * - 提供 _scope，按照约定自定义的effect需将异常报告给 _scope.handleError 处理；
  *
- * 主要应用场景：
- * - 资源管理：管理需要及时清理的资源（如定时器、事件监听器等）
- * - 状态同步：协调多个相关联的副作用操作
- * - 可中断任务：支持暂停和恢复的长期运行任务
- *
- * @template ErrorSource - 错误源类型
+ * 约定：
+ * - 不要修改_开头的属性，它们可以被读取，但是一定不要修改。
+ * - 副作用发生的异常应该交由 _scope.handleError 进行处理。
  */
-export class Effect<ErrorSource extends string = string>
-  implements EffectInterface<EffectInherentErrorSource | ErrorSource>
-{
+export abstract class Effect {
   /**
-   * 回调函数集合
+   * 双向链表节点引用
    *
-   * @protected
+   * @readonly  由scope注入（由 Scope 使用）—— 注意：不可直接修改
    */
-  protected callbacks?: Map<EffectInherentErrorSource | 'error', Set<AnyCallback>>
+  _prev?: Effect
   /**
-   * 状态
+   * 双向链表节点引用
    *
-   * @protected
+   * @readonly 由scope注入（由 Scope 使用）—— 注意：不可直接修改
    */
-  protected _state: EffectState = 'active'
+  _next?: Effect
+  /**
+   * 所属作用域
+   *
+   * @readonly 由scope注入（自定义Effect可以调用this._scope.handleError(e,source)上报异常） —— 注意：不可直接修改
+   */
+  _scope?: EffectScope
+
+  /** 当前状态 */
+  private _state: EffectState = 'active'
 
   /**
-   * 状态:
-   *   - `active`: 活跃
-   *   - `paused`: 暂停
-   *   - `deprecated`: 弃用
+   * 获取当前状态
    */
   get state(): EffectState {
     return this._state
   }
 
   /**
-   * 是否已弃用/销毁
-   *
-   * @readonly
-   */
-  get isDeprecated() {
-    return this.state === 'deprecated'
-  }
-
-  /**
-   * 判断是否为暂停状态
-   */
-  get isPaused(): boolean {
-    return this.state === 'paused'
-  }
-
-  /**
-   * 判断是否处于活跃状态
+   * 判断当前状态是否为活跃状态
    */
   get isActive(): boolean {
-    return this.state === 'active'
+    return this._state === 'active'
   }
 
   /**
-   * 状态:
-   *   - `active`: 活跃
-   *   - `paused`: 暂停
-   *   - `deprecated`: 弃用
+   * 判断当前状态是否为暂停状态
    */
-  getState(): EffectState {
-    return this._state
+  get isPaused(): boolean {
+    return this._state === 'paused'
   }
 
   /**
-   * @inheritDoc
+   * 判断当前状态是否为弃用状态
    */
-  dispose(): boolean {
-    if (this.isDeprecated) return true
+  get isDeprecated(): boolean {
+    return this._state === 'deprecated'
+  }
+
+  /**
+   * 弃用当前副作用实例
+   */
+  dispose(): void {
+    if (this.isDeprecated) throw new Error('Effect is already deprecated.')
+
+    // 从作用域链表中删除自己
+    this._scope?.removeEffect(this)
+
+    this.beforeDispose?.()
     this._state = 'deprecated'
-    this.triggerCallback('dispose')
-    this.clearCallbacks()
-    return true
+    this.afterDispose?.()
   }
 
   /**
-   * @inheritDoc
+   * 暂停当前副作用实例
    */
-  onDispose(callback: VoidCallback): this {
-    return this.addCallback(callback, 'dispose')
-  }
-
-  /**
-   * @inheritDoc
-   */
-  pause(): boolean {
-    if (!this.isActive) {
-      throw new Error('Effect must be active to pause.')
-    }
+  pause(): void {
+    if (!this.isActive) throw new Error('Effect must be active to pause.')
+    this.beforePause?.()
     this._state = 'paused'
-    this.triggerCallback('pause')
-    return true
+    this.afterPause?.()
   }
 
   /**
-   * @inheritDoc
+   * 恢复当前副作用实例
    */
-  resume(): boolean {
-    if (!this.isPaused) {
-      throw new Error('Effect must be paused to resume.')
-    }
+  resume(): void {
+    if (!this.isPaused) throw new Error('Effect must be paused to resume.')
+    this.beforeResume?.()
     this._state = 'active'
-    this.triggerCallback('resume')
-    return true
+    this.afterResume?.()
   }
 
-  /**
-   * 监听暂停事件
-   *
-   * @param {VoidCallback} callback - 回调函数
-   * @returns {this}
-   */
-  onPause(callback: VoidCallback): this {
-    return this.addCallback(callback, 'pause')
-  }
-
-  /**
-   * 监听恢复事件
-   *
-   * @param {VoidCallback} callback - 回调函数
-   * @returns {this}
-   */
-  onResume(callback: VoidCallback): this {
-    return this.addCallback(callback, 'resume')
-  }
-
-  /**
-   * 监听错误事件
-   *
-   * @param {EffectCallbackErrorHandler} callback - 回调函数
-   * @returns {this}
-   */
-  onError(callback: EffectCallbackErrorHandler<EffectInherentErrorSource | ErrorSource>): this {
-    return this.addCallback(callback, 'error')
-  }
-
-  /**
-   * 清理所有回调函数
-   *
-   * @private
-   */
-  private clearCallbacks(): void {
-    if (this.callbacks) {
-      this.callbacks.clear()
-      this.callbacks = undefined
-    }
-  }
-
-  /**
-   * 报告回调异常
-   *
-   * @param {unknown} e - 捕获到的异常
-   * @param {EffectInherentErrorSource} source - 回调事件源
-   * @protected
-   */
-  protected reportError(e: unknown, source: EffectInherentErrorSource | ErrorSource): void {
-    const errorHandlers = this.callbacks?.get('error')
-    if (errorHandlers) {
-      errorHandlers.forEach(callback => {
-        try {
-          callback(e, source)
-        } catch (innerError) {
-          logger.error(`Error handler for "${source}" threw an error:`, innerError)
-        }
-      })
-    } else {
-      logger.error(`Unhandled error in effect callback (${source}):`, e)
-    }
-  }
-
-  /**
-   * 触发回调
-   *
-   * @param type
-   * @protected
-   */
-  protected triggerCallback(type: EffectInherentErrorSource): void {
-    const callbacks = this.callbacks?.get(type)
-    if (!callbacks) return
-    callbacks.forEach(callback => {
-      try {
-        callback()
-      } catch (e) {
-        this.reportError(e, type)
-      }
-    })
-  }
-
-  /**
-   * 添加回调函数
-   *
-   * @param callback
-   * @param type
-   * @private
-   */
-  private addCallback(callback: AnyCallback, type: EffectInherentErrorSource | 'error'): this {
-    if (this.isDeprecated) {
-      throw new Error('Cannot add callback to a deprecated effect.')
-    }
-    if (typeof callback !== 'function') {
-      throw new TypeError(`Callback parameter for "${type}" must be a function.`)
-    }
-    if (!this.callbacks) {
-      this.callbacks = new Map()
-    }
-    const callbackSet = this.callbacks.get(type) || new Set()
-    callbackSet.add(callback)
-    this.callbacks.set(type, callbackSet)
-    return this
-  }
-}
-
-/**
- * 检测是否为可处置副作用对象
- *
- * @param {any} obj - 要检测的对象
- * @returns {boolean} 如果对象实现了 EffectInterface，则返回 true，否则返回 false
- */
-export const isEffect = (obj: any): obj is EffectInterface => {
-  if (!obj || typeof obj !== 'object') return false
-  if (obj instanceof Effect) return true
-  return (
-    typeof obj.dispose === 'function' &&
-    typeof obj.onDispose === 'function' &&
-    typeof obj.pause === 'function' &&
-    typeof obj.onPause === 'function' &&
-    typeof obj.resume === 'function' &&
-    typeof obj.onResume === 'function' &&
-    typeof obj.onError === 'function' &&
-    typeof obj.getState === 'function'
-  )
+  /* ---------- 前置/后置钩子 (供子类覆盖) ---------- */
+  protected beforeDispose?(): void
+  protected beforePause?(): void
+  protected beforeResume?(): void
+  protected afterDispose?(): void
+  protected afterPause?(): void
+  protected afterResume?(): void
 }
