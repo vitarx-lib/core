@@ -1,4 +1,4 @@
-import type { Signal, Watcher } from '../types/index.js'
+import type { Signal, Watcher } from '../../types/index.js'
 
 /**
  * signal → watcher 双向链表头
