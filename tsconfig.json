@@ -38,14 +38,17 @@
     "types": [
       "vitest/globals",
       "vite/client",
-      "node"
+      "node",
+      "global.d.ts"
     ]
   },
   "include": [
     "**/src/**/*.ts",
     "**/tests/**/*.ts",
     "**/__tests__/**/*.ts",
-    "./scripts/*.ts"
+    "./scripts/*.ts",
+    "global.d.ts",
+    "packages/**/*.ts"
   ],
   "exclude": [
     "**/node_modules",
