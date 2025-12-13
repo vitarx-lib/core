@@ -1,5 +1,6 @@
 import { Context } from '../context/index.js'
-import type { Signal } from '../types/index.js'
+import type { DebuggerEventType } from '../types/debug.js'
+import type { DebuggerEventHandler, Signal } from '../types/index.js'
 
 /**
  * 信号依赖集合
@@ -10,7 +11,16 @@ export type DepSet = Set<Signal>
  * 上下文中存储依赖的符号
  */
 const DEP_CTX = Symbol.for('SIGNAL_DEPENDENCY_CONTEXT')
-type DepCollector = { add: (dep: Signal) => void }
+type DepCollector = {
+  add: (dep: Signal) => void
+  /**
+   * 跟踪信号依赖 - 开发环境有效
+   *
+   * @param signal - 被跟踪的信号
+   * @param type - 调试事件类型
+   */
+  onTrack?: DebuggerEventHandler
+}
 /**
  * 依赖收集结果
  * @template T 函数返回值类型
@@ -27,7 +37,19 @@ export type CollectResult<T, D> = {
    */
   deps: D
 }
-
+/**
+ * 跟踪信号依赖 - 仅开发模式调用此api
+ *
+ * @param signal - 被跟踪的信号
+ * @param type - 调试事件类型
+ */
+export function debugTrack(signal: Signal, type: DebuggerEventType) {
+  const collector = Context.get<DepCollector>(DEP_CTX)
+  if (collector) {
+    collector.add(signal)
+    collector?.onTrack?.({ signal, type })
+  }
+}
 /**
  * 跟踪信号，将信号加入当前上下文的依赖集合
  *
