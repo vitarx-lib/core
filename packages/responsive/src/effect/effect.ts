@@ -1,4 +1,4 @@
-import { EffectScope } from './scope.js'
+import { EffectScope, getCurrentScope } from './scope.js'
 
 /**
  * 副作用状态枚举
@@ -43,7 +43,13 @@ export abstract class Effect {
 
   /** 当前状态 */
   private _state: EffectState = 'active'
-
+  constructor(scope: EffectScope | boolean = true) {
+    if (scope === true) {
+      getCurrentScope()?.addEffect(this)
+    } else if (typeof scope === 'object') {
+      scope.addEffect(this)
+    }
+  }
   /**
    * 获取当前状态
    */
