@@ -36,7 +36,7 @@ export class ReactiveWatcher<T = any> extends Watcher {
     options?: WatcherOptions
   ) {
     super(options)
-    this.run()
+    this.runEffect()
   }
   /**
    * 子类可覆写：每一次收集完成后
@@ -46,7 +46,9 @@ export class ReactiveWatcher<T = any> extends Watcher {
   protected afterCollect?(value: T): void
   /** 核心：执行 + 依赖收集 */
   protected run(): void {
+    this.errorSource = 'getter'
     const value = collectSignal(() => this.getter(this.onCleanup), this).result
+    this.errorSource = 'trigger'
     this.afterCollect?.(value)
   }
 }
