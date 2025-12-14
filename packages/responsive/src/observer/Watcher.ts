@@ -22,7 +22,7 @@ export interface WatcherOptions extends EffectOptions {
    */
   flush?: FlushMode
 }
-
+export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
 const WATCHER_CONTEXT = Symbol.for('__v_watcher_context')
 /**
  * Watcher 抽象基类
@@ -107,10 +107,13 @@ export abstract class Watcher extends Effect implements IWatcher {
   /**
    * 添加清理函数
    *
-   * @param fn - 清理函数
+   * @param cleanupFn
    */
-  public pushCleanup = (fn: VoidCallback): void => {
-    this.cleanups.push(fn)
+  public onCleanup = (cleanupFn: VoidCallback): void => {
+    if (typeof cleanupFn !== 'function') {
+      throw new Error('[onWatcherCleanup] Invalid cleanup function.')
+    }
+    this.cleanups.push(cleanupFn)
   }
   /**
    * 在对象被销毁前执行清理操作
@@ -141,11 +144,7 @@ export abstract class Watcher extends Effect implements IWatcher {
       try {
         fn()
       } catch (e) {
-        if (this._scope) {
-          this._scope.handleError(e, 'cleanup')
-        } else {
-          throw e
-        }
+        this.reportError(e, 'watcher.cleanup')
       }
     }
     // 清空清理函数列表，将数组长度设置为0
@@ -161,14 +160,7 @@ export abstract class Watcher extends Effect implements IWatcher {
     try {
       Context.run(WATCHER_CONTEXT, this, () => this.run())
     } catch (e) {
-      // 如果捕获到错误
-      if (this._scope) {
-        // 如果存在作用域(_scope)，则调用其handleError方法处理错误
-        this._scope.handleError(e, 'callback')
-      } else {
-        // 如果不存在作用域，则重新抛出错误
-        throw e
-      }
+      this.reportError(e, 'watcher.trigger')
     }
   }
 }
@@ -179,7 +171,7 @@ export abstract class Watcher extends Effect implements IWatcher {
  * @param cleanupFn - 当观察者被清理时需要执行的回调函数
  * @param silent - 是否在无观察者上下文时静默警告，默认为false
  */
-export function onWatcherCleanup(cleanupFn: VoidCallback, silent: boolean = false) {
+export function onWatcherCleanup(cleanupFn: VoidCallback, silent: boolean = false): void {
   // 获取当前上下文中的观察者实例
   const watcher = Context.get(WATCHER_CONTEXT)
   // 如果存在观察者实例，则将清理函数添加到观察者的清理函数列表中
