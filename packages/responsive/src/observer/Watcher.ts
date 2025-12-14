@@ -25,25 +25,6 @@ export interface WatcherOptions extends EffectOptions {
    * @default 'pre'
    */
   flush?: FlushMode
-  /**
-   * 是否只允许运行一次
-   *
-   * 当设置为 true 时，回调函数只会在第一次信号值变化时执行，
-   * 之后观察器将自动停止并释放资源。
-   *
-   * @default false
-   * @example
-   * ```typescript
-   * const count = signal(0);
-   * const watcher = new SignalWatcher(count, (newValue, oldValue) => {
-   *   console.log(`Changed from ${oldValue} to ${newValue}`); // 只会执行一次
-   * }, { once: true, flush:'sync' });
-   *
-   * signal(1); // 触发回调: Changed from 0 to 1
-   * signal(2); // 不会触发回调，因为观察器已经停止
-   * ```
-   */
-  once?: boolean
 }
 /**
  * Watcher 抽象基类
@@ -89,13 +70,12 @@ export abstract class Watcher extends Effect implements IWatcher {
    * @default 'trigger'
    */
   protected errorSource: string = 'trigger'
-  private readonly once: boolean
   /**
    * 构造函数
    * @param options 调试钩子选项
    */
   protected constructor(options: WatcherOptions = {}) {
-    const { flush = 'pre', once = false, ...effectOptions } = options
+    const { flush = 'pre', ...effectOptions } = options
     super(effectOptions)
     if (__DEV__) {
       this.onTrigger = options.onTrigger
@@ -115,7 +95,6 @@ export abstract class Watcher extends Effect implements IWatcher {
         logger.warn(`[Watcher] Invalid flush option: ${options.flush}`)
         this.scheduler = queuePreFlushJob
     }
-    this.once = once
   }
   /**
    * 响应 signal 变化或触发回调
@@ -164,7 +143,6 @@ export abstract class Watcher extends Effect implements IWatcher {
     } catch (e) {
       this.reportError(e, this.errorSource)
     }
-    if (this.once) this.dispose()
   }
 
   /**
