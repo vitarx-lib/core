@@ -27,7 +27,7 @@ export interface EffectScopeOptions {
   errorHandler?: EffectScopeErrorHandler
 }
 
-const SCOPE_CONTEXT = Symbol('EFFECT_SCOPE_CONTEXT')
+const SCOPE_CONTEXT = Symbol.for('__v_effect_scope_context')
 
 /**
  * EffectScope 作用域
