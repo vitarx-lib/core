@@ -8,13 +8,13 @@ import { IS_SIGNAL, SIGNAL_RAW_VALUE, SIGNAL_READ_VALUE } from '../signal/index.
  * @template VALUE - 读取值类型
  * @interface
  */
-export interface Signal<RAW = any, VALUE = RAW> {
+export interface Signal<VALUE = any, RAW = any> {
   /** 是否为 signal（类型判定用） */
   readonly [IS_SIGNAL]: true
-  /** 原始值（getter，可选提供，toRaw 使用，读取且不触发跟踪） */
-  readonly [SIGNAL_RAW_VALUE]?: RAW
   /** 读取值（getter，必须提供，readSignal 使用，读取正常触发跟踪） */
   readonly [SIGNAL_READ_VALUE]: VALUE
+  /** 原始值（getter，可选提供，toRaw 使用，读取且不触发跟踪） */
+  readonly [SIGNAL_RAW_VALUE]?: RAW
   /**
    * signal → watcher 链表头
    *
