@@ -159,7 +159,7 @@ function flushAll(): void {
  *
  * @param job 要执行的任务函数
  */
-export function queuePreFlushJob<T extends Job>(job: T): void {
+export function queuePreFlushJob(job: Job): void {
   addJobToQueue(preFlushQueue, job)
 }
 
@@ -167,7 +167,7 @@ export function queuePreFlushJob<T extends Job>(job: T): void {
  * 将任务添加到主任务队列
  * @param job 要执行的任务函数
  */
-export function queueJob<T extends Job>(job: T): void {
+export function queueJob(job: Job): void {
   addJobToQueue(mainQueue, job)
 }
 
@@ -176,7 +176,7 @@ export function queueJob<T extends Job>(job: T): void {
  *
  * @param job 要执行的任务函数
  */
-export function queuePostFlushJob<T extends Job>(job: T): void {
+export function queuePostFlushJob(job: Job): void {
   addJobToQueue(postFlushQueue, job)
 }
 
