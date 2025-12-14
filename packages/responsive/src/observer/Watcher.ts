@@ -1,12 +1,10 @@
 import { logger } from '@vitarx/utils'
 import type { VoidCallback } from '@vitarx/utils/src/index.js'
-import { Context } from '../context/index.js'
 import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeWatcherDeps } from '../depend/index.js'
 import { Effect, type EffectOptions } from '../effect/index.js'
 import type { DebuggerHandler, FlushMode, IWatcher } from '../types/index.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
-const WATCHER_CONTEXT = Symbol.for('__v_watcher_context')
 /**
  * 观察器配置选项接口
  *
@@ -75,8 +73,14 @@ export abstract class Watcher extends Effect implements IWatcher {
   onTrigger?: DebuggerHandler
   /** track 调试钩子 */
   onTrack?: DebuggerHandler
-  /** 调度函数 */
-  public scheduler: ((job: () => void) => void) | undefined
+  /**
+   * 调度器
+   *
+   * 可以修改，但不建议运行时动态修改。
+   *
+   * @default `queuePreFlushJob`
+   */
+  public scheduler: (job: () => void) => void
   /** cleanup 回调 */
   private readonly cleanups: VoidCallback[] = []
   /**
@@ -97,36 +101,30 @@ export abstract class Watcher extends Effect implements IWatcher {
       this.onTrigger = options.onTrigger
       this.onTrack = options.onTrack
     }
-    if (flush && flush !== 'sync') {
-      switch (options.flush) {
-        case 'pre':
-          this.scheduler = queuePreFlushJob
-          break
-        case 'post':
-          this.scheduler = queuePostFlushJob
-          break
-        default:
-          logger.warn(`[Watcher] Invalid flush option: ${options.flush}`)
-          this.scheduler = queuePreFlushJob
-      }
+    switch (flush) {
+      case 'pre':
+        this.scheduler = queuePreFlushJob
+        break
+      case 'sync':
+        this.scheduler = (fn: () => void) => fn()
+        break
+      case 'post':
+        this.scheduler = queuePostFlushJob
+        break
+      default:
+        logger.warn(`[Watcher] Invalid flush option: ${options.flush}`)
+        this.scheduler = queuePreFlushJob
     }
     this.once = once
   }
   /**
    * 响应 signal 变化或触发回调
    *
-   * 此方法内部封装了调度模式，子类应该实现抽象run方法。
+   * 此方法是由信号触发器调用的，子类需实现抽象run方法。
    */
-  trigger(): void {
+  schedule(): void {
     if (!this.isActive) return
-    // 判断是否有调度器
-    if (this.scheduler) {
-      // 如果有调度器，则将收集函数作为回调传递给调度器
-      this.scheduler(this.runEffect)
-    } else {
-      // 如果没有调度器，则直接执行收集函数
-      this.runEffect()
-    }
+    this.scheduler(this.execute)
   }
   /**
    * 添加清理函数
@@ -150,6 +148,25 @@ export abstract class Watcher extends Effect implements IWatcher {
     // 调用清理方法，执行资源释放等清理操作
     this.cleanup()
   }
+
+  /**
+   * 运行副作用并处理可能出现的错误
+   *
+   * 该方法会尝试执行run方法，并根据执行结果进行错误处理
+   *
+   * 此方法不会触发异步调度
+   */
+  execute = (): void => {
+    if (!this.isActive) return
+    this.cleanup()
+    try {
+      this.run()
+    } catch (e) {
+      this.reportError(e, this.errorSource)
+    }
+    if (this.once) this.dispose()
+  }
+
   /**
    * 在对象被销毁后执行的清理方法
    * 重写父类的afterDispose方法，用于释放资源
@@ -157,43 +174,23 @@ export abstract class Watcher extends Effect implements IWatcher {
   protected override afterDispose() {
     // 移除所有相关的依赖观察者，防止内存泄漏
     removeWatcherDeps(this)
-    // 将调度器引用置为undefined，帮助垃圾回收
-    this.scheduler = undefined
     // 将触发回调函数置为undefined，清除引用
     this.onTrigger = undefined
     // 将追踪回调函数置为undefined，清除引用
     this.onTrack = undefined
   }
+
   /**
    * 运行副作用
    *
    * 此方法由子类实现，用于执行副作用逻辑。
    *
-   * 子类应该不应该调用 run 方法，必要时可 runEffect 方法。
+   * 子类应该不应该调用 run 方法，必要时可 syncTrigger 方法。
    */
   protected abstract run(): void
-  /**
-   * 受保护的方法：运行副作用并处理可能出现的错误
-   *
-   * 该方法会尝试执行run方法，并根据执行结果进行错误处理
-   *
-   * 此方法不会触发异步调度
-   */
-  protected runEffect(): void {
-    if (!this.isActive) return
-    this.cleanup()
-    try {
-      Context.run(WATCHER_CONTEXT, this, () => this.run())
-    } catch (e) {
-      this.reportError(e, this.errorSource)
-    }
-    if (this.once) this.dispose()
-  }
-
   protected override reportError(e: unknown, source: string) {
     super.reportError(e, `watcher.${source}`)
   }
-
   /**
    * 清理方法，用于执行所有注册的清理函数并清空清理函数列表
    *
@@ -210,23 +207,5 @@ export abstract class Watcher extends Effect implements IWatcher {
     }
     // 清空清理函数列表，将数组长度设置为0
     this.cleanups.length = 0
-  }
-}
-
-/**
- * 用于在观察者(watcher)清理时执行回调函数的工具函数
- *
- * @param cleanupFn - 当观察者被清理时需要执行的回调函数
- * @param silent - 是否在无观察者上下文时静默警告，默认为false
- */
-export function onWatcherCleanup(cleanupFn: VoidCallback, silent: boolean = false): void {
-  // 获取当前上下文中的观察者实例
-  const watcher = Context.get(WATCHER_CONTEXT)
-  // 如果存在观察者实例，则将清理函数添加到观察者的清理函数列表中
-  if (watcher) {
-    watcher.pushCleanup(cleanupFn)
-  } else if (!silent) {
-    // 如果不存在观察者实例且未设置静默模式，则输出警告日志
-    logger.warn('[onWatcherCleanup] No watcher found in the current context.')
   }
 }
