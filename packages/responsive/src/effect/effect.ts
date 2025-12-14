@@ -124,7 +124,19 @@ export abstract class Effect {
     this._state = 'active'
     this.afterResume?.()
   }
-
+  /**
+   * 抛出异常
+   *
+   * @param e - 异常对象
+   * @param source - 异常源
+   */
+  protected reportError(e: unknown, source: string): void {
+    if (this._scope) {
+      this._scope.handleError(e, source)
+    } else {
+      throw e
+    }
+  }
   /* ---------- 前置/后置钩子 (供子类覆盖) ---------- */
   protected beforeDispose?(): void
   protected beforePause?(): void
