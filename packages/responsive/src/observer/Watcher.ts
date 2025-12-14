@@ -103,18 +103,6 @@ export abstract class Watcher extends Effect implements IWatcher {
     }
   }
   /**
-   * 在对象被销毁后执行的清理方法
-   * 重写父类的afterDispose方法，用于释放资源
-   */
-  protected override afterDispose() {
-    // 将调度器引用置为undefined，帮助垃圾回收
-    this.scheduler = undefined
-    // 将触发回调函数置为undefined，清除引用
-    this.onTrigger = undefined
-    // 将追踪回调函数置为undefined，清除引用
-    this.onTrack = undefined
-  }
-  /**
    * 添加清理函数
    *
    * @param cleanupFn
@@ -134,8 +122,20 @@ export abstract class Watcher extends Effect implements IWatcher {
   protected override beforeDispose() {
     // 调用清理方法，执行资源释放等清理操作
     this.cleanup()
+  }
+  /**
+   * 在对象被销毁后执行的清理方法
+   * 重写父类的afterDispose方法，用于释放资源
+   */
+  protected override afterDispose() {
     // 移除所有相关的依赖观察者，防止内存泄漏
     removeWatcherDeps(this)
+    // 将调度器引用置为undefined，帮助垃圾回收
+    this.scheduler = undefined
+    // 将触发回调函数置为undefined，清除引用
+    this.onTrigger = undefined
+    // 将追踪回调函数置为undefined，清除引用
+    this.onTrack = undefined
   }
   /**
    * 运行副作用
