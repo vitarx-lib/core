@@ -2,27 +2,10 @@ import { logger } from '@vitarx/utils'
 import type { VoidCallback } from '@vitarx/utils/src/index.js'
 import { Context } from '../context/index.js'
 import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeWatcherDeps } from '../depend/index.js'
-import { Effect, type EffectOptions } from '../effect/index.js'
-import type { DebuggerHandler, FlushMode, IWatcher } from '../types/index.js'
+import { Effect } from '../effect/index.js'
+import type { DebuggerHandler, IWatcher, WatcherOptions } from '../types/index.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
-export interface WatcherOptions extends EffectOptions {
-  /** trigger 调试钩子 */
-  onTrigger?: DebuggerHandler
-  /** track 调试钩子 */
-  onTrack?: DebuggerHandler
-  /**
-   * 指定副作用执行时机
-   *
-   * - 'pre'：在主任务之前执行副作用
-   * - 'post'：在主任务之后执行副作用
-   * - 'sync'：同步执行副作用
-   *
-   * @default 'pre'
-   */
-  flush?: FlushMode
-}
-export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
 const WATCHER_CONTEXT = Symbol.for('__v_watcher_context')
 /**
  * Watcher 抽象基类
