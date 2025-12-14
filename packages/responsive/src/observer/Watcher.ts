@@ -2,11 +2,51 @@ import { logger } from '@vitarx/utils'
 import type { VoidCallback } from '@vitarx/utils/src/index.js'
 import { Context } from '../context/index.js'
 import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeWatcherDeps } from '../depend/index.js'
-import { Effect } from '../effect/index.js'
-import type { DebuggerHandler, IWatcher, WatcherOptions } from '../types/index.js'
+import { Effect, type EffectOptions } from '../effect/index.js'
+import type { DebuggerHandler, FlushMode, IWatcher } from '../types/index.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
 const WATCHER_CONTEXT = Symbol.for('__v_watcher_context')
+/**
+ * 观察器配置选项接口
+ *
+ * 该接口扩展了 EffectOptions，提供了专门用于观察器的额外配置选项。
+ */
+export interface WatcherOptions extends EffectOptions {
+  /** trigger 调试钩子 */
+  onTrigger?: DebuggerHandler
+  /** track 调试钩子 */
+  onTrack?: DebuggerHandler
+  /**
+   * 指定副作用执行时机
+   *
+   * - 'pre'：在主任务之前执行副作用
+   * - 'post'：在主任务之后执行副作用
+   * - 'sync'：同步执行副作用
+   *
+   * @default 'pre'
+   */
+  flush?: FlushMode
+  /**
+   * 是否只允许运行一次
+   *
+   * 当设置为 true 时，回调函数只会在第一次信号值变化时执行，
+   * 之后观察器将自动停止并释放资源。
+   *
+   * @default false
+   * @example
+   * ```typescript
+   * const count = signal(0);
+   * const watcher = new SignalWatcher(count, (newValue, oldValue) => {
+   *   console.log(`Changed from ${oldValue} to ${newValue}`); // 只会执行一次
+   * }, { once: true, flush:'sync' });
+   *
+   * signal(1); // 触发回调: Changed from 0 to 1
+   * signal(2); // 不会触发回调，因为观察器已经停止
+   * ```
+   */
+  once?: boolean
+}
 /**
  * Watcher 抽象基类
  * - 实现 IWatcher 接口的公共部分
@@ -45,17 +85,19 @@ export abstract class Watcher extends Effect implements IWatcher {
    * @default 'trigger'
    */
   protected errorSource: string = 'trigger'
+  private readonly once: boolean
   /**
    * 构造函数
    * @param options 调试钩子选项
    */
   protected constructor(options: WatcherOptions = {}) {
-    super(options)
+    const { flush = 'pre', once = false, ...effectOptions } = options
+    super(effectOptions)
     if (__DEV__) {
       this.onTrigger = options.onTrigger
       this.onTrack = options.onTrack
     }
-    if (options?.flush && options.flush !== 'sync') {
+    if (flush && flush !== 'sync') {
       switch (options.flush) {
         case 'pre':
           this.scheduler = queuePreFlushJob
@@ -68,6 +110,7 @@ export abstract class Watcher extends Effect implements IWatcher {
           this.scheduler = queuePreFlushJob
       }
     }
+    this.once = once
   }
   /**
    * 响应 signal 变化或触发回调
@@ -88,11 +131,12 @@ export abstract class Watcher extends Effect implements IWatcher {
   /**
    * 添加清理函数
    *
-   * @param cleanupFn
+   * @param cleanupFn - 清理函数
+   * @throws {TypeError} 如果清理函数不是函数类型，则抛出一个类型错误
    */
   public onCleanup = (cleanupFn: VoidCallback): void => {
     if (typeof cleanupFn !== 'function') {
-      throw new Error('[onWatcherCleanup] Invalid cleanup function.')
+      throw new TypeError('[onWatcherCleanup] Invalid cleanup function.')
     }
     this.cleanups.push(cleanupFn)
   }
@@ -129,23 +173,6 @@ export abstract class Watcher extends Effect implements IWatcher {
    */
   protected abstract run(): void
   /**
-   * 清理方法，用于执行所有注册的清理函数并清空清理函数列表
-   *
-   * @protected 这是一个受保护的方法，只能在类内部或子类中访问
-   */
-  private cleanup(): void {
-    // 遍历并执行所有注册的清理函数
-    for (const fn of this.cleanups) {
-      try {
-        fn()
-      } catch (e) {
-        this.reportError(e, 'watcher.cleanup')
-      }
-    }
-    // 清空清理函数列表，将数组长度设置为0
-    this.cleanups.length = 0
-  }
-  /**
    * 受保护的方法：运行副作用并处理可能出现的错误
    *
    * 该方法会尝试执行run方法，并根据执行结果进行错误处理
@@ -158,8 +185,31 @@ export abstract class Watcher extends Effect implements IWatcher {
     try {
       Context.run(WATCHER_CONTEXT, this, () => this.run())
     } catch (e) {
-      this.reportError(e, `watcher.${this.errorSource}`)
+      this.reportError(e, this.errorSource)
     }
+    if (this.once) this.dispose()
+  }
+
+  protected override reportError(e: unknown, source: string) {
+    super.reportError(e, `watcher.${source}`)
+  }
+
+  /**
+   * 清理方法，用于执行所有注册的清理函数并清空清理函数列表
+   *
+   * @protected 这是一个受保护的方法，只能在类内部或子类中访问
+   */
+  private cleanup(): void {
+    // 遍历并执行所有注册的清理函数
+    for (const fn of this.cleanups) {
+      try {
+        fn()
+      } catch (e) {
+        this.reportError(e, 'cleanup')
+      }
+    }
+    // 清空清理函数列表，将数组长度设置为0
+    this.cleanups.length = 0
   }
 }
 
