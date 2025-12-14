@@ -46,9 +46,9 @@ export class Watcher<T = any> extends Effect implements Watcher {
   private _value!: T
   private _isInit = false
 
-  private _compare: (a: T, b: T) => boolean
-  private _once: boolean
-  private _dynamicDeps: boolean
+  private readonly _compare: (a: T, b: T) => boolean
+  private readonly _once: boolean
+  private readonly _dynamicDeps: boolean
 
   private _scheduler?: (job: () => void) => void
   private _cleanups: VoidCallback[] = []
