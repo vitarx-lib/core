@@ -1,6 +1,7 @@
 import { type VoidCallback } from '@vitarx/utils'
 import { Context, runInContext } from '../context/index.js'
 import { Effect } from './effect.js'
+import { NEXT_EFFECT, PREV_EFFECT } from './symbol.js'
 
 /**
  * 作用域错误处理函数
@@ -72,9 +73,34 @@ export class EffectScope {
     let node = this._head
     while (node) {
       n++
-      node = node._next
+      node = node[NEXT_EFFECT]
     }
     return n
+  }
+
+  /**
+   * 获取所有副作用的访问器属性
+   *
+   * 返回一个包含所有副作用的数组，按照添加顺序排列
+   *
+   * 获取数量需要遍历链表，因此时间复杂度为O(n)，一般仅用于测试阶段
+   *
+   * @returns {Effect[]} 包含所有效果的数组
+   */
+  get effects(): Effect[] {
+    // 初始化一个空数组用于存放效果
+    const list: Effect[] = []
+    // 从链表头部开始遍历
+    let node = this._head
+    // 遍历整个效果链表
+    while (node) {
+      // 将当前节点添加到数组中
+      list.push(node)
+      // 移动到下一个节点
+      node = node[NEXT_EFFECT]
+    }
+    // 返回包含所有效果的数组
+    return list
   }
 
   /**
@@ -121,12 +147,12 @@ export class EffectScope {
     // 将当前效果的_scope指针指向当前作用域
     effect._scope = this
     // 将当前效果的_prev指针指向链表的尾部
-    effect._prev = this._tail
+    effect[PREV_EFFECT] = this._tail
     // 初始化当前效果的_next指针为undefined，因为它是最后一个效果
-    effect._next = undefined
+    effect[NEXT_EFFECT] = undefined
     if (!this._head) this._head = this._tail = effect
     else {
-      this._tail!._next = effect
+      this._tail![NEXT_EFFECT] = effect
       this._tail = effect
     }
   }
@@ -144,18 +170,18 @@ export class EffectScope {
     // 将当前效果的_scope指针置为undefined，表示它不再属于任何作用域
     effect._scope = undefined
     // 获取要移除节点的前一个节点和后一个节点
-    const prev = effect._prev
-    const next = effect._next
+    const prev = effect[PREV_EFFECT]
+    const next = effect[NEXT_EFFECT]
     // 如果存在前一个节点，将其_next指针指向后一个节点，从而跳过当前节点
-    if (prev) prev._next = next
+    if (prev) prev[NEXT_EFFECT] = next
     // 如果不存在前一个节点，说明当前节点是头节点，将头节点指向后一个节点
     else this._head = next
     // 如果存在后一个节点，将其_prev指针指向前一个节点，从而跳过当前节点
-    if (next) next._prev = prev
+    if (next) next[PREV_EFFECT] = prev
     // 如果不存在后一个节点，说明当前节点是尾节点，将尾节点指向前一个节点
     else this._tail = prev
     // 清空当前节点的_prev和_next指针，帮助垃圾回收
-    effect._prev = effect._next = undefined
+    effect[PREV_EFFECT] = effect[NEXT_EFFECT] = undefined
   }
 
   /**
@@ -182,9 +208,7 @@ export class EffectScope {
     } else {
       throw error instanceof Error
         ? error
-        : new Error(
-            `[EffectScope][${String(this.name ?? 'anonymous')}] ${source}: ${String(error)}`
-          )
+        : new Error(`[EffectScope][${String(this.name)}] ${source}: ${String(error)}`)
     }
   }
 
@@ -195,14 +219,14 @@ export class EffectScope {
   dispose(): void {
     let node = this._head // 从链表头节点开始遍历
     while (node) {
-      const next = node._next // 保存下一个节点的引用，防止当前节点释放后无法访问
+      const next = node[NEXT_EFFECT] // 保存下一个节点的引用，防止当前节点释放后无法访问
       try {
         node.dispose?.() // 尝试调用节点的dispose方法，如果存在的话
       } catch (error) {
         // 如果dispose方法抛出错误，使用错误处理器报告错误
         this.handleError(error, 'dispose')
       } finally {
-        node._prev = node._next = undefined // 断开当前节点与前后的连接
+        node[PREV_EFFECT] = node[NEXT_EFFECT] = undefined // 断开当前节点与前后的连接
       }
       node = next // 移动到下一个节点
     }
@@ -225,7 +249,7 @@ export class EffectScope {
     let node = this._head // 从链表头节点开始遍历
     while (node) {
       // 当节点不为null时继续循环
-      const next = node._next // 保存当前节点的下一个节点
+      const next = node[NEXT_EFFECT] // 保存当前节点的下一个节点
       try {
         node.pause?.() // 尝试调用节点的pause方法（如果存在）
       } catch (error) {
@@ -247,7 +271,7 @@ export class EffectScope {
     let node = this._head // 从链表头节点开始遍历
     while (node) {
       // 遍历链表中的每个节点
-      const next = node._next // 保存当前节点的下一个节点引用
+      const next = node[NEXT_EFFECT] // 保存当前节点的下一个节点引用
       try {
         node.resume?.() // 尝试恢复当前节点的执行，使用可选链操作符确保resume方法存在
       } catch (error) {

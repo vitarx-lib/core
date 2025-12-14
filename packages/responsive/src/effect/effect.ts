@@ -1,4 +1,5 @@
 import { EffectScope, getCurrentScope } from './scope.js'
+import { NEXT_EFFECT, PREV_EFFECT } from './symbol.js'
 
 /**
  * 副作用状态枚举
@@ -39,13 +40,13 @@ export abstract class Effect {
    *
    * @readonly  由scope注入（由 Scope 使用）—— 注意：不可直接修改
    */
-  _prev?: Effect
+  [PREV_EFFECT]?: Effect;
   /**
    * 双向链表节点引用
    *
    * @readonly 由scope注入（由 Scope 使用）—— 注意：不可直接修改
    */
-  _next?: Effect
+  [NEXT_EFFECT]?: Effect
   /**
    * 所属作用域
    *
