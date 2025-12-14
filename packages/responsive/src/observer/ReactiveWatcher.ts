@@ -32,13 +32,12 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  */
 export class ReactiveWatcher<T = any> extends Watcher {
   constructor(
-    private effect: (onCleanup: OnCleanup) => T,
+    private getter: (onCleanup: OnCleanup) => T,
     options?: WatcherOptions
   ) {
     super(options)
     this.run()
   }
-
   /**
    * 子类可覆写：每一次收集完成后
    * @param value - 副作用函数返回的值
@@ -47,7 +46,7 @@ export class ReactiveWatcher<T = any> extends Watcher {
   protected afterCollect?(value: T): void
   /** 核心：执行 + 依赖收集 */
   protected run(): void {
-    const value = collectSignal(() => this.effect(this.pushCleanup), this).result
+    const value = collectSignal(() => this.getter(this.onCleanup), this).result
     this.afterCollect?.(value)
   }
 }
