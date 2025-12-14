@@ -1,8 +1,9 @@
-import type { VoidCallback } from '@vitarx/utils/src/index.js'
-import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
-import type { DebuggerEvent } from './debug.js'
+import type { VoidCallback } from '@vitarx/utils'
+import type { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
+import type { Effect } from '../effect/index.js'
+import type { DebuggerHandler } from './debug.js'
 
-export interface Watcher {
+export interface Watcher extends Effect {
   /**
    * signal → watcher 链表头
    *
@@ -20,13 +21,13 @@ export interface Watcher {
    *
    * @param event - 调试事件
    */
-  onTrigger?: (event: DebuggerEvent) => void
+  onTrigger?: DebuggerHandler
   /**
    * track调试钩子 - 跟踪信号
    *
    * @param event - 调试事件
    */
-  onTrack?: (event: DebuggerEvent) => void
+  onTrack?: DebuggerHandler
   /**
    * 触发器
    */
