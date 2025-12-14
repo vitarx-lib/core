@@ -5,20 +5,14 @@ import {
   DEP_LINK_HEAD,
   DEP_LINK_TAIL,
   DepLink,
-  linkSignalWatcher,
   removeWatcherDeps
 } from '../depend/index.js'
-import { Effect, EffectScope } from '../effect/index.js'
+import { Effect } from '../effect/index.js'
 import type { DebuggerEvent, FlushMode, OnCleanup, Watcher } from '../types/index.js'
+import type { DepEffectOptions } from './depEffect.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
-export interface WatchEffectOptions {
-  /**
-   * 作用域
-   *
-   * @default true
-   */
-  scope?: EffectScope | boolean
+export interface WatchEffectOptions extends DepEffectOptions {
   /**
    * 指定副作用执行时机
    *
@@ -29,14 +23,6 @@ export interface WatchEffectOptions {
    * @default 'pre'
    */
   flush?: FlushMode
-  /**
-   * 追踪依赖的调试钩子
-   */
-  onTrack?: (event: DebuggerEvent) => void
-  /**
-   * 触发更新时的调试钩子
-   */
-  onTrigger?: (event: DebuggerEvent) => void
 }
 
 /**
@@ -91,11 +77,7 @@ export class ReactiveWatcher extends Effect implements Watcher {
     private effect: (onCleanup: OnCleanup) => void,
     options?: WatchEffectOptions
   ) {
-    super(options?.scope)
-    if (__DEV__) {
-      this.onTrigger = options?.onTrigger
-      this.onTrack = options?.onTrack
-    }
+    super(options)
     if (options?.flush && options.flush !== 'sync') {
       switch (options.flush) {
         case 'pre':
@@ -186,10 +168,7 @@ export class ReactiveWatcher extends Effect implements Watcher {
     this.cleanup()
     removeWatcherDeps(this)
     try {
-      collectSignal(() => this.effect(this.cleanups.push.bind(this.cleanups)), {
-        add: signal => linkSignalWatcher(this, signal),
-        onTrack: this.onTrack
-      })
+      collectSignal(() => this.effect(this.cleanups.push.bind(this.cleanups)), this)
     } catch (e) {
       if (this._scope) {
         this._scope.handleError(e, 'watcher.getter')

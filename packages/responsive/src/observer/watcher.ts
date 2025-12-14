@@ -4,11 +4,10 @@ import {
   DEP_LINK_HEAD,
   DEP_LINK_TAIL,
   DepLink,
-  linkSignalWatcher,
   removeWatcherDeps
 } from '../depend/index.js'
 import { Effect } from '../effect/index.js'
-import type { DebuggerEvent, Signal } from '../types/index.js'
+import type { DebuggerEvent, Watcher } from '../types/index.js'
 import type { WatchEffectOptions } from './effect.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
@@ -34,7 +33,7 @@ const schedulerMap: Record<'pre' | 'post', (job: () => void) => void> = {
 
 /* --------------------------------- Watcher --------------------------------- */
 
-export class Watcher<T = any> extends Effect implements Watcher {
+export class ValueWatcher<T = any> extends Effect implements Watcher {
   /** watcher <-> signal 依赖链表 */
   [DEP_LINK_HEAD]?: DepLink;
   [DEP_LINK_TAIL]?: DepLink
@@ -58,7 +57,7 @@ export class Watcher<T = any> extends Effect implements Watcher {
     cb?: WatcherCallback<T>,
     options: WatcherOptions<T> = {}
   ) {
-    super(options.scope)
+    super(options)
 
     this._getter = getter
     this._cb = cb
@@ -140,10 +139,7 @@ export class Watcher<T = any> extends Effect implements Watcher {
 
     removeWatcherDeps(this)
 
-    const { result } = collectSignal(() => this._getter(this._registerCleanup), {
-      add: (signal: Signal) => linkSignalWatcher(this, signal),
-      onTrack: this.onTrack
-    })
+    const { result } = collectSignal(() => this._getter(this._registerCleanup), this)
 
     return result
   }
