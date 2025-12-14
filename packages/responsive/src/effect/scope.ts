@@ -162,11 +162,7 @@ export class EffectScope {
    * @param effect - 需要被移除的效果节点
    */
   removeEffect(effect: Effect) {
-    if (effect._scope !== this) {
-      throw new Error(
-        `[Vitarx.EffectScope]: Cannot remove effect from scope. Effect does not belong to this scope.`
-      )
-    }
+    if (!effect._scope) return
     // 将当前效果的_scope指针置为undefined，表示它不再属于任何作用域
     effect._scope = undefined
     // 获取要移除节点的前一个节点和后一个节点
