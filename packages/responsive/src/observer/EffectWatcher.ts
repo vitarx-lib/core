@@ -1,15 +1,7 @@
 import { collectSignal, removeWatcherDeps } from '../depend/index.js'
-import type { WatcherOnCleanup, WatcherOptions } from '../types/index.js'
-import { Watcher } from './Watcher.js'
+import type { WatcherOnCleanup } from '../types/index.js'
+import { Watcher, type WatcherOptions } from './Watcher.js'
 
-/**
- * EffectWatcher 观察器配置选项接口
- *
- * 该接口扩展了 WatcherOptions。
- *
- * @extends WatcherOptions
- */
-export interface EffectWatcherOptions extends WatcherOptions {}
 /**
  * 副作用观察器
  *
@@ -31,10 +23,10 @@ export class EffectWatcher<T = any> extends Watcher {
   protected override errorSource: string = 'collect'
   constructor(
     private effect: (onCleanup: WatcherOnCleanup) => T,
-    options?: EffectWatcherOptions
+    options?: WatcherOptions
   ) {
     super(options)
-    this.runEffect()
+    this.execute()
   }
   /**
    * 核心：执行 + 依赖收集
@@ -51,4 +43,24 @@ export class EffectWatcher<T = any> extends Watcher {
     super.afterDispose()
     this.effect = undefined as any
   }
+}
+
+/**
+ * 创建一个副作用效果观察器，
+ * 当依赖的响应式数据变化时自动执行回调函数
+ *
+ * @param effect - 一个回调函数，接收一个 onCleanup 函数作为参数，用于清理副作用
+ * @param [options] - 可选配置项，用于控制观察器的行为
+ * @param [options.flush = 'pre'] - 调度模式
+ * @param [options.onTrigger] - 调试钩子，在依赖发生变化时触发
+ * @param [options.onTrack] - 调试钩子，在跟踪依赖时触发
+ *
+ * @returns {EffectWatcher} 返回一个 EffectWatcher 实例，可以用于手动停止观察
+ */
+export function watchEffect(
+  effect: (onCleanup: WatcherOnCleanup) => void,
+  options?: WatcherOptions
+): EffectWatcher {
+  // 返回一个观察器实例
+  return new EffectWatcher(effect, options) // 创建并返回新的 EffectWatcher 实例
 }
