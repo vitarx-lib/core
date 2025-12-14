@@ -98,11 +98,10 @@ export abstract class Effect {
   dispose(): void {
     if (this.isDeprecated) throw new Error('Effect is already deprecated.')
 
-    // 从作用域链表中删除自己
-    this._scope?.removeEffect(this)
-
     this.beforeDispose?.()
     this._state = 'deprecated'
+    // 从作用域链表中删除自己
+    this._scope?.removeEffect(this)
     this.afterDispose?.()
   }
 
