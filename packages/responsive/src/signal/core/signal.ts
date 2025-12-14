@@ -29,7 +29,7 @@ export function signal<T>(initialValue: T, options: SignalOptions = {}): FnSigna
   let _value: T = initialValue
 
   // 核心 Signal 函数（重载实现）
-  const sig = ((newValue?: T): T | void => {
+  const sig = function (newValue?: T): T | void {
     // 无参调用：get 操作，收集依赖 + 返回当前值
     if (arguments.length === 0) {
       trackSignal(sig, 'get')
@@ -41,7 +41,7 @@ export function signal<T>(initialValue: T, options: SignalOptions = {}): FnSigna
     const oldValue = _value
     _value = newValue!
     triggerSignal(sig, 'set', { newValue, oldValue })
-  }) as FnSignal<T>
+  } as FnSignal<T>
   Object.defineProperty(sig, IS_SIGNAL, { value: true })
   Object.defineProperty(sig, SIGNAL_RAW_VALUE, { get: () => _value })
   Object.defineProperty(sig, SIGNAL_READ_VALUE, { get: () => sig() })
