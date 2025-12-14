@@ -1,9 +1,8 @@
 import { linkSignalWatcher } from '../depend/index.js'
 import { readSignal } from '../signal/index.js'
-import type { Signal } from '../types/index.js'
-import { Watcher, type WatcherOnCleanup, type WatcherOptions } from './Watcher.js'
+import type { ChangeCallback, Signal } from '../types/index.js'
+import { Watcher, type WatcherOptions } from './Watcher.js'
 
-export type ChangeCallback<T> = (newValue: T, oldValue: T, onCleanup: WatcherOnCleanup) => void
 /**
  * SignalWatcher 观察器配置选项接口
  *
