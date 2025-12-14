@@ -1,15 +1,6 @@
 import { collectSignal, removeWatcherDeps } from '../depend/index.js'
-import type { ChangeCallback, WatchOptions } from '../types/index.js'
-import { Watcher } from './Watcher.js'
-
-/**
- * ValueWatcher 观察器配置选项接口
- *
- * 该接口扩展了 WatchOptions。
- *
- * @extends WatchOptions
- */
-export interface ValueWatcherOptions extends WatchOptions {}
+import type { ChangeCallback } from '../types/index.js'
+import { Watcher, type WatcherOptions } from './Watcher.js'
 
 /**
  * ValueWatcher 值观察器类
@@ -37,7 +28,6 @@ export class ValueWatcher<T> extends Watcher {
    * @private
    */
   private _value!: T
-  private readonly _once: boolean
   /**
    * ValueWatcher 类的构造函数
    *
@@ -48,20 +38,10 @@ export class ValueWatcher<T> extends Watcher {
   constructor(
     private getter: () => T,
     private _cb: ChangeCallback<T>,
-    options: ValueWatcherOptions = {}
+    options?: WatcherOptions
   ) {
-    const { immediate = false, once = false, ...watcherOptions } = options
-    super(watcherOptions)
-    this._once = once
-    if (immediate) {
-      this.runEffect()
-    } else {
-      try {
-        this._value = this.getValue()
-      } catch (e) {
-        this.reportError(e, 'watcher.getter')
-      }
-    }
+    super(options)
+    this._value = this.getValue()
   }
 
   /**
@@ -78,8 +58,6 @@ export class ValueWatcher<T> extends Watcher {
     this.errorSource = 'callback'
     // 调用回调函数，传入新值、旧值和清理函数
     this._cb(value, old, this.onCleanup)
-    // 如果设置为一次性监听，则在执行后自动释放资源
-    if (this._once) this.dispose()
   }
   /**
    * 获取值并收集新依赖
@@ -90,6 +68,14 @@ export class ValueWatcher<T> extends Watcher {
     this.errorSource = 'getter' // 设置错误源为getter
     removeWatcherDeps(this)
     return collectSignal(this.getter, this).result // 收集信号并返回结果
+  }
+  /**
+   * 获取值的getter方法
+   *
+   * @returns {T} 返回存储的值，类型为泛型T
+   */
+  public get value(): T {
+    return this._value // 返回内部存储的_value属性
   }
   /**
    * 在观察器被销毁时执行的操作
