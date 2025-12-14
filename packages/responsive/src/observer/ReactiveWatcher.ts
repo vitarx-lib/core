@@ -1,5 +1,5 @@
 import { collectSignal } from '../depend/index.js'
-import type { OnCleanup } from '../types/index.js'
+import type { WatcherOnCleanup } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
 /**
@@ -13,30 +13,31 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  * @example
  * ```typescript
  * class MyWatcher extends ReactiveWatcher {
- *   private init = false
  *   private _value = undefined
  *   constructor(signal,private cb){
  *     super(()=>readSignal(signal))
  *   }
  *   afterCollect(newValue) {
- *     if (!this.init) {
- *       this.init = true
+ *     if (!this.isInitialized) {
  *       this._value = newValue
  *     }else{
- *      this.cb(newValue,this._value)
+ *      const oldValue = this._value
  *      this._value = newValue
+ *      this.cb(newValue,oldValue)
  *     }
  *   }
  * }
  * ```
  */
 export class ReactiveWatcher<T = any> extends Watcher {
+  protected readonly isInitialized: boolean = false
   constructor(
-    private getter: (onCleanup: OnCleanup) => T,
+    private getter: (onCleanup: WatcherOnCleanup) => T,
     options?: WatcherOptions
   ) {
     super(options)
     this.runEffect()
+    this.isInitialized = true
   }
   /**
    * 子类可覆写：每一次收集完成后
@@ -44,11 +45,21 @@ export class ReactiveWatcher<T = any> extends Watcher {
    * @protected
    */
   protected afterCollect?(value: T): void
-  /** 核心：执行 + 依赖收集 */
+  /**
+   * 核心：执行 + 依赖收集
+   *
+   * 子类应该实现抽象方法：afterCollect，不要从写此方法
+   *
+   * @protected
+   */
   protected run(): void {
     this.errorSource = 'getter'
     const value = collectSignal(() => this.getter(this.onCleanup), this).result
     this.errorSource = 'trigger'
     this.afterCollect?.(value)
+  }
+  protected override afterDispose() {
+    super.afterDispose()
+    this.getter = undefined as any
   }
 }
