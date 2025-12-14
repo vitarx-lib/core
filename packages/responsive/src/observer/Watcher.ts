@@ -1,4 +1,6 @@
 import { logger } from '@vitarx/utils'
+import type { VoidCallback } from '@vitarx/utils/src/index.js'
+import { Context } from '../context/index.js'
 import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeWatcherDeps } from '../depend/index.js'
 import { Effect, type EffectOptions } from '../effect/index.js'
 import type { DebuggerHandler, FlushMode, IWatcher } from '../types/index.js'
@@ -20,6 +22,8 @@ export interface WatcherOptions extends EffectOptions {
    */
   flush?: FlushMode
 }
+
+const WATCHER_CONTEXT = Symbol.for('__v_watcher_context')
 /**
  * Watcher 抽象基类
  * - 实现 IWatcher 接口的公共部分
@@ -46,6 +50,8 @@ export abstract class Watcher extends Effect implements IWatcher {
   onTrack?: DebuggerHandler
   /** 调度函数 */
   public scheduler: ((job: () => void) => void) | undefined
+  /** cleanup 回调 */
+  private readonly cleanups: VoidCallback[] = []
   /**
    * 构造函数
    * @param options 调试钩子选项
@@ -80,10 +86,10 @@ export abstract class Watcher extends Effect implements IWatcher {
     // 判断是否有调度器
     if (this.scheduler) {
       // 如果有调度器，则将收集函数作为回调传递给调度器
-      this.scheduler(this.run)
+      this.scheduler(this._trigger)
     } else {
       // 如果没有调度器，则直接执行收集函数
-      this.run()
+      this._trigger()
     }
   }
   /**
@@ -99,12 +105,22 @@ export abstract class Watcher extends Effect implements IWatcher {
     this.onTrack = undefined
   }
   /**
+   * 添加清理函数
+   *
+   * @param fn - 清理函数
+   */
+  public pushCleanup = (fn: VoidCallback): void => {
+    this.cleanups.push(fn)
+  }
+  /**
    * 在对象被销毁前执行清理操作
    * 这是一个重写的方法，用于在组件或实例被销毁前执行必要的清理工作
    *
    * @protected 这是一个受保护的方法，只能在类内部或子类中访问
    */
   protected override beforeDispose() {
+    // 调用清理方法，执行资源释放等清理操作
+    this.cleanup()
     // 移除所有相关的依赖观察者，防止内存泄漏
     removeWatcherDeps(this)
   }
@@ -114,4 +130,63 @@ export abstract class Watcher extends Effect implements IWatcher {
    * 此方法由子类实现，用于执行副作用逻辑。
    */
   protected abstract run(): void
+  /**
+   * 清理方法，用于执行所有注册的清理函数并清空清理函数列表
+   *
+   * @protected 这是一个受保护的方法，只能在类内部或子类中访问
+   */
+  private cleanup(): void {
+    // 遍历并执行所有注册的清理函数
+    for (const fn of this.cleanups) {
+      try {
+        fn()
+      } catch (e) {
+        if (this._scope) {
+          this._scope.handleError(e, 'cleanup')
+        } else {
+          throw e
+        }
+      }
+    }
+    // 清空清理函数列表，将数组长度设置为0
+    this.cleanups.length = 0
+  }
+  /**
+   * 私有方法：触发执行并处理可能出现的错误
+   *
+   * 该方法会尝试执行run方法，并根据执行结果进行错误处理
+   */
+  private _trigger(): void {
+    this.cleanup()
+    try {
+      Context.run(WATCHER_CONTEXT, this, () => this.run())
+    } catch (e) {
+      // 如果捕获到错误
+      if (this._scope) {
+        // 如果存在作用域(_scope)，则调用其handleError方法处理错误
+        this._scope.handleError(e, 'callback')
+      } else {
+        // 如果不存在作用域，则重新抛出错误
+        throw e
+      }
+    }
+  }
+}
+
+/**
+ * 用于在观察者(watcher)清理时执行回调函数的工具函数
+ *
+ * @param cleanupFn - 当观察者被清理时需要执行的回调函数
+ * @param silent - 是否在无观察者上下文时静默警告，默认为false
+ */
+export function onWatcherCleanup(cleanupFn: VoidCallback, silent: boolean = false) {
+  // 获取当前上下文中的观察者实例
+  const watcher = Context.get(WATCHER_CONTEXT)
+  // 如果存在观察者实例，则将清理函数添加到观察者的清理函数列表中
+  if (watcher) {
+    watcher.pushCleanup(cleanupFn)
+  } else if (!silent) {
+    // 如果不存在观察者实例且未设置静默模式，则输出警告日志
+    logger.warn('[onWatcherCleanup] No watcher found in the current context.')
+  }
 }
