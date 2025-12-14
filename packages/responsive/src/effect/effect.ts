@@ -8,6 +8,18 @@ import { EffectScope, getCurrentScope } from './scope.js'
  * - deprecated: 弃用状态，表示当前效果已被弃用。
  */
 export type EffectState = 'active' | 'paused' | 'deprecated'
+export interface EffectOptions {
+  /**
+   * 作用域
+   *
+   * - ture 表示当前效果将自动加入当前作用域。
+   * - false 表示当前效果将不会加入任何作用域。
+   * - EffectScope 对象 ：表示当前效果将加入指定的作用域。
+   *
+   * @default true
+   */
+  scope?: EffectScope | boolean
+}
 /**
  * 最小化的副作用基类
  *
@@ -43,7 +55,8 @@ export abstract class Effect {
 
   /** 当前状态 */
   private _state: EffectState = 'active'
-  constructor(scope: EffectScope | boolean = true) {
+  protected constructor(options?: EffectOptions) {
+    const scope = options?.scope ?? true
     if (scope === true) {
       getCurrentScope()?.addEffect(this)
     } else if (typeof scope === 'object') {
