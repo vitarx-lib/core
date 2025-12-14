@@ -23,6 +23,14 @@ export interface LoggerConfig {
   level: LogLevel
   /** 是否启用源代码位置信息 */
   includeSourceInfo: boolean
+  /**
+   * 自定义日志处理函数
+   *
+   * @param level - 日志级别
+   * @param message - 日志消息
+   * @param args - 其他参数
+   */
+  handler?: (level: LogLevel, message: string, args: any[], source: LogSource | undefined) => void
   /** 自定义前缀 */
   prefix?: string
 }
@@ -127,61 +135,6 @@ export class Logger {
   }
 
   /**
-   * 内部日志处理方法
-   *
-   * @param level 日志级别
-   * @param message 日志消息
-   * @param args 附加数据或源代码位置信息
-   */
-  private log(level: LogLevel, message: string, ...args: any[]): void {
-    // 检查日志级别
-    if (level < this.config.level) {
-      return
-    }
-
-    // 解析参数
-    let data: any[]
-    let source: LogSource | undefined
-
-    // 检查最后一个参数是否是源代码位置信息
-    const lastArg = args[args.length - 1]
-    if (
-      args.length > 0 &&
-      lastArg &&
-      typeof lastArg === 'object' &&
-      'fileName' in lastArg &&
-      'lineNumber' in lastArg &&
-      'columnNumber' in lastArg
-    ) {
-      source = lastArg as LogSource
-      data = args.slice(0, -1)
-    } else {
-      data = args
-    }
-
-    // 处理空数据
-    if (data.length === 1 && data[0] === undefined) data = []
-    // 格式化消息
-    const formattedMessage = this.formatMessage(level, message, source)
-
-    // 输出日志
-    switch (level) {
-      case LogLevel.DEBUG:
-        console.debug(formattedMessage, ...data)
-        break
-      case LogLevel.INFO:
-        console.info(formattedMessage, ...data)
-        break
-      case LogLevel.WARN:
-        console.warn(formattedMessage, ...data)
-        break
-      case LogLevel.ERROR:
-        console.error(formattedMessage, ...data)
-        break
-    }
-  }
-
-  /**
    * 格式化日志消息
    *
    * @param level 日志级别
@@ -216,14 +169,71 @@ export class Logger {
     if (source && this.config.includeSourceInfo) {
       const { fileName, lineNumber, columnNumber } = source
       const shortFileName = fileName.split('/').pop() || fileName
-      return `${prefix}: ${message} \nat ${shortFileName}:${lineNumber}:${columnNumber}`
+      return `${prefix} ${message} \nat ${shortFileName}:${lineNumber}:${columnNumber}`
     }
 
-    return `${prefix}: ${message}`
+    return `${prefix} ${message}`
+  }
+
+  /**
+   * 内部日志处理方法
+   *
+   * @param level 日志级别
+   * @param message 日志消息
+   * @param args 附加数据或源代码位置信息
+   */
+  private log(level: LogLevel, message: string, ...args: any[]): void {
+    // 检查日志级别
+    if (level < this.config.level) {
+      return
+    }
+    // 解析参数
+    let data: any[]
+    let source: LogSource | undefined
+
+    // 检查最后一个参数是否是源代码位置信息
+    const lastArg = args[args.length - 1]
+    if (
+      args.length > 0 &&
+      lastArg &&
+      typeof lastArg === 'object' &&
+      'fileName' in lastArg &&
+      'lineNumber' in lastArg &&
+      'columnNumber' in lastArg
+    ) {
+      source = lastArg as LogSource
+      data = args.slice(0, -1)
+    } else {
+      data = args
+    }
+
+    // 处理空数据
+    if (data.length === 1 && data[0] === undefined) data = []
+    if (this.config.handler) {
+      this.config.handler(level, message, data, source)
+    }
+    // 格式化消息
+    const formattedMessage = this.formatMessage(level, message, source)
+
+    // 输出日志
+    switch (level) {
+      case LogLevel.DEBUG:
+        console.debug(formattedMessage, ...data)
+        break
+      case LogLevel.INFO:
+        console.info(formattedMessage, ...data)
+        break
+      case LogLevel.WARN:
+        console.warn(formattedMessage, ...data)
+        break
+      case LogLevel.ERROR:
+        console.error(formattedMessage, ...data)
+        break
+    }
   }
 }
 
 /**
  * vitarx框架共享的日志助手实例
  */
-export const logger = new Logger({ prefix: '[Vitarx]' })
+export const logger = new Logger()
