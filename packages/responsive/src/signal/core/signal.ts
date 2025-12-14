@@ -38,8 +38,9 @@ export function signal<T>(initialValue: T, options: SignalOptions = {}): FnSigna
 
     // 有参调用：set 操作，更新值 + 触发观察者
     if (compare(_value, newValue)) return
+    const oldValue = _value
     _value = newValue!
-    triggerSignal(sig, 'set')
+    triggerSignal(sig, 'set', { newValue, oldValue })
   }) as FnSignal<T>
   Object.defineProperty(sig, IS_SIGNAL, { value: true })
   Object.defineProperty(sig, SIGNAL_RAW_VALUE, { get: () => _value })
