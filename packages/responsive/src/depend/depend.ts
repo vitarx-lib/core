@@ -56,10 +56,9 @@ export function collectSignal<T, C extends IWatcher>(fn: () => T, watcher: C): C
  * 收集函数执行过程中的信号依赖
  *
  * @template T 函数返回值类型
- * @template D 依赖收集器类型
  * @param fn - 需要依赖收集的函数
- * @param watcher
- * @returns {CollectResult<T, D>} 包含函数执行结果和依赖集合
+ * @param watcher - 观察者对象，自动建立依赖关系
+ * @returns {CollectResult<T>} 包含函数执行结果和依赖集合
  */
 export function collectSignal<T>(fn: () => T, watcher?: IWatcher): CollectResult<T> {
   const deps = new Set<Signal>()
