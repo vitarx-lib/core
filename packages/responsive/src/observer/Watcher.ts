@@ -9,6 +9,11 @@ import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
  * 观察器配置选项接口
  *
  * 该接口扩展了 EffectOptions，提供了专门用于观察器的额外配置选项。
+ *
+ * @property {DebuggerHandler} [onTrigger] - trigger 调试钩子
+ * @property {DebuggerHandler} [onTrack] - track 调试钩子
+ * @property {FlushMode} [flush='pre'] - 指定副作用执行时机
+ * @property {boolean|EffectScope} [scope=true] - 作用域
  */
 export interface WatcherOptions extends EffectOptions {
   /** trigger 调试钩子 */
