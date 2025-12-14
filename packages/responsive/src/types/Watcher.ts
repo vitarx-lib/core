@@ -34,4 +34,5 @@ export interface IWatcher extends Effect {
   trigger(): void
 }
 export type FlushMode = 'pre' | 'post' | 'sync'
-export type OnCleanup = (fn: VoidCallback) => void
+export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
+export type ChangeCallback<T> = (newValue: T, oldValue: T, onCleanup: WatcherOnCleanup) => void
