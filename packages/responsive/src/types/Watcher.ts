@@ -29,9 +29,11 @@ export interface IWatcher extends Effect {
    */
   onTrack?: DebuggerHandler
   /**
-   * 触发器
+   * 调度触发器
+   *
+   * 监听器必须实现此方法，用于触发调度。
    */
-  trigger(): void
+  schedule(): void
 }
 export type FlushMode = 'pre' | 'post' | 'sync'
 export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
@@ -57,6 +59,25 @@ export interface WatcherOptions extends EffectOptions {
    * @default 'pre'
    */
   flush?: FlushMode
+  /**
+   * 是否只允许运行一次
+   *
+   * 当设置为 true 时，回调函数只会在第一次信号值变化时执行，
+   * 之后观察器将自动停止并释放资源。
+   *
+   * @default false
+   * @example
+   * ```typescript
+   * const count = signal(0);
+   * const watcher = new SignalWatcher(count, (newValue, oldValue) => {
+   *   console.log(`Changed from ${oldValue} to ${newValue}`); // 只会执行一次
+   * }, { once: true, flush:'sync' });
+   *
+   * signal(1); // 触发回调: Changed from 0 to 1
+   * signal(2); // 不会触发回调，因为观察器已经停止
+   * ```
+   */
+  once?: boolean
 }
 
 /**
@@ -71,8 +92,7 @@ export interface WatchOptions extends WatcherOptions {
    * 是否立即执行回调函数
    *
    * 当设置为 true 时，观察器创建后会立即执行一次回调函数，
-   * 无需等待信号值发生变化。回调函数接收当前值作为新值，
-   * undefined 作为旧值。
+   * 无需等待信号值发生变化。回调函数接收当前值作为新值。
    *
    * @default false
    * @example
