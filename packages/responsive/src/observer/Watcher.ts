@@ -33,8 +33,12 @@ const WATCHER_CONTEXT = Symbol.for('__v_watcher_context')
  * - 抽象 run 方法由子类实现
  * - 实现 beforeDispose  和 afterDispose 方法，清理资源
  *
- * 注意：子类如重写了 beforeDispose / afterDispose，
- * 必须要调用 super.beforeDispose() / super.afterDispose()，否则会造成内存泄露。
+ * 注意：
+ * 1. 子类如重写了 beforeDispose / afterDispose，必须调用 super.beforeDispose / afterDispose 来清理资源。
+ * 2. 子类必须实现 run 方法，用于执行副作用逻辑。
+ * 3. 子类不应该调用 run 方法，如需主动执行可调用 runEffect 方法。（无异步调度）
+ * 4. trigger 方法是提供给信号系统使用的，非必要不要调用此方法。（有异步调度）
+ * 5. 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
  *
  * @abstract
  * @implements IWatcher
@@ -52,6 +56,12 @@ export abstract class Watcher extends Effect implements IWatcher {
   public scheduler: ((job: () => void) => void) | undefined
   /** cleanup 回调 */
   private readonly cleanups: VoidCallback[] = []
+  /**
+   * 错误源
+   *
+   * @default 'trigger'
+   */
+  protected errorSource: string = 'trigger'
   /**
    * 构造函数
    * @param options 调试钩子选项
@@ -86,10 +96,10 @@ export abstract class Watcher extends Effect implements IWatcher {
     // 判断是否有调度器
     if (this.scheduler) {
       // 如果有调度器，则将收集函数作为回调传递给调度器
-      this.scheduler(this._trigger)
+      this.scheduler(this.runEffect)
     } else {
       // 如果没有调度器，则直接执行收集函数
-      this._trigger()
+      this.runEffect()
     }
   }
   /**
@@ -131,6 +141,8 @@ export abstract class Watcher extends Effect implements IWatcher {
    * 运行副作用
    *
    * 此方法由子类实现，用于执行副作用逻辑。
+   *
+   * 子类应该不应该调用 run 方法，必要时可 runEffect 方法。
    */
   protected abstract run(): void
   /**
@@ -151,16 +163,18 @@ export abstract class Watcher extends Effect implements IWatcher {
     this.cleanups.length = 0
   }
   /**
-   * 私有方法：触发执行并处理可能出现的错误
+   * 受保护的方法：运行副作用并处理可能出现的错误
    *
    * 该方法会尝试执行run方法，并根据执行结果进行错误处理
+   *
+   * 此方法不会触发异步调度
    */
-  private _trigger(): void {
+  protected runEffect(): void {
     this.cleanup()
     try {
       Context.run(WATCHER_CONTEXT, this, () => this.run())
     } catch (e) {
-      this.reportError(e, 'watcher.trigger')
+      this.reportError(e, `watcher.${this.errorSource}`)
     }
   }
 }
