@@ -1,6 +1,6 @@
 import { Context } from '../context/index.js'
 import type { DebuggerEventOptions, SignalOpType } from '../types/debug.js'
-import type { Signal, Watcher } from '../types/index.js'
+import type { IWatcher, Signal } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
 import { DEP_LINK_HEAD, linkSignalWatcher } from './link.js'
 
@@ -31,7 +31,7 @@ export type CollectResult<T> = {
 }
 interface CollectContext {
   deps: DepSet
-  watcher: Watcher | undefined
+  watcher: IWatcher | undefined
 }
 
 /**
@@ -51,7 +51,7 @@ export function collectSignal<T>(fn: () => T): CollectResult<T>
  * @param watcher - 观察者对象，自动建立依赖关系
  * @returns {CollectResult<T>} 函数执行结果
  */
-export function collectSignal<T, C extends Watcher>(fn: () => T, watcher: C): CollectResult<T>
+export function collectSignal<T, C extends IWatcher>(fn: () => T, watcher: C): CollectResult<T>
 /**
  * 收集函数执行过程中的信号依赖
  *
@@ -61,7 +61,7 @@ export function collectSignal<T, C extends Watcher>(fn: () => T, watcher: C): Co
  * @param watcher
  * @returns {CollectResult<T, D>} 包含函数执行结果和依赖集合
  */
-export function collectSignal<T>(fn: () => T, watcher?: Watcher): CollectResult<T> {
+export function collectSignal<T>(fn: () => T, watcher?: IWatcher): CollectResult<T> {
   const ctx: CollectContext = {
     deps: new Set<Signal>(),
     watcher

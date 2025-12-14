@@ -1,4 +1,4 @@
-import type { Signal, Watcher } from '../types/index.js'
+import type { IWatcher, Signal } from '../types/index.js'
 
 /**
  * signal → watcher 双向链表头
@@ -25,7 +25,7 @@ export class DepLink {
   wNext?: DepLink
   constructor(
     public signal: Signal,
-    public watcher: Watcher
+    public watcher: IWatcher
   ) {}
 }
 /**
@@ -33,7 +33,7 @@ export class DepLink {
  *
  * @internal 内部核心助手函数
  */
-export function linkSignalWatcher(watcher: Watcher, signal: Signal): DepLink {
+export function linkSignalWatcher(watcher: IWatcher, signal: Signal): DepLink {
   const link = new DepLink(signal, watcher)
 
   // -------------------
@@ -94,7 +94,7 @@ export function unlinkSignalWatcher(link: DepLink): void {
 /**
  * 移除 Watcher 的所有依赖（用于重新收集或销毁）
  */
-export function removeWatcherDeps(watcher: Watcher) {
+export function removeWatcherDeps(watcher: IWatcher) {
   let link = watcher[DEP_LINK_HEAD]
   while (link) {
     const next = link.wNext
@@ -123,10 +123,10 @@ export function removeSignalDeps(signal: Signal) {
  * 注意：时间复杂度为O(n)，一般仅用于测试环境
  *
  * @param signal - 需要转换的信号对象
- * @returns {Watcher[]} 包含所有相关观察者的数组
+ * @returns {IWatcher[]} 包含所有相关观察者的数组
  */
-export function signalWatchersToArray(signal: Signal): Watcher[] {
-  const arr: Watcher[] = [] // 初始化一个空数组，用于存储观察者
+export function signalWatchersToArray(signal: Signal): IWatcher[] {
+  const arr: IWatcher[] = [] // 初始化一个空数组，用于存储观察者
   // 从信号的依赖链头部开始遍历
   let node = signal[DEP_LINK_HEAD] as DepLink | undefined
   // 遍历依赖链，将每个观察者添加到数组中
@@ -147,7 +147,7 @@ export function signalWatchersToArray(signal: Signal): Watcher[] {
  * @param watcher - 观察者对象，包含信号链表的头指针
  * @returns Signal[] - 包含所有信号的数组
  */
-export function watcherSignalsToArray(watcher: Watcher): Signal[] {
+export function watcherSignalsToArray(watcher: IWatcher): Signal[] {
   const arr: Signal[] = [] // 用于存储信号的数组
   // 从链表头开始遍历
   let node = watcher[DEP_LINK_HEAD] as DepLink | undefined

@@ -1,5 +1,5 @@
 import type { Signal } from './signal.js'
-import type { Watcher } from './watcher.js'
+import type { IWatcher } from './Watcher.js'
 
 export type SignalOpType = keyof ProxyHandler<any> | string
 export interface DebuggerEventOptions {
@@ -22,7 +22,7 @@ export interface DebuggerEvent extends DebuggerEventOptions {
   /**
    * 观察者对象
    */
-  watcher: Watcher
+  watcher: IWatcher
   /**
    * 触发类型
    *

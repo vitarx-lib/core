@@ -3,7 +3,7 @@ import type { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
 import type { Effect } from '../effect/index.js'
 import type { DebuggerHandler } from './debug.js'
 
-export interface Watcher extends Effect {
+export interface IWatcher extends Effect {
   /**
    * signal → watcher 链表头
    *
