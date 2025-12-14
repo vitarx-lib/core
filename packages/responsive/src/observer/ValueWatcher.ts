@@ -1,5 +1,6 @@
-import type { ChangeCallback, WatcherOnCleanup, WatchOptions } from '../types/index.js'
-import { EffectWatcher } from './EffectWatcher.js'
+import { collectSignal, removeWatcherDeps } from '../depend/index.js'
+import type { ChangeCallback, WatchOptions } from '../types/index.js'
+import { Watcher } from './Watcher.js'
 
 /**
  * ValueWatcher 观察器配置选项接口
@@ -13,9 +14,9 @@ export interface ValueWatcherOptions extends WatchOptions {}
 /**
  * ValueWatcher 值观察器类
  *
- * 该类继承自 EffectWatcher，用于观察值的变化并在值发生变化时执行回调函数。
- * 它会自动追踪依赖，并在依赖的响应式数据发生变化时重新收集依赖。
- * 当检测到值变化时（通过 Object.is 比较），会触发注册的回调函数。
+ * 该类继承自 Watcher，用于观察getter返回值值的变化并在值发生变化时执行回调函数。
+ * 它会自动追踪getter依赖，并在依赖的响应式数据发生变化时重新收集依赖。
+ * 当检测到依赖变化时（通过 Object.is 比较），会触发注册的回调函数。
  *
  * @template T - 被观察值的类型
  *
@@ -30,13 +31,13 @@ export interface ValueWatcherOptions extends WatchOptions {}
  * )
  * ```
  */
-export class ValueWatcher<T> extends EffectWatcher<T> {
+export class ValueWatcher<T> extends Watcher {
   /**
    * 存储被观察的值的私有成员变量
    * @private
    */
   private _value!: T
-
+  private readonly _once: boolean
   /**
    * ValueWatcher 类的构造函数
    *
@@ -45,40 +46,50 @@ export class ValueWatcher<T> extends EffectWatcher<T> {
    * @param options - 可选的观察器配置选项
    */
   constructor(
-    getter: (onCleanup: WatcherOnCleanup) => T,
+    private getter: () => T,
     private _cb: ChangeCallback<T>,
-    options?: ValueWatcherOptions
+    options: ValueWatcherOptions = {}
   ) {
-    super(getter, options)
-    if (options?.immediate) {
+    const { immediate = false, once = false, ...watcherOptions } = options
+    super(watcherOptions)
+    this._once = once
+    if (immediate) {
+      this.runEffect()
+    } else {
       try {
-        this._cb(this._value, this._value, this.onCleanup)
+        this._value = this.getValue()
       } catch (e) {
-        this.reportError(e, 'callback')
+        this.reportError(e, 'watcher.getter')
       }
     }
   }
 
   /**
-   * 在收集依赖后执行的操作
-   * 比较新旧值的变化，如果有变化则调用回调函数
-   * @param value - 当前值
+   * 重写运行方法，用于执行响应式值的更新逻辑
    */
-  protected override afterCollect(value: T) {
-    // 如果是第一次初始化，直接设置值并返回
-    if (!this.isInitialized) {
-      this._value = value
-      return
-    }
-
+  protected override run() {
+    // 获取当前值
+    const value = this.getValue()
     // 使用 Object.is 比较新旧值，如果相同则直接返回
     if (Object.is(value, this._value)) return
-
     // 保存旧值，更新新值，并调用回调函数
     const old = this._value
     this._value = value
     this.errorSource = 'callback'
+    // 调用回调函数，传入新值、旧值和清理函数
     this._cb(value, old, this.onCleanup)
+    // 如果设置为一次性监听，则在执行后自动释放资源
+    if (this._once) this.dispose()
+  }
+  /**
+   * 获取值并收集新依赖
+   *
+   * @returns {T} 返回类型为泛型T的值
+   */
+  private getValue(): T {
+    this.errorSource = 'getter' // 设置错误源为getter
+    removeWatcherDeps(this)
+    return collectSignal(this.getter, this).result // 收集信号并返回结果
   }
   /**
    * 在观察器被销毁时执行的操作
