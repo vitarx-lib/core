@@ -1,3 +1,5 @@
 export * from './scheduler.js'
-export * from './ReactiveWatcher.js'
 export * from './Watcher.js'
+export * from './ReactiveWatcher.js'
+export * from './ValueWatcher.js'
+export * from './SignalWatcher.js'
