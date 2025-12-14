@@ -11,7 +11,7 @@ import { Watcher } from './Watcher.js'
  */
 export interface EffectWatcherOptions extends WatcherOptions {}
 /**
- * 依赖收集副作用类
+ * 副作用观察器
  *
  * 这是一个观察者类，继承自 Watcher 抽象基类，用于管理响应式依赖收集和副作用执行。
  * 该类实现监听副作用函数的依赖关系，依赖变化时自动执行副作用。
@@ -21,39 +21,21 @@ export interface EffectWatcherOptions extends WatcherOptions {}
  *
  * @example
  * ```typescript
- * class MyWatcher extends EffectWatcher {
- *   private _value = undefined
- *   constructor(signal,private cb){
- *     super(()=>readSignal(signal))
- *   }
- *   afterCollect(newValue) {
- *     if (!this.isInitialized) {
- *       this._value = newValue
- *     }else{
- *      const oldValue = this._value
- *      this._value = newValue
- *      this.cb(newValue,oldValue)
- *     }
- *   }
- * }
+ * new EffectWatcher(() => {
+ *   const count = signal(1)
+ *   console.log(count())
+ * })
  * ```
  */
 export class EffectWatcher<T = any> extends Watcher {
-  protected readonly isInitialized: boolean = false
+  protected override errorSource: string = 'collect'
   constructor(
-    private getter: (onCleanup: WatcherOnCleanup) => T,
+    private effect: (onCleanup: WatcherOnCleanup) => T,
     options?: EffectWatcherOptions
   ) {
     super(options)
     this.runEffect()
-    this.isInitialized = true
   }
-  /**
-   * 子类可覆写：每一次收集完成后
-   * @param value - 副作用函数返回的值
-   * @protected
-   */
-  protected afterCollect?(value: T): void
   /**
    * 核心：执行 + 依赖收集
    *
@@ -62,17 +44,10 @@ export class EffectWatcher<T = any> extends Watcher {
    * @protected
    */
   protected run(): void {
-    const oldErrorSource = this.errorSource
-    try {
-      this.errorSource = 'getter'
-      const value = collectSignal(() => this.getter(this.onCleanup), this).result
-      this.afterCollect?.(value)
-    } finally {
-      this.errorSource = oldErrorSource
-    }
+    collectSignal(() => this.effect(this.onCleanup), this)
   }
   protected override afterDispose() {
     super.afterDispose()
-    this.getter = undefined as any
+    this.effect = undefined as any
   }
 }
