@@ -1,8 +1,8 @@
 import { logger } from '@vitarx/utils'
 import type { VoidCallback } from '@vitarx/utils/src/index.js'
-import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeWatcherDeps } from '../depend/index.js'
+import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeEffectDeps } from '../depend/index.js'
 import { Effect, type EffectOptions } from '../effect/index.js'
-import type { DebuggerHandler, FlushMode, IWatcher } from '../types/index.js'
+import type { DebuggerHandler, DepEffect, FlushMode } from '../types/index.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
 /**
@@ -48,9 +48,9 @@ export interface WatcherOptions extends EffectOptions {
  * 5. 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
  *
  * @abstract
- * @implements IWatcher
+ * @implements DepEffect
  */
-export abstract class Watcher extends Effect implements IWatcher {
+export abstract class Watcher extends Effect implements DepEffect {
   /** signal → watcher 链表头 */
   [DEP_LINK_HEAD]?: DepLink;
   /** signal → watcher 链表尾 */
@@ -156,7 +156,7 @@ export abstract class Watcher extends Effect implements IWatcher {
    */
   protected override afterDispose() {
     // 移除所有相关的依赖观察者，防止内存泄漏
-    removeWatcherDeps(this)
+    removeEffectDeps(this)
     // 将触发回调函数置为undefined，清除引用
     this.onTrigger = undefined
     // 将追踪回调函数置为undefined，清除引用

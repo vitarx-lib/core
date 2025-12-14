@@ -8,7 +8,7 @@ import type { DebuggerEvent } from '../types/debug.js'
  */
 export function triggerOnTrack(event: DebuggerEvent) {
   try {
-    const debugHandler = event.watcher.onTrack
+    const debugHandler = event.effect.onTrack
     if (typeof debugHandler === 'function') debugHandler(event)
   } catch (e) {
     logger.debug(`[triggerOnTrack] Error in onTrack:`, e)
@@ -21,7 +21,7 @@ export function triggerOnTrack(event: DebuggerEvent) {
  */
 export function triggerOnTrigger(event: DebuggerEvent) {
   try {
-    const debugHandler = event.watcher.onTrigger
+    const debugHandler = event.effect.onTrigger
     if (typeof debugHandler === 'function') debugHandler(event)
   } catch (e) {
     logger.debug(`[triggerOnTrigger] Error in onTrigger:`, e)

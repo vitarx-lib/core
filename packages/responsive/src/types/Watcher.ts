@@ -1,9 +1,8 @@
 import type { VoidCallback } from '@vitarx/utils'
 import type { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
-import type { Effect } from '../effect/index.js'
 import type { DebuggerHandler } from './debug.js'
 
-export interface IWatcher extends Effect {
+export interface DepEffect {
   /**
    * signal → watcher 链表头
    *

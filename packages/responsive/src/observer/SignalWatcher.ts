@@ -1,5 +1,5 @@
 import { triggerOnTrack } from '../depend/debug.js'
-import { linkSignalWatcher } from '../depend/index.js'
+import { linkSignalEffect } from '../depend/index.js'
 import { readSignal } from '../signal/index.js'
 import type { ChangeCallback, Signal } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
@@ -36,10 +36,10 @@ export class SignalWatcher<T> extends Watcher {
   ) {
     super(options)
     this._value = readSignal(signal)
-    linkSignalWatcher(this, signal)
+    linkSignalEffect(this, signal)
     if (__DEV__) {
       triggerOnTrack({
-        watcher: this,
+        effect: this,
         signal,
         type: 'get'
       })

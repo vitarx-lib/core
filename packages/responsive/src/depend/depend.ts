@@ -1,8 +1,8 @@
 import { Context } from '../context/index.js'
 import type { DebuggerEventOptions, SignalOpType } from '../types/debug.js'
-import type { IWatcher, Signal } from '../types/index.js'
+import type { DepEffect, Signal } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
-import { DEP_LINK_HEAD, linkSignalWatcher } from './link.js'
+import { DEP_LINK_HEAD, linkSignalEffect } from './link.js'
 
 /**
  * 信号依赖集合
@@ -31,7 +31,7 @@ export type CollectResult<T> = {
 }
 interface CollectContext {
   deps: DepSet
-  watcher: IWatcher | undefined
+  watcher: DepEffect | undefined
 }
 
 /**
@@ -51,7 +51,7 @@ export function collectSignal<T>(fn: () => T): CollectResult<T>
  * @param watcher - 观察者对象，自动建立依赖关系
  * @returns {CollectResult<T>} 函数执行结果
  */
-export function collectSignal<T, C extends IWatcher>(fn: () => T, watcher: C): CollectResult<T>
+export function collectSignal<T, C extends DepEffect>(fn: () => T, watcher: C): CollectResult<T>
 /**
  * 收集函数执行过程中的信号依赖
  *
@@ -60,13 +60,13 @@ export function collectSignal<T, C extends IWatcher>(fn: () => T, watcher: C): C
  * @param watcher - 观察者对象，自动建立依赖关系
  * @returns {CollectResult<T>} 包含函数执行结果和依赖集合
  */
-export function collectSignal<T>(fn: () => T, watcher?: IWatcher): CollectResult<T> {
+export function collectSignal<T>(fn: () => T, watcher?: DepEffect): CollectResult<T> {
   const deps = new Set<Signal>()
   const ctx: CollectContext = { deps, watcher }
   const result = Context.run(DEP_CONTEXT, ctx, fn)
   if (watcher) {
     for (const dep of deps) {
-      linkSignalWatcher(watcher, dep)
+      linkSignalEffect(watcher, dep)
     }
   }
   return { result, deps }
@@ -87,7 +87,7 @@ export function trackSignal(
   if (!ctx || ctx.deps.has(signal)) return
   ctx.deps.add(signal)
   if (__DEV__) {
-    if (ctx.watcher) triggerOnTrack({ watcher: ctx.watcher, signal, type, ...options })
+    if (ctx.watcher) triggerOnTrack({ effect: ctx.watcher, signal, type, ...options })
   }
 }
 /**
@@ -105,9 +105,9 @@ export function triggerSignal(
   // 遍历信号的所有依赖链接
   // 从头节点开始，直到链表结束
   for (let link = signal[DEP_LINK_HEAD]; link; link = link.sigNext) {
-    const watcher = link.watcher
+    const watcher = link.effect
     if (__DEV__) {
-      if (watcher) triggerOnTrigger({ watcher, signal, type, ...options })
+      if (watcher) triggerOnTrigger({ effect: watcher, signal, type, ...options })
     }
     watcher.schedule()
   }

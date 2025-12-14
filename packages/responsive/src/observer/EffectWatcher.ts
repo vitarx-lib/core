@@ -1,4 +1,4 @@
-import { collectSignal, removeWatcherDeps } from '../depend/index.js'
+import { collectSignal, removeEffectDeps } from '../depend/index.js'
 import type { WatcherOnCleanup } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
@@ -36,7 +36,7 @@ export class EffectWatcher<T = any> extends Watcher {
    * @protected
    */
   protected run(): void {
-    removeWatcherDeps(this)
+    removeEffectDeps(this)
     collectSignal(() => this.effect(this.onCleanup), this)
   }
   protected override afterDispose() {
