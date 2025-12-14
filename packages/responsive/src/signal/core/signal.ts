@@ -1,5 +1,5 @@
+import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Signal, SignalOptions } from '../../types/index.js'
-import { trackSignal, triggerSignal } from '../depend/index.js'
 import { IS_SIGNAL, SIGNAL_RAW_VALUE, SIGNAL_READ_VALUE } from './symbol.js'
 
 /**

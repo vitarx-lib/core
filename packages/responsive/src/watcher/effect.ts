@@ -1,7 +1,5 @@
 import { logger } from '@vitarx/utils'
 import type { VoidCallback } from '@vitarx/utils/src/index.js'
-import { Effect, EffectScope } from '../../effect/index.js'
-import type { DebuggerEvent, FlushMode, OnCleanup, Watcher } from '../../types/index.js'
 import {
   collectSignal,
   DEP_LINK_HEAD,
@@ -10,6 +8,8 @@ import {
   linkSignalWatcher,
   removeWatcherDeps
 } from '../depend/index.js'
+import { Effect, EffectScope } from '../effect/index.js'
+import type { DebuggerEvent, FlushMode, OnCleanup, Watcher } from '../types/index.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
 export interface WatchEffectOptions {

@@ -1,11 +1,5 @@
-import {
-  DEP_LINK_HEAD,
-  DEP_LINK_TAIL,
-  DepLink,
-  IS_SIGNAL,
-  SIGNAL_RAW_VALUE,
-  SIGNAL_READ_VALUE
-} from '../signal/index.js'
+import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
+import { IS_SIGNAL, SIGNAL_RAW_VALUE, SIGNAL_READ_VALUE } from '../signal/index.js'
 
 /**
  * 响应式信号接口

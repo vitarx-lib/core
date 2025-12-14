@@ -1,5 +1,5 @@
 import type { VoidCallback } from '@vitarx/utils/src/index.js'
-import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../signal/index.js'
+import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
 import type { DebuggerEvent } from './debug.js'
 
 export interface Watcher {

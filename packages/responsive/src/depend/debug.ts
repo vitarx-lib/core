@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
-import type { DebuggerEventHandler, DependType } from '../../types/debug.js'
-import type { Signal } from '../../types/index.js'
+import type { DebuggerEventHandler, DependType } from '../types/debug.js'
+import type { Signal } from '../types/index.js'
 
 /**
  * 调试追踪器

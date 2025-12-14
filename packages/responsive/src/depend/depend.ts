@@ -1,6 +1,6 @@
-import { Context } from '../../context/index.js'
-import type { DebuggerEventHandler, DependType } from '../../types/debug.js'
-import type { Signal } from '../../types/index.js'
+import { Context } from '../context/index.js'
+import type { DebuggerEventHandler, DependType } from '../types/debug.js'
+import type { Signal } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
 import { DEP_LINK_HEAD } from './link.js'
 

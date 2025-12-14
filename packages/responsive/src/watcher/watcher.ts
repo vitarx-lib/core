@@ -1,6 +1,4 @@
 import type { VoidCallback } from '@vitarx/utils'
-import { Effect } from '../../effect/index.js'
-import type { DebuggerEvent, Signal } from '../../types/index.js'
 import {
   collectSignal,
   DEP_LINK_HEAD,
@@ -9,6 +7,8 @@ import {
   linkSignalWatcher,
   removeWatcherDeps
 } from '../depend/index.js'
+import { Effect } from '../effect/index.js'
+import type { DebuggerEvent, Signal } from '../types/index.js'
 import type { WatchEffectOptions } from './effect.js'
 import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
 
