@@ -62,12 +62,15 @@ export function collectSignal<T, C extends IWatcher>(fn: () => T, watcher: C): C
  * @returns {CollectResult<T, D>} 包含函数执行结果和依赖集合
  */
 export function collectSignal<T>(fn: () => T, watcher?: IWatcher): CollectResult<T> {
-  const ctx: CollectContext = {
-    deps: new Set<Signal>(),
-    watcher
-  }
+  const deps = new Set<Signal>()
+  const ctx: CollectContext = { deps, watcher }
   const result = Context.run(DEP_CONTEXT, ctx, fn)
-  return { result, deps: ctx.deps }
+  if (watcher) {
+    for (const dep of deps) {
+      linkSignalWatcher(watcher, dep)
+    }
+  }
+  return { result, deps }
 }
 /**
  * 跟踪信号，将信号加入当前上下文的依赖集合
@@ -84,11 +87,8 @@ export function trackSignal(
   const ctx = Context.get<CollectContext>(DEP_CONTEXT)
   if (!ctx || ctx.deps.has(signal)) return
   ctx.deps.add(signal)
-  if (ctx.watcher) {
-    linkSignalWatcher(ctx.watcher, signal)
-    if (__DEV__) {
-      triggerOnTrack({ watcher: ctx.watcher, signal, type, ...options })
-    }
+  if (__DEV__) {
+    if (ctx.watcher) triggerOnTrack({ watcher: ctx.watcher, signal, type, ...options })
   }
 }
 /**
