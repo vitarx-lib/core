@@ -1,6 +1,7 @@
 import { type VoidCallback } from '@vitarx/utils'
+import { logger } from '@vitarx/utils/src/index.js'
 import { Context, runInContext } from '../context/index.js'
-import { Effect } from './effect.js'
+import { Effect, type EffectState } from './effect.js'
 import { NEXT_EFFECT, PREV_EFFECT } from './symbol.js'
 
 /**
@@ -37,17 +38,31 @@ const SCOPE_CONTEXT = Symbol.for('__v_effect_scope_context')
  * 它维护了一个效果链表，支持添加、移除、暂停、恢复和销毁操作。
  */
 export class EffectScope {
-  public readonly name: string | symbol // 作用域的唯一标识符，可以是字符串或Symbol
-  public errorHandler?: EffectScopeErrorHandler // 可选的错误处理器，用于处理作用域内的错误
+  /**
+   * 作用域名称
+   */
+  public readonly name: string | symbol
+  /**
+   * 可选的错误处理器，用于处理作用域内的错误
+   */
+  public errorHandler?: EffectScopeErrorHandler
   /**
    * 私有属性，用于存储不同类型的回调函数集合。
    * 使用 Map 数据结构，键为回调类型（'dispose' | 'pause' | 'resume'），值为对应的回调函数集合。
    */
   private _callbacks?: Map<'dispose' | 'pause' | 'resume', Set<VoidCallback>>
-  /** 链表头尾 */
-  private _head?: Effect // 链表的第一个节点
+  /** 链表头部 */
+  private _head?: Effect
   /** 链表尾部 */
-  private _tail?: Effect // 链表的最后一个节点
+  private _tail?: Effect
+  /** 当前状态 */
+  private _state: EffectState = 'active'
+  /**
+   * 获取当前状态
+   */
+  get state(): EffectState {
+    return this._state
+  }
 
   /**
    * 构造函数，创建一个新的 EffectScope 实例。
@@ -213,6 +228,11 @@ export class EffectScope {
    * 这是链表的销毁方法，执行后链表将不再可用
    */
   dispose(): void {
+    if (this.state === 'deprecated') {
+      logger.warn(`[EffectScope][${String(this.name)}] has been deprecated.`)
+      return
+    }
+    this._state = 'deprecated'
     let node = this._head // 从链表头节点开始遍历
     while (node) {
       const next = node[NEXT_EFFECT] // 保存下一个节点的引用，防止当前节点释放后无法访问
@@ -242,6 +262,10 @@ export class EffectScope {
    * 调用完成后，会触发 'pause' 回调
    */
   pause(): void {
+    if (this.state !== 'active') {
+      throw new Error(`[EffectScope][${String(this.name)}] Cannot pause. Scope is not active.`)
+    }
+    this._state = 'paused'
     let node = this._head // 从链表头节点开始遍历
     while (node) {
       // 当节点不为null时继续循环
@@ -264,6 +288,10 @@ export class EffectScope {
    * 最后会触发 'resume' 类型的回调函数
    */
   resume(): void {
+    if (this.state !== 'active') {
+      throw new Error(`[EffectScope][${String(this.name)}] Cannot resume. Scope is not active.`)
+    }
+    this._state = 'active'
     let node = this._head // 从链表头节点开始遍历
     while (node) {
       // 遍历链表中的每个节点
@@ -288,6 +316,9 @@ export class EffectScope {
    * @private - 表示此方法仅在类内部可见
    */
   private addCallback(cb: VoidCallback, type: 'dispose' | 'pause' | 'resume') {
+    if (this.state === 'deprecated') {
+      throw new Error(`[EffectScope][${String(this.name)}] EffectScope is already deprecated.`)
+    }
     if (!this._callbacks) this._callbacks = new Map() // 如果回调映射不存在，则创建一个新的
     const set = this._callbacks.get(type) || new Set() // 获取或创建回调集合
     set.add(cb) // 将回调添加到集合中
