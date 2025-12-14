@@ -170,6 +170,7 @@ export abstract class Watcher extends Effect implements IWatcher {
    * 此方法不会触发异步调度
    */
   protected runEffect(): void {
+    if (!this.isActive) return
     this.cleanup()
     try {
       Context.run(WATCHER_CONTEXT, this, () => this.run())
