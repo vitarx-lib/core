@@ -1,5 +1,5 @@
 import { Context } from '../context/index.js'
-import type { DependType } from '../types/debug.js'
+import type { DebuggerEventOptions, SignalOpType } from '../types/debug.js'
 import type { Signal, Watcher } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
 import { DEP_LINK_HEAD, linkSignalWatcher } from './link.js'
@@ -33,23 +33,7 @@ interface CollectContext {
   deps: DepSet
   watcher: Watcher | undefined
 }
-/**
- * 跟踪信号，将信号加入当前上下文的依赖集合
- *
- * @param signal - 被跟踪的响应式信号
- * @param type
- */
-export function trackSignal(signal: Signal, type: DependType): void {
-  const ctx = Context.get<CollectContext>(DEP_CONTEXT)
-  if (!ctx || ctx.deps.has(signal)) return
-  ctx.deps.add(signal)
-  if (ctx.watcher) {
-    linkSignalWatcher(ctx.watcher, signal)
-    if (__DEV__) {
-      triggerOnTrack(ctx.watcher, signal, type)
-    }
-  }
-}
+
 /**
  * 运行函数并收集信号依赖
  *
@@ -77,10 +61,7 @@ export function collectSignal<T, C extends Watcher>(fn: () => T, watcher: C): Co
  * @param watcher
  * @returns {CollectResult<T, D>} 包含函数执行结果和依赖集合
  */
-export function collectSignal<T, D extends Watcher | DepSet>(
-  fn: () => T,
-  watcher?: Watcher
-): CollectResult<T> {
+export function collectSignal<T>(fn: () => T, watcher?: Watcher): CollectResult<T> {
   const ctx: CollectContext = {
     deps: new Set<Signal>(),
     watcher
@@ -88,20 +69,46 @@ export function collectSignal<T, D extends Watcher | DepSet>(
   const result = Context.run(DEP_CONTEXT, ctx, fn)
   return { result, deps: ctx.deps }
 }
-
+/**
+ * 跟踪信号，将信号加入当前上下文的依赖集合
+ *
+ * @param signal - 被跟踪的响应式信号
+ * @param type - 跟踪信号的类型，仅供调试使用
+ * @param options - 调试选项，仅供调试使用
+ */
+export function trackSignal(
+  signal: Signal,
+  type: SignalOpType = 'get',
+  options?: DebuggerEventOptions
+): void {
+  const ctx = Context.get<CollectContext>(DEP_CONTEXT)
+  if (!ctx || ctx.deps.has(signal)) return
+  ctx.deps.add(signal)
+  if (ctx.watcher) {
+    linkSignalWatcher(ctx.watcher, signal)
+    if (__DEV__) {
+      triggerOnTrack({ watcher: ctx.watcher, signal, type, ...options })
+    }
+  }
+}
 /**
  * 触发信号的相关函数
  * 该函数用于遍历信号的所有依赖链接，并触发每个观察者的回调函数
  * @param signal - 要触发的信号对象
  * @param type - 依赖类型，用于标识依赖关系的性质
+ * @param options - 调试选项，仅供调试使用
  */
-export function triggerSignal(signal: Signal, type: DependType) {
+export function triggerSignal(
+  signal: Signal,
+  type: SignalOpType = 'set',
+  options?: DebuggerEventOptions
+) {
   // 遍历信号的所有依赖链接
   // 从头节点开始，直到链表结束
   for (let link = signal[DEP_LINK_HEAD]; link; link = link.sigNext) {
     const watcher = link.watcher
     if (__DEV__) {
-      if (watcher) triggerOnTrigger(watcher, signal, type)
+      if (watcher) triggerOnTrigger({ watcher, signal, type, ...options })
     }
     watcher.trigger()
   }
