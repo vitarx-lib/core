@@ -1,8 +1,8 @@
 import { Context } from '../context/index.js'
-import type { DebuggerEventHandler, DependType } from '../types/debug.js'
-import type { Signal } from '../types/index.js'
+import type { DependType } from '../types/debug.js'
+import type { Signal, Watcher } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
-import { DEP_LINK_HEAD } from './link.js'
+import { DEP_LINK_HEAD, linkSignalWatcher } from './link.js'
 
 /**
  * 信号依赖集合
@@ -12,22 +12,12 @@ export type DepSet = Set<Signal>
 /**
  * 上下文中存储依赖的符号
  */
-const DEP_CTX = Symbol.for('SIGNAL_DEPENDENCY_CONTEXT')
-type DepCollector = {
-  add: (dep: Signal) => void
-  /**
-   * 跟踪信号依赖 - 开发环境有效
-   *
-   * @param signal - 被跟踪的信号
-   * @param type - 调试事件类型
-   */
-  onTrack?: DebuggerEventHandler
-}
+const DEP_CONTEXT = Symbol.for('SIGNAL_DEPENDENCY_CONTEXT')
 /**
  * 依赖收集结果
  * @template T 函数返回值类型
  */
-export type CollectResult<T, D> = {
+export type CollectResult<T> = {
   /**
    * 函数执行结果
    */
@@ -37,9 +27,12 @@ export type CollectResult<T, D> = {
    *
    * 如果传入了自定义的收集器，则返回的是收集器自身
    */
-  deps: D
+  deps: DepSet
 }
-
+interface CollectContext {
+  deps: DepSet
+  watcher: Watcher | undefined
+}
 /**
  * 跟踪信号，将信号加入当前上下文的依赖集合
  *
@@ -47,11 +40,14 @@ export type CollectResult<T, D> = {
  * @param type
  */
 export function trackSignal(signal: Signal, type: DependType): void {
-  const ctx = Context.get<DepCollector>(DEP_CTX)
-  if (!ctx) return
-  ctx.add(signal)
-  if (__DEV__) {
-    triggerOnTrack(ctx, signal, type)
+  const ctx = Context.get<CollectContext>(DEP_CONTEXT)
+  if (!ctx || ctx.deps.has(signal)) return
+  ctx.deps.add(signal)
+  if (ctx.watcher) {
+    linkSignalWatcher(ctx.watcher, signal)
+    if (__DEV__) {
+      triggerOnTrack(ctx.watcher, signal, type)
+    }
   }
 }
 /**
@@ -61,36 +57,36 @@ export function trackSignal(signal: Signal, type: DependType): void {
  * @param fn - 需要收集依赖的函数
  * @returns {CollectResult<T, DepSet>} 函数执行结果
  */
-export function collectSignal<T>(fn: () => T): CollectResult<T, DepSet>
+export function collectSignal<T>(fn: () => T): CollectResult<T>
 /**
- * 运行函数并收集依赖 - 自定义收集器
+ * 运行函数并收集依赖和构建双向依赖关系
  *
  * @template T 函数返回值类型
  * @template C 收集器类型，必须带有add方法
  * @param fn - 需要收集依赖的函数
- * @param collector - 自定义收集器
- * @returns {CollectResult<T, C>} 函数执行结果
+ * @param watcher - 观察者对象，自动建立依赖关系
+ * @returns {CollectResult<T>} 函数执行结果
  */
-export function collectSignal<T, C extends DepCollector>(
-  fn: () => T,
-  collector: C
-): CollectResult<T, C>
+export function collectSignal<T, C extends Watcher>(fn: () => T, watcher: C): CollectResult<T>
 /**
  * 收集函数执行过程中的信号依赖
  *
  * @template T 函数返回值类型
  * @template D 依赖收集器类型
  * @param fn - 需要依赖收集的函数
- * @param collector - 收集器
+ * @param watcher
  * @returns {CollectResult<T, D>} 包含函数执行结果和依赖集合
  */
-export function collectSignal<T, D extends DepCollector | DepSet>(
+export function collectSignal<T, D extends Watcher | DepSet>(
   fn: () => T,
-  collector?: D
-): CollectResult<T, D extends undefined ? DepSet : D> {
-  const ctx = collector || new Set<Signal>()
-  const result = Context.run(DEP_CTX, ctx, fn)
-  return { result, deps: ctx } as CollectResult<T, D extends undefined ? DepSet : D>
+  watcher?: Watcher
+): CollectResult<T> {
+  const ctx: CollectContext = {
+    deps: new Set<Signal>(),
+    watcher
+  }
+  const result = Context.run(DEP_CONTEXT, ctx, fn)
+  return { result, deps: ctx.deps }
 }
 
 /**
@@ -105,7 +101,7 @@ export function triggerSignal(signal: Signal, type: DependType) {
   for (let link = signal[DEP_LINK_HEAD]; link; link = link.sigNext) {
     const watcher = link.watcher
     if (__DEV__) {
-      triggerOnTrigger(watcher, signal, type)
+      if (watcher) triggerOnTrigger(watcher, signal, type)
     }
     watcher.trigger()
   }
