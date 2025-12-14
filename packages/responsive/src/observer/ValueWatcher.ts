@@ -1,4 +1,4 @@
-import type { ChangeCallback, WatchOptions } from '../types/index.js'
+import type { ChangeCallback, WatcherOnCleanup, WatchOptions } from '../types/index.js'
 import { EffectWatcher } from './EffectWatcher.js'
 
 /**
@@ -45,7 +45,7 @@ export class ValueWatcher<T> extends EffectWatcher<T> {
    * @param options - 可选的观察器配置选项
    */
   constructor(
-    getter: () => T,
+    getter: (onCleanup: WatcherOnCleanup) => T,
     private _cb: ChangeCallback<T>,
     options?: ValueWatcherOptions
   ) {
