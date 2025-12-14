@@ -110,6 +110,6 @@ export function triggerSignal(
     if (__DEV__) {
       if (watcher) triggerOnTrigger({ watcher, signal, type, ...options })
     }
-    watcher.trigger()
+    watcher.schedule()
   }
 }
