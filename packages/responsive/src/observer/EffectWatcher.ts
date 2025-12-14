@@ -1,18 +1,27 @@
 import { collectSignal } from '../depend/index.js'
-import type { WatcherOnCleanup } from '../types/index.js'
-import { Watcher, type WatcherOptions } from './Watcher.js'
+import type { WatcherOnCleanup, WatcherOptions } from '../types/index.js'
+import { Watcher } from './Watcher.js'
 
+/**
+ * EffectWatcher 观察器配置选项接口
+ *
+ * 该接口扩展了 WatcherOptions。
+ *
+ * @extends WatcherOptions
+ */
+export interface EffectWatcherOptions extends WatcherOptions {}
 /**
  * 依赖收集副作用类
  *
  * 这是一个观察者类，继承自 Watcher 抽象基类，用于管理响应式依赖收集和副作用执行。
  * 该类实现监听副作用函数的依赖关系，依赖变化时自动执行副作用。
  *
+ * @template T - getter返回值类型
  * @extends Watcher
  *
  * @example
  * ```typescript
- * class MyWatcher extends ReactiveWatcher {
+ * class MyWatcher extends EffectWatcher {
  *   private _value = undefined
  *   constructor(signal,private cb){
  *     super(()=>readSignal(signal))
@@ -29,11 +38,11 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  * }
  * ```
  */
-export class ReactiveWatcher<T = any> extends Watcher {
+export class EffectWatcher<T = any> extends Watcher {
   protected readonly isInitialized: boolean = false
   constructor(
     private getter: (onCleanup: WatcherOnCleanup) => T,
-    options?: WatcherOptions
+    options?: EffectWatcherOptions
   ) {
     super(options)
     this.runEffect()
@@ -53,10 +62,14 @@ export class ReactiveWatcher<T = any> extends Watcher {
    * @protected
    */
   protected run(): void {
-    this.errorSource = 'getter'
-    const value = collectSignal(() => this.getter(this.onCleanup), this).result
-    this.errorSource = 'trigger'
-    this.afterCollect?.(value)
+    const oldErrorSource = this.errorSource
+    try {
+      this.errorSource = 'getter'
+      const value = collectSignal(() => this.getter(this.onCleanup), this).result
+      this.afterCollect?.(value)
+    } finally {
+      this.errorSource = oldErrorSource
+    }
   }
   protected override afterDispose() {
     super.afterDispose()
