@@ -94,12 +94,32 @@ export abstract class BaseProxyHandler<T extends object> implements ProxyHandler
       triggerSignal(this.proxy, type)
     }
   }
+  /**
+   * 跟踪信号的方法
+   * @param type - 信号操作类型，指定要跟踪的信号操作类型
+   * @param devInfo - 可选参数，设备信息对象，包含设备的额外信息
+   * 该方法用于跟踪与代理对象相关的信号操作，将相关信息传递给trackSignal函数
+   */
   protected trackSignal(type: SignalOpType, devInfo?: Record<string, any>) {
-    trackSignal(this.proxy, type, devInfo)
+    trackSignal(this.proxy, type, devInfo) // 调用trackSignal函数，传入代理对象、操作类型和设备信息
   }
-  // 抽象方法，由子类实现，处理 get 操作
+
+  /**
+   * 抽象方法，由子类实现，处理 get 操作
+   * @param target
+   * @param p
+   * @param receiver
+   * @protected
+   */
   protected abstract doGet(target: T, p: string | symbol, receiver: any): any
 
-  // 抽象方法，由子类实现，处理 set 操作
+  /**
+   * 抽象方法，由子类实现，处理 set 操作
+   * @param target
+   * @param p
+   * @param newValue
+   * @param receiver
+   * @protected
+   */
   protected abstract doSet(target: T, p: string | symbol, newValue: any, receiver: any): boolean
 }
