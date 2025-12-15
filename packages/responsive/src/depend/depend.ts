@@ -87,7 +87,8 @@ export function trackSignal(
   if (!ctx || ctx.deps.has(signal)) return
   ctx.deps.add(signal)
   if (__DEV__) {
-    if (ctx.watcher) triggerOnTrack({ effect: ctx.watcher, signal, type, ...options })
+    const effect = ctx.watcher
+    if (effect) triggerOnTrack({ ...options, effect, signal, type })
   }
 }
 /**
@@ -105,10 +106,10 @@ export function triggerSignal(
   // 遍历信号的所有依赖链接
   // 从头节点开始，直到链表结束
   for (let link = signal[DEP_LINK_HEAD]; link; link = link.sigNext) {
-    const watcher = link.effect
+    const effect = link.effect
     if (__DEV__) {
-      if (watcher) triggerOnTrigger({ effect: watcher, signal, type, ...options })
+      if (effect) triggerOnTrigger({ ...options, effect, signal, type })
     }
-    watcher.schedule()
+    effect.schedule()
   }
 }
