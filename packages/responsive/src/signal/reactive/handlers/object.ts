@@ -23,7 +23,7 @@ function isNestingObject(value: any): value is object {
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-class ChildSignal<T extends object, K extends keyof T> implements Signal {
+export class ChildSignal<T extends object, K extends keyof T> implements Signal {
   // 只读属性，用于标识这是一个信号对象
   readonly [IS_SIGNAL] = true
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
@@ -32,10 +32,12 @@ class ChildSignal<T extends object, K extends keyof T> implements Signal {
    * 构造函数
    * @param target - 目标对象
    * @param key - 目标对象的键
+   * @param deep - 是否进行深度代理
    */
   constructor(
     public readonly target: T,
-    public readonly key: K
+    public readonly key: K,
+    public readonly deep: boolean
   ) {}
   // 获取信号值的getter
   get [SIGNAL_VALUE]() {
@@ -46,7 +48,7 @@ class ChildSignal<T extends object, K extends keyof T> implements Signal {
     // 获取当前值
     const value = this.target[this.key]
     // 如果值是嵌套对象，创建代理对象
-    if (isNestingObject(value)) {
+    if (this.deep && isNestingObject(value)) {
       return (this.proxy = new ObjectProxyHandler(value).proxy)
     }
     // 返回当前值
@@ -93,7 +95,7 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
    * 检查目标对象是否包含指定的属性
    * @param target 目标对象
    * @param p 属性键，可以是字符串或Symbol类型
-   * @returns 如果目标对象包含指定属性则返回true，否则返回false
+   * @returns {boolean} 如果目标对象包含指定属性则返回true，否则返回false
    */
   has(target: T, p: string | symbol): boolean {
     // 跟踪信号，记录has操作和相关的键
@@ -149,7 +151,7 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
     // 检查子映射中是否已存在该属性的信号
     if (this.childMap.has(p)) return this.childMap.get(p)![SIGNAL_VALUE]
     // 如果不存在，则创建一个新的子信号
-    const sig = new ChildSignal(target, p)
+    const sig = new ChildSignal(target, p, this.deep)
     this.childMap.set(p, sig) // 将新信号添加到子映射中
     return sig[SIGNAL_VALUE] // 返回信号中的值
   }
