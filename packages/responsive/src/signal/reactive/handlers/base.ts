@@ -5,7 +5,7 @@ import {
   trackSignal,
   triggerSignal
 } from '../../../depend/index.js'
-import type { Signal, SignalOpType } from '../../../types/index.js'
+import type { DebuggerEventOptions, Signal, SignalOpType } from '../../../types/index.js'
 import { IS_SIGNAL, SIGNAL_RAW_VALUE, SIGNAL_VALUE } from '../../core/index.js'
 import { IS_REACTIVE_SIGNAL } from '../symbol.js'
 
@@ -83,14 +83,19 @@ export abstract class BaseProxyHandler<T extends object> implements ProxyHandler
     return this.doSet(target, p, newValue, receiver)
   }
 
-  protected triggerSignal(type: SignalOpType, devInfo?: Record<string, any>) {
+  /**
+   * 触发信号的方法
+   * 根据当前环境是否为开发环境决定是否传递 devInfo 参数
+   * @param type - 信号操作类型
+   * @param devInfo - 调试器事件选项（可选参数，仅在开发环境使用）
+   */
+  protected triggerSignal(type: SignalOpType, devInfo?: DebuggerEventOptions) {
+    // 判断是否为开发环境
     if (__DEV__) {
-      triggerSignal(this.proxy, type, {
-        oldValue: this.target,
-        newValue: this.target,
-        info: devInfo
-      })
+      // 在开发环境下，传递 devInfo 参数
+      triggerSignal(this.proxy, type, devInfo)
     } else {
+      // 在非开发环境下，不传递 devInfo 参数
       triggerSignal(this.proxy, type)
     }
   }
@@ -100,7 +105,7 @@ export abstract class BaseProxyHandler<T extends object> implements ProxyHandler
    * @param devInfo - 可选参数，设备信息对象，包含设备的额外信息
    * 该方法用于跟踪与代理对象相关的信号操作，将相关信息传递给trackSignal函数
    */
-  protected trackSignal(type: SignalOpType, devInfo?: Record<string, any>) {
+  protected trackSignal(type: SignalOpType, devInfo?: DebuggerEventOptions) {
     trackSignal(this.proxy, type, devInfo) // 调用trackSignal函数，传入代理对象、操作类型和设备信息
   }
 
