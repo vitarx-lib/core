@@ -3,16 +3,14 @@ import type { DepEffect } from './Watcher.js'
 
 export type SignalOpType = keyof ProxyHandler<any> | string
 export interface DebuggerEventOptions {
-  /**
-   * 额外的信息
-   *
-   * 由信号发出的额外调试信息，可能为 undefined
-   */
-  info?: Record<string, any>
   /** 变更前的值，仅在触发阶段可选 */
   oldValue?: any
   /** 变更后的值，仅在触发阶段可选 */
   newValue?: any
+  /**
+   * 其他信号自定义发出的信息
+   */
+  [key: string]: any
 }
 export interface DebuggerEvent extends DebuggerEventOptions {
   /**
