@@ -29,12 +29,8 @@ export abstract class BaseProxyHandler<T extends object> implements ProxyHandler
   /**
    * 构造函数
    * @param target - 要代理的目标对象
-   * @param deep - 是否进行深度代理
    */
-  constructor(
-    public target: T,
-    public readonly deep: boolean = true
-  ) {
+  constructor(public target: T) {
     // 创建代理对象并赋值给 proxy 属性
     this.proxy = new Proxy(this.target, this) as Signal<T>
   }

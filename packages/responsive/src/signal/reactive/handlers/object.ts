@@ -90,7 +90,12 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
    * 子代理映射表，存储对象属性的子信号
    */
   protected readonly childMap = new Map<any, ChildSignal<T, any>>()
-
+  constructor(
+    target: T,
+    public readonly deep: boolean = true
+  ) {
+    super(target)
+  }
   /**
    * 检查目标对象是否包含指定的属性
    * @param target 目标对象
