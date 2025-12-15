@@ -125,7 +125,7 @@ export function removeSignalDeps(signal: Signal) {
  * @param signal - 需要转换的信号对象
  * @returns {DepEffect[]} 包含所有相关观察者的数组
  */
-export function effectDepToArray(signal: Signal): DepEffect[] {
+export function getSignalEffects(signal: Signal): DepEffect[] {
   const arr: DepEffect[] = [] // 初始化一个空数组，用于存储观察者
   // 从信号的依赖链头部开始遍历
   let node = signal[DEP_LINK_HEAD] as DepLink | undefined
@@ -147,7 +147,7 @@ export function effectDepToArray(signal: Signal): DepEffect[] {
  * @param effect - 观察者对象，包含信号链表的头指针
  * @returns Signal[] - 包含所有信号的数组
  */
-export function signalDepToArray(effect: DepEffect): Signal[] {
+export function getEffectSignals(effect: DepEffect): Signal[] {
   const arr: Signal[] = [] // 用于存储信号的数组
   // 从链表头开始遍历
   let node = effect[DEP_LINK_HEAD] as DepLink | undefined
