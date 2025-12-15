@@ -89,8 +89,16 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
    */
   protected readonly childMap = new Map<any, ChildSignal<T, any>>()
 
+  /**
+   * 检查目标对象是否包含指定的属性
+   * @param target 目标对象
+   * @param p 属性键，可以是字符串或Symbol类型
+   * @returns 如果目标对象包含指定属性则返回true，否则返回false
+   */
   has(target: T, p: string | symbol): boolean {
+    // 跟踪信号，记录has操作和相关的键
     this.trackSignal('has', { key: p })
+    // 使用Reflect.has检查目标对象是否包含指定属性并返回结果
     return Reflect.has(target, p)
   }
 
@@ -98,7 +106,7 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
    * 删除对象属性的代理处理方法
    * @param target 目标对象
    * @param p 要删除的属性键，可以是字符串或Symbol
-   * @returns 返回一个布尔值，表示删除操作是否成功
+   * @returns {boolean} 返回一个布尔值，表示删除操作是否成功
    */
   deleteProperty(target: T, p: string | symbol): boolean {
     // 检查目标对象是否拥有该属性
@@ -109,7 +117,7 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
     const result = Reflect.deleteProperty(target, p)
     // 仅删除自身属性才触发结构 signal
     if (hadOwn && result) {
-      this.triggerSignal('deleteProperty', { key: p })
+      this.triggerSignal('deleteProperty', { key: p, oldValue, newValue: undefined })
       // 如果有 child signal，失效
       const sig = this.childMap.get(p)
       if (sig) {
@@ -162,12 +170,13 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
       sig[SIGNAL_VALUE] = newValue // 直接更新信号的值
       return true // 设置成功
     }
-    const hadKey = Object.prototype.hasOwnProperty.call(target, p) // 检查属性是否已存在
+    // 检查属性是否已存在
+    const hadKey = Object.prototype.hasOwnProperty.call(target, p)
     // 没有 ChildSignal：直接结构写入
     const result = Reflect.set(target, p, newValue, receiver) // 使用Reflect设置属性值
     if (!result) return false // 如果设置失败则返回false
     // 只触发结构变化信号，不创建子信号
-    if (!hadKey) this.triggerSignal('add', { key: p }) // 如果是新属性，触发添加信号的回调
+    if (!hadKey) this.triggerSignal('add', { key: p, oldValue: undefined, newValue }) // 如果是新属性，触发添加信号的回调
     return true // 设置成功返回true
   }
 }
