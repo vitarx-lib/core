@@ -6,7 +6,7 @@ import { collectionClear, CollectionProxyHandler } from './collection.js'
  * 用于处理WeakSet和Set类型的代理操作
  * @param T - 泛型参数，可以是AnySet或AnyWeakSet类型
  */
-export class weakSetProxyHandler<T extends AnySet | AnyWeakSet> extends CollectionProxyHandler<T> {
+export class WeakSetProxyHandler<T extends AnySet | AnyWeakSet> extends CollectionProxyHandler<T> {
   /**
    * 处理属性获取操作的重写方法
    * @param target - 目标对象
@@ -68,7 +68,7 @@ export class weakSetProxyHandler<T extends AnySet | AnyWeakSet> extends Collecti
  * SetProxyHandler 类继承自 weakSetProxyHandler<AnySet>，用于处理 Set 对象的代理操作
  * 该类重写了 doGet 方法，以自定义对 Set 对象特定属性的处理逻辑
  */
-export class SetProxyHandler extends weakSetProxyHandler<AnySet> {
+export class SetProxyHandler extends WeakSetProxyHandler<AnySet> {
   /**
    * 重写 doGet 方法，用于获取代理对象上的属性值
    * @param target - 被代理的原始 Set 对象
