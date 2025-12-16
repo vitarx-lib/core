@@ -1,6 +1,6 @@
 import type { AnyCollection, AnyObject } from '@vitarx/utils'
-import type { ReactiveSignal } from '../../signal/reactive/proxy/base.js'
-import { IS_MARK_RAW, IS_REACTIVE } from '../../signal/reactive/symbol.js'
+import { IS_MARK_RAW, IS_REACTIVE } from '../../signal/implement/reactive/index.js'
+import type { ReactiveSignal } from '../../signal/implement/reactive/proxy/base.js'
 import type { Signal } from './core.js'
 
 /**
