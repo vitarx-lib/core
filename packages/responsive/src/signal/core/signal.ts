@@ -1,11 +1,7 @@
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Signal, SignalOptions } from '../../types/index.js'
-import { IS_SIGNAL, SIGNAL_RAW_VALUE, SIGNAL_VALUE } from './symbol.js'
+import { IS_SIGNAL, SIGNAL_VALUE } from './symbol.js'
 
-/**
- * 函数式 signal 访问（用于 readFnSignal 读取值，需触发跟踪）
- */
-const IS_FN_SIGNAL = Symbol.for('__v_is-fn-signal')
 /**
  * FnSignal 函数类型重载：
  * - 无参调用：返回当前值（get）
@@ -43,19 +39,6 @@ export function signal<T>(initialValue: T, options: SignalOptions = {}): FnSigna
     triggerSignal(sig, 'set', { newValue, oldValue })
   } as FnSignal<T>
   Object.defineProperty(sig, IS_SIGNAL, { value: true })
-  Object.defineProperty(sig, SIGNAL_RAW_VALUE, { get: () => _value })
-  Object.defineProperty(sig, SIGNAL_VALUE, { get: () => sig(), set: (v: any) => sig(v) })
-  Object.defineProperty(sig, IS_FN_SIGNAL, { value: true })
+  Object.defineProperty(sig, SIGNAL_VALUE, { get: sig })
   return sig
-}
-
-/**
- * 判断一个值是否为函数信号(FnSignal)类型
- *
- * @param val - 需要检查的值
- * @returns {boolean} 如果值是FnSignal类型返回true，否则返回false
- */
-export function isFnSignal(val: any): val is FnSignal {
-  // 双重非运算确保val为真，并且检查IS_FN_SIGNAL属性是否存在
-  return !!val && !!val[IS_FN_SIGNAL]
 }
