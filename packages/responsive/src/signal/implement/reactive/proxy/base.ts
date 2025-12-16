@@ -1,11 +1,5 @@
 import type { AnyMap, AnySet, AnyWeakMap, AnyWeakSet } from '@vitarx/utils'
-import {
-  DEP_LINK_HEAD,
-  DEP_LINK_TAIL,
-  DepLink,
-  trackSignal,
-  triggerSignal
-} from '../../../../depend/index.js'
+import { trackSignal, triggerSignal } from '../../../../depend/index.js'
 import type {
   DebuggerEventOptions,
   Reactive,
@@ -15,52 +9,10 @@ import type {
 import { IS_SIGNAL, SIGNAL_VALUE } from '../../../core/index.js'
 import { IS_REACTIVE } from '../symbol.js'
 
-/**
- * ProxySignal 是一个抽象代理类，用于创建响应式对象的基础代理实现。
- * 该类实现了 ProxyHandler 接口，提供了依赖追踪和信号触发的核心机制。
- *
- * 核心功能：
- * - 创建响应式代理对象，拦截对象的读写操作
- * - 实现依赖追踪（trackSignal）和信号触发（triggerSignal）机制
- * - 支持深度代理和浅代理两种模式
- * - 维护依赖链表（_link_head 和 _link_tail）用于管理依赖关系
- * - 处理特殊的 Symbol 属性访问（如 IS_SIGNAL、IS_REACTIVE 等）
- *
- * @example
- * ```typescript
- * class MyObjectProxy extends ProxySignal<{ count: number }> {
- *   protected doGet(target, p, receiver) {
- *     // 实现具体的 get 逻辑
- *     return Reflect.get(target, p, receiver);
- *   }
- *   protected doSet(target, p, value, receiver) {
- *     // 实现具体的 set 逻辑
- *     return Reflect.set(target, p, value, receiver);
- *   }
- * }
- * const obj = { count: 0 };
- * const proxy = new MyObjectProxy(obj);
- * const reactiveObj = proxy.proxy;
- * ```
- *
- * @template T - 被代理的目标对象类型，必须是 object 类型
- * @template Deep - 是否进行深度代理的标志，默认为 true
- *
- * @param target - 要代理的目标对象
- * @param deep - 可选参数，指定是否进行深度代理，默认为 true
- *
- * @remarks
- * - 该类是抽象类，必须通过子类实现 doGet 和 doSet 方法
- * - 在开发环境下会提供额外的调试信息支持
- * - 通过 Symbol 属性可以访问代理对象的内部状态（如 IS_SIGNAL、IS_REACTIVE 等）
- * - 依赖链表用于高效管理和追踪对象的依赖关系
- */
 export abstract class ReactiveSignal<T extends object, Deep extends boolean = true>
   implements ProxyHandler<T>, Signal<number>
 {
-  readonly [IS_SIGNAL]: true = true;
-  [DEP_LINK_HEAD]?: DepLink;
-  [DEP_LINK_TAIL]?: DepLink
+  readonly [IS_SIGNAL]: true = true
   public readonly deep: Deep
   public readonly proxy: Reactive<T, Deep>
   private version: number = 0
@@ -78,6 +30,7 @@ export abstract class ReactiveSignal<T extends object, Deep extends boolean = tr
     this.proxy = new Proxy(this.target, this) as Reactive<T, Deep>
   }
   get [SIGNAL_VALUE]() {
+    this.trackSignal('get', { key: SIGNAL_VALUE })
     return this.version
   }
   get(target: T, p: string | symbol, receiver: any): any {
