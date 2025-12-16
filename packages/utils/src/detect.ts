@@ -316,7 +316,7 @@ export function isNumString(str: any, allowSpace: boolean = false): str is `${nu
  * ```
  */
 export function isMap(obj: any): obj is Map<any, any> {
-  return Object.prototype.toString.call(obj) === '[object Map]'
+  return !!obj && obj instanceof Map
 }
 
 /**
@@ -336,7 +336,7 @@ export function isMap(obj: any): obj is Map<any, any> {
  * ```
  */
 export function isSet(obj: any): obj is Set<any> {
-  return Object.prototype.toString.call(obj) === '[object Set]'
+  return !!obj && obj instanceof Set
 }
 
 /**
@@ -356,7 +356,7 @@ export function isSet(obj: any): obj is Set<any> {
  * ```
  */
 export function isWeakMap(obj: any): obj is WeakMap<WeakKey, any> {
-  return Object.prototype.toString.call(obj) === '[object WeakMap]'
+  return !!obj && obj instanceof WeakMap
 }
 
 /**
@@ -376,7 +376,7 @@ export function isWeakMap(obj: any): obj is WeakMap<WeakKey, any> {
  * ```
  */
 export function isWeakSet(obj: any): obj is WeakSet<WeakKey> {
-  return Object.prototype.toString.call(obj) === '[object WeakSet]'
+  return !!obj && obj instanceof WeakSet
 }
 
 /**
@@ -399,7 +399,10 @@ export function isWeakSet(obj: any): obj is WeakSet<WeakKey> {
  * ```
  */
 export function isCollection(obj: any): obj is AnyCollection {
-  return isMap(obj) || isSet(obj) || isWeakMap(obj) || isWeakSet(obj)
+  return (
+    !!obj &&
+    (obj instanceof Map || obj instanceof Set || obj instanceof WeakMap || obj instanceof WeakSet)
+  )
 }
 
 /**
@@ -535,5 +538,5 @@ export function isDeepEqual(var1: any, var2: any, depth: number = Infinity): boo
  * ```
  */
 export function isPromise(val: any): val is Promise<any> {
-  return val && val instanceof Promise
+  return !!val && val instanceof Promise
 }
