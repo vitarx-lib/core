@@ -1,6 +1,8 @@
-import type { VoidCallback } from '@vitarx/utils'
+import type { AnyFunction, VoidCallback } from '@vitarx/utils'
 import type { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
+import type { WatcherOptions } from '../observer/index.js'
 import type { DebuggerHandler } from './debug.js'
+import type { Signal } from './signal/index.js'
 
 export interface DepEffect {
   /**
@@ -36,8 +38,37 @@ export interface DepEffect {
 }
 export type FlushMode = 'pre' | 'post' | 'sync'
 export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
-export type SignalChangeCallback<T> = (
-  newValue: T,
-  oldValue: T,
+export type WatchSource<T> = Signal<T> | (() => T) | (T extends object ? T : never)
+export type UnwrapGetter<T> = T extends AnyFunction ? ReturnType<T> : T
+export type UnwrapSource<T> = T extends Signal<infer V> ? V : UnwrapGetter<T>
+export type CallbackValue<T> = {
+  [K in keyof T]: T[K] extends WatchSource<infer V> ? UnwrapSource<V> : UnwrapSource<T[K]>
+}
+export type WatchCallback<T, Immediate extends boolean = false> = (
+  newValue: Immediate extends false ? T : CallbackValue<T>,
+  oldValue: Immediate extends false ? T : CallbackValue<T>,
   onCleanup: WatcherOnCleanup
 ) => void
+
+export type CompareFunction = (value1: any, value2: any) => boolean
+
+export interface WatchOptions extends WatcherOptions {
+  /**
+   * 是否立即执行回调函数
+   *
+   * @default false
+   */
+  immediate?: boolean
+  /**
+   * 是否深度监听对象
+   *
+   * @default false
+   */
+  deep?: boolean | number
+  /**
+   * 是否只监听一次
+   *
+   * @default false
+   */
+  once?: boolean
+}
