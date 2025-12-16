@@ -29,16 +29,19 @@ export function isObject(val: any): val is { [key: PropertyKey]: any } {
  * @returns { boolean } - 如果是键值对对象则返回true
  * @example
  * ```typescript
+ * isPlainObject({}); // true
+ * isPlainObject([]); // false
+ * isPlainObject(new Map()); // false
+ * isPlainObject(null); // false
+ * isPlainObject(42); // false
+ * // 别名
  * isRecordObject({}); // true
- * isRecordObject([]); // false
- * isRecordObject(new Map()); // false
- * isRecordObject(null); // false
- * isRecordObject(42); // false
  * ```
  */
 export function isPlainObject(val: any): val is AnyRecord {
   return toTypeString(val) === '[object Object]'
 }
+export { isPlainObject as isRecordObject }
 /**
  * 判断是否为数组对象
  *

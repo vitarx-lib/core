@@ -12,9 +12,9 @@ import {
   isNumber,
   isNumString,
   isObject,
+  isPlainObject,
   isPromise,
   isPureFunction,
-  isRecordObject,
   isSet,
   isSimpleGetterFunction,
   isString,
@@ -32,10 +32,10 @@ describe('detect', () => {
   })
 
   it('should detect record objects correctly', () => {
-    expect(isRecordObject({})).toBe(true)
-    expect(isRecordObject(null)).toBe(false)
-    expect(isRecordObject([])).toBe(false)
-    expect(isRecordObject(new Map())).toBe(true)
+    expect(isPlainObject({})).toBe(true)
+    expect(isPlainObject(null)).toBe(false)
+    expect(isPlainObject([])).toBe(false)
+    expect(isPlainObject(new Map())).toBe(false)
   })
 
   it('should detect arrays correctly', () => {
