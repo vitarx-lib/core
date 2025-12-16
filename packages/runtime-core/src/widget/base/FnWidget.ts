@@ -1,5 +1,5 @@
+import type { AnyCallback } from '@vitarx/utils'
 import { isPromise } from '@vitarx/utils'
-import type { AnyCallback } from '@vitarx/utils/src/index.js'
 import { __WIDGET_INTRINSIC_KEYWORDS__, LifecycleHook, NodeState } from '../../constants/index.js'
 import { HookCollector, type HookCollectResult } from '../../runtime/hook.js'
 import { useSuspense } from '../../runtime/index.js'

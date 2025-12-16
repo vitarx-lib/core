@@ -1,4 +1,4 @@
-import type { AnyCallback } from '@vitarx/utils/src/index.js'
+import type { AnyCallback } from '@vitarx/utils/src'
 import type { LifecycleHook } from '../constants/index.js'
 import type { Widget } from '../widget/index.js'
 
