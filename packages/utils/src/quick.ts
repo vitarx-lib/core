@@ -1,4 +1,4 @@
-import { isArray, isObject, isRecordObject } from './detect.js'
+import { isArray, isObject, isPlainObject } from './detect.js'
 import type { AnyCallback, FnCallback } from './types'
 
 /**
@@ -75,7 +75,7 @@ export function deepMergeObject<T extends Record<string, any>, U extends Record<
   if (Object.is(target, source)) return target as T & U
 
   // 确保目标和源都是记录对象（对象字面量或类实例）
-  if (isRecordObject(target) && isRecordObject(source)) {
+  if (isPlainObject(target) && isPlainObject(source)) {
     // 初始化输出对象，以目标对象的属性开始
     const output: Record<string, any> = { ...target }
 
@@ -108,7 +108,7 @@ export function deepMergeObject<T extends Record<string, any>, U extends Record<
         }
 
         // 如果新旧值都是对象，则递归合并
-        if (isRecordObject(newValue) && isRecordObject(oldValue)) {
+        if (isPlainObject(newValue) && isPlainObject(oldValue)) {
           output[key] = deepMergeObject(oldValue, newValue, options)
           continue
         }
