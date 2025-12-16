@@ -5,9 +5,14 @@ import {
   DepLink,
   trackSignal,
   triggerSignal
-} from '../../../depend/index.js'
-import type { DebuggerEventOptions, Reactive, Signal, SignalOpType } from '../../../types/index.js'
-import { IS_SIGNAL, SIGNAL_VALUE } from '../../core/index.js'
+} from '../../../../depend/index.js'
+import type {
+  DebuggerEventOptions,
+  Reactive,
+  Signal,
+  SignalOpType
+} from '../../../../types/index.js'
+import { IS_SIGNAL, SIGNAL_VALUE } from '../../../core/index.js'
 import { IS_REACTIVE } from '../symbol.js'
 
 /**

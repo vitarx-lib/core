@@ -1,6 +1,6 @@
 import { isObject } from '@vitarx/utils'
-import type { NonReactive, Reactive } from '../../types/index.js'
-import { isSignal } from '../core/index.js'
+import type { NonReactive, Reactive } from '../../../types/index.js'
+import { isSignal } from '../../core/index.js'
 import type { ReactiveSignal } from './proxy/base.js'
 import { createProxyObject } from './proxy/object.js'
 import { IS_MARK_RAW, IS_REACTIVE } from './symbol.js'

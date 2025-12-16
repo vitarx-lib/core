@@ -1,8 +1,8 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { isObject } from '@vitarx/utils'
-import { removeSignalDeps, trackSignal, triggerSignal } from '../../../depend/index.js'
-import type { Reactive, Signal } from '../../../types/index.js'
-import { IS_SIGNAL, isSignal, readSignal, SIGNAL_VALUE } from '../../core/index.js'
+import { removeSignalDeps, trackSignal, triggerSignal } from '../../../../depend/index.js'
+import type { Reactive, Signal } from '../../../../types/index.js'
+import { IS_SIGNAL, isSignal, readSignal, SIGNAL_VALUE } from '../../../core/index.js'
 import { isMakeRaw } from '../helpers.js'
 import { ReactiveSignal } from './base.js'
 import { MapProxy, WeakMapProxy } from './map.js'
@@ -26,7 +26,7 @@ function isNestingObject(value: any): value is object {
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-export class ChildSignal<T extends object, K extends keyof T> implements Signal {
+export class ChildSignal<T extends object, K extends keyof T> implements Signal<T[K]> {
   // 只读属性，用于标识这是一个信号对象
   readonly [IS_SIGNAL] = true
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
