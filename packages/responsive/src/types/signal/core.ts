@@ -25,3 +25,7 @@ export interface Signal<T = any> {
    */
   [DEP_LINK_TAIL]?: DepLink
 }
+/**
+ * 获取信号值类型辅助工具
+ */
+export type UnwrapSignal<T> = T extends Signal<infer V> ? V : T
