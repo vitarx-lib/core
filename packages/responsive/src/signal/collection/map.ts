@@ -1,11 +1,35 @@
 import type { AnyMap, AnyWeakMap } from '@vitarx/utils'
-import { collectionClear, CollectionProxyHandler } from './collection.js'
+import { collectionClear, CollectionProxy } from './base.js'
 
 /**
- * WeakMapProxyHandler 类，继承自 CollectionProxyHandler，用于处理 WeakMap 或 Map 对象的代理操作
- * @template T - 继承自 AnyWeakMap 或 AnyMap 的泛型类型
+ * WeakMapProxy 是一个代理类，用于封装 WeakMap 或 Map 对象，提供响应式的数据操作能力。
+ * 该类继承自 CollectionProxy，并重写了属性获取操作，以支持对 Map/WeakMap 的 set 和 delete 操作的拦截和处理。
+ *
+ * 核心功能：
+ * - 拦截并处理 Map/WeakMap 的 set 和 delete 操作
+ * - 在数据变更时触发相应的信号
+ *
+ * 使用示例：
+ * ```typescript
+ * const originalMap = new Map();
+ * const proxyMap = new WeakMapProxy(originalMap).proxy;
+ *
+ * // 使用代理对象设置值
+ * proxyMap.set('key', 'value');
+ *
+ * // 使用代理对象删除值
+ * proxyMap.delete('key');
+ * ```
+ *
+ * 构造函数参数：
+ * @param target - 被代理的目标 WeakMap 或 Map 对象
+ *
+ * 注意事项：
+ * - 该类主要设计用于响应式系统，会在数据变更时触发信号
+ * - 不建议直接操作原始的 Map/WeakMap 对象，应通过代理对象进行操作
+ * - 当使用 WeakMap 时，需要注意弱引用的特性
  */
-export class WeakMapProxyHandler<T extends AnyWeakMap | AnyMap> extends CollectionProxyHandler<T> {
+export class WeakMapProxy<T extends AnyWeakMap | AnyMap> extends CollectionProxy<T> {
   /**
    * 处理属性获取操作的重写方法
    * @param target - 目标 WeakMap 或 Map 对象
@@ -60,11 +84,28 @@ export class WeakMapProxyHandler<T extends AnyWeakMap | AnyMap> extends Collecti
 }
 
 /**
- * MapProxyHandler 类，继承自 WeakMapProxyHandler 类
- * 用于处理 Map 对象的代理操作
- * @template T - 继承自 Map<any, any> 的泛型类型
+ * MapProxy 是一个扩展自 WeakMapProxy 的代理类，专门用于处理 Map 对象的代理操作。
+ * 它重写了属性获取方法，以提供对 Map 对象的特殊处理，特别是对 'clear' 方法的自定义实现。
+ *
+ * 核心功能：
+ * - 代理 Map 对象的基本操作
+ * - 自定义处理 'clear' 方法
+ * - 继承 WeakMapProxy 的其他功能
+ *
+ * 使用示例：
+ * ```typescript
+ * const originalMap = new Map();
+ * const proxy = new MapProxy(originalMap).proxy;
+ * ```
+ *
+ * 构造函数参数：
+ * - 继承自 WeakMapProxy，无额外参数
+ *
+ * 特殊限制：
+ * - 主要用于 Map 对象的代理
+ * - 对 'clear' 方法有特殊处理逻辑
  */
-export class MapProxyHandler<T extends Map<any, any>> extends WeakMapProxyHandler<T> {
+export class MapProxy<T extends AnyMap> extends WeakMapProxy<T> {
   /**
    * 获取属性值的重写方法
    * @param target - 目标 Map 对象
