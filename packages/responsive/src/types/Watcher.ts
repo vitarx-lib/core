@@ -36,4 +36,8 @@ export interface DepEffect {
 }
 export type FlushMode = 'pre' | 'post' | 'sync'
 export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
-export type ChangeCallback<T> = (newValue: T, oldValue: T, onCleanup: WatcherOnCleanup) => void
+export type SignalChangeCallback<T> = (
+  newValue: T,
+  oldValue: T,
+  onCleanup: WatcherOnCleanup
+) => void
