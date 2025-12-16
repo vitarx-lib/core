@@ -1,5 +1,5 @@
 import { trackSignal, triggerSignal } from '../../depend/index.js'
-import type { Signal, SignalOptions } from '../../types/index.js'
+import type { Signal } from '../../types/index.js'
 import { IS_SIGNAL, SIGNAL_VALUE } from './symbol.js'
 
 /**
@@ -16,12 +16,9 @@ export interface FnSignal<T = any> extends Signal<T> {
  * 创建函数式 Signal
  *
  * @param initialValue 初始值
- * @param options - 配置选项
- * @param {boolean | SignalOptions['compare']} [options.compare] - 比较函数
- * @returns 兼具 get/set 能力的 Signal 函数
+ * @returns {FnSignal} - 函数式 Signal 对象
  */
-export function signal<T>(initialValue: T, options: SignalOptions = {}): FnSignal<T> {
-  const compare = options.compare ?? Object.is
+export function signal<T>(initialValue: T): FnSignal<T> {
   let _value: T = initialValue
 
   // 核心 Signal 函数（重载实现）
@@ -33,7 +30,7 @@ export function signal<T>(initialValue: T, options: SignalOptions = {}): FnSigna
     }
 
     // 有参调用：set 操作，更新值 + 触发观察者
-    if (compare(_value, newValue)) return
+    if (Object.is(_value, newValue)) return
     const oldValue = _value
     _value = newValue!
     triggerSignal(sig, 'set', { newValue, oldValue })
