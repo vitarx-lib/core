@@ -1,9 +1,12 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { isObject } from '@vitarx/utils'
 import { removeSignalDeps, trackSignal, triggerSignal } from '../../../depend/index.js'
-import type { Signal } from '../../../types/index.js'
-import { IS_SIGNAL, isMarkNonSignal, isSignal, SIGNAL_VALUE } from '../../core/index.js'
-import { BaseProxyHandler } from './base.js'
+import type { Reactive, Signal } from '../../../types/index.js'
+import { IS_SIGNAL, isSignal, readSignal, SIGNAL_VALUE } from '../../core/index.js'
+import { isMakeRaw } from '../helpers.js'
+import { ReactiveSignal } from './base.js'
+import { MapProxy, WeakMapProxy } from './map.js'
+import { SetProxy, WeakSetProxy } from './set.js'
 
 /**
  * 检查一个值是否为嵌套对象
@@ -14,7 +17,7 @@ import { BaseProxyHandler } from './base.js'
  *          使用类型谓词(value is object)来确保返回true时value的类型为object
  */
 function isNestingObject(value: any): value is object {
-  return isObject(value) && !isSignal(value) && !isMarkNonSignal(value)
+  return isObject(value) && !isMakeRaw(value)
 }
 
 /**
@@ -47,12 +50,10 @@ export class ChildSignal<T extends object, K extends keyof T> implements Signal 
     if (this.proxy) return this.proxy
     // 获取当前值
     const value = this.target[this.key]
+    if (isSignal(value)) return readSignal(value)
     // 如果值是嵌套对象，创建代理对象
     if (this.deep && isNestingObject(value)) {
-      this.proxy = Array.isArray(value)
-        ? new ArrayProxyHandler(value, true).proxy
-        : new ObjectProxyHandler(value, true).proxy
-      return this.proxy
+      return (this.proxy = createProxyObject(value))
     }
     // 返回当前值
     return value
@@ -84,21 +85,14 @@ export class ChildSignal<T extends object, K extends keyof T> implements Signal 
   }
 }
 
-/**
- * ObjectProxyHandler 类，继承自 BaseProxyHandler，用于处理对象的代理操作
- * @template T - 表示任意记录类型的泛型参数
- */
-export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T> {
+export class ObjectProxy<T extends AnyRecord, Deep extends boolean = true> extends ReactiveSignal<
+  T,
+  Deep
+> {
   /**
    * 子代理映射表，存储对象属性的子信号
    */
   protected readonly childMap = new Map<any, ChildSignal<T, any>>()
-  constructor(
-    target: T,
-    public readonly deep: boolean = true
-  ) {
-    super(target)
-  }
   /**
    * 检查目标对象是否包含指定的属性
    * @param target 目标对象
@@ -111,7 +105,6 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
     // 使用Reflect.has检查目标对象是否包含指定属性并返回结果
     return Reflect.has(target, p)
   }
-
   /**
    * 删除对象属性的代理处理方法
    * @param target 目标对象
@@ -137,15 +130,7 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
     }
     return result
   }
-
-  /**
-   * 重写doGet方法，用于处理对象的属性获取操作
-   * @param target 目标对象
-   * @param p 要获取的属性键
-   * @param receiver receiver参数，用于确定this的指向
-   * @returns 返回属性的值
-   */
-  protected override doGet(target: T, p: keyof T, receiver: any) {
+  protected doGet(target: T, p: keyof T, receiver: any) {
     let value: any // 用于存储获取到的属性值
     // 检查目标对象是否自身拥有该属性
     if (!Object.prototype.hasOwnProperty.call(target, p)) {
@@ -163,16 +148,7 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
     this.childMap.set(p, sig) // 将新信号添加到子映射中
     return sig[SIGNAL_VALUE] // 返回信号中的值
   }
-
-  /**
-   * 设置目标对象的属性值
-   * @param target 目标对象
-   * @param p 要设置的属性键
-   * @param newValue 新的属性值
-   * @param receiver 最初被调用的对象
-   * @returns {boolean} 设置是否成功
-   */
-  protected override doSet(target: T, p: keyof T, newValue: any, receiver: any): boolean {
+  protected set(target: T, p: keyof T, newValue: any, receiver: any): boolean {
     // 已有 ChildSignal：必须走信号（它维护 proxy / 嵌套 reactive）
     const sig = this.childMap.get(p) // 获取属性对应的信号
     if (sig) {
@@ -191,11 +167,7 @@ export class ObjectProxyHandler<T extends AnyRecord> extends BaseProxyHandler<T>
   }
 }
 
-/**
- * ArrayProxyHandler 类继承自 ObjectProxyHandler，用于处理数组类型的代理操作
- * @template T - 表示数组类型，必须是 any[] 的子类型
- */
-export class ArrayProxyHandler<T extends any[]> extends ObjectProxyHandler<T> {
+export class ArrayProxy<T extends any[], Deep extends boolean = true> extends ObjectProxy<T, Deep> {
   // 存储数组旧长度的私有属性
   private oldLength: number
   // 存储数组长度特殊子信号的只读属性
@@ -203,9 +175,9 @@ export class ArrayProxyHandler<T extends any[]> extends ObjectProxyHandler<T> {
   /**
    * 构造函数
    * @param target - 目标数组
-   * @param deep - 是否深度代理，可选参数，默认为 false
+   * @param deep - 是否深度代理
    */
-  constructor(target: T, deep?: boolean) {
+  constructor(target: T, deep?: Deep) {
     super(target, deep)
     // 初始化旧长度为当前数组长度
     this.oldLength = target.length
@@ -213,7 +185,7 @@ export class ArrayProxyHandler<T extends any[]> extends ObjectProxyHandler<T> {
     this.lengthSignal = new ChildSignal(target, 'length', false)
     this.childMap.set('length', this.lengthSignal)
   }
-  protected override doSet(target: T, p: keyof T, newValue: any, receiver: any): boolean {
+  protected override set(target: T, p: keyof T, newValue: any, receiver: any): boolean {
     if (p === 'length') {
       if (typeof newValue !== 'number' || newValue < 0 || !Number.isInteger(newValue)) {
         throw new TypeError(`Invalid array length: ${newValue}`)
@@ -235,6 +207,37 @@ export class ArrayProxyHandler<T extends any[]> extends ObjectProxyHandler<T> {
       this.triggerSignal('add', { key: p, oldValue, newValue })
       return true
     }
-    return super.doSet(target, p, newValue, receiver)
+    return super.set(target, p, newValue, receiver)
   }
+}
+
+/**
+ *
+ * @param target
+ * @param deep
+ */
+export function createProxyObject<T extends object, Deep extends boolean = true>(
+  target: T,
+  deep?: Deep
+): Reactive<T, Deep> {
+  if (Array.isArray(target)) {
+    return new ArrayProxy(target, deep).proxy
+  }
+  // 如果传入的是Map类型，则使用MapProxyHandler创建代理
+  if (target instanceof Map) {
+    return new MapProxy(target).proxy as any
+  }
+  // 如果传入的是Set类型，则使用SetProxyHandler创建代理
+  if (target instanceof Set) {
+    return new SetProxy(target).proxy as any
+  }
+  // 如果传入的是WeakSet类型，则使用WeakSetProxyHandler创建代理
+  if (target instanceof WeakSet) {
+    return new WeakSetProxy(target).proxy as any
+  }
+  // 如果传入的是WeakMap类型，则使用WeakMapProxyHandler创建代理
+  if (target instanceof WeakMap) {
+    return new WeakMapProxy(target).proxy as any
+  }
+  return new ObjectProxy(target, deep).proxy
 }

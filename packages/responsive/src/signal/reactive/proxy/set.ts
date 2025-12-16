@@ -40,10 +40,6 @@ export class WeakSetProxy<T extends AnySet | AnyWeakSet> extends CollectionProxy
     return super.doGet(target, p, receiver)
   }
 
-  /**
-   * 创建用于添加元素的函数
-   * @returns 返回一个添加元素的函数
-   */
   private addSet() {
     // 返回一个用于添加元素的函数
     return (value: any) => {
@@ -59,10 +55,6 @@ export class WeakSetProxy<T extends AnySet | AnyWeakSet> extends CollectionProxy
     }
   }
 
-  /**
-   * 创建用于删除元素的函数
-   * @returns 返回一个删除元素的函数
-   */
   private deleteSet() {
     return (key: any) => {
       // 检查集合中是否包含指定键

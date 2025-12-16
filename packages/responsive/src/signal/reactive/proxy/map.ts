@@ -30,13 +30,6 @@ import { collectionClear, CollectionProxy } from './base.js'
  * - 当使用 WeakMap 时，需要注意弱引用的特性
  */
 export class WeakMapProxy<T extends AnyWeakMap | AnyMap> extends CollectionProxy<T> {
-  /**
-   * 处理属性获取操作的重写方法
-   * @param target - 目标 WeakMap 或 Map 对象
-   * @param p - 要获取的属性键
-   * @param receiver - 代理对象或继承的调用者
-   * @returns 返回属性值或处理函数
-   */
   protected override doGet(target: T, p: string | symbol, receiver: any): any {
     // 如果请求的是 'delete' 属性，则返回删除处理函数
     if (p === 'delete') return this.deleteMap()
@@ -46,10 +39,6 @@ export class WeakMapProxy<T extends AnyWeakMap | AnyMap> extends CollectionProxy
     return super.doGet(target, p, receiver)
   }
 
-  /**
-   * 创建一个删除元素的处理函数
-   * @returns 返回一个接受键并执行删除操作的函数
-   */
   private deleteMap() {
     return (key: any) => {
       // 检查目标映射中是否包含指定的键
@@ -63,10 +52,6 @@ export class WeakMapProxy<T extends AnyWeakMap | AnyMap> extends CollectionProxy
     }
   }
 
-  /**
-   * 创建一个设置键值对的处理函数
-   * @returns 返回一个接受键和值并执行设置操作的函数
-   */
   private setMap() {
     return (key: any, value: any) => {
       // 返回一个设置键值对的函数
@@ -106,13 +91,6 @@ export class WeakMapProxy<T extends AnyWeakMap | AnyMap> extends CollectionProxy
  * - 对 'clear' 方法有特殊处理逻辑
  */
 export class MapProxy<T extends AnyMap> extends WeakMapProxy<T> {
-  /**
-   * 获取属性值的重写方法
-   * @param target - 目标 Map 对象
-   * @param p - 要获取的属性键，可以是字符串或 Symbol
-   * @param receiver - 代理对象或原始对象
-   * @returns 返回属性值
-   */
   protected override doGet(target: T, p: string | symbol, receiver: any): any {
     // 如果请求的属性是 'clear'，则返回自定义的 collectionClear 函数
     if (p === 'clear') return collectionClear(this)
