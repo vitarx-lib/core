@@ -1,5 +1,8 @@
 import type { AnyArray, AnyCollection, AnyRecord } from './types'
 
+const objectToString = Object.prototype.toString
+const toTypeString = (value: any): string => objectToString.call(value)
+const asyncFunction = Object.getPrototypeOf(async function () {})
 /**
  * 判断是否为对象
  *
@@ -20,26 +23,22 @@ export function isObject(val: any): val is { [key: PropertyKey]: any } {
   return typeof val === 'object' && val !== null
 }
 /**
- * 判断变量是否为键值对记录对象
- *
- * @note 仅排除 Array 类型，集合类型也会被认为是一个键值对对象
+ * 判断变量是否为记录对象
  *
  * @param val - 要判断的变量
  * @returns { boolean } - 如果是键值对对象则返回true
- *
  * @example
  * ```typescript
  * isRecordObject({}); // true
  * isRecordObject([]); // false
- * isRecordObject(new Map()); // true
+ * isRecordObject(new Map()); // false
  * isRecordObject(null); // false
  * isRecordObject(42); // false
  * ```
  */
-export function isRecordObject(val: any): val is AnyRecord {
-  return val !== null && typeof val === 'object' && !Array.isArray(val)
+export function isPlainObject(val: any): val is AnyRecord {
+  return toTypeString(val) === '[object Object]'
 }
-
 /**
  * 判断是否为数组对象
  *
@@ -178,7 +177,7 @@ export function isEmpty(val: any): boolean {
  * ```
  */
 export function isAsyncFunction(func: Function): func is (...args: any[]) => Promise<any> {
-  return Object.getPrototypeOf(func) === Object.getPrototypeOf(async function () {})
+  return Object.getPrototypeOf(func) === asyncFunction
 }
 
 /**
@@ -399,7 +398,7 @@ export function isWeakSet(obj: any): obj is WeakSet<WeakKey> {
  */
 export function isCollection(obj: any): obj is AnyCollection {
   return (
-    !!obj &&
+    obj != null &&
     (obj instanceof Map || obj instanceof Set || obj instanceof WeakMap || obj instanceof WeakSet)
   )
 }
@@ -432,7 +431,7 @@ export function isArrayEqual(a: AnyArray, b: AnyArray): boolean {
 
   // 逐个比较元素
   for (let i = 0; i < a.length; i++) {
-    if (!Object.is(a[i], b[i])) return false // 修复错误：应该是!Object.is而不是Object.is
+    if (!Object.is(a[i], b[i])) return false
   }
 
   return true
