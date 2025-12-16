@@ -38,8 +38,7 @@
     "types": [
       "vitest/globals",
       "vite/client",
-      "node",
-      "global.d.ts"
+      "node"
     ]
   },
   "include": [
