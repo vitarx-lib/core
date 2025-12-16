@@ -16,10 +16,9 @@ import type { AnyArray, AnyCollection, AnyRecord } from './types'
  * isObject(42); // false
  * ```
  */
-export function isObject(val: any): val is object {
+export function isObject(val: any): val is { [key: PropertyKey]: any } {
   return typeof val === 'object' && val !== null
 }
-
 /**
  * 判断变量是否为键值对记录对象
  *
