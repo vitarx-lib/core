@@ -140,13 +140,13 @@ export function watch<T>(
         } else if (isFunction(s)) {
           return (s as any)()
         }
-        console.log(s, `[...${index}]`)
+        logWarn(s, `[...${index}]`)
         return s
       }) as T
     watcher = new ValueWatcher(getter, cb as any, watcherOptions)
     ;(watcher as ValueWatcher<any>).compare = () => false
   } else {
-    console.log(source)
+    logWarn(source)
     return new ValueWatcher(() => source as T, cb as any, watcherOptions)
   }
   if (immediate) watcher.execute()
