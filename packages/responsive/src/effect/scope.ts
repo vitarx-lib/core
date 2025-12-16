@@ -1,5 +1,4 @@
-import { type VoidCallback } from '@vitarx/utils'
-import { logger } from '@vitarx/utils/src/index.js'
+import { logger, type VoidCallback } from '@vitarx/utils'
 import { Context, runInContext } from '../context/index.js'
 import { Effect, type EffectState } from './effect.js'
 import { NEXT_EFFECT, PREV_EFFECT } from './symbol.js'
