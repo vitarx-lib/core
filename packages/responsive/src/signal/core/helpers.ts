@@ -15,7 +15,7 @@ export function isSignal(obj: any): obj is Signal {
  * @param sig - 信号对象
  * @returns {any} - 如果是信号对象，则返回信号值；否则返回原值
  */
-export function readSignal<T>(sig: Signal<T> | T): T extends Signal<T> ? T : T {
+export function readSignal<T>(sig: Signal<T> | T): T {
   if (!isSignal(sig)) return sig as any
   if (SIGNAL_VALUE in sig) return sig[SIGNAL_VALUE] as any
   return sig as any
