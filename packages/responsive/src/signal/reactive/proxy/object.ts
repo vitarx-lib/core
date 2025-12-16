@@ -30,7 +30,7 @@ export class ChildSignal<T extends object, K extends keyof T> implements Signal 
   // 只读属性，用于标识这是一个信号对象
   readonly [IS_SIGNAL] = true
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
-  private proxy?: Signal
+  private proxy?: Reactive
   /**
    * 构造函数
    * @param target - 目标对象
