@@ -1,7 +1,7 @@
 import { triggerOnTrack } from '../depend/debug.js'
 import { linkSignalEffect } from '../depend/index.js'
 import { readSignal } from '../signal/index.js'
-import type { ChangeCallback, Signal } from '../types/index.js'
+import type { CompareFunction, Signal, WatchCallback } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
 /**
@@ -29,9 +29,21 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  */
 export class SignalWatcher<T> extends Watcher {
   protected override errorSource: string = 'callback'
+  /**
+   * 比较函数，用于比较新旧值
+   *
+   * 可以修改此属性，自定义比较函数
+   */
+  public compare: CompareFunction = Object.is
+  /**
+   * 存储被监听的 Signal 的值
+   * @private
+   */
+  private _value: T
+
   constructor(
     private signal: Signal<T>,
-    private cb: ChangeCallback<T>,
+    private cb: WatchCallback<T>,
     options?: WatcherOptions
   ) {
     super(options)
@@ -47,12 +59,6 @@ export class SignalWatcher<T> extends Watcher {
   }
 
   /**
-   * 存储被监听的 Signal 的值
-   * @private
-   */
-  private _value: T
-
-  /**
    * 获取值的getter方法
    * 用于返回当前实例中存储的信号值
    *
@@ -61,12 +67,13 @@ export class SignalWatcher<T> extends Watcher {
   public get value(): T {
     return this._value
   }
+
   /**
    * @inheritDoc
    */
   protected run() {
     const newValue = readSignal(this.signal)
-    if (Object.is(newValue, this._value)) return
+    if (this.compare(newValue, this._value)) return
     const old = this._value
     this._value = newValue
     this.cb(newValue, old, this.onCleanup)

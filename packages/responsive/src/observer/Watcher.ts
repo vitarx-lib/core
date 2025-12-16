@@ -1,5 +1,5 @@
+import type { VoidCallback } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import type { VoidCallback } from '@vitarx/utils/src/index.js'
 import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeEffectDeps } from '../depend/index.js'
 import { Effect, type EffectOptions } from '../effect/index.js'
 import type { DebuggerHandler, DepEffect, FlushMode } from '../types/index.js'

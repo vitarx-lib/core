@@ -1,5 +1,5 @@
 import { collectSignal, removeEffectDeps } from '../depend/index.js'
-import type { ChangeCallback } from '../types/index.js'
+import type { CompareFunction, WatchCallback } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
 /**
@@ -29,6 +29,13 @@ export class ValueWatcher<T> extends Watcher {
    */
   private _value!: T
   /**
+   * 比较函数，用于比较新旧值
+   *
+   * 可以修改此属性，自定义比较函数
+   */
+  public compare: CompareFunction = Object.is
+
+  /**
    * ValueWatcher 类的构造函数
    *
    * @param getter - 用于获取当前值的函数
@@ -37,7 +44,7 @@ export class ValueWatcher<T> extends Watcher {
    */
   constructor(
     private getter: () => T,
-    private _cb: ChangeCallback<T>,
+    private _cb: WatchCallback<T>,
     options?: WatcherOptions
   ) {
     super(options)
@@ -51,7 +58,7 @@ export class ValueWatcher<T> extends Watcher {
     // 获取当前值
     const value = this.getValue()
     // 使用 Object.is 比较新旧值，如果相同则直接返回
-    if (Object.is(value, this._value)) return
+    if (this.compare(value, this._value)) return
     // 保存旧值，更新新值，并调用回调函数
     const old = this._value
     this._value = value
