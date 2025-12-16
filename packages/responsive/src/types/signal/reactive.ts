@@ -1,4 +1,5 @@
 import type { AnyCollection, AnyObject } from '@vitarx/utils'
+import type { ReactiveSignal } from '../../signal/reactive/proxy/base.js'
 import { IS_MARK_RAW, IS_REACTIVE } from '../../signal/reactive/symbol.js'
 import type { Signal } from './core.js'
 
@@ -12,6 +13,7 @@ import type { Signal } from './core.js'
 export type NonReactive<T extends AnyObject = AnyObject> = T & {
   readonly [IS_MARK_RAW]: true
 }
+
 /**
  * 解包嵌套的信号值
  *
@@ -103,14 +105,14 @@ export type ReactiveProxy<T extends AnyObject, Deep extends boolean> = T extends
     : UnwrapNestedSignal<T>
 
 /**
- * 响应式信号接口
+ * 响应式代理对象接口
  *
  * 这是一个抽象接口，用于描述响应式信号对象。
  *
  * @template T - 信号值类型
  * @template Deep - 是否进行深度解包
  * @remarks
- * 该接口继承自 `Signal` 接口，并添加了 `[IS_REACTIVE_SIGNAL]` 属性，用于标记响应式信号。
+ * 该接口继承自 `Signal` 接口，并添加了 `[IS_REACTIVE]` 属性，用于标记响应式信号。
  *
  * @example
  * ```typescript
@@ -128,30 +130,6 @@ export type ReactiveProxy<T extends AnyObject, Deep extends boolean> = T extends
 export type Reactive<T extends AnyObject = any, Deep extends boolean = true> = ReactiveProxy<
   T,
   Deep
-> &
-  Signal<ReactiveProxy<T, Deep>, T> & {
-    [IS_REACTIVE]: true
-  }
-
-/**
- * 集合信号
- *
- * 这是一个抽象接口，用于描述集合信号对象。
- */
-export type CollectionSignal<T extends AnyCollection> = T & Signal<T, T>
-/**
- * 响应式信号接口
- *
- * 这是一个抽象接口，用于描述响应式对象。
- *
- * @template T - 集合类型
- * @remarks
- * 该接口继承自 `Signal` 接口，并添加了 `[IS_REACTIVE_SIGNAL]` 属性，用于标记响应式对象。
- */
-export type ReactiveSignal<T extends AnyObject = any, Deep extends boolean = true> = ReactiveProxy<
-  T,
-  Deep
-> &
-  Signal<ReactiveProxy<T, Deep>, T> & {
-    [IS_REACTIVE]: true
-  }
+> & {
+  [IS_REACTIVE]: ReactiveSignal<T, Deep>
+}
