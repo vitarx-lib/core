@@ -1,12 +1,8 @@
-import { SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
-import type { Signal } from '../../types/index.js'
-
 /**
- * PropertyRef 是一个泛型类，用于创建对对象属性的引用信号。
- * 它实现了 Signal 接口，允许对对象的特定属性进行响应式访问和修改。
+ * PropertyRef 是一个泛型类，用于对象属性的引用。
  *
  * 核心功能：
- * - 提供对对象属性的响应式访问
+ * - 提供对象属性访问
  * - 支持默认值设置
  * - 实现了标准的 getter/setter 接口
  *
@@ -33,18 +29,12 @@ import type { Signal } from '../../types/index.js'
  * - 属性键必须是目标对象的有效键
  * - 当属性值为 undefined 时，将返回默认值（如果提供）
  */
-export class PropertyRef<T extends object, K extends keyof T> implements Signal<T[K]> {
-  [SIGNAL_SYMBOL]: true = true
-
+export class PropertyRef<T extends object, K extends keyof T> {
   constructor(
     private readonly _target: T,
     private readonly _key: K,
     private readonly _defaultValue?: T[K]
   ) {}
-
-  get [SIGNAL_VALUE](): T[K] {
-    return this.value
-  }
 
   get value(): T[K] {
     const v = this._target[this._key]
