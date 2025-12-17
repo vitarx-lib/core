@@ -3,30 +3,33 @@ import { isObject } from '@vitarx/utils'
 import { removeSignalDeps, trackSignal, triggerSignal } from '../../../../depend/index.js'
 import type { Reactive, Signal } from '../../../../types/index.js'
 import { IS_SIGNAL, isSignal, readSignal, SIGNAL_VALUE } from '../../../core/index.js'
-import { isMakeRaw } from '../helpers.js'
+import { IS_MARK_RAW } from '../symbol.js'
 import { ReactiveSignal } from './base.js'
 import { MapProxy, WeakMapProxy } from './map.js'
 import { SetProxy, WeakSetProxy } from './set.js'
 
 /**
  * 检查一个值是否为嵌套对象
- * 嵌套对象是指普通的JavaScript对象，不是信号(Signal)也不是非信号标记(MarkNonSignal)
+ * 嵌套对象是指普通的JavaScript对象，不是非信号标记(IS_MARK_RAW)
  *
  * @param value - 需要检查的值
  * @returns {boolean} 如果值是嵌套对象则返回true，否则返回false
  *          使用类型谓词(value is object)来确保返回true时value的类型为object
  */
 function isNestingObject(value: any): value is object {
-  return isObject(value) && !isMakeRaw(value)
+  return isObject(value) && !value[IS_MARK_RAW]
 }
 
 /**
- * ChildSignal 类是一个实现 Signal 接口的泛型类
- * 它用于跟踪和响应对象属性的变化
+ * ChildSignal 类用于跟踪和响应对象属性的变化，仅在reactive内部使用
+ *
+ * 它实现了 Signal 接口，用于包装对象的单个属性，使其具有响应式能力。
+ * 当属性被访问时会建立依赖关系，当属性被修改时会触发更新通知。
+ *
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-export class ChildSignal<T extends object, K extends keyof T> implements Signal<T[K]> {
+class ChildSignal<T extends object, K extends keyof T> implements Signal<T[K]> {
   // 只读属性，用于标识这是一个信号对象
   readonly [IS_SIGNAL] = true
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
@@ -50,6 +53,7 @@ export class ChildSignal<T extends object, K extends keyof T> implements Signal<
     if (this.proxy) return this.proxy
     // 获取当前值
     const value = this.target[this.key]
+    // 优化：优先检查是否为信号，因为这是更常见的场景
     if (isSignal(value)) return readSignal(value)
     // 如果值是嵌套对象，创建代理对象
     if (this.deep && isNestingObject(value)) {
@@ -74,6 +78,8 @@ export class ChildSignal<T extends object, K extends keyof T> implements Signal<
   /**
    * 使信号失效，触发更新通知
    * 通常在对象属性被删除或重置时调用
+   *
+   * @param oldValue - 属性的旧值
    */
   invalidate(oldValue: any) {
     // 移除代理
@@ -85,12 +91,24 @@ export class ChildSignal<T extends object, K extends keyof T> implements Signal<
   }
 }
 
+/**
+ * ObjectProxy 类用于创建对象的响应式代理
+ *
+ * 该类继承自 ReactiveSignal，提供了对普通对象的代理处理。
+ * 它通过 ChildSignal 来管理对象各个属性的响应式行为。
+ *
+ * @template T - 目标对象的类型，必须是 AnyRecord 类型
+ * @template Deep - 是否进行深度代理的类型，必须是 boolean 类型
+ */
 export class ObjectProxy<T extends AnyRecord, Deep extends boolean = true> extends ReactiveSignal<
   T,
   Deep
 > {
   /**
    * 子代理映射表，存储对象属性的子信号
+   *
+   * 该 Map 用于缓存对象属性对应的 ChildSignal 实例，
+   * 避免重复创建相同的信号实例。
    */
   protected readonly childMap = new Map<any, ChildSignal<T, any>>()
   /**
@@ -130,7 +148,19 @@ export class ObjectProxy<T extends AnyRecord, Deep extends boolean = true> exten
     }
     return result
   }
-  protected doGet(target: T, p: keyof T, receiver: any) {
+  /**
+   * 获取对象属性值的处理方法
+   *
+   * 该方法负责处理对象属性的读取操作，会根据情况返回属性值或对应的信号。
+   * 如果属性已有对应的 ChildSignal，则返回该信号的值；
+   * 否则创建新的 ChildSignal 并返回其值。
+   *
+   * @param target - 目标对象
+   * @param p - 属性键
+   * @param receiver - 代理对象
+   * @returns 返回属性值或信号值
+   */
+  protected doGet(target: T, p: string | symbol, receiver: any) {
     let value: any // 用于存储获取到的属性值
     // 检查目标对象是否自身拥有该属性
     if (!Object.prototype.hasOwnProperty.call(target, p)) {
@@ -148,6 +178,19 @@ export class ObjectProxy<T extends AnyRecord, Deep extends boolean = true> exten
     this.childMap.set(p, sig) // 将新信号添加到子映射中
     return sig[SIGNAL_VALUE] // 返回信号中的值
   }
+  /**
+   * 设置对象属性值的处理方法
+   *
+   * 该方法负责处理对象属性的写入操作。
+   * 如果属性已有对应的 ChildSignal，则通过信号来更新值；
+   * 否则直接设置属性值并根据需要触发相应的信号。
+   *
+   * @param target - 目标对象
+   * @param p - 属性键
+   * @param newValue - 新的属性值
+   * @param receiver - 代理对象
+   * @returns {boolean} 返回设置操作是否成功
+   */
   protected set(target: T, p: keyof T, newValue: any, receiver: any): boolean {
     // 已有 ChildSignal：必须走信号（它维护 proxy / 嵌套 reactive）
     const sig = this.childMap.get(p) // 获取属性对应的信号
@@ -167,6 +210,15 @@ export class ObjectProxy<T extends AnyRecord, Deep extends boolean = true> exten
   }
 }
 
+/**
+ * ArrayProxy 类用于创建数组的响应式代理
+ *
+ * 该类继承自 ObjectProxy，专门处理数组类型的响应式代理。
+ * 它增加了对数组长度属性的特殊处理，确保数组长度变化也能正确触发响应。
+ *
+ * @template T - 目标数组的类型，必须是 any[] 类型
+ * @template Deep - 是否进行深度代理的类型，必须是 boolean 类型
+ */
 export class ArrayProxy<T extends any[], Deep extends boolean = true> extends ObjectProxy<T, Deep> {
   // 存储数组旧长度的私有属性
   private oldLength: number
@@ -185,6 +237,18 @@ export class ArrayProxy<T extends any[], Deep extends boolean = true> extends Ob
     this.lengthSignal = new ChildSignal(target, 'length', false)
     this.childMap.set('length', this.lengthSignal)
   }
+  /**
+   * 重写的设置属性值方法，专门处理数组长度的变化
+   *
+   * 当设置数组的 length 属性时，该方法会确保正确处理数组长度变化，
+   * 包括清理被截断元素的依赖关系和触发相应的更新信号。
+   *
+   * @param target - 目标数组
+   * @param p - 属性键
+   * @param newValue - 新的属性值
+   * @param receiver - 代理对象
+   * @returns {boolean} 返回设置操作是否成功
+   */
   protected override set(target: T, p: keyof T, newValue: any, receiver: any): boolean {
     if (p === 'length') {
       if (typeof newValue !== 'number' || newValue < 0 || !Number.isInteger(newValue)) {
@@ -193,6 +257,9 @@ export class ArrayProxy<T extends any[], Deep extends boolean = true> extends Ob
       const oldValue = this.oldLength
       if (newValue === oldValue) return true
       target.length = newValue
+
+      // 优化：使用迭代器一次性处理所有需要失效的元素
+      // 遍历并失效被截断的元素信号
       for (let i = newValue; i < oldValue; i++) {
         const sig = this.childMap.get(i)
         if (sig) {
@@ -200,6 +267,7 @@ export class ArrayProxy<T extends any[], Deep extends boolean = true> extends Ob
           this.childMap.delete(i)
         }
       }
+
       this.oldLength = newValue
       // 触发长度更新通知，必须主动触发，不能通过修改子信号值触发，因为子信号会判断值是否一致
       triggerSignal(this.lengthSignal, 'set', { oldValue, newValue })
@@ -212,32 +280,64 @@ export class ArrayProxy<T extends any[], Deep extends boolean = true> extends Ob
 }
 
 /**
+ * 响应式对象缓存，用于存储已创建的响应式代理对象
  *
- * @param target
- * @param deep
+ * 使用 WeakMap 来避免内存泄漏，确保当原始对象被垃圾回收时，
+ * 对应的代理对象也能被正确回收。
+ */
+const reactiveCache = new WeakMap<object, ReactiveSignal<any, any>>()
+const shallowReactiveCache = new WeakMap<object, ReactiveSignal<any, any>>()
+const getCache = <T extends object>(target: T, deep: boolean) =>
+  deep ? reactiveCache.get(target)?.proxy : shallowReactiveCache.get(target)?.proxy
+const setCache = (instance: ReactiveSignal<any, any>) => {
+  instance.deep
+    ? reactiveCache.set(instance.target, instance)
+    : shallowReactiveCache.set(instance.target, instance)
+  return instance.proxy
+}
+
+/**
+ * 创建对象的响应式代理
+ *
+ * 该函数根据目标对象的类型创建相应的响应式代理：
+ * - 数组使用 ArrayProxy
+ * - Map 使用 MapProxy
+ * - Set 使用 SetProxy
+ * - WeakSet 使用 WeakSetProxy
+ * - WeakMap 使用 WeakMapProxy
+ * - 普通对象使用 ObjectProxy
+ *
+ * 同时使用缓存机制避免重复创建相同的代理对象。
+ *
+ * @template T - 目标对象的类型
+ * @template Deep - 是否进行深度代理
+ * @param target - 需要创建代理的目标对象
+ * @param deep - 是否进行深度代理，默认为 true
+ * @returns 返回目标对象的响应式代理
  */
 export function createProxyObject<T extends object, Deep extends boolean = true>(
   target: T,
   deep?: Deep
 ): Reactive<T, Deep> {
+  deep ??= true as Deep
   if (Array.isArray(target)) {
-    return new ArrayProxy(target, deep).proxy
+    return getCache(target, deep) ?? setCache(new ArrayProxy(target, deep))
   }
   // 如果传入的是Map类型，则使用MapProxyHandler创建代理
   if (target instanceof Map) {
-    return new MapProxy(target).proxy as any
+    return getCache(target, false) ?? setCache(new MapProxy(target))
   }
   // 如果传入的是Set类型，则使用SetProxyHandler创建代理
   if (target instanceof Set) {
-    return new SetProxy(target).proxy as any
+    return getCache(target, false) ?? setCache(new SetProxy(target))
   }
   // 如果传入的是WeakSet类型，则使用WeakSetProxyHandler创建代理
   if (target instanceof WeakSet) {
-    return new WeakSetProxy(target).proxy as any
+    return getCache(target, false) ?? setCache(new WeakSetProxy(target))
   }
   // 如果传入的是WeakMap类型，则使用WeakMapProxyHandler创建代理
   if (target instanceof WeakMap) {
-    return new WeakMapProxy(target).proxy as any
+    return getCache(target, false) ?? setCache(new WeakMapProxy(target))
   }
-  return new ObjectProxy(target, deep).proxy
+  return getCache(target, deep) ?? setCache(new ObjectProxy(target, deep))
 }
