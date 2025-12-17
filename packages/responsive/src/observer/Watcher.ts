@@ -39,14 +39,14 @@ export interface WatcherOptions extends EffectOptions {
  * - 初始化调度器
  * - 实现调度逻辑
  * - 抽象 runEffect 方法由子类实现
- * - 实现 beforeDispose，清理资源
+ * - 实现 beforeDispose 和 afterDispose，清理资源
  *
- * 注意：
- * 1. 子类如重写了 beforeDispose / afterDispose，必须调用 super.beforeDispose / afterDispose 来清理资源。
- * 2. 子类必须实现 runEffect 方法，用于执行副作用逻辑。
- * 3. 子类不应该调用 runEffect 方法，如需主动执行可调用 execute 方法。（无异步调度）
- * 4. schedule 方法是提供给信号系统使用的，非必要不要调用此方法。（有异步调度）
- * 5. 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
+ * 注意事项：
+ * - 子类如重写了 beforeDispose / afterDispose，必须调用 super.beforeDispose / afterDispose 来清理资源。
+ * - 子类必须实现 runEffect 方法，用于执行副作用，不需要重复添加 try-catch。
+ * - 子类不应该调用 runEffect 方法，如需主动执行可调用 execute 方法。（无异步调度）
+ * - schedule 方法是提供给信号系统使用的，非必要不要调用此方法。（有异步调度）
+ * - 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
  *
  * @abstract
  * @implements DepEffect
