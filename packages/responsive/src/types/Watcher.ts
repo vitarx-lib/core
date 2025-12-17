@@ -1,5 +1,6 @@
 import type { AnyFunction, VoidCallback } from '@vitarx/utils'
-import type { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink } from '../depend/index.js'
+import type { DEP_LINK_HEAD, DEP_LINK_TAIL } from '../constants/index.js'
+import type { DepLink } from '../depend/index.js'
 import type { WatcherOptions } from '../observer/index.js'
 import type { DebuggerHandler } from './debug.js'
 import type { Signal } from './signal/index.js'

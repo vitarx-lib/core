@@ -1,5 +1,5 @@
 import type { AnyMap, AnyWeakMap } from '@vitarx/utils'
-import { collectionClear, CollectionProxy } from './base.js'
+import { collectionClear, CollectionProxy } from './collection.js'
 
 /**
  * WeakMapProxy 是一个代理类，用于封装 WeakMap 或 Map 对象，提供响应式的数据操作能力。

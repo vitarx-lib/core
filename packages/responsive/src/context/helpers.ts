@@ -1,4 +1,4 @@
-import type { AsyncContextTask, Tag } from './context.js'
+import type { AsyncContextTask, ContextTag } from './context.js'
 import { Context } from './context.js'
 
 /**
@@ -7,7 +7,7 @@ import { Context } from './context.js'
  * 获取指定标签的上下文对象
  *
  * @template T - 上下文对象的类型
- * @param {Tag} tag - 上下文标签
+ * @param {ContextTag} tag - 上下文标签
  * @returns {T|undefined} 找到的上下文对象，如果不存在则返回undefined
  * @example
  * ```js
@@ -15,7 +15,7 @@ import { Context } from './context.js'
  * console.log(userCtx?.id) // 123
  * ```
  */
-export function getContext<T extends Record<string | symbol, any>>(tag: Tag): T | undefined {
+export function getContext<T extends Record<string | symbol, any>>(tag: ContextTag): T | undefined {
   return Context.get<T>(tag)
 }
 
@@ -26,7 +26,7 @@ export function getContext<T extends Record<string | symbol, any>>(tag: Tag): T 
  *
  * @alias runInContext
  * @template R - 函数返回值的类型
- * @param {Tag} tag - 上下文标签
+ * @param {ContextTag} tag - 上下文标签
  * @param {object} ctx - 要设置的上下文对象
  * @param {() => R} fn - 要在上下文中运行的函数
  * @returns {R} 函数的执行结果
@@ -38,7 +38,7 @@ export function getContext<T extends Record<string | symbol, any>>(tag: Tag): T 
  * })
  * ```
  */
-export function runInContext<R>(tag: Tag, ctx: object, fn: () => R): R {
+export function runInContext<R>(tag: ContextTag, ctx: object, fn: () => R): R {
   return Context.run(tag, ctx, fn)
 }
 

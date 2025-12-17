@@ -1,18 +1,12 @@
 import { isObject } from '@vitarx/utils/src/index.js'
-import {
-  DEP_LINK_HEAD,
-  DEP_LINK_TAIL,
-  DepLink,
-  trackSignal,
-  triggerSignal
-} from '../../../depend/index.js'
-import type { RefSignal, RefValue } from '../../../types/index.js'
-import { IS_SIGNAL, isSignal, readSignal, SIGNAL_VALUE } from '../../core/index.js'
-import { IS_MARK_RAW, reactive } from '../reactive/index.js'
-import { IS_REF_SIGNAL } from './symbol.js'
+import { IS_RAW, IS_REF_SIGNAL, IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
+import { trackSignal, triggerSignal } from '../../depend/index.js'
+import type { RefSignal, RefValue } from '../../types/index.js'
+import { reactive } from '../reactive/index.js'
+import { isSignal, readSignal } from '../utils/index.js'
 
 const toReactive = (val: any) => {
-  return isObject(val) && !val[IS_SIGNAL] && !val[IS_MARK_RAW] ? reactive(val, true) : val
+  return isObject(val) && !val[IS_SIGNAL] && !val[IS_RAW] ? reactive(val, true) : val
 }
 
 /**
@@ -29,13 +23,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
   [IS_SIGNAL]: true = true;
 
   /** 标识这是一个 Ref 对象 */
-  [IS_REF_SIGNAL]: true = true;
-
-  /** 依赖链接头部 */
-  [DEP_LINK_HEAD]?: DepLink | undefined;
-
-  /** 依赖链接尾部 */
-  [DEP_LINK_TAIL]?: DepLink | undefined
+  [IS_REF_SIGNAL]: true = true
 
   /** 是否启用深层响应式 */
   public readonly deep: Deep

@@ -1,5 +1,5 @@
 import type { AnySet, AnyWeakSet } from '@vitarx/utils'
-import { collectionClear, CollectionProxy } from './base.js'
+import { collectionClear, CollectionProxy } from './collection.js'
 
 /**
  * WeakSetProxy 是一个代理类，用于包装 WeakSet 或 Set 实例，提供额外的功能如信号触发。

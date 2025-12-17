@@ -1,10 +1,8 @@
 import { isArray, isMap, isNumber, isPlainObject, isSet } from '@vitarx/utils'
 import { isFunction, logger } from '@vitarx/utils/src/index.js'
+import { IS_REACTIVE } from '../constants/index.js'
 import { trackSignal } from '../depend/index.js'
-import { IS_REACTIVE, isReactive, toRaw } from '../signal/implement/reactive/index.js'
-import { ReactiveSignal } from '../signal/implement/reactive/proxy/base.js'
-import { isRef } from '../signal/implement/ref/helpers.js'
-import { isSignal, readSignal } from '../signal/index.js'
+import { isReactive, isRef, isSignal, readSignal, toRaw } from '../signal/index.js'
 import type { Reactive, WatchCallback, WatchOptions, WatchSource } from '../types/index.js'
 import { SignalWatcher } from './SignalWatcher.js'
 import { ValueWatcher } from './ValueWatcher.js'
@@ -25,7 +23,7 @@ function traverse<T>(
   if (depth <= 0 || !isReactive(value)) return value
 
   const reactive = value as unknown as Reactive
-  const signal = reactive[IS_REACTIVE] as ReactiveSignal<any>
+  const signal = reactive[IS_REACTIVE]
 
   // 强制跟踪结构信号
   trackSignal(signal, 'watch-force-track')

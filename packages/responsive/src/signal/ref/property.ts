@@ -1,5 +1,5 @@
-import type { Signal } from '../../../types/index.js'
-import { IS_SIGNAL, SIGNAL_VALUE } from '../../core/index.js'
+import { IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
+import type { Signal } from '../../types/index.js'
 
 /**
  * PropertyRef 是一个泛型类，用于创建对对象属性的引用信号。
@@ -53,32 +53,4 @@ export class PropertyRef<T extends object, K extends keyof T> implements Signal<
   set value(newVal: T[K]) {
     this._target[this._key] = newVal
   }
-}
-
-/**
- * 创建一个属性引用对象
- *
- * @param target - 目标对象，其属性将被观察
- * @param key - 目标对象上要观察的属性键
- * @param defaultValue - 可选参数，属性的默认值
- * @returns {PropertyRef<T, K>} 返回一个新的 PropertyRef 实例
- * @template T - 目标对象的类型
- * @template K - 目标对象属性键的类型，必须是 T 的键之一
- * @example
- * ```js
- * const obj = reactive({ name: 'John' });
- * const nameRef = propertyRef(obj, 'name', 'Default');
- * console.log(nameRef.value); // 'John'
- * nameRef.value = 'Jane';
- * console.log(obj.name); // 'Jane'
- * ```
- *
- * @see {@link PropertyRef}
- */
-export function propertyRef<T extends object, K extends keyof T>(
-  target: T, // 目标对象，需要被观察属性变化的对象
-  key: K, // 目标对象的属性键，将被观察和响应变化
-  defaultValue?: T[K] // 可选参数，当属性值为 undefined 时使用的默认值
-): PropertyRef<T, K> {
-  return new PropertyRef(target, key, defaultValue) // 创建并返回一个新的 PropertyRef 实例
 }

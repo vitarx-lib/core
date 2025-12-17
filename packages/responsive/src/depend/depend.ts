@@ -1,8 +1,9 @@
+import { DEP_LINK_HEAD } from '../constants/index.js'
 import { Context } from '../context/index.js'
 import type { DebuggerEventOptions, SignalOpType } from '../types/debug.js'
 import type { DepEffect, Signal } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
-import { DEP_LINK_HEAD, linkSignalEffect } from './link.js'
+import { linkSignalEffect } from './link.js'
 
 /**
  * 信号依赖集合

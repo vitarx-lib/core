@@ -1,9 +1,8 @@
 import { isObject } from '@vitarx/utils'
-import type { NonReactive, Reactive } from '../../../types/index.js'
-import { isSignal } from '../../core/index.js'
-import type { ReactiveSignal } from './proxy/base.js'
-import { createProxyObject } from './proxy/object.js'
-import { IS_MARK_RAW, IS_REACTIVE } from './symbol.js'
+import { IS_RAW, IS_REACTIVE } from '../../constants/index.js'
+import type { NonReactive, Reactive } from '../../types/index.js'
+import type { ReactiveSignal } from '../reactive/signal.js'
+import { isReactive } from './is.js'
 
 /**
  * 将一个对象标记为永远不会被转换为响应式信号。
@@ -26,9 +25,9 @@ import { IS_MARK_RAW, IS_REACTIVE } from './symbol.js'
  */
 export function markRaw<T extends object>(obj: T): NonReactive<T> {
   if (!isObject(obj)) {
-    throw new TypeError('[markNonSignal]: The argument must be an object type')
+    throw new TypeError('[markRaw]: The argument must be an object type')
   }
-  Object.defineProperty(obj, IS_MARK_RAW, {
+  Object.defineProperty(obj, IS_RAW, {
     value: true
   })
   return obj as NonReactive<T>
@@ -42,27 +41,9 @@ export function markRaw<T extends object>(obj: T): NonReactive<T> {
 export function isMakeRaw(obj: any): boolean {
   // 使用!!操作符将对象和其NON_SIGNAL属性转换为布尔值
   // 只有当对象和其NON_SIGNAL属性都存在时才返回true
-  return !!obj && !!obj[IS_MARK_RAW]
+  return !!obj && !!obj[IS_RAW]
 }
-/**
- * 检查对象是否为代理对象
- *
- * @param val - 待检查的对象
- * @returns {boolean} 如果是对象且具有IS_PROXY属性则返回true，否则返回false
- */
-export function isProxy(val: any): boolean {
-  return isReactive(val)
-}
-/**
- * 检查一个值是否为响应式对象
- *
- * @param val - 需要检查的值
- * @returns {boolean} 如果是响应式对象则返回true，否则返回false
- */
-export function isReactive(val: any): val is Reactive {
-  // 首先确保val不为null或undefined，然后检查其是否具有IS_REACTIVE属性
-  return !!val && !!val[IS_REACTIVE]
-}
+
 /**
  * 获取代理原始值
  *
@@ -74,24 +55,4 @@ export function toRaw<T extends object>(val: T | Reactive<T>): T {
     return ((val as any)[IS_REACTIVE] as ReactiveSignal<any>).target
   }
   return val
-}
-/**
- * 将一个对象代理为响应式对象
- *
- * @template T - 任意对象类型
- * @param target - 需要转换为响应式的目标对象，不要传入集合对象，集合
- * @param [deep=true] - 深度响应式配置
- * @returns {T} 返回一个响应式代理对象
- */
-export function reactive<T extends object, Deep extends boolean = true>(
-  target: T,
-  deep?: Deep
-): Reactive<T, Deep> {
-  if (!isObject(target)) {
-    throw new Error('Cannot reactive a non-object')
-  }
-  if (isSignal(target)) {
-    throw new Error('Cannot reactive a signal')
-  }
-  return createProxyObject(target, deep)
 }

@@ -1,85 +1,7 @@
-import { isRecordObject } from '@vitarx/utils'
-import type { ReadonlyRef, ShallowRef, ToRef, UnwrapRef } from '../../../types/index.js'
-import { isReactive } from '../reactive/index.js'
-import { PropertyRef } from './property.js'
-import { Ref } from './ref.js'
-import { IS_REF_SIGNAL } from './symbol.js'
-
-/** @see {@link ref} 无参数重载 */
-export function ref(): Ref
-/** @see {@link ref} 泛型重载 */
-export function ref<Value>(): Ref<Value | undefined>
-/** @see {@link ref} 带初始值重载 */
-export function ref<Value>(value: Value): Ref<Value>
-/** @see {@link ref} 浅层响应式重载 */
-export function ref<Value>(value: Value, deep: false): Ref<Value, false>
-/**
- * 创建响应式引用，值变化时自动触发依赖更新
- *
- * @param value - 初始值
- * @param deep - 是否深度代理嵌套对象，默认 true
- * @example
- * ```js
- * const count = ref(0)
- * const user = ref({ name: 'Zhang' })
- * const shallow = ref({ a: { b: 1 } }, false) // 浅层响应式
- * ```
- */
-export function ref<Value = any, Deep extends boolean = true>(
-  value?: Value,
-  deep?: Deep
-): Ref<Value, Deep> {
-  return new Ref(value, deep ?? true) as Ref<Value, Deep>
-}
-
-/** @see {@link shallowRef} 无参数重载 */
-export function shallowRef(): ShallowRef
-/** @see {@link shallowRef} 泛型重载 */
-export function shallowRef<Value>(): ShallowRef<Value | undefined>
-/** @see {@link shallowRef} 带初始值重载 */
-export function shallowRef<Value>(value: Value): ShallowRef<Value>
-/**
- * 创建浅层响应式引用，仅跟踪 `.value` 的变化，不代理嵌套对象
- *
- * @param value - 初始值
- * @example
- * ```js
- * const user = shallowRef({ profile: { age: 25 } })
- * user.value.profile.age = 26 // 不会触发更新
- * user.trigger() // 强制触发更新
- * ```
- */
-export function shallowRef<Value = any>(value?: Value): ShallowRef<Value> {
-  return new Ref(value, false) as Ref<Value, false>
-}
-
-/**
- * 判断是否为 Ref 对象
- *
- * @param val - 任意值
- * @example
- * ```js
- * isRef(ref(0)) // true
- * isRef(0) // false
- * ```
- */
-export function isRef(val: any): val is Ref {
-  return !!val && val[IS_REF_SIGNAL]
-}
-
-/**
- * 解包 Ref 对象，返回其 `.value` 值；普通值原样返回
- *
- * @param ref - Ref 对象或普通值
- * @example
- * ```js
- * unref(ref(0)) // 0
- * unref(100) // 100
- * ```
- */
-export function unref<T>(ref: T): UnwrapRef<T> {
-  return isRef(ref) ? ref.value : (ref as any)
-}
+import { isPlainObject } from '@vitarx/utils'
+import type { ReadonlyRef, ToRef } from '../../types/index.js'
+import { PropertyRef, Ref } from '../implement/ref/index.js'
+import { isReactive, isRef } from './is.js'
 
 /**
  * 转换为 ReadonlyRef
@@ -146,6 +68,7 @@ export function toRef<T extends object, K extends keyof T>(
   key: K,
   defaultValue?: T[K]
 ): PropertyRef<T, K>
+
 /**
  * 创建一个基于源的 RefSignal
  *
@@ -214,7 +137,7 @@ export function toRefs<T extends object>(
   object: T,
   skipWarn = false
 ): { [K in keyof T]: ToRef<T[K]> } {
-  if (!isRecordObject(object)) {
+  if (!isPlainObject(object)) {
     throw new TypeError(`toRefs() called on a non-object`)
   }
   if (!skipWarn && !isReactive(object)) {

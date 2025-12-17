@@ -1,7 +1,7 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { isPromise } from '@vitarx/utils'
 
-export type Tag = string | symbol
+export type ContextTag = string | symbol
 export type AsyncContextTask<T> = (() => Promise<T>) | Promise<T>
 /**
  * 上下文管理器接口
@@ -14,24 +14,24 @@ export interface IContext {
    * 存储上下文的仓库
    *
    * @readonly 不要修改它，否则会破坏上下文管理器的状态
-   * @returns {ReadonlyMap<Tag, object>} 当前所有上下文的只读Map
+   * @returns {ReadonlyMap<ContextTag, object>} 当前所有上下文的只读Map
    */
-  readonly store: ReadonlyMap<Tag, object>
+  readonly store: ReadonlyMap<ContextTag, object>
 
   /**
    * 根据标签获取对应的上下文对象
    *
    * @template T - 上下文对象的类型
-   * @param {Tag} tag - 要获取的上下文标签
+   * @param {ContextTag} tag - 要获取的上下文标签
    * @returns {T|undefined} 找到的上下文对象，如果不存在则返回undefined
    */
-  get<T = AnyRecord>(tag: Tag): T | undefined
+  get<T = AnyRecord>(tag: ContextTag): T | undefined
 
   /**
    * 在指定上下文中运行一个函数
    *
    * @template R - 函数返回值的类型
-   * @param {Tag} tag - 上下文标签
+   * @param {ContextTag} tag - 上下文标签
    * @param {object} ctx - 要设置的上下文对象
    * @param {() => R} fn - 要在上下文中运行的函数
    * @returns {R} 函数的执行结果
@@ -42,7 +42,7 @@ export interface IContext {
    * 3. 如果函数返回Promise，则会在Promise完成后自动删除该上下文
    * 4. 无论函数执行成功或失败，都会确保上下文状态被正确恢复
    */
-  run<R>(tag: Tag, ctx: object, fn: () => R): R
+  run<R>(tag: ContextTag, ctx: object, fn: () => R): R
 
   /**
    * 在异步任务中管理上下文
@@ -71,15 +71,15 @@ if (import.meta.env?.SSR) {
    * 确保每个异步操作都有自己独立的上下文存储
    */
   const { AsyncLocalStorage: als } = await import('node:async_hooks')
-  const asyncStore = new als<Map<Tag, object>>()
+  const asyncStore = new als<Map<ContextTag, object>>()
   Context = class ServerContext {
-    static get store(): Map<Tag, object> {
+    static get store(): Map<ContextTag, object> {
       return asyncStore.getStore() ?? new Map()
     }
-    static get<T = object>(tag: Tag): T | undefined {
+    static get<T = object>(tag: ContextTag): T | undefined {
       return this.store.get(tag) as T | undefined
     }
-    static run<R>(tag: Tag, ctx: object, fn: () => R): R {
+    static run<R>(tag: ContextTag, ctx: object, fn: () => R): R {
       // 克隆上下文，形成上下文隔离
       const store = new Map(this.store)
       store.set(tag, ctx)
@@ -91,14 +91,14 @@ if (import.meta.env?.SSR) {
   }
 } else {
   Context = class ClientContext {
-    static #store = new Map<Tag, object>()
-    static get store(): ReadonlyMap<Tag, object> {
+    static #store = new Map<ContextTag, object>()
+    static get store(): ReadonlyMap<ContextTag, object> {
       return this.#store
     }
-    static get<T = Record<string | symbol, any>>(tag: Tag): T | undefined {
+    static get<T = Record<string | symbol, any>>(tag: ContextTag): T | undefined {
       return this.#store.get(tag) as T | undefined
     }
-    static run<R>(tag: Tag, ctx: object, fn: () => R): R {
+    static run<R>(tag: ContextTag, ctx: object, fn: () => R): R {
       const prev = this.#store.get(tag)
       this.#store.set(tag, ctx)
       try {

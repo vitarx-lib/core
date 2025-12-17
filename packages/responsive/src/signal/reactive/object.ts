@@ -1,12 +1,12 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { isObject } from '@vitarx/utils'
-import { removeSignalDeps, trackSignal, triggerSignal } from '../../../../depend/index.js'
-import type { Reactive, Signal } from '../../../../types/index.js'
-import { IS_SIGNAL, isSignal, readSignal, SIGNAL_VALUE } from '../../../core/index.js'
-import { IS_MARK_RAW } from '../symbol.js'
-import { ReactiveSignal } from './base.js'
+import { IS_RAW, IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
+import { removeSignalDeps, trackSignal, triggerSignal } from '../../depend/index.js'
+import type { Reactive, Signal } from '../../types/index.js'
+import { isSignal, readSignal } from '../utils/index.js'
 import { MapProxy, WeakMapProxy } from './map.js'
 import { SetProxy, WeakSetProxy } from './set.js'
+import { ReactiveSignal } from './signal.js'
 
 /**
  * 检查一个值是否为嵌套对象
@@ -17,7 +17,7 @@ import { SetProxy, WeakSetProxy } from './set.js'
  *          使用类型谓词(value is object)来确保返回true时value的类型为object
  */
 function isNestingObject(value: any): value is object {
-  return isObject(value) && !value[IS_MARK_RAW]
+  return isObject(value) && !value[IS_RAW]
 }
 
 /**
@@ -171,8 +171,9 @@ export class ObjectProxy<T extends AnyRecord, Deep extends boolean = true> exten
       }
       return value // 返回获取的值
     }
+    const childSig = this.childMap.get(p)
     // 检查子映射中是否已存在该属性的信号
-    if (this.childMap.has(p)) return this.childMap.get(p)![SIGNAL_VALUE]
+    if (childSig) return childSig[SIGNAL_VALUE]
     // 如果不存在，则创建一个新的子信号
     const sig = new ChildSignal(target, p, this.deep)
     this.childMap.set(p, sig) // 将新信号添加到子映射中

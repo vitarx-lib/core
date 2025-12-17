@@ -1,6 +1,6 @@
 import type { AnyObject } from '@vitarx/utils'
-import type { Signal } from './core.js'
 import type { NonReactive, Reactive } from './reactive.js'
+import type { Signal } from './signal.js'
 
 /**
  * 响应式 ref 信号接口

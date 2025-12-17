@@ -1,6 +1,6 @@
+import { IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Signal } from '../../types/index.js'
-import { IS_SIGNAL, SIGNAL_VALUE } from './symbol.js'
 
 /**
  * FnSignal 函数类型重载：
