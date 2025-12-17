@@ -1,4 +1,4 @@
-import { isObject } from '@vitarx/utils/src/index.js'
+import { isObject } from '@vitarx/utils'
 import { IS_RAW, IS_REF_SIGNAL, IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { RefSignal, RefValue } from '../../types/index.js'
@@ -36,7 +36,7 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
    *
    * @param initialValue - 初始值
    * @param deep - 是否启用深层响应式
-   * @throws 当尝试将一个信号转换为 ref 时抛出错误
+   * @throws {Error} 当尝试将一个信号转换为 ref 时抛出错误
    */
   constructor(initialValue: T, deep: Deep) {
     if (isSignal(initialValue)) throw new Error('Cannot convert a signal to a ref')
@@ -100,5 +100,16 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
    */
   track() {
     trackSignal(this, 'get', { key: 'value' })
+  }
+
+  /**
+   * 更新值
+   *
+   * 等同于 `ref.value = newValue`
+   *
+   * @param newValue - 新的值
+   */
+  update = (newValue: T) => {
+    this.value = newValue
   }
 }
