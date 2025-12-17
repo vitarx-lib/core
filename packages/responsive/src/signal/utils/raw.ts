@@ -1,7 +1,7 @@
 import { isObject } from '@vitarx/utils'
 import { IS_RAW_SYMBOL, REACTIVE_SYMBOL } from '../../constants/index.js'
 import type { RawObject, Reactive } from '../../types/index.js'
-import type { BaseReactive } from '../reactive/base.js'
+import type { ReactiveSource } from '../reactive/base.js'
 import { isReactive } from './is.js'
 
 /**
@@ -52,7 +52,7 @@ export function isMakeRaw(obj: any): boolean {
  */
 export function toRaw<T extends object>(val: T | Reactive<T>): T {
   if (isReactive(val)) {
-    return ((val as any)[REACTIVE_SYMBOL] as BaseReactive<any>).target
+    return ((val as any)[REACTIVE_SYMBOL] as ReactiveSource<any>).target
   }
   return val as T
 }
