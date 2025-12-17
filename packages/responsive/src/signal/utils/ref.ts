@@ -1,6 +1,6 @@
 import { isPlainObject } from '@vitarx/utils'
 import type { ReadonlyRef, ToRef } from '../../types/index.js'
-import { PropertyRef, Ref } from '../implement/ref/index.js'
+import { PropertyRef, Ref } from '../ref/index.js'
 import { isReactive, isRef } from './is.js'
 
 /**
