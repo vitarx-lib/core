@@ -8,12 +8,6 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  * SignalWatcher 是一个用于监听 Signal 值变化的观察者类。
  * 它继承自 Watcher，当监听的 Signal 值发生变化时执行回调函数。
  *
- * 核心功能：
- * - 监听 Signal 值的变化
- * - 支持一次性监听（once 模式）
- * - 支持立即执行回调（immediate 模式）
- * - 自动清理资源
- *
  * @example
  * ```typescript
  * const signal = new Signal(0)
@@ -24,8 +18,8 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  *
  * @template T - 监听的 Signal 值的类型
  * @param signal - 要监听的 Signal 实例
- * @param cb - 值变化时的回调函数，接收三个参数：新值、旧值和清理函数
- * @param {WatcherOptions} options - 可选的观察器配置项
+ * @param cb - 值变化时的回调函数，接收三个参数：新值、旧值和清理注册函数
+ * @param {WatcherOptions} [options] - 可选的观察器配置项
  */
 export class SignalWatcher<T> extends Watcher {
   protected override errorSource: string = 'callback'
