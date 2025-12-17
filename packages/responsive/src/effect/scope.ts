@@ -356,3 +356,17 @@ export function getCurrentScope(): EffectScope | undefined {
   // 从上下文中获取并返回类型为EffectScope的SCOPE_CONTEXT值
   return Context.get<EffectScope>(SCOPE_CONTEXT)
 }
+/**
+ * 在作用域中注册一个销毁函数
+ *
+ * @param fn - 要注册的销毁函数
+ * @param failSilently - 是否忽略不存在作用域的错误（默认为false）
+ */
+export function onScopeDispose(fn: () => void, failSilently?: boolean): void {
+  const scope = getCurrentScope()
+  if (scope) {
+    scope.onDispose(fn)
+  } else if (!failSilently) {
+    console.warn('[EffectScope] onScopeDispose() no active scope found')
+  }
+}
