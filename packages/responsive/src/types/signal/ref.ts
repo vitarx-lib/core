@@ -1,15 +1,16 @@
 import type { AnyObject } from '@vitarx/utils'
-import type { Reactive } from './reactive.js'
-import type { RawObject, Signal } from './signal.js'
+import { REF_SYMBOL } from '../../constants/index.js'
+import type { RawObject, Reactive } from './reactive.js'
+import type { Signal } from './signal.js'
 
 /**
  * 响应式 ref 信号接口
  *
  * @template T - 信号值类型
- * @template RAW - 原始值类型
  * @interface
  */
 export interface RefSignal<T = any, Deep extends boolean = true> extends Signal<RefValue<T, Deep>> {
+  readonly [REF_SYMBOL]: true
   get value(): RefValue<T, Deep>
   set value(value: T)
 }

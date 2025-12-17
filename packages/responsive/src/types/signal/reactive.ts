@@ -1,7 +1,80 @@
 import type { AnyCollection, AnyObject } from '@vitarx/utils'
-import type { REACTIVE_SYMBOL } from '../../constants/index.js'
-import type { BaseReactive } from '../../signal/reactive/base.js'
-import type { DeepUnwrapNestedSignal, UnwrapNestedSignal } from './signal.js'
+import type { AnyFunction } from '@vitarx/utils/src/index.js'
+import { IS_RAW_SYMBOL, type REACTIVE_SYMBOL } from '../../constants/index.js'
+import type { CallableSignal, Ref } from '../../signal/index.js'
+import type { ReactiveSource } from '../../signal/reactive/base.js'
+import type { RefSignal } from './ref.js'
+
+/**
+ * 原始对象标记
+ *
+ * 具有 `RAW_SYMBOL` 属性标记的对象不会被识别或构造为响应式信号。
+ *
+ * @template T - 对象的类型
+ */
+export type RawObject<T extends AnyObject = AnyObject> = T & {
+  readonly [IS_RAW_SYMBOL]: true
+}
+type NonWarped = AnyCollection | AnyFunction | RawObject
+/**
+ * 解包嵌套的信号值
+ *
+ * @template T - 对象类型
+ * @remarks
+ * 该类型用于解包对象属性的信号包装。
+ * 如果属性值是 `Ref | CallableSignal` 类型，则提取其内部值类型；否则保持原类型不变。
+ *
+ * @example
+ * ```typescript
+ * type User = {
+ *   name: Ref<string>
+ *   age: number
+ *   info: {
+ *     address: CallableSignal<string>
+ *   }
+ * }
+ *
+ * type UnwrappedUser = UnwrapNestedRefs<User>
+ * // 等价于 { name: string; age: number; info: { address: Signal<string> } }
+ * ```
+ */
+export type UnwrapReactiveValues<T extends AnyObject> = T extends NonWarped
+  ? T
+  : {
+      [K in keyof T]: T[K] extends Ref<infer V> | CallableSignal<infer V> ? V : T[K]
+    }
+
+/**
+ * 深度解包嵌套信号值工具
+ *
+ * @template T - 对象类型
+ * @remarks
+ * 该类型用于递归解包对象属性的信号包装。
+ * 如果属性值是 `Ref | CallableSignal` 类型，则提取其内部值类型；否则保持原类型不变。
+ *
+ * @example
+ * ```typescript
+ * type User = {
+ *   name: Ref<string>
+ *   age: number
+ *   info: {
+ *     address: CallableSignal<string>
+ *   }
+ * }
+ *
+ * type UnwrappedUser = DeepUnwrapNestedRefs<User>
+ * // 等价于 { name: string; age: number; info: { address: string } }
+ * ```
+ */
+export type DeepUnwrapReactiveValues<T extends object> = T extends NonWarped
+  ? T
+  : {
+      [K in keyof T]: T[K] extends object
+        ? T[K] extends RefSignal<infer V, boolean> | CallableSignal<infer V>
+          ? V
+          : DeepUnwrapReactiveValues<T[K]>
+        : T[K]
+    }
 
 /**
  * 响应式代理对象类型工具
@@ -28,8 +101,8 @@ import type { DeepUnwrapNestedSignal, UnwrapNestedSignal } from './signal.js'
 export type ReactiveProxy<T extends AnyObject, Deep extends boolean> = T extends AnyCollection
   ? T
   : Deep extends true
-    ? DeepUnwrapNestedSignal<T>
-    : UnwrapNestedSignal<T>
+    ? DeepUnwrapReactiveValues<T>
+    : UnwrapReactiveValues<T>
 
 /**
  * 响应式代理对象接口
@@ -58,5 +131,5 @@ export type Reactive<T extends AnyObject = any, Deep extends boolean = true> = R
   T,
   Deep
 > & {
-  [REACTIVE_SYMBOL]: BaseReactive<T, Deep>
+  [REACTIVE_SYMBOL]: ReactiveSource<T, Deep>
 }
