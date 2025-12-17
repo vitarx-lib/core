@@ -84,7 +84,7 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
    * true表示依赖已变化，需要重新计算
    * @private
    */
-  private _dirty: boolean = true
+  public dirty: boolean = true
   /**
    * 计算属性的getter函数
    * @private
@@ -95,11 +95,6 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
    * @private
    */
   private readonly _setter?: ComputedSetter<T>
-  /**
-   * 是否已设置副作用
-   * @private
-   */
-  private _isSetup: boolean = false
 
   /**
    * 构造一个计算属性对象
@@ -142,9 +137,9 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
    */
   get value(): T {
     // 首次访问或手动调用后，设置副作用
-    if (!this._isSetup || this._dirty) this.recomputed()
+    if (this.dirty) this.recomputed()
     // 追踪对value属性的访问
-    trackSignal(this, 'get', { key: 'value' })
+    trackSignal(this, 'get')
     return this._value
   }
 
@@ -167,8 +162,8 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
   }
 
   schedule() {
-    if (this._dirty) {
-      this._dirty = true
+    if (!this.dirty) {
+      this.dirty = true
       triggerSignal(this, 'dirty')
     }
   }
@@ -220,7 +215,7 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
       } catch (e) {
         this.reportError(e, 'computed.getter')
       } finally {
-        this._dirty = false
+        this.dirty = false
       }
     }, this)
   }
