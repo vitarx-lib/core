@@ -1,4 +1,9 @@
-import { DEP_LINK_HEAD, DEP_LINK_TAIL } from '../constants/index.js'
+import {
+  EFFECT_DEP_HEAD,
+  EFFECT_DEP_TAIL,
+  SIGNAL_DEP_HEAD,
+  SIGNAL_DEP_TAIL
+} from '../constants/index.js'
 import type { DepEffect, Signal } from '../types/index.js'
 
 /**
@@ -14,100 +19,100 @@ export class DepLink {
   // signal 维度链表的后继节点，指向同一个signal的后一个依赖关系
   sigNext?: DepLink
   // effect 维度链表
-  wPrev?: DepLink
-  wNext?: DepLink
+  ePrev?: DepLink
+  eNext?: DepLink
   constructor(
     public signal: Signal,
     public effect: DepEffect
   ) {}
 }
+
 /**
- * 添加 signal <-> effect 双向链表关联
+ * 创建 signal <-> effect 双向链表关联
  *
  * @internal 内部核心助手函数
  */
-export function linkSignalEffect(effect: DepEffect, signal: Signal): DepLink {
+export function createDepLink(effect: DepEffect, signal: Signal): DepLink {
   const link = new DepLink(signal, effect)
 
   // -------------------
   // effect 维度链表
   // -------------------
-  if (!effect[DEP_LINK_HEAD]) {
-    effect[DEP_LINK_HEAD] = effect[DEP_LINK_TAIL] = link
+  if (!effect[EFFECT_DEP_HEAD]) {
+    effect[EFFECT_DEP_HEAD] = effect[EFFECT_DEP_TAIL] = link
   } else {
-    link.wPrev = effect[DEP_LINK_TAIL]!
-    effect[DEP_LINK_TAIL]!.wNext = link
-    effect[DEP_LINK_TAIL] = link
+    link.ePrev = effect[EFFECT_DEP_TAIL]!
+    effect[EFFECT_DEP_TAIL]!.eNext = link
+    effect[EFFECT_DEP_TAIL] = link
   }
 
   // -------------------
   // signal 维度链表
   // -------------------
-  if (!signal[DEP_LINK_HEAD]) {
-    signal[DEP_LINK_HEAD] = signal[DEP_LINK_TAIL] = link
+  if (!signal[SIGNAL_DEP_HEAD]) {
+    signal[SIGNAL_DEP_HEAD] = signal[SIGNAL_DEP_TAIL] = link
   } else {
-    link.sigPrev = signal[DEP_LINK_TAIL]!
-    signal[DEP_LINK_TAIL]!.sigNext = link
-    signal[DEP_LINK_TAIL] = link
+    link.sigPrev = signal[SIGNAL_DEP_TAIL]!
+    signal[SIGNAL_DEP_TAIL]!.sigNext = link
+    signal[SIGNAL_DEP_TAIL] = link
   }
 
   return link
 }
 
 /**
- * 移除 signal <-> effect 链表关联
+ * 销毁 signal <-> effect 链表关联
  *
  * @internal 内部核心助手函数
  */
-export function unlinkSignalEffect(link: DepLink): void {
-  const effect = link.effect
-  const signal = link.signal
+export function destroyDepLink(link: DepLink): void {
+  const { effect, signal } = link
 
   // -------------------
   // effect 维度
   // -------------------
-  if (link.wPrev) link.wPrev.wNext = link.wNext
-  if (link.wNext) link.wNext.wPrev = link.wPrev
-  if (effect[DEP_LINK_HEAD] === link) effect[DEP_LINK_HEAD] = link.wNext
-  if (effect[DEP_LINK_TAIL] === link) effect[DEP_LINK_TAIL] = link.wPrev
+  if (link.ePrev) link.ePrev.eNext = link.eNext
+  if (link.eNext) link.eNext.ePrev = link.ePrev
+  if (effect[EFFECT_DEP_HEAD] === link) effect[EFFECT_DEP_HEAD] = link.eNext
+  if (effect[EFFECT_DEP_TAIL] === link) effect[EFFECT_DEP_TAIL] = link.ePrev
 
-  link.wPrev = link.wNext = undefined
+  link.ePrev = link.eNext = undefined
 
   // -------------------
   // signal 维度
   // -------------------
   if (link.sigPrev) link.sigPrev.sigNext = link.sigNext
   if (link.sigNext) link.sigNext.sigPrev = link.sigPrev
-  if (signal[DEP_LINK_HEAD] === link) signal[DEP_LINK_HEAD] = link.sigNext
-  if (signal[DEP_LINK_TAIL] === link) signal[DEP_LINK_TAIL] = link.sigPrev
+  if (signal[SIGNAL_DEP_HEAD] === link) signal[SIGNAL_DEP_HEAD] = link.sigNext
+  if (signal[SIGNAL_DEP_TAIL] === link) signal[SIGNAL_DEP_TAIL] = link.sigPrev
 
   link.sigPrev = link.sigNext = undefined
 }
 
 /**
- * 移除 effect 的所有依赖（用于重新收集或销毁）
+ * 移除 effect 关联的所有信号依赖（用于重新收集或销毁）
  */
-export function removeEffectDeps(effect: DepEffect) {
-  let link = effect[DEP_LINK_HEAD]
+export function clearEffectDeps(effect: DepEffect) {
+  let link = effect[EFFECT_DEP_HEAD]
   while (link) {
-    const next = link.wNext
-    unlinkSignalEffect(link)
+    const next = link.eNext
+    destroyDepLink(link)
     link = next
   }
-  effect[DEP_LINK_HEAD] = effect[DEP_LINK_TAIL] = undefined
+  effect[EFFECT_DEP_HEAD] = effect[EFFECT_DEP_TAIL] = undefined
 }
 
 /**
- * 移除 Signal 的所有 effect 依赖
+ * 移除 Signal 关联的 effect 依赖
  */
-export function removeSignalDeps(signal: Signal) {
-  let link = signal[DEP_LINK_HEAD]
+export function clearSignalEffects(signal: Signal) {
+  let link = signal[SIGNAL_DEP_HEAD]
   while (link) {
     const next = link.sigNext
-    unlinkSignalEffect(link)
+    destroyDepLink(link)
     link = next
   }
-  signal[DEP_LINK_HEAD] = signal[DEP_LINK_TAIL] = undefined
+  signal[SIGNAL_DEP_HEAD] = signal[SIGNAL_DEP_TAIL] = undefined
 }
 
 /**
@@ -119,19 +124,17 @@ export function removeSignalDeps(signal: Signal) {
  * @returns {DepEffect[]} 包含所有相关观察者的数组
  */
 export function getSignalEffects(signal: Signal): DepEffect[] {
-  const arr: DepEffect[] = [] // 初始化一个空数组，用于存储观察者
-  // 从信号的依赖链头部开始遍历
-  let node = signal[DEP_LINK_HEAD] as DepLink | undefined
-  // 遍历依赖链，将每个观察者添加到数组中
+  const arr: DepEffect[] = []
+  let node = signal[SIGNAL_DEP_HEAD] as DepLink | undefined
   while (node) {
-    arr.push(node.effect) // 将当前节点中的观察者添加到数组
-    node = node.sigNext // 移动到下一个节点
+    arr.push(node.effect)
+    node = node.sigNext
   }
-  return arr // 返回包含所有观察者的数组
+  return arr
 }
 
 /**
- * 将观察者(Watcher)的信号链表转换为信号数组
+ * 将观察者(effect)的信号链表转换为信号数组
  *
  * 该函数遍历观察者维护的信号链表，将每个信号依次添加到数组中
  *
@@ -141,13 +144,11 @@ export function getSignalEffects(signal: Signal): DepEffect[] {
  * @returns Signal[] - 包含所有信号的数组
  */
 export function getEffectSignals(effect: DepEffect): Signal[] {
-  const arr: Signal[] = [] // 用于存储信号的数组
-  // 从链表头开始遍历
-  let node = effect[DEP_LINK_HEAD] as DepLink | undefined
-  // 遍历链表，直到节点为undefined
+  const arr: Signal[] = []
+  let node = effect[EFFECT_DEP_HEAD] as DepLink | undefined
   while (node) {
-    arr.push(node.signal) // 将当前节点的信号添加到数组
-    node = node.wNext // 移动到下一个节点
+    arr.push(node.signal)
+    node = node.eNext
   }
-  return arr // 返回包含所有信号的数组
+  return arr
 }

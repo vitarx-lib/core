@@ -1,4 +1,4 @@
-import { collectSignal, removeEffectDeps } from '../depend/index.js'
+import { collectSignal } from '../depend/index.js'
 import type { CompareFunction, WatchCallback } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
@@ -91,7 +91,6 @@ export class ValueWatcher<T> extends Watcher {
    */
   private getValue(): T {
     this.errorSource = 'getter' // 设置错误源为getter
-    removeEffectDeps(this)
     return collectSignal(this.getter, this).result // 收集信号并返回结果
   }
 }

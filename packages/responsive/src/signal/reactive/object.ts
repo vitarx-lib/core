@@ -1,7 +1,7 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { isObject } from '@vitarx/utils'
 import { IS_RAW, IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
-import { removeSignalDeps, trackSignal, triggerSignal } from '../../depend/index.js'
+import { clearSignalEffects, trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Reactive, Signal } from '../../types/index.js'
 import { isSignal, readSignal } from '../utils/index.js'
 import { MapProxy, WeakMapProxy } from './map.js'
@@ -87,7 +87,7 @@ class ChildSignal<T extends object, K extends keyof T> implements Signal<T[K]> {
     // 触发信号更新通知，传入旧值和undefined作为新值
     triggerSignal(this, 'set', { oldValue: oldValue, newValue: undefined })
     // 移除信号依赖链
-    removeSignalDeps(this)
+    clearSignalEffects(this)
   }
 }
 

@@ -1,9 +1,9 @@
-import { DEP_LINK_HEAD } from '../constants/index.js'
+import { SIGNAL_DEP_HEAD } from '../constants/index.js'
 import { Context } from '../context/index.js'
 import type { DebuggerEventOptions, SignalOpType } from '../types/debug.js'
 import type { DepEffect, Signal } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
-import { linkSignalEffect } from './link.js'
+import { clearEffectDeps, createDepLink } from './link.js'
 
 /**
  * 信号依赖集合
@@ -32,7 +32,7 @@ export type CollectResult<T> = {
 }
 interface CollectContext {
   deps: DepSet
-  watcher: DepEffect | undefined
+  effect: DepEffect | undefined
 }
 
 /**
@@ -44,7 +44,9 @@ interface CollectContext {
  */
 export function collectSignal<T>(fn: () => T): CollectResult<T>
 /**
- * 运行函数并收集依赖和构建双向依赖关系
+ * 运行函数并收集依赖并构建双向依赖关系
+ *
+ * 在关联之前，会先清空依赖关系，无需外部额外清理。
  *
  * @template T 函数返回值类型
  * @template C 收集器类型，必须带有add方法
@@ -63,21 +65,19 @@ export function collectSignal<T, C extends DepEffect>(fn: () => T, effect: C): C
  */
 export function collectSignal<T>(fn: () => T, effect?: DepEffect): CollectResult<T> {
   const deps = new Set<Signal>()
-  const ctx: CollectContext = { deps, watcher: effect }
+  const ctx: CollectContext = { deps, effect }
   const result = Context.run(DEP_CONTEXT, ctx, fn)
   if (effect) {
+    clearEffectDeps(effect)
     for (const dep of deps) {
-      linkSignalEffect(effect, dep)
+      createDepLink(effect, dep)
     }
   }
   return { result, deps }
 }
 /**
- * 跟踪信号，将信号加入当前上下文的依赖集合
- *
- * @param signal - 被跟踪的响应式信号
- * @param type - 跟踪信号的类型，仅供调试使用
- * @param options - 调试选项，仅供调试使用
+ * trackSignal 仅在 collectSignal 的上下文中生效，
+ * 它只记录 signal，真正建立 DepLink 的操作在 collectSignal fn 执行后完成。
  */
 export function trackSignal(
   signal: Signal,
@@ -88,12 +88,12 @@ export function trackSignal(
   if (!ctx || ctx.deps.has(signal)) return
   ctx.deps.add(signal)
   if (__DEV__) {
-    const effect = ctx.watcher
+    const effect = ctx.effect
     if (effect) triggerOnTrack({ ...options, effect, signal, type })
   }
 }
 /**
- * 触发信号的相关函数
+ * 触发信号的助手函数
  * 该函数用于遍历信号的所有依赖链接，并触发每个观察者的回调函数
  * @param signal - 要触发的信号对象
  * @param type - 依赖类型，用于标识依赖关系的性质
@@ -106,11 +106,13 @@ export function triggerSignal(
 ) {
   // 遍历信号的所有依赖链接
   // 从头节点开始，直到链表结束
-  for (let link = signal[DEP_LINK_HEAD]; link; link = link.sigNext) {
+  for (let link = signal[SIGNAL_DEP_HEAD]; link; ) {
+    const next = link.sigNext
     const effect = link.effect
     if (__DEV__) {
-      if (effect) triggerOnTrigger({ ...options, effect, signal, type })
+      triggerOnTrigger({ ...options, effect, signal, type })
     }
     effect.schedule()
+    link = next
   }
 }

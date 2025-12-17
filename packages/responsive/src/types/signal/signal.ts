@@ -1,9 +1,9 @@
 import type { AnyCollection, AnyObject } from '@vitarx/utils'
-import type {
-  DEP_LINK_HEAD,
-  DEP_LINK_TAIL,
-  IS_SIGNAL,
-  SIGNAL_VALUE
+import {
+  type IS_SIGNAL,
+  SIGNAL_DEP_HEAD,
+  SIGNAL_DEP_TAIL,
+  type SIGNAL_VALUE
 } from '../../constants/index.js'
 import type { DepLink } from '../../depend/index.js'
 import type { NonReactive } from './reactive.js'
@@ -20,17 +20,17 @@ export interface Signal<T = any> {
   /** 读取值（必须提供，readSignal / getSignal 使用） */
   readonly [SIGNAL_VALUE]: T
   /**
-   * signal → watcher 链表头
+   * signal → effect 链表头
    *
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
    */
-  [DEP_LINK_HEAD]?: DepLink
+  [SIGNAL_DEP_HEAD]?: DepLink
   /**
-   * signal → watcher 链表尾
+   * signal → effect 链表尾
    *
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
    */
-  [DEP_LINK_TAIL]?: DepLink
+  [SIGNAL_DEP_TAIL]?: DepLink
 }
 /**
  * 获取信号值类型辅助工具

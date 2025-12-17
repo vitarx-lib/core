@@ -1,6 +1,6 @@
 import type { VoidCallback } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import { removeEffectDeps } from '../depend/index.js'
+import { clearEffectDeps } from '../depend/index.js'
 import { Effect, type EffectOptions } from '../effect/index.js'
 import type { DebuggerHandler, DepEffect, FlushMode } from '../types/index.js'
 import { queuePostFlushJob, queuePreFlushJob, type Scheduler } from './scheduler.js'
@@ -146,7 +146,7 @@ export abstract class Watcher extends Effect implements DepEffect {
    */
   protected override afterDispose() {
     // 移除所有相关的依赖观察者，防止内存泄漏
-    removeEffectDeps(this)
+    clearEffectDeps(this)
     // 将触发回调函数置为undefined，清除引用
     this.onTrigger = undefined
     // 将追踪回调函数置为undefined，清除引用

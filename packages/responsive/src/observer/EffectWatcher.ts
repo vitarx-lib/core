@@ -1,5 +1,5 @@
 import { isFunction } from '@vitarx/utils'
-import { collectSignal, removeEffectDeps } from '../depend/index.js'
+import { collectSignal } from '../depend/index.js'
 import type { WatcherOnCleanup } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
@@ -38,7 +38,6 @@ export class EffectWatcher<T = any> extends Watcher {
    * @protected
    */
   protected runEffect(): void {
-    removeEffectDeps(this)
     collectSignal(() => this.effect(this.onCleanup), this)
   }
 }

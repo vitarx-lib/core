@@ -1,5 +1,5 @@
 import type { AnyFunction, VoidCallback } from '@vitarx/utils'
-import type { DEP_LINK_HEAD, DEP_LINK_TAIL } from '../constants/index.js'
+import { EFFECT_DEP_HEAD, EFFECT_DEP_TAIL } from '../constants/index.js'
 import type { DepLink } from '../depend/index.js'
 import type { WatcherOptions } from '../observer/index.js'
 import type { DebuggerHandler } from './debug.js'
@@ -20,7 +20,7 @@ export interface DepEffect {
    *
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
    */
-  [DEP_LINK_HEAD]?: DepLink
+  [EFFECT_DEP_HEAD]?: DepLink
   /**
    * signal → watcher 链表尾
    *
@@ -29,7 +29,7 @@ export interface DepEffect {
    *
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
    */
-  [DEP_LINK_TAIL]?: DepLink
+  [EFFECT_DEP_TAIL]?: DepLink
   /**
    * trigger调试钩子 - 触发信号
    *

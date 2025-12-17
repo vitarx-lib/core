@@ -1,5 +1,5 @@
 import { triggerOnTrack } from '../depend/debug.js'
-import { linkSignalEffect } from '../depend/index.js'
+import { createDepLink } from '../depend/index.js'
 import { readSignal } from '../signal/index.js'
 import type { CompareFunction, Signal, WatchCallback } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
@@ -42,7 +42,7 @@ export class SignalWatcher<T> extends Watcher {
   ) {
     super(options)
     this._value = readSignal(signal)
-    linkSignalEffect(this, signal)
+    createDepLink(this, signal)
     if (__DEV__) {
       triggerOnTrack({
         effect: this,
