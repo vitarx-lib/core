@@ -64,12 +64,12 @@ export type AnyPrimitive = null | undefined | boolean | number | string | bigint
  * //       readonly theme: string;
  * //     }
  * //   }
- * //   readonly tags: readonly string[];
+ * //   readonly tags: ReadonlyArray<string[]>;
  * // }
  * ```
  */
 export type DeepReadonly<T> = {
-  readonly [P in keyof T]: T[P] extends AnyFunction | AnyPrimitive | AnyCollection
+  readonly [P in keyof T]: T[P] extends AnyPrimitive
     ? T[P]
     : T[P] extends Set<infer U>
       ? ReadonlySet<U>
