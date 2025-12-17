@@ -7,9 +7,9 @@ export const SIGNAL_VALUE = Symbol.for('__v_symbol:read-signal')
  */
 export const SIGNAL_SYMBOL = Symbol.for('__v_symbol:is-signal')
 /**
- * 忽略响应性自动包装（用于 isMarkRaw 判断）
+ * 函数式 signal 标识
  */
-export const IS_RAW_SYMBOL = Symbol.for('__v_symbol:is-raw')
+export const CALLABLE_SIGNAL_SYMBOL = Symbol.for('__v_symbol:is-callable')
 /**
  * 只读代理标识
  */
@@ -22,6 +22,10 @@ export const REF_SYMBOL = Symbol.for('__v_symbol:is-ref')
  * reactive 独有标识
  */
 export const REACTIVE_SYMBOL = Symbol.for('__v_symbol:is-reactive')
+/**
+ * 忽略响应性自动包装（用于 isMarkRaw 判断）
+ */
+export const IS_RAW_SYMBOL = Symbol.for('__v_symbol:is-raw')
 
 // effect <-> signal 双向链表头
 export const EFFECT_DEP_HEAD = Symbol.for('__v_dep:effect_dep_head')
