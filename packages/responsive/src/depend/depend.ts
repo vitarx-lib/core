@@ -49,25 +49,25 @@ export function collectSignal<T>(fn: () => T): CollectResult<T>
  * @template T 函数返回值类型
  * @template C 收集器类型，必须带有add方法
  * @param fn - 需要收集依赖的函数
- * @param watcher - 观察者对象，自动建立依赖关系
+ * @param effect - 副作用对象，自动建立依赖关系
  * @returns {CollectResult<T>} 函数执行结果
  */
-export function collectSignal<T, C extends DepEffect>(fn: () => T, watcher: C): CollectResult<T>
+export function collectSignal<T, C extends DepEffect>(fn: () => T, effect: C): CollectResult<T>
 /**
  * 收集函数执行过程中的信号依赖
  *
  * @template T 函数返回值类型
  * @param fn - 需要依赖收集的函数
- * @param watcher - 观察者对象，自动建立依赖关系
+ * @param effect - 副作用对象，自动建立依赖关系
  * @returns {CollectResult<T>} 包含函数执行结果和依赖集合
  */
-export function collectSignal<T>(fn: () => T, watcher?: DepEffect): CollectResult<T> {
+export function collectSignal<T>(fn: () => T, effect?: DepEffect): CollectResult<T> {
   const deps = new Set<Signal>()
-  const ctx: CollectContext = { deps, watcher }
+  const ctx: CollectContext = { deps, watcher: effect }
   const result = Context.run(DEP_CONTEXT, ctx, fn)
-  if (watcher) {
+  if (effect) {
     for (const dep of deps) {
-      linkSignalEffect(watcher, dep)
+      linkSignalEffect(effect, dep)
     }
   }
   return { result, deps }
