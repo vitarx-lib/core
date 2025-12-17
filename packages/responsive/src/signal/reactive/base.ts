@@ -3,9 +3,11 @@ import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { DebuggerEventOptions, Reactive, Signal, SignalOpType } from '../../types/index.js'
 
 /**
- * BaseReactive 是一个抽象类，用于创建响应式对象代理。
+ * ReactiveSource 是一个抽象类，用于创建响应式对象代理。
+ *
+ * 它实现了 Signal 接口，仅发出结构变化的信号。
  */
-export abstract class BaseReactive<T extends object, Deep extends boolean = true>
+export abstract class ReactiveSource<T extends object, Deep extends boolean = true>
   implements ProxyHandler<T>, Signal<number>
 {
   readonly [SIGNAL_SYMBOL]: true = true

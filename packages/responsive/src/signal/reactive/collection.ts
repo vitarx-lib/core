@@ -1,5 +1,5 @@
 import type { AnyMap, AnySet, AnyWeakMap, AnyWeakSet } from '@vitarx/utils/src/index.js'
-import { BaseReactive } from './base.js'
+import { ReactiveSource } from './base.js'
 
 /**
  * ReactiveCollection 是一个抽象代理类，用于创建响应式的集合类型（Map、WeakMap、Set、WeakSet）代理。
@@ -32,7 +32,7 @@ import { BaseReactive } from './base.js'
  */
 export abstract class ReactiveCollection<
   T extends AnyWeakMap | AnyMap | AnySet | AnyWeakSet
-> extends BaseReactive<T, false> {
+> extends ReactiveSource<T, false> {
   constructor(target: T) {
     super(target, false)
   }

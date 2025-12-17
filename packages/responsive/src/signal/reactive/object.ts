@@ -19,6 +19,33 @@ import { ReactiveSet, ReactiveWeakSet } from './set.js'
 const isNestingObject = (value: any): value is object => {
   return isObject(value) && !value[SIGNAL_SYMBOL] && !value[IS_RAW_SYMBOL]
 }
+/**
+ * 设置对象属性的值
+ *
+ * @param target - 目标对象
+ * @param key - 属性键
+ * @param value - 新的属性值
+ */
+const setValue = <T extends object>(target: T, key: keyof T, value: any): boolean => {
+  const oldValue = target[key]
+  if (isRef(oldValue)) {
+    const old = oldValue.value
+    if (Object.is(old, value)) return false
+    oldValue.value = value
+    return true
+  }
+  if (isCallableSignal(oldValue)) {
+    const old = oldValue()
+    if (Object.is(old, value)) return false
+    oldValue(value)
+    return true
+  }
+  // 使用Object.is比较新旧值，避免不必要的更新
+  if (Object.is(oldValue, value)) return false
+  // 更新为新值
+  target[key] = value
+  return true
+}
 
 /**
  * PropertySignal 类用于跟踪和响应对象属性的变化，仅在reactive内部使用
@@ -80,23 +107,11 @@ class PropertySignal<T extends object, K extends keyof T> implements Signal<T[K]
   }
   update(v: any) {
     // 保存旧值以便后续比较
-    const oldValue = this.target[this.key]
-    if (isRef(oldValue)) {
-      oldValue.value = v
-      return
+    const result = setValue(this.target, this.key, v)
+    if (result) {
+      this.proxy = undefined
+      triggerSignal(this, 'set', { newValue: v })
     }
-    if (isCallableSignal(oldValue)) {
-      oldValue(v)
-      return
-    }
-    // 使用Object.is比较新旧值，避免不必要的更新
-    if (Object.is(oldValue, v)) return
-    // 更新为新值
-    this.target[this.key] = v
-    // 移除代理，因为值已经改变
-    this.proxy = undefined
-    // 触发信号更新通知，传入新值和旧值
-    triggerSignal(this, 'set', { newValue: v, oldValue })
   }
 }
 
@@ -211,9 +226,8 @@ export class ReactiveObject<
     }
     // 检查属性是否已存在
     const hadKey = Object.prototype.hasOwnProperty.call(target, p)
-    // 没有 PropertySignal：直接结构写入
-    const result = Reflect.set(target, p, newValue, receiver) // 使用Reflect设置属性值
-    if (!result) return false // 如果设置失败则返回false
+    // 更新属性值
+    setValue(target, p, newValue)
     // 如果是新属性，触发添加信号的回调
     if (!hadKey) this.triggerSignal('add', { key: p, oldValue: undefined, newValue })
     return true // 设置成功返回true
