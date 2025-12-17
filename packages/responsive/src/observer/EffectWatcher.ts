@@ -1,3 +1,4 @@
+import { isFunction } from '@vitarx/utils'
 import { collectSignal, removeEffectDeps } from '../depend/index.js'
 import type { WatcherOnCleanup } from '../types/index.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
@@ -21,27 +22,24 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  */
 export class EffectWatcher<T = any> extends Watcher {
   protected override errorSource: string = 'collect'
-  constructor(
-    private effect: (onCleanup: WatcherOnCleanup) => T,
-    options?: WatcherOptions
-  ) {
+  // 建议添加 readonly 修饰符
+  private readonly effect: (onCleanup: WatcherOnCleanup) => T
+  constructor(effect: (onCleanup: WatcherOnCleanup) => T, options?: WatcherOptions) {
     super(options)
+    if (!isFunction(effect)) {
+      throw new Error('[EffectWatcher] effect must be a function')
+    }
+    this.effect = effect
     this.execute()
   }
   /**
    * 核心：执行 + 依赖收集
-   *
-   * 子类应该实现抽象方法：afterCollect，不要从写此方法
    *
    * @protected
    */
   protected runEffect(): void {
     removeEffectDeps(this)
     collectSignal(() => this.effect(this.onCleanup), this)
-  }
-  protected override afterDispose() {
-    super.afterDispose()
-    this.effect = undefined as any
   }
 }
 
@@ -62,5 +60,5 @@ export function watchEffect(
   options?: WatcherOptions
 ): EffectWatcher {
   // 返回一个观察器实例
-  return new EffectWatcher(effect, options) // 创建并返回新的 EffectWatcher 实例
+  return new EffectWatcher(effect, options)
 }
