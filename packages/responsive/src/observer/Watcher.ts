@@ -1,9 +1,9 @@
 import type { VoidCallback } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import { DEP_LINK_HEAD, DEP_LINK_TAIL, DepLink, removeEffectDeps } from '../depend/index.js'
+import { removeEffectDeps } from '../depend/index.js'
 import { Effect, type EffectOptions } from '../effect/index.js'
 import type { DebuggerHandler, DepEffect, FlushMode } from '../types/index.js'
-import { queuePostFlushJob, queuePreFlushJob } from './scheduler.js'
+import { queuePostFlushJob, queuePreFlushJob, type Scheduler } from './scheduler.js'
 
 /**
  * 观察器配置选项接口
@@ -31,34 +31,41 @@ export interface WatcherOptions extends EffectOptions {
    */
   flush?: FlushMode
 }
+
 /**
  * Watcher 抽象基类
- * - 实现 IWatcher 接口的公共部分
+ * - 实现 DepEffect 接口的公共部分
  * - 初始化调试钩子
  * - 初始化调度器
- * - 实现trigger调度逻辑
- * - 抽象 run 方法由子类实现
- * - 实现 beforeDispose  和 afterDispose 方法，清理资源
+ * - 实现调度逻辑
+ * - 抽象 runEffect 方法由子类实现
+ * - 实现 beforeDispose，清理资源
  *
  * 注意：
  * 1. 子类如重写了 beforeDispose / afterDispose，必须调用 super.beforeDispose / afterDispose 来清理资源。
- * 2. 子类必须实现 run 方法，用于执行副作用逻辑。
- * 3. 子类不应该调用 run 方法，如需主动执行可调用 runEffect 方法。（无异步调度）
- * 4. trigger 方法是提供给信号系统使用的，非必要不要调用此方法。（有异步调度）
+ * 2. 子类必须实现 runEffect 方法，用于执行副作用逻辑。
+ * 3. 子类不应该调用 runEffect 方法，如需主动执行可调用 execute 方法。（无异步调度）
+ * 4. schedule 方法是提供给信号系统使用的，非必要不要调用此方法。（有异步调度）
  * 5. 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
  *
  * @abstract
  * @implements DepEffect
  */
 export abstract class Watcher extends Effect implements DepEffect {
-  /** signal → watcher 链表头 */
-  [DEP_LINK_HEAD]?: DepLink;
-  /** signal → watcher 链表尾 */
-  [DEP_LINK_TAIL]?: DepLink
   /** trigger 调试钩子 */
   onTrigger?: DebuggerHandler
   /** track 调试钩子 */
   onTrack?: DebuggerHandler
+  /**
+   * 静态缓存 scheduler 对象，用于存储不同 flush 模式对应的调度器实例。
+   *
+   * @private
+   */
+  private static readonly schedulerCache: Record<FlushMode, Scheduler> = {
+    pre: queuePreFlushJob,
+    post: queuePostFlushJob,
+    sync: (job: () => void) => job()
+  }
   /**
    * 调度器
    *
@@ -66,15 +73,16 @@ export abstract class Watcher extends Effect implements DepEffect {
    *
    * @default `queuePreFlushJob`
    */
-  public scheduler: (job: () => void) => void
-  /** cleanup 回调 */
-  private readonly cleanups: VoidCallback[] = []
+  public scheduler: Scheduler
   /**
    * 错误源
    *
    * @default 'trigger'
    */
-  protected errorSource: string = 'trigger'
+  protected errorSource: string = 'execute'
+  /** cleanup 回调 */
+  private readonly cleanups: VoidCallback[] = []
+
   /**
    * 构造函数
    * @param options 调试钩子选项
@@ -86,29 +94,13 @@ export abstract class Watcher extends Effect implements DepEffect {
       this.onTrigger = options.onTrigger
       this.onTrack = options.onTrack
     }
-    switch (flush) {
-      case 'pre':
-        this.scheduler = queuePreFlushJob
-        break
-      case 'sync':
-        this.scheduler = (fn: () => void) => fn()
-        break
-      case 'post':
-        this.scheduler = queuePostFlushJob
-        break
-      default:
-        logger.warn(`[Watcher] Invalid flush option: ${options.flush}`)
-        this.scheduler = queuePreFlushJob
+    const scheduler = Watcher.schedulerCache[flush]
+    if (!scheduler) {
+      logger.warn(`[Watcher] Invalid flush option: ${flush}`)
+      this.scheduler = queuePreFlushJob
+    } else {
+      this.scheduler = scheduler
     }
-  }
-  /**
-   * 响应 signal 变化或触发回调
-   *
-   * 此方法是由信号触发器调用的，子类需实现抽象run方法。
-   */
-  schedule(): void {
-    if (!this.isActive) return
-    this.scheduler(this.execute)
   }
   /**
    * 添加清理函数
@@ -122,34 +114,32 @@ export abstract class Watcher extends Effect implements DepEffect {
     }
     this.cleanups.push(cleanupFn)
   }
+
   /**
-   * 在对象被销毁前执行清理操作
-   * 这是一个重写的方法，用于在组件或实例被销毁前执行必要的清理工作
+   * 响应 signal 变化或触发回调
    *
-   * @protected 这是一个受保护的方法，只能在类内部或子类中访问
+   * 此方法是由信号触发器调用的，子类需实现抽象runEffect方法。
    */
-  protected override beforeDispose() {
-    // 调用清理方法，执行资源释放等清理操作
-    this.cleanup()
+  schedule(): void {
+    if (!this.isActive) return
+    this.scheduler(this.execute)
   }
 
   /**
-   * 运行副作用并处理可能出现的错误
+   * 执行副作用
    *
-   * 该方法会尝试执行run方法，并根据执行结果进行错误处理
-   *
-   * 此方法不会触发异步调度
+   * 立即执行副作用函数，包含错误处理和清理工作。
+   * 与 schedule() 不同，此方法会同步执行，不经过调度器。
    */
   execute = (): void => {
     if (!this.isActive) return
-    this.cleanup()
+    this.runCleanup()
     try {
-      this.run()
+      this.runEffect()
     } catch (e) {
       this.reportError(e, this.errorSource)
     }
   }
-
   /**
    * 在对象被销毁后执行的清理方法
    * 重写父类的afterDispose方法，用于释放资源
@@ -164,22 +154,60 @@ export abstract class Watcher extends Effect implements DepEffect {
   }
 
   /**
-   * 运行副作用
+   * 在对象被销毁前执行清理操作
+   * 这是一个重写的方法，用于在组件或实例被销毁前执行必要的清理工作
    *
-   * 此方法由子类实现，用于执行副作用逻辑。
-   *
-   * 子类应该不应该调用 run 方法，必要时可 syncTrigger 方法。
+   * @protected
    */
-  protected abstract run(): void
+  protected override beforeDispose() {
+    // 调用清理方法，执行资源释放等清理操作
+    this.runCleanup()
+  }
+
+  /**
+   * 执行副作用逻辑
+   *
+   * 抽象方法，由子类实现具体的副作用逻辑。
+   *
+   * @warning 子类不应直接调用此方法，而应使用：
+   * - execute() - 同步执行副作用
+   * - schedule() - 通过调度器执行副作用（可能异步）
+   *
+   * @abstract
+   * @protected
+   */
+  protected abstract runEffect(): void
+
+  /**
+   * 报告观察器相关的错误
+   *
+   * 重写父类的错误报告方法，在错误来源前添加 'watcher.' 前缀，
+   * 以便更好地追踪错误发生在观察器的哪个环节。
+   *
+   * @param e - 发生的错误对象
+   * @param source - 错误来源标识，如 'trigger'、'getter'、'callback' 等
+   * @override 重写父类的 reportError 方法
+   *
+   * @example
+   * ```typescript
+   * // 在 getter 中发生错误时
+   * this.reportError(error, 'getter')  // 输出: watcher.getter
+   *
+   * // 在回调执行中发生错误时
+   * this.reportError(error, 'callback')  // 输出: watcher.callback
+   * ```
+   */
   protected override reportError(e: unknown, source: string) {
     super.reportError(e, `watcher.${source}`)
   }
+
   /**
    * 清理方法，用于执行所有注册的清理函数并清空清理函数列表
    *
-   * @protected 这是一个受保护的方法，只能在类内部或子类中访问
+   * @internal 仅供内部使用
+   * @private
    */
-  private cleanup(): void {
+  private runCleanup(): void {
     // 遍历并执行所有注册的清理函数
     for (const fn of this.cleanups) {
       try {

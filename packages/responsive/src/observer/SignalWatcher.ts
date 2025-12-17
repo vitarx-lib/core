@@ -71,7 +71,7 @@ export class SignalWatcher<T> extends Watcher {
   /**
    * @inheritDoc
    */
-  protected run() {
+  protected runEffect() {
     const newValue = readSignal(this.signal)
     if (this.compare(newValue, this._value)) return
     const old = this._value

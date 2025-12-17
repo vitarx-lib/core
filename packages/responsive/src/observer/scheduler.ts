@@ -16,7 +16,11 @@
  * 接受任意参数并返回 void 的函数
  */
 export type Job = () => void
-
+/**
+ * 任务调度器类型定义
+ * 接受一个任务函数并返回一个任务执行函数
+ */
+export type Scheduler = (job: () => void) => void
 /**
  * 队列类型定义
  * 键为任务函数，值为参数数组或 undefined

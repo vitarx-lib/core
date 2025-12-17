@@ -35,7 +35,7 @@ export class EffectWatcher<T = any> extends Watcher {
    *
    * @protected
    */
-  protected run(): void {
+  protected runEffect(): void {
     removeEffectDeps(this)
     collectSignal(() => this.effect(this.onCleanup), this)
   }

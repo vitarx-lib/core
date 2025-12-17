@@ -54,7 +54,7 @@ export class ValueWatcher<T> extends Watcher {
   /**
    * 重写运行方法，用于执行响应式值的更新逻辑
    */
-  protected override run() {
+  protected override runEffect() {
     // 获取当前值
     const value = this.getValue()
     // 使用 Object.is 比较新旧值，如果相同则直接返回
