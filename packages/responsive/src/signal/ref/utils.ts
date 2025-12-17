@@ -94,7 +94,6 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
 
     const val = object[key]
     if (isRef(val)) return val
-
     return new PropertyRef(object, key, defaultValue)
   }
 
@@ -104,12 +103,13 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
   if (isRef(value)) return value
 
   // 如果传入函数，则生成只读 ref
-  if (typeof value === 'function')
+  if (typeof value === 'function') {
     return {
       get value() {
         return value()
       }
     }
+  }
 
   // 否则包装为普通 ref
   return new Ref(value, true)

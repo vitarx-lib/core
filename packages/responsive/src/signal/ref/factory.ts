@@ -1,6 +1,6 @@
 import type { ShallowRef } from '../../types/index.js'
+import { Ref } from './impl.js'
 import { PropertyRef } from './property.js'
-import { Ref } from './ref.js'
 
 /** @see {@link ref} 无参数重载 */
 export function ref(): Ref
