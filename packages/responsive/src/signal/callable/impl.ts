@@ -1,4 +1,4 @@
-import { SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
+import { CALLABLE_SIGNAL_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Signal } from '../../types/index.js'
 
@@ -8,6 +8,7 @@ import type { Signal } from '../../types/index.js'
  * - 有参调用：设置新值（set），返回 void
  */
 export interface CallableSignal<T = any> extends Signal<T> {
+  readonly [CALLABLE_SIGNAL_SYMBOL]: true
   (): T
   (value: T): void
 }
@@ -37,5 +38,6 @@ export function signal<T>(initialValue: T): CallableSignal<T> {
   } as CallableSignal<T>
   Object.defineProperty(sig, SIGNAL_SYMBOL, { value: true })
   Object.defineProperty(sig, SIGNAL_VALUE, { get: sig })
+  Object.defineProperty(sig, CALLABLE_SIGNAL_SYMBOL, { value: true })
   return sig
 }
