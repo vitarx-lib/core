@@ -3,8 +3,8 @@ import { isObject } from '@vitarx/utils'
 import { IS_RAW_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
 import { clearSignalEffects, trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Reactive, Signal } from '../../types/index.js'
-import { isSignal, readSignal } from '../utils/index.js'
-import { BaseReactive } from './base.js'
+import { isCallableSignal, isRef } from '../utils/index.js'
+import { ReactiveSource } from './base.js'
 import { ReactiveMap, ReactiveWeakMap } from './map.js'
 import { ReactiveSet, ReactiveWeakSet } from './set.js'
 
@@ -16,8 +16,8 @@ import { ReactiveSet, ReactiveWeakSet } from './set.js'
  * @returns {boolean} 如果值是嵌套对象则返回true，否则返回false
  *          使用类型谓词(value is object)来确保返回true时value的类型为object
  */
-function isNestingObject(value: any): value is object {
-  return isObject(value) && !value[IS_RAW_SYMBOL]
+const isNestingObject = (value: any): value is object => {
+  return isObject(value) && !value[SIGNAL_SYMBOL] && !value[IS_RAW_SYMBOL]
 }
 
 /**
@@ -53,27 +53,16 @@ class PropertySignal<T extends object, K extends keyof T> implements Signal<T[K]
     if (this.proxy) return this.proxy
     // 获取当前值
     const value = this.target[this.key]
-    // 优化：优先检查是否为信号，因为这是更常见的场景
-    if (isSignal(value)) return readSignal(value)
+    // 解包 ref
+    if (isRef(value)) return value.value
+    // 解包 CallableSignal
+    if (isCallableSignal(value)) return value()
     // 如果值是嵌套对象，创建代理对象
     if (this.deep && isNestingObject(value)) {
       return (this.proxy = createReactive(value))
     }
     // 返回当前值
     return value
-  }
-  // 设置信号值的setter
-  set [SIGNAL_VALUE](v: any) {
-    // 保存旧值以便后续比较
-    const oldValue = this.target[this.key]
-    // 使用Object.is比较新旧值，避免不必要的更新
-    if (Object.is(oldValue, v)) return
-    // 更新为新值
-    this.target[this.key] = v
-    // 移除代理，因为值可能已经改变
-    this.proxy = undefined
-    // 触发信号更新通知，传入新值和旧值
-    triggerSignal(this, 'set', { newValue: v, oldValue })
   }
   /**
    * 使信号失效，触发更新通知
@@ -89,21 +78,41 @@ class PropertySignal<T extends object, K extends keyof T> implements Signal<T[K]
     // 移除信号依赖链
     clearSignalEffects(this)
   }
+  update(v: any) {
+    // 保存旧值以便后续比较
+    const oldValue = this.target[this.key]
+    if (isRef(oldValue)) {
+      oldValue.value = v
+      return
+    }
+    if (isCallableSignal(oldValue)) {
+      oldValue(v)
+      return
+    }
+    // 使用Object.is比较新旧值，避免不必要的更新
+    if (Object.is(oldValue, v)) return
+    // 更新为新值
+    this.target[this.key] = v
+    // 移除代理，因为值已经改变
+    this.proxy = undefined
+    // 触发信号更新通知，传入新值和旧值
+    triggerSignal(this, 'set', { newValue: v, oldValue })
+  }
 }
 
 /**
  * ReactiveObject 类用于创建对象的响应式代理
  *
- * 该类继承自 BaseReactive，提供了对普通对象的代理处理。
+ * 该类继承自 ReactiveSource，提供了对普通对象的代理处理。
  * 它通过 PropertySignal 来管理对象各个属性的响应式行为。
  *
  * @template T - 目标对象的类型，必须是 AnyRecord 类型
  * @template Deep - 是否进行深度代理的类型，必须是 boolean 类型
  */
-export class ReactiveObject<T extends AnyRecord, Deep extends boolean = true> extends BaseReactive<
-  T,
-  Deep
-> {
+export class ReactiveObject<
+  T extends AnyRecord,
+  Deep extends boolean = true
+> extends ReactiveSource<T, Deep> {
   /**
    * 子代理映射表，存储对象属性的子信号
    *
@@ -196,8 +205,8 @@ export class ReactiveObject<T extends AnyRecord, Deep extends boolean = true> ex
     // 已有 PropertySignal：必须走信号（它维护 proxy / 嵌套 reactive）
     const sig = this.childMap.get(p) // 获取属性对应的信号
     if (sig) {
-      // 如果存在信号
-      sig[SIGNAL_VALUE] = newValue // 直接更新信号的值
+      // 如果存在属性信号,则更新
+      sig.update(newValue)
       return true // 设置成功
     }
     // 检查属性是否已存在
@@ -205,8 +214,8 @@ export class ReactiveObject<T extends AnyRecord, Deep extends boolean = true> ex
     // 没有 PropertySignal：直接结构写入
     const result = Reflect.set(target, p, newValue, receiver) // 使用Reflect设置属性值
     if (!result) return false // 如果设置失败则返回false
-    // 只触发结构变化信号，不创建子信号
-    if (!hadKey) this.triggerSignal('add', { key: p, oldValue: undefined, newValue }) // 如果是新属性，触发添加信号的回调
+    // 如果是新属性，触发添加信号的回调
+    if (!hadKey) this.triggerSignal('add', { key: p, oldValue: undefined, newValue })
     return true // 设置成功返回true
   }
 }
@@ -289,11 +298,11 @@ export class ReactiveArray<T extends any[], Deep extends boolean = true> extends
  * 使用 WeakMap 来避免内存泄漏，确保当原始对象被垃圾回收时，
  * 对应的代理对象也能被正确回收。
  */
-const reactiveCache = new WeakMap<object, BaseReactive<any, any>>()
-const shallowReactiveCache = new WeakMap<object, BaseReactive<any, any>>()
+const reactiveCache = new WeakMap<object, ReactiveSource<any, any>>()
+const shallowReactiveCache = new WeakMap<object, ReactiveSource<any, any>>()
 const getCache = <T extends object>(target: T, deep: boolean) =>
   deep ? reactiveCache.get(target)?.proxy : shallowReactiveCache.get(target)?.proxy
-const setCache = (instance: BaseReactive<any, any>) => {
+const setCache = (instance: ReactiveSource<any, any>) => {
   instance.deep
     ? reactiveCache.set(instance.target, instance)
     : shallowReactiveCache.set(instance.target, instance)
