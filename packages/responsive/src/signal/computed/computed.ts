@@ -116,7 +116,7 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
     super(effectOptions)
     this._getter = getter
     this._setter = options.setter
-    // 如果设置了立即计算，则在构造时就初始化（setupEffect会自动计算并缓存）
+    // 立即计算
     if (immediate) this.recomputed()
   }
 
