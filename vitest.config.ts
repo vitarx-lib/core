@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config'
 import { entries } from './scripts/alias'
 
 export default defineConfig({
+  define: {
+    __DEV__: JSON.stringify(true)
+  },
   resolve: {
     alias: entries
   },

@@ -46,7 +46,7 @@
     "**/tests/**/*.ts",
     "**/__tests__/**/*.ts",
     "./scripts/*.ts",
-    "global.d.ts",
+    "vite-env.d.ts",
     "packages/**/*.ts"
   ],
   "exclude": [
