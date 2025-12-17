@@ -11,7 +11,7 @@ import type { DepEffect, Signal } from '../../types/index.js'
  * @param {T | undefined} oldValue - 上一次的计算结果，第一次计算时为undefined
  * @returns {T} - 计算结果
  */
-export type ComputedGetter<T> = (oldValue: T | undefined) => T
+export type ComputedGetter<T> = (oldValue: T) => T
 /**
  * 计算属性的setter处理函数
  *
