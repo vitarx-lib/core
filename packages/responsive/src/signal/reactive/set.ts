@@ -1,9 +1,9 @@
 import type { AnySet, AnyWeakSet } from '@vitarx/utils'
-import { collectionClear, CollectionProxy } from './collection.js'
+import { collectionClear, ReactiveCollection } from './collection.js'
 
 /**
- * WeakSetProxy 是一个代理类，用于包装 WeakSet 或 Set 实例，提供额外的功能如信号触发。
- * 它继承自 CollectionProxy，主要重写了 add 和 delete 方法的实现，以便在操作时触发相应的信号。
+ * ReactiveWeakSet 是一个代理类，用于包装 WeakSet 或 Set 实例，提供额外的功能如信号触发。
+ * 它继承自 ReactiveCollection，主要重写了 add 和 delete 方法的实现，以便在操作时触发相应的信号。
  *
  * 核心功能：
  * - 代理 WeakSet 或 Set 的基本操作
@@ -13,7 +13,7 @@ import { collectionClear, CollectionProxy } from './collection.js'
  * 使用示例：
  * ```typescript
  * const originalSet = new WeakSet();
- * const proxySet = new WeakSetProxy(originalSet).proxy;
+ * const proxySet = new ReactiveWeakSet(originalSet).proxy;
  * const obj = {};
  * proxySet.add(obj); // 触发 'add' 信号
  * proxySet.delete(obj); // 触发 'delete' 信号
@@ -26,7 +26,7 @@ import { collectionClear, CollectionProxy } from './collection.js'
  * - 由于 WeakSet 的特性，其元素必须是对象
  * - WeakSet 中的元素是弱引用，当没有其他引用时可能会被垃圾回收
  */
-export class WeakSetProxy<T extends AnySet | AnyWeakSet> extends CollectionProxy<T> {
+export class ReactiveWeakSet<T extends AnySet | AnyWeakSet> extends ReactiveCollection<T> {
   protected override doGet(target: T, p: string | symbol, receiver: any): any {
     // 如果是add方法，返回自定义的addSet函数
     if (p === 'add') {
@@ -70,17 +70,17 @@ export class WeakSetProxy<T extends AnySet | AnyWeakSet> extends CollectionProxy
 }
 
 /**
- * SetProxy 是一个用于代理 Set 对象的类，继承自 WeakSetProxy。
+ * ReactiveSet 是一个用于代理 Set 对象的类，继承自 ReactiveWeakSet。
  * 它主要用于自定义 Set 的某些行为，特别是 clear 操作。
  *
  * 核心功能：
  * - 自定义 Set 的 clear 行为
- * - 继承 WeakSetProxy 的其他所有代理功能
+ * - 继承 ReactiveWeakSet 的其他所有代理功能
  *
  * 使用示例：
  * ```typescript
  * const mySet = new Set([1, 2, 3]);
- * const proxy = new SetProxy(mySet).proxy;
+ * const proxy = new ReactiveSet(mySet).proxy;
  * // proxy.clear() 将使用自定义的 clear 行为
  * ```
  *
@@ -93,9 +93,9 @@ export class WeakSetProxy<T extends AnySet | AnyWeakSet> extends CollectionProxy
  *
  * 副作用：
  * - 修改了原始 Set 对象的 clear 行为
- * - 其他操作通过父类 WeakSetProxy 处理
+ * - 其他操作通过父类 ReactiveWeakSet 处理
  */
-export class SetProxy<T extends AnySet> extends WeakSetProxy<T> {
+export class ReactiveSet<T extends AnySet> extends ReactiveWeakSet<T> {
   protected override doGet(target: T, p: string | symbol, receiver: any): any {
     // 如果请求的属性是 'clear'，则返回自定义的 collectionClear 函数
     // 这样可以自定义 Set 的 clear 行为

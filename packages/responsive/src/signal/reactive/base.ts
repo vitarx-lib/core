@@ -1,11 +1,14 @@
-import { IS_REACTIVE, IS_SIGNAL, RAW_VALUE, SIGNAL_VALUE } from '../../constants/index.js'
+import { REACTIVE_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { DebuggerEventOptions, Reactive, Signal, SignalOpType } from '../../types/index.js'
 
-export abstract class ReactiveSignal<T extends object, Deep extends boolean = true>
+/**
+ * BaseReactive 是一个抽象类，用于创建响应式对象代理。
+ */
+export abstract class BaseReactive<T extends object, Deep extends boolean = true>
   implements ProxyHandler<T>, Signal<number>
 {
-  readonly [IS_SIGNAL]: true = true
+  readonly [SIGNAL_SYMBOL]: true = true
   public readonly deep: Deep
   public readonly proxy: Reactive<T, Deep>
   private version: number = 0
@@ -27,8 +30,7 @@ export abstract class ReactiveSignal<T extends object, Deep extends boolean = tr
     return this.version
   }
   get(target: T, p: string | symbol, receiver: any): any {
-    if (p === IS_REACTIVE) return this
-    if (p === RAW_VALUE) return target
+    if (p === REACTIVE_SYMBOL) return this
     // 调用子类实现的 doGet 方法处理非 symbol 属性
     return this.doGet(target, p, receiver)
   }

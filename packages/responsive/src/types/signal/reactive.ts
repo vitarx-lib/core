@@ -1,18 +1,7 @@
 import type { AnyCollection, AnyObject } from '@vitarx/utils'
-import type { IS_RAW, IS_REACTIVE } from '../../constants/index.js'
-import type { ReactiveSignal } from '../../signal/reactive/signal.js'
+import type { REACTIVE_SYMBOL } from '../../constants/index.js'
+import type { BaseReactive } from '../../signal/reactive/base.js'
 import type { DeepUnwrapNestedSignal, UnwrapNestedSignal } from './signal.js'
-
-/**
- * 非响应式信号
- *
- * 具有 `NON_SIGNAL` 属性标记的对象不会被识别或构造为响应式信号。
- *
- * @template T - 对象的类型
- */
-export type NonReactive<T extends AnyObject = AnyObject> = T & {
-  readonly [IS_RAW]: true
-}
 
 /**
  * 响应式代理对象类型工具
@@ -69,5 +58,5 @@ export type Reactive<T extends AnyObject = any, Deep extends boolean = true> = R
   T,
   Deep
 > & {
-  [IS_REACTIVE]: ReactiveSignal<T, Deep>
+  [REACTIVE_SYMBOL]: BaseReactive<T, Deep>
 }

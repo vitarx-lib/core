@@ -1,4 +1,4 @@
-import { IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
+import { SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
 import type { Signal } from '../../types/index.js'
 
 /**
@@ -34,7 +34,7 @@ import type { Signal } from '../../types/index.js'
  * - 当属性值为 undefined 时，将返回默认值（如果提供）
  */
 export class PropertyRef<T extends object, K extends keyof T> implements Signal<T[K]> {
-  [IS_SIGNAL]: true = true
+  [SIGNAL_SYMBOL]: true = true
 
   constructor(
     private readonly _target: T,

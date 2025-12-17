@@ -1,6 +1,6 @@
 import type { AnyObject } from '@vitarx/utils'
-import type { NonReactive, Reactive } from './reactive.js'
-import type { Signal } from './signal.js'
+import type { Reactive } from './reactive.js'
+import type { RawObject, Signal } from './signal.js'
 
 /**
  * 响应式 ref 信号接口
@@ -19,10 +19,11 @@ export interface RefSignal<T = any, Deep extends boolean = true> extends Signal<
 export type RefValue<T, Deep extends boolean = true> = Deep extends false
   ? T
   : T extends AnyObject
-    ? T extends NonReactive | Signal
+    ? T extends RawObject
       ? T
       : Reactive<T>
     : T
+
 /**
  * 浅层响应式 ref 信号接口
  *

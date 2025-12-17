@@ -1,11 +1,16 @@
-import { IS_REACTIVE, IS_READONLY, IS_REF_SIGNAL, IS_SIGNAL } from '../../constants/index.js'
+import {
+  REACTIVE_SYMBOL,
+  READONLY_SYMBOL,
+  REF_SYMBOL,
+  SIGNAL_SYMBOL
+} from '../../constants/index.js'
 import type { Reactive, RefSignal, Signal } from '../../types/index.js'
 
 /**
  * 判断对象是否是 Signal
  */
 export function isSignal(obj: any): obj is Signal {
-  return !!obj?.[IS_SIGNAL]
+  return !!obj?.[SIGNAL_SYMBOL]
 }
 
 /**
@@ -19,7 +24,7 @@ export function isSignal(obj: any): obj is Signal {
  * ```
  */
 export function isRef(val: any): val is RefSignal<any, boolean> {
-  return !!val?.[IS_REF_SIGNAL]
+  return !!val?.[REF_SYMBOL]
 }
 export { isRef as isRefSignal }
 
@@ -31,7 +36,7 @@ export { isRef as isRefSignal }
  */
 export function isReactive(val: any): val is Reactive<any, boolean> {
   // 首先确保val不为null或undefined，然后检查其是否具有IS_REACTIVE属性
-  return !!val?.[IS_REACTIVE]
+  return !!val?.[REACTIVE_SYMBOL]
 }
 
 /**
@@ -56,5 +61,5 @@ export function isReactive(val: any): val is Reactive<any, boolean> {
  * ```
  */
 export function isReadonly(obj: any): boolean {
-  return obj?.[IS_READONLY] === true
+  return obj?.[READONLY_SYMBOL] === true
 }

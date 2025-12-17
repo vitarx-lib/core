@@ -1,6 +1,7 @@
 import { isObject, logger } from '@vitarx/utils'
-import { IS_RAW, IS_READONLY, RAW_VALUE } from '../../constants/index.js'
+import { IS_RAW_SYMBOL, READONLY_SYMBOL } from '../../constants/index.js'
 import type { ReadonlyOptions, ReadonlyProxy } from '../../types/signal/readonly.js'
+import { readSignal } from '../utils/index.js'
 
 /**
  * 只读代理
@@ -35,14 +36,14 @@ class ReadonlyHandler<T extends object> implements ProxyHandler<T> {
   }
 
   get(target: T, prop: any, receiver: any): any {
-    if (prop === IS_RAW) return true
-    if (prop === RAW_VALUE) return target
-    if (prop === IS_READONLY) return true
+    if (prop === IS_RAW_SYMBOL) return true
+    if (prop === READONLY_SYMBOL) return true
     const data = Reflect.get(target, prop, receiver)
-    if (this.options.deep && isObject(data) && !data[IS_READONLY]) {
+    if (this.options.deep && isObject(data) && !data[READONLY_SYMBOL]) {
       return createReadonly(data, this.options)
     }
-    return data
+    if (typeof data === 'function') return data.bind(target)
+    return readSignal(data)
   }
 
   /**

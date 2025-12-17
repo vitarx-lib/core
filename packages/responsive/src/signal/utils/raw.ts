@@ -1,7 +1,7 @@
 import { isObject } from '@vitarx/utils'
-import { IS_RAW, IS_REACTIVE } from '../../constants/index.js'
-import type { NonReactive, Reactive } from '../../types/index.js'
-import type { ReactiveSignal } from '../reactive/signal.js'
+import { IS_RAW_SYMBOL, REACTIVE_SYMBOL } from '../../constants/index.js'
+import type { RawObject, Reactive } from '../../types/index.js'
+import type { BaseReactive } from '../reactive/base.js'
 import { isReactive } from './is.js'
 
 /**
@@ -13,7 +13,7 @@ import { isReactive } from './is.js'
  *
  * @template T - 待标记的对象类型
  * @param  obj - 待标记的对象，必须是一个非null的对象
- * @returns { NonReactive<T> } - 返回被标记为非信号的对象
+ * @returns { RawObject<T> } - 返回被标记为非信号的对象
  * @throws { TypeError } - 如果传入的参数不是对象类型（比如null、undefined、数字等），则抛出类型错误
  * @example
  * ```ts
@@ -23,14 +23,14 @@ import { isReactive } from './is.js'
  * console.log(isSignal(signal)); // false
  * ```
  */
-export function markRaw<T extends object>(obj: T): NonReactive<T> {
+export function markRaw<T extends object>(obj: T): RawObject<T> {
   if (!isObject(obj)) {
     throw new TypeError('[markRaw]: The argument must be an object type')
   }
-  Object.defineProperty(obj, IS_RAW, {
+  Object.defineProperty(obj, IS_RAW_SYMBOL, {
     value: true
   })
-  return obj as NonReactive<T>
+  return obj as RawObject<T>
 }
 /**
  * 检查对象是否被标记为非信号类型
@@ -41,7 +41,7 @@ export function markRaw<T extends object>(obj: T): NonReactive<T> {
 export function isMakeRaw(obj: any): boolean {
   // 使用!!操作符将对象和其NON_SIGNAL属性转换为布尔值
   // 只有当对象和其NON_SIGNAL属性都存在时才返回true
-  return !!obj && !!obj[IS_RAW]
+  return !!obj && !!obj[IS_RAW_SYMBOL]
 }
 
 /**
@@ -52,7 +52,7 @@ export function isMakeRaw(obj: any): boolean {
  */
 export function toRaw<T extends object>(val: T | Reactive<T>): T {
   if (isReactive(val)) {
-    return ((val as any)[IS_REACTIVE] as ReactiveSignal<any>).target
+    return ((val as any)[REACTIVE_SYMBOL] as BaseReactive<any>).target
   }
-  return val
+  return val as T
 }

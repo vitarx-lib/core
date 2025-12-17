@@ -1,12 +1,12 @@
 import { isObject } from '@vitarx/utils'
-import { IS_RAW, IS_REF_SIGNAL, IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
+import { IS_RAW_SYMBOL, REF_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { RefSignal, RefValue } from '../../types/index.js'
 import { reactive } from '../reactive/index.js'
 import { isSignal, readSignal } from '../utils/index.js'
 
 const toReactive = (val: any) => {
-  return isObject(val) && !val[IS_SIGNAL] && !val[IS_RAW] ? reactive(val, true) : val
+  return isObject(val) && !val[SIGNAL_SYMBOL] && !val[IS_RAW_SYMBOL] ? reactive(val, true) : val
 }
 
 /**
@@ -20,10 +20,10 @@ const toReactive = (val: any) => {
  */
 export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, Deep> {
   /** 标识这是一个信号对象 */
-  [IS_SIGNAL]: true = true;
+  [SIGNAL_SYMBOL]: true = true;
 
   /** 标识这是一个 Ref 对象 */
-  [IS_REF_SIGNAL]: true = true
+  [REF_SYMBOL]: true = true
 
   /** 是否启用深层响应式 */
   public readonly deep: Deep

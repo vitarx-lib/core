@@ -1,8 +1,8 @@
 import type { AnyMap, AnySet, AnyWeakMap, AnyWeakSet } from '@vitarx/utils/src/index.js'
-import { ReactiveSignal } from './signal.js'
+import { BaseReactive } from './base.js'
 
 /**
- * CollectionProxy 是一个抽象代理类，用于创建响应式的集合类型（Map、WeakMap、Set、WeakSet）代理。
+ * ReactiveCollection 是一个抽象代理类，用于创建响应式的集合类型（Map、WeakMap、Set、WeakSet）代理。
  * 该类实现了基本的代理行为，包括依赖追踪和信号触发机制。
  *
  * 核心功能：
@@ -13,7 +13,7 @@ import { ReactiveSignal } from './signal.js'
  *
  * @example
  * ```typescript
- * class MyMapProxy extends CollectionProxy<Map<string, number>> {
+ * class MyMapProxy extends ReactiveCollection<Map<string, number>> {
  *   // 实现具体的代理逻辑
  * }
  * const map = new Map<string, number>();
@@ -30,9 +30,9 @@ import { ReactiveSignal } from './signal.js'
  * - 集合类型的代理对象是不可变的，不允许直接写入操作
  * - 在开发环境下会提供额外的调试信息
  */
-export abstract class CollectionProxy<
+export abstract class ReactiveCollection<
   T extends AnyWeakMap | AnyMap | AnySet | AnyWeakSet
-> extends ReactiveSignal<T, false> {
+> extends BaseReactive<T, false> {
   constructor(target: T) {
     super(target, false)
   }
@@ -72,7 +72,7 @@ export abstract class CollectionProxy<
  * @param collection - CollectionProxyHandler类型的集合代理处理器，可以是Set或Map
  * @returns 返回一个无参数函数，执行时会清除集合中的所有元素
  */
-export function collectionClear(collection: CollectionProxy<any>) {
+export function collectionClear(collection: ReactiveCollection<any>) {
   return () => {
     // 记录清除前的集合大小
     const oldSize = collection.target.size

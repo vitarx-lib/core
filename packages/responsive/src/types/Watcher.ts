@@ -1,7 +1,7 @@
 import type { AnyFunction, VoidCallback } from '@vitarx/utils'
 import { EFFECT_DEP_HEAD, EFFECT_DEP_TAIL } from '../constants/index.js'
 import type { DepLink } from '../depend/index.js'
-import type { WatcherOptions } from '../observer/index.js'
+import type { WatcherOptions } from '../watcher/index.js'
 import type { DebuggerHandler } from './debug.js'
 import type { Signal } from './signal/index.js'
 

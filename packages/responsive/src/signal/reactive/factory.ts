@@ -1,7 +1,7 @@
 import { isObject } from '@vitarx/utils'
 import type { Reactive } from '../../types/index.js'
 import { isSignal } from '..//utils/index.js'
-import { createProxyObject } from './object.js'
+import { createReactive } from './object.js'
 
 /**
  * 将一个对象代理为响应式对象
@@ -21,5 +21,5 @@ export function reactive<T extends object, Deep extends boolean = true>(
   if (isSignal(target)) {
     throw new Error('Cannot reactive a signal')
   }
-  return createProxyObject(target, deep)
+  return createReactive(target, deep)
 }

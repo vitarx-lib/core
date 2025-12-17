@@ -1,12 +1,12 @@
 import type { AnyCollection, AnyObject } from '@vitarx/utils'
 import {
-  type IS_SIGNAL,
+  IS_RAW_SYMBOL,
   SIGNAL_DEP_HEAD,
   SIGNAL_DEP_TAIL,
+  SIGNAL_SYMBOL,
   type SIGNAL_VALUE
 } from '../../constants/index.js'
 import type { DepLink } from '../../depend/index.js'
-import type { NonReactive } from './reactive.js'
 
 /**
  * 响应式信号接口
@@ -16,7 +16,7 @@ import type { NonReactive } from './reactive.js'
  */
 export interface Signal<T = any> {
   /** 是否为 signal（类型判定用） */
-  readonly [IS_SIGNAL]: true
+  readonly [SIGNAL_SYMBOL]: true
   /** 读取值（必须提供，readSignal / getSignal 使用） */
   readonly [SIGNAL_VALUE]: T
   /**
@@ -32,6 +32,18 @@ export interface Signal<T = any> {
    */
   [SIGNAL_DEP_TAIL]?: DepLink
 }
+
+/**
+ * 原始对象标记
+ *
+ * 具有 `RAW_SYMBOL` 属性标记的对象不会被识别或构造为响应式信号。
+ *
+ * @template T - 对象的类型
+ */
+export type RawObject<T extends AnyObject = AnyObject> = T & {
+  readonly [IS_RAW_SYMBOL]: true
+}
+
 /**
  * 获取信号值类型辅助工具
  */
@@ -60,10 +72,12 @@ export type UnwrapSignal<T> = T extends Signal<infer V> ? V : T
  * ```
  */
 export type UnwrapNestedSignal<T extends AnyObject> = T extends AnyCollection
-  ? T
-  : {
-      [K in keyof T]: T[K] extends Signal<infer U> ? U : T[K]
-    }
+  ? T extends RawObject
+    ? T
+    : {
+        [K in keyof T]: T[K] extends Signal<infer U> ? U : T[K]
+      }
+  : T
 
 /**
  * 深度解包嵌套信号值工具
@@ -89,7 +103,7 @@ export type UnwrapNestedSignal<T extends AnyObject> = T extends AnyCollection
  */
 export type DeepUnwrapNestedSignal<T extends object> = T extends AnyCollection
   ? T
-  : T extends NonReactive
+  : T extends RawObject
     ? T
     : {
         [K in keyof T]: T[K] extends object

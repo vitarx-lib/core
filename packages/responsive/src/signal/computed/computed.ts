@@ -1,5 +1,5 @@
 import { isFunction, logger } from '@vitarx/utils'
-import { IS_SIGNAL, SIGNAL_VALUE } from '../../constants/index.js'
+import { SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
 import { collectSignal, trackSignal, triggerSignal } from '../../depend/index.js'
 import { Effect, type EffectOptions, EffectScope } from '../../effect/index.js'
 import type { DepEffect, Signal } from '../../types/index.js'
@@ -78,7 +78,7 @@ export interface ComputedOptions<T> extends EffectOptions {
  * ```
  */
 export class Computed<T> extends Effect implements Signal<T>, DepEffect {
-  readonly [IS_SIGNAL]: true = true
+  readonly [SIGNAL_SYMBOL]: true = true
   /**
    * 脏标记，标识是否需要重新计算
    * true表示依赖已变化，需要重新计算
