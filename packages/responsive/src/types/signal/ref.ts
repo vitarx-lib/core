@@ -99,7 +99,7 @@ export type ShallowRef<T = any> = RefSignal<T, false>
  */
 export interface ReadonlyRef<T = any> {
   readonly [REF_SYMBOL]: true
-  get value(): T
+  readonly value: T
 }
 
 /**
@@ -113,7 +113,7 @@ export interface ReadonlyRef<T = any> {
  * @example
  * ```typescript
  * const data = reactive({a:0})
- * const count: WritableRef<number> = toRefs(data,'a')
+ * const count: RefWrapper<number> = toRef(data,'a')
  *
  * // 读取值
  * console.log(count.value) // 0
@@ -123,12 +123,13 @@ export interface ReadonlyRef<T = any> {
  * console.log(count.value) // 1
  * ```
  */
-export interface WritableRef<T = any> extends ReadonlyRef {
-  set value(value: T)
+export interface RefWrapper<T = any> {
+  readonly [REF_SYMBOL]: true
+  value: T
 }
 
 /**
- * 类型工具 UnwrapRef，用于解包 WritableRef / ReadonlyRef 类型的值
+ * 类型工具 UnwrapRef，用于解包 RefWrapper 类型的值
  *
  * 如果 T 继承于 ReadonlyRef 类型，则返回其包装的值类型；
  * 否则直接返回 T 本身。
@@ -142,7 +143,7 @@ export interface WritableRef<T = any> extends ReadonlyRef {
  * type C = UnwrapRef<WritableRef<boolean>> // boolean
  * ```
  */
-export type UnwrapRef<T> = T extends ReadonlyRef<infer V> ? V : T
+export type UnwrapRef<T> = T extends RefWrapper<infer V> ? V : T
 
 /**
  * ToRef 类型工具，它根据输入类型 T 转换类型
@@ -159,4 +160,4 @@ export type UnwrapRef<T> = T extends ReadonlyRef<infer V> ? V : T
  * type C = ToRef<WritableRef<boolean>> // WritableRef<boolean>
  * ```
  */
-export type ToRef<T> = T extends { readonly [REF_SYMBOL]: true } ? T : WritableRef<T>
+export type ToRef<T> = T extends { readonly [REF_SYMBOL]: true } ? T : RefWrapper<T>
