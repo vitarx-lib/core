@@ -60,22 +60,93 @@ export interface DepEffect {
 }
 
 /**
- * 回调值类型
+ * 刷新模式类型
+ *
+ * 控制观察者回调函数的执行时机：
+ * - 'pre': 在组件更新前执行（默认）
+ * - 'post': 在组件更新后执行
+ * - 'sync': 同步执行，值变化时立即执行
  */
 export type FlushMode = 'pre' | 'post' | 'sync'
+
+/**
+ * 观察者清理回调函数类型
+ *
+ * 用于注册清理函数，在观察者下一次执行前或被停止时调用。
+ *
+ * @param cleanupFn - 需要执行的清理函数
+ *
+ * @example
+ * ```typescript
+ * watch(count, (newVal, oldVal, onCleanup) => {
+ *   const timer = setTimeout(() => {
+ *     console.log('delayed execution')
+ *   }, 1000)
+ *
+ *   // 注册清理函数
+ *   onCleanup(() => {
+ *     clearTimeout(timer)
+ *   })
+ * })
+ * ```
+ */
 export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
+
+/**
+ * 观察源类型
+ *
+ * 定义可以被观察的数据源类型，包括：
+ * - 信号对象 (AnySignal)
+ * - 引用对象 (RefWrapper)
+ * - getter 函数 (() => T)
+ * - 对象类型 (T extends object ? T : never)
+ *
+ * @template T - 观察源的数据类型
+ */
 export type WatchSource<T> =
-  | AnySignal<T, any>
+  | AnySignal<T>
   | RefWrapper<T>
   | (() => T)
   | (T extends object ? T : never)
+
+/**
+ * 解包函数返回值类型工具
+ *
+ * 如果 T 是函数类型，则返回该函数的返回值类型；
+ * 否则直接返回 T 本身。
+ *
+ * @template T - 泛型参数
+ *
+ * @example
+ * ```typescript
+ * type A = UnwrapGetter<() => string> // string
+ * type B = UnwrapGetter<number> // number
+ * ```
+ */
 export type UnwrapGetter<T> = T extends AnyFunction ? ReturnType<T> : T
-export type UnwrapSource<T> = T extends AnySignal<T, any> | RefWrapper<infer V>
-  ? V
-  : UnwrapGetter<T>
+
+/**
+ * 解包观察源类型工具
+ *
+ * 如果 T 是信号或引用类型，则提取其内部值类型；
+ * 否则如果是函数类型，则返回函数的返回值类型；
+ * 否则直接返回 T 本身。
+ *
+ * @template T - 泛型参数
+ */
+export type UnwrapSource<T> = T extends AnySignal<T> | RefWrapper<infer V> ? V : UnwrapGetter<T>
+
+/**
+ * 回调值类型工具
+ *
+ * 用于解包观察源数组中每个元素的值类型。
+ *
+ * @template T - 观察源数组类型
+ */
 export type CallbackValue<T> = {
   [K in keyof T]: T[K] extends WatchSource<infer V> ? UnwrapSource<V> : UnwrapSource<T[K]>
 }
+
 /**
  * WatchCallback 监听回调函数的类型。
  *
@@ -83,8 +154,22 @@ export type CallbackValue<T> = {
  */
 export type WatchCallback<T> = (newValue: T, oldValue: T, onCleanup: WatcherOnCleanup) => void
 
+/**
+ * 比较函数类型
+ *
+ * 用于自定义值比较逻辑的函数类型。
+ *
+ * @param value1 - 第一个值
+ * @param value2 - 第二个值
+ * @returns {boolean} 如果两个值相等返回 true，否则返回 false
+ */
 export type CompareFunction = (value1: any, value2: any) => boolean
 
+/**
+ * 观察选项接口
+ *
+ * 扩展自 WatcherOptions，提供了额外的观察配置选项。
+ */
 export interface WatchOptions extends WatcherOptions {
   /**
    * 是否立即执行回调函数
