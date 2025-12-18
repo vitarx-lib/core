@@ -1,4 +1,4 @@
-import type { AnyMap, AnySet, AnyWeakMap, AnyWeakSet } from '@vitarx/utils/src/index.js'
+import type { AnyMap, AnySet, AnyWeakMap, AnyWeakSet } from '@vitarx/utils'
 import { ReactiveSource } from './base.js'
 
 /**

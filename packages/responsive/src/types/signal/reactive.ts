@@ -1,5 +1,4 @@
-import type { AnyCollection, AnyObject } from '@vitarx/utils'
-import type { AnyFunction } from '@vitarx/utils/src/index.js'
+import type { AnyCollection, AnyFunction, AnyObject } from '@vitarx/utils'
 import { IS_RAW, type IS_REACTIVE } from '../../constants/index.js'
 import type { ReactiveSource } from '../../signal/reactive/base.js'
 import type { RefWrapper } from './ref.js'

@@ -1,5 +1,4 @@
-import { isArray, isMap, isNumber, isPlainObject, isSet } from '@vitarx/utils'
-import { isFunction, logger } from '@vitarx/utils/src/index.js'
+import { isArray, isFunction, isMap, isNumber, isPlainObject, isSet, logger } from '@vitarx/utils'
 import { IS_REACTIVE } from '../constants/index.js'
 import { trackSignal } from '../depend/index.js'
 import type {
