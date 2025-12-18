@@ -1,6 +1,7 @@
+export type * from './types/index.js'
 export * from './context/index.js'
 export * from './depend/index.js'
 export * from './effect/index.js'
 export * from './watcher/index.js'
 export * from './signal/index.js'
-export type * from './types/index.js'
+export * from './utils/index.js'
