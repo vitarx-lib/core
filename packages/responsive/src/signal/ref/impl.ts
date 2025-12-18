@@ -1,9 +1,9 @@
-import { isObject } from '@vitarx/utils'
+import { isObject, logger } from '@vitarx/utils'
 import { IS_RAW_SYMBOL, REF_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
-import type { RefSignal, RefValue } from '../../types/index.js'
+import type { RefValue, Signal } from '../../types/index.js'
 import { reactive } from '../reactive/index.js'
-import { isSignal, readSignal } from '../utils/index.js'
+import { isRef, readSignal } from '../utils/index.js'
 
 const toReactive = (val: any) => {
   return isObject(val) && !val[SIGNAL_SYMBOL] && !val[IS_RAW_SYMBOL] ? reactive(val, true) : val
@@ -18,19 +18,15 @@ const toReactive = (val: any) => {
  * @template T - 引用中存储的值的类型
  * @template Deep - 是否启用深层响应式，默认为 true
  */
-export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, Deep> {
+export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValue<T, Deep>> {
   /** 标识这是一个信号对象 */
-  [SIGNAL_SYMBOL]: true = true;
-
+  readonly [SIGNAL_SYMBOL]: true = true
   /** 标识这是一个 Ref 对象 */
-  [REF_SYMBOL]: true = true
-
+  readonly [REF_SYMBOL]: true = true
   /** 是否启用深层响应式 */
   public readonly deep: Deep
-
   /** 存储原始值 */
   private _rawValue: T
-
   /**
    * 创建一个新的 Ref 实例
    *
@@ -39,15 +35,19 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
    * @throws {Error} 当尝试将一个信号转换为 ref 时抛出错误
    */
   constructor(initialValue: T, deep: Deep) {
-    if (isSignal(initialValue)) throw new Error('Cannot convert a signal to a ref')
+    if (__DEV__) {
+      if (isRef(initialValue)) {
+        logger.warn(
+          '[Ref] Creating a ref from another ref is not recommended as it creates unnecessary nesting. Consider using the original ref directly.'
+        )
+      }
+    }
     this.deep = deep
     this._rawValue = initialValue
     this._value = deep ? toReactive(initialValue) : initialValue
   }
-
   /** 存储处理后的值（可能被代理） */
   private _value: RefValue<T, Deep>
-
   /**
    * 获取当前值
    *
@@ -57,7 +57,6 @@ export class Ref<T = any, Deep extends boolean = true> implements RefSignal<T, D
     this.track()
     return readSignal(this._value)
   }
-
   /**
    * 设置新值
    *

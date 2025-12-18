@@ -1,15 +1,81 @@
-import type { ShallowRef } from '../../types/index.js'
 import { Ref } from './impl.js'
 import { PropertyRef } from './property.js'
 
-/** @see {@link ref} 无参数重载 */
+/**
+ * 创建响应式引用（无参数重载）
+ * 
+ * 创建一个未初始化的响应式引用，值为 undefined。
+ * 
+ * @returns {Ref<undefined, true>} 返回一个未初始化的响应式引用
+ * 
+ * @example
+ * ```js
+ * const count = ref() // Ref<undefined, true>
+ * console.log(count.value) // undefined
+ * count.value = 1
+ * console.log(count.value) // 1
+ * ```
+ */
 export function ref(): Ref
-/** @see {@link ref} 泛型重载 */
+
+/**
+ * 创建响应式引用（泛型重载）
+ * 
+ * 创建一个指定类型的响应式引用，初始值为 undefined。
+ * 
+ * @template Value - 引用值的类型
+ * @returns {Ref<Value | undefined, true>} 返回指定类型的响应式引用
+ * 
+ * @example
+ * ```js
+ * const count = ref<number>() // Ref<number | undefined, true>
+ * console.log(count.value) // undefined
+ * count.value = 1
+ * console.log(count.value) // 1
+ * ```
+ */
 export function ref<Value>(): Ref<Value | undefined>
-/** @see {@link ref} 带初始值重载 */
+
+/**
+ * 创建响应式引用（带初始值重载）
+ * 
+ * 创建一个带有初始值的响应式引用。
+ * 
+ * @template Value - 引用值的类型
+ * @param value - 初始值
+ * @returns {Ref<Value, true>} 返回带有初始值的响应式引用
+ * 
+ * @example
+ * ```js
+ * const count = ref(0) // Ref<number, true>
+ * const user = ref({ name: 'Zhang' }) // Ref<{ name: string }, true>
+ * console.log(count.value) // 0
+ * count.value = 1
+ * console.log(count.value) // 1
+ * ```
+ */
 export function ref<Value>(value: Value): Ref<Value>
-/** @see {@link ref} 浅层响应式重载 */
+
+/**
+ * 创建响应式引用（浅层响应式重载）
+ * 
+ * 创建一个浅层响应式的引用，只对根级别的值变化做出响应，
+ * 不会对嵌套对象的属性变化做出响应。
+ * 
+ * @template Value - 引用值的类型
+ * @param value - 初始值
+ * @param deep - 是否深度代理嵌套对象，设置为 false 表示浅层响应式
+ * @returns {Ref<Value, false>} 返回浅层响应式的引用
+ * 
+ * @example
+ * ```js
+ * const shallow = ref({ a: { b: 1 } }, false) // 浅层响应式
+ * shallow.value.a.b = 2 // 不会触发响应
+ * shallow.value = { a: { b: 2 } } // 会触发响应
+ * ```
+ */
 export function ref<Value>(value: Value, deep: false): Ref<Value, false>
+
 /**
  * 创建响应式引用，值变化时自动触发依赖更新
  *
@@ -22,19 +88,65 @@ export function ref<Value>(value: Value, deep: false): Ref<Value, false>
  * const shallow = ref({ a: { b: 1 } }, false) // 浅层响应式
  * ```
  */
-export function ref<Value = any, Deep extends boolean = true>(
-  value?: Value,
-  deep?: Deep
-): Ref<Value, Deep> {
-  return new Ref(value, deep ?? true) as Ref<Value, Deep>
+export function ref(value?: any, deep?: boolean): Ref<any, boolean> {
+  return new Ref(value, deep ?? true)
 }
 
-/** @see {@link shallowRef} 无参数重载 */
-export function shallowRef(): ShallowRef
-/** @see {@link shallowRef} 泛型重载 */
-export function shallowRef<Value>(): ShallowRef<Value | undefined>
-/** @see {@link shallowRef} 带初始值重载 */
-export function shallowRef<Value>(value: Value): ShallowRef<Value>
+/**
+ * 创建浅层响应式引用（无参数重载）
+ * 
+ * 创建一个未初始化的浅层响应式引用，值为 undefined。
+ * 
+ * @returns {Ref<undefined, false>} 返回一个未初始化的浅层响应式引用
+ * 
+ * @example
+ * ```js
+ * const count = shallowRef() // Ref<undefined, false>
+ * console.log(count.value) // undefined
+ * count.value = 1
+ * console.log(count.value) // 1
+ * ```
+ */
+export function shallowRef(): Ref<any, false>
+
+/**
+ * 创建浅层响应式引用（泛型重载）
+ * 
+ * 创建一个指定类型的浅层响应式引用，初始值为 undefined。
+ * 
+ * @template Value - 引用值的类型
+ * @returns {Ref<Value | undefined, false>} 返回指定类型的浅层响应式引用
+ * 
+ * @example
+ * ```js
+ * const count = shallowRef<number>() // Ref<number | undefined, false>
+ * console.log(count.value) // undefined
+ * count.value = 1
+ * console.log(count.value) // 1
+ * ```
+ */
+export function shallowRef<Value>(): Ref<Value | undefined, false>
+
+/**
+ * 创建浅层响应式引用（带初始值重载）
+ * 
+ * 创建一个带有初始值的浅层响应式引用。
+ * 
+ * @template Value - 引用值的类型
+ * @param value - 初始值
+ * @returns {Ref<Value, false>} 返回带有初始值的浅层响应式引用
+ * 
+ * @example
+ * ```js
+ * const count = shallowRef(0) // Ref<number, false>
+ * const user = shallowRef({ name: 'Zhang' }) // Ref<{ name: string }, false>
+ * console.log(count.value) // 0
+ * count.value = 1
+ * console.log(count.value) // 1
+ * ```
+ */
+export function shallowRef<Value>(value: Value): Ref<Value, false>
+
 /**
  * 创建浅层响应式引用，仅跟踪 `.value` 的变化，不代理嵌套对象
  *
@@ -46,8 +158,8 @@ export function shallowRef<Value>(value: Value): ShallowRef<Value>
  * user.trigger() // 强制触发更新
  * ```
  */
-export function shallowRef<Value = any>(value?: Value): ShallowRef<Value> {
-  return new Ref(value, false) as Ref<Value, false>
+export function shallowRef(value?: any): Ref<any, false> {
+  return new Ref(value, false)
 }
 
 /**
@@ -67,8 +179,6 @@ export function shallowRef<Value = any>(value?: Value): ShallowRef<Value> {
  * nameRef.value = 'Jane';
  * console.log(obj.name); // 'Jane'
  * ```
- *
- * @see {@link PropertyRef}
  */
 export function propertyRef<T extends object, K extends keyof T>(
   target: T, // 目标对象，需要被观察属性变化的对象
