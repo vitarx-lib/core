@@ -1,4 +1,9 @@
-import { CALLABLE_SIGNAL_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
+import {
+  CALLABLE_SIGNAL_SYMBOL,
+  IS_SIGNAL,
+  SIGNAL_CURRENT,
+  SIGNAL_PEEK
+} from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Signal } from '../../types/index.js'
 
@@ -29,15 +34,17 @@ export function signal<T>(initialValue: T): CallableSignal<T> {
       trackSignal(sig, 'get')
       return _value
     }
-
     // 有参调用：set 操作，更新值 + 触发观察者
     if (Object.is(_value, newValue)) return
     const oldValue = _value
     _value = newValue!
     triggerSignal(sig, 'set', { newValue, oldValue })
   } as CallableSignal<T>
-  Object.defineProperty(sig, SIGNAL_SYMBOL, { value: true })
-  Object.defineProperty(sig, SIGNAL_VALUE, { get: sig })
+  Object.defineProperty(sig, IS_SIGNAL, { value: true })
+  Object.defineProperty(sig, SIGNAL_CURRENT, { get: sig, set: newValue => sig(newValue) })
+  Object.defineProperty(sig, SIGNAL_PEEK, {
+    get: () => _value
+  })
   Object.defineProperty(sig, CALLABLE_SIGNAL_SYMBOL, { value: true })
   return sig
 }
