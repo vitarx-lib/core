@@ -1,19 +1,18 @@
 import { SIGNAL_DEP_HEAD } from '../constants/index.js'
-import { Context } from '../context/index.js'
+import { readSignal } from '../signal/index.js'
 import type { DebuggerEventOptions, SignalOpType } from '../types/debug.js'
-import type { DepEffect, Signal } from '../types/index.js'
+import type { AnySignal, DepEffect, Signal } from '../types/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
 import { clearEffectDeps, createDepLink } from './link.js'
+
+let isTrackingSuspended = false
+let activeCollectCtx: CollectContext | null = null
 
 /**
  * 信号依赖集合
  */
 export type DepSet = Set<Signal>
 
-/**
- * 上下文中存储依赖的符号
- */
-const DEP_CONTEXT = Symbol.for('SIGNAL_DEPENDENCY_CONTEXT')
 /**
  * 依赖收集结果
  * @template T 函数返回值类型
@@ -33,6 +32,39 @@ export type CollectResult<T> = {
 interface CollectContext {
   deps: DepSet
   effect: DepEffect | undefined
+}
+
+/**
+ * 暂停依赖收集，执行闭包 fn 后自动恢复
+ *
+ * @param fn - 在挂起期间执行的函数
+ * @returns - fn 的返回值
+ */
+export function withSuspendedTracking<T>(fn: () => T): T {
+  isTrackingSuspended = true
+  try {
+    return fn()
+  } finally {
+    isTrackingSuspended = false
+  }
+}
+
+/**
+ * 查看信号值而不触发跟踪
+ * 该函数临时挂起跟踪机制，读取信号值后恢复跟踪状态
+ *
+ * @param sig - 信号对象或值
+ * @returns - 返回信号的当前值
+ */
+export function peekSignal<T>(sig: AnySignal<T> | T): T {
+  // 挂起信号跟踪
+  isTrackingSuspended = true
+  // 读取信号值
+  const value = readSignal(sig)
+  // 恢复信号跟踪
+  isTrackingSuspended = false
+  // 返回读取到的值
+  return value
 }
 
 /**
@@ -65,8 +97,9 @@ export function collectSignal<T, C extends DepEffect>(fn: () => T, effect: C): C
  */
 export function collectSignal<T>(fn: () => T, effect?: DepEffect): CollectResult<T> {
   const deps = new Set<Signal>()
-  const ctx: CollectContext = { deps, effect }
-  const result = Context.run(DEP_CONTEXT, ctx, fn)
+  activeCollectCtx = { deps, effect }
+  const result = fn()
+  activeCollectCtx = null
   if (effect) {
     clearEffectDeps(effect)
     for (const dep of deps) {
@@ -84,8 +117,9 @@ export function trackSignal(
   type: SignalOpType = 'get',
   options?: DebuggerEventOptions
 ): void {
-  const ctx = Context.get<CollectContext>(DEP_CONTEXT)
-  if (!ctx || ctx.deps.has(signal)) return
+  if (isTrackingSuspended) return
+  const ctx = activeCollectCtx
+  if (!ctx) return
   ctx.deps.add(signal)
   if (__DEV__) {
     const effect = ctx.effect
