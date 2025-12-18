@@ -110,6 +110,7 @@ const logWarn = (value: any, title: string = '') => {
  * @param [options.once] - 是否只执行一次
  * @param [options.immediate = false] - 是否执行回调函数
  * @param [options.scope = true] - 是否在组件作用域内执行回调函数
+ * @param [options.deep = false] - 是否深度监听对象
  *
  * @returns {Watcher} 返回一个 Watcher 实例，可以用于手动停止观察
  */
