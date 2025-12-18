@@ -157,6 +157,9 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffect {
     }
   }
 
+  /**
+   * @internal 依赖系统触发，手动调用会强制重新计算。
+   */
   schedule() {
     if (!this.dirty) {
       this.dirty = true
