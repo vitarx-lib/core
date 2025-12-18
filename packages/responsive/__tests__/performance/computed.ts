@@ -1,3 +1,4 @@
+;(globalThis as any).__DEV__ = true
 import { computed, ref, watch } from '../../src'
 
 const { memoryUsage } = process
@@ -6,13 +7,12 @@ const data = ref(1)
 const startMemory = memoryUsage()
 console.time('executionTime')
 
-const max = 1000
+const max = 10000
 let changeCount = 0
 for (let i = 0; i < max; i++) {
   const c = computed(() => data.value + 100)
   watch(c, () => changeCount++)
 }
-
 // 修改响应式变量
 data.value++
 

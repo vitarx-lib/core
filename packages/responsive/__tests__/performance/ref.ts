@@ -1,4 +1,6 @@
-import { ref, SubManager } from '../../src'
+;(globalThis as any).__DEV__ = true
+
+import { ref, watch } from '../../src'
 
 const startMemory = process.memoryUsage()
 console.time('executionTime')
@@ -7,7 +9,7 @@ const max = 1000
 let changeCount = 0
 for (let i = 0; i < max; i++) {
   const d = ref({ a: 1, b: { c: 2 } })
-  SubManager.addSyncSubscriber(d, () => {})
+  watch(d, () => {}, { flush: 'sync' })
 }
 console.log(`changeCount: ${changeCount}`)
 console.timeEnd('executionTime')
