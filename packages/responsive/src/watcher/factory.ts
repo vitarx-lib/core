@@ -1,10 +1,18 @@
 import { isArray, isMap, isNumber, isPlainObject, isSet } from '@vitarx/utils'
 import { isFunction, logger } from '@vitarx/utils/src/index.js'
-import { REACTIVE_SYMBOL } from '../constants/index.js'
+import { IS_REACTIVE } from '../constants/index.js'
 import { trackSignal } from '../depend/index.js'
-import { isReactive, isRef, isSignal, readSignal, toRaw } from '../signal/index.js'
-import type { Reactive, WatchCallback, WatchOptions, WatchSource } from '../types/index.js'
+import type {
+  CallbackValue,
+  Reactive,
+  RefWrapper,
+  WatchCallback,
+  WatchOptions,
+  WatchSource
+} from '../types/index.js'
+import { isReactive, isRef, isSignal, readSignal } from '../utils/index.js'
 import { SignalWatcher } from './SignalWatcher.js'
+import type { ValueChangeWatcher } from './ValueChangeWatcher.js'
 import { ValueWatcher } from './ValueWatcher.js'
 import { Watcher } from './Watcher.js'
 
@@ -15,15 +23,15 @@ import { Watcher } from './Watcher.js'
  * @param depth
  * @param seen
  */
-function traverse<T>(
+const traverse = <T>(
   value: T,
   depth: number = Infinity,
   seen: Map<Reactive, number> = new Map()
-): T {
+): T => {
   if (depth <= 0 || !isReactive(value)) return value
 
   const reactive = value as unknown as Reactive
-  const signal = reactive[REACTIVE_SYMBOL]
+  const signal = reactive[IS_REACTIVE]
 
   // 强制跟踪结构信号
   trackSignal(signal, 'watch-force-track')
@@ -83,6 +91,7 @@ function traverse<T>(
 
   return value
 }
+
 const logWarn = (value: any, title: string = '') => {
   logger.warn(
     `[watch()] Invalid watch source: ${title}`,
@@ -93,7 +102,7 @@ const logWarn = (value: any, title: string = '') => {
 /**
  * 创建一个观察器，用于监听源数据变化并执行回调函数
  *
- * @param source - 源数据，可以是一个信号、一个 getter 函数、一个 reactive 对象、包含多个有效源的数组。
+ * @param source - 源数据，可以任意信号、ref对象、getter 函数、reactive 对象、包含有效源的数组。
  * @param cb - 回调函数，接收三个参数：新值、旧值和清理函数
  * @param options - 可选的配置项，用于控制观察器的行为
  * @param [options.flush = 'pre'] - 调度模式
@@ -107,46 +116,56 @@ const logWarn = (value: any, title: string = '') => {
  */
 export function watch<T>(
   source: WatchSource<T>,
-  cb: WatchCallback<T, true>,
+  cb: WatchCallback<CallbackValue<T>>,
   options: WatchOptions = {}
 ): Watcher {
   const { immediate = false, deep = false, once = false, ...watcherOptions } = options
+  let watcher: ValueChangeWatcher<CallbackValue<T>>
   if (once) {
     cb = (newValue, oldValue, onCleanup) => {
       cb(newValue, oldValue, onCleanup)
       watcher.dispose()
     }
   }
-  let watcher: Watcher
   if (isSignal(source)) {
-    watcher = new SignalWatcher(source, cb as any, watcherOptions)
-  } else if (typeof source === 'function') {
-    watcher = new ValueWatcher(source, cb as any, watcherOptions)
+    watcher = new SignalWatcher(source as any, cb as any, watcherOptions)
+    if (immediate) watcher.runCallback(watcher.value)
+    return watcher
+  }
+  let getter: () => any
+  let forceUpdate: boolean = false
+  if (typeof source === 'function') {
+    getter = source
+    watcher = new ValueWatcher(source as () => CallbackValue<T>, cb, watcherOptions)
+  } else if (isRef(source)) {
+    getter = () => source.value
+    watcher = new ValueWatcher(() => source.value as CallbackValue<T>, cb as any, watcherOptions)
   } else if (isReactive(source)) {
     const depth = isNumber(deep) ? deep : deep ? Infinity : 1
-    watcher = new ValueWatcher(() => traverse(source, depth), cb as any, watcherOptions)
-    // 强制触发回调
-    ;(watcher as ValueWatcher<any>).compare = () => false
+    getter = () => traverse(source, depth)
+    forceUpdate = true
   } else if (isArray(source)) {
-    const getter = () =>
+    getter = () =>
       (source as any[]).map((s: any, index) => {
         if (isSignal(s)) {
           return readSignal(s)
         } else if (isReactive(s)) {
           traverse(s)
-          return toRaw(s)
+          return s[IS_REACTIVE].target
         } else if (isFunction(s)) {
           return (s as any)()
+        } else if (isRef(s)) {
+          return (s as RefWrapper).value
         }
         logWarn(s, `[...${index}]`)
         return s
-      }) as T
-    watcher = new ValueWatcher(getter, cb as any, watcherOptions)
-    ;(watcher as ValueWatcher<any>).compare = () => false
+      }) as CallbackValue<T>
   } else {
     logWarn(source)
-    return new ValueWatcher(() => source as T, cb as any, watcherOptions)
+    getter = () => source
   }
-  if (immediate) watcher.execute()
+  watcher = new ValueWatcher(getter, cb, watcherOptions)
+  if (forceUpdate) watcher.compare = () => false
+  if (immediate) watcher.runCallback(watcher.value)
   return watcher
 }

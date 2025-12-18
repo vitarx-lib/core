@@ -61,7 +61,7 @@ export abstract class Watcher extends Effect implements DepEffect {
    *
    * @private
    */
-  private static readonly schedulerCache: Record<FlushMode, Scheduler> = {
+  private static readonly schedulerMap: Record<FlushMode, Scheduler> = {
     pre: queuePreFlushJob,
     post: queuePostFlushJob,
     sync: (job: () => void) => job()
@@ -74,12 +74,6 @@ export abstract class Watcher extends Effect implements DepEffect {
    * @default `queuePreFlushJob`
    */
   public scheduler: Scheduler
-  /**
-   * 错误源
-   *
-   * @default 'trigger'
-   */
-  protected errorSource: string = 'execute'
   /** cleanup 回调 */
   private readonly cleanups: VoidCallback[] = []
 
@@ -94,7 +88,7 @@ export abstract class Watcher extends Effect implements DepEffect {
       this.onTrigger = options.onTrigger
       this.onTrack = options.onTrack
     }
-    const scheduler = Watcher.schedulerCache[flush]
+    const scheduler = Watcher.schedulerMap[flush]
     if (!scheduler) {
       logger.warn(`[Watcher] Invalid flush option: ${flush}`)
       this.scheduler = queuePreFlushJob
@@ -114,7 +108,6 @@ export abstract class Watcher extends Effect implements DepEffect {
     }
     this.cleanups.push(cleanupFn)
   }
-
   /**
    * 响应 signal 变化或触发回调
    *
@@ -124,7 +117,6 @@ export abstract class Watcher extends Effect implements DepEffect {
     if (!this.isActive) return
     this.scheduler(this.execute)
   }
-
   /**
    * 执行副作用
    *
@@ -134,11 +126,7 @@ export abstract class Watcher extends Effect implements DepEffect {
   execute = (): void => {
     if (!this.isActive) return
     this.runCleanup()
-    try {
-      this.runEffect()
-    } catch (e) {
-      this.reportError(e, this.errorSource)
-    }
+    this.runEffect()
   }
   /**
    * 在对象被销毁后执行的清理方法
@@ -152,7 +140,6 @@ export abstract class Watcher extends Effect implements DepEffect {
     // 将追踪回调函数置为undefined，清除引用
     this.onTrack = undefined
   }
-
   /**
    * 在对象被销毁前执行清理操作
    * 这是一个重写的方法，用于在组件或实例被销毁前执行必要的清理工作
@@ -163,7 +150,6 @@ export abstract class Watcher extends Effect implements DepEffect {
     // 调用清理方法，执行资源释放等清理操作
     this.runCleanup()
   }
-
   /**
    * 执行副作用逻辑
    *
@@ -177,7 +163,6 @@ export abstract class Watcher extends Effect implements DepEffect {
    * @protected
    */
   protected abstract runEffect(): void
-
   /**
    * 报告观察器相关的错误
    *
@@ -200,14 +185,13 @@ export abstract class Watcher extends Effect implements DepEffect {
   protected override reportError(e: unknown, source: string) {
     super.reportError(e, `watcher.${source}`)
   }
-
   /**
    * 清理方法，用于执行所有注册的清理函数并清空清理函数列表
    *
    * @internal 仅供内部使用
    * @private
    */
-  private runCleanup(): void {
+  protected runCleanup(): void {
     // 遍历并执行所有注册的清理函数
     for (const fn of this.cleanups) {
       try {

@@ -21,7 +21,6 @@ import { Watcher, type WatcherOptions } from './Watcher.js'
  * ```
  */
 export class EffectWatcher<T = any> extends Watcher {
-  protected override errorSource: string = 'collect'
   // 建议添加 readonly 修饰符
   private readonly effect: (onCleanup: WatcherOnCleanup) => T
   constructor(effect: (onCleanup: WatcherOnCleanup) => T, options?: WatcherOptions) {
@@ -38,7 +37,11 @@ export class EffectWatcher<T = any> extends Watcher {
    * @protected
    */
   protected runEffect(): void {
-    collectSignal(() => this.effect(this.onCleanup), this)
+    try {
+      collectSignal(() => this.effect(this.onCleanup), this)
+    } catch (e) {
+      this.reportError(e, 'effect')
+    }
   }
 }
 
