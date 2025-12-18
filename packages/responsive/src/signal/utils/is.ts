@@ -5,7 +5,7 @@ import {
   REF_SYMBOL,
   SIGNAL_SYMBOL
 } from '../../constants/index.js'
-import type { Reactive, RefSignal, Signal } from '../../types/index.js'
+import type { Reactive, RefWrapper, Signal } from '../../types/index.js'
 import type { CallableSignal } from '../callable/index.js'
 
 /**
@@ -33,13 +33,14 @@ export function isCallableSignal(val: any): val is CallableSignal {
  * @example
  * ```js
  * isRef(ref(0)) // true
+ * isRef(toRef(0)) // true
+ * isRef(toRef({a:1},'a')) // true
  * isRef(0) // false
  * ```
  */
-export function isRef(val: any): val is RefSignal<any, boolean> {
+export function isRef(val: any): val is RefWrapper {
   return !!val?.[REF_SYMBOL]
 }
-export { isRef as isRefSignal }
 
 /**
  * 检查一个值是否为响应式对象
