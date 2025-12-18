@@ -1,7 +1,7 @@
 import { SIGNAL_DEP_HEAD } from '../constants/index.js'
-import { readSignal } from '../signal/index.js'
 import type { DebuggerEventOptions, SignalOpType } from '../types/debug.js'
 import type { AnySignal, DepEffect, Signal } from '../types/index.js'
+import { readSignal } from '../utils/index.js'
 import { triggerOnTrack, triggerOnTrigger } from './debug.js'
 import { clearEffectDeps, createDepLink } from './link.js'
 
