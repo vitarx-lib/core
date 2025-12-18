@@ -1,12 +1,5 @@
-import {
-  CALLABLE_SIGNAL_SYMBOL,
-  IS_SIGNAL,
-  REACTIVE_SYMBOL,
-  READONLY_SYMBOL,
-  REF_SYMBOL
-} from '../../constants/index.js'
-import type { Reactive, RefWrapper, Signal } from '../../types/index.js'
-import type { CallableSignal } from '../callable/index.js'
+import { IS_REACTIVE, IS_REF, IS_SIGNAL, READONLY_SYMBOL } from '../constants/index.js'
+import type { CallableSignal, Reactive, RefSignal, RefWrapper, Signal } from '../types/index.js'
 
 /**
  * 判断对象是否是 Signal
@@ -17,31 +10,39 @@ export function isSignal(obj: any): obj is Signal {
 
 /**
  * 检查给定的值是否为可调用信号(CallableSignal)
- * 这个函数通过检查值上是否存在特定的符号属性来判断
  *
  * @param val - 需要检查的任意值
  * @returns {boolean} 如果值是可调用信号则返回true，否则返回false
  */
 export function isCallableSignal(val: any): val is CallableSignal {
-  // 使用可选链操作符检查值是否存在且具有CALLABLE_SIGNAL_SYMBOL属性
-  // 双感叹号将结果转换为布尔值
-  return !!val?.[CALLABLE_SIGNAL_SYMBOL]
+  // 核心信号 + typeof 为 function
+  return isSignal(val) && typeof val === 'function'
 }
 
 /**
- * 判断是否为 Ref 对象
+ * 判断是否为值信号（通过 .value 访问）
+ **/
+export function isRefSignal(val: any): val is RefSignal {
+  // 核心信号 + 非函数 + 有 value 属性
+  return isSignal(val) && typeof val !== 'function' && 'value' in val
+}
+
+/**
+ * 判断值是否实现RefWrapper接口
  *
  * @param val - 任意值
  * @example
  * ```js
  * isRef(ref(0)) // true
+ * isRef(computed(()=>0)) // true
  * isRef(toRef(0)) // true
- * isRef(toRef({a:1},'a')) // true
+ * isRef(toRef({k:0},'k')) // true
+ *
  * isRef(0) // false
  * ```
  */
 export function isRef(val: any): val is RefWrapper {
-  return !!val?.[REF_SYMBOL] && 'value' in val
+  return !!val?.[IS_REF] && 'value' in val
 }
 
 /**
@@ -52,7 +53,7 @@ export function isRef(val: any): val is RefWrapper {
  */
 export function isReactive(val: any): val is Reactive<any, boolean> {
   // 首先确保val不为null或undefined，然后检查其是否具有IS_REACTIVE属性
-  return !!val?.[REACTIVE_SYMBOL]
+  return !!val?.[IS_REACTIVE]
 }
 
 /**

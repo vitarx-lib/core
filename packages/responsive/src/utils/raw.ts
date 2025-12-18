@@ -1,7 +1,7 @@
 import { isObject } from '@vitarx/utils'
-import { IS_RAW_SYMBOL, REACTIVE_SYMBOL } from '../../constants/index.js'
-import type { RawObject, Reactive } from '../../types/index.js'
-import type { ReactiveSource } from '../reactive/base.js'
+import { IS_RAW, IS_REACTIVE } from '../constants/index.js'
+import type { ReactiveSource } from '../signal/reactive/base.js'
+import type { RawObject, Reactive } from '../types/index.js'
 import { isReactive } from './is.js'
 
 /**
@@ -27,7 +27,7 @@ export function markRaw<T extends object>(obj: T): RawObject<T> {
   if (!isObject(obj)) {
     throw new TypeError('[markRaw]: The argument must be an object type')
   }
-  Object.defineProperty(obj, IS_RAW_SYMBOL, {
+  Object.defineProperty(obj, IS_RAW, {
     value: true
   })
   return obj as RawObject<T>
@@ -41,7 +41,7 @@ export function markRaw<T extends object>(obj: T): RawObject<T> {
 export function isMakeRaw(obj: any): boolean {
   // 使用!!操作符将对象和其NON_SIGNAL属性转换为布尔值
   // 只有当对象和其NON_SIGNAL属性都存在时才返回true
-  return !!obj && !!obj[IS_RAW_SYMBOL]
+  return !!obj && !!obj[IS_RAW]
 }
 
 /**
@@ -52,7 +52,7 @@ export function isMakeRaw(obj: any): boolean {
  */
 export function toRaw<T extends object>(val: T | Reactive<T>): T {
   if (isReactive(val)) {
-    return ((val as any)[REACTIVE_SYMBOL] as ReactiveSource<any>).target
+    return ((val as any)[IS_REACTIVE] as ReactiveSource<any>).target
   }
   return val as T
 }
