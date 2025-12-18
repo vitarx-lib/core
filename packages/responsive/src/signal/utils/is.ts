@@ -39,7 +39,7 @@ export function isCallableSignal(val: any): val is CallableSignal {
  * ```
  */
 export function isRef(val: any): val is RefWrapper {
-  return !!val?.[REF_SYMBOL]
+  return !!val?.[REF_SYMBOL] && 'value' in val
 }
 
 /**
