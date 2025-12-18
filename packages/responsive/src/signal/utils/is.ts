@@ -1,9 +1,9 @@
 import {
   CALLABLE_SIGNAL_SYMBOL,
+  IS_SIGNAL,
   REACTIVE_SYMBOL,
   READONLY_SYMBOL,
-  REF_SYMBOL,
-  SIGNAL_SYMBOL
+  REF_SYMBOL
 } from '../../constants/index.js'
 import type { Reactive, RefWrapper, Signal } from '../../types/index.js'
 import type { CallableSignal } from '../callable/index.js'
@@ -12,8 +12,9 @@ import type { CallableSignal } from '../callable/index.js'
  * 判断对象是否是 Signal
  */
 export function isSignal(obj: any): obj is Signal {
-  return !!obj?.[SIGNAL_SYMBOL]
+  return !!obj?.[IS_SIGNAL]
 }
+
 /**
  * 检查给定的值是否为可调用信号(CallableSignal)
  * 这个函数通过检查值上是否存在特定的符号属性来判断
@@ -26,6 +27,7 @@ export function isCallableSignal(val: any): val is CallableSignal {
   // 双感叹号将结果转换为布尔值
   return !!val?.[CALLABLE_SIGNAL_SYMBOL]
 }
+
 /**
  * 判断是否为 Ref 对象
  *
