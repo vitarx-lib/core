@@ -1,5 +1,6 @@
 import { isPlainObject } from '@vitarx/utils'
-import type { ReadonlyRef, ToRef } from '../../types/index.js'
+import { REF_SYMBOL } from '../../constants/index.js'
+import type { ReadonlyRef, RefWrapper, ToRef } from '../../types/index.js'
 import { PropertyRef, Ref } from '../ref/index.js'
 import { isReactive, isRef } from '../utils/index.js'
 
@@ -74,7 +75,7 @@ export function toRef<T extends object, K extends keyof T>(
  *
  * 根据传入参数的不同，该函数有多种行为模式：
  * 1. 当传入函数时，返回一个只读 ReadonlyRef，其值通过 getter 访问源的返回值
- * 2. 当传入已有的 RefSignal 时，直接返回原 RefSignal
+ * 2. 当传入已有的 RefWrapper 时，直接返回原 RefWrapper
  * 3. 当传入任意普通值时，包装为可写的 Ref
  * 4. 当传入对象与键时，返回一个与该属性双向绑定的 PropertyRef
  *
@@ -85,7 +86,7 @@ export function toRef<T extends object, K extends keyof T>(
  * console.log(countRef.value) // 42
  * ```
  */
-export function toRef(arg1: any, arg2?: any, arg3?: any): any {
+export function toRef(arg1: any, arg2?: any, arg3?: any): RefWrapper {
   // 对象属性重载：toRef(obj, key, defaultValue?)
   if (arguments.length >= 2) {
     const object = arg1
@@ -105,6 +106,7 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): any {
   // 如果传入函数，则生成只读 ref
   if (typeof value === 'function') {
     return {
+      [REF_SYMBOL]: true,
       get value() {
         return value()
       }
