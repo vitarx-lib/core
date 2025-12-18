@@ -1,5 +1,5 @@
 import { AnyRecord } from '@vitarx/utils'
-import type { ReadonlyProxy, UnwrapValueWrappers } from '../../types/signal/readonly.js'
+import type { ReadonlyProxy } from '../../types/signal/readonly.js'
 import { createReadonlyProxy } from './readonly.js'
 
 /**
@@ -13,7 +13,7 @@ import { createReadonlyProxy } from './readonly.js'
  * 3. 作为配置对象使用时确保不被意外修改
  *
  * @template T - 目标对象类型
- * @template Deep - 是否深度只读
+ * @template IsDeep - 是否深度只读
  * @param  target - 要代理的目标对象
  * @param [deep=true] - 是否进行深度代理
  * @returns {DeepReadonly<T>} 深度只读的代理对象
@@ -27,10 +27,10 @@ import { createReadonlyProxy } from './readonly.js'
  * readonlyState.user.settings.theme = 'light' // 打印警告，因为是深度只读的
  * ```
  */
-export function readonly<T extends AnyRecord, Deep extends boolean = true>(
+export function readonly<T extends AnyRecord, IsDeep extends boolean = true>(
   target: T,
-  deep?: Deep
-): ReadonlyProxy<T, Deep> {
+  deep?: IsDeep
+): ReadonlyProxy<T, IsDeep> {
   return createReadonlyProxy(target, deep ?? true) as any
 }
 
@@ -56,6 +56,6 @@ export function readonly<T extends AnyRecord, Deep extends boolean = true>(
  * shallowReadonlyState.user.name = 'Bob' // 成功修改
  * ```
  */
-export function shallowReadonly<T extends AnyRecord>(target: T): Readonly<UnwrapValueWrappers<T>> {
+export function shallowReadonly<T extends AnyRecord>(target: T): ReadonlyProxy<T, false> {
   return createReadonlyProxy(target, false) as any
 }
