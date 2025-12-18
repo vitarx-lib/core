@@ -1,12 +1,18 @@
 import { isObject, logger } from '@vitarx/utils'
-import { IS_RAW_SYMBOL, REF_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
+import {
+  IS_RAW_SYMBOL,
+  IS_SIGNAL,
+  REF_SYMBOL,
+  SIGNAL_CURRENT,
+  SIGNAL_PEEK
+} from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
 import type { RefValue, Signal } from '../../types/index.js'
 import { reactive } from '../reactive/index.js'
-import { isRef, readSignal } from '../utils/index.js'
+import { isRef } from '../utils/index.js'
 
 const toReactive = (val: any) => {
-  return isObject(val) && !val[SIGNAL_SYMBOL] && !val[IS_RAW_SYMBOL] ? reactive(val, true) : val
+  return isObject(val) && !val[IS_SIGNAL] && !val[IS_RAW_SYMBOL] ? reactive(val, true) : val
 }
 
 /**
@@ -20,7 +26,7 @@ const toReactive = (val: any) => {
  */
 export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValue<T, Deep>> {
   /** 标识这是一个信号对象 */
-  readonly [SIGNAL_SYMBOL]: true = true
+  readonly [IS_SIGNAL]: true = true
   /** 标识这是一个 Ref 对象 */
   readonly [REF_SYMBOL]: true = true
   /** 是否启用深层响应式 */
@@ -55,7 +61,7 @@ export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValu
    */
   get value(): RefValue<T, Deep> {
     this.track()
-    return readSignal(this._value)
+    return this._value
   }
   /**
    * 设置新值
@@ -78,10 +84,17 @@ export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValu
    *
    * 访问时会追踪依赖关系
    */
-  get [SIGNAL_VALUE]() {
+  get [SIGNAL_CURRENT]() {
     this.track()
+    return this.value
+  }
+  get [SIGNAL_PEEK]() {
     return this._value
   }
+  set [SIGNAL_CURRENT](newValue: any) {
+    this.value = newValue
+  }
+
   /**
    * 手动触发依赖更新
    *
