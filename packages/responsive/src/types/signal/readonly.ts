@@ -1,11 +1,11 @@
 import type { AnyCollection, AnyFunction, AnyObject, DeepReadonly } from '@vitarx/utils'
-import type { ReadonlyRef } from './ref.js'
+import type { RefWrapper } from './ref.js'
 import type { Signal } from './signal.js'
 
 /**
  * 获取信号值类型工具
  */
-type UnwrapValueWrapper<T> = T extends Signal<infer V> | ReadonlyRef<infer V> ? V : T
+type UnwrapValueWrapper<T> = T extends Signal<infer V> | RefWrapper<infer V> ? V : T
 
 /**
  * 浅层解包工具
@@ -61,7 +61,7 @@ type DeepUnwrapValueWrappers<T extends object> = T extends AnyCollection | AnyFu
   ? T
   : {
       [K in keyof T]: T[K] extends object
-        ? T[K] extends Signal<infer V> | ReadonlyRef<infer V>
+        ? T[K] extends Signal<infer V> | RefWrapper<infer V>
           ? V
           : DeepUnwrapValueWrappers<T[K]>
         : T[K]
