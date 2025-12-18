@@ -1,9 +1,9 @@
 import type { AnyCollection, AnyObject } from '@vitarx/utils'
 import type { AnyFunction } from '@vitarx/utils/src/index.js'
 import { IS_RAW_SYMBOL, type REACTIVE_SYMBOL } from '../../constants/index.js'
-import type { CallableSignal, Ref } from '../../signal/index.js'
+import type { CallableSignal } from '../../signal/index.js'
 import type { ReactiveSource } from '../../signal/reactive/base.js'
-import type { RefSignal } from './ref.js'
+import type { ReadonlyRef } from './ref.js'
 
 /**
  * 原始对象标记
@@ -15,7 +15,11 @@ import type { RefSignal } from './ref.js'
 export type RawObject<T extends AnyObject = AnyObject> = T & {
   readonly [IS_RAW_SYMBOL]: true
 }
+/**
+ * 不需要包装的数据类型
+ */
 type NonWarped = AnyCollection | AnyFunction | RawObject
+
 /**
  * 解包嵌套的信号值
  *
@@ -38,12 +42,11 @@ type NonWarped = AnyCollection | AnyFunction | RawObject
  * // 等价于 { name: string; age: number; info: { address: Signal<string> } }
  * ```
  */
-export type UnwrapReactiveValues<T extends AnyObject> = T extends NonWarped
+type UnwrapReactiveValues<T extends AnyObject> = T extends NonWarped
   ? T
   : {
-      [K in keyof T]: T[K] extends Ref<infer V> | CallableSignal<infer V> ? V : T[K]
+      [K in keyof T]: T[K] extends ReadonlyRef<T> | CallableSignal<infer V> ? V : T[K]
     }
-
 /**
  * 深度解包嵌套信号值工具
  *
@@ -66,11 +69,11 @@ export type UnwrapReactiveValues<T extends AnyObject> = T extends NonWarped
  * // 等价于 { name: string; age: number; info: { address: string } }
  * ```
  */
-export type DeepUnwrapReactiveValues<T extends object> = T extends NonWarped
+type DeepUnwrapReactiveValues<T extends object> = T extends NonWarped
   ? T
   : {
       [K in keyof T]: T[K] extends object
-        ? T[K] extends RefSignal<infer V, boolean> | CallableSignal<infer V>
+        ? T[K] extends ReadonlyRef<infer V> | CallableSignal<infer V>
           ? V
           : DeepUnwrapReactiveValues<T[K]>
         : T[K]
@@ -98,7 +101,7 @@ export type DeepUnwrapReactiveValues<T extends object> = T extends NonWarped
  * // 等价于 { name: Signal<string>; age: number }
  * ```
  */
-export type ReactiveProxy<T extends AnyObject, Deep extends boolean> = T extends AnyCollection
+type ReactiveProxy<T extends AnyObject, Deep extends boolean> = T extends AnyCollection
   ? T
   : Deep extends true
     ? DeepUnwrapReactiveValues<T>
