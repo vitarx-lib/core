@@ -28,6 +28,7 @@ export class SignalWatcher<T> extends ValueChangeWatcher<T> {
     options?: WatcherOptions
   ) {
     super(cb, options)
+    this._value = this.getter()
     createDepLink(this, sig)
     if (__DEV__) {
       triggerOnTrack({

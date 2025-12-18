@@ -38,9 +38,8 @@ export abstract class ValueChangeWatcher<T> extends Watcher {
     options?: WatcherOptions
   ) {
     super(options)
-    this._value = this.getter()
   }
-  private _value: T
+  protected _value!: T
   public get value(): T {
     return this._value
   }

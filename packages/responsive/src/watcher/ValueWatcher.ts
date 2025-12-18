@@ -36,6 +36,7 @@ export class ValueWatcher<T> extends ValueChangeWatcher<T> {
     options: WatcherOptions
   ) {
     super(callback, options)
+    this._value = this.getter()
   }
   /**
    * 获取值并收集新依赖
