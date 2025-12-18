@@ -135,10 +135,8 @@ export function watch<T>(
   let forceUpdate: boolean = false
   if (typeof source === 'function') {
     getter = source
-    watcher = new ValueWatcher(source as () => CallbackValue<T>, cb, watcherOptions)
   } else if (isRef(source)) {
     getter = () => source.value
-    watcher = new ValueWatcher(() => source.value as CallbackValue<T>, cb as any, watcherOptions)
   } else if (isReactive(source)) {
     const depth = isNumber(deep) ? deep : deep ? Infinity : 1
     getter = () => traverse(source, depth)
