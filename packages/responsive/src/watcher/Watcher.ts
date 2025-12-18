@@ -133,8 +133,6 @@ export abstract class Watcher extends Effect implements DepEffect {
    * 重写父类的afterDispose方法，用于释放资源
    */
   protected override afterDispose() {
-    // 移除所有相关的依赖观察者，防止内存泄漏
-    clearEffectDeps(this)
     // 将触发回调函数置为undefined，清除引用
     this.onTrigger = undefined
     // 将追踪回调函数置为undefined，清除引用
@@ -149,6 +147,8 @@ export abstract class Watcher extends Effect implements DepEffect {
   protected override beforeDispose() {
     // 调用清理方法，执行资源释放等清理操作
     this.runCleanup()
+    // 移除所有相关的依赖观察者，防止内存泄漏
+    clearEffectDeps(this)
   }
   /**
    * 执行副作用逻辑
