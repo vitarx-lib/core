@@ -160,4 +160,4 @@ export type UnwrapRef<T> = T extends RefWrapper<infer V> ? V : T
  * type C = ToRef<WritableRef<boolean>> // WritableRef<boolean>
  * ```
  */
-export type ToRef<T> = T extends { readonly [REF_SYMBOL]: true } ? T : RefWrapper<T>
+export type ToRef<T> = T extends RefWrapper ? T : RefWrapper<T>
