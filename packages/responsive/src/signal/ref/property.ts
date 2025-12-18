@@ -1,5 +1,5 @@
 import { REF_SYMBOL } from '../../constants/index.js'
-import type { WritableRef } from '../../types/index.js'
+import type { RefWrapper } from '../../types/index.js'
 
 /**
  * PropertyRef 是一个泛型类，用于对象属性的引用。
@@ -32,7 +32,7 @@ import type { WritableRef } from '../../types/index.js'
  * - 属性键必须是目标对象的有效键
  * - 当属性值为 undefined 时，将返回默认值（如果提供）
  */
-export class PropertyRef<T extends object, K extends keyof T> implements WritableRef<T[K]> {
+export class PropertyRef<T extends object, K extends keyof T> implements RefWrapper<T[K]> {
   constructor(
     private readonly _target: T,
     private readonly _key: K,
