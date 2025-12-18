@@ -213,10 +213,10 @@ export class ReactiveObject<
    * @param target - 目标对象
    * @param p - 属性键
    * @param newValue - 新的属性值
-   * @param receiver - 代理对象
+   * @param _receiver - 代理对象
    * @returns {boolean} 返回设置操作是否成功
    */
-  protected set(target: T, p: keyof T, newValue: any, receiver: any): boolean {
+  protected set(target: T, p: keyof T, newValue: any, _receiver: any): boolean {
     // 已有 PropertySignal：必须走信号（它维护 proxy / 嵌套 reactive）
     const sig = this.childMap.get(p) // 获取属性对应的信号
     if (sig) {
