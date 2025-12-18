@@ -3,7 +3,7 @@ import type { AnyFunction } from '@vitarx/utils/src/index.js'
 import { IS_RAW_SYMBOL, type REACTIVE_SYMBOL } from '../../constants/index.js'
 import type { CallableSignal } from '../../signal/index.js'
 import type { ReactiveSource } from '../../signal/reactive/base.js'
-import type { ReadonlyRef } from './ref.js'
+import type { RefWrapper } from './ref.js'
 
 /**
  * 原始对象标记
@@ -45,7 +45,7 @@ type NonWarped = AnyCollection | AnyFunction | RawObject
 type UnwrapReactiveValues<T extends AnyObject> = T extends NonWarped
   ? T
   : {
-      [K in keyof T]: T[K] extends ReadonlyRef<T> | CallableSignal<infer V> ? V : T[K]
+      [K in keyof T]: T[K] extends RefWrapper<T> | CallableSignal<infer V> ? V : T[K]
     }
 /**
  * 深度解包嵌套信号值工具
@@ -73,7 +73,7 @@ type DeepUnwrapReactiveValues<T extends object> = T extends NonWarped
   ? T
   : {
       [K in keyof T]: T[K] extends object
-        ? T[K] extends ReadonlyRef<infer V> | CallableSignal<infer V>
+        ? T[K] extends RefWrapper<infer V> | CallableSignal<infer V>
           ? V
           : DeepUnwrapReactiveValues<T[K]>
         : T[K]
