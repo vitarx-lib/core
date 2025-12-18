@@ -5,8 +5,15 @@ import type { CallableSignal } from '../../types/index.js'
 /**
  * 创建函数式 Signal
  *
- * @param value 初始值
+ * @param value - 初始值
  * @returns {CallableSignal} - 函数式 Signal 对象
+ * @example
+ * ```ts
+ * const count = signal(0)
+ * console.log(count()) // 0
+ * count(1)
+ * console.log(count()) // 1
+ * ```
  */
 export function signal<T>(value: T): CallableSignal<T> {
   let _value: T = value
