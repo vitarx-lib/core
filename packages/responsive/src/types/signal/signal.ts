@@ -1,8 +1,9 @@
 import {
+  IS_SIGNAL,
+  type SIGNAL_CURRENT,
   SIGNAL_DEP_HEAD,
   SIGNAL_DEP_TAIL,
-  SIGNAL_SYMBOL,
-  type SIGNAL_VALUE
+  SIGNAL_PEEK
 } from '../../constants/index.js'
 import type { DepLink } from '../../depend/index.js'
 
@@ -14,19 +15,25 @@ import type { DepLink } from '../../depend/index.js'
  */
 export interface Signal<T = any> {
   /** 是否为 signal（类型判定用） */
-  readonly [SIGNAL_SYMBOL]: true
-  /** 读取值（必须提供，readSignal / getSignal 使用） */
-  readonly [SIGNAL_VALUE]: T
+  readonly [IS_SIGNAL]: true
+  /** 读写统一路径（正常读写行为，应触发对应信号） */
+  [SIGNAL_CURRENT]: T
+  /** 静默读取路径，不发出信号，只读取值 */
+  readonly [SIGNAL_PEEK]: T
   /**
    * signal → effect 链表头
    *
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
+   *
+   * @internal
    */
   [SIGNAL_DEP_HEAD]?: DepLink
   /**
    * signal → effect 链表尾
    *
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
+   *
+   * @internal
    */
   [SIGNAL_DEP_TAIL]?: DepLink
 }

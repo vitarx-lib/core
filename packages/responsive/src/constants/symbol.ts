@@ -1,11 +1,15 @@
 /**
- * signal 读取值（用于 readSignal 读取值，需触发跟踪）
+ * signal 标记（用于 isSignal 判断）
  */
-export const SIGNAL_VALUE = Symbol.for('__v_symbol:read-signal')
+export const IS_SIGNAL = Symbol.for('__v_signal:is-signal')
 /**
- * 标记该对象是 signal（用于 isSignal 判断）
+ * signal 读/写访问路径
  */
-export const SIGNAL_SYMBOL = Symbol.for('__v_symbol:is-signal')
+export const SIGNAL_CURRENT = Symbol.for('__v_signal:current-value')
+/**
+ * signal 静默读取访问路径 （不触发依赖跟踪）
+ */
+export const SIGNAL_PEEK = Symbol.for('__v_signal:peek-value')
 /**
  * 函数式 signal 标识
  */
