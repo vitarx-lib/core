@@ -1,5 +1,5 @@
 import type { AnyObject } from '@vitarx/utils'
-import { REF_SYMBOL } from '../../constants/index.js'
+import { IS_REF } from '../../constants/index.js'
 import type { RawObject, Reactive } from './reactive.js'
 import type { Signal } from './signal.js'
 
@@ -29,57 +29,6 @@ export type RefValue<T, IsDeep extends boolean = true> = IsDeep extends false
       ? T
       : Reactive<T>
     : T
-
-/**
- * 响应式 ref 信号接口
- *
- * Ref 是一种特殊类型的信号，用于包装单个值并使其具有响应性。
- * 当值发生变化时，会自动通知依赖它的计算属性和副作用。
- *
- * @template T - 信号值类型
- * @template IsDeep - 是否启用深层响应式，默认为 true
- *
- * @example
- * ```typescript
- * const count = ref(0) // RefSignal<number>
- * const user = ref({ name: 'John' }) // RefSignal<{ name: string }>
- *
- * // 读取值
- * console.log(count.value) // 0
- *
- * // 修改值
- * count.value = 1
- * console.log(count.value) // 1
- * ```
- */
-export interface RefSignal<T = any, IsDeep extends boolean = true>
-  extends Signal<RefValue<T, IsDeep>> {
-  readonly [REF_SYMBOL]: true
-  get value(): RefValue<T, IsDeep>
-  set value(value: T)
-}
-
-/**
- * 浅层响应式 ref 信号接口
- *
- * 浅层响应式的 ref，只对根级别的值变化做出响应，
- * 不会对嵌套对象的属性变化做出响应。
- *
- * @template T - 响应式 ref 信号的值类型
- *
- * @example
- * ```typescript
- * const shallowUser = shallowRef({ name: 'John', profile: { age: 18 } })
- *
- * // 修改根级别属性会触发响应
- * shallowUser.value = { name: 'Jane', profile: { age: 20 } }
- *
- * // 修改嵌套属性不会触发响应
- * shallowUser.value.profile.age = 21 // 不会触发响应
- * ```
- */
-export type ShallowRef<T = any> = RefSignal<T, false>
-
 /**
  * 只读 ref 接口
  *
@@ -98,7 +47,7 @@ export type ShallowRef<T = any> = RefSignal<T, false>
  * ```
  */
 export interface ReadonlyRef<T = any> {
-  readonly [REF_SYMBOL]: true
+  readonly [IS_REF]: true
   readonly value: T
 }
 
@@ -124,7 +73,7 @@ export interface ReadonlyRef<T = any> {
  * ```
  */
 export interface RefWrapper<T = any> {
-  readonly [REF_SYMBOL]: true
+  readonly [IS_REF]: true
   value: T
 }
 
