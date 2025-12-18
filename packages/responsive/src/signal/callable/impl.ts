@@ -1,31 +1,15 @@
-import {
-  CALLABLE_SIGNAL_SYMBOL,
-  IS_SIGNAL,
-  SIGNAL_CURRENT,
-  SIGNAL_PEEK
-} from '../../constants/index.js'
+import { IS_SIGNAL } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
-import type { Signal } from '../../types/index.js'
-
-/**
- * CallableSignal 函数类型重载：
- * - 无参调用：返回当前值（get）
- * - 有参调用：设置新值（set），返回 void
- */
-export interface CallableSignal<T = any> extends Signal<T> {
-  readonly [CALLABLE_SIGNAL_SYMBOL]: true
-  (): T
-  (value: T): void
-}
+import type { CallableSignal } from '../../types/index.js'
 
 /**
  * 创建函数式 Signal
  *
- * @param initialValue 初始值
+ * @param value 初始值
  * @returns {CallableSignal} - 函数式 Signal 对象
  */
-export function signal<T>(initialValue: T): CallableSignal<T> {
-  let _value: T = initialValue
+export function signal<T>(value: T): CallableSignal<T> {
+  let _value: T = value
 
   // 核心 Signal 函数（重载实现）
   const sig = function (newValue?: T): T | void {
@@ -41,10 +25,5 @@ export function signal<T>(initialValue: T): CallableSignal<T> {
     triggerSignal(sig, 'set', { newValue, oldValue })
   } as CallableSignal<T>
   Object.defineProperty(sig, IS_SIGNAL, { value: true })
-  Object.defineProperty(sig, SIGNAL_CURRENT, { get: sig, set: newValue => sig(newValue) })
-  Object.defineProperty(sig, SIGNAL_PEEK, {
-    get: () => _value
-  })
-  Object.defineProperty(sig, CALLABLE_SIGNAL_SYMBOL, { value: true })
   return sig
 }
