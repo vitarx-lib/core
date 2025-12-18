@@ -1,8 +1,8 @@
 import { isPlainObject } from '@vitarx/utils'
-import { REF_SYMBOL } from '../../constants/index.js'
+import { IS_REF } from '../../constants/index.js'
 import type { ReadonlyRef, RefWrapper, ToRef } from '../../types/index.js'
+import { isReactive, isRef } from '../../utils/index.js'
 import { PropertyRef, Ref } from '../ref/index.js'
-import { isReactive, isRef } from '../utils/index.js'
 
 /**
  * 转换为 ReadonlyRef
@@ -106,7 +106,7 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): RefWrapper {
   // 如果传入函数，则生成只读 ref
   if (typeof value === 'function') {
     return {
-      [REF_SYMBOL]: true,
+      [IS_REF]: true,
       get value() {
         return value()
       }

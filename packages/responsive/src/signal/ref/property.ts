@@ -1,4 +1,4 @@
-import { REF_SYMBOL } from '../../constants/index.js'
+import { IS_REF } from '../../constants/index.js'
 import type { RefWrapper } from '../../types/index.js'
 
 /**
@@ -33,12 +33,12 @@ import type { RefWrapper } from '../../types/index.js'
  * - 当属性值为 undefined 时，将返回默认值（如果提供）
  */
 export class PropertyRef<T extends object, K extends keyof T> implements RefWrapper<T[K]> {
+  readonly [IS_REF]: true = true
   constructor(
     private readonly _target: T,
     private readonly _key: K,
     private readonly _defaultValue?: T[K]
   ) {}
-  readonly [REF_SYMBOL]: true = true
   get value(): T[K] {
     const v = this._target[this._key]
     return v === undefined ? this._defaultValue! : v

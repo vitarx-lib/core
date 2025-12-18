@@ -1,9 +1,9 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { isObject } from '@vitarx/utils'
-import { IS_RAW_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
+import { IS_RAW, IS_REF, IS_SIGNAL } from '../../constants/index.js'
 import { clearSignalEffects, trackSignal, triggerSignal } from '../../depend/index.js'
-import type { Reactive, Signal } from '../../types/index.js'
-import { isCallableSignal, isRef } from '../utils/index.js'
+import type { Reactive, RefSignal } from '../../types/index.js'
+import { isCallableSignal, isRef } from '../../utils/index.js'
 import { ReactiveSource } from './base.js'
 import { ReactiveMap, ReactiveWeakMap } from './map.js'
 import { ReactiveSet, ReactiveWeakSet } from './set.js'
@@ -17,7 +17,7 @@ import { ReactiveSet, ReactiveWeakSet } from './set.js'
  *          使用类型谓词(value is object)来确保返回true时value的类型为object
  */
 const isNestingObject = (value: any): value is object => {
-  return isObject(value) && !value[SIGNAL_SYMBOL] && !value[IS_RAW_SYMBOL]
+  return isObject(value) && !value[IS_SIGNAL] && !value[IS_RAW]
 }
 /**
  * 设置对象属性的值
@@ -56,9 +56,10 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-class PropertySignal<T extends object, K extends keyof T> implements Signal<T[K]> {
+class PropertySignal<T extends object, K extends keyof T> implements RefSignal<T[K]> {
   // 只读属性，用于标识这是一个信号对象
-  readonly [SIGNAL_SYMBOL] = true
+  readonly [IS_SIGNAL] = true
+  readonly [IS_REF] = true
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
   private proxy?: Reactive
   /**
@@ -73,7 +74,7 @@ class PropertySignal<T extends object, K extends keyof T> implements Signal<T[K]
     public readonly deep: boolean
   ) {}
   // 获取信号值的getter
-  get [SIGNAL_VALUE]() {
+  get value() {
     // 访问值时追踪信号依赖，用于建立依赖关系
     trackSignal(this)
     // 如果已存在代理对象，直接返回
@@ -86,10 +87,18 @@ class PropertySignal<T extends object, K extends keyof T> implements Signal<T[K]
     if (isCallableSignal(value)) return value()
     // 如果值是嵌套对象，创建代理对象
     if (this.deep && isNestingObject(value)) {
-      return (this.proxy = createReactive(value))
+      return (this.proxy = createReactive(value)) as T[K]
     }
     // 返回当前值
     return value
+  }
+  set value(v: T[K]) {
+    // 设置属性值，并返回代理对象
+    const result = setValue(this.target, this.key, v)
+    if (result) {
+      this.proxy = undefined
+      triggerSignal(this, 'set', { newValue: v })
+    }
   }
   /**
    * 使信号失效，触发更新通知
@@ -104,14 +113,6 @@ class PropertySignal<T extends object, K extends keyof T> implements Signal<T[K]
     triggerSignal(this, 'set', { oldValue: oldValue, newValue: undefined })
     // 移除信号依赖链
     clearSignalEffects(this)
-  }
-  update(v: any) {
-    // 保存旧值以便后续比较
-    const result = setValue(this.target, this.key, v)
-    if (result) {
-      this.proxy = undefined
-      triggerSignal(this, 'set', { newValue: v })
-    }
   }
 }
 
@@ -197,11 +198,11 @@ export class ReactiveObject<
     }
     const childSig = this.childMap.get(p)
     // 检查子映射中是否已存在该属性的信号
-    if (childSig) return childSig[SIGNAL_VALUE]
+    if (childSig) return childSig.value
     // 如果不存在，则创建一个新的子信号
     const sig = new PropertySignal(target, p, this.deep)
     this.childMap.set(p, sig) // 将新信号添加到子映射中
-    return sig[SIGNAL_VALUE] // 返回信号中的值
+    return sig.value // 返回信号中的值
   }
   /**
    * 设置对象属性值的处理方法
@@ -221,7 +222,7 @@ export class ReactiveObject<
     const sig = this.childMap.get(p) // 获取属性对应的信号
     if (sig) {
       // 如果存在属性信号,则更新
-      sig.update(newValue)
+      sig.value = newValue
       return true // 设置成功
     }
     // 检查属性是否已存在

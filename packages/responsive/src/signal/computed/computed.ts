@@ -1,8 +1,8 @@
 import { isFunction, logger } from '@vitarx/utils'
-import { SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
+import { IS_REF, IS_SIGNAL } from '../../constants/index.js'
 import { collectSignal, trackSignal, triggerSignal } from '../../depend/index.js'
 import { Effect, type EffectOptions, EffectScope } from '../../effect/index.js'
-import type { DepEffect, Signal } from '../../types/index.js'
+import type { DepEffect, RefSignal } from '../../types/index.js'
 
 /**
  * 计算属性的值获取函数
@@ -77,8 +77,9 @@ export interface ComputedOptions<T> extends EffectOptions {
  * console.log(double.value) // 4
  * ```
  */
-export class Computed<T> extends Effect implements Signal<T>, DepEffect {
-  readonly [SIGNAL_SYMBOL]: true = true
+export class Computed<T> extends Effect implements RefSignal<T>, DepEffect {
+  readonly [IS_SIGNAL]: true = true
+  readonly [IS_REF]: true = true
   /**
    * 脏标记，标识是否需要重新计算
    * true表示依赖已变化，需要重新计算
@@ -95,7 +96,6 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
    * @private
    */
   private readonly _setter?: ComputedSetter<T>
-
   /**
    * 构造一个计算属性对象
    *
@@ -113,10 +113,6 @@ export class Computed<T> extends Effect implements Signal<T>, DepEffect {
     this._setter = options.setter
     // 立即计算
     if (immediate) this.recomputed()
-  }
-
-  get [SIGNAL_VALUE](): T {
-    return this.value
   }
 
   /**

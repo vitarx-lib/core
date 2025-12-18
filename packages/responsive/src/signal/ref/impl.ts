@@ -1,18 +1,12 @@
 import { isObject, logger } from '@vitarx/utils'
-import {
-  IS_RAW_SYMBOL,
-  IS_SIGNAL,
-  REF_SYMBOL,
-  SIGNAL_CURRENT,
-  SIGNAL_PEEK
-} from '../../constants/index.js'
+import { IS_RAW, IS_REF, IS_SIGNAL } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
-import type { RefValue, Signal } from '../../types/index.js'
+import type { RefSignal, RefValue } from '../../types/index.js'
+import { isRef } from '../../utils/index.js'
 import { reactive } from '../reactive/index.js'
-import { isRef } from '../utils/index.js'
 
 const toReactive = (val: any) => {
-  return isObject(val) && !val[IS_SIGNAL] && !val[IS_RAW_SYMBOL] ? reactive(val, true) : val
+  return isObject(val) && !val[IS_SIGNAL] && !val[IS_RAW] ? reactive(val, true) : val
 }
 
 /**
@@ -24,11 +18,11 @@ const toReactive = (val: any) => {
  * @template T - 引用中存储的值的类型
  * @template Deep - 是否启用深层响应式，默认为 true
  */
-export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValue<T, Deep>> {
+export class Ref<T = any, Deep extends boolean = true> implements RefSignal<RefValue<T, Deep>, T> {
   /** 标识这是一个信号对象 */
   readonly [IS_SIGNAL]: true = true
   /** 标识这是一个 Ref 对象 */
-  readonly [REF_SYMBOL]: true = true
+  readonly [IS_REF]: true = true
   /** 是否启用深层响应式 */
   public readonly deep: Deep
   /** 存储原始值 */
@@ -78,23 +72,6 @@ export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValu
     this._rawValue = newValue
     triggerSignal(this, 'set', { key: 'value', oldValue, newValue })
   }
-
-  /**
-   * 获取信号值
-   *
-   * 访问时会追踪依赖关系
-   */
-  get [SIGNAL_CURRENT]() {
-    this.track()
-    return this.value
-  }
-  get [SIGNAL_PEEK]() {
-    return this._value
-  }
-  set [SIGNAL_CURRENT](newValue: any) {
-    this.value = newValue
-  }
-
   /**
    * 手动触发依赖更新
    *
@@ -103,7 +80,6 @@ export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValu
   trigger() {
     triggerSignal(this, 'set', { key: 'value', newValue: this._rawValue })
   }
-
   /**
    * 手动触发依赖跟踪
    *
@@ -112,7 +88,6 @@ export class Ref<T = any, Deep extends boolean = true> implements Signal<RefValu
   track() {
     trackSignal(this, 'get', { key: 'value' })
   }
-
   /**
    * 更新值
    *

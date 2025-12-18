@@ -1,6 +1,6 @@
 import { isObject } from '@vitarx/utils'
 import type { Reactive } from '../../types/index.js'
-import { isSignal } from '..//utils/index.js'
+import { isSignal } from '../../utils/index.js'
 import { createReactive } from './object.js'
 
 /**

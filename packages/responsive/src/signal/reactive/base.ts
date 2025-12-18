@@ -1,16 +1,16 @@
-import { REACTIVE_SYMBOL, SIGNAL_SYMBOL, SIGNAL_VALUE } from '../../constants/index.js'
+import { IS_REACTIVE, IS_REF, IS_SIGNAL } from '../../constants/index.js'
 import { trackSignal, triggerSignal } from '../../depend/index.js'
-import type { DebuggerEventOptions, Reactive, Signal, SignalOpType } from '../../types/index.js'
+import type { DebuggerEventOptions, Reactive, RefSignal, SignalOpType } from '../../types/index.js'
 
 /**
  * ReactiveSource 是一个抽象类，用于创建响应式对象代理。
  *
- * 它实现了 Signal 接口，仅发出结构变化的信号。
+ * 它实现了 RefSignal 接口，仅发出结构变化的信号。
  */
 export abstract class ReactiveSource<T extends object, Deep extends boolean = true>
-  implements ProxyHandler<T>, Signal<number>
+  implements ProxyHandler<T>, RefSignal<number>
 {
-  readonly [SIGNAL_SYMBOL]: true = true
+  readonly [IS_SIGNAL]: true = true
   public readonly deep: Deep
   public readonly proxy: Reactive<T, Deep>
   private version: number = 0
@@ -27,12 +27,15 @@ export abstract class ReactiveSource<T extends object, Deep extends boolean = tr
     // 创建代理对象并赋值给 proxy 属性
     this.proxy = new Proxy(this.target, this) as Reactive<T, Deep>
   }
-  get [SIGNAL_VALUE]() {
-    this.trackSignal('get', { key: SIGNAL_VALUE })
+  readonly [IS_REF]: true = true
+  get value(): number {
     return this.version
   }
+  set value(value: number) {
+    this.version = value
+  }
   get(target: T, p: string | symbol, receiver: any): any {
-    if (p === REACTIVE_SYMBOL) return this
+    if (p === IS_REACTIVE) return this
     // 调用子类实现的 doGet 方法处理非 symbol 属性
     return this.doGet(target, p, receiver)
   }
