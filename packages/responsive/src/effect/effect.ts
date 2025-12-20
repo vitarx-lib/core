@@ -35,7 +35,7 @@ export interface EffectOptions {
 export abstract class Effect implements EffectLike {
   /** 当前状态 */
   private _state: EffectState = 'active'
-  protected constructor(options?: EffectOptions) {
+  constructor(options?: EffectOptions) {
     const scope = options?.scope ?? true
     if (scope === true) {
       getActiveScope()?.add(this)
