@@ -122,9 +122,13 @@ export function watch<T>(
   const { immediate = false, deep = false, once = false, ...watcherOptions } = options
   let watcher: ValueChangeWatcher<CallbackValue<T>>
   if (once) {
+    const originalCb = cb
     cb = (newValue, oldValue, onCleanup) => {
-      cb(newValue, oldValue, onCleanup)
-      watcher.dispose()
+      try {
+        originalCb(newValue, oldValue, onCleanup)
+      } finally {
+        watcher.dispose()
+      }
     }
   }
   if (isSignal(source)) {
