@@ -46,7 +46,8 @@ export class EffectWatcher<T = any> extends Watcher {
 }
 
 /**
- * 创建一个副作用效果观察器，
+ * 创建一个副作用效果观察器
+ *
  * 当依赖的响应式数据变化时自动执行回调函数
  *
  * @param effect - 一个回调函数，接收一个 onCleanup 函数作为参数，用于清理副作用
