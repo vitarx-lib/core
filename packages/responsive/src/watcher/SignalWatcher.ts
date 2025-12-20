@@ -1,6 +1,7 @@
 import { triggerOnTrack } from '../depend/debug.js'
 import { createDepLink, peekSignal } from '../depend/index.js'
 import type { AnySignal, WatchCallback } from '../types/index.js'
+import { readSignal } from '../utils/index.js'
 import { ValueChangeWatcher } from './ValueChangeWatcher.js'
 import { type WatcherOptions } from './Watcher.js'
 
@@ -28,7 +29,7 @@ export class SignalWatcher<T> extends ValueChangeWatcher<T> {
     options?: WatcherOptions
   ) {
     super(cb, options)
-    this._value = this.getter()
+    this._value = readSignal(this.sig)
     createDepLink(this, sig)
     if (__DEV__) {
       triggerOnTrack({
