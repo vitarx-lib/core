@@ -1,6 +1,6 @@
 ;(globalThis as any).__DEV__ = false
 import * as process from 'node:process'
-import { ref, Ref, watch } from '../../src/index.js'
+import { type CallableSignal, signal, watch } from '../../src/index.js'
 
 // ====================== 配置 ======================
 const SIGNAL_COUNT = 10_000
@@ -29,9 +29,9 @@ async function run() {
 
   // ---------- 1. create ----------
   console.time('create signals')
-  const signals: Ref<number>[] = new Array(SIGNAL_COUNT)
+  const signals: CallableSignal<number>[] = new Array(SIGNAL_COUNT)
   for (let i = 0; i < SIGNAL_COUNT; i++) {
-    signals[i] = ref(i)
+    signals[i] = signal(i)
   }
   console.timeEnd('create signals')
   mem('after create')
@@ -45,7 +45,7 @@ async function run() {
   }
 
   for (let i = 0; i < SIGNAL_COUNT; i++) {
-    const watcher = watch(() => signals[i].value, cb, { flush: 'sync' })
+    const watcher = watch(signals[i], cb, { flush: 'sync' })
     stops[i] = watcher.dispose.bind(watcher)
   }
   console.timeEnd('attach watchers')
@@ -55,7 +55,8 @@ async function run() {
   triggerCount = 0
   console.time('single update')
   for (let i = 0; i < SIGNAL_COUNT; i++) {
-    signals[i].value++
+    const c = signals[i]()
+    signals[i](c + 1)
   }
   console.timeEnd('single update')
   console.log('trigger count:', triggerCount)
@@ -65,7 +66,8 @@ async function run() {
   console.time(`hot update x${UPDATE_ROUNDS}`)
   for (let r = 0; r < UPDATE_ROUNDS; r++) {
     for (let i = 0; i < SIGNAL_COUNT; i++) {
-      signals[i].value++
+      const c = signals[i]()
+      signals[i](c + 1)
     }
   }
   console.timeEnd(`hot update x${UPDATE_ROUNDS}`)

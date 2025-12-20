@@ -1,6 +1,6 @@
 ;(globalThis as any).__DEV__ = true
 
-import { ref, watch } from '../../src'
+import { reactive, watch } from '../../src'
 
 const startMemory = process.memoryUsage()
 console.time('executionTime')
@@ -8,13 +8,13 @@ console.time('executionTime')
 const max = 100000
 let changeCount = 0
 for (let i = 0; i < max; i++) {
-  const d = ref(1)
+  const d = reactive({ value: 0 })
   watch(
     d,
     () => {
       changeCount++
     },
-    { flush: 'sync' }
+    { flush: 'sync', deep: true }
   )
   d.value++
 }
