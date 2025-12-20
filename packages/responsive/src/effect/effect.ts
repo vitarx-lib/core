@@ -1,5 +1,5 @@
-import { EffectScope, getCurrentScope } from './scope.js'
-import { NEXT_EFFECT, PREV_EFFECT } from './symbol.js'
+import { getActiveScope, removeFromOwnerScope, reportEffectError } from './helpers.js'
+import { type EffectLike, EffectScope } from './scope.js'
 
 /**
  * 副作用状态枚举
@@ -21,47 +21,26 @@ export interface EffectOptions {
    */
   scope?: EffectScope | boolean
 }
+
 /**
- * 最小化的副作用基类
+ * 通用型副作用基类
  *
  * 设计原则：
  * - 保持非常轻量，仅管理状态与生命周期钩子；
  * - 提供受保护的 beforeX 钩子供子类实现自定义清理/暂停/恢复逻辑；
- * - 提供 _prev/_next 链表引用，供 EffectScope 做 O(1) 的添加/删除；
- * - 提供 _scope，按照约定自定义的effect需将异常报告给 _scope.handleError 处理；
  *
  * 约定：
- * - 不要修改_开头的属性，它们可以被读取，但是一定不要修改。
- * - 副作用发生的异常应该交由 _scope.handleError 进行处理。
+ * - 副作用发生非预期异常应该主动捕获并交由 reportError 方法进行向上报告。
  */
-export abstract class Effect {
-  /**
-   * 双向链表节点引用
-   *
-   * @readonly  由scope注入（由 Scope 使用）—— 注意：不可直接修改
-   */
-  [PREV_EFFECT]?: Effect;
-  /**
-   * 双向链表节点引用
-   *
-   * @readonly 由scope注入（由 Scope 使用）—— 注意：不可直接修改
-   */
-  [NEXT_EFFECT]?: Effect
-  /**
-   * 所属作用域
-   *
-   * @readonly 由scope注入（自定义Effect可以调用this._scope.handleError(e,source)上报异常） —— 注意：不可直接修改
-   */
-  _scope?: EffectScope
-
+export abstract class Effect implements EffectLike {
   /** 当前状态 */
   private _state: EffectState = 'active'
   protected constructor(options?: EffectOptions) {
     const scope = options?.scope ?? true
     if (scope === true) {
-      getCurrentScope()?.addEffect(this)
+      getActiveScope()?.add(this)
     } else if (typeof scope === 'object') {
-      scope.addEffect(this)
+      scope.add(this)
     }
   }
   /**
@@ -101,7 +80,7 @@ export abstract class Effect {
     this.beforeDispose?.()
     this._state = 'deprecated'
     // 从作用域链表中删除自己
-    this._scope?.removeEffect(this)
+    removeFromOwnerScope(this)
     this.afterDispose?.()
   }
 
@@ -125,17 +104,13 @@ export abstract class Effect {
     this.afterResume?.()
   }
   /**
-   * 抛出异常
+   * 报告非预期异常
    *
-   * @param e - 异常对象
-   * @param source - 异常源
+   * @param e - 捕获的非预期异常/通常是Error对象
+   * @param source - 异常源/字符串类型，帮助定位异常发生地：watcher.callback
    */
   protected reportError(e: unknown, source: string): void {
-    if (this._scope) {
-      this._scope.handleError(e, source)
-    } else {
-      throw e
-    }
+    reportEffectError(this, e, source)
   }
   /* ---------- 前置/后置钩子 (供子类覆盖) ---------- */
   protected beforeDispose?(): void

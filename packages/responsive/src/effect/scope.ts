@@ -1,7 +1,7 @@
 import { logger, type VoidCallback } from '@vitarx/utils'
-import { Context, runInContext } from '../context/index.js'
-import { Effect, type EffectState } from './effect.js'
-import { NEXT_EFFECT, PREV_EFFECT } from './symbol.js'
+import { runInContext } from '../context/index.js'
+import { type EffectState } from './effect.js'
+import { ACTIVE_SCOPE, NEXT_EFFECT, OWNER_SCOPE, PREV_EFFECT } from './symbol.js'
 
 /**
  * 作用域错误处理函数
@@ -11,6 +11,9 @@ import { NEXT_EFFECT, PREV_EFFECT } from './symbol.js'
  */
 export type EffectScopeErrorHandler = (error: unknown, source: string) => void
 
+/**
+ * 作用域可选配置选项
+ */
 export interface EffectScopeOptions {
   /**
    * 作用域名称，用于在调试时更直观地识别作用域
@@ -28,7 +31,53 @@ export interface EffectScopeOptions {
   errorHandler?: EffectScopeErrorHandler
 }
 
-const SCOPE_CONTEXT = Symbol.for('__v_effect_scope_context')
+/**
+ * 副作用效果接口定义
+ *
+ * 定义了副作用效果应该具备的基本方法，这些方法用于管理副作用的生命周期。
+ * 所有方法都是可选的，允许实现部分或全部功能。
+ */
+export interface EffectLike {
+  /**
+   * 双向链表节点引用
+   *
+   * @internal  由EffectScope注入和使用—— 注意：不可直接修改
+   */
+  [PREV_EFFECT]?: EffectLike
+  /**
+   * 双向链表节点引用
+   *
+   * @internal 由EffectScope注入和使用 —— 注意：不可直接修改
+   */
+  [NEXT_EFFECT]?: EffectLike
+  /**
+   * EffectScope 实例
+   *
+   * @internal 由EffectScope注入和使用 —— 注意：不可直接修改
+   */
+  [OWNER_SCOPE]?: EffectScope
+  /**
+   * 释放资源的方法
+   *
+   * 当副作用不再需要时调用此方法来清理相关资源，如取消订阅、清除定时器等。
+   * 实现此方法可以确保不会发生内存泄漏。
+   */
+  dispose?: () => void
+  /**
+   * 暂停副作用的方法
+   *
+   * 用于临时暂停副作用的执行，但不释放其资源。
+   * 这在某些场景下很有用，比如组件暂时不可见时暂停更新。
+   */
+  pause?: () => void
+  /**
+   * 恢复副作用的方法
+   *
+   * 用于恢复之前被暂停的副作用执行。
+   * 应当与 pause 方法配对使用。
+   */
+  resume?: () => void
+}
 
 /**
  * EffectScope 作用域
@@ -51,9 +100,9 @@ export class EffectScope {
    */
   private _callbacks?: Map<'dispose' | 'pause' | 'resume', Set<VoidCallback>>
   /** 链表头部 */
-  private _head?: Effect
+  private _head?: EffectLike
   /** 链表尾部 */
-  private _tail?: Effect
+  private _tail?: EffectLike
   /** 当前状态 */
   private _state: EffectState = 'active'
   /**
@@ -99,22 +148,27 @@ export class EffectScope {
    *
    * 获取数量需要遍历链表，因此时间复杂度为O(n)，一般仅用于测试阶段
    *
+   * @warning 仅测试环境有用，开发环境返回固定的空数组
    * @returns {Effect[]} 包含所有效果的数组
    */
-  get effects(): Effect[] {
-    // 初始化一个空数组用于存放效果
-    const list: Effect[] = []
-    // 从链表头部开始遍历
-    let node = this._head
-    // 遍历整个效果链表
-    while (node) {
-      // 将当前节点添加到数组中
-      list.push(node)
-      // 移动到下一个节点
-      node = node[NEXT_EFFECT]
+  get effects(): EffectLike[] {
+    if (__DEV__) {
+      // 初始化一个空数组用于存放效果
+      const list: EffectLike[] = []
+      // 从链表头部开始遍历
+      let node = this._head
+      // 遍历整个效果链表
+      while (node) {
+        // 将当前节点添加到数组中
+        list.push(node)
+        // 移动到下一个节点
+        node = node[NEXT_EFFECT]
+      }
+      // 返回包含所有效果的数组
+      return list
+    } else {
+      return []
     }
-    // 返回包含所有效果的数组
-    return list
   }
 
   /**
@@ -148,18 +202,17 @@ export class EffectScope {
    * 向效果链表中添加一个新的效果
    * @param effect - 要添加的效果对象
    */
-  addEffect(effect: Effect) {
+  add(effect: EffectLike) {
     // 如果 effect 已经属于当前 scope，直接返回
-    if (effect._scope === this) return
+    if (effect[OWNER_SCOPE] === this) return
     // 如果 effect 当前属于其他 scope，抛出错误而不是静默切换
-    if (effect._scope) {
+    if (effect[OWNER_SCOPE]) {
       throw new Error(
-        `[Vitarx.EffectScope]: Cannot add effect to scope. Effect already belongs to another scope. ` +
-          `Please remove it from the current scope first.`
+        '[Vitarx.EffectScope]: Cannot add effect to scope. Effect already belongs to another scope. Please remove it from the current scope first.'
       )
     }
     // 将当前效果的_scope指针指向当前作用域
-    effect._scope = this
+    effect[OWNER_SCOPE] = this
     // 将当前效果的_prev指针指向链表的尾部
     effect[PREV_EFFECT] = this._tail
     // 初始化当前效果的_next指针为undefined，因为它是最后一个效果
@@ -175,10 +228,10 @@ export class EffectScope {
    * 从效果链表中移除指定的效果节点
    * @param effect - 需要被移除的效果节点
    */
-  removeEffect(effect: Effect) {
-    if (!effect._scope) return
+  remove(effect: EffectLike) {
+    if (!effect[OWNER_SCOPE]) return
     // 将当前效果的_scope指针置为undefined，表示它不再属于任何作用域
-    effect._scope = undefined
+    effect[OWNER_SCOPE] = undefined
     // 获取要移除节点的前一个节点和后一个节点
     const prev = effect[PREV_EFFECT]
     const next = effect[NEXT_EFFECT]
@@ -202,7 +255,7 @@ export class EffectScope {
    * @returns {T} 函数执行的结果
    */
   run<T>(fn: () => T): T {
-    return runInContext(SCOPE_CONTEXT, this, fn)
+    return runInContext(ACTIVE_SCOPE, this, fn)
   }
 
   /**
@@ -241,7 +294,7 @@ export class EffectScope {
         // 如果dispose方法抛出错误，使用错误处理器报告错误
         this.handleError(error, 'dispose')
       } finally {
-        node[PREV_EFFECT] = node[NEXT_EFFECT] = undefined // 断开当前节点与前后的连接
+        node[OWNER_SCOPE] = node[PREV_EFFECT] = node[NEXT_EFFECT] = undefined // 断开当前节点与前后的连接
       }
       node = next // 移动到下一个节点
     }
@@ -254,7 +307,6 @@ export class EffectScope {
     // 清空所有回调引用，完成资源释放
     this._callbacks = undefined
   }
-
   /**
    * 暂停链表中的所有节点
    * 该方法会遍历链表中的每个节点，并尝试调用其pause方法（如果存在）
@@ -265,21 +317,8 @@ export class EffectScope {
       throw new Error(`[EffectScope][${String(this.name)}] Cannot pause. Scope is not active.`)
     }
     this._state = 'paused'
-    let node = this._head // 从链表头节点开始遍历
-    while (node) {
-      // 当节点不为null时继续循环
-      const next = node[NEXT_EFFECT] // 保存当前节点的下一个节点
-      try {
-        node.pause?.() // 尝试调用节点的pause方法（如果存在）
-      } catch (error) {
-        // 如果调用pause方法时发生错误，报告作用域错误
-        this.handleError(error, 'pause')
-      }
-      node = next // 移动到下一个节点
-    }
-    this.triggerCallback('pause') // 触发暂停回调
+    this.traverseEffects('pause')
   }
-
   /**
    * 恢复链表中所有节点的执行状态
    * 此方法会遍历链表中的每个节点，并尝试调用其resume方法
@@ -291,22 +330,28 @@ export class EffectScope {
       throw new Error(`[EffectScope][${String(this.name)}] Cannot resume. Scope is not active.`)
     }
     this._state = 'active'
-    let node = this._head // 从链表头节点开始遍历
-    while (node) {
-      // 遍历链表中的每个节点
-      const next = node[NEXT_EFFECT] // 保存当前节点的下一个节点引用
-      try {
-        node.resume?.() // 尝试恢复当前节点的执行，使用可选链操作符确保resume方法存在
-      } catch (error) {
-        // 捕获恢复过程中可能发生的错误
-        // 报告范围错误，包含节点信息、错误来源和具体的错误对象
-        this.handleError(error, 'resume')
-      }
-      node = next // 移动到下一个节点
-    }
-    this.triggerCallback('resume') // 触发'resume'类型的回调函数
+    this.traverseEffects('resume')
   }
-
+  /**
+   * 遍历链表中的每个节点
+   *
+   * 调用对应的方法
+   *
+   * @param type - 要调用的方法类型（'pause' | 'resume'）
+   */
+  private traverseEffects(type: 'pause' | 'resume') {
+    let node = this._head
+    while (node) {
+      const next = node[NEXT_EFFECT]
+      try {
+        node[type]?.() // 调用对应的方法
+      } catch (error) {
+        this.handleError(error, type)
+      }
+      node = next
+    }
+    this.triggerCallback(type)
+  }
   /**
    * 添加回调函数的私有方法。
    * @param cb - 要添加的回调函数
@@ -332,77 +377,12 @@ export class EffectScope {
   private triggerCallback(type: 'dispose' | 'pause' | 'resume'): void {
     const callbacks = this._callbacks?.get(type) // 获取指定类型的回调集合
     if (!callbacks) return // 如果不存在回调集合，则直接返回
-    for (const callback of callbacks) callback()
+    for (const callback of callbacks) {
+      try {
+        callback()
+      } catch (e) {
+        this.handleError(e, `scope.${type}.callback`)
+      }
+    }
   }
-}
-
-/**
- * 创建一个新的作用域实例
- *
- * @param options - 可选的配置参数，用于初始化作用域
- * @returns 返回一个新的 EffectScope 实例
- */
-export function createScope(options?: EffectScopeOptions): EffectScope {
-  return new EffectScope(options) // 使用提供的选项创建并返回一个新的 EffectScope 实例
-}
-
-/**
- * 获取当前的作用域(EffectScope)
- * 该函数用于从上下文中获取当前的作用域对象
- *
- * @returns {EffectScope | undefined} 返回当前的作用域(EffectScope)对象，如果不存在则返回undefined
- */
-export function getCurrentScope(): EffectScope | undefined {
-  // 从上下文中获取并返回类型为EffectScope的SCOPE_CONTEXT值
-  return Context.get<EffectScope>(SCOPE_CONTEXT)
-}
-
-/**
- * 在作用域销毁时执行回调函数的通用函数
- *
- * @param fn - 要执行的回调函数
- * @param failSilently - 是否静默失败（不输出警告）
- * @param action - 执行的动作名称
- */
-function onScopeAction(
-  fn: () => void,
-  failSilently: boolean | undefined,
-  action: 'Dispose' | 'Pause' | 'Resume'
-): void {
-  const scope = getCurrentScope()
-  if (scope) {
-    scope[`on${action}`](fn)
-  } else if (!failSilently) {
-    console.warn(`[EffectScope] onScope${action}() no active scope found`)
-  }
-}
-
-/**
- * 在作用域销毁时注册回调函数
- * 
- * @param fn - 作用域销毁时要执行的回调函数
- * @param failSilently - 是否静默失败（不输出警告），默认为 false
- */
-export function onScopeDispose(fn: () => void, failSilently?: boolean): void {
-  onScopeAction(fn, failSilently, 'Dispose')
-}
-
-/**
- * 在作用域暂停时注册回调函数
- * 
- * @param fn - 作用域暂停时要执行的回调函数
- * @param failSilently - 是否静默失败（不输出警告），默认为 false
- */
-export function onScopePause(fn: () => void, failSilently?: boolean): void {
-  onScopeAction(fn, failSilently, 'Pause')
-}
-
-/**
- * 在作用域恢复时注册回调函数
- * 
- * @param fn - 作用域恢复时要执行的回调函数
- * @param failSilently - 是否静默失败（不输出警告），默认为 false
- */
-export function onScopeResume(fn: () => void, failSilently?: boolean): void {
-  onScopeAction(fn, failSilently, 'Resume')
 }
