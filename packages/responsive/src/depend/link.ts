@@ -1,11 +1,74 @@
+import type { DebuggerHandler, Signal } from '../types/index.js'
 import {
+  DEP_INDEX_MAP,
+  DEP_VERSION,
   EFFECT_DEP_HEAD,
   EFFECT_DEP_TAIL,
   SIGNAL_DEP_HEAD,
   SIGNAL_DEP_TAIL
-} from '../constants/index.js'
-import type { DepEffect, Signal } from '../types/index.js'
+} from './symbol.js'
 
+/**
+ * DepEffectLike 接口定义了响应式依赖的副作用对象
+ *
+ * 这个接口是响应式系统的核心，它管理着信号(signal)和观察者(watcher)之间的关系，
+ * 并提供了调试和调度功能。当依赖的信号值发生变化时，会触发相应的副作用。
+ */
+export interface DepEffectLike {
+  /**
+   * 响应式依赖的版本号
+   */
+  [DEP_VERSION]?: number
+  /**
+   * signal <-> watcher 索引映射
+   *
+   * 用于快速查找某个信号的依赖关系。
+   * 这是依赖系统的核心数据结构，用于高效地管理依赖关系。
+   *
+   * ⚠️ 注意：依赖系统核心数据，请勿修改。
+   */
+  [DEP_INDEX_MAP]?: WeakMap<Signal, DepLink>
+  /**
+   * signal <-> watcher 链表头
+   *
+   * 用于维护信号到观察者的双向链表结构的起始节点。
+   * 这是依赖系统的核心数据结构，用于高效地管理依赖关系。
+   *
+   * ⚠️ 注意：依赖系统核心数据，请勿修改。
+   */
+  [EFFECT_DEP_HEAD]?: DepLink
+  /**
+   * signal <-> watcher 链表尾
+   *
+   * 用于维护信号到观察者的双向链表结构的末尾节点。
+   * 这是依赖系统的核心数据结构，用于高效地管理依赖关系。
+   *
+   * ⚠️ 注意：依赖系统核心数据，请勿修改。
+   */
+  [EFFECT_DEP_TAIL]?: DepLink
+  /**
+   * trigger调试钩子 - 触发信号
+   *
+   * 当信号值发生变化并触发依赖更新时调用此钩子函数。
+   * 可用于调试和监控依赖系统的运行状态。
+   *
+   * @param event - 调试事件对象，包含触发相关的调试信息
+   */
+  onTrigger?: DebuggerHandler
+  /**
+   * track调试钩子 - 跟踪信号
+   *
+   * 当响应式系统跟踪到新的依赖关系时调用此钩子函数。
+   * 可用于调试和监控依赖收集的过程。
+   *
+   * @param event - 调试事件对象，包含跟踪相关的调试信息
+   */
+  onTrack?: DebuggerHandler
+  /**
+   * 运行副作用
+   */
+  run(): void
+}
 /**
  * DepLink 类用于表示依赖关系中的双向链表节点
  *
@@ -14,16 +77,24 @@ import type { DepEffect, Signal } from '../types/index.js'
  * 这种结构允许在signal和effect之间建立高效的依赖关系
  */
 export class DepLink {
-  // signal 维度链表的前驱节点，指向同一个signal的前一个依赖关系
+  // signal维度上的前驱节点
   sigPrev?: DepLink
-  // signal 维度链表的后继节点，指向同一个signal的后一个依赖关系
+  // signal维度上的后继节点
   sigNext?: DepLink
-  // effect 维度链表
+  // effect维度上的前驱节点
   ePrev?: DepLink
-  eNext?: DepLink
+  // effect维度上的后继节点
+  eNext?: DepLink;
+  // 依赖关系的版本号，用于追踪依赖关系的变化
+  [DEP_VERSION]?: number
+  /**
+   * 构造函数
+   * @param signal - 关联的Signal对象
+   * @param effect - 关联的DepEffectLike对象
+   */
   constructor(
     public signal: Signal,
-    public effect: DepEffect
+    public effect: DepEffectLike
   ) {}
 }
 
@@ -45,9 +116,14 @@ export class DepLink {
  *
  * @example
  * ```typescript
- * const effect = new DepEffect()
- * const signal = new Signal()
- * const link = createDepLink(effect, signal)
+ * const sig = signal(0)
+ * const effect = {
+ * run(){
+ *   console.log('effect run',sig())
+ * }
+ * }
+ * const link = createDepLink(effect, sig)
+ * sig(1)
  * ```
  *
  * @remarks
@@ -55,7 +131,7 @@ export class DepLink {
  * - 使用 EFFECT_DEP_HEAD/EFFECT_DEP_TAIL 和 SIGNAL_DEP_HEAD/SIGNAL_DEP_TAIL 作为链表头尾的标记
  * - 维护了双向链表的前驱(ePrev/sigPrev)和后继(eNext/sigNext)指针
  */
-export function createDepLink(effect: DepEffect, signal: Signal): DepLink {
+export function createDepLink(effect: DepEffectLike, signal: Signal): DepLink {
   // 创建新的链表节点
   const link = new DepLink(signal, effect)
 
@@ -87,7 +163,6 @@ export function createDepLink(effect: DepEffect, signal: Signal): DepLink {
 
   return link
 }
-
 /**
  * 销毁 signal <-> effect 链表关联
  *
@@ -115,21 +190,28 @@ export function destroyDepLink(link: DepLink): void {
   if (signal[SIGNAL_DEP_TAIL] === link) signal[SIGNAL_DEP_TAIL] = link.sigPrev
 
   link.sigPrev = link.sigNext = undefined
-}
 
+  // -------------------
+  // index map（关键补充）
+  // -------------------
+  effect[DEP_INDEX_MAP]?.delete(signal)
+}
 /**
  * 移除 effect 关联的所有信号依赖（用于重新收集或销毁）
  */
-export function clearEffectDeps(effect: DepEffect) {
+export function clearEffectDeps(effect: DepEffectLike) {
   let link = effect[EFFECT_DEP_HEAD]
   while (link) {
     const next = link.eNext
     destroyDepLink(link)
     link = next
   }
-  effect[EFFECT_DEP_HEAD] = effect[EFFECT_DEP_TAIL] = undefined
+  effect[DEP_VERSION] =
+    effect[DEP_INDEX_MAP] =
+    effect[EFFECT_DEP_HEAD] =
+    effect[EFFECT_DEP_TAIL] =
+      undefined
 }
-
 /**
  * 移除 Signal 关联的 effect 依赖
  */
@@ -144,39 +226,27 @@ export function clearSignalEffects(signal: Signal) {
 }
 
 /**
- * 将信号(signal)相关的观察者(effects)转换为数组
+ * 迭代一个 signal 关联的所有 effect
  *
- * 注意：时间复杂度为O(n)，一般仅用于测试环境
- *
- * @param signal - 需要转换的信号对象
- * @returns {DepEffect[]} 包含所有相关观察者的数组
+ * @wraning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function getSignalEffects(signal: Signal): DepEffect[] {
-  const arr: DepEffect[] = []
+export function* iterateSignalEffects(signal: Signal): IterableIterator<DepEffectLike> {
   let node = signal[SIGNAL_DEP_HEAD] as DepLink | undefined
   while (node) {
-    arr.push(node.effect)
+    yield node.effect
     node = node.sigNext
   }
-  return arr
 }
 
 /**
- * 将观察者(effect)的信号链表转换为信号数组
+ * 迭代一个 effect 依赖的所有 signal
  *
- * 该函数遍历观察者维护的信号链表，将每个信号依次添加到数组中
- *
- * 注意：时间复杂度为O(n)，一般仅用于测试环境
- *
- * @param effect - 观察者对象，包含信号链表的头指针
- * @returns Signal[] - 包含所有信号的数组
+ * @wraning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function getEffectSignals(effect: DepEffect): Signal[] {
-  const arr: Signal[] = []
+export function* iterateEffectSignals(effect: DepEffectLike): IterableIterator<Signal> {
   let node = effect[EFFECT_DEP_HEAD] as DepLink | undefined
   while (node) {
-    arr.push(node.signal)
+    yield node.signal
     node = node.eNext
   }
-  return arr
 }

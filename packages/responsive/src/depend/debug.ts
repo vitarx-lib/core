@@ -1,5 +1,5 @@
 import { logger } from '@vitarx/utils'
-import type { DebuggerEvent } from '../types/debug.js'
+import type { DebuggerEvent } from '../types/index.js'
 
 /**
  * 调试追踪器
@@ -14,6 +14,7 @@ export function triggerOnTrack(event: DebuggerEvent) {
     logger.debug(`[triggerOnTrack] Error in onTrack:`, e)
   }
 }
+
 /**
  * 调试触发器
  *
