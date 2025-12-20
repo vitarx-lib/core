@@ -31,16 +31,42 @@ export class DepLink {
  * 创建 signal <-> effect 双向链表关联
  *
  * @internal 内部核心助手函数
+ *
+ * @description
+ * 该函数用于创建一个双向链表节点，将 effect 和 signal 进行双向关联。
+ * 主要包含两个维度的链表维护：
+ * 1. effect 维度：维护 effect 所依赖的所有 signal
+ * 2. signal 维度：维护所有依赖该 signal 的 effect
+ *
+ * @param effect - 需要关联的 effect 对象
+ * @param signal - 需要关联的 signal 对象
+ *
+ * @returns 返回新创建的 DepLink 链表节点
+ *
+ * @example
+ * ```typescript
+ * const effect = new DepEffect()
+ * const signal = new Signal()
+ * const link = createDepLink(effect, signal)
+ * ```
+ *
+ * @remarks
+ * - 函数会自动处理链表的头尾节点更新
+ * - 使用 EFFECT_DEP_HEAD/EFFECT_DEP_TAIL 和 SIGNAL_DEP_HEAD/SIGNAL_DEP_TAIL 作为链表头尾的标记
+ * - 维护了双向链表的前驱(ePrev/sigPrev)和后继(eNext/sigNext)指针
  */
 export function createDepLink(effect: DepEffect, signal: Signal): DepLink {
+  // 创建新的链表节点
   const link = new DepLink(signal, effect)
 
   // -------------------
   // effect 维度链表
   // -------------------
+  // 如果 effect 的依赖链表为空，新节点即为头节点和尾节点
   if (!effect[EFFECT_DEP_HEAD]) {
     effect[EFFECT_DEP_HEAD] = effect[EFFECT_DEP_TAIL] = link
   } else {
+    // 否则将新节点添加到链表尾部
     link.ePrev = effect[EFFECT_DEP_TAIL]!
     effect[EFFECT_DEP_TAIL]!.eNext = link
     effect[EFFECT_DEP_TAIL] = link
@@ -49,9 +75,11 @@ export function createDepLink(effect: DepEffect, signal: Signal): DepLink {
   // -------------------
   // signal 维度链表
   // -------------------
+  // 如果 signal 的依赖链表为空，新节点即为头节点和尾节点
   if (!signal[SIGNAL_DEP_HEAD]) {
     signal[SIGNAL_DEP_HEAD] = signal[SIGNAL_DEP_TAIL] = link
   } else {
+    // 否则将新节点添加到链表尾部
     link.sigPrev = signal[SIGNAL_DEP_TAIL]!
     signal[SIGNAL_DEP_TAIL]!.sigNext = link
     signal[SIGNAL_DEP_TAIL] = link
