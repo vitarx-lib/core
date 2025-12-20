@@ -1,5 +1,6 @@
-import { IS_REF, IS_SIGNAL, SIGNAL_DEP_HEAD, SIGNAL_DEP_TAIL } from '../../constants/index.js'
+import { IS_REF, IS_SIGNAL } from '../../constants/index.js'
 import type { DepLink } from '../../depend/index.js'
+import { SIGNAL_DEP_HEAD, SIGNAL_DEP_TAIL } from '../../depend/symbol.js'
 
 /**
  * 信号接口约束接口

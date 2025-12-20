@@ -1,8 +1,8 @@
+import type { DepEffectLike } from '../depend/index.js'
 import type { Signal } from './signal/index.js'
-import type { DepEffect } from './Watcher.js'
 
 export type SignalOpType = keyof ProxyHandler<any> | string
-export interface DebuggerEventOptions {
+export interface ExtraDebugData {
   /** 变更前的值，仅在触发阶段可选 */
   oldValue?: any
   /** 变更后的值，仅在触发阶段可选 */
@@ -12,7 +12,7 @@ export interface DebuggerEventOptions {
    */
   [key: string]: any
 }
-export interface DebuggerEvent extends DebuggerEventOptions {
+export interface DebuggerEvent extends ExtraDebugData {
   /**
    * 信号来源
    */
@@ -20,7 +20,7 @@ export interface DebuggerEvent extends DebuggerEventOptions {
   /**
    * 副作用对象（通常是Watcher派生类实例）
    */
-  effect: DepEffect
+  effect: DepEffectLike
   /**
    * 触发类型
    *
