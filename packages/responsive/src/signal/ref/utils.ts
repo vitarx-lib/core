@@ -2,7 +2,8 @@ import { isPlainObject } from '@vitarx/utils'
 import { IS_REF } from '../../constants/index.js'
 import type { ReadonlyRef, RefWrapper, ToRef } from '../../types/index.js'
 import { isReactive, isRef } from '../../utils/index.js'
-import { PropertyRef, Ref } from '../ref/index.js'
+import { Ref } from './impl.js'
+import { PropertyRef } from './property.js'
 
 /**
  * 转换为 ReadonlyRef
