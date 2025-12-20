@@ -47,7 +47,7 @@ export class ValueWatcher<T> extends ValueChangeWatcher<T> {
    */
   protected override getter(): T {
     try {
-      return collectSignal(this._getter, this).result // 收集信号并返回结果
+      return collectSignal(this._getter, this) // 收集信号并返回结果
     } catch (e) {
       this.reportError(e, 'getter')
       return undefined as T
