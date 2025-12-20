@@ -1,8 +1,8 @@
 import type { VoidCallback } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import { clearEffectDeps } from '../depend/index.js'
+import { clearEffectDeps, type DepEffectLike } from '../depend/index.js'
 import { Effect, type EffectOptions } from '../effect/index.js'
-import type { DebuggerHandler, DepEffect, FlushMode } from '../types/index.js'
+import type { DebuggerHandler, FlushMode } from '../types/index.js'
 import { queuePostFlushJob, queuePreFlushJob, type Scheduler } from './scheduler.js'
 
 /**
@@ -45,13 +45,13 @@ export interface WatcherOptions extends EffectOptions {
  * - 子类如重写了 beforeDispose / afterDispose，必须调用 super.beforeDispose / afterDispose 来清理资源。
  * - 子类必须实现 runEffect 方法，用于执行副作用，不需要重复添加 try-catch。
  * - 子类不应该调用 runEffect 方法，如需主动执行可调用 execute 方法。（无异步调度）
- * - schedule 方法是提供给信号系统使用的，非必要不要调用此方法。（有异步调度）
+ * - run 方法是提供给信号系统使用的，非必要不要主动调用此方法。（有异步调度）
  * - 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
  *
  * @abstract
- * @implements DepEffect
+ * @implements DepEffectLike
  */
-export abstract class Watcher extends Effect implements DepEffect {
+export abstract class Watcher extends Effect implements DepEffectLike {
   /** trigger 调试钩子 */
   onTrigger?: DebuggerHandler
   /** track 调试钩子 */
@@ -113,7 +113,7 @@ export abstract class Watcher extends Effect implements DepEffect {
    *
    * 此方法是由信号触发器调用的，子类需实现抽象runEffect方法。
    */
-  schedule(): void {
+  run(): void {
     if (!this.isActive) return
     this.scheduler(this.execute)
   }
