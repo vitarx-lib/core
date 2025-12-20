@@ -1,8 +1,13 @@
 import { isFunction, logger } from '@vitarx/utils'
 import { IS_REF, IS_SIGNAL } from '../../constants/index.js'
-import { collectSignal, trackSignal, triggerSignal } from '../../depend/index.js'
-import { Effect, type EffectOptions, EffectScope } from '../../effect/index.js'
-import type { DepEffect, RefSignal } from '../../types/index.js'
+import {
+  collectSignal,
+  type DepEffectLike,
+  trackSignal,
+  triggerSignal
+} from '../../depend/index.js'
+import { Effect, type EffectOptions } from '../../effect/index.js'
+import type { RefSignal } from '../../types/index.js'
 
 /**
  * 计算属性的值获取函数
@@ -77,7 +82,7 @@ export interface ComputedOptions<T> extends EffectOptions {
  * console.log(double.value) // 4
  * ```
  */
-export class Computed<T> extends Effect implements RefSignal<T>, DepEffect {
+export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
   readonly [IS_SIGNAL]: true = true
   readonly [IS_REF]: true = true
   /**
@@ -160,7 +165,7 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffect {
   /**
    * @internal 依赖系统触发，手动调用会强制重新计算。
    */
-  schedule() {
+  run() {
     if (!this.dirty) {
       this.dirty = true
       triggerSignal(this, 'dirty')
