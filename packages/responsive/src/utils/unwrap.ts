@@ -18,10 +18,10 @@ export function unref<T>(ref: RefWrapper<T> | T): T {
  * 解包函数，用于处理可能被包装的值
  *
  * @template T - 泛型类型，表示值的类型
- * @param val - 需要解包的值，可能是RefWrapper、CallableSignal或直接值
+ * @param val - 需要解包的值，可能是RefWrapper、AnySignal或直接值
  * @returns - 返回解包后的原始值 T
  */
-export function unwrapper<T>(val: RefWrapper<T> | AnySignal<T, any> | T): T {
+export function unwrap<T>(val: RefWrapper<T> | AnySignal<T> | T): T {
   if (isRef(val)) return val.value
   if (isCallableSignal(val)) return val()
   return val

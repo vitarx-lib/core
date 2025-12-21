@@ -94,7 +94,7 @@ yarn add @vitarx/responsive
 | utils           | isReactive            | 函数 | 检查一个值是否为响应式对象               |
 | utils           | isReadonly            | 函数 | 判断是否为只读对象                   |
 | utils           | unref                 | 函数 | 解包 ref 包装，返回其 `.value` 值    |
-| utils           | unwrapper             | 函数 | 解包函数，用于处理可能被包装的值            |
+| utils           | unwrap                | 函数 | 解包函数，用于处理可能被包装的值            |
 | utils           | markRaw               | 函数 | 将一个对象标记为永远不会被转换为响应式信号       |
 | utils           | isMakeRaw             | 函数 | 检查对象是否被标记为非信号类型             |
 | utils           | toRaw                 | 函数 | 获取代理原始值                     |
