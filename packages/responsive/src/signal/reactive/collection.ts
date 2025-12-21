@@ -1,5 +1,5 @@
 import type { AnyMap, AnySet, AnyWeakMap, AnyWeakSet } from '@vitarx/utils'
-import { ReactiveSource } from './base.js'
+import { ReactiveProxy } from './base.js'
 
 /**
  * ReactiveCollection 是一个抽象代理类，用于创建响应式的集合类型（Map、WeakMap、Set、WeakSet）代理。
@@ -32,7 +32,7 @@ import { ReactiveSource } from './base.js'
  */
 export abstract class ReactiveCollection<
   T extends AnyWeakMap | AnyMap | AnySet | AnyWeakSet
-> extends ReactiveSource<T, false> {
+> extends ReactiveProxy<T, false> {
   constructor(target: T) {
     super(target, false)
   }

@@ -4,7 +4,7 @@ import { IS_RAW, IS_REF, IS_SIGNAL } from '../../constants/index.js'
 import { clearSignalEffects, trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Reactive, RefSignal } from '../../types/index.js'
 import { isCallableSignal, isRef } from '../../utils/index.js'
-import { ReactiveSource } from './base.js'
+import { ReactiveProxy } from './base.js'
 import { ReactiveMap, ReactiveWeakMap } from './map.js'
 import { ReactiveSet, ReactiveWeakSet } from './set.js'
 
@@ -133,10 +133,10 @@ export class PropertySignal<T extends object, K extends keyof T> implements RefS
  * @template T - 目标对象的类型，必须是 AnyRecord 类型
  * @template Deep - 是否进行深度代理的类型，必须是 boolean 类型
  */
-export class ReactiveObject<
-  T extends AnyRecord,
-  Deep extends boolean = true
-> extends ReactiveSource<T, Deep> {
+export class ReactiveObject<T extends AnyRecord, Deep extends boolean = true> extends ReactiveProxy<
+  T,
+  Deep
+> {
   /**
    * 子代理映射表，存储对象属性的子信号
    *
@@ -320,11 +320,11 @@ export class ReactiveArray<T extends any[], Deep extends boolean = true> extends
  * 使用 WeakMap 来避免内存泄漏，确保当原始对象被垃圾回收时，
  * 对应的代理对象也能被正确回收。
  */
-const reactiveCache = new WeakMap<object, ReactiveSource<any, any>>()
-const shallowReactiveCache = new WeakMap<object, ReactiveSource<any, any>>()
+const reactiveCache = new WeakMap<object, ReactiveProxy<any, any>>()
+const shallowReactiveCache = new WeakMap<object, ReactiveProxy<any, any>>()
 const getCache = <T extends object>(target: T, deep: boolean) =>
   deep ? reactiveCache.get(target)?.proxy : shallowReactiveCache.get(target)?.proxy
-const setCache = (instance: ReactiveSource<any, any>) => {
+const setCache = (instance: ReactiveProxy<any, any>) => {
   instance.deep
     ? reactiveCache.set(instance.target, instance)
     : shallowReactiveCache.set(instance.target, instance)
