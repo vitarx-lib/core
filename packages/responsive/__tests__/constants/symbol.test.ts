@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { IS_RAW, IS_REACTIVE, IS_REF, IS_SIGNAL, READONLY_SYMBOL } from '../../src/index.js'
+import { IS_RAW, IS_REACTIVE, IS_READONLY, IS_REF, IS_SIGNAL } from '../../src/index.js'
 
 describe('constants/symbol', () => {
   describe('IS_SIGNAL', () => {
@@ -14,11 +14,11 @@ describe('constants/symbol', () => {
 
   describe('READONLY_SYMBOL', () => {
     it('should be a Symbol', () => {
-      expect(typeof READONLY_SYMBOL).toBe('symbol')
+      expect(typeof IS_READONLY).toBe('symbol')
     })
 
     it('should have correct description', () => {
-      expect(READONLY_SYMBOL.toString()).toBe('Symbol(__v_symbol:is-readonly)')
+      expect(IS_READONLY.toString()).toBe('Symbol(__v_symbol:is-readonly)')
     })
   })
 

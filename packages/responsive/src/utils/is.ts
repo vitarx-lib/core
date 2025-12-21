@@ -1,4 +1,4 @@
-import { IS_REACTIVE, IS_REF, IS_SIGNAL, READONLY_SYMBOL } from '../constants/index.js'
+import { IS_REACTIVE, IS_READONLY, IS_REF, IS_SIGNAL } from '../constants/index.js'
 import type { CallableSignal, Reactive, RefSignal, RefWrapper, Signal } from '../types/index.js'
 
 /**
@@ -78,5 +78,5 @@ export function isReactive(val: any): val is Reactive<any, boolean> {
  * ```
  */
 export function isReadonly(obj: any): boolean {
-  return obj?.[READONLY_SYMBOL] === true
+  return obj?.[IS_READONLY] === true
 }

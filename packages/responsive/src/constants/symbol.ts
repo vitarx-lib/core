@@ -5,7 +5,7 @@ export const IS_SIGNAL = Symbol.for('__v_signal:is-signal')
 /**
  * 只读代理标识
  */
-export const READONLY_SYMBOL = Symbol.for('__v_symbol:is-readonly')
+export const IS_READONLY = Symbol.for('__v_symbol:is-readonly')
 /**
  * 引用信号（用于 isRef ）判断
  */
