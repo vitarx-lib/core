@@ -29,14 +29,10 @@ const isNestingObject = (value: any): value is object => {
 const setValue = <T extends object>(target: T, key: keyof T, value: any): boolean => {
   const oldValue = target[key]
   if (isRef(oldValue)) {
-    const old = oldValue.value
-    if (Object.is(old, value)) return false
     oldValue.value = value
     return true
   }
   if (isCallableSignal(oldValue)) {
-    const old = oldValue()
-    if (Object.is(old, value)) return false
     oldValue(value)
     return true
   }
