@@ -1,7 +1,6 @@
 import { isObject } from '@vitarx/utils'
 import { IS_RAW, RAW_VALUE } from '../constants/index.js'
-import type { RawObject } from '../types/index.js'
-import type { RawValue } from '../types/signal/raw.js'
+import type { RawObject, RawValue } from '../types/index.js'
 
 /**
  * 将一个对象标记为永远不会被转换为响应式信号。
@@ -51,8 +50,6 @@ export function isMakeRaw(obj: any): boolean {
  * @returns - 如果传入的对象其属性存在RAW_VALUE，则返回其值，否则返回对象本身
  */
 export function toRaw<T extends object>(wrap: T | RawValue<T>): T {
-  if (wrap && RAW_VALUE in wrap) {
-    return wrap[RAW_VALUE]
-  }
-  return wrap as T
+  const raw = (wrap as any)?.[RAW_VALUE]
+  return raw ?? (wrap as T)
 }
