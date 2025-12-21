@@ -81,7 +81,7 @@ export abstract class Watcher extends Effect implements DepEffectLike {
    * 构造函数
    * @param options 调试钩子选项
    */
-  protected constructor(options: WatcherOptions = {}) {
+  constructor(options: WatcherOptions = {}) {
     const { flush = 'pre', ...effectOptions } = options
     super(effectOptions)
     if (__DEV__) {
