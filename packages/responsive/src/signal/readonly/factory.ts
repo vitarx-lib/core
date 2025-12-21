@@ -1,5 +1,5 @@
 import { AnyRecord } from '@vitarx/utils'
-import type { ReadonlyProxy } from '../../types/signal/readonly.js'
+import type { ReadonlyProxy } from '../../types/index.js'
 import { createReadonlyProxy } from './readonly.js'
 
 /**
