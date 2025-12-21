@@ -42,6 +42,7 @@ export function isPlainObject(val: any): val is AnyRecord {
   return toTypeString(val) === '[object Object]'
 }
 export { isPlainObject as isRecordObject }
+
 /**
  * 判断是否为数组对象
  *
@@ -540,4 +541,16 @@ export function isDeepEqual(var1: any, var2: any, depth: number = Infinity): boo
  */
 export function isPromise(val: any): val is Promise<any> {
   return !!val && val instanceof Promise
+}
+
+const hasOwn = Object.prototype.hasOwnProperty
+/**
+ * 检查对象是否包含指定的属性
+ *
+ * @param target - 目标对象
+ * @param key - 属性键
+ * @returns {boolean} 如果对象包含指定属性则返回true，否则返回false
+ */
+export function hasOwnProperty(target: object, key: PropertyKey): boolean {
+  return hasOwn.call(target, key)
 }
