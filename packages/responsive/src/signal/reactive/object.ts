@@ -1,5 +1,5 @@
 import type { AnyRecord } from '@vitarx/utils'
-import { isObject } from '@vitarx/utils'
+import { hasOwnProperty, isObject } from '@vitarx/utils'
 import { IS_RAW, IS_REF, IS_SIGNAL } from '../../constants/index.js'
 import { clearSignalEffects, trackSignal, triggerSignal } from '../../depend/index.js'
 import type { Reactive, RefSignal } from '../../types/index.js'
@@ -45,16 +45,6 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
   // 更新为新值
   target[key] = value
   return true
-}
-/**
- * 检查对象是否包含指定的属性
- *
- * @param target - 目标对象
- * @param key - 属性键
- * @returns {boolean} 如果对象包含指定属性则返回true，否则返回false
- */
-const hasOwnProperty = (target: object, key: string | symbol): boolean => {
-  return Object.prototype.hasOwnProperty.call(target, key)
 }
 /**
  * PropertySignal 类用于跟踪和响应对象属性的变化，仅在reactive内部使用
