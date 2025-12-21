@@ -1,5 +1,5 @@
 import type { AnyObject } from '@vitarx/utils'
-import { IS_REF } from '../../constants/index.js'
+import type { IS_REF } from '../../constants/index.js'
 import type { RawObject, Reactive } from './reactive.js'
 import type { Signal } from './signal.js'
 
