@@ -326,8 +326,8 @@ export class EffectScope {
    * 最后会触发 'resume' 类型的回调函数
    */
   resume(): void {
-    if (this.state !== 'active') {
-      throw new Error(`[EffectScope][${String(this.name)}] Cannot resume. Scope is not active.`)
+    if (this.state !== 'paused') {
+      throw new Error(`[EffectScope][${String(this.name)}] Cannot resume. Scope is not paused.`)
     }
     this._state = 'active'
     this.traverseEffects('resume')
