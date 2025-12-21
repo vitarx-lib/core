@@ -18,3 +18,7 @@ export const IS_REACTIVE = Symbol.for('__v_symbol:is-reactive')
  * 忽略响应性自动包装（用于 isMarkRaw 判断）
  */
 export const IS_RAW = Symbol.for('__v_symbol:is-raw')
+/**
+ * 获取包装的原始值
+ */
+export const RAW_VALUE = Symbol.for('__v_symbol:to-raw')
