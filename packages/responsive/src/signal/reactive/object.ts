@@ -65,7 +65,7 @@ const hasOwnProperty = (target: object, key: string | symbol): boolean => {
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-class PropertySignal<T extends object, K extends keyof T> implements RefSignal<T[K]> {
+export class PropertySignal<T extends object, K extends keyof T> implements RefSignal<T[K]> {
   // 只读属性，用于标识这是一个信号对象
   readonly [IS_SIGNAL] = true
   readonly [IS_REF] = true
@@ -124,7 +124,6 @@ class PropertySignal<T extends object, K extends keyof T> implements RefSignal<T
     clearSignalEffects(this)
   }
 }
-
 /**
  * ReactiveObject 类用于创建对象的响应式代理
  *
@@ -243,7 +242,6 @@ export class ReactiveObject<
     return true // 设置成功返回true
   }
 }
-
 /**
  * ReactiveArray 类用于创建数组的响应式代理
  *
