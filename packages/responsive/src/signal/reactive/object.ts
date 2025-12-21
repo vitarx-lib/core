@@ -46,7 +46,16 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
   target[key] = value
   return true
 }
-
+/**
+ * 检查对象是否包含指定的属性
+ *
+ * @param target - 目标对象
+ * @param key - 属性键
+ * @returns {boolean} 如果对象包含指定属性则返回true，否则返回false
+ */
+const hasOwnProperty = (target: object, key: string | symbol): boolean => {
+  return Object.prototype.hasOwnProperty.call(target, key)
+}
 /**
  * PropertySignal 类用于跟踪和响应对象属性的变化，仅在reactive内部使用
  *
@@ -156,7 +165,7 @@ export class ReactiveObject<
    */
   deleteProperty(target: T, p: string | symbol): boolean {
     // 检查目标对象是否拥有该属性
-    const hadOwn = Object.prototype.hasOwnProperty.call(target, p)
+    const hadOwn = hasOwnProperty(target, p)
     // 保存删除前的属性值
     const oldValue = target[p]
     // 使用Reflect执行删除操作
@@ -188,7 +197,7 @@ export class ReactiveObject<
   protected doGet(target: T, p: string | symbol, receiver: any) {
     let value: any // 用于存储获取到的属性值
     // 检查目标对象是否自身拥有该属性
-    if (!Object.prototype.hasOwnProperty.call(target, p)) {
+    if (!hasOwnProperty(target, p)) {
       value = Reflect.get(target, p, receiver) // 使用Reflect获取属性值
       if (value === void 0) {
         // 如果值为undefined
@@ -217,7 +226,7 @@ export class ReactiveObject<
    * @param _receiver - 代理对象
    * @returns {boolean} 返回设置操作是否成功
    */
-  protected set(target: T, p: keyof T, newValue: any, _receiver: any): boolean {
+  protected set(target: T, p: string | symbol, newValue: any, _receiver: any): boolean {
     // 已有 PropertySignal：必须走信号（它维护 proxy / 嵌套 reactive）
     const sig = this.childMap.get(p) // 获取属性对应的信号
     if (sig) {
@@ -226,7 +235,7 @@ export class ReactiveObject<
       return true // 设置成功
     }
     // 检查属性是否已存在
-    const hadKey = Object.prototype.hasOwnProperty.call(target, p)
+    const hadKey = hasOwnProperty(target, p as string)
     // 更新属性值
     setValue(target, p, newValue)
     // 如果是新属性，触发添加信号的回调
@@ -277,7 +286,7 @@ export class ReactiveArray<T extends any[], Deep extends boolean = true> extends
    * @param receiver - 代理对象
    * @returns {boolean} 返回设置操作是否成功
    */
-  protected override set(target: T, p: keyof T, newValue: any, receiver: any): boolean {
+  protected override set(target: T, p: string | symbol, newValue: any, receiver: any): boolean {
     if (p === 'length') {
       if (typeof newValue !== 'number' || newValue < 0 || !Number.isInteger(newValue)) {
         throw new TypeError(`Invalid array length: ${newValue}`)
