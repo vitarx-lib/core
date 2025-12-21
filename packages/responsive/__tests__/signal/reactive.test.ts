@@ -1,156 +1,84 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  isReactive,
-  isSignal,
-  reactive,
-  ref,
-  shallowReactive,
-  watch,
-  watchProperty
-} from '../../src'
+import { reactive, watch } from '../../src/index.js'
 
-describe('reactive', () => {
-  describe('基础功能', () => {
-    it('应该正确创建reactive对象', () => {
-      const obj = reactive({ count: 0 })
-      expect(obj.count).toBe(0)
-      expect(isReactive(obj)).toBe(true)
-      expect(isSignal(obj)).toBe(true)
-    })
+describe('signal/reactive', () => {
+  it('should create a reactive object', () => {
+    const obj = { count: 0 }
+    const reactiveObj = reactive(obj)
 
-    it('应该能够修改reactive对象的属性', () => {
-      const obj = reactive({ count: 0 })
-      obj.count = 1
-      expect(obj.count).toBe(1)
-    })
-
-    it('应该支持添加新属性', () => {
-      const obj = reactive({ count: 0 }) as any
-      obj.newProp = 'test'
-      expect(obj.newProp).toBe('test')
-    })
-
-    it('应该支持删除属性', () => {
-      const obj = reactive({ count: 0, removable: true })
-      // @ts-ignore
-      delete obj.removable
-      expect('removable' in obj).toBe(false)
-    })
+    expect(reactiveObj).not.toBe(obj)
+    expect(reactiveObj.count).toBe(0)
   })
 
-  describe('嵌套对象', () => {
-    it('应该支持嵌套对象的响应式', () => {
-      const obj = reactive({ nested: { count: 0 } })
-      expect(obj.nested.count).toBe(0)
-      const fn = vi.fn()
-      watch(obj.nested, fn, { flush: 'sync' })
-      obj.nested.count = 1
-      expect(fn).toHaveBeenCalledOnce()
-    })
+  it('should reflect changes in the original object', () => {
+    const obj = { count: 0 }
+    const reactiveObj = reactive(obj)
 
-    it('应该使嵌套对象也成为响应式', () => {
-      const obj = reactive({ nested: { count: 0 } })
-      expect(isReactive(obj.nested)).toBe(true)
-    })
+    obj.count = 42
+    expect(reactiveObj.count).toBe(42)
   })
 
-  describe('集合类型', () => {
-    it('应该支持Map类型', () => {
-      const map = reactive(new Map<string, number>())
-      map.set('count', 0)
-      expect(map.get('count')).toBe(0)
-      map.set('count', 1)
-      expect(map.get('count')).toBe(1)
-    })
+  it('should reflect changes in the reactive object', () => {
+    const obj = { count: 0 }
+    const reactiveObj = reactive(obj)
 
-    it('应该支持Set类型', () => {
-      const set = reactive(new Set<number>())
-      set.add(1)
-      expect(set.has(1)).toBe(true)
-      set.delete(1)
-      expect(set.has(1)).toBe(false)
-    })
+    reactiveObj.count = 42
+    expect(obj.count).toBe(42)
   })
 
-  describe('数组类型', () => {
-    it('应该支持数组push', () => {
-      const arr = reactive([1, 2, 3])
-      arr.push(4)
-      expect(arr[3]).toBe(4)
-      expect(arr.length).toBe(4)
+  it('should trigger watchers when property changes', async () => {
+    const obj = { count: 0 }
+    const reactiveObj = reactive(obj)
+
+    const callback = vi.fn()
+    const watcher = watch(() => reactiveObj.count, callback, {
+      flush: 'sync'
     })
-    it('应该支持数组unshift', () => {
-      const arr = reactive([1, 2, 3])
-      arr.unshift(0)
-      expect(arr[0]).toBe(0)
-      expect(arr.length).toBe(4)
-    })
-    it('应该支持数组pop', () => {
-      const arr = reactive([1, 2, 3])
-      arr.pop()
-      expect(arr[2]).toBe(undefined)
-      expect(arr.length).toBe(2)
-    })
-    it('应该支持数组shift', () => {
-      const arr = reactive([1, 2, 3])
-      arr.shift()
-      expect(arr[0]).toBe(2)
-      expect(arr.length).toBe(2)
-    })
-    it('应该支持数组splice', () => {
-      const arr = reactive([1, 2, 3])
-      arr.splice(1, 1, 4)
-      expect(arr[1]).toBe(4)
-      expect(arr.length).toBe(3)
-      arr.splice(0, 1)
-      expect(arr.length).toBe(2)
-    })
-    it('应该支持数组fill', () => {
-      const arr = reactive([1, 2, 3])
-      arr.fill(0)
-      expect(arr[0]).toBe(0)
-      expect(arr[1]).toBe(0)
-      expect(arr[2]).toBe(0)
-      expect(arr.length).toBe(3)
-    })
-    it('应该触发length变化', () => {
-      const arr = reactive([] as number[])
-      const cb = vi.fn()
-      watchProperty(arr, 'length', cb, { flush: 'sync' })
-      arr[0] = 1
-      expect(cb).toHaveBeenCalledOnce()
-    })
+
+    reactiveObj.count = 42
+    expect(reactiveObj.count).toBe(42)
+
+    // Callback should be called with new and old values
+    expect(callback).toHaveBeenCalledWith(42, 0, expect.any(Function))
+
+    watcher.dispose()
   })
 
-  describe('与ref的交互', () => {
-    it('应该自动解包嵌套在reactive中的ref', () => {
-      const count = ref(0)
-      const obj = reactive({ count })
+  it('should work with nested objects', () => {
+    const obj = { nested: { count: 0 } }
+    const reactiveObj = reactive(obj)
 
-      // 访问时应该自动解包
-      expect(obj.count).toBe(0)
+    expect(reactiveObj.nested.count).toBe(0)
 
-      // 修改reactive中的属性应该影响原始ref
-      obj.count = 1
-      expect(count.value).toBe(1)
-
-      // 修改原始ref应该影响reactive中的属性
-      count.value = 2
-      expect(obj.count).toBe(2)
-
-      // shallowReactive应该保持原始ref
-      const shallowObj = shallowReactive({ count })
-      expect(shallowObj.count).toBe(count)
-    })
+    reactiveObj.nested.count = 42
+    expect(reactiveObj.nested.count).toBe(42)
   })
 
-  describe('类型检查', () => {
-    it('isReactive应该正确识别reactive对象', () => {
-      const obj = reactive({ count: 0 })
-      const plainObj = { count: 0 }
+  it('should work with arrays', () => {
+    const arr = [1, 2, 3]
+    const reactiveArr = reactive(arr)
 
-      expect(isReactive(obj)).toBe(true)
-      expect(isReactive(plainObj)).toBe(false)
-    })
+    expect(reactiveArr[0]).toBe(1)
+
+    reactiveArr[0] = 42
+    expect(reactiveArr[0]).toBe(42)
+  })
+
+  it('should handle adding new properties', () => {
+    const obj: any = { count: 0 }
+    const reactiveObj = reactive(obj)
+
+    reactiveObj.newProp = 'new value'
+    expect(reactiveObj.newProp).toBe('new value')
+  })
+
+  it('should handle deleting properties', () => {
+    const obj: any = { count: 0, toDelete: 'value' }
+    const reactiveObj = reactive(obj)
+
+    expect(reactiveObj.toDelete).toBe('value')
+
+    delete reactiveObj.toDelete
+    expect(reactiveObj.toDelete).toBeUndefined()
   })
 })

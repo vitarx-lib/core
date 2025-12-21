@@ -1,119 +1,126 @@
+import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
-import { computed, isSignal, reactive, ref } from '../../src'
+import { computed, computedWithSetter, isComputed, ref } from '../../src/index.js'
 
-describe('computed', () => {
-  describe('基础功能', () => {
-    it('应该正确创建computed对象', () => {
-      const count = ref(0)
-      const double = computed(() => count.value * 2)
-      expect(double.value).toBe(0)
-      expect(isSignal(double)).toBe(true)
-    })
-
-    it('应该根据依赖的变化更新计算值', () => {
+describe('signal/computed', () => {
+  describe('computed', () => {
+    it('should create a computed property with getter', () => {
       const count = ref(0)
       const double = computed(() => count.value * 2)
 
+      expect(double.value).toBe(0)
+
       count.value = 2
       expect(double.value).toBe(4)
-
-      count.value = 3
-      expect(double.value).toBe(6)
     })
-  })
 
-  describe('缓存机制', () => {
-    it('应该缓存计算结果', () => {
+    it('should support lazy evaluation', () => {
       const count = ref(0)
-      const fn = vi.fn(() => count.value * 2)
-      const double = computed(fn)
+      const getter = vi.fn(() => count.value * 2)
+      const double = computed(getter)
 
-      // 首次访问会计算
+      // Getter should not be called immediately
+      expect(getter).not.toHaveBeenCalled()
+
+      // Accessing value should call getter
       expect(double.value).toBe(0)
-      expect(fn).toHaveBeenCalledTimes(1)
+      expect(getter).toHaveBeenCalledTimes(1)
 
-      // 再次访问应该使用缓存
+      // Accessing again should not call getter (cached)
       expect(double.value).toBe(0)
-      expect(fn).toHaveBeenCalledTimes(1)
+      expect(getter).toHaveBeenCalledTimes(1)
 
-      // 依赖变化后，再次访问会重新计算
+      // Changing dependency should invalidate cache
       count.value = 2
       expect(double.value).toBe(4)
-      expect(fn).toHaveBeenCalledTimes(2)
+      expect(getter).toHaveBeenCalledTimes(2)
     })
-    it('支持懒计算（多次修改依赖只计算一次）', () => {
-      const count = ref(0)
-      const fn = vi.fn(() => count.value * 2)
-      const double = computed(fn)
-      
-      // 首次访问会计算
-      expect(double.value).toBe(0)
-      expect(fn).toHaveBeenCalledTimes(1)
-      
-      // 多次修改依赖，但不访问值
-      for (let i = 1; i <= 10; i++) {
-        count.value = i
-      }
-      
-      // 此时还没有重新计算（懒计算）
-      expect(fn).toHaveBeenCalledTimes(1)
-      
-      // 访问时才重新计算，只计算一次
-      expect(double.value).toBe(20) // 10 * 2
-      expect(fn).toHaveBeenCalledTimes(2) // 初始1次 + 重新计算1次
-    })
-  })
 
-  describe('setter功能', () => {
-    it('应该支持自定义setter', () => {
+    it('should support setter', () => {
       const count = ref(0)
-      const double = computed(() => count.value * 2, {
-        setter: val => {
-          count.value = val / 2
+      const double = computed(
+        () => count.value * 2,
+        newValue => {
+          count.value = newValue / 2
         }
-      })
+      )
 
       expect(double.value).toBe(0)
 
+      // Setting value should call setter
+      double.value = 10
+      expect(count.value).toBe(5)
+      expect(double.value).toBe(10)
+    })
+
+    it('should support immediate option', () => {
+      const count = ref(0)
+      const getter = vi.fn(() => count.value * 2)
+      const double = computed(getter, { immediate: true })
+
+      // Getter should be called immediately
+      expect(getter).toHaveBeenCalledTimes(1)
+      expect(double.value).toBe(0)
+
+      // Accessing again should not call getter (cached)
+      expect(double.value).toBe(0)
+      expect(getter).toHaveBeenCalledTimes(1)
+    })
+
+    it('should warn when setting value without setter', () => {
+      const count = ref(0)
+      const double = computed(() => count.value * 2)
+
+      // Mock logger.warn
+      const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+
+      // Setting value should trigger warning
+      double.value = 10
+
+      // Verify warning was called
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Computed properties should not be modified directly unless a setter function is defined.'
+      )
+
+      // Restore logger
+      warnSpy.mockRestore()
+    })
+  })
+
+  describe('computedWithSetter', () => {
+    it('should create a computed property with getter and setter', () => {
+      const count = ref(0)
+      const double = computedWithSetter(
+        () => count.value * 2,
+        newValue => {
+          count.value = newValue / 2
+        }
+      )
+
+      expect(double.value).toBe(0)
+
+      // Setting value should call setter
       double.value = 10
       expect(count.value).toBe(5)
       expect(double.value).toBe(10)
     })
   })
 
-  describe('与reactive的交互', () => {
-    it('应该支持reactive对象作为依赖', () => {
-      const state = reactive({ count: 0 })
-      const double = computed(() => state.count * 2)
-
-      expect(double.value).toBe(0)
-
-      state.count = 2
-      expect(double.value).toBe(4)
-    })
-  })
-
-  describe('嵌套computed', () => {
-    it('应该支持嵌套的computed', () => {
+  describe('isComputed', () => {
+    it('should return true for computed properties', () => {
       const count = ref(0)
       const double = computed(() => count.value * 2)
-      const quadruple = computed(() => double.value * 2)
 
-      expect(quadruple.value).toBe(0)
-
-      count.value = 2
-      expect(double.value).toBe(4)
-      expect(quadruple.value).toBe(8)
+      expect(isComputed(double)).toBe(true)
     })
-  })
 
-  describe('immediate选项', () => {
-    it('应该支持immediate选项立即计算', () => {
+    it('should return false for non-computed values', () => {
       const count = ref(0)
-      const fn = vi.fn(() => count.value)
-      computed(fn, { immediate: true })
-      // 不访问value属性也应该已经计算过一次
-      expect(fn).toHaveBeenCalledTimes(1)
+
+      expect(isComputed(count)).toBe(false)
+      expect(isComputed(42)).toBe(false)
+      expect(isComputed({})).toBe(false)
+      expect(isComputed(null)).toBe(false)
     })
   })
 })

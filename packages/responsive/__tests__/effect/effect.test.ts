@@ -1,132 +1,130 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { Effect, isEffect } from '../../src/effect'
+import { describe, expect, it, vi } from 'vitest'
+import { Effect, EffectScope } from '../../src/index.js'
 
-describe('Effect', () => {
-  let effect: Effect
+describe('effect/effect', () => {
+  describe('Effect', () => {
+    class TestEffect extends Effect {
+      run(): void {
+        // Implementation for testing
+      }
+    }
 
-  beforeEach(() => {
-    effect = new Effect()
-  })
-
-  describe('状态属性', () => {
-    it('初始状态应该为active', () => {
+    it('should initialize with active state', () => {
+      const effect = new TestEffect()
       expect(effect.state).toBe('active')
-      expect(effect.isActive).toBe(true)
-      expect(effect.isPaused).toBe(false)
-      expect(effect.isDeprecated).toBe(false)
+      expect(effect.state === 'active').toBe(true)
+      expect(effect.state === 'paused').toBe(false)
+      expect(effect.state === 'deprecated').toBe(false)
     })
 
-    it('getState方法应该返回当前状态', () => {
-      expect(effect.getState()).toBe('active')
+    it('should be added to active scope when scope option is true', () => {
+      const scope = new EffectScope()
+      let effect: TestEffect | undefined
+      scope.run(() => {
+        effect = new TestEffect()
+      })
+      // The effect should be added to the active scope
+      expect(scope.effects.length).toBe(1)
+      expect(scope.effects[0]).toBe(effect)
     })
-  })
 
-  describe('dispose方法', () => {
-    it('应该将状态设置为deprecated', () => {
+    it('should be added to specified scope when scope option is an EffectScope', () => {
+      const scope = new EffectScope()
+      const effect = new TestEffect({ scope })
+      // The effect should be added to the specified scope
+      expect(scope.effects.length).toBe(1)
+      expect(scope.effects[0]).toBe(effect)
+    })
+
+    it('should not be added to any scope when scope option is false', () => {
+      const scope = new EffectScope()
+      scope.run(() => {
+        const effect = new TestEffect({ scope: false })
+        // The effect should not be added to any scope
+        expect(scope.effects.length).toBe(0)
+      })
+    })
+
+    it('should dispose correctly', () => {
+      const effect = new TestEffect()
+      expect(effect.state).toBe('active')
+
       effect.dispose()
       expect(effect.state).toBe('deprecated')
-      expect(effect.isDeprecated).toBe(true)
-    })
-
-    it('重复调用dispose不应产生影响', () => {
-      effect.dispose()
-      effect.dispose()
       expect(effect.state).toBe('deprecated')
     })
 
-    it('应该触发dispose回调', () => {
-      const callback = vi.fn()
-      effect.onDispose(callback)
+    it('should throw error when disposing already disposed effect', () => {
+      const effect = new TestEffect()
       effect.dispose()
-      expect(callback).toHaveBeenCalled()
-    })
-  })
 
-  describe('pause和resume方法', () => {
-    it('pause应该将状态设置为paused', () => {
+      expect(() => {
+        effect.dispose()
+      }).toThrow('Effect is already deprecated.')
+    })
+
+    it('should pause and resume correctly', () => {
+      const effect = new TestEffect()
+      expect(effect.state).toBe('active')
+
       effect.pause()
       expect(effect.state).toBe('paused')
-      expect(effect.isPaused).toBe(true)
-    })
+      expect(effect.state).toBe('paused')
 
-    it('resume应该将状态从paused恢复为active', () => {
-      effect.pause()
       effect.resume()
       expect(effect.state).toBe('active')
-      expect(effect.isActive).toBe(true)
+      expect(effect.state === 'active').toBe(true)
     })
 
-    it('非active状态下调用pause应该抛出错误', () => {
-      effect.dispose()
-      expect(() => effect.pause()).toThrow('Effect must be active to pause.')
+    it('should throw error when pausing non-active effect', () => {
+      const effect = new TestEffect()
+      effect.pause()
+
+      expect(() => {
+        effect.pause()
+      }).toThrow('Effect must be active to pause.')
     })
 
-    it('非paused状态下调用resume应该抛出错误', () => {
-      expect(() => effect.resume()).toThrow('Effect must be paused to resume.')
+    it('should throw error when resuming non-paused effect', () => {
+      const effect = new TestEffect()
+
+      expect(() => {
+        effect.resume()
+      }).toThrow('Effect must be paused to resume.')
     })
 
-    it('应该触发pause和resume回调', () => {
-      const pauseCallback = vi.fn()
-      const resumeCallback = vi.fn()
-      effect.onPause(pauseCallback)
-      effect.onResume(resumeCallback)
+    it('should call lifecycle hooks', () => {
+      const beforeDisposeSpy = vi.fn()
+      const afterDisposeSpy = vi.fn()
+      const beforePauseSpy = vi.fn()
+      const afterPauseSpy = vi.fn()
+      const beforeResumeSpy = vi.fn()
+      const afterResumeSpy = vi.fn()
+
+      class TestEffectWithHooks extends Effect {
+        protected override beforeDispose = beforeDisposeSpy
+        protected override afterDispose = afterDisposeSpy
+        protected override beforePause = beforePauseSpy
+        protected override afterPause = afterPauseSpy
+        protected override beforeResume = beforeResumeSpy
+        protected override afterResume = afterResumeSpy
+
+        run(): void {}
+      }
+
+      const effect = new TestEffectWithHooks()
 
       effect.pause()
-      expect(pauseCallback).toHaveBeenCalled()
+      expect(beforePauseSpy).toHaveBeenCalled()
+      expect(afterPauseSpy).toHaveBeenCalled()
 
       effect.resume()
-      expect(resumeCallback).toHaveBeenCalled()
-    })
-  })
+      expect(beforeResumeSpy).toHaveBeenCalled()
+      expect(afterResumeSpy).toHaveBeenCalled()
 
-  describe('错误处理', () => {
-    it('回调函数抛出错误时应该触发error回调', () => {
-      const error = new Error('Test error')
-      const errorCallback = vi.fn()
-      effect.onError(errorCallback)
-
-      const disposeCb = () => {
-        throw error
-      }
-      effect.onDispose(disposeCb)
       effect.dispose()
-
-      expect(errorCallback).toHaveBeenCalledWith(error, 'dispose')
-    })
-
-    it('deprecated状态下添加回调应该抛出错误', () => {
-      effect.dispose()
-      expect(() => effect.onDispose(() => {})).toThrow(
-        'Cannot add callback to a deprecated effect.'
-      )
-    })
-
-    it('添加非函数回调应该抛出错误', () => {
-      expect(() => effect.onDispose('not a function' as any)).toThrow(
-        'Callback parameter for "dispose" must be a function.'
-      )
-    })
-  })
-
-  describe('isEffect函数', () => {
-    it('应该正确识别Effect实例', () => {
-      expect(isEffect(effect)).toBe(true)
-      expect(isEffect({})).toBe(false)
-      expect(isEffect(null)).toBe(false)
-    })
-
-    it('应该识别类Effect接口的对象', () => {
-      const effectLike = {
-        dispose: () => {},
-        onDispose: () => {},
-        pause: () => {},
-        onPause: () => {},
-        resume: () => {},
-        onResume: () => {},
-        onError: () => {},
-        getState: () => 'active' as const
-      }
-      expect(isEffect(effectLike)).toBe(true)
+      expect(beforeDisposeSpy).toHaveBeenCalled()
+      expect(afterDisposeSpy).toHaveBeenCalled()
     })
   })
 })
