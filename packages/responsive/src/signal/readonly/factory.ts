@@ -16,7 +16,7 @@ import { createReadonlyProxy } from './readonly.js'
  * @template IsDeep - 是否深度只读
  * @param  target - 要代理的目标对象
  * @param [deep=true] - 是否进行深度代理
- * @returns {DeepReadonly<T>} 深度只读的代理对象
+ * @returns {ReadonlyProxy<T>} 深度只读的代理对象
  * @example
  * ```ts
  * const state = { user: { name: 'Alice', settings: { theme: 'dark' } } }
