@@ -1,8 +1,7 @@
 import { isObject } from '@vitarx/utils'
-import { IS_RAW, IS_REACTIVE } from '../constants/index.js'
-import type { ReactiveSource } from '../signal/reactive/base.js'
-import type { RawObject, Reactive } from '../types/index.js'
-import { isReactive } from './is.js'
+import { IS_RAW, RAW_VALUE } from '../constants/index.js'
+import type { RawObject } from '../types/index.js'
+import type { RawValue } from '../types/signal/raw.js'
 
 /**
  * 将一个对象标记为永远不会被转换为响应式信号。
@@ -45,14 +44,15 @@ export function isMakeRaw(obj: any): boolean {
 }
 
 /**
- * 获取代理原始值
+ * 获取原始值
  *
- * @returns - 信号原始值
- * @param val - 待获取原始值的对象
+ * @template T - 待获取原始值的对象类型
+ * @param wrap - 包装原始值的对象
+ * @returns - 如果传入的对象其属性存在RAW_VALUE，则返回其值，否则返回对象本身
  */
-export function toRaw<T extends object>(val: T | Reactive<T>): T {
-  if (isReactive(val)) {
-    return ((val as any)[IS_REACTIVE] as ReactiveSource<any>).target
+export function toRaw<T extends object>(wrap: T | RawValue<T>): T {
+  if (wrap && RAW_VALUE in wrap) {
+    return wrap[RAW_VALUE]
   }
-  return val as T
+  return wrap as T
 }
