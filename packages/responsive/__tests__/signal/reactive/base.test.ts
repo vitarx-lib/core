@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { IS_REF, IS_SIGNAL } from '../../../src/index.js'
-import { ReactiveSource } from '../../../src/signal/reactive/base.js'
+import { ReactiveProxy } from '../../../src/signal/reactive/base.js'
 
-class TestReactiveSource<T extends object> extends ReactiveSource<T> {
+class TestReactiveSource<T extends object> extends ReactiveProxy<T> {
   protected doGet(_target: T, _p: string | symbol, _receiver: any): any {
     // Implementation for testing
   }
@@ -14,7 +14,7 @@ describe('signal/reactive/base', () => {
       const target = { prop: 42 }
       const reactiveSource = new TestReactiveSource(target)
 
-      expect(reactiveSource).toBeInstanceOf(ReactiveSource)
+      expect(reactiveSource).toBeInstanceOf(ReactiveProxy)
       expect(reactiveSource.target).toBe(target)
       expect(reactiveSource.deep).toBe(true)
       expect(reactiveSource.proxy).toBeDefined()
