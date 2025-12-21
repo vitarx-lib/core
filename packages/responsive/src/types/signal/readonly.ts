@@ -1,4 +1,5 @@
 import type { AnyCollection, AnyFunction, AnyObject, DeepReadonly } from '@vitarx/utils'
+import type { RawValue } from './raw.js'
 import type { RefWrapper } from './ref.js'
 import type { CallableSignal } from './signal.js'
 
@@ -102,6 +103,7 @@ type DeepUnwrapValueWrappers<T extends object> = T extends AnyCollection | AnyFu
  * // 等价于 Readonly<{ name: string; profile: { age: RefWrapper<number> } }>
  * ```
  */
-export type ReadonlyProxy<T extends object, IsDeep extends boolean> = IsDeep extends true
+export type ReadonlyProxy<T extends object, IsDeep extends boolean> = (IsDeep extends true
   ? DeepReadonly<DeepUnwrapValueWrappers<T>>
-  : Readonly<UnwrapValueWrappers<T>>
+  : Readonly<UnwrapValueWrappers<T>>) &
+  RawValue<T>

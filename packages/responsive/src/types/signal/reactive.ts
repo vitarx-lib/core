@@ -1,6 +1,7 @@
 import type { AnyCollection, AnyFunction, AnyObject } from '@vitarx/utils'
-import type { IS_RAW, IS_REACTIVE } from '../../constants/index.js'
-import type { ReactiveSource } from '../../signal/reactive/base.js'
+import { type IS_RAW, type IS_REACTIVE } from '../../constants/index.js'
+import type { ReactiveProxy } from '../../signal/reactive/base.js'
+import type { RawValue } from './raw.js'
 import type { RefWrapper } from './ref.js'
 import type { CallableSignal } from './signal.js'
 
@@ -79,34 +80,6 @@ type DeepUnwrapReactiveValues<T extends object> = T extends NonWarped
     }
 
 /**
- * 响应式代理对象类型工具
- *
- * @template T - 源对象类型
- * @template Deep - 是否进行深度解包
- * @remarks
- * 该类型用于处理代理对象。如果 `Deep` 为 `true`，则进行深度解包；否则保持原类型不变。
- *
- * @example
- * ```typescript
- * type User = {
- *   name: Signal<string>
- *   age: number
- * }
- *
- * type StructuralUser = ReactiveProxy<User, true>
- * // 等价于 { name: string; age: number }
- *
- * type SimpleUser = ReactiveProxy<User, false>
- * // 等价于 { name: Signal<string>; age: number }
- * ```
- */
-type ReactiveProxy<T extends AnyObject, Deep extends boolean> = T extends AnyCollection
-  ? T
-  : Deep extends true
-    ? DeepUnwrapReactiveValues<T>
-    : UnwrapReactiveValues<T>
-
-/**
  * 响应式代理对象接口
  *
  * 这是一个抽象接口，用于描述响应式信号对象。
@@ -129,9 +102,13 @@ type ReactiveProxy<T extends AnyObject, Deep extends boolean> = T extends AnyCol
  * console.log(user.gender) // male
  * ```
  */
-export type Reactive<T extends AnyObject = any, Deep extends boolean = true> = ReactiveProxy<
-  T,
-  Deep
-> & {
-  [IS_REACTIVE]: ReactiveSource<T, Deep>
-}
+export type Reactive<
+  T extends AnyObject = any,
+  Deep extends boolean = true
+> = (T extends AnyCollection
+  ? T
+  : Deep extends true
+    ? DeepUnwrapReactiveValues<T>
+    : UnwrapReactiveValues<T>) & {
+  [IS_REACTIVE]: ReactiveProxy<T, Deep>
+} & RawValue<T>
