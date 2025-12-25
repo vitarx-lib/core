@@ -20,13 +20,13 @@ Vitarx 响应式系统的核心包，提供高性能、类型安全的响应式�
 
 ## 安装
 
-```
+```shell
 npm install @vitarx/responsive
 ```
 
 或使用其他包管理器：
 
-```
+```shell
 # pnpm
 pnpm add @vitarx/responsive
 
@@ -38,7 +38,7 @@ yarn add @vitarx/responsive
 
 | 模块              | 导出项                   | 类型 | 描述                          |
 |-----------------|-----------------------|----|-----------------------------|
-| context         | Context               | 类  | 上下文管理器类                     |
+| context         | Context               | 类  | 上下文管理器静态类                   |
 | context         | getContext            | 函数 | 获取指定标签的上下文对象                |
 | context         | runInContext          | 函数 | 在指定上下文中同步执行函数               |
 | context         | runContext            | 函数 | runInContext的别名             |
@@ -71,12 +71,12 @@ yarn add @vitarx/responsive
 | effect          | onScopePause          | 函数 | 在作用域暂停时注册回调函数               |
 | effect          | onScopeResume         | 函数 | 在作用域恢复时注册回调函数               |
 | watcher         | watch                 | 函数 | 创建一个观察器，用于监听源数据变化并执行回调函数    |
+| watcher         | watchEffect           | 函数 | EffectWatcher 观察器类的助手函数     |
 | watcher         | Watcher               | 类  | 观察器基类                       |
 | watcher         | EffectWatcher         | 类  | 基于 Effect 的观察器类             |
 | watcher         | ValueWatcher          | 类  | 值观察器类                       |
 | watcher         | SignalWatcher         | 类  | 信号观察器类                      |
 | watcher         | ValueChangeWatcher    | 类  | 值变化观察器类                     |
-| signal.callable | signal                | 函数 | 创建函数式 Signal                |
 | signal.reactive | reactive              | 函数 | 将一个对象代理为响应式对象               |
 | signal.reactive | shallowReactive       | 函数 | 创建浅层响应式对象                   |
 | signal.readonly | readonly              | 函数 | 创建只读对象                      |
@@ -87,21 +87,15 @@ yarn add @vitarx/responsive
 | signal.computed | computed              | 函数 | 创建一个计算属性                    |
 | signal.computed | computedWithSetter    | 函数 | 创建一个带有setter的计算属性           |
 | signal.computed | isComputed            | 函数 | 判断是否为计算属性对象                 |
-| utils           | isSignal              | 函数 | 判断对象是否是 Signal              |
 | utils           | isCallableSignal      | 函数 | 检查给定的值是否为可调用信号              |
 | utils           | isRefSignal           | 函数 | 判断是否为值信号                    |
-| utils           | isRef                 | 函数 | 判断值是否实现RefWrapper接口         |
+| utils           | isRef                 | 函数 | 判断值是否实现Ref接口                |
 | utils           | isReactive            | 函数 | 检查一个值是否为响应式对象               |
 | utils           | isReadonly            | 函数 | 判断是否为只读对象                   |
 | utils           | unref                 | 函数 | 解包 ref 包装，返回其 `.value` 值    |
-| utils           | unwrap                | 函数 | 解包函数，用于处理可能被包装的值            |
 | utils           | markRaw               | 函数 | 将一个对象标记为永远不会被转换为响应式信号       |
 | utils           | isMakeRaw             | 函数 | 检查对象是否被标记为非信号类型             |
 | utils           | toRaw                 | 函数 | 获取代理原始值                     |
-| utils           | readSignal            | 函数 | 获取信号值的辅助函数                  |
-| utils           | getSignal             | 函数 | readSignal的别名               |
-| utils           | writeSignal           | 函数 | 将指定的值写入到信号对象中               |
-| utils           | setSignal             | 函数 | writeSignal的别名              |
 | constants       | IS_SIGNAL             | 符号 | signal 标记                   |
 | constants       | IS_READONLY           | 符号 | 只读代理标识                      |
 | constants       | IS_REF                | 符号 | 引用信号标记                      |
