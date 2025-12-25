@@ -1,4 +1,4 @@
-import type { AnyArray, AnyCollection, AnyRecord } from './types'
+import type { AnyArray, AnyCollection, AnyFunction, AnyRecord } from './types'
 
 const objectToString = Object.prototype.toString
 const toTypeString = (value: any): string => objectToString.call(value)
@@ -202,7 +202,7 @@ export function isAsyncFunction(func: Function): func is (...args: any[]) => Pro
  * isFunction(null); // false
  * ```
  */
-export function isFunction(val: any): val is (...args: any[]) => any {
+export function isFunction(val: any): val is AnyFunction {
   return typeof val === 'function'
 }
 
