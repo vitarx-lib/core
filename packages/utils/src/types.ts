@@ -68,19 +68,21 @@ export type AnyPrimitive = null | undefined | boolean | number | string | bigint
  * // }
  * ```
  */
-export type DeepReadonly<T> = {
-  readonly [P in keyof T]: T[P] extends AnyPrimitive
-    ? T[P]
-    : T[P] extends Set<infer U>
-      ? ReadonlySet<U>
-      : T[P] extends Map<infer K, infer V>
-        ? ReadonlyMap<K, V>
-        : T[P] extends Array<infer U>
-          ? ReadonlyArray<DeepReadonly<U>>
-          : T[P] extends object
-            ? DeepReadonly<T[P]>
-            : T[P]
-}
+export type DeepReadonly<T> = T extends AnyPrimitive | AnyFunction | Date | Error | RegExp
+  ? T
+  : {
+      readonly [P in keyof T]: T[P] extends AnyPrimitive
+        ? T[P]
+        : T[P] extends Set<infer U>
+          ? ReadonlySet<U>
+          : T[P] extends Map<infer K, infer V>
+            ? ReadonlyMap<K, V>
+            : T[P] extends Array<infer U>
+              ? ReadonlyArray<DeepReadonly<U>>
+              : T[P] extends object
+                ? DeepReadonly<T[P]>
+                : T[P]
+    }
 /**
  * 递归移除对象类型中所有属性的只读修饰符
  *
