@@ -146,7 +146,7 @@ describe('watcher/Watcher', () => {
       const watcher = new TestWatcher()
       const runCleanupSpy = vi.spyOn(watcher as any, 'runCleanup')
       const clearEffectDepsSpy = vi.spyOn(
-        await import('../../src/depend/index.js'),
+        await import('../../src/core/signal/index.js'),
         'clearEffectDeps'
       )
 

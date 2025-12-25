@@ -1,6 +1,6 @@
 ;(globalThis as any).__DEV__ = false
 import * as process from 'node:process'
-import { ref, Ref, watch } from '../../src/index.js'
+import { ref, ValueRef, watch } from '../../src/index.js'
 
 // ====================== 配置 ======================
 const SIGNAL_COUNT = 10_000
@@ -29,7 +29,7 @@ async function run() {
 
   // ---------- 1. create ----------
   console.time('create signals')
-  const signals: Ref<number>[] = new Array(SIGNAL_COUNT)
+  const signals: ValueRef<number>[] = new Array(SIGNAL_COUNT)
   for (let i = 0; i < SIGNAL_COUNT; i++) {
     signals[i] = ref(i)
   }

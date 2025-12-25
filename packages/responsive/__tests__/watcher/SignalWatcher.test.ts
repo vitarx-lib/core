@@ -15,7 +15,10 @@ describe('watcher/SignalWatcher', () => {
     it('should create a link between watcher and signal', async () => {
       const signal = ref(42)
       const callback = vi.fn()
-      const createDepLinkSpy = vi.spyOn(await import('../../src/depend/link.js'), 'createDepLink')
+      const createDepLinkSpy = vi.spyOn(
+        await import('../../src/core/signal/index.js'),
+        'createDepLink'
+      )
 
       const watcher = new SignalWatcher(signal, callback, {})
 
@@ -30,12 +33,11 @@ describe('watcher/SignalWatcher', () => {
       const watcher = new SignalWatcher(signal, callback, {})
 
       const peekSignalSpy = vi
-        .spyOn(await import('../../src/depend/index.js'), 'peekSignal')
+        .spyOn(await import('../../src/core/signal/index.js'), 'peekSignal')
         .mockReturnValue(42)
 
       const result = watcher['getter']()
-
-      expect(peekSignalSpy).toHaveBeenCalledWith(signal)
+      expect(peekSignalSpy).toHaveBeenCalledWith(signal, 'value')
       expect(result).toBe(42)
     })
   })
