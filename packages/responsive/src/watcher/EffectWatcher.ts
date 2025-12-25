@@ -1,6 +1,6 @@
 import { isFunction } from '@vitarx/utils'
-import { collectSignal } from '../depend/index.js'
-import type { WatcherOnCleanup } from '../types/index.js'
+import { collectSignal } from '../core/index.js'
+import type { WatcherOnCleanup } from './types.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
 /**

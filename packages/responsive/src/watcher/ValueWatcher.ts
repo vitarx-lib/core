@@ -1,5 +1,5 @@
-import { collectSignal } from '../depend/index.js'
-import type { WatchCallback } from '../types/index.js'
+import { collectSignal } from '../core/index.js'
+import type { WatchCallback } from './types.js'
 import { ValueChangeWatcher } from './ValueChangeWatcher.js'
 import { type WatcherOptions } from './Watcher.js'
 

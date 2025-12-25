@@ -1,9 +1,9 @@
 import type { VoidCallback } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import { clearEffectDeps, type DepEffectLike } from '../depend/index.js'
-import { Effect, type EffectOptions } from '../effect/index.js'
-import type { DebuggerHandler, FlushMode } from '../types/index.js'
+import type { DebuggerHandler } from '../core/index.js'
+import { clearEffectDeps, type DepEffectLike, Effect, type EffectOptions } from '../core/index.js'
 import { queuePostFlushJob, queuePreFlushJob, type Scheduler } from './scheduler.js'
+import type { FlushMode } from './types.js'
 
 /**
  * 观察器配置选项接口

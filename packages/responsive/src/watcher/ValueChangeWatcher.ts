@@ -1,4 +1,4 @@
-import type { CompareFunction, WatchCallback } from '../types/index.js'
+import type { CompareFunction, WatchCallback } from './types.js'
 import { Watcher, type WatcherOptions } from './Watcher.js'
 
 /**
