@@ -3,8 +3,7 @@
  *
  * 提供快速创建测试用 Widget 的工具函数
  */
-
-import { Scheduler } from '@vitarx/responsive'
+import { flushSync } from '@vitarx/responsive'
 import {
   type ClassWidget,
   createVNode,
@@ -93,7 +92,7 @@ export function createContainer(): HTMLElement {
  * 同步执行所有待处理的更新任务
  */
 export function flushScheduler(): void {
-  Scheduler.flushSync()
+  flushSync()
 }
 
 /**

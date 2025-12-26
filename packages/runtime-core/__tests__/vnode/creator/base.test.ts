@@ -2,11 +2,11 @@ import { ref } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  IS_VNODE,
   type NodeDevInfo,
   NodeKind,
   NodeState,
-  setNodeDevInfo,
-  VIRTUAL_NODE_SYMBOL
+  setNodeDevInfo
 } from '../../../src/index.js'
 import { createBaseVNode } from '../../../src/vnode/creator/base.js'
 
@@ -16,7 +16,7 @@ describe('vnode/creator/base - createBaseVNode', () => {
       const vnode = createBaseVNode('div', NodeKind.REGULAR_ELEMENT, {})
 
       expect(vnode).toBeDefined()
-      expect(vnode[VIRTUAL_NODE_SYMBOL]).toBe(true)
+      expect(vnode[IS_VNODE]).toBe(true)
       expect(vnode.type).toBe('div')
       expect(vnode.kind).toBe(NodeKind.REGULAR_ELEMENT)
       expect(vnode.state).toBe(NodeState.Created)
@@ -84,15 +84,15 @@ describe('vnode/creator/base - createBaseVNode', () => {
 
   describe('ref 属性处理', () => {
     let warnSpy: ReturnType<typeof vi.spyOn>
-  
+
     beforeEach(() => {
       warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
     })
-  
+
     afterEach(() => {
       warnSpy.mockRestore()
     })
-      
+
     it('应该提取并设置 ref 属性', () => {
       const myRef = ref<HTMLElement | null>(null)
       const vnode = createBaseVNode('div', NodeKind.REGULAR_ELEMENT, { ref: myRef })
