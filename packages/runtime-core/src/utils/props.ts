@@ -1,55 +1,14 @@
 import {
-  REF_SIGNAL_SYMBOL,
+  IS_REF,
+  IS_SIGNAL,
   type RefSignal,
   shallowRef,
-  SIGNAL_RAW_VALUE_SYMBOL,
-  SIGNAL_SYMBOL,
-  SubManager,
-  Subscriber,
-  toRaw,
   unref,
-  type WatchOptions,
-  watchProperty
+  watchEffect
 } from '@vitarx/responsive'
+import { forceUpdateProps } from '../runtime/index.js'
 import type { AnyProps } from '../types/index.js'
 import { StyleUtils } from './style.js'
-
-/**
- * 监听props属性变化的函数
- *
- * @template T - props类型
- * @template K - props的键类型，必须是T的键之一
- * @param {T} props - 需要监听的props对象
- * @param {K} propName - 需要监听的属性名
- * @param {Function} callback - 属性变化时的回调函数
- * @param {boolean | Omit<WatchOptions, 'scope'>} [immediateOrWatchOptions=false] - 监听选项，可以是布尔值或WatchOptions对象
- * @returns {Subscriber} 返回订阅者对象，可用于取消订阅
- */
-export function onPropChange<T extends Record<string, any>, K extends keyof T>(
-  props: T,
-  propName: K,
-  callback: (newValue: T[K], oldValue: T[K]) => void,
-  immediateOrWatchOptions: boolean | Omit<WatchOptions, 'scope'> = false
-): Subscriber {
-  // 当前记录的“原始”旧值（用于回调）
-  let oldValue = props[propName]
-  const options: WatchOptions =
-    typeof immediateOrWatchOptions === 'boolean'
-      ? {
-          immediate: immediateOrWatchOptions
-        }
-      : { ...immediateOrWatchOptions }
-  return watchProperty(
-    props,
-    propName as any,
-    () => {
-      const newValue = props[propName]
-      callback(newValue, oldValue)
-      oldValue = newValue
-    },
-    options
-  )
-}
 
 /**
  * PropModel 类实现了一个双向绑定的属性代理，用于在组件Prop和响应式系统之间建立双向数据绑定。
@@ -78,8 +37,8 @@ export function onPropChange<T extends Record<string, any>, K extends keyof T>(
 export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
   implements RefSignal<T[K]>
 {
-  readonly [REF_SIGNAL_SYMBOL] = true
-  readonly [SIGNAL_SYMBOL] = true
+  readonly [IS_REF] = true
+  readonly [IS_SIGNAL] = true
   private readonly _ref: RefSignal
   private readonly _props: T
   private readonly _propName: K
@@ -90,17 +49,13 @@ export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
     this._eventName = `onUpdate:${propName.toString()}`
     this._ref = shallowRef(props[propName])
     // 双向绑定的关键，监听属性值的变化，如果改变，则更新_ref.value
-    watchProperty(props, propName as any, () => {
+    watchEffect(() => {
       if (this._ref.value !== props[propName]) {
         this._ref.value = props[propName]
       }
     })
     // 为了解决父组件传入的是 ref() , 所以初始化默认值通过 this.value 来使传入的ref更新
     if (defaultValue !== undefined && this._ref.value === undefined) this._ref.value = defaultValue
-  }
-
-  get [SIGNAL_RAW_VALUE_SYMBOL]() {
-    return this._ref.value
   }
 
   /**
@@ -125,9 +80,9 @@ export class PropModel<T extends AnyProps, K extends keyof T, D extends T[K]>
     // 如果新值和旧值相同，则不进行更新
     if (newValue === this._ref.value) return
     this._ref.value = newValue
-    const originalProps = toRaw(this._props) as T
-    originalProps[this._propName] = newValue
-    SubManager.notify(this._props, this._propName)
+    forceUpdateProps(() => {
+      this._props[this._propName] = newValue
+    })
     this._notify(newValue)
   }
 

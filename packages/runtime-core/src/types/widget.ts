@@ -1,5 +1,5 @@
 import type { RequiredKeys } from '@vitarx/utils'
-import type { STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
+import type { IS_STATELESS_WIDGET } from '../constants/index.js'
 import type { __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
 import type { Widget } from '../widget/index.js'
 import type { StatelessWidgetNode, VNode } from './nodes/index.js'
@@ -240,12 +240,12 @@ export type AsyncWidget<P extends AnyProps = any> = {
  * 无状态小部件
  */
 export type StatelessWidget<P extends AnyProps = any, R extends Renderable = Renderable> = {
-  readonly [STATELESS_F_WIDGET_SYMBOL]: true
+  readonly [IS_STATELESS_WIDGET]: true
   (props: P): R
 } & WidgetOptions
 
 export interface StatelessWidgetSymbol {
-  readonly [STATELESS_F_WIDGET_SYMBOL]: true
+  readonly [IS_STATELESS_WIDGET]: true
 }
 
 /**

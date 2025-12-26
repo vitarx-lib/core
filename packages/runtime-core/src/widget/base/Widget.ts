@@ -1,5 +1,5 @@
-import { NON_SIGNAL_SYMBOL, Scheduler } from '@vitarx/responsive'
-import { CLASS_WIDGET_BASE_SYMBOL } from '../../constants/index.js'
+import { flushSync, IS_RAW } from '@vitarx/responsive'
+import { IS_CLASS_WIDGET } from '../../constants/index.js'
 import { getCurrentVNode } from '../../runtime/index.js'
 import type {
   AnyProps,
@@ -49,11 +49,11 @@ export abstract class Widget<
   /**
    * 类小部件标识符符
    */
-  static [CLASS_WIDGET_BASE_SYMBOL] = true
+  static [IS_CLASS_WIDGET] = true
   /**
    * 禁止代理小部件实例
    */
-  readonly [NON_SIGNAL_SYMBOL] = true
+  readonly [IS_RAW] = true
   /**
    * 存储小部件的传入属性
    *
@@ -381,7 +381,7 @@ export abstract class Widget<
    * @param [sync=true] - 是否同步更新，默认是
    */
   $forceUpdate(sync: boolean = true): void {
-    this.$vnode.instance!.update()
-    if (sync) Scheduler.flushSync()
+    this.$vnode.instance!.update(true)
+    if (sync) flushSync()
   }
 }

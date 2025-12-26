@@ -1,4 +1,4 @@
-import { VNODE_BUILDER_SYMBOL } from '../../constants/index.js'
+import { IS_VNODE_BUILDER } from '../../constants/index.js'
 import type { AnyProps, VNode, VNodeBuilder } from '../../types/index.js'
 
 /**
@@ -25,7 +25,7 @@ import type { AnyProps, VNode, VNodeBuilder } from '../../types/index.js'
 export function defineNodeBuilder<P extends AnyProps, R extends VNode>(
   builder: (props: P) => R
 ): VNodeBuilder<P, R> {
-  Object.defineProperty(builder, VNODE_BUILDER_SYMBOL, {
+  Object.defineProperty(builder, IS_VNODE_BUILDER, {
     value: true
   })
   return builder as VNodeBuilder<P, R>
@@ -38,5 +38,5 @@ export function defineNodeBuilder<P extends AnyProps, R extends VNode>(
  * @returns {boolean} - 如果是节点构建器则返回true，否则返回false
  */
 export function isNodeBuilder(val: any): val is VNodeBuilder {
-  return typeof val === 'function' && val?.[VNODE_BUILDER_SYMBOL]
+  return typeof val === 'function' && val?.[IS_VNODE_BUILDER]
 }

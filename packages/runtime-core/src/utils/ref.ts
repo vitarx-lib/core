@@ -1,4 +1,4 @@
-import { isRefSignal, Ref, shallowRef } from '@vitarx/responsive'
+import { isRefSignal, shallowRef, ValueRef } from '@vitarx/responsive'
 import type {
   ElementOf,
   HostNodeElements,
@@ -21,7 +21,7 @@ export type ComputedRefElType<T> = T extends HostNodeElements
         ? ImpostWidget<T>
         : T
 /** 引用元素类型 */
-export type RefEl<T> = Ref<ComputedRefElType<T> | null>
+export type RefEl<T> = ValueRef<ComputedRefElType<T> | null>
 
 /**
  * 引用节点元素

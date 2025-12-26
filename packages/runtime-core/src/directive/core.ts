@@ -1,4 +1,4 @@
-import { Scheduler } from '@vitarx/responsive'
+import { queuePostFlushJob } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { getRenderer } from '../renderer/index.js'
 import { getCurrentVNode } from '../runtime/index.js'
@@ -267,8 +267,7 @@ export function diffDirectives(
 
       // 调用指令的更新生命周期钩子
       dir.beforeUpdate?.(el as never, binding, oldVNode)
-      dir.updated &&
-        Scheduler.queuePostFlushJob(() => dir.updated?.(el as never, binding, oldVNode))
+      dir.updated && queuePostFlushJob(() => dir.updated?.(el as never, binding, oldVNode))
     } else {
       // --- 新增 ---
       const binding = { value: newValue, oldValue: undefined, arg }

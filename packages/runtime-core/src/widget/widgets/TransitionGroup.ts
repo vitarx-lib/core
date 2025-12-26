@@ -17,8 +17,7 @@ import type {
   WithProps
 } from '../../types/index.js'
 import { getDomElement, isContainerNode } from '../../utils/index.js'
-import { PatchUpdate } from '../../vnode/core/update.js'
-import { createVNode } from '../../vnode/index.js'
+import { createVNode, PatchUpdate } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 import type { Fragment } from './Fragment.js'
 

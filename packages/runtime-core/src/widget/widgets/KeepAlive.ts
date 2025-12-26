@@ -1,3 +1,4 @@
+import { watch } from '@vitarx/responsive'
 import { getRenderer } from '../../renderer/index.js'
 import type {
   AnyProps,
@@ -9,7 +10,7 @@ import type {
   WidgetNode,
   WidgetType
 } from '../../types/index.js'
-import { getDomTarget, isWidget, isWidgetNode, onPropChange } from '../../utils/index.js'
+import { getDomTarget, isWidget, isWidgetNode } from '../../utils/index.js'
 import {
   activateNode,
   createVNode,
@@ -137,7 +138,7 @@ export class KeepAlive extends Widget<KeepAliveProps> {
     // 缓存当前展示的小部件
     this.currentChild = this.makeChildVNode(props.children)
     // 开始监听 props.children
-    onPropChange(this.props, 'children', this.handleChildChange.bind(this))
+    watch(() => this.props.children, this.handleChildChange.bind(this))
   }
 
   /**

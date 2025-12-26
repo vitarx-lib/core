@@ -1,5 +1,5 @@
-import { shallowRef, Subscriber, watch } from '@vitarx/responsive'
-import { NodeState, SUSPENSE_COUNTER_SYMBOL } from '../../constants/index.js'
+import { shallowRef, watch, Watcher } from '@vitarx/responsive'
+import { NodeState, SUSPENSE_COUNTER } from '../../constants/index.js'
 import { linkParentNode, provide } from '../../runtime/index.js'
 import type { AnyProps, ErrorHandler, Renderable, VNode } from '../../types/index.js'
 import { isVNode } from '../../utils/index.js'
@@ -84,13 +84,13 @@ interface SuspenseProps {
 export class Suspense extends Widget<SuspenseProps> {
   protected counter = shallowRef(0)
   protected showFallback = true
-  private listener?: Subscriber
+  private listener?: Watcher
   private pendingOnResolved: boolean = true
   private ssrPromise?: (value: void) => void
   private readonly fallback: VNode
   constructor(props: SuspenseProps) {
     super(props)
-    provide(SUSPENSE_COUNTER_SYMBOL, this.counter)
+    provide(SUSPENSE_COUNTER, this.counter)
     if (typeof props.onError === 'function') this.onError = props.onError
     this.fallback = isVNode(props.fallback)
       ? props.fallback

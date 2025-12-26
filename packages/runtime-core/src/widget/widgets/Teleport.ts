@@ -1,10 +1,16 @@
+import { watch } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { getRenderer } from '../../renderer/index.js'
 import { linkParentNode } from '../../runtime/index.js'
 import type { HostNodeElements, HostParentElement, Renderable, VNode } from '../../types/index.js'
-import { __DEV__, isVNode, onPropChange } from '../../utils/index.js'
-import { patchUpdate } from '../../vnode/core/update.js'
-import { createCommentVNode, mountNode, renderNode, unmountNode } from '../../vnode/index.js'
+import { __DEV__, isVNode } from '../../utils/index.js'
+import {
+  createCommentVNode,
+  mountNode,
+  patchUpdate,
+  renderNode,
+  unmountNode
+} from '../../vnode/index.js'
 import { Widget } from '../base/index.js'
 
 interface TeleportProps {
@@ -90,9 +96,8 @@ export class Teleport extends Widget<TeleportProps, Required<TeleportProps>> {
     super(props)
     this.disabled = !!props.disabled
     if (!this.disabled) {
-      onPropChange(
-        props,
-        'children',
+      watch(
+        () => this.props.children,
         (newChild, oldChild) => {
           if (this.teleported) patchUpdate(oldChild, newChild)
         },

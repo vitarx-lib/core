@@ -1,4 +1,4 @@
-import { CLASS_WIDGET_BASE_SYMBOL, STATELESS_F_WIDGET_SYMBOL } from '../constants/index.js'
+import { IS_CLASS_WIDGET, IS_STATELESS_WIDGET } from '../constants/index.js'
 import type {
   ClassWidget,
   Renderable,
@@ -37,7 +37,7 @@ export function defineStatelessWidget<T extends (props: any) => Renderable>(
   build: T,
   displayName?: string
 ): T & StatelessWidgetSymbol {
-  Object.defineProperty(build, STATELESS_F_WIDGET_SYMBOL, { value: true })
+  Object.defineProperty(build, IS_STATELESS_WIDGET, { value: true })
   if (typeof displayName === 'string') {
     ;(build as unknown as { displayName: string }).displayName = displayName
   }
@@ -52,7 +52,7 @@ export { defineStatelessWidget as stateless }
  * @returns {boolean} - true 表示为简单小部件
  */
 export function isStatelessWidget(fn: any): fn is StatelessWidget {
-  return typeof fn === 'function' && fn[STATELESS_F_WIDGET_SYMBOL] === true
+  return typeof fn === 'function' && fn[IS_STATELESS_WIDGET] === true
 }
 
 /**
@@ -65,7 +65,7 @@ export function isStatelessWidget(fn: any): fn is StatelessWidget {
 export function isClassWidget(val: any): val is ClassWidget {
   // 使用可选链操作符安全地访问对象的CLASS_WIDGET_BASE_SYMBOL属性
   // 并检查其值是否为true
-  return val?.[CLASS_WIDGET_BASE_SYMBOL] === true
+  return val?.[IS_CLASS_WIDGET] === true
 }
 
 /**

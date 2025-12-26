@@ -1,6 +1,5 @@
-import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
+import { IS_RAW } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
-import { __VITARX_VERSION__ } from '../constants/index.js'
 import { normalizeDirective } from '../directive/index.js'
 import { getRenderer } from '../renderer/index.js'
 import { runInAppContext } from '../runtime/index.js'
@@ -104,7 +103,7 @@ const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
  * @param config - 可选的应用配置对象，包含错误处理器和ID前缀等配置
  */
 export class App {
-  readonly [NON_SIGNAL_SYMBOL] = true
+  readonly [IS_RAW] = true
   /** 配置选项 */
   public readonly config: Required<AppConfig>
   /**
@@ -172,7 +171,7 @@ export class App {
    * @returns {string} - 版本号
    */
   get version(): string {
-    return __VITARX_VERSION__
+    return __VERSION__
   }
   /**
    * 将组件挂载到指定的DOM容器中

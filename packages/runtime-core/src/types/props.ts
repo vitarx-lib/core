@@ -1,4 +1,4 @@
-import type { Ref, RefSignal, UnwrapRef } from '@vitarx/responsive'
+import type { Ref, RefSignal, UnwrapRef, ValueRef } from '@vitarx/responsive'
 import type { PickRequired } from '@vitarx/utils'
 import type { RefEl } from '../utils/index.js'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../widget/index.js'
@@ -26,7 +26,7 @@ import type { AnyProps, WidgetPropsType, WidgetType } from './widget.js'
  * setValue(ref(42)); // 传入响应式引用
  * ```
  */
-export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | Ref<T> | RefSignal<T>
+export type MaybeRef<T> = T extends RefSignal<any, infer U> ? U | T : T | ValueRef<T> | RefSignal<T>
 
 /**
  * 属性支持引用值的类型
@@ -294,7 +294,7 @@ export type ReadonlyProps<Input extends {}, Default extends {} = {}> = Readonly<
   MergeProps<Input, Default>
 >
 
-type VModelValue<T> = T extends RefSignal<infer U> ? Ref<U, boolean> : Ref<T, boolean>
+type VModelValue<T> = T extends Ref ? T : Ref<T>
 type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
   ? 'modelValue' extends keyof PickRequired<T>
     ?

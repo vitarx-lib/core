@@ -1,10 +1,10 @@
 import {
   CONTAINER_NODE_KINDS,
   ELEMENT_NODE_KINDS,
+  IS_VNODE,
   NodeKind,
   NON_ELEMENT_NODE_KINDS,
   SPECIAL_NODE_KINDS,
-  VIRTUAL_NODE_SYMBOL,
   WIDGET_NODE_KINDS
 } from '../constants/index.js'
 import type {
@@ -28,7 +28,7 @@ import type {
  * @returns {boolean} 如果值是VNode节点则返回true，否则返回false
  */
 export function isVNode(val: any): val is VNode {
-  return val && typeof val === 'object' && val[VIRTUAL_NODE_SYMBOL] === true
+  return val && typeof val === 'object' && val[IS_VNODE] === true
 }
 /**
  * 检查传入的值是否为WidgetNode类型

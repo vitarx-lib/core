@@ -1,4 +1,4 @@
-import { Scheduler } from '@vitarx/responsive'
+import { flushSync } from '@vitarx/responsive'
 import type {
   StatefulWidgetNode,
   StatefulWidgetNodeType,
@@ -79,7 +79,7 @@ export function useForceUpdater(): (sync?: boolean) => void {
     return sync => {
       instance.update()
       if (sync) {
-        Scheduler.flushSync()
+        flushSync()
       }
     }
   }

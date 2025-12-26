@@ -1,6 +1,6 @@
 import { getContext, runInContext } from '@vitarx/responsive'
 import type { App } from '../app/index.js'
-import { APP_CONTEXT_SYMBOL, VNODE_CONTEXT_SYMBOL } from '../constants/index.js'
+import { APP_CONTEXT, VNODE_CONTEXT } from '../constants/index.js'
 import type { WidgetNode } from '../types/index.js'
 
 /**
@@ -11,7 +11,7 @@ import type { WidgetNode } from '../types/index.js'
  */
 export function runInAppContext<R>(app: App, fn: () => R): R {
   // 使用APP_CONTEXT_SYMBOL作为上下文标识符，在指定应用上下文中执行函数
-  return runInContext(APP_CONTEXT_SYMBOL, app, fn)
+  return runInContext(APP_CONTEXT, app, fn)
 }
 
 /**
@@ -23,7 +23,7 @@ export function runInAppContext<R>(app: App, fn: () => R): R {
  */
 export function getAppContext<T extends App = App>(): T | undefined {
   // 调用getContext函数，传入APP_CONTEXT_SYMBOL作为key，并指定返回类型为App
-  return getContext<T>(APP_CONTEXT_SYMBOL)
+  return getContext<T>(APP_CONTEXT)
 }
 
 /**
@@ -36,7 +36,7 @@ export function getAppContext<T extends App = App>(): T | undefined {
  */
 export function runInNodeContext<R>(node: WidgetNode, fn: () => R): R {
   // 调用runInContext函数，传入虚拟节点上下文符号、当前对象和要执行的函数
-  return runInContext(VNODE_CONTEXT_SYMBOL, node, fn)
+  return runInContext(VNODE_CONTEXT, node, fn)
 }
 
 /**
@@ -47,5 +47,5 @@ export function runInNodeContext<R>(node: WidgetNode, fn: () => R): R {
  */
 export function getCurrentVNode(): WidgetNode | undefined {
   // 调用runInContext函数，传入虚拟节点上下文符号和getCurrentVNode函数，返回当前组件虚拟节点
-  return getContext<WidgetNode>(VNODE_CONTEXT_SYMBOL)
+  return getContext<WidgetNode>(VNODE_CONTEXT)
 }

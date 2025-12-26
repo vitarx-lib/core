@@ -1,135 +1,101 @@
-import {
-  Depend,
-  isReactive,
-  PROXY_SIGNAL_SYMBOL,
-  SIGNAL_RAW_VALUE_SYMBOL,
-  SIGNAL_SYMBOL,
-  SignalManager
-} from '@vitarx/responsive'
+import { isReactive, ObjectReactive } from '@vitarx/responsive'
 import type { AnyRecord } from '@vitarx/utils'
-import { isRecordObject, logger, LogLevel } from '@vitarx/utils'
+import { isObject, isPlainObject, logger, LogLevel } from '@vitarx/utils'
 import type { AnyProps, MergeProps, ReadonlyProps } from '../types/index.js'
 import { getCurrentVNode } from './context.js'
 
-const VNODE_PROPS_DEFAULT_DATA_SYMBOL = Symbol('VNODE_PROPS_DEFAULT_DATA_SYMBOL')
-const VNODE_PROPS_PROXY_SYMBOL = Symbol('VNODE_PROPS_SYMBOL')
+const DEFAULT_PROPS = Symbol.for('__v_props:default-props')
+const IS_PROPS_PROXY = Symbol.for('__v_props:is-props-proxy')
 const WARN_MESSAGE = `The component's props should maintain a one-way data flow, and you shouldn't modify it directly.`
-const STATIC_SYMBOL = new Set([SIGNAL_SYMBOL, PROXY_SIGNAL_SYMBOL, VNODE_PROPS_PROXY_SYMBOL])
 
+let isReadonlySuspended = false
 /**
- * PropsProxyHandler 是一个属性代理处理器类，用于管理和代理对象的属性访问。
- * 该类继承自 ReactiveProxyHandler，主要用于处理 VNode 属性的特殊访问和设置逻辑。
+ * PropsProxy 是一个属性代理处理器类，用于管理和代理对象的属性访问。
+ * 该类继承自 ReactiveObject，主要用于处理 VNode 属性的特殊访问和设置逻辑。
  *
  * 主要功能：
  * - 属性访问代理：处理对象属性的读取，支持从默认属性中获取值
  * - 属性设置代理：管理对象属性的设置，包含特殊属性的处理
  * - 属性删除代理：处理对象属性的删除操作
  *
- * @example
- * const target = { name: 'test' };
- * const proxy = new Proxy(target, new PropsProxyHandler(target));
- *
  * @param target - 需要被代理的目标对象，类型为 T
- *
- * @remarks
- * - 该类主要用于处理 VNode 相关的属性代理，包含了 VNODE_PROPS_SYMBOL 和 VNODE_PROPS_DEFAULT_DATA 等特殊属性的处理
- * - 在开发环境下，对属性设置和删除操作会输出警告信息
- * - 该代理处理器默认不进行深度代理（deep: false）
  */
-class PropsProxyHandler<T extends Record<string, any>> implements ProxyHandler<T> {
-  public readonly proxy: T
-  public [VNODE_PROPS_DEFAULT_DATA_SYMBOL]?: Partial<T>
+class readonlyProps<T extends Record<string, any>> extends ObjectReactive<T> {
+  public _defaultProps?: Partial<T>
   constructor(target: T, defaultProps?: Partial<T>) {
-    this.proxy = new Proxy(target, this)
-    if (defaultProps && typeof defaultProps === 'object') {
-      this[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
+    super(target, false)
+    if (isObject(defaultProps)) {
+      this._defaultProps = defaultProps
     }
   }
-  get(target: T, prop: string | symbol) {
-    if (typeof prop === 'symbol') {
-      if (prop === VNODE_PROPS_DEFAULT_DATA_SYMBOL) return this[VNODE_PROPS_DEFAULT_DATA_SYMBOL]
-      if (STATIC_SYMBOL.has(prop)) return true
-      if (prop === SIGNAL_RAW_VALUE_SYMBOL) return target
+  override set(target: T, p: string | symbol, newValue: any, _receiver: any): boolean {
+    if (p === DEFAULT_PROPS) {
+      this._defaultProps = newValue
+      return true
     }
-
-    // 获取值
-    const value = Reflect.get(target, prop)
-    // 如果获取到的值为 undefined 或 null，则尝试从默认属性中获取
+    if (!isReadonlySuspended) logger.warn(WARN_MESSAGE)
+    return super.set(target, p, newValue, _receiver)
+  }
+  override get(target: T, p: string | symbol, receiver: any): any {
+    if (p === IS_PROPS_PROXY) return true
+    if (p === DEFAULT_PROPS) return this._defaultProps
+    const value = super.get(target, p, receiver)
     if (value === undefined || value === null) {
       // 尝试从默认属性中获取
-      const defaultProps = Reflect.get(this, VNODE_PROPS_DEFAULT_DATA_SYMBOL)
-      if (defaultProps && Reflect.has(defaultProps, prop)) {
-        return Reflect.get(defaultProps, prop, defaultProps)
+      const defaultProps = this._defaultProps
+      if (defaultProps && p in defaultProps) {
+        return Reflect.get(defaultProps, p, defaultProps)
       }
     }
-    this.track(prop)
     return value
   }
-  set(target: T, prop: string | symbol, value: any): boolean {
-    // 设置默认属性
-    if (prop === VNODE_PROPS_DEFAULT_DATA_SYMBOL) {
-      this[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = value
-      return true // 返回 true 表示设置成功
-    }
-    logger.warn(WARN_MESSAGE)
-    const oldValue = Reflect.get(target, prop)
-    if (oldValue === value) return true
-    if (!Reflect.set(target, prop, value)) return false
-    this.notify(prop)
-    return true
-  }
-  has(target: T, prop: string | symbol): boolean {
-    this.track(prop)
-    return Reflect.has(target, prop)
-  }
-  deleteProperty(target: T, prop: any): boolean {
-    logger.warn(WARN_MESSAGE) // 输出预设的警告消息
-    this.notify(prop)
-    return Reflect.deleteProperty(target, prop)
-  }
-  /**
-   * 通知观察者属性发生变化
-   * 会同时通知当前对象的观察者和所有父级对象的观察者
-   *
-   * @private
-   */
-  private notify(prop: string | symbol) {
-    SignalManager.notifySubscribers(this.proxy as any, prop as any)
-  }
-  /**
-   * 收集属性的依赖关系
-   * 用于在属性被访问时收集依赖，实现响应式追踪
-   *
-   * @param {string|symbol} prop - 被访问的属性
-   * @private
-   */
-  private track(prop: string | symbol) {
-    Depend.track(this.proxy as Record<string | symbol, any>, prop)
+  override deleteProperty(target: T, p: string | symbol): boolean {
+    if (!isReadonlySuspended) logger.warn(WARN_MESSAGE)
+    return super.deleteProperty(target, p)
   }
 }
-
+/**
+ * 强制设置属性的函数
+ * 该函数通过临时挂起只读状态，允许在只读上下文中执行属性设置操作
+ *
+ * 仅在底层驱动中使用，开发者应遵守单向数据流，避免数据混乱。
+ *
+ * @internal
+ * @template T - 函数返回值
+ * @param update - 要执行的更新函数，该函数内部进行属性更新操作不会触发警告
+ * @returns {T} 无返回值
+ */
+export function forceUpdateProps<T>(update: () => T): T {
+  // 挂起只读状态，设置为true表示允许修改
+  isReadonlySuspended = true
+  try {
+    // 执行传入的设置函数
+    return update()
+  } finally {
+    // 无论是否发生异常，最终都会恢复只读状态
+    isReadonlySuspended = false
+  }
+}
 /**
  * 创建props代理
  *
- * @utils 内部使用，请勿外部调用。
  * @param {object} props
  * @param {object} defaultProps - 默认属性对象
  * @returns {Readonly<Record<string, any>>} - 只读属性对象
  */
-export function proxyWidgetProps<T extends Record<string | symbol, any>>(
+export function proxyProps<T extends Record<string | symbol, any>>(
   props: T,
   defaultProps?: Partial<T>
 ): ReadonlyProps<T> {
   // 避免重复代理
-  if (props[VNODE_PROPS_PROXY_SYMBOL]) {
-    if (isRecordObject(defaultProps)) {
-      ;(props as AnyRecord)[VNODE_PROPS_DEFAULT_DATA_SYMBOL] = defaultProps
+  if (props[IS_PROPS_PROXY]) {
+    if (isPlainObject(defaultProps)) {
+      ;(props as AnyRecord)[DEFAULT_PROPS] = defaultProps
     }
     return props as Readonly<T>
   }
-  return new PropsProxyHandler<T>(props, defaultProps).proxy as Readonly<T>
+  return new readonlyProps<T>(props, defaultProps).proxy as ReadonlyProps<T>
 }
-
 /**
  * 动态定义默认Props
  *
@@ -227,7 +193,7 @@ export function defineProps<D extends AnyProps, I extends AnyProps = {}>(
   inputProps?: I
 ): ReadonlyProps<I, D> {
   // 验证defaultProps参数类型
-  if (!isRecordObject(defaultProps)) {
+  if (!isPlainObject(defaultProps)) {
     throw new TypeError(
       logger.formatMessage(
         LogLevel.ERROR,
@@ -250,7 +216,7 @@ export function defineProps<D extends AnyProps, I extends AnyProps = {}>(
   // 处理响应式对象
   if (isReactive(inputProps)) {
     // 对于响应式对象，使用Symbol标记默认属性
-    Reflect.set(inputProps, VNODE_PROPS_DEFAULT_DATA_SYMBOL, defaultProps)
+    Reflect.set(inputProps, DEFAULT_PROPS, defaultProps)
   } else {
     // 对于非响应式对象，直接合并属性
     // 只有当inputProps中不存在该属性或值为undefined/null时才使用默认值

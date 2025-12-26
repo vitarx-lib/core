@@ -1,9 +1,7 @@
 import { getRenderer } from '../../renderer/index.js'
 import type { HostNodeElements, Renderable, VNode } from '../../types/index.js'
-import { AnyChild } from '../../types/vnode.js'
 import { getDomElement, getDomTarget } from '../../utils/index.js'
-import { PatchUpdate } from '../../vnode/core/update.js'
-import { mountNode, unmountNode } from '../../vnode/index.js'
+import { mountNode, PatchUpdate, unmountNode } from '../../vnode/index.js'
 import { BaseTransition, type BaseTransitionProps } from './BaseTransition.js'
 
 interface TransitionProps extends BaseTransitionProps {
@@ -153,7 +151,7 @@ export class Transition extends BaseTransition<TransitionProps, { mode: 'default
   /**
    * 构建组件渲染内容
    *
-   * @returns {AnyChild} 当前子节点的 VNode
+   * @returns {Renderable} 当前子节点的 VNode
    */
   override build(): Renderable {
     return this.children

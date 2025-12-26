@@ -8,31 +8,31 @@
  * 每个虚拟节点都会包含这个Symbol作为其只读属性，
  * 可以通过检查该属性的存在来验证对象是否为虚拟节点。
  */
-export const VIRTUAL_NODE_SYMBOL = Symbol.for('__v_node__')
+export const IS_VNODE = Symbol.for('__v_vnode:is')
 /**
  * props中用于存放devInfo的属性名
  */
-export const VNODE_PROPS_DEV_INFO_SYMBOL = Symbol.for('__v_vnode_dev__')
+export const DEV_INFO_PROP = Symbol.for('__v_vnode:props_dev')
 /**
  * 虚拟节点的context属性的Symbol
  */
-export const VNODE_CONTEXT_SYMBOL = Symbol.for('__v_vnode_context__')
+export const VNODE_CONTEXT = Symbol.for('__v_vnode:context')
 /**
  * 类小部件的标识符
  */
-export const CLASS_WIDGET_BASE_SYMBOL = Symbol.for('__v_class_widget__')
+export const IS_CLASS_WIDGET = Symbol.for('__v_widget:is-class')
 /**
  * 无状态函数组件的标识符
  */
-export const STATELESS_F_WIDGET_SYMBOL = Symbol.for('__v_stateless_widget__')
-export const VNODE_BUILDER_SYMBOL = Symbol.for('__v_vnode_builder__')
+export const IS_STATELESS_WIDGET = Symbol.for('__v_widget:is-stateless')
+export const IS_VNODE_BUILDER = Symbol.for('__v_vnode:is-builder')
 /**
  * 应用上下文的Symbol
  */
-export const APP_CONTEXT_SYMBOL = Symbol.for('__v_app_context__')
+export const APP_CONTEXT = Symbol.for('__v_app:context')
 /**
  * `Suspense` 计数器标识符
  *
  * 用于在组件树中跟踪当前组件的挂起状态。
  */
-export const SUSPENSE_COUNTER_SYMBOL = Symbol.for('__v_suspense_counter__')
+export const SUSPENSE_COUNTER = Symbol.for('__v_suspense:counter')

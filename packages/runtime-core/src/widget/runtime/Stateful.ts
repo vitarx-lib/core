@@ -1,13 +1,15 @@
 import {
-  type DependencyMap,
-  depSubscribe,
+  collectSignal,
+  type DepEffectLike,
+  Effect,
   EffectScope,
-  Scheduler,
-  Subscriber
+  IS_REF,
+  queueJob,
+  trackSignal
 } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { LifecycleHook, NodeState } from '../../constants/index.js'
-import { findParentNode, linkParentNode, proxyWidgetProps } from '../../runtime/index.js'
+import { findParentNode, linkParentNode, proxyProps } from '../../runtime/index.js'
 import type {
   ErrorSource,
   LifecycleHookParameter,
@@ -17,7 +19,7 @@ import type {
   VNode,
   WidgetInstanceType
 } from '../../types/index.js'
-import { __DEV__, isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
+import { isClassWidget, isStatefulWidgetNode, isVNode } from '../../utils/index.js'
 import { createCommentVNode, createTextVNode, patchUpdate } from '../../vnode/index.js'
 import { FnWidget } from '../base/FnWidget.js'
 import { Widget } from '../base/index.js'
@@ -33,16 +35,13 @@ export class StatefulWidgetRuntime<
 > extends WidgetRuntime<T> {
   /** 响应式作用域，管理所有副作用 */
   public readonly scope: EffectScope
-  /** 依赖映射表，仅在开发模式下使用 */
-  public deps: DependencyMap | null = null
   /** 是否在非活跃期间被更新 */
   public dirty: boolean = false
   /** 组件实例 */
   public readonly instance: WidgetInstanceType<T>
   /** 是否有待处理的更新任务 */
   private hasPendingUpdate: boolean = false
-  /** 视图依赖订阅器，用于追踪渲染依赖 */
-  private renderDepsSubscriber: Subscriber | null = null
+  private renderEffect: RenderEffect
   constructor(node: StatefulWidgetNode<T>) {
     super(node)
     this.scope = new EffectScope({
@@ -52,8 +51,39 @@ export class StatefulWidgetRuntime<
       }
     })
     // @ts-ignore
-    this.props = proxyWidgetProps(this.vnode.props, this.type['defaultProps'])
+    this.props = proxyProps(this.vnode.props, this.type['defaultProps'])
     this.instance = this.createWidgetInstance()
+    this.renderEffect = new RenderEffect(
+      (): VNode => {
+        let vnode: VNode
+
+        try {
+          const buildResult = this.runInContext(() => this.instance.build())
+
+          if (isVNode(buildResult)) {
+            vnode = buildResult
+          } else {
+            const resultType = typeof buildResult
+            if (resultType === 'string' || resultType === 'number') {
+              vnode = createTextVNode({ text: String(buildResult) })
+            } else {
+              vnode = createCommentVNode({
+                text: `StatefulWidget<${this.name}> build() returned invalid type: ${resultType}`
+              })
+            }
+          }
+        } catch (error) {
+          const errorVNode = this.reportError(error, 'build')
+          vnode = isVNode(errorVNode)
+            ? errorVNode
+            : createCommentVNode({ text: `StatefulWidget<${this.name}> build failed` })
+        }
+        linkParentNode(vnode, this.vnode)
+        return vnode
+      },
+      this.update,
+      this.scope
+    )
   }
 
   /**
@@ -152,10 +182,11 @@ export class StatefulWidgetRuntime<
    *
    * @returns Promise，在更新完成后 resolve
    */
-  public override update = (): void => {
+  public override update = (force?: boolean): void => {
     if (this.state === NodeState.Unmounted) {
       throw new Error('Cannot update unmounted widget')
     }
+    if (force) this.renderEffect.dirty = true
     if (this.state === NodeState.Created) {
       if (this.cachedChildVNode) this.cachedChildVNode = this.build()
       return
@@ -167,22 +198,26 @@ export class StatefulWidgetRuntime<
     if (this.hasPendingUpdate) return
     this.hasPendingUpdate = true
     this.invokeHook(LifecycleHook.beforeUpdate)
-    Scheduler.queueJob(this.finishUpdate)
+    queueJob(this.finishUpdate)
   }
   /**
    * 销毁实例资源
    * 执行清理操作，释放内存
    */
   public override destroy(): void {
-    if (this.renderDepsSubscriber) {
-      this.renderDepsSubscriber.dispose()
-      this.renderDepsSubscriber = null
-    }
-    // 清空依赖数组
-    this.deps = null
     // 释放作用域资源
     this.scope.dispose()
     super.destroy()
+  }
+  /**
+   * 重新构建子虚拟节点并建立依赖追踪
+   *
+   * 如果启用了自动更新，会建立响应式依赖订阅，当依赖变化时自动触发更新
+   *
+   * @returns 构建的虚拟节点
+   */
+  public override build(): VNode {
+    return this.renderEffect.rebuild()
   }
   /**
    * 在 update 内部调用的渲染执行函数
@@ -214,67 +249,6 @@ export class StatefulWidgetRuntime<
     }
   }
   /**
-   * 重新构建子虚拟节点并建立依赖追踪
-   *
-   * 如果启用了自动更新，会建立响应式依赖订阅，当依赖变化时自动触发更新
-   *
-   * @returns 构建的虚拟节点
-   */
-  public override build(): VNode {
-    // 清理旧的依赖订阅
-    if (this.renderDepsSubscriber) {
-      this.renderDepsSubscriber.dispose()
-    }
-    // 构建虚拟节点并订阅依赖变化
-    const { result, subscriber, deps } = depSubscribe(this.buildChildVNode, this.update, {
-      flush: 'sync',
-      scope: false
-    })
-    // 开发模式下记录依赖用于调试
-    if (__DEV__) {
-      this.deps = deps
-    }
-    this.renderDepsSubscriber = subscriber || null
-    return result
-  }
-  /**
-   * 构建子虚拟节点
-   *
-   * 调用组件实例的 build 方法生成虚拟节点，并处理各种返回值类型：
-   * - VNode: 直接使用
-   * - string/number: 转换为文本节点
-   * - 其他类型: 创建注释节点（开发模式警告）
-   *
-   * @returns 构建的虚拟节点
-   */
-  private buildChildVNode = (): VNode => {
-    let vnode: VNode
-
-    try {
-      const buildResult = this.runInContext(() => this.instance.build())
-
-      if (isVNode(buildResult)) {
-        vnode = buildResult
-      } else {
-        const resultType = typeof buildResult
-        if (resultType === 'string' || resultType === 'number') {
-          vnode = createTextVNode({ text: String(buildResult) })
-        } else {
-          vnode = createCommentVNode({
-            text: `StatefulWidget<${this.name}> build() returned invalid type: ${resultType}`
-          })
-        }
-      }
-    } catch (error) {
-      const errorVNode = this.reportError(error, 'build')
-      vnode = isVNode(errorVNode)
-        ? errorVNode
-        : createCommentVNode({ text: `StatefulWidget<${this.name}> build failed` })
-    }
-    linkParentNode(vnode, this.vnode)
-    return vnode
-  }
-  /**
    * 创建组件实例
    *
    * 根据组件类型（类组件或函数组件）创建相应的实例
@@ -301,5 +275,62 @@ export class StatefulWidgetRuntime<
         return instance as WidgetInstanceType<T>
       })
     )
+  }
+}
+
+/**
+ * RenderEffect 类，用于处理渲染效果，实现了 DepEffectLike 接口
+ * 它是一个响应式系统中的核心组件，用于管理视图的渲染和更新
+ */
+class RenderEffect extends Effect implements DepEffectLike {
+  // 标记为引用类型，用于在响应式系统中识别
+  readonly [IS_REF]: true = true
+  // 脏标记，表示是否需要重新计算
+  public dirty: boolean = true
+  /**
+   * 计算结果缓存
+   * @private 私有属性，用于存储计算后的虚拟节点
+   */
+  private _node!: VNode
+
+  // 构造函数，接收构建函数、更新函数和作用域
+  constructor(
+    // 用于构建虚拟节点的函数
+    private readonly build: () => VNode,
+    // 用于更新效果的函数
+    private readonly update: () => void,
+    // 效果的作用域
+    scope: EffectScope
+  ) {
+    // 处理作用域，调用父类构造函数
+    super({ scope })
+  }
+
+  /**
+   * 强制更新
+   */
+  rebuild(): VNode {
+    // 首次访问或手动调用后，设置副作用
+    if (this.dirty) this.recomputed()
+    // 追踪对value属性的访问
+    trackSignal(this, 'get')
+    return this._node
+  }
+  run() {
+    if (!this.dirty) {
+      this.dirty = true
+      this.update()
+    }
+  }
+  private recomputed(): void {
+    collectSignal(() => {
+      try {
+        this._node = this.build()
+      } catch (e) {
+        this.reportError(e, 'render')
+      } finally {
+        this.dirty = false
+      }
+    }, this)
   }
 }

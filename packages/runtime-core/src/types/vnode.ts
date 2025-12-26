@@ -9,9 +9,9 @@ import type {
   COMMENT_NODE_TYPE,
   DynamicRenderType,
   FRAGMENT_NODE_TYPE,
+  IS_VNODE_BUILDER,
   NodeKind,
-  TEXT_NODE_TYPE,
-  VNODE_BUILDER_SYMBOL
+  TEXT_NODE_TYPE
 } from '../constants/index.js'
 import type { Dynamic, Fragment } from '../widget/index.js'
 import type {
@@ -212,5 +212,5 @@ export type ElementOf<T extends NodeType = NodeType> = T extends HostNodeNames
  */
 export type VNodeBuilder<P extends AnyProps = AnyProps, R extends VNode = VNode> = {
   (props: P): R
-  [VNODE_BUILDER_SYMBOL]: true
+  [IS_VNODE_BUILDER]: true
 }

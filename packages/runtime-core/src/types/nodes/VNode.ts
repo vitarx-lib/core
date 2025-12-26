@@ -1,6 +1,6 @@
-import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
+import { IS_RAW } from '@vitarx/responsive'
 import { App } from '../../app/index.js'
-import { NodeKind, NodeState, VIRTUAL_NODE_SYMBOL } from '../../constants/index.js'
+import { IS_VNODE, NodeKind, NodeState } from '../../constants/index.js'
 import type {
   ContainerNodeType,
   Directive,
@@ -81,7 +81,7 @@ export interface VNode<T extends NodeType = NodeType> extends NodeMeta {
    * 这可以提高性能，因为虚拟节点本身不需要响应式追踪，
    * 只有节点中的特定值（如props中的某些属性）需要响应式处理。
    */
-  readonly [NON_SIGNAL_SYMBOL]: true
+  readonly [IS_RAW]: true
   /**
    * 标记为虚拟节点的 getter 方法
    *
@@ -89,7 +89,7 @@ export interface VNode<T extends NodeType = NodeType> extends NodeMeta {
    * 这个符号属性使得框架能够区分虚拟节点和其他对象，
    * 即使它们有相似的结构。
    */
-  readonly [VIRTUAL_NODE_SYMBOL]: true
+  readonly [IS_VNODE]: true
   /**
    * 节点类型
    *

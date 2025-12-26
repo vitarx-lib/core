@@ -1,5 +1,5 @@
-import { NON_SIGNAL_SYMBOL } from '@vitarx/responsive'
-import { NodeState, VIRTUAL_NODE_SYMBOL } from '../../constants/index.js'
+import { IS_RAW } from '@vitarx/responsive'
+import { IS_VNODE, NodeState } from '../../constants/index.js'
 import type { NodeDirectives, VNode } from '../../types/index.js'
 import { isElementNode, isFragmentNode, isWidgetNode } from '../../utils/index.js'
 
@@ -37,8 +37,8 @@ import { isElementNode, isFragmentNode, isWidgetNode } from '../../utils/index.j
 export function cloneVNode<T extends VNode>(node: T): T {
   // 创建新的节点对象，复制基础属性
   const cloned: VNode = {
-    [NON_SIGNAL_SYMBOL]: true,
-    [VIRTUAL_NODE_SYMBOL]: true,
+    [IS_RAW]: true,
+    [IS_VNODE]: true,
     type: node.type,
     kind: node.kind,
     // 状态恢复为 Created（初始状态）

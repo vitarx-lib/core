@@ -1,4 +1,4 @@
-import { Ref } from '@vitarx/responsive'
+import { ValueRef } from '@vitarx/responsive'
 import { isFunction, isRecordObject, withDelayAndTimeout } from '@vitarx/utils'
 import { useSuspense } from '../../runtime/index.js'
 import type {
@@ -104,7 +104,7 @@ export class Lazy<T extends WidgetType = WidgetType> extends Widget<LazyWidgetPr
   }
 
   /** Suspense 计数器引用 */
-  protected suspenseCounter: Ref<number> | undefined = undefined
+  protected suspenseCounter: ValueRef<number> | undefined = undefined
 
   /** 取消异步加载任务的函数 */
   private _cancelTask?: () => void

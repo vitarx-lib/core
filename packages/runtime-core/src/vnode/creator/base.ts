@@ -1,11 +1,6 @@
-import { isRef, NON_SIGNAL_SYMBOL, unref } from '@vitarx/responsive'
+import { IS_RAW, isRef, unref } from '@vitarx/responsive'
 import { isObject, logger, popProperty } from '@vitarx/utils'
-import {
-  NodeKind,
-  NodeState,
-  SPECIAL_NODE_KINDS,
-  VIRTUAL_NODE_SYMBOL
-} from '../../constants/index.js'
+import { IS_VNODE, NodeKind, NodeState, SPECIAL_NODE_KINDS } from '../../constants/index.js'
 import { resolveDirective } from '../../directive/index.js'
 import { getAppContext } from '../../runtime/index.js'
 import type { AnyProps, NodeDirectives, NodeType, VNode } from '../../types/index.js'
@@ -22,8 +17,8 @@ import { bindProps } from '../normalizer/props.js'
 export const createBaseVNode = (type: NodeType, kind: NodeKind, props: AnyProps): VNode => {
   props = { ...props }
   const node: VNode = {
-    [NON_SIGNAL_SYMBOL]: true,
-    [VIRTUAL_NODE_SYMBOL]: true,
+    [IS_RAW]: true,
+    [IS_VNODE]: true,
     state: NodeState.Created,
     type,
     kind,
@@ -86,7 +81,7 @@ export const createBaseVNode = (type: NodeType, kind: NodeKind, props: AnyProps)
         if (key === 'v-model') {
           props['modelValue'] = props[key]
           if (isRef(value)) {
-            props['onUpdate:modelValue'] = value.update
+            props['onUpdate:modelValue'] = (v: any) => (value.value = v)
           } else if (__DEV__) {
             logger.warn(
               `v-model only supports passing in Ref type values, otherwise automatic updates cannot be completed`,
