@@ -1,7 +1,7 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { hasOwnProperty, isObject } from '@vitarx/utils'
 import { clearSignalEffects, trackSignal, triggerSignal } from '../../core/index.js'
-import { IS_RAW, IS_SHALLOW, isRef } from '../shared/index.js'
+import { IS_RAW, isRef } from '../shared/index.js'
 import { ReactiveSource } from './base.js'
 import { MapReactive, WeakMapReactive } from './map.js'
 import { SetReactive, WeakSetReactive } from './set.js'
@@ -45,7 +45,7 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-export class ReactiveProperty<T extends object, K extends keyof T> {
+class ReactiveProperty<T extends object, K extends keyof T> {
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
   private proxy?: T[K]
   /**
@@ -115,9 +115,6 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
    * 避免重复创建相同的信号实例。
    */
   protected readonly propertyMap = new Map<keyof any, ReactiveProperty<T, any>>()
-  constructor(target: T, deep: boolean) {
-    super(target, deep)
-  }
   /**
    * 检查目标对象是否包含指定的属性
    * @param target 目标对象
@@ -168,7 +165,6 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
    * @returns 返回属性值或信号值
    */
   protected doGet(target: T, p: string | symbol, receiver: any) {
-    if (p === IS_SHALLOW) return !this.deep
     let value: any // 用于存储获取到的属性值
     // 检查目标对象是否自身拥有该属性
     if (!hasOwnProperty(target, p)) {
