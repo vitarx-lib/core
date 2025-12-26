@@ -295,8 +295,8 @@ const reactiveCache = new WeakMap<object, ReactiveSource<any>>()
 const shallowReactiveCache = new WeakMap<object, ReactiveSource<any>>()
 const getCache = <T extends object>(target: T, deep: boolean) =>
   deep ? reactiveCache.get(target)?.proxy : shallowReactiveCache.get(target)?.proxy
-const setCache = (instance: ReactiveSource<any>, deep: boolean) => {
-  deep
+const setCache = (instance: ReactiveSource<any>) => {
+  instance.deep
     ? reactiveCache.set(instance.target, instance)
     : shallowReactiveCache.set(instance.target, instance)
   return instance.proxy
@@ -323,23 +323,23 @@ const setCache = (instance: ReactiveSource<any>, deep: boolean) => {
  */
 export function createReactive<T extends object, Deep extends boolean>(target: T, deep: Deep): T {
   if (Array.isArray(target)) {
-    return getCache(target, deep) ?? setCache(new ArrayReactive(target, deep), deep)
+    return getCache(target, deep) ?? setCache(new ArrayReactive(target, deep))
   }
   // 如果传入的是Map类型，则使用MapProxyHandler创建代理
   if (target instanceof Map) {
-    return getCache(target, false) ?? setCache(new MapReactive(target), deep)
+    return getCache(target, false) ?? setCache(new MapReactive(target))
   }
   // 如果传入的是Set类型，则使用SetProxyHandler创建代理
   if (target instanceof Set) {
-    return getCache(target, false) ?? setCache(new SetReactive(target), deep)
+    return getCache(target, false) ?? setCache(new SetReactive(target))
   }
   // 如果传入的是WeakSet类型，则使用WeakSetProxyHandler创建代理
   if (target instanceof WeakSet) {
-    return getCache(target, false) ?? setCache(new WeakSetReactive(target), deep)
+    return getCache(target, false) ?? setCache(new WeakSetReactive(target))
   }
   // 如果传入的是WeakMap类型，则使用WeakMapProxyHandler创建代理
   if (target instanceof WeakMap) {
-    return getCache(target, false) ?? setCache(new WeakMapReactive(target), deep)
+    return getCache(target, false) ?? setCache(new WeakMapReactive(target))
   }
-  return getCache(target, deep) ?? setCache(new ObjectReactive(target, deep), deep)
+  return getCache(target, deep) ?? setCache(new ObjectReactive(target, deep))
 }
