@@ -1,8 +1,9 @@
-import { Scheduler, SubManager } from '@vitarx/responsive'
+import { flushSync } from '@vitarx/responsive'
 import {
   type AnyProps,
   createCommentVNode,
   createWidgetRuntime,
+  forceUpdateProps,
   type HostNodeElements,
   isVNode,
   LifecycleHook,
@@ -41,15 +42,9 @@ import { BaseWidgetDriver } from '../base/index.js'
 export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeType> {
   /** @inheritDoc */
   override updateProps(node: StatefulWidgetNode, newProps: AnyProps): void {
-    const oldProps = node.props
-    const changedKeys: string[] = this.diffProps(oldProps, newProps)
+    const changedKeys = forceUpdateProps(() => this.diffProps(node.instance!.props, newProps))
     // 如果有属性变化，触发更新
-    if (changedKeys.length > 0) {
-      SubManager.notify(node.instance!.props, changedKeys)
-      node.instance!.update()
-      // 同步执行所有队列中的任务
-      Scheduler.flushSync()
-    }
+    if (changedKeys.length > 0) flushSync()
   }
   /** @inheritDoc */
   override render(node: VNode<StatefulWidgetNodeType>): void {
@@ -85,7 +80,7 @@ export class StatefulWidgetDriver extends BaseWidgetDriver<StatefulWidgetNodeTyp
     widget.invokeHook(LifecycleHook.activated)
     if (widget.dirty) {
       widget.update()
-      Scheduler.flushSync()
+      flushSync()
     }
   }
   /** @inheritDoc */
