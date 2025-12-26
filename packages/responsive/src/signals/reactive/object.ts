@@ -113,12 +113,12 @@ export class ObjectReactive<
   Deep extends boolean = true
 > extends ReactiveSource<T, Deep> {
   /**
-   * 子代理映射表，存储对象属性的子信号
+   * 属性映射表，存储对象属性的子信号
    *
-   * 该 Map 用于缓存对象属性对应的 PropertySignal 实例，
+   * 该 Map 用于缓存对象属性对应的 ReactiveProperty 实例，
    * 避免重复创建相同的信号实例。
    */
-  protected readonly childMap = new Map<any, ReactiveProperty<T, any>>()
+  protected readonly propertyMap = new Map<keyof any, ReactiveProperty<T, any>>()
   /**
    * 检查目标对象是否包含指定的属性
    * @param target 目标对象
@@ -146,13 +146,13 @@ export class ObjectReactive<
     const result = Reflect.deleteProperty(target, p)
     // 仅删除自身属性才触发结构 signal
     if (hadOwn && result) {
-      this.triggerSignal('deleteProperty', { key: p, oldValue, newValue: undefined })
       // 如果有 child signal，失效
-      const sig = this.childMap.get(p)
+      const sig = this.propertyMap.get(p)
       if (sig) {
-        this.childMap.delete(p)
+        this.propertyMap.delete(p)
         sig.invalidate(oldValue)
       }
+      this.triggerSignal('deleteProperty', { key: p, oldValue, newValue: undefined })
     }
     return result
   }
@@ -179,12 +179,12 @@ export class ObjectReactive<
       }
       return value // 返回获取的值
     }
-    const childSig = this.childMap.get(p)
+    const childSig = this.propertyMap.get(p)
     // 检查子映射中是否已存在该属性的信号
     if (childSig) return childSig.getValue()
     // 如果不存在，则创建一个新的子信号
     const sig = new ReactiveProperty(target, p, this.deep)
-    this.childMap.set(p, sig) // 将新信号添加到子映射中
+    this.propertyMap.set(p, sig) // 将新信号添加到子映射中
     return sig.getValue() // 返回信号中的值
   }
   /**
@@ -202,7 +202,7 @@ export class ObjectReactive<
    */
   protected set(target: T, p: string | symbol, newValue: any, _receiver: any): boolean {
     // 已有 PropertySignal：必须走信号（它维护 proxy / 嵌套 reactive）
-    const sig = this.childMap.get(p) // 获取属性对应的信号
+    const sig = this.propertyMap.get(p) // 获取属性对应的信号
     if (sig) {
       // 如果存在属性信号,则更新
       sig.setValue(newValue)
@@ -245,7 +245,7 @@ export class ArrayReactive<T extends any[], Deep extends boolean = true> extends
     this.oldLength = target.length
     // 与构建长度特殊子信号
     this.lengthSignal = new ReactiveProperty(target, 'length', false)
-    this.childMap.set('length', this.lengthSignal)
+    this.propertyMap.set('length', this.lengthSignal)
   }
   /**
    * 重写的设置属性值方法，专门处理数组长度的变化
@@ -271,10 +271,10 @@ export class ArrayReactive<T extends any[], Deep extends boolean = true> extends
       // 优化：使用迭代器一次性处理所有需要失效的元素
       // 遍历并失效被截断的元素信号
       for (let i = newValue; i < oldValue; i++) {
-        const sig = this.childMap.get(i)
+        const sig = this.propertyMap.get(i)
         if (sig) {
           sig.invalidate(undefined) // 解绑依赖
-          this.childMap.delete(i)
+          this.propertyMap.delete(i)
         }
       }
 
