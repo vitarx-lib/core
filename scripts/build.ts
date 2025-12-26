@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import { exec } from 'child_process'
-import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
+import { existsSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs'
 import { join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { promisify } from 'util'
@@ -90,47 +90,13 @@ function createTempTsConfig(packagePath: string): string {
   const tsconfigJson = {
     extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
     compilerOptions: { outDir: 'dist' }, // 设置编译输出目录为dist
-    include: ['src'], // 包含的文件和目录
+    include: ['src', '../../vite-env.d.ts'], // 包含的文件和目录
     exclude: ['dist', 'node_modules', '__tests__', 'tests'] // 排除的文件和目录
   }
   // 将配置对象写入JSON文件，使用2个空格进行格式化
   writeFileSync(tsconfigPath, JSON.stringify(tsconfigJson, null, 2))
   // 返回创建的临时配置文件路径
   return tsconfigPath
-}
-
-/**
- * 创建一个用于类型检查的临时TypeScript配置文件（包含测试目录）
- * @param tsconfigPath - 临时配置文件的完整路径
- * @returns {string} 返回临时配置文件的完整路径
- */
-function createTempTsConfigForTypeCheck(tsconfigPath: string): string {
-  // 定义临时配置文件的内容结构（包含测试目录）
-  const tsconfigJson = {
-    extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
-    compilerOptions: {
-      noEmit: true // 不生成输出文件
-    },
-    include: ['src', '__tests__', 'tests'], // 包含源码和测试目录
-    exclude: ['dist', 'node_modules'] // 排除的文件和目录
-  }
-  // 将配置对象写入JSON文件，使用2个空格进行格式化
-  writeFileSync(tsconfigPath, JSON.stringify(tsconfigJson, null, 2))
-  // 返回创建的临时配置文件路径
-  return tsconfigPath
-}
-
-/**
- * 将字符串转换为驼峰命名格式
- * @param name 需要转换的字符串，通常可能是包名或文件名
- * @returns {string} 返回转换后的驼峰格式字符串
- */
-function toCamelCase(name: string): string {
-  return name
-    .replace(/^@.*\//, '') // 移除开头的@符号和任何斜杠及前面的内容（如@scope/）
-    .split('-') // 按连字符分割字符串为数组
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1)) // 将每个单词首字母大写
-    .join('') // 将处理后的单词数组连接成字符串
 }
 
 /**
@@ -166,6 +132,9 @@ async function buildPackage(
 ) {
   // 导入并解析包的 package.json 文件
   const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
+  if (pkg.name === 'vitarx') {
+    throw new Error('vitarx package cannot be built')
+  }
   // 创建分隔线，用于日志输出
   const separator = '='.repeat(50)
   // 记录开始构建包的信息
@@ -181,25 +150,6 @@ async function buildPackage(
     if (!existsSync(testDir1) && !existsSync(testDir2)) {
       log.warn('⚠️  No test directory found (__tests__ or tests)')
     } else {
-      // log.warn('🔍 Running TypeScript type check...')
-      // const tsconfigPath = join(packagePath, 'tsconfig.test.json')
-      // const hasTsconfig = existsSync(tsconfigPath)
-      // if (!hasTsconfig) {
-      //   // 如果没有 tsconfig.json，创建临时配置
-      //   createTempTsConfigForTypeCheck(tsconfigPath)
-      // }
-      //
-      // try {
-      //   // 运行 TypeScript 类型检查（不生成输出文件）
-      //   await runCommand(`tsc --noEmit -p ${tsconfigPath}`, packagePath)
-      //   log.success('  ✓ Type check passed successfully')
-      // } finally {
-      //   // 清理临时配置文件
-      //   if (!hasTsconfig) {
-      //     rmSync(tsconfigPath, { force: true })
-      //   }
-      // }
-
       log.warn('🧪 Running vitest tests...')
       const vitestConfig = join(packagePath, 'vitest.config.ts')
       let cmd = `vitest run --dir ${packagePath}`
@@ -227,20 +177,7 @@ async function buildPackage(
     // 删除临时配置文件
     if (!isRemoveTempTsConfig) rmSync(tempTsConfig)
   }
-
-  // 版本替换处理
-  if (packageDirName === 'vitarx') {
-    const distPath = join(dist, '/index.js')
-    // 检查文件是否存在
-    if (existsSync(distPath)) {
-      // 读取文件内容
-      const content = readFileSync(distPath, 'utf-8')
-      // 替换版本号占位符
-      writeFileSync(distPath, content.replace(/'__VERSION__'/g, `"${pkg.version}"`), 'utf-8')
-    }
-  }
   log.success('  ✓ TypeScript compilation completed')
-
   // Vite bundle
   // log.warn('\n📦 Compiling bundle formats...')
   // const name = toCamelCase(pkg.name)
