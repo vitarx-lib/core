@@ -187,7 +187,7 @@ describe('signal/reactive/object', () => {
   describe('createReactive', () => {
     it('should create reactive object', () => {
       const target = { prop: 42 }
-      const reactive = createReactive(target)
+      const reactive = createReactive(target, true)
 
       expect(reactive).toBeDefined()
       expect(reactive.prop).toBe(42)
@@ -195,7 +195,7 @@ describe('signal/reactive/object', () => {
 
     it('should create reactive array', () => {
       const target = [1, 2, 3]
-      const reactive = createReactive(target)
+      const reactive = createReactive(target, true)
 
       expect(reactive).toBeDefined()
       expect(Array.isArray(reactive)).toBe(true)
@@ -204,7 +204,7 @@ describe('signal/reactive/object', () => {
 
     it('should create reactive Map', () => {
       const target = new Map([['key', 'value']])
-      const reactive = createReactive(target)
+      const reactive = createReactive(target, true)
 
       expect(reactive).toBeDefined()
       expect(reactive.get('key')).toBe('value')
@@ -212,7 +212,7 @@ describe('signal/reactive/object', () => {
 
     it('should create reactive Set', () => {
       const target = new Set([1, 2, 3])
-      const reactive = createReactive(target)
+      const reactive = createReactive(target, true)
 
       expect(reactive).toBeDefined()
       expect(reactive.has(1)).toBe(true)
@@ -221,7 +221,7 @@ describe('signal/reactive/object', () => {
     it('should create reactive WeakMap', () => {
       const key = {}
       const target = new WeakMap([[key, 'value']])
-      const reactive = createReactive(target)
+      const reactive = createReactive(target, true)
 
       expect(reactive).toBeDefined()
       expect(reactive.get(key)).toBe('value')
@@ -230,7 +230,7 @@ describe('signal/reactive/object', () => {
     it('should create reactive WeakSet', () => {
       const key = {}
       const target = new WeakSet([key])
-      const reactive = createReactive(target)
+      const reactive = createReactive(target, true)
 
       expect(reactive).toBeDefined()
       expect(reactive.has(key)).toBe(true)

@@ -15,7 +15,7 @@ describe('signal/reactive/base', () => {
 
       expect(reactiveSource).toBeInstanceOf(ReactiveSource)
       expect(reactiveSource.target).toBe(target)
-      expect(reactiveSource.deep).toBe(true)
+      expect(reactiveSource.deep).toBe(false)
       expect(reactiveSource.proxy).toBeDefined()
     })
 
