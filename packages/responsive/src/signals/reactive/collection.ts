@@ -32,10 +32,7 @@ import { ReactiveSource } from './base.js'
  */
 export abstract class ReactiveCollection<
   T extends AnyWeakMap | AnyMap | AnySet | AnyWeakSet
-> extends ReactiveSource<T, false> {
-  constructor(target: T) {
-    super(target, false)
-  }
+> extends ReactiveSource<T> {
   /**
    * 获取目标对象的属性值
    * @param target 目标对象

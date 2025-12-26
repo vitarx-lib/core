@@ -47,45 +47,20 @@ export type WatcherOnCleanup = (cleanupFn: VoidCallback) => void
  * @template T - 观察源的数据类型
  */
 export type WatchSource<T> = Ref<T, any> | (() => T) | (T extends object ? T : never)
-
 /**
- * 解包函数返回值类型工具
+ * 观察源数组类型
  *
- * 如果 T 是函数类型，则返回该函数的返回值类型；
- * 否则直接返回 T 本身。
+ * 观察源数组类型，用于批量观察多个数据源。
  *
- * @template T - 泛型参数
- *
- * @example
- * ```typescript
- * type A = UnwrapGetter<() => string> // string
- * type B = UnwrapGetter<number> // number
- * ```
+ * @template T - 观察源的数据类型
  */
-export type UnwrapGetter<T> = T extends AnyFunction ? ReturnType<T> : T
-
-/**
- * 解包观察源类型工具
- *
- * 如果 T 是信号或引用类型，则提取其内部值类型；
- * 否则如果是函数类型，则返回函数的返回值类型；
- * 否则直接返回 T 本身。
- *
- * @template T - 泛型参数
- */
-export type UnwrapSource<T> = T extends Ref<infer V, any> ? V : UnwrapGetter<T>
-
-/**
- * 回调值类型工具
- *
- * 用于解包观察源数组中每个元素的值类型。
- *
- * @template T - 观察源数组类型
- */
-export type CallbackValue<T> = {
-  [K in keyof T]: T[K] extends WatchSource<infer V> ? UnwrapSource<V> : UnwrapSource<T[K]>
+export type UnwarpSources<T extends any[]> = {
+  [K in keyof T]: T[K] extends Ref<infer V, any>
+    ? V
+    : T[K] extends AnyFunction
+      ? ReturnType<T[K]>
+      : T[K]
 }
-
 /**
  * WatchCallback 监听回调函数的类型。
  *

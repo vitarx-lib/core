@@ -1,4 +1,4 @@
-import type { Reactive } from '../reactive/index.js'
+import type { Reactive, ShallowReactive } from '../reactive/base.js'
 import { IS_REACTIVE, IS_READONLY, IS_REF, IS_SIGNAL } from './symbol.js'
 import type { Ref, RefSignal } from './types.js'
 
@@ -34,7 +34,7 @@ export function isRefSignal(val: any): val is RefSignal {
  * @param val - 需要检查的值
  * @returns {boolean} 如果是响应式对象则返回true，否则返回false
  */
-export function isReactive(val: any): val is Reactive<any, boolean> {
+export function isReactive(val: any): val is Reactive | ShallowReactive {
   // 首先确保val不为null或undefined，然后检查其是否具有IS_REACTIVE属性
   return !!val?.[IS_REACTIVE]
 }

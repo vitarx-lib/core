@@ -1,8 +1,8 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { hasOwnProperty, isObject } from '@vitarx/utils'
 import { clearSignalEffects, trackSignal, triggerSignal } from '../../core/index.js'
-import { IS_RAW, isRef } from '../shared/index.js'
-import { type Reactive, ReactiveSource } from './base.js'
+import { IS_RAW, IS_SHALLOW, isRef } from '../shared/index.js'
+import { ReactiveSource } from './base.js'
 import { MapReactive, WeakMapReactive } from './map.js'
 import { SetReactive, WeakSetReactive } from './set.js'
 
@@ -47,7 +47,7 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
  */
 export class ReactiveProperty<T extends object, K extends keyof T> {
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
-  private proxy?: Reactive
+  private proxy?: T[K]
   /**
    * 构造函数
    * @param target - 目标对象
@@ -71,7 +71,7 @@ export class ReactiveProperty<T extends object, K extends keyof T> {
     if (isRef(value)) return value.value
     // 如果值是嵌套对象，创建代理对象
     if (this.deep && isNestingObject(value)) {
-      return (this.proxy = createReactive(value))
+      return (this.proxy = createReactive(value, true))
     }
     // 返回当前值
     return value
@@ -106,12 +106,8 @@ export class ReactiveProperty<T extends object, K extends keyof T> {
  * 它通过 ReactiveProperty 来管理对象各个属性的响应式行为。
  *
  * @template T - 目标对象的类型，必须是 键值对对象 类型
- * @template Deep - 是否进行深度代理的类型，必须是 boolean 类型
  */
-export class ObjectReactive<
-  T extends AnyRecord,
-  Deep extends boolean = true
-> extends ReactiveSource<T, Deep> {
+export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
   /**
    * 属性映射表，存储对象属性的子信号
    *
@@ -119,6 +115,9 @@ export class ObjectReactive<
    * 避免重复创建相同的信号实例。
    */
   protected readonly propertyMap = new Map<keyof any, ReactiveProperty<T, any>>()
+  constructor(target: T, deep: boolean) {
+    super(target, deep)
+  }
   /**
    * 检查目标对象是否包含指定的属性
    * @param target 目标对象
@@ -169,6 +168,7 @@ export class ObjectReactive<
    * @returns 返回属性值或信号值
    */
   protected doGet(target: T, p: string | symbol, receiver: any) {
+    if (p === IS_SHALLOW) return !this.deep
     let value: any // 用于存储获取到的属性值
     // 检查目标对象是否自身拥有该属性
     if (!hasOwnProperty(target, p)) {
@@ -224,12 +224,8 @@ export class ObjectReactive<
  * 它增加了对数组长度属性的特殊处理，确保数组长度变化也能正确触发响应。
  *
  * @template T - 目标数组的类型，必须是 any[] 类型
- * @template Deep - 是否进行深度代理的类型，必须是 boolean 类型
  */
-export class ArrayReactive<T extends any[], Deep extends boolean = true> extends ObjectReactive<
-  T,
-  Deep
-> {
+export class ArrayReactive<T extends any[]> extends ObjectReactive<T> {
   // 存储数组旧长度的私有属性
   private oldLength: number
   // 存储数组长度特殊子信号的只读属性
@@ -239,7 +235,7 @@ export class ArrayReactive<T extends any[], Deep extends boolean = true> extends
    * @param target - 目标数组
    * @param deep - 是否深度代理
    */
-  constructor(target: T, deep?: Deep) {
+  constructor(target: T, deep: boolean) {
     super(target, deep)
     // 初始化旧长度为当前数组长度
     this.oldLength = target.length
@@ -295,12 +291,12 @@ export class ArrayReactive<T extends any[], Deep extends boolean = true> extends
  * 使用 WeakMap 来避免内存泄漏，确保当原始对象被垃圾回收时，
  * 对应的代理对象也能被正确回收。
  */
-const reactiveCache = new WeakMap<object, ReactiveSource<any, any>>()
-const shallowReactiveCache = new WeakMap<object, ReactiveSource<any, any>>()
+const reactiveCache = new WeakMap<object, ReactiveSource<any>>()
+const shallowReactiveCache = new WeakMap<object, ReactiveSource<any>>()
 const getCache = <T extends object>(target: T, deep: boolean) =>
   deep ? reactiveCache.get(target)?.proxy : shallowReactiveCache.get(target)?.proxy
-const setCache = (instance: ReactiveSource<any, any>) => {
-  instance.deep
+const setCache = (instance: ReactiveSource<any>, deep: boolean) => {
+  deep
     ? reactiveCache.set(instance.target, instance)
     : shallowReactiveCache.set(instance.target, instance)
   return instance.proxy
@@ -325,29 +321,25 @@ const setCache = (instance: ReactiveSource<any, any>) => {
  * @param deep - 是否进行深度代理，默认为 true
  * @returns 返回目标对象的响应式代理
  */
-export function createReactive<T extends object, Deep extends boolean = true>(
-  target: T,
-  deep?: Deep
-): Reactive<T, Deep> {
-  deep ??= true as Deep
+export function createReactive<T extends object, Deep extends boolean>(target: T, deep: Deep): T {
   if (Array.isArray(target)) {
-    return getCache(target, deep) ?? setCache(new ArrayReactive(target, deep))
+    return getCache(target, deep) ?? setCache(new ArrayReactive(target, deep), deep)
   }
   // 如果传入的是Map类型，则使用MapProxyHandler创建代理
   if (target instanceof Map) {
-    return getCache(target, false) ?? setCache(new MapReactive(target))
+    return getCache(target, false) ?? setCache(new MapReactive(target), deep)
   }
   // 如果传入的是Set类型，则使用SetProxyHandler创建代理
   if (target instanceof Set) {
-    return getCache(target, false) ?? setCache(new SetReactive(target))
+    return getCache(target, false) ?? setCache(new SetReactive(target), deep)
   }
   // 如果传入的是WeakSet类型，则使用WeakSetProxyHandler创建代理
   if (target instanceof WeakSet) {
-    return getCache(target, false) ?? setCache(new WeakSetReactive(target))
+    return getCache(target, false) ?? setCache(new WeakSetReactive(target), deep)
   }
   // 如果传入的是WeakMap类型，则使用WeakMapProxyHandler创建代理
   if (target instanceof WeakMap) {
-    return getCache(target, false) ?? setCache(new WeakMapReactive(target))
+    return getCache(target, false) ?? setCache(new WeakMapReactive(target), deep)
   }
-  return getCache(target, deep) ?? setCache(new ObjectReactive(target, deep))
+  return getCache(target, deep) ?? setCache(new ObjectReactive(target, deep), deep)
 }

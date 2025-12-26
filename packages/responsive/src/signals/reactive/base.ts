@@ -1,4 +1,3 @@
-import { AnyObject } from '@vitarx/utils'
 import type { ExtraDebugData, SignalOpType } from '../../core/index.js'
 import { trackSignal, triggerSignal } from '../../core/index.js'
 import { type DeepUnwrapRefs, IS_REACTIVE, RAW_VALUE, type UnwrapRefs } from '../shared/index.js'
@@ -6,25 +5,28 @@ import { type DeepUnwrapRefs, IS_REACTIVE, RAW_VALUE, type UnwrapRefs } from '..
 /**
  * 响应式类型定义
  *
- * @template T 要转换为响应式的对象类型
- * @template Deep 是否深度响应式，默认为true
+ * @template T 目标对象类型
  */
-export type Reactive<T extends AnyObject = any, Deep extends boolean = true> = (Deep extends true
-  ? DeepUnwrapRefs<T>
-  : UnwrapRefs<T>) & {
-  readonly [IS_REACTIVE]: ReactiveSource<T, Deep>
+export type Reactive<T extends object = object> = DeepUnwrapRefs<T> & {
+  readonly [RAW_VALUE]: T
+  readonly [IS_REACTIVE]: ReactiveSource<T>
 }
-
+/**
+ * 浅层响应式类型定义
+ *
+ * @template T 目标对象类型
+ */
+export type ShallowReactive<T extends object = object> = UnwrapRefs<T> & {
+  readonly [RAW_VALUE]: T
+  readonly [IS_REACTIVE]: ReactiveSource<T>
+}
 /**
  * ReactiveSource 是一个抽象类，用于创建响应式对象代理。
  *
  * 它实现了 Signal 接口，非集合类型对象，仅会发出结构变化信号。
  */
-export abstract class ReactiveSource<T extends object, Deep extends boolean = true>
-  implements ProxyHandler<T>
-{
-  public readonly deep: Deep
-  public readonly proxy: Reactive<T, Deep>
+export abstract class ReactiveSource<T extends object> implements ProxyHandler<T> {
+  public readonly proxy: T
   /**
    * 构造函数
    * @param target - 要代理的目标对象
@@ -32,11 +34,10 @@ export abstract class ReactiveSource<T extends object, Deep extends boolean = tr
    */
   constructor(
     public readonly target: T,
-    deep?: Deep
+    public readonly deep: boolean = false
   ) {
-    this.deep = deep ?? (true as Deep)
     // 创建代理对象并赋值给 proxy 属性
-    this.proxy = new Proxy(this.target, this) as Reactive<T, Deep>
+    this.proxy = new Proxy(this.target, this)
   }
   get(target: T, p: string | symbol, receiver: any): any {
     if (p === IS_REACTIVE) return this
