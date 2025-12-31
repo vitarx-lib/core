@@ -281,3 +281,23 @@ export function* iterateEffectSignals(effect: DepEffectLike): IterableIterator<S
     node = node.eNext
   }
 }
+
+/**
+ * 判断一个副作用对象是否具有信号依赖
+ *
+ * @param effect - 待检查的副作用对象
+ * @returns {boolean} 如果副作用对象具有信号依赖返回true，否则返回false
+ */
+export function isWithSignal(effect: DepEffectLike): boolean {
+  return !!effect?.[EFFECT_DEP_HEAD]
+}
+
+/**
+ * 判断一个信号对象是否具有副作用依赖
+ *
+ * @param signal - 待检查的信号对象
+ * @returns {boolean} 如果信号对象具有副作用依赖返回true，否则返回false
+ */
+export function isWithEffect(signal: Signal): boolean {
+  return !!signal?.[SIGNAL_DEP_HEAD]
+}

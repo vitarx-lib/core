@@ -58,6 +58,8 @@ yarn add @vitarx/responsive
 | depend          | clearSignalEffects    | 函数 | 移除 Signal 关联的 effect 依赖     |
 | depend          | iterateSignalEffects  | 函数 | 迭代一个 signal 关联的所有 effect    |
 | depend          | iterateEffectSignals  | 函数 | 迭代一个 effect 依赖的所有 signal    |
+| depend          | isWithSignal          | 函数 | 判断一个副作用对象是否具有信号依赖           |
+| depend          | isWithEffect          | 函数 | 判断一个信号对象是否具有副作用依赖           |
 | effect          | Effect                | 类  | 通用型副作用基类                    |
 | effect          | EffectScope           | 类  | EffectScope 作用域类            |
 | effect          | EffectLike            | 接口 | 副作用效果接口                     |

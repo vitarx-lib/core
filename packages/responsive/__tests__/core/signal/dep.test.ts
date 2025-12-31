@@ -11,10 +11,15 @@ import {
   clearEffectDeps,
   clearSignalEffects,
   createDepLink,
+  type DepEffectLike,
+  DepLink,
   destroyDepLink,
+  isWithEffect,
+  isWithSignal,
   iterateEffectSignals,
   iterateSignalEffects,
-  ref
+  ref,
+  type Signal
 } from '../../../src/index.js'
 
 describe('depend/link', () => {
@@ -183,6 +188,72 @@ describe('depend/link', () => {
       const signals = Array.from(iterateEffectSignals(effect as any))
 
       expect(signals).toHaveLength(0)
+    })
+  })
+  // 测试用例
+  describe('isWithSignal', () => {
+    it('当effect对象具有EFFECT_DEP_HEAD属性时应该返回true', () => {
+      const effectWithSignal = { [EFFECT_DEP_HEAD]: {} } as DepEffectLike
+      expect(isWithSignal(effectWithSignal)).toBe(true)
+    })
+
+    it('当effect对象不具有EFFECT_DEP_HEAD属性时应该返回false', () => {
+      const effectWithoutSignal = {} as DepEffectLike
+      expect(isWithSignal(effectWithoutSignal)).toBe(false)
+    })
+
+    it('当effect为null时应该返回false', () => {
+      expect(isWithSignal(null as any)).toBe(false)
+    })
+
+    it('当effect为undefined时应该返回false', () => {
+      expect(isWithSignal(undefined as any)).toBe(false)
+    })
+
+    it('当EFFECT_DEP_HEAD属性值为null时应该返回false', () => {
+      const effectWithNullDep = { [EFFECT_DEP_HEAD]: null } as unknown as DepEffectLike
+      expect(isWithSignal(effectWithNullDep)).toBe(false)
+    })
+
+    it('当EFFECT_DEP_HEAD属性值为undefined时应该返回false', () => {
+      const effectWithUndefinedDep = { [EFFECT_DEP_HEAD]: undefined } as DepEffectLike
+      expect(isWithSignal(effectWithUndefinedDep)).toBe(false)
+    })
+  })
+
+  describe('isWithEffect', () => {
+    it('should return true when signal has effect dependency', () => {
+      const signal: Signal = {
+        [SIGNAL_DEP_HEAD]: {} as DepLink
+      }
+      expect(isWithEffect(signal)).toBe(true)
+    })
+
+    it('should return false when signal has no effect dependency', () => {
+      const signal: Signal = {}
+      expect(isWithEffect(signal)).toBe(false)
+    })
+
+    it('should return false when signal is null', () => {
+      expect(isWithEffect(null as any)).toBe(false)
+    })
+
+    it('should return false when signal is undefined', () => {
+      expect(isWithEffect(undefined as any)).toBe(false)
+    })
+
+    it('should return false when SIGNAL_DEP_HEAD is undefined', () => {
+      const signal: Signal = {
+        [SIGNAL_DEP_HEAD]: undefined
+      }
+      expect(isWithEffect(signal)).toBe(false)
+    })
+
+    it('should return false when SIGNAL_DEP_HEAD is null', () => {
+      const signal: Signal = {
+        [SIGNAL_DEP_HEAD]: null as any
+      }
+      expect(isWithEffect(signal)).toBe(false)
     })
   })
 })
