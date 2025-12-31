@@ -11,6 +11,6 @@ import type { Ref } from './types.js'
  * unref(100) // 100
  * ```
  */
-export function unref<T>(ref: Ref<T> | T): T {
+export function unref<T>(ref: Ref<T, any> | T): T {
   return isRef(ref) ? ref.value : ref
 }
