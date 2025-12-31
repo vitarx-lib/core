@@ -45,7 +45,7 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-class ReactiveProperty<T extends object, K extends keyof T> {
+export class ReactiveProperty<T extends object, K extends keyof T> {
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
   private proxy?: T[K]
   /**
