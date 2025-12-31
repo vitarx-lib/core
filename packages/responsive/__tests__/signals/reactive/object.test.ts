@@ -56,7 +56,7 @@ describe('signal/reactive/object', () => {
       )
       const clearSignalEffectsSpy = vi.spyOn(
         await import('../../../src/core/signal/index.js'),
-        'clearSignalEffects'
+        'clearSignalLinks'
       )
 
       propertySignal.invalidate(42)

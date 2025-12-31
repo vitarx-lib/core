@@ -162,7 +162,7 @@ export class DepLink {
  * - 使用 EFFECT_DEP_HEAD/EFFECT_DEP_TAIL 和 SIGNAL_DEP_HEAD/SIGNAL_DEP_TAIL 作为链表头尾的标记
  * - 维护了双向链表的前驱(ePrev/sigPrev)和后继(eNext/sigNext)指针
  */
-export function createDepLink(effect: DepEffectLike, signal: Signal): DepLink {
+export function linkSignalToEffect(effect: DepEffectLike, signal: Signal): DepLink {
   // 创建新的链表节点
   const link = new DepLink(signal, effect)
 
@@ -199,7 +199,7 @@ export function createDepLink(effect: DepEffectLike, signal: Signal): DepLink {
  *
  * @internal 内部核心助手函数
  */
-export function destroyDepLink(link: DepLink): void {
+export function unlinkSignalFromEffect(link: DepLink): void {
   const { effect, signal } = link
 
   // -------------------
@@ -228,13 +228,13 @@ export function destroyDepLink(link: DepLink): void {
   effect[DEP_INDEX_MAP]?.delete(signal)
 }
 /**
- * 移除 effect 关联的所有信号依赖（用于重新收集或销毁）
+ * 移除 Effect 和所有 Signal 关联
  */
-export function clearEffectDeps(effect: DepEffectLike) {
+export function clearEffectLinks(effect: DepEffectLike): void {
   let link = effect[EFFECT_DEP_HEAD]
   while (link) {
     const next = link.eNext
-    destroyDepLink(link)
+    unlinkSignalFromEffect(link)
     link = next
   }
   effect[DEP_VERSION] =
@@ -244,13 +244,13 @@ export function clearEffectDeps(effect: DepEffectLike) {
       undefined
 }
 /**
- * 移除 Signal 关联的 effect 依赖
+ * 移除 Signal 和所有 Effect 关联
  */
-export function clearSignalEffects(signal: Signal) {
+export function clearSignalLinks(signal: Signal): void {
   let link = signal[SIGNAL_DEP_HEAD]
   while (link) {
     const next = link.sigNext
-    destroyDepLink(link)
+    unlinkSignalFromEffect(link)
     link = next
   }
   signal[SIGNAL_DEP_HEAD] = signal[SIGNAL_DEP_TAIL] = undefined
@@ -261,7 +261,7 @@ export function clearSignalEffects(signal: Signal) {
  *
  * @wraning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function* iterateSignalEffects(signal: Signal): IterableIterator<DepEffectLike> {
+export function* iterateLinkedEffects(signal: Signal): IterableIterator<DepEffectLike> {
   let node = signal[SIGNAL_DEP_HEAD] as DepLink | undefined
   while (node) {
     yield node.effect
@@ -274,7 +274,7 @@ export function* iterateSignalEffects(signal: Signal): IterableIterator<DepEffec
  *
  * @wraning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function* iterateEffectSignals(effect: DepEffectLike): IterableIterator<Signal> {
+export function* iterateLinkedSignals(effect: DepEffectLike): IterableIterator<Signal> {
   let node = effect[EFFECT_DEP_HEAD] as DepLink | undefined
   while (node) {
     yield node.signal
@@ -288,7 +288,7 @@ export function* iterateEffectSignals(effect: DepEffectLike): IterableIterator<S
  * @param effect - 待检查的副作用对象
  * @returns {boolean} 如果副作用对象具有信号依赖返回true，否则返回false
  */
-export function isWithSignal(effect: DepEffectLike): boolean {
+export function hasLinkedSignal(effect: DepEffectLike): boolean {
   return !!effect?.[EFFECT_DEP_HEAD]
 }
 
@@ -298,6 +298,6 @@ export function isWithSignal(effect: DepEffectLike): boolean {
  * @param signal - 待检查的信号对象
  * @returns {boolean} 如果信号对象具有副作用依赖返回true，否则返回false
  */
-export function isWithEffect(signal: Signal): boolean {
+export function hasLinkedEffect(signal: Signal): boolean {
   return !!signal?.[SIGNAL_DEP_HEAD]
 }

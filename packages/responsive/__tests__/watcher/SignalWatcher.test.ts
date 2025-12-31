@@ -17,7 +17,7 @@ describe('watcher/SignalWatcher', () => {
       const callback = vi.fn()
       const createDepLinkSpy = vi.spyOn(
         await import('../../src/core/signal/index.js'),
-        'createDepLink'
+        'linkSignalToEffect'
       )
 
       const watcher = new SignalWatcher(signal, callback, {})

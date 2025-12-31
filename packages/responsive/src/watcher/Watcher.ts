@@ -1,7 +1,7 @@
 import type { VoidCallback } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
 import type { DebuggerHandler } from '../core/index.js'
-import { clearEffectDeps, type DepEffectLike, Effect, type EffectOptions } from '../core/index.js'
+import { clearEffectLinks, type DepEffectLike, Effect, type EffectOptions } from '../core/index.js'
 import { queuePostFlushJob, queuePreFlushJob, type Scheduler } from './scheduler.js'
 import type { FlushMode } from './types.js'
 
@@ -148,7 +148,7 @@ export abstract class Watcher extends Effect implements DepEffectLike {
     // 调用清理方法，执行资源释放等清理操作
     this.runCleanup()
     // 移除所有相关的依赖观察者，防止内存泄漏
-    clearEffectDeps(this)
+    clearEffectLinks(this)
   }
   /**
    * 执行副作用逻辑

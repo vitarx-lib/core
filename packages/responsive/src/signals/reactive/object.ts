@@ -1,6 +1,6 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { hasOwnProperty, isObject } from '@vitarx/utils'
-import { clearSignalEffects, trackSignal, triggerSignal } from '../../core/index.js'
+import { clearSignalLinks, trackSignal, triggerSignal } from '../../core/index.js'
 import { IS_RAW, isRef } from '../shared/index.js'
 import { ReactiveSource } from './base.js'
 import { MapReactive, WeakMapReactive } from './map.js'
@@ -96,7 +96,7 @@ export class ReactiveProperty<T extends object, K extends keyof T> {
     // 触发信号更新通知，传入旧值和undefined作为新值
     triggerSignal(this, 'set', { oldValue: oldValue, newValue: undefined })
     // 移除信号依赖链
-    clearSignalEffects(this)
+    clearSignalLinks(this)
   }
 }
 /**

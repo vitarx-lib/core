@@ -8,18 +8,18 @@ import {
   SIGNAL_DEP_TAIL
 } from '../../../src/core/signal/symbol.js'
 import {
-  clearEffectDeps,
-  clearSignalEffects,
-  createDepLink,
+  clearEffectLinks,
+  clearSignalLinks,
   type DepEffectLike,
   DepLink,
-  destroyDepLink,
-  isWithEffect,
-  isWithSignal,
-  iterateEffectSignals,
-  iterateSignalEffects,
+  hasLinkedEffect,
+  hasLinkedSignal,
+  iterateLinkedEffects,
+  iterateLinkedSignals,
+  linkSignalToEffect,
   ref,
-  type Signal
+  type Signal,
+  unlinkSignalFromEffect
 } from '../../../src/index.js'
 
 describe('depend/link', () => {
@@ -28,7 +28,7 @@ describe('depend/link', () => {
       const signal = ref(42)
       const effect = { run: vi.fn() }
 
-      const link = createDepLink(effect as any, signal)
+      const link = linkSignalToEffect(effect as any, signal)
 
       // Check link properties
       expect(link.signal).toBe(signal)
@@ -48,8 +48,8 @@ describe('depend/link', () => {
       const signal2 = ref(2)
       const effect = { run: vi.fn() }
 
-      const link1 = createDepLink(effect as any, signal1)
-      const link2 = createDepLink(effect as any, signal2)
+      const link1 = linkSignalToEffect(effect as any, signal1)
+      const link2 = linkSignalToEffect(effect as any, signal2)
 
       // Check that effect has both links in its dependency list
       expect((effect as any)[EFFECT_DEP_HEAD]).toBe(link1)
@@ -72,14 +72,14 @@ describe('depend/link', () => {
       const signal = ref(42)
       const effect = { run: vi.fn() }
 
-      const link = createDepLink(effect as any, signal)
+      const link = linkSignalToEffect(effect as any, signal)
 
       // Verify link exists
       expect((effect as any)[EFFECT_DEP_HEAD]).toBe(link)
       expect((signal as any)[SIGNAL_DEP_HEAD]).toBe(link)
 
       // Destroy the link
-      destroyDepLink(link)
+      unlinkSignalFromEffect(link)
 
       // Verify link is removed
       expect((effect as any)[EFFECT_DEP_HEAD]).toBeUndefined()
@@ -95,21 +95,21 @@ describe('depend/link', () => {
     })
   })
 
-  describe('clearEffectDeps', () => {
+  describe('clearEffectLinks', () => {
     it('should remove all dependencies for an effect', () => {
       const signal1 = ref(1)
       const signal2 = ref(2)
       const effect = { run: vi.fn() }
 
-      createDepLink(effect as any, signal1)
-      createDepLink(effect as any, signal2)
+      linkSignalToEffect(effect as any, signal1)
+      linkSignalToEffect(effect as any, signal2)
 
       // Verify dependencies exist
       expect((effect as any)[EFFECT_DEP_HEAD]).toBeDefined()
       expect((effect as any)[EFFECT_DEP_TAIL]).toBeDefined()
 
       // Clear dependencies
-      clearEffectDeps(effect as any)
+      clearEffectLinks(effect as any)
 
       // Verify dependencies are cleared
       expect((effect as any)[EFFECT_DEP_HEAD]).toBeUndefined()
@@ -125,15 +125,15 @@ describe('depend/link', () => {
       const effect1 = { run: vi.fn() }
       const effect2 = { run: vi.fn() }
 
-      createDepLink(effect1 as any, signal)
-      createDepLink(effect2 as any, signal)
+      linkSignalToEffect(effect1 as any, signal)
+      linkSignalToEffect(effect2 as any, signal)
 
       // Verify effects exist
       expect((signal as any)[SIGNAL_DEP_HEAD]).toBeDefined()
       expect((signal as any)[SIGNAL_DEP_TAIL]).toBeDefined()
 
       // Clear effects
-      clearSignalEffects(signal)
+      clearSignalLinks(signal)
 
       // Verify effects are cleared
       expect((signal as any)[SIGNAL_DEP_HEAD]).toBeUndefined()
@@ -147,10 +147,10 @@ describe('depend/link', () => {
       const effect1 = { run: vi.fn() }
       const effect2 = { run: vi.fn() }
 
-      createDepLink(effect1 as any, signal)
-      createDepLink(effect2 as any, signal)
+      linkSignalToEffect(effect1 as any, signal)
+      linkSignalToEffect(effect2 as any, signal)
 
-      const effects = Array.from(iterateSignalEffects(signal))
+      const effects = Array.from(iterateLinkedEffects(signal))
 
       expect(effects).toContain(effect1)
       expect(effects).toContain(effect2)
@@ -160,7 +160,7 @@ describe('depend/link', () => {
     it('should return empty iterator for signal with no effects', () => {
       const signal = ref(42)
 
-      const effects = Array.from(iterateSignalEffects(signal))
+      const effects = Array.from(iterateLinkedEffects(signal))
 
       expect(effects).toHaveLength(0)
     })
@@ -172,10 +172,10 @@ describe('depend/link', () => {
       const signal2 = ref(2)
       const effect = { run: vi.fn() }
 
-      createDepLink(effect as any, signal1)
-      createDepLink(effect as any, signal2)
+      linkSignalToEffect(effect as any, signal1)
+      linkSignalToEffect(effect as any, signal2)
 
-      const signals = Array.from(iterateEffectSignals(effect as any))
+      const signals = Array.from(iterateLinkedSignals(effect as any))
 
       expect(signals).toContain(signal1)
       expect(signals).toContain(signal2)
@@ -185,7 +185,7 @@ describe('depend/link', () => {
     it('should return empty iterator for effect with no dependencies', () => {
       const effect = { run: vi.fn() }
 
-      const signals = Array.from(iterateEffectSignals(effect as any))
+      const signals = Array.from(iterateLinkedSignals(effect as any))
 
       expect(signals).toHaveLength(0)
     })
@@ -194,30 +194,30 @@ describe('depend/link', () => {
   describe('isWithSignal', () => {
     it('当effect对象具有EFFECT_DEP_HEAD属性时应该返回true', () => {
       const effectWithSignal = { [EFFECT_DEP_HEAD]: {} } as DepEffectLike
-      expect(isWithSignal(effectWithSignal)).toBe(true)
+      expect(hasLinkedSignal(effectWithSignal)).toBe(true)
     })
 
     it('当effect对象不具有EFFECT_DEP_HEAD属性时应该返回false', () => {
       const effectWithoutSignal = {} as DepEffectLike
-      expect(isWithSignal(effectWithoutSignal)).toBe(false)
+      expect(hasLinkedSignal(effectWithoutSignal)).toBe(false)
     })
 
     it('当effect为null时应该返回false', () => {
-      expect(isWithSignal(null as any)).toBe(false)
+      expect(hasLinkedSignal(null as any)).toBe(false)
     })
 
     it('当effect为undefined时应该返回false', () => {
-      expect(isWithSignal(undefined as any)).toBe(false)
+      expect(hasLinkedSignal(undefined as any)).toBe(false)
     })
 
     it('当EFFECT_DEP_HEAD属性值为null时应该返回false', () => {
       const effectWithNullDep = { [EFFECT_DEP_HEAD]: null } as unknown as DepEffectLike
-      expect(isWithSignal(effectWithNullDep)).toBe(false)
+      expect(hasLinkedSignal(effectWithNullDep)).toBe(false)
     })
 
     it('当EFFECT_DEP_HEAD属性值为undefined时应该返回false', () => {
       const effectWithUndefinedDep = { [EFFECT_DEP_HEAD]: undefined } as DepEffectLike
-      expect(isWithSignal(effectWithUndefinedDep)).toBe(false)
+      expect(hasLinkedSignal(effectWithUndefinedDep)).toBe(false)
     })
   })
 
@@ -226,34 +226,34 @@ describe('depend/link', () => {
       const signal: Signal = {
         [SIGNAL_DEP_HEAD]: {} as DepLink
       }
-      expect(isWithEffect(signal)).toBe(true)
+      expect(hasLinkedEffect(signal)).toBe(true)
     })
 
     it('should return false when signal has no effect dependency', () => {
       const signal: Signal = {}
-      expect(isWithEffect(signal)).toBe(false)
+      expect(hasLinkedEffect(signal)).toBe(false)
     })
 
     it('should return false when signal is null', () => {
-      expect(isWithEffect(null as any)).toBe(false)
+      expect(hasLinkedEffect(null as any)).toBe(false)
     })
 
     it('should return false when signal is undefined', () => {
-      expect(isWithEffect(undefined as any)).toBe(false)
+      expect(hasLinkedEffect(undefined as any)).toBe(false)
     })
 
     it('should return false when SIGNAL_DEP_HEAD is undefined', () => {
       const signal: Signal = {
         [SIGNAL_DEP_HEAD]: undefined
       }
-      expect(isWithEffect(signal)).toBe(false)
+      expect(hasLinkedEffect(signal)).toBe(false)
     })
 
     it('should return false when SIGNAL_DEP_HEAD is null', () => {
       const signal: Signal = {
         [SIGNAL_DEP_HEAD]: null as any
       }
-      expect(isWithEffect(signal)).toBe(false)
+      expect(hasLinkedEffect(signal)).toBe(false)
     })
   })
 })

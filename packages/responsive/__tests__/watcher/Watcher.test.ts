@@ -147,7 +147,7 @@ describe('watcher/Watcher', () => {
       const runCleanupSpy = vi.spyOn(watcher as any, 'runCleanup')
       const clearEffectDepsSpy = vi.spyOn(
         await import('../../src/core/signal/index.js'),
-        'clearEffectDeps'
+        'clearEffectLinks'
       )
 
       watcher['beforeDispose']()

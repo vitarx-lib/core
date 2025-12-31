@@ -1,6 +1,5 @@
-// collect.ts
 import type { DepEffectLike } from './dep.js'
-import { destroyDepLink } from './dep.js'
+import { unlinkSignalFromEffect } from './dep.js'
 import { DEP_INDEX_MAP, DEP_VERSION, EFFECT_DEP_HEAD } from './symbol.js'
 
 let currentActiveEffect: DepEffectLike | null = null
@@ -82,7 +81,7 @@ function finalizeDeps(effect: DepEffectLike): void {
       const index = effect[DEP_INDEX_MAP]
       if (index) index.delete(link.signal)
       // 销毁当前依赖链接
-      destroyDepLink(link)
+      unlinkSignalFromEffect(link)
     }
     // 移动到下一个链接
     link = next

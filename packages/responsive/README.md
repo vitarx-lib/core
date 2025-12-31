@@ -36,73 +36,73 @@ yarn add @vitarx/responsive
 
 ## API 列表
 
-| 模块              | 导出项                   | 类型 | 描述                          |
-|-----------------|-----------------------|----|-----------------------------|
-| context         | Context               | 类  | 上下文管理器静态类                   |
-| context         | getContext            | 函数 | 获取指定标签的上下文对象                |
-| context         | runInContext          | 函数 | 在指定上下文中同步执行函数               |
-| context         | runContext            | 函数 | runInContext的别名             |
-| context         | withAsyncContext      | 函数 | 在异步任务中管理上下文                 |
-| depend          | getActiveEffect       | 函数 | 获取当前活动的副作用函数                |
-| depend          | isTrackingPaused      | 函数 | 判断跟踪是否已暂停                   |
-| depend          | withSuspendedTracking | 函数 | 暂停依赖追踪的辅助函数                 |
-| depend          | peekSignal            | 函数 | 查看信号的当前值而不触发跟踪              |
-| depend          | collectSignal         | 函数 | 收集信号函数，用于追踪函数执行期间的依赖关系      |
-| depend          | trackSignal           | 函数 | 跟踪信号变化的函数                   |
-| depend          | triggerSignal         | 函数 | 触发信号的处理函数                   |
-| depend          | DepEffectLike         | 接口 | 响应式依赖的副作用对象接口               |
-| depend          | DepLink               | 类  | 依赖关系中的双向链表节点类               |
-| depend          | createDepLink         | 函数 | 创建 signal <-> effect 双向链表关联 |
-| depend          | destroyDepLink        | 函数 | 销毁 signal <-> effect 链表关联   |
-| depend          | clearEffectDeps       | 函数 | 移除 effect 关联的所有信号依赖         |
-| depend          | clearSignalEffects    | 函数 | 移除 Signal 关联的 effect 依赖     |
-| depend          | iterateSignalEffects  | 函数 | 迭代一个 signal 关联的所有 effect    |
-| depend          | iterateEffectSignals  | 函数 | 迭代一个 effect 依赖的所有 signal    |
-| depend          | isWithSignal          | 函数 | 判断一个副作用对象是否具有信号依赖           |
-| depend          | isWithEffect          | 函数 | 判断一个信号对象是否具有副作用依赖           |
-| effect          | Effect                | 类  | 通用型副作用基类                    |
-| effect          | EffectScope           | 类  | EffectScope 作用域类            |
-| effect          | EffectLike            | 接口 | 副作用效果接口                     |
-| effect          | createScope           | 函数 | 创建一个新的作用域实例                 |
-| effect          | getActiveScope        | 函数 | 获取当前活跃的作用域                  |
-| effect          | getOwnerScope         | 函数 | 获取给定effect的作用域              |
-| effect          | addToActiveScope      | 函数 | 向当前作用域添加一个副作用函数             |
-| effect          | removeFromOwnerScope  | 函数 | 从当前作用域中移除指定的副作用函数           |
-| effect          | reportEffectError     | 函数 | 处理effect错误的函数               |
-| effect          | onScopeDispose        | 函数 | 在作用域销毁时注册回调函数               |
-| effect          | onScopePause          | 函数 | 在作用域暂停时注册回调函数               |
-| effect          | onScopeResume         | 函数 | 在作用域恢复时注册回调函数               |
-| watcher         | watch                 | 函数 | 创建一个观察器，用于监听源数据变化并执行回调函数    |
-| watcher         | watchEffect           | 函数 | EffectWatcher 观察器类的助手函数     |
-| watcher         | Watcher               | 类  | 观察器基类                       |
-| watcher         | EffectWatcher         | 类  | 基于 Effect 的观察器类             |
-| watcher         | ValueWatcher          | 类  | 值观察器类                       |
-| watcher         | SignalWatcher         | 类  | 信号观察器类                      |
-| watcher         | ValueChangeWatcher    | 类  | 值变化观察器类                     |
-| signal.reactive | reactive              | 函数 | 将一个对象代理为响应式对象               |
-| signal.reactive | shallowReactive       | 函数 | 创建浅层响应式对象                   |
-| signal.readonly | readonly              | 函数 | 创建只读对象                      |
-| signal.readonly | shallowReadonly       | 函数 | 创建浅层只读对象                    |
-| signal.ref      | ref                   | 函数 | 创建响应式引用                     |
-| signal.ref      | shallowRef            | 函数 | 创建浅层响应式引用                   |
-| signal.ref      | propertyRef           | 函数 | 创建一个属性引用对象                  |
-| signal.computed | computed              | 函数 | 创建一个计算属性                    |
-| signal.computed | computedWithSetter    | 函数 | 创建一个带有setter的计算属性           |
-| signal.computed | isComputed            | 函数 | 判断是否为计算属性对象                 |
-| utils           | isCallableSignal      | 函数 | 检查给定的值是否为可调用信号              |
-| utils           | isRefSignal           | 函数 | 判断是否为值信号                    |
-| utils           | isRef                 | 函数 | 判断值是否实现Ref接口                |
-| utils           | isReactive            | 函数 | 检查一个值是否为响应式对象               |
-| utils           | isReadonly            | 函数 | 判断是否为只读对象                   |
-| utils           | unref                 | 函数 | 解包 ref 包装，返回其 `.value` 值    |
-| utils           | markRaw               | 函数 | 将一个对象标记为永远不会被转换为响应式信号       |
-| utils           | isMakeRaw             | 函数 | 检查对象是否被标记为非信号类型             |
-| utils           | toRaw                 | 函数 | 获取代理原始值                     |
-| constants       | IS_SIGNAL             | 符号 | signal 标记                   |
-| constants       | IS_READONLY           | 符号 | 只读代理标识                      |
-| constants       | IS_REF                | 符号 | 引用信号标记                      |
-| constants       | IS_REACTIVE           | 符号 | reactive 独有标识               |
-| constants       | IS_RAW                | 符号 | 忽略响应性自动包装标记                 |
+| 模块              | 导出项                    | 类型 | 描述                          |
+|-----------------|------------------------|----|-----------------------------|
+| context         | Context                | 类  | 上下文管理器静态类                   |
+| context         | getContext             | 函数 | 获取指定标签的上下文对象                |
+| context         | runInContext           | 函数 | 在指定上下文中同步执行函数               |
+| context         | runContext             | 函数 | runInContext的别名             |
+| context         | withAsyncContext       | 函数 | 在异步任务中管理上下文                 |
+| depend          | getActiveEffect        | 函数 | 获取当前活动的副作用函数                |
+| depend          | isTrackingPaused       | 函数 | 判断跟踪是否已暂停                   |
+| depend          | withSuspendedTracking  | 函数 | 暂停依赖追踪的辅助函数                 |
+| depend          | peekSignal             | 函数 | 查看信号的当前值而不触发跟踪              |
+| depend          | collectSignal          | 函数 | 收集信号函数，用于追踪函数执行期间的依赖关系      |
+| depend          | trackSignal            | 函数 | 跟踪信号变化的函数                   |
+| depend          | triggerSignal          | 函数 | 触发信号的处理函数                   |
+| depend          | DepEffectLike          | 接口 | 响应式依赖的副作用对象接口               |
+| depend          | DepLink                | 类  | 依赖关系中的双向链表节点类               |
+| depend          | linkSignalToEffect     | 函数 | 创建 signal <-> effect 双向链表关联 |
+| depend          | unlinkSignalFromEffect | 函数 | 销毁 signal <-> effect 链表关联   |
+| depend          | clearEffectLinks       | 函数 | 移除 effect 关联的所有信号依赖         |
+| depend          | clearSignalLinks       | 函数 | 移除 Signal 关联的 effect 依赖     |
+| depend          | iterateLinkedEffects   | 函数 | 迭代一个 signal 关联的所有 effect    |
+| depend          | iterateLinkedSignals   | 函数 | 迭代一个 effect 依赖的所有 signal    |
+| depend          | hasLinkedSignal        | 函数 | 判断一个副作用对象是否连接了信号            |
+| depend          | hasLinkedEffect        | 函数 | 判断一个信号对象是否连接了副作用            |
+| effect          | Effect                 | 类  | 通用型副作用基类                    |
+| effect          | EffectScope            | 类  | EffectScope 作用域类            |
+| effect          | EffectLike             | 接口 | 副作用效果接口                     |
+| effect          | createScope            | 函数 | 创建一个新的作用域实例                 |
+| effect          | getActiveScope         | 函数 | 获取当前活跃的作用域                  |
+| effect          | getOwnerScope          | 函数 | 获取给定effect的作用域              |
+| effect          | addToActiveScope       | 函数 | 向当前作用域添加一个副作用函数             |
+| effect          | removeFromOwnerScope   | 函数 | 从当前作用域中移除指定的副作用函数           |
+| effect          | reportEffectError      | 函数 | 处理effect错误的函数               |
+| effect          | onScopeDispose         | 函数 | 在作用域销毁时注册回调函数               |
+| effect          | onScopePause           | 函数 | 在作用域暂停时注册回调函数               |
+| effect          | onScopeResume          | 函数 | 在作用域恢复时注册回调函数               |
+| watcher         | watch                  | 函数 | 创建一个观察器，用于监听源数据变化并执行回调函数    |
+| watcher         | watchEffect            | 函数 | EffectWatcher 观察器类的助手函数     |
+| watcher         | Watcher                | 类  | 观察器基类                       |
+| watcher         | EffectWatcher          | 类  | 基于 Effect 的观察器类             |
+| watcher         | ValueWatcher           | 类  | 值观察器类                       |
+| watcher         | SignalWatcher          | 类  | 信号观察器类                      |
+| watcher         | ValueChangeWatcher     | 类  | 值变化观察器类                     |
+| signal.reactive | reactive               | 函数 | 将一个对象代理为响应式对象               |
+| signal.reactive | shallowReactive        | 函数 | 创建浅层响应式对象                   |
+| signal.readonly | readonly               | 函数 | 创建只读对象                      |
+| signal.readonly | shallowReadonly        | 函数 | 创建浅层只读对象                    |
+| signal.ref      | ref                    | 函数 | 创建响应式引用                     |
+| signal.ref      | shallowRef             | 函数 | 创建浅层响应式引用                   |
+| signal.ref      | propertyRef            | 函数 | 创建一个属性引用对象                  |
+| signal.computed | computed               | 函数 | 创建一个计算属性                    |
+| signal.computed | computedWithSetter     | 函数 | 创建一个带有setter的计算属性           |
+| signal.computed | isComputed             | 函数 | 判断是否为计算属性对象                 |
+| utils           | isCallableSignal       | 函数 | 检查给定的值是否为可调用信号              |
+| utils           | isRefSignal            | 函数 | 判断是否为值信号                    |
+| utils           | isRef                  | 函数 | 判断值是否实现Ref接口                |
+| utils           | isReactive             | 函数 | 检查一个值是否为响应式对象               |
+| utils           | isReadonly             | 函数 | 判断是否为只读对象                   |
+| utils           | unref                  | 函数 | 解包 ref 包装，返回其 `.value` 值    |
+| utils           | markRaw                | 函数 | 将一个对象标记为永远不会被转换为响应式信号       |
+| utils           | isMakeRaw              | 函数 | 检查对象是否被标记为非信号类型             |
+| utils           | toRaw                  | 函数 | 获取代理原始值                     |
+| constants       | IS_SIGNAL              | 符号 | signal 标记                   |
+| constants       | IS_READONLY            | 符号 | 只读代理标识                      |
+| constants       | IS_REF                 | 符号 | 引用信号标记                      |
+| constants       | IS_REACTIVE            | 符号 | reactive 独有标识               |
+| constants       | IS_RAW                 | 符号 | 忽略响应性自动包装标记                 |
 
 ## 许可证
 

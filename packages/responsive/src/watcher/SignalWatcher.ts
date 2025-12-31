@@ -1,4 +1,4 @@
-import { createDepLink, peekSignal } from '../core/index.js'
+import { linkSignalToEffect, peekSignal } from '../core/index.js'
 import { triggerOnTrack } from '../core/signal/debug.js'
 import type { RefSignal } from '../signals/index.js'
 import type { WatchCallback } from './types.js'
@@ -30,7 +30,7 @@ export class SignalWatcher<T> extends ValueChangeWatcher<T> {
   ) {
     super(cb, options)
     this._value = this.sig.value
-    createDepLink(this, sig)
+    linkSignalToEffect(this, sig)
     if (__DEV__) {
       triggerOnTrack({
         effect: this,
