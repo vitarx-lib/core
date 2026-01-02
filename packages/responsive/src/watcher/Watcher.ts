@@ -1,8 +1,15 @@
 import type { VoidCallback } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import type { DebuggerHandler } from '../core/index.js'
-import { clearEffectLinks, type DepEffectLike, Effect, type EffectOptions } from '../core/index.js'
-import { queuePostFlushJob, queuePreFlushJob, type Scheduler } from './scheduler.js'
+import {
+  clearEffectLinks,
+  type DebuggerHandler,
+  type DepEffectLike,
+  Effect,
+  type EffectOptions,
+  queuePostFlushJob,
+  queuePreFlushJob,
+  type Scheduler
+} from '../core/index.js'
 import type { FlushMode } from './types.js'
 
 /**
@@ -182,7 +189,7 @@ export abstract class Watcher extends Effect implements DepEffectLike {
    * this.reportError(error, 'callback')  // 输出: watcher.callback
    * ```
    */
-  protected override reportError(e: unknown, source: string) {
+  protected override reportError(e: unknown, source: string): void {
     super.reportError(e, `watcher.${source}`)
   }
   /**

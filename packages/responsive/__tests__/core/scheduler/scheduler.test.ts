@@ -7,7 +7,7 @@ import {
   queuePostFlushJob,
   queuePreFlushJob,
   removeJob
-} from '../../src/index.js'
+} from '../../../src/index.js'
 
 describe('watcher/scheduler', () => {
   beforeEach(() => {

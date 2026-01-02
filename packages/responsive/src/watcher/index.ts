@@ -1,4 +1,3 @@
-export * from './scheduler.js'
 export * from './Watcher.js'
 export * from './EffectWatcher.js'
 export * from './ValueWatcher.js'
