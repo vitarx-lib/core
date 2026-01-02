@@ -50,7 +50,7 @@ yarn add @vitarx/responsive
 | depend          | collectSignal          | 函数 | 收集信号函数，用于追踪函数执行期间的依赖关系      |
 | depend          | trackSignal            | 函数 | 跟踪信号变化的函数                   |
 | depend          | triggerSignal          | 函数 | 触发信号的处理函数                   |
-| depend          | DepEffectLike          | 接口 | 响应式依赖的副作用对象接口               |
+| depend          | EffectHandle           | 接口 | 副作用句柄                       |
 | depend          | DepLink                | 类  | 依赖关系中的双向链表节点类               |
 | depend          | linkSignalToEffect     | 函数 | 创建 signal <-> effect 双向链表关联 |
 | depend          | unlinkSignalFromEffect | 函数 | 销毁 signal <-> effect 链表关联   |
@@ -62,7 +62,7 @@ yarn add @vitarx/responsive
 | depend          | hasLinkedEffect        | 函数 | 判断一个信号对象是否连接了副作用            |
 | effect          | Effect                 | 类  | 通用型副作用基类                    |
 | effect          | EffectScope            | 类  | EffectScope 作用域类            |
-| effect          | EffectLike             | 接口 | 副作用效果接口                     |
+| effect          | DisposableEffect       | 接口 | 可处置的副作用效果接口                 |
 | effect          | createScope            | 函数 | 创建一个新的作用域实例                 |
 | effect          | getActiveScope         | 函数 | 获取当前活跃的作用域                  |
 | effect          | getOwnerScope          | 函数 | 获取给定effect的作用域              |
@@ -75,10 +75,9 @@ yarn add @vitarx/responsive
 | watcher         | watch                  | 函数 | 创建一个观察器，用于监听源数据变化并执行回调函数    |
 | watcher         | watchEffect            | 函数 | EffectWatcher 观察器类的助手函数     |
 | watcher         | Watcher                | 类  | 观察器基类                       |
-| watcher         | EffectWatcher          | 类  | 基于 Effect 的观察器类             |
-| watcher         | ValueWatcher           | 类  | 值观察器类                       |
-| watcher         | SignalWatcher          | 类  | 信号观察器类                      |
-| watcher         | ValueChangeWatcher     | 类  | 值变化观察器类                     |
+| watcher         | EffectWatcher          | 类  | 副作用观察器类                     |
+| watcher         | GetterWatcher          | 类  | 返回值观察器类                     |
+| watcher         | RefSignalWatcher       | 类  | RefSignal观察器类               |
 | signal.reactive | reactive               | 函数 | 将一个对象代理为响应式对象               |
 | signal.reactive | shallowReactive        | 函数 | 创建浅层响应式对象                   |
 | signal.readonly | readonly               | 函数 | 创建只读对象                      |
