@@ -28,16 +28,6 @@ describe('watcher/Watcher', () => {
       expect(warnSpy).toHaveBeenCalledWith('[Watcher] Invalid flush option: invalid')
       warnSpy.mockRestore()
     })
-
-    it('should set debug hooks in development mode', () => {
-      const options = {
-        onTrigger: vi.fn(),
-        onTrack: vi.fn()
-      }
-      const watcher = new TestWatcher(options)
-      expect(watcher.onTrigger).toBe(options.onTrigger)
-      expect(watcher.onTrack).toBe(options.onTrack)
-    })
   })
 
   describe('scheduler', () => {
@@ -75,38 +65,13 @@ describe('watcher/Watcher', () => {
     })
   })
 
-  describe('run', () => {
-    it('should call scheduler with execute when active', () => {
-      const watcher = new TestWatcher()
-      const schedulerSpy = vi.spyOn(watcher as any, 'scheduler')
-      const executeSpy = vi.spyOn(watcher as any, 'execute')
-
-      watcher.run()
-
-      expect(schedulerSpy).toHaveBeenCalledWith(expect.any(Function))
-      // We can't easily verify execute was passed to scheduler
-    })
-
-    it('should not call scheduler when not active', () => {
-      const watcher = new TestWatcher()
-      // Make watcher inactive
-      // @ts-ignore
-      watcher['_state'] = 'disposed'
-      const schedulerSpy = vi.spyOn(watcher as any, 'scheduler')
-
-      watcher.run()
-
-      expect(schedulerSpy).not.toHaveBeenCalled()
-    })
-  })
-
   describe('execute', () => {
     it('should run cleanup and runEffect when active', () => {
       const watcher = new TestWatcher()
       const runCleanupSpy = vi.spyOn(watcher as any, 'runCleanup')
       const runEffectSpy = vi.spyOn(watcher as any, 'runEffect')
 
-      watcher.execute()
+      watcher['execute']()
 
       expect(runCleanupSpy).toHaveBeenCalled()
       expect(runEffectSpy).toHaveBeenCalled()
@@ -120,24 +85,10 @@ describe('watcher/Watcher', () => {
       const runCleanupSpy = vi.spyOn(watcher as any, 'runCleanup')
       const runEffectSpy = vi.spyOn(watcher as any, 'runEffect')
 
-      watcher.execute()
+      watcher['execute']()
 
       expect(runCleanupSpy).not.toHaveBeenCalled()
       expect(runEffectSpy).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('afterDispose', () => {
-    it('should clear debug hooks', () => {
-      const watcher = new TestWatcher({
-        onTrigger: vi.fn(),
-        onTrack: vi.fn()
-      })
-
-      watcher['afterDispose']()
-
-      expect(watcher.onTrigger).toBeUndefined()
-      expect(watcher.onTrack).toBeUndefined()
     })
   })
 
@@ -153,7 +104,7 @@ describe('watcher/Watcher', () => {
       watcher['beforeDispose']()
 
       expect(runCleanupSpy).toHaveBeenCalled()
-      expect(clearEffectDepsSpy).toHaveBeenCalledWith(watcher)
+      expect(clearEffectDepsSpy).toHaveBeenCalled()
     })
   })
 

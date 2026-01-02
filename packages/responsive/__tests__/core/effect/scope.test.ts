@@ -9,11 +9,7 @@ import {
 
 describe('effect/scope', () => {
   describe('EffectScope', () => {
-    class TestEffect extends Effect {
-      run(): void {
-        // Implementation for testing
-      }
-    }
+    class TestEffect extends Effect {}
 
     it('should create a new scope', () => {
       const scope = new EffectScope()

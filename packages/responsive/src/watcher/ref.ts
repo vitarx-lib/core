@@ -2,17 +2,17 @@ import { linkSignalToEffect, peekSignal } from '../core/index.js'
 import { triggerOnTrack } from '../core/signal/debug.js'
 import type { RefSignal } from '../signals/index.js'
 import type { WatchCallback } from './types.js'
-import { ValueChangeWatcher } from './ValueChangeWatcher.js'
-import { type WatcherOptions } from './Watcher.js'
+import { ValueWatcher } from './value.js'
+import { type WatcherOptions } from './watcher.js'
 
 /**
- * SignalWatcher 是一个用于监听 Signal 值变化的观察者类。
- * 它继承自 Watcher，当监听的 Signal 值发生变化时执行回调函数。
+ * RefSignalWatcher 是一个用于监听 RefSignal 值变化的观察者类。
+ * 它继承自 Watcher，当监听的 RefSignal 值发生变化时执行回调函数。
  *
  * @example
  * ```typescript
- * const signal = new Signal(0)
- * const watcher = new SignalWatcher(signal, (newValue, oldValue) => {
+ * const signal = ref(0)
+ * const watcher = new RefSignalWatcher(signal, (newValue, oldValue) => {
  *   console.log(`Value changed from ${oldValue} to ${newValue}`)
  * })
  * ```
@@ -22,7 +22,7 @@ import { type WatcherOptions } from './Watcher.js'
  * @param cb - 值变化时的回调函数，接收三个参数：新值、旧值和清理注册函数
  * @param {WatcherOptions} [options] - 可选的观察器配置项
  */
-export class SignalWatcher<T> extends ValueChangeWatcher<T> {
+export class RefSignalWatcher<T> extends ValueWatcher<T> {
   constructor(
     private sig: RefSignal<T>,
     cb: WatchCallback<T>,
@@ -30,10 +30,10 @@ export class SignalWatcher<T> extends ValueChangeWatcher<T> {
   ) {
     super(cb, options)
     this._value = this.sig.value
-    linkSignalToEffect(this, sig)
+    linkSignalToEffect(this.effectHandle, sig)
     if (__DEV__) {
       triggerOnTrack({
-        effect: this,
+        effect: this.effectHandle,
         signal: sig,
         type: 'get'
       })

@@ -95,7 +95,7 @@ describe('watcher/factory', () => {
       expect(callback).toHaveBeenCalledTimes(1)
 
       // Watcher should be isDeprecated
-      expect(watcher.isDeprecated).toBe(true)
+      expect(watcher.isDisposed).toBe(true)
     })
 
     it('should watch a getter function', async () => {

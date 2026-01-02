@@ -1,4 +1,4 @@
-import type { DebuggerHandler } from './debug.js'
+import type { DebuggerOptions } from './debug.js'
 import {
   DEP_INDEX_MAP,
   DEP_VERSION,
@@ -40,18 +40,19 @@ export interface Signal {
   [P: keyof any]: any
 }
 /**
- * DepEffectLike 接口定义了响应式依赖的副作用对象
+ * EffectHandle 协议接口（内部使用）
  *
- * 这个接口是响应式系统的核心，它管理着信号(signal)和观察者(watcher)之间的关系，
- * 并提供了调试和调度功能。当依赖的信号值发生变化时，会触发相应的副作用。
+ * Effect 描述对象，可以触发依赖关系。
+ *
+ * @internal
  */
-export interface DepEffectLike {
+export interface EffectHandle extends DebuggerOptions {
   /**
-   * 响应式依赖的版本号
+   * 依赖版本号
    */
   [DEP_VERSION]?: number
   /**
-   * signal <-> watcher 索引映射
+   * signal <-> effect 索引映射
    *
    * 用于快速查找某个信号的依赖关系。
    * 这是依赖系统的核心数据结构，用于高效地管理依赖关系。
@@ -60,7 +61,7 @@ export interface DepEffectLike {
    */
   [DEP_INDEX_MAP]?: WeakMap<Signal, DepLink>
   /**
-   * signal <-> watcher 链表头
+   * signal <-> effect 链表头
    *
    * 用于维护信号到观察者的双向链表结构的起始节点。
    * 这是依赖系统的核心数据结构，用于高效地管理依赖关系。
@@ -69,7 +70,7 @@ export interface DepEffectLike {
    */
   [EFFECT_DEP_HEAD]?: DepLink
   /**
-   * signal <-> watcher 链表尾
+   * signal <-> effect 链表尾
    *
    * 用于维护信号到观察者的双向链表结构的末尾节点。
    * 这是依赖系统的核心数据结构，用于高效地管理依赖关系。
@@ -77,28 +78,7 @@ export interface DepEffectLike {
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
    */
   [EFFECT_DEP_TAIL]?: DepLink
-  /**
-   * trigger调试钩子 - 触发信号
-   *
-   * 当信号值发生变化并触发依赖更新时调用此钩子函数。
-   * 可用于调试和监控依赖系统的运行状态。
-   *
-   * @param event - 调试事件对象，包含触发相关的调试信息
-   */
-  onTrigger?: DebuggerHandler
-  /**
-   * track调试钩子 - 跟踪信号
-   *
-   * 当响应式系统跟踪到新的依赖关系时调用此钩子函数。
-   * 可用于调试和监控依赖收集的过程。
-   *
-   * @param event - 调试事件对象，包含跟踪相关的调试信息
-   */
-  onTrack?: DebuggerHandler
-  /**
-   * 运行副作用
-   */
-  run(): void
+  (): void
 }
 /**
  * DepLink 类用于表示依赖关系中的双向链表节点
@@ -125,7 +105,7 @@ export class DepLink {
    */
   constructor(
     public signal: Signal,
-    public effect: DepEffectLike
+    public effect: EffectHandle
   ) {}
 }
 
@@ -162,7 +142,7 @@ export class DepLink {
  * - 使用 EFFECT_DEP_HEAD/EFFECT_DEP_TAIL 和 SIGNAL_DEP_HEAD/SIGNAL_DEP_TAIL 作为链表头尾的标记
  * - 维护了双向链表的前驱(ePrev/sigPrev)和后继(eNext/sigNext)指针
  */
-export function linkSignalToEffect(effect: DepEffectLike, signal: Signal): DepLink {
+export function linkSignalToEffect(effect: EffectHandle, signal: Signal): DepLink {
   // 创建新的链表节点
   const link = new DepLink(signal, effect)
 
@@ -230,7 +210,7 @@ export function unlinkSignalFromEffect(link: DepLink): void {
 /**
  * 移除 Effect 和所有 Signal 关联
  */
-export function clearEffectLinks(effect: DepEffectLike): void {
+export function clearEffectLinks(effect: EffectHandle): void {
   let link = effect[EFFECT_DEP_HEAD]
   while (link) {
     const next = link.eNext
@@ -259,9 +239,9 @@ export function clearSignalLinks(signal: Signal): void {
 /**
  * 迭代一个 signal 关联的所有 effect
  *
- * @wraning ⚠️ 注意：O(n)，主要用于测试 / 调试
+ * @warning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function* iterateLinkedEffects(signal: Signal): IterableIterator<DepEffectLike> {
+export function* iterateLinkedEffects(signal: Signal): IterableIterator<EffectHandle> {
   let node = signal[SIGNAL_DEP_HEAD] as DepLink | undefined
   while (node) {
     yield node.effect
@@ -272,9 +252,9 @@ export function* iterateLinkedEffects(signal: Signal): IterableIterator<DepEffec
 /**
  * 迭代一个 effect 依赖的所有 signal
  *
- * @wraning ⚠️ 注意：O(n)，主要用于测试 / 调试
+ * @warning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function* iterateLinkedSignals(effect: DepEffectLike): IterableIterator<Signal> {
+export function* iterateLinkedSignals(effect: EffectHandle): IterableIterator<Signal> {
   let node = effect[EFFECT_DEP_HEAD] as DepLink | undefined
   while (node) {
     yield node.signal
@@ -288,7 +268,7 @@ export function* iterateLinkedSignals(effect: DepEffectLike): IterableIterator<S
  * @param effect - 待检查的副作用对象
  * @returns {boolean} 如果副作用对象具有信号依赖返回true，否则返回false
  */
-export function hasLinkedSignal(effect: DepEffectLike): boolean {
+export function hasLinkedSignal(effect: EffectHandle): boolean {
   return !!effect?.[EFFECT_DEP_HEAD]
 }
 

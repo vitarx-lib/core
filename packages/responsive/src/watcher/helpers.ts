@@ -9,18 +9,18 @@ import {
   type Ref
 } from '../signals/index.js'
 import type { Reactive, ShallowReactive } from '../signals/reactive/base.js'
-import { SignalWatcher } from './SignalWatcher.js'
+import { GetterWatcher } from './getter.js'
+import { RefSignalWatcher } from './ref.js'
 import type { UnwarpSources, WatchCallback, WatchOptions, WatchSource } from './types.js'
-import type { ValueChangeWatcher } from './ValueChangeWatcher.js'
-import { ValueWatcher } from './ValueWatcher.js'
-import { Watcher } from './Watcher.js'
+import type { ValueWatcher } from './value.js'
+import { Watcher } from './watcher.js'
 
 /**
  * 属性是否可枚举
  */
 const isEnumerable = Object.prototype.propertyIsEnumerable
 /**
- * 递归遍历响应式代理对象，用于深度观察其内部属性变化
+ * 递归遍历响应式代理对象，用于深度追踪内部属性变化
  *
  * 该函数会触发响应式对象的依赖追踪，确保嵌套的响应式属性也能被观察到。
  * 同时处理循环引用问题，避免无限递归。
@@ -213,7 +213,7 @@ export function watch<T>(
   // 解构配置项，设置默认值
   const { immediate = false, deep = false, once = false, ...watcherOptions } = options
 
-  let watcher: ValueChangeWatcher<T>
+  let watcher: ValueWatcher<T>
 
   // 处理 once 配置：执行一次后自动停止监听
   if (once) {
@@ -230,7 +230,7 @@ export function watch<T>(
 
   // 处理 RefSignal 类型数据源
   if (isRefSignal(source)) {
-    watcher = new SignalWatcher(source, cb as any, watcherOptions)
+    watcher = new RefSignalWatcher(source, cb as any, watcherOptions)
     // 立即执行回调
     if (immediate) watcher.runCallback(watcher.value)
     return watcher
@@ -284,7 +284,7 @@ export function watch<T>(
   }
 
   // 创建值监听器
-  watcher = new ValueWatcher(getter, cb, watcherOptions)
+  watcher = new GetterWatcher(getter, cb, watcherOptions)
 
   // 响应式对象强制更新（跳过值比较）
   if (forceUpdate) watcher.compare = () => false

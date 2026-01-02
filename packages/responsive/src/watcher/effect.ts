@@ -1,7 +1,7 @@
 import { isFunction } from '@vitarx/utils'
 import { collectSignal } from '../core/index.js'
 import type { WatcherOnCleanup } from './types.js'
-import { Watcher, type WatcherOptions } from './Watcher.js'
+import { Watcher, type WatcherOptions } from './watcher.js'
 
 /**
  * 副作用观察器
@@ -29,7 +29,7 @@ export class EffectWatcher<T = any> extends Watcher {
       throw new Error('[EffectWatcher] effect must be a function')
     }
     this.effect = effect
-    this.execute()
+    this.runEffect()
   }
   /**
    * 核心：执行 + 依赖收集
@@ -38,7 +38,7 @@ export class EffectWatcher<T = any> extends Watcher {
    */
   protected runEffect(): void {
     try {
-      collectSignal(() => this.effect(this.onCleanup), this)
+      collectSignal(() => this.effect(this.onCleanup), this.effectHandle)
     } catch (e) {
       this.reportError(e, 'effect')
     }
@@ -48,7 +48,7 @@ export class EffectWatcher<T = any> extends Watcher {
 /**
  * 创建一个副作用效果观察器
  *
- * 当依赖的响应式数据变化时自动执行回调函数
+ * 当依赖的响应式数据变化时自动执行副作用
  *
  * @param effect - 一个回调函数，接收一个 onCleanup 函数作为参数，用于清理副作用
  * @param [options] - 可选配置项，用于控制观察器的行为

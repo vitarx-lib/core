@@ -1,7 +1,7 @@
 import { collectSignal } from '../core/index.js'
 import type { WatchCallback } from './types.js'
-import { ValueChangeWatcher } from './ValueChangeWatcher.js'
-import { type WatcherOptions } from './Watcher.js'
+import { ValueWatcher } from './value.js'
+import { type WatcherOptions } from './watcher.js'
 
 /**
  * ValueWatcher 值观察器类
@@ -22,7 +22,7 @@ import { type WatcherOptions } from './Watcher.js'
  * )
  * ```
  */
-export class ValueWatcher<T> extends ValueChangeWatcher<T> {
+export class GetterWatcher<T> extends ValueWatcher<T> {
   /**
    * ValueWatcher 类的构造函数
    *
@@ -47,7 +47,7 @@ export class ValueWatcher<T> extends ValueChangeWatcher<T> {
    */
   protected override getter(): T {
     try {
-      return collectSignal(this._getter, this) // 收集信号并返回结果
+      return collectSignal(this._getter, this.effectHandle) // 收集信号并返回结果
     } catch (e) {
       this.reportError(e, 'getter')
       return undefined as T

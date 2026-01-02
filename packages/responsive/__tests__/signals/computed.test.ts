@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
-import { computed, computedWithSetter, isComputed, ref } from '../../src/index.js'
+import { computed, isComputed, ref } from '../../src/index.js'
 
 describe('signal/computed', () => {
   describe('computed', () => {
@@ -38,12 +38,12 @@ describe('signal/computed', () => {
 
     it('should support setter', () => {
       const count = ref(0)
-      const double = computed(
-        () => count.value * 2,
-        newValue => {
+      const double = computed({
+        get: () => count.value * 2,
+        set: newValue => {
           count.value = newValue / 2
         }
-      )
+      })
 
       expect(double.value).toBe(0)
 
@@ -56,7 +56,7 @@ describe('signal/computed', () => {
     it('should support immediate option', () => {
       const count = ref(0)
       const getter = vi.fn(() => count.value * 2)
-      const double = computed(getter, { immediate: true })
+      const double = computed(getter).recompute()
 
       // Getter should be called immediately
       expect(getter).toHaveBeenCalledTimes(1)
@@ -84,25 +84,6 @@ describe('signal/computed', () => {
 
       // Restore logger
       warnSpy.mockRestore()
-    })
-  })
-
-  describe('computedWithSetter', () => {
-    it('should create a computed property with getter and setter', () => {
-      const count = ref(0)
-      const double = computedWithSetter(
-        () => count.value * 2,
-        newValue => {
-          count.value = newValue / 2
-        }
-      )
-
-      expect(double.value).toBe(0)
-
-      // Setting value should call setter
-      double.value = 10
-      expect(count.value).toBe(5)
-      expect(double.value).toBe(10)
     })
   })
 

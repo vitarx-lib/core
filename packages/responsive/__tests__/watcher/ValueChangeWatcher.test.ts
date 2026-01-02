@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ValueChangeWatcher, WatcherOptions } from '../../src/index.js'
+import { WatcherOptions } from '../../src/index.js'
+import { ValueWatcher } from '../../src/watcher/value.js'
 
-class TestValueChangeWatcher<T> extends ValueChangeWatcher<T> {
+class TestValueChangeWatcher<T> extends ValueWatcher<T> {
   constructor(
     initialValue: T,
     callback: (newValue: T, oldValue: T, onCleanup: (cleanupFn: () => void) => void) => void,
@@ -30,13 +31,13 @@ describe('watcher/ValueChangeWatcher', () => {
     it('should create a ValueChangeWatcher instance', () => {
       const callback = vi.fn()
       const watcher = new TestValueChangeWatcher(0, callback)
-      expect(watcher).toBeInstanceOf(ValueChangeWatcher)
+      expect(watcher).toBeInstanceOf(ValueWatcher)
     })
 
     it('should accept options', () => {
       const callback = vi.fn()
       const watcher = new TestValueChangeWatcher(0, callback, { flush: 'post' })
-      expect(watcher).toBeInstanceOf(ValueChangeWatcher)
+      expect(watcher).toBeInstanceOf(ValueWatcher)
     })
   })
 

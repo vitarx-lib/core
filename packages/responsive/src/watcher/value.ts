@@ -1,26 +1,16 @@
 import type { CompareFunction, WatchCallback } from './types.js'
-import { Watcher, type WatcherOptions } from './Watcher.js'
+import { Watcher, type WatcherOptions } from './watcher.js'
 
 /**
- * ValueChangeWatcher 值观察器类
+ * ValueWatcher 值观察器抽象类
  *
- * 该类继承自 Watcher，用于观察 getter 函数返回值的变化并在值发生变化时执行回调函数。
+ * 该类继承自 Watcher，用于观察值的变化并在值发生变化时执行回调函数。
  * 它会自动追踪 getter 函数的依赖，并在依赖的响应式数据发生变化时重新收集依赖。
  * 当检测到依赖变化时（通过 compare 函数比较，默认使用 Object.is），会触发注册的回调函数。
  *
  * @template T - 被观察值的类型
- *
- * @example
- * ```typescript
- * const watcher = new ValueChangeWatcher(
- *   () => state.value,
- *   (newValue, oldValue) => {
- *     console.log(`值从 ${oldValue} 变为 ${newValue}`)
- *   }
- * )
- * ```
  */
-export abstract class ValueChangeWatcher<T> extends Watcher {
+export abstract class ValueWatcher<T> extends Watcher {
   /**
    * 比较函数，用于比较新旧值
    *

@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ref, ValueWatcher } from '../../src/index.js'
+import { GetterWatcher, ref } from '../../src/index.js'
 
-describe('watcher/ValueWatcher', () => {
+describe('watcher/GetterWatcher', () => {
   describe('constructor', () => {
-    it('should create a ValueWatcher instance', () => {
+    it('should create a GetterWatcher instance', () => {
       const getter = vi.fn(() => 42)
       const callback = vi.fn()
-      const watcher = new ValueWatcher(getter, callback, {})
+      const watcher = new GetterWatcher(getter, callback, {})
 
-      expect(watcher).toBeInstanceOf(ValueWatcher)
+      expect(watcher).toBeInstanceOf(GetterWatcher)
       expect(getter).toHaveBeenCalled()
     })
   })
@@ -18,7 +18,7 @@ describe('watcher/ValueWatcher', () => {
       const signal = ref(42)
       const getter = vi.fn(() => signal.value)
       const callback = vi.fn()
-      const watcher = new ValueWatcher(getter, callback, {})
+      const watcher = new GetterWatcher(getter, callback, {})
 
       expect(watcher['getter']()).toBe(42)
       expect(getter).toHaveBeenCalled()
@@ -35,7 +35,7 @@ describe('watcher/ValueWatcher', () => {
       const mockReportError = vi.fn()
 
       // Create a mock class that extends ValueWatcher to override reportError
-      class TestValueWatcher<T> extends ValueWatcher<T> {
+      class TestValueWatcher<T> extends GetterWatcher<T> {
         protected override reportError(e: unknown, source: string) {
           mockReportError(e, source)
         }

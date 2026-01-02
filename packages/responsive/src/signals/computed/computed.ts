@@ -18,7 +18,7 @@ import { IS_REF, IS_SIGNAL, type RefSignal } from '../shared/index.js'
  * 计算属性的值获取函数
  *
  * @template T - 计算结果值的类型
- * @param {T | undefined} oldValue - 上一次的计算结果，第一次计算时为undefined
+ * @param {T} oldValue - 上一次的计算结果，第一次计算时为 undefined
  * @returns {T} - 计算结果
  */
 export type ComputedGetter<T> = (oldValue: T) => T
@@ -95,7 +95,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
       this._getter = getter.get
       this._setter = getter.set
     } else {
-      throw new Error('[Computed] getter must be a function')
+      throw new Error('[Computed] getter must be a function or an object with get/set methods')
     }
     this._effect = () => {
       if (!this.dirty) {
@@ -126,7 +126,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
    */
   get value(): T {
     // 首次访问或手动调用后，设置副作用
-    if (this.dirty) this.immediate()
+    if (this.dirty) this.recompute()
     // 追踪对value属性的访问
     trackSignal(this, 'get')
     return this._value
@@ -195,11 +195,13 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
   }
 
   /**
-   * 立即执行计算的方法
+   * 强制重新计算
+   *
    * 该方法会触发重新计算并返回当前实例，支持链式调用
+   *
    * @returns {this} 返回当前实例，以便支持链式调用
    */
-  immediate(): this {
+  recompute(): this {
     // 调用重新计算方法
     collectSignal(() => {
       try {

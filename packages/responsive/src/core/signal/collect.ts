@@ -1,8 +1,7 @@
-import type { DepEffectLike } from './dep.js'
-import { unlinkSignalFromEffect } from './dep.js'
+import { type EffectHandle, unlinkSignalFromEffect } from './dep.js'
 import { DEP_INDEX_MAP, DEP_VERSION, EFFECT_DEP_HEAD } from './symbol.js'
 
-let currentActiveEffect: DepEffectLike | null = null
+let currentActiveEffect: EffectHandle | null = null
 let isTrackingSuspended = false
 
 /**
@@ -11,7 +10,7 @@ let isTrackingSuspended = false
  *
  * @returns 返回当前活动的副作用函数(DepEffectLike类型)，如果没有则返回null
  */
-export function getActiveEffect(): DepEffectLike | null {
+export function getActiveEffect(): EffectHandle | null {
   return currentActiveEffect // 返回当前活动的副作用函数
 }
 
@@ -69,7 +68,7 @@ export function peekSignal<T extends object, K extends keyof T>(sig: T, key: K):
  * 该函数用于遍历effect的所有依赖链接，移除过时的依赖关系，并清理不再需要的链接
  * @param effect - 需要处理的依赖效果对象，包含依赖关系和版本信息
  */
-function finalizeDeps(effect: DepEffectLike): void {
+function finalizeDeps(effect: EffectHandle): void {
   // 从effect的依赖链头部开始遍历
   let link = effect[EFFECT_DEP_HEAD]
   while (link) {
@@ -96,7 +95,7 @@ function finalizeDeps(effect: DepEffectLike): void {
  * @param effect - 依赖效果对象，用于追踪依赖关系
  * @returns {T} 返回执行 fn 函数的结果
  */
-export function collectSignal<T>(fn: () => T, effect: DepEffectLike): T {
+export function collectSignal<T>(fn: () => T, effect: EffectHandle): T {
   // 设置当前活动的效果为传入的 effect
   currentActiveEffect = effect
   // 获取并更新效果对象的版本号

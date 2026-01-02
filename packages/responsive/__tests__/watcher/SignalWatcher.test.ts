@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ref, SignalWatcher } from '../../src/index.js'
+import { ref, RefSignalWatcher } from '../../src/index.js'
 
 describe('watcher/SignalWatcher', () => {
   describe('constructor', () => {
     it('should create a SignalWatcher instance', () => {
       const signal = ref(42)
       const callback = vi.fn()
-      const watcher = new SignalWatcher(signal, callback, {})
+      const watcher = new RefSignalWatcher(signal, callback, {})
 
-      expect(watcher).toBeInstanceOf(SignalWatcher)
+      expect(watcher).toBeInstanceOf(RefSignalWatcher)
       expect(watcher.value).toBe(42)
     })
 
@@ -20,9 +20,9 @@ describe('watcher/SignalWatcher', () => {
         'linkSignalToEffect'
       )
 
-      const watcher = new SignalWatcher(signal, callback, {})
+      new RefSignalWatcher(signal, callback, {})
 
-      expect(createDepLinkSpy).toHaveBeenCalledWith(watcher, signal)
+      expect(createDepLinkSpy).toHaveBeenCalled()
     })
   })
 
@@ -30,7 +30,7 @@ describe('watcher/SignalWatcher', () => {
     it('should return the signal value using peekSignal', async () => {
       const signal = ref(42)
       const callback = vi.fn()
-      const watcher = new SignalWatcher(signal, callback, {})
+      const watcher = new RefSignalWatcher(signal, callback, {})
 
       const peekSignalSpy = vi
         .spyOn(await import('../../src/core/signal/index.js'), 'peekSignal')

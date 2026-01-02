@@ -1,6 +1,6 @@
 import type { AnyFunction, VoidCallback } from '@vitarx/utils'
 import type { Ref } from '../signals/index.js'
-import type { WatcherOptions } from './Watcher.js'
+import type { WatcherOptions } from './watcher.js'
 
 /**
  * 刷新模式类型

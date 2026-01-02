@@ -3,11 +3,7 @@ import { Effect, EffectScope } from '../../../src/index.js'
 
 describe('effect/effect', () => {
   describe('Effect', () => {
-    class TestEffect extends Effect {
-      run(): void {
-        // Implementation for testing
-      }
-    }
+    class TestEffect extends Effect {}
 
     it('should initialize with active state', () => {
       const effect = new TestEffect()
@@ -108,8 +104,6 @@ describe('effect/effect', () => {
         protected override afterPause = afterPauseSpy
         protected override beforeResume = beforeResumeSpy
         protected override afterResume = afterResumeSpy
-
-        run(): void {}
       }
 
       const effect = new TestEffectWithHooks()

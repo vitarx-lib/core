@@ -8,7 +8,7 @@ import { Computed, type ComputedGetter, type ComputedSetter } from './computed.j
  * 当依赖的响应式数据发生变化时，计算属性会自动重新计算并更新其值。
  *
  * @template T - 计算结果的类型
- * @param {ComputedGetter<T>} getter - 计算属性的getter函数，接收上一次的计算结果作为参数
+ * @param {ComputedGetter<T>} getterOrOptions - 计算属性的getter函数，接收上一次的计算结果作为参数
  * @param [debuggerOptions] - 调试选项
  * @param {DebuggerOptions} [debuggerOptions.onTrack] - 调试选项，用于设置track回调函数
  * @param {DebuggerOptions} [debuggerOptions.onTrigger] - 调试选项，用于设置trigger回调函数
@@ -37,10 +37,10 @@ import { Computed, type ComputedGetter, type ComputedSetter } from './computed.j
  * ```
  */
 export function computed<T>(
-  getter: ComputedGetter<T> | { get: ComputedGetter<T>; set: ComputedSetter<T> },
+  getterOrOptions: ComputedGetter<T> | { get: ComputedGetter<T>; set: ComputedSetter<T> },
   debuggerOptions?: DebuggerOptions
 ): Computed<T> {
-  return new Computed(getter, debuggerOptions)
+  return new Computed(getterOrOptions, debuggerOptions)
 }
 
 /**

@@ -1,6 +1,6 @@
 import { getActiveEffect, isTrackingPaused } from './collect.js'
 import { type ExtraDebugData, type SignalOpType, triggerOnTrack } from './debug.js'
-import { type DepEffectLike, DepLink, linkSignalToEffect, type Signal } from './dep.js'
+import { DepLink, type EffectHandle, linkSignalToEffect, type Signal } from './dep.js'
 import { DEP_INDEX_MAP, DEP_VERSION } from './symbol.js'
 
 /**
@@ -9,7 +9,7 @@ import { DEP_INDEX_MAP, DEP_VERSION } from './symbol.js'
  * @param effect - 需要追踪的效果对象，实现了DepEffectLike接口
  * @param signal - 被追踪的信号对象
  */
-function trackHandler(effect: DepEffectLike, signal: Signal): void {
+function trackHandler(effect: EffectHandle, signal: Signal): void {
   let link: DepLink | undefined // 用于存储依赖链接的变量，初始值为undefined
   // 从效果对象中获取依赖索引映射
   const index = effect[DEP_INDEX_MAP]

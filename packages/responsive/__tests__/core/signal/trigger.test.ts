@@ -8,8 +8,8 @@ describe('depend/trigger', () => {
       const signal = ref(42)
 
       // Create mock effects
-      const effect1 = { run: vi.fn() }
-      const effect2 = { run: vi.fn() }
+      const effect1 = vi.fn()
+      const effect2 = vi.fn()
 
       // Mock the signal's dependency head to point to our mock effects
       // We'll simulate the linked list structure
@@ -27,15 +27,15 @@ describe('depend/trigger', () => {
       triggerSignal(signal, 'set')
 
       // Both effects should have been run
-      expect(effect1.run).toHaveBeenCalled()
-      expect(effect2.run).toHaveBeenCalled()
+      expect(effect1).toHaveBeenCalled()
+      expect(effect2).toHaveBeenCalled()
     })
 
     it('should call triggerOnTrigger in dev mode', async () => {
       const signal = ref(42)
 
       // Create mock effect
-      const effect = { run: vi.fn() }
+      const effect = vi.fn()
 
       // Mock the linked list
 
@@ -65,7 +65,7 @@ describe('depend/trigger', () => {
       }
 
       // Effect should still be run
-      expect(effect.run).toHaveBeenCalled()
+      expect(effect).toHaveBeenCalled()
     })
 
     it('should handle signal with no dependencies', () => {

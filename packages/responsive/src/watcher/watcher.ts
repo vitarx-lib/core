@@ -1,11 +1,12 @@
-import type { VoidCallback } from '@vitarx/utils'
-import { logger } from '@vitarx/utils'
+import { logger, type VoidCallback } from '@vitarx/utils'
 import {
+  bindDebuggerOptions,
   clearEffectLinks,
   type DebuggerHandler,
-  type DepEffectLike,
+  type DebuggerOptions,
   Effect,
-  type EffectOptions,
+  type EffectHandle,
+  EffectScope,
   queuePostFlushJob,
   queuePreFlushJob,
   type Scheduler
@@ -22,11 +23,17 @@ import type { FlushMode } from './types.js'
  * @property {FlushMode} [flush='pre'] - 指定副作用执行时机
  * @property {boolean|EffectScope} [scope=true] - 作用域
  */
-export interface WatcherOptions extends EffectOptions {
-  /** trigger 调试钩子 */
-  onTrigger?: DebuggerHandler
-  /** track 调试钩子 */
-  onTrack?: DebuggerHandler
+export interface WatcherOptions extends DebuggerOptions {
+  /**
+   * 作用域
+   *
+   * - ture 表示当前效果将自动加入当前作用域。
+   * - false 表示当前效果将不会加入任何作用域。
+   * - EffectScope 对象 ：表示当前效果将加入指定的作用域。
+   *
+   * @default true
+   */
+  scope?: EffectScope | boolean
   /**
    * 指定副作用执行时机
    *
@@ -41,8 +48,6 @@ export interface WatcherOptions extends EffectOptions {
 
 /**
  * Watcher 抽象基类
- * - 实现 DepEffect 接口的公共部分
- * - 初始化调试钩子
  * - 初始化调度器
  * - 实现调度逻辑
  * - 抽象 runEffect 方法由子类实现
@@ -56,13 +61,9 @@ export interface WatcherOptions extends EffectOptions {
  * - 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
  *
  * @abstract
- * @implements DepEffectLike
+ * @implements EffectHandle
  */
-export abstract class Watcher extends Effect implements DepEffectLike {
-  /** trigger 调试钩子 */
-  onTrigger?: DebuggerHandler
-  /** track 调试钩子 */
-  onTrack?: DebuggerHandler
+export abstract class Watcher extends Effect {
   /**
    * 静态缓存 scheduler 对象，用于存储不同 flush 模式对应的调度器实例。
    *
@@ -83,24 +84,25 @@ export abstract class Watcher extends Effect implements DepEffectLike {
   public scheduler: Scheduler
   /** cleanup 回调 */
   private readonly cleanups: VoidCallback[] = []
-
+  protected readonly effectHandle: EffectHandle
   /**
    * 构造函数
    * @param options 调试钩子选项
    */
   constructor(options: WatcherOptions = {}) {
-    const { flush = 'pre', ...effectOptions } = options
-    super(effectOptions)
-    if (__DEV__) {
-      this.onTrigger = options.onTrigger
-      this.onTrack = options.onTrack
-    }
+    const { flush = 'pre', scope } = options
+    super(scope)
     const scheduler = Watcher.schedulerMap[flush]
     if (!scheduler) {
       logger.warn(`[Watcher] Invalid flush option: ${flush}`)
       this.scheduler = queuePreFlushJob
     } else {
       this.scheduler = scheduler
+    }
+    this.effectHandle = () => this.scheduler(this.execute)
+    // 判断是否为开发环境
+    if (__DEV__) {
+      bindDebuggerOptions(this.effectHandle, options)
     }
   }
   /**
@@ -115,36 +117,19 @@ export abstract class Watcher extends Effect implements DepEffectLike {
     }
     this.cleanups.push(cleanupFn)
   }
-  /**
-   * 响应 signal 变化或触发回调
-   *
-   * 此方法是由信号触发器调用的，子类需实现抽象runEffect方法。
-   */
-  run(): void {
-    if (!this.isActive) return
-    this.scheduler(this.execute)
-  }
+
   /**
    * 执行副作用
    *
    * 立即执行副作用函数，包含错误处理和清理工作。
    * 与 schedule() 不同，此方法会同步执行，不经过调度器。
    */
-  execute = (): void => {
+  protected execute = (): void => {
     if (!this.isActive) return
     this.runCleanup()
     this.runEffect()
   }
-  /**
-   * 在对象被销毁后执行的清理方法
-   * 重写父类的afterDispose方法，用于释放资源
-   */
-  protected override afterDispose() {
-    // 将触发回调函数置为undefined，清除引用
-    this.onTrigger = undefined
-    // 将追踪回调函数置为undefined，清除引用
-    this.onTrack = undefined
-  }
+
   /**
    * 在对象被销毁前执行清理操作
    * 这是一个重写的方法，用于在组件或实例被销毁前执行必要的清理工作
@@ -155,7 +140,7 @@ export abstract class Watcher extends Effect implements DepEffectLike {
     // 调用清理方法，执行资源释放等清理操作
     this.runCleanup()
     // 移除所有相关的依赖观察者，防止内存泄漏
-    clearEffectLinks(this)
+    clearEffectLinks(this.effectHandle)
   }
   /**
    * 执行副作用逻辑

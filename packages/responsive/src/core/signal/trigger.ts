@@ -23,7 +23,7 @@ export function triggerSignal(
     if (__DEV__) {
       triggerOnTrigger({ ...debugData, effect, signal, type })
     }
-    effect.run() // 调度effect的执行
+    effect() // 调度effect的执行
     link = next // 移动到下一个链接
   }
 }
