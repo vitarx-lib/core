@@ -53,7 +53,6 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
   /**
    * 脏标记，标识是否需要重新计算
    * true表示依赖已变化，需要重新计算
-   * @private
    */
   public dirty: boolean = true
   /**
@@ -154,8 +153,14 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
     }
   }
 
+  /**
+   * 销毁当前对象的方法
+   * 该方法负责从所有者作用域中移除当前对象，并清除与当前对象关联的效果链接
+   */
   dispose(): void {
+    // 从所有者作用域中移除当前对象
     removeFromOwnerScope(this)
+    // 清除当前对象的效果链接
     clearEffectLinks(this._effect)
   }
 
