@@ -1,9 +1,5 @@
-import {
-  Computed,
-  type ComputedGetter,
-  type ComputedOptions,
-  type ComputedSetter
-} from './computed.js'
+import type { DebuggerOptions } from '../../core/index.js'
+import { Computed, type ComputedGetter, type ComputedSetter } from './computed.js'
 
 /**
  * 创建一个计算属性
@@ -13,9 +9,9 @@ import {
  *
  * @template T - 计算结果的类型
  * @param {ComputedGetter<T>} getter - 计算属性的getter函数，接收上一次的计算结果作为参数
- * @param {ComputedOptions<T>} [options] - 计算属性的配置选项
- * @param {(newValue: T) => void} [options.setter] - 计算属性的setter函数，用于处理对计算属性的赋值操作
- * @param {boolean} [options.immediate=false] - 是否立即计算，默认为false，首次访问时才计算
+ * @param [debuggerOptions] - 调试选项
+ * @param {DebuggerOptions} [debuggerOptions.onTrack] - 调试选项，用于设置track回调函数
+ * @param {DebuggerOptions} [debuggerOptions.onTrigger] - 调试选项，用于设置trigger回调函数
  * @returns {Computed<T>} 创建的计算属性对象
  * @example
  * ```ts
@@ -29,9 +25,9 @@ import {
  * // 使用setter
  * const count = ref(0)
  * const double = computed(
- *   () => count.value * 2,
  *   {
- *     setter: (newValue) => {
+ *     get: () => count.value * 2,
+ *     set: (newValue) => {
  *       count.value = newValue / 2
  *     }
  *   }
@@ -41,44 +37,10 @@ import {
  * ```
  */
 export function computed<T>(
-  getter: ComputedGetter<T>,
-  options?: ComputedOptions<T> | ComputedSetter<T>
+  getter: ComputedGetter<T> | { get: ComputedGetter<T>; set: ComputedSetter<T> },
+  debuggerOptions?: DebuggerOptions
 ): Computed<T> {
-  if (typeof options === 'function') {
-    options = { setter: options }
-  }
-  return new Computed(getter, options)
-}
-
-/**
- * 创建一个带有setter的计算属性
- *
- * 这是一个便捷函数，用于创建同时具有getter和setter的计算属性。
- *
- * @template T - 计算结果的类型
- * @param {ComputedGetter<T>} getter - 计算属性的getter函数
- * @param {ComputedSetter<T>} setter - 计算属性的setter函数
- * @param {Omit<ComputedOptions<T>, 'setter'>} [options={}] - 其他计算属性配置选项
- * @returns {Computed<T>} 创建的计算属性对象
- * @example
- * ```ts
- * const count = ref(0)
- * const double = computedWithSetter(
- *   () => count.value * 2,
- *   (newValue) => {
- *     count.value = newValue / 2
- *   }
- * )
- * double.value = 10
- * console.log(count.value) // 5
- * ```
- */
-export function computedWithSetter<T>(
-  getter: ComputedGetter<T>,
-  setter: ComputedSetter<T>,
-  options: Omit<ComputedOptions<T>, 'setter'> = {}
-): Computed<T> {
-  return computed(getter, { ...options, setter })
+  return new Computed(getter, debuggerOptions)
 }
 
 /**

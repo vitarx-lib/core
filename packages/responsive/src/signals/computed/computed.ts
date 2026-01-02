@@ -1,13 +1,18 @@
-import { isFunction, logger } from '@vitarx/utils'
+import { isFunction, isObject, logger } from '@vitarx/utils'
 import {
+  addToActiveScope,
+  bindDebugHook,
+  clearEffectLinks,
   collectSignal,
-  type DepEffectLike,
-  Effect,
-  type EffectOptions,
+  type DebuggerOptions,
+  type DisposableEffect,
+  type EffectHandle,
+  removeFromOwnerScope,
+  reportEffectError,
   trackSignal,
   triggerSignal
 } from '../../core/index.js'
-import { IS_REF, IS_SIGNAL, type Ref, type RefSignal } from '../shared/index.js'
+import { IS_REF, IS_SIGNAL, type RefSignal } from '../shared/index.js'
 
 /**
  * 计算属性的值获取函数
@@ -29,7 +34,7 @@ export type ComputedSetter<T> = (newValue: T) => void
  *
  * @template T - 计算结果的类型
  */
-export interface ComputedOptions<T> extends EffectOptions {
+export interface ComputedOptions<T> extends DebuggerOptions {
   /**
    * 计算属性的setter处理函数
    *
@@ -82,7 +87,7 @@ export interface ComputedOptions<T> extends EffectOptions {
  * console.log(double.value) // 4
  * ```
  */
-export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
+export class Computed<T> implements RefSignal<T>, DisposableEffect {
   readonly [IS_REF]: true = true
   readonly [IS_SIGNAL]: true = true
   /**
@@ -100,31 +105,54 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
    * 计算属性的setter函数
    * @private
    */
-  private readonly _setter?: ComputedSetter<T>
+  private readonly _setter: ComputedSetter<T> | undefined
   /**
-   * 构造一个计算属性对象
-   *
-   * @param {ComputedGetter<T>} getter - 计算属性的getter函数，接收上一次的计算结果作为参数
-   * @param {ComputedOptions<T>} [options={}] - 计算属性的配置选项
-   * @param {ComputedSetter<T>} [options.setter] - 计算属性的setter函数，用于处理对计算属性的赋值操作
-   * @param {boolean} [options.immediate=false] - 是否立即计算，默认为false，采用懒计算模式
-   * @param {boolean | EffectScope} [options.scope=true] - 是否添加到当前作用域，默认为true，作用域销毁时自动清理
+   * 副作用句柄，用于管理计算属性的副作用
    */
-  constructor(getter: ComputedGetter<T>, options: ComputedOptions<T> = {}) {
+  private readonly _effect: EffectHandle
+
+  constructor(getter: ComputedGetter<T>, debuggerOptions?: DebuggerOptions)
+
+  constructor(
+    options: { get: ComputedGetter<T>; set: ComputedSetter<T> },
+    debuggerOptions?: DebuggerOptions
+  )
+
+  constructor(
+    getter: ComputedGetter<T> | { get: ComputedGetter<T>; set: ComputedSetter<T> },
+    debuggerOptions?: DebuggerOptions
+  )
+
+  constructor(
+    getter: ComputedGetter<T> | { get: ComputedGetter<T>; set: ComputedSetter<T> },
+    debuggerOptions?: DebuggerOptions
+  ) {
     // 处理作用域
-    const { immediate = false, setter, ...effectOptions } = options
-    super(effectOptions)
-    this._getter = getter
-    this._setter = options.setter
-    // 立即计算
-    if (immediate) this.recomputed()
+    addToActiveScope(this)
+    if (isFunction(getter)) {
+      this._getter = getter
+    } else if (isObject(getter)) {
+      this._getter = getter.get
+      this._setter = getter.set
+    } else {
+      throw new Error('[Computed] getter must be a function')
+    }
+    this._effect = () => {
+      if (!this.dirty) {
+        this.dirty = true
+        triggerSignal(this, 'dirty')
+      }
+    }
+    if (__DEV__) {
+      if (debuggerOptions) bindDebugHook(this._effect, debuggerOptions)
+    }
   }
 
   /**
    * 计算结果缓存
    * @private
    */
-  private _value: T = undefined as T
+  private _value!: T
 
   /**
    * 获取计算结果
@@ -138,7 +166,7 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
    */
   get value(): T {
     // 首次访问或手动调用后，设置副作用
-    if (this.dirty) this.recomputed()
+    if (this.dirty) this.immediate()
     // 追踪对value属性的访问
     trackSignal(this, 'get')
     return this._value
@@ -154,7 +182,11 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
    */
   set value(newValue: T) {
     if (this._setter) {
-      this._setter(newValue)
+      try {
+        this._setter(newValue)
+      } catch (e) {
+        reportEffectError(this, e, 'computed.setter')
+      }
     } else {
       logger.warn(
         'Computed properties should not be modified directly unless a setter function is defined.'
@@ -162,14 +194,9 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
     }
   }
 
-  /**
-   * @internal 依赖系统触发，手动调用会强制重新计算。
-   */
-  run() {
-    if (!this.dirty) {
-      this.dirty = true
-      triggerSignal(this, 'dirty')
-    }
+  dispose(): void {
+    removeFromOwnerScope(this)
+    clearEffectLinks(this._effect)
   }
 
   /**
@@ -177,7 +204,7 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
    *
    * @returns {string} 字符串表示
    */
-  override toString(): string {
+  toString(): string {
     const val = this.value
     if (val?.toString && isFunction(val.toString)) {
       return val.toString()
@@ -208,19 +235,22 @@ export class Computed<T> extends Effect implements RefSignal<T>, DepEffectLike {
   }
 
   /**
-   * 重新计算（依赖追踪）
-   *
-   * 收集getter函数执行过程中的依赖并建立订阅关系
+   * 立即执行计算的方法
+   * 该方法会触发重新计算并返回当前实例，支持链式调用
+   * @returns {this} 返回当前实例，以便支持链式调用
    */
-  private recomputed(): void {
+  immediate(): this {
+    // 调用重新计算方法
     collectSignal(() => {
       try {
         this._value = this._getter(this._value)
       } catch (e) {
-        this.reportError(e, 'computed.getter')
+        reportEffectError(this, e, 'computed.getter')
       } finally {
         this.dirty = false
       }
-    }, this)
+    }, this._effect)
+    // 返回当前实例，支持链式调用
+    return this
   }
 }

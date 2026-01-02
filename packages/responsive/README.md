@@ -87,8 +87,8 @@ yarn add @vitarx/responsive
 | signal.ref      | shallowRef             | 函数 | 创建浅层响应式引用                   |
 | signal.ref      | propertyRef            | 函数 | 创建一个属性引用对象                  |
 | signal.computed | computed               | 函数 | 创建一个计算属性                    |
-| signal.computed | computedWithSetter     | 函数 | 创建一个带有setter的计算属性           |
 | signal.computed | isComputed             | 函数 | 判断是否为计算属性对象                 |
+| signal.computed | Computed               | 类  | 计算属性信号类                     |
 | utils           | isCallableSignal       | 函数 | 检查给定的值是否为可调用信号              |
 | utils           | isRefSignal            | 函数 | 判断是否为值信号                    |
 | utils           | isRef                  | 函数 | 判断值是否实现Ref接口                |

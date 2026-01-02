@@ -11,15 +11,6 @@ describe('signal/computed/computed', () => {
       expect(computed).toBeInstanceOf(Computed)
       expect(computed.dirty).toBe(true)
     })
-
-    it('should accept options', () => {
-      const getter = vi.fn(() => 42)
-      const setter = vi.fn()
-      const options = { setter, immediate: true }
-      const computed = new Computed(getter, options)
-
-      expect(computed).toBeInstanceOf(Computed)
-    })
   })
 
   describe('value', () => {
@@ -56,7 +47,7 @@ describe('signal/computed/computed', () => {
       const setter = vi.fn(newValue => {
         source.value = newValue / 2
       })
-      const computed = new Computed(() => source.value * 2, { setter })
+      const computed = new Computed({ get: () => source.value * 2, set: setter })
 
       computed.value = 10
 
@@ -90,7 +81,7 @@ describe('signal/computed/computed', () => {
         'triggerSignal'
       )
 
-      computed.run()
+      computed['_effect']()
 
       expect(computed.dirty).toBe(true)
       expect(triggerSignalSpy).toHaveBeenCalledWith(computed, 'dirty')
@@ -106,7 +97,7 @@ describe('signal/computed/computed', () => {
         'triggerSignal'
       )
 
-      computed.run()
+      computed['_effect']()
 
       expect(computed.dirty).toBe(true)
       expect(triggerSignalSpy).not.toHaveBeenCalled()
@@ -155,20 +146,6 @@ describe('signal/computed/computed', () => {
       const _ = computed.value
 
       expect(collectSignalSpy).toHaveBeenCalled()
-    })
-
-    it('should report error when getter throws', () => {
-      const error = new Error('Test error')
-      const getter = vi.fn(() => {
-        throw error
-      })
-      const computed = new Computed(getter)
-      const reportErrorSpy = vi.spyOn(computed as any, 'reportError').mockImplementation(() => {})
-
-      // Access value to trigger recomputation
-      const _ = computed.value
-
-      expect(reportErrorSpy).toHaveBeenCalledWith(error, 'computed.getter')
     })
   })
 })
