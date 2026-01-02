@@ -1,4 +1,4 @@
-import { type EffectHandle, unlinkSignalFromEffect } from './dep.js'
+import { destroyDepLink, type EffectHandle } from './dep.js'
 import { DEP_INDEX_MAP, DEP_VERSION, EFFECT_DEP_HEAD } from './symbol.js'
 
 let currentActiveEffect: EffectHandle | null = null
@@ -80,7 +80,7 @@ function finalizeDeps(effect: EffectHandle): void {
       const index = effect[DEP_INDEX_MAP]
       if (index) index.delete(link.signal)
       // 销毁当前依赖链接
-      unlinkSignalFromEffect(link)
+      destroyDepLink(link)
     }
     // 移动到下一个链接
     link = next

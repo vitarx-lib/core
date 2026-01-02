@@ -1,6 +1,6 @@
 import { getActiveEffect, isTrackingPaused } from './collect.js'
 import { type ExtraDebugData, type SignalOpType, triggerOnTrack } from './debug.js'
-import { DepLink, type EffectHandle, linkSignalToEffect, type Signal } from './dep.js'
+import { createDepLink, DepLink, type EffectHandle, type Signal } from './dep.js'
 import { DEP_INDEX_MAP, DEP_VERSION } from './symbol.js'
 
 /**
@@ -21,7 +21,7 @@ function trackHandler(effect: EffectHandle, signal: Signal): void {
 
   // 如果不存在依赖链接，则创建一个新的依赖链接
   if (!link) {
-    link = linkSignalToEffect(effect, signal) // 创建新的依赖链接
+    link = createDepLink(effect, signal) // 创建新的依赖链接
     // 如果存在依赖索引映射，则将新创建的链接存入映射中
     if (index) index.set(signal, link)
   }

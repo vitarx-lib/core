@@ -208,7 +208,7 @@ export function destroyDepLink(link: DepLink): void {
   effect[DEP_INDEX_MAP]?.delete(signal)
 }
 /**
- * 移除 Effect 和所有 Signal 关联
+ * 清除 Effect 依赖链
  */
 export function clearEffectLinks(effect: EffectHandle): void {
   let link = effect[EFFECT_DEP_HEAD]
@@ -224,7 +224,7 @@ export function clearEffectLinks(effect: EffectHandle): void {
       undefined
 }
 /**
- * 移除 Signal 和所有 Effect 关联
+ * 清除 Signal 依赖链
  */
 export function clearSignalLinks(signal: Signal): void {
   let link = signal[SIGNAL_DEP_HEAD]
