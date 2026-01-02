@@ -1,7 +1,7 @@
 import { isFunction, isObject, logger } from '@vitarx/utils'
 import {
   addToActiveScope,
-  bindDebugHook,
+  bindDebuggerOptions,
   clearEffectLinks,
   collectSignal,
   type DebuggerOptions,
@@ -28,46 +28,6 @@ export type ComputedGetter<T> = (oldValue: T) => T
  * @template T - 同计算结果的类型
  */
 export type ComputedSetter<T> = (newValue: T) => void
-
-/**
- * 计算属性的选项
- *
- * @template T - 计算结果的类型
- */
-export interface ComputedOptions<T> extends DebuggerOptions {
-  /**
-   * 计算属性的setter处理函数
-   *
-   * 计算属性一般是不允许修改的，如果你需要处理修改计算属性值，可以传入setter参数，
-   *
-   * setter参数是一个函数，接受一个参数，就是新的值，你可以在这里进行一些操作，比如修改依赖的值，但是不能修改计算属性的值。
-   *
-   * @example
-   *
-   * ```ts
-   * const count = ref(0)
-   * const double = computed(() => count.value * 2, {
-   *   setter: (newValue) => {
-   *     count.value = newValue / 2
-   *   }
-   * })
-   * double.value = 10
-   * console.log(double.value) // 5
-   * ```
-   *
-   * @param newValue - 新的值
-   */
-  setter?: ComputedSetter<T>
-  /**
-   * 立即计算
-   *
-   * 如果设置为true，则在创建时立即执行getter并计算结果。
-   * 默认为false，采用Vue的懒计算模式，在第一次访问value时才进行计算。
-   *
-   * @default false
-   */
-  immediate?: boolean
-}
 
 /**
  * # 计算属性
@@ -144,7 +104,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
       }
     }
     if (__DEV__) {
-      if (debuggerOptions) bindDebugHook(this._effect, debuggerOptions)
+      if (debuggerOptions) bindDebuggerOptions(this._effect, debuggerOptions)
     }
   }
 
