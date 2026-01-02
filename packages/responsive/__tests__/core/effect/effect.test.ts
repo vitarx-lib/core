@@ -14,7 +14,7 @@ describe('effect/effect', () => {
       expect(effect.state).toBe('active')
       expect(effect.state === 'active').toBe(true)
       expect(effect.state === 'paused').toBe(false)
-      expect(effect.state === 'deprecated').toBe(false)
+      expect(effect.state === 'disposed').toBe(false)
     })
 
     it('should be added to active scope when scope option is true', () => {
@@ -30,7 +30,7 @@ describe('effect/effect', () => {
 
     it('should be added to specified scope when scope option is an EffectScope', () => {
       const scope = new EffectScope()
-      const effect = new TestEffect({ scope })
+      const effect = new TestEffect(scope)
       // The effect should be added to the specified scope
       expect(scope.effects.length).toBe(1)
       expect(scope.effects[0]).toBe(effect)
@@ -39,7 +39,7 @@ describe('effect/effect', () => {
     it('should not be added to any scope when scope option is false', () => {
       const scope = new EffectScope()
       scope.run(() => {
-        const effect = new TestEffect({ scope: false })
+        const effect = new TestEffect(false)
         // The effect should not be added to any scope
         expect(scope.effects.length).toBe(0)
       })
@@ -50,8 +50,8 @@ describe('effect/effect', () => {
       expect(effect.state).toBe('active')
 
       effect.dispose()
-      expect(effect.state).toBe('deprecated')
-      expect(effect.state).toBe('deprecated')
+      expect(effect.state).toBe('disposed')
+      expect(effect.state).toBe('disposed')
     })
 
     it('should throw error when disposing already disposed effect', () => {
@@ -60,7 +60,7 @@ describe('effect/effect', () => {
 
       expect(() => {
         effect.dispose()
-      }).toThrow('Effect is already deprecated.')
+      }).toThrow('Effect is already disposed.')
     })
 
     it('should pause and resume correctly', () => {

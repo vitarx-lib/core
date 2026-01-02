@@ -23,7 +23,7 @@ describe('effect/scope', () => {
 
     it('should add effects to the scope', () => {
       const scope = new EffectScope()
-      const effect = new TestEffect({ scope: scope })
+      const effect = new TestEffect(scope)
 
       expect(scope.effects.length).toBe(1)
       expect(scope.effects.includes(effect)).toBe(true)
@@ -31,20 +31,20 @@ describe('effect/scope', () => {
 
     it('should dispose all effects when scope is disposed', () => {
       const scope = new EffectScope()
-      const effect1 = new TestEffect({ scope: scope })
-      const effect2 = new TestEffect({ scope: scope })
+      new TestEffect(scope)
+      new TestEffect(scope)
 
       expect(scope.effects.length).toBe(2)
 
       scope.dispose()
 
-      expect(scope.state).toBe('deprecated')
+      expect(scope.state).toBe('disposed')
     })
 
     it('should pause and resume all effects when scope is paused and resumed', () => {
       const scope = new EffectScope()
-      const effect1 = new TestEffect({ scope: scope })
-      const effect2 = new TestEffect({ scope: scope })
+      new TestEffect(scope)
+      new TestEffect(scope)
 
       expect(scope.state).toBe('active')
 
@@ -73,7 +73,7 @@ describe('effect/scope', () => {
       const scope = new EffectScope()
 
       scope.run(() => {
-        new TestEffect({ scope: true }) // This should be added to the scope
+        new TestEffect(true) // This should be added to the scope
       })
 
       expect(scope.effects.length).toBe(1)

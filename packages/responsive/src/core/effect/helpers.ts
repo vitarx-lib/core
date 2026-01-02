@@ -1,5 +1,5 @@
 import { Context } from '../context/index.js'
-import { type EffectLike, EffectScope, type EffectScopeOptions } from './scope.js'
+import { type DisposableEffect, EffectScope, type EffectScopeOptions } from './scope.js'
 import { ACTIVE_SCOPE, OWNER_SCOPE } from './symbol.js'
 
 /**
@@ -28,7 +28,7 @@ export function getActiveScope(): EffectScope | undefined {
  * @param effect - 需要获取作用域的effect对象
  * @returns - 返回effect对应的作用域对象，如果不存在则返回undefined
  */
-export function getOwnerScope(effect: EffectLike): EffectScope | undefined {
+export function getOwnerScope(effect: DisposableEffect): EffectScope | undefined {
   // 通过effect对象的CURRENT_SCOPE属性获取其对应的作用域
   return effect[OWNER_SCOPE]
 }
@@ -37,7 +37,7 @@ export function getOwnerScope(effect: EffectLike): EffectScope | undefined {
  * 向当前作用域添加一个副作用函数
  * @param effect - 要添加的副作用函数，类型为EffectLike
  */
-export function addToActiveScope(effect: EffectLike): void {
+export function addToActiveScope(effect: DisposableEffect): void {
   // 获取当前活跃的作用域
   const activeScope = getActiveScope()
   // 如果存在活跃作用域，则将副作用函数添加到该作用域中
@@ -48,7 +48,7 @@ export function addToActiveScope(effect: EffectLike): void {
  * 从当前作用域中移除指定的副作用函数
  * @param effect - 需要移除的副作用函数对象，必须符合EffectLike接口
  */
-export function removeFromOwnerScope(effect: EffectLike): void {
+export function removeFromOwnerScope(effect: DisposableEffect): void {
   // 获取副作用函数绑定的当前作用域
   const currentScope = effect[OWNER_SCOPE]
   // 如果存在当前作用域，则从作用域中移除该副作用函数
@@ -63,7 +63,7 @@ export function removeFromOwnerScope(effect: EffectLike): void {
  * @param e - 发生的未知错误
  * @param source - 错误来源的字符串描述
  */
-export function reportEffectError(effect: EffectLike, e: unknown, source: string) {
+export function reportEffectError(effect: DisposableEffect, e: unknown, source: string) {
   // 检查effect是否存在当前作用域
   if (effect[OWNER_SCOPE]) {
     // 如果存在当前作用域，则调用该作用域的错误处理方法

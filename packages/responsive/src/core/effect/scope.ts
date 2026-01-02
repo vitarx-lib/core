@@ -37,19 +37,19 @@ export interface EffectScopeOptions {
  * 定义了副作用效果应该具备的基本方法，这些方法用于管理副作用的生命周期。
  * 所有方法都是可选的，允许实现部分或全部功能。
  */
-export interface EffectLike {
+export interface DisposableEffect {
   /**
    * 双向链表节点引用
    *
    * @internal  由EffectScope注入和使用—— 注意：不可直接修改
    */
-  [PREV_EFFECT]?: EffectLike
+  [PREV_EFFECT]?: DisposableEffect
   /**
    * 双向链表节点引用
    *
    * @internal 由EffectScope注入和使用 —— 注意：不可直接修改
    */
-  [NEXT_EFFECT]?: EffectLike
+  [NEXT_EFFECT]?: DisposableEffect
   /**
    * EffectScope 实例
    *
@@ -62,7 +62,7 @@ export interface EffectLike {
    * 当副作用不再需要时调用此方法来清理相关资源，如取消订阅、清除定时器等。
    * 实现此方法可以确保不会发生内存泄漏。
    */
-  dispose?: () => void
+  dispose: () => void
   /**
    * 暂停副作用的方法
    *
@@ -100,9 +100,9 @@ export class EffectScope {
    */
   private _callbacks?: Map<'dispose' | 'pause' | 'resume', Set<VoidCallback>>
   /** 链表头部 */
-  private _head?: EffectLike
+  private _head?: DisposableEffect
   /** 链表尾部 */
-  private _tail?: EffectLike
+  private _tail?: DisposableEffect
   /** 当前状态 */
   private _state: EffectState = 'active'
   /**
@@ -151,10 +151,10 @@ export class EffectScope {
    * @warning 仅测试环境有用，开发环境返回固定的空数组
    * @returns {Effect[]} 包含所有效果的数组
    */
-  get effects(): EffectLike[] {
+  get effects(): DisposableEffect[] {
     if (__DEV__) {
       // 初始化一个空数组用于存放效果
-      const list: EffectLike[] = []
+      const list: DisposableEffect[] = []
       // 从链表头部开始遍历
       let node = this._head
       // 遍历整个效果链表
@@ -202,7 +202,7 @@ export class EffectScope {
    * 向效果链表中添加一个新的效果
    * @param effect - 要添加的效果对象
    */
-  add(effect: EffectLike) {
+  add(effect: DisposableEffect) {
     // 如果 effect 已经属于当前 scope，直接返回
     if (effect[OWNER_SCOPE] === this) return
     // 如果 effect 当前属于其他 scope，抛出错误而不是静默切换
@@ -228,7 +228,7 @@ export class EffectScope {
    * 从效果链表中移除指定的效果节点
    * @param effect - 需要被移除的效果节点
    */
-  remove(effect: EffectLike) {
+  remove(effect: DisposableEffect) {
     if (!effect[OWNER_SCOPE]) return
     // 将当前效果的_scope指针置为undefined，表示它不再属于任何作用域
     effect[OWNER_SCOPE] = undefined
@@ -280,11 +280,11 @@ export class EffectScope {
    * 这是链表的销毁方法，执行后链表将不再可用
    */
   dispose(): void {
-    if (this.state === 'deprecated') {
-      logger.warn(`[EffectScope][${String(this.name)}] has been deprecated.`)
+    if (this.state === 'disposed') {
+      logger.warn(`[EffectScope][${String(this.name)}] has been disposed.`)
       return
     }
-    this._state = 'deprecated'
+    this._state = 'disposed'
     let node = this._head // 从链表头节点开始遍历
     while (node) {
       const next = node[NEXT_EFFECT] // 保存下一个节点的引用，防止当前节点释放后无法访问
@@ -360,8 +360,8 @@ export class EffectScope {
    * @private - 表示此方法仅在类内部可见
    */
   private addCallback(cb: VoidCallback, type: 'dispose' | 'pause' | 'resume') {
-    if (this.state === 'deprecated') {
-      throw new Error(`[EffectScope][${String(this.name)}] EffectScope is already deprecated.`)
+    if (this.state === 'disposed') {
+      throw new Error(`[EffectScope][${String(this.name)}] EffectScope is already disposed.`)
     }
     if (!this._callbacks) this._callbacks = new Map() // 如果回调映射不存在，则创建一个新的
     const set = this._callbacks.get(type) || new Set() // 获取或创建回调集合

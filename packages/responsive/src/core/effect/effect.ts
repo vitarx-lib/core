@@ -1,42 +1,29 @@
 import { getActiveScope, removeFromOwnerScope, reportEffectError } from './helpers.js'
-import { type EffectLike, EffectScope } from './scope.js'
+import { type DisposableEffect, EffectScope } from './scope.js'
 
 /**
  * 副作用状态枚举
  *
  * - active: 活跃状态，表示当前效果正在运行。
  * - paused: 暂停状态，表示当前效果已暂停。
- * - deprecated: 弃用状态，表示当前效果已被弃用。
+ * - disposed: 弃用状态，表示当前效果已被弃用。
  */
-export type EffectState = 'active' | 'paused' | 'deprecated'
-export interface EffectOptions {
-  /**
-   * 作用域
-   *
-   * - ture 表示当前效果将自动加入当前作用域。
-   * - false 表示当前效果将不会加入任何作用域。
-   * - EffectScope 对象 ：表示当前效果将加入指定的作用域。
-   *
-   * @default true
-   */
-  scope?: EffectScope | boolean
-}
+export type EffectState = 'active' | 'paused' | 'disposed'
 
 /**
  * 通用型副作用基类
  *
  * 设计原则：
  * - 保持非常轻量，仅管理状态与生命周期钩子；
- * - 提供受保护的 beforeX 钩子供子类实现自定义清理/暂停/恢复逻辑；
+ * - 提供受保护的 beforeX / afterX 钩子供子类实现自定义清理/暂停/恢复逻辑；
  *
  * 约定：
  * - 副作用发生非预期异常应该主动捕获并交由 reportError 方法进行向上报告。
  */
-export abstract class Effect implements EffectLike {
+export abstract class Effect implements DisposableEffect {
   /** 当前状态 */
   private _state: EffectState = 'active'
-  constructor(options?: EffectOptions) {
-    const scope = options?.scope ?? true
+  constructor(scope: EffectScope | boolean = true) {
     if (scope === true) {
       getActiveScope()?.add(this)
     } else if (typeof scope === 'object') {
@@ -67,18 +54,18 @@ export abstract class Effect implements EffectLike {
   /**
    * 判断当前状态是否为弃用状态
    */
-  get isDeprecated(): boolean {
-    return this._state === 'deprecated'
+  get isDisposed(): boolean {
+    return this._state === 'disposed'
   }
 
   /**
    * 弃用当前副作用实例
    */
   dispose(): void {
-    if (this.isDeprecated) throw new Error('Effect is already deprecated.')
+    if (this.isDisposed) throw new Error('Effect is already disposed.')
 
     this.beforeDispose?.()
-    this._state = 'deprecated'
+    this._state = 'disposed'
     // 从作用域链表中删除自己
     removeFromOwnerScope(this)
     this.afterDispose?.()
