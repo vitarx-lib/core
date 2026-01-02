@@ -10,16 +10,16 @@ import {
 import {
   clearEffectLinks,
   clearSignalLinks,
+  createDepLink,
   DepLink,
+  destroyDepLink,
   type EffectHandle,
   hasLinkedEffect,
   hasLinkedSignal,
   iterateLinkedEffects,
   iterateLinkedSignals,
-  linkSignalToEffect,
   ref,
-  type Signal,
-  unlinkSignalFromEffect
+  type Signal
 } from '../../../src/index.js'
 
 describe('depend/link', () => {
@@ -28,7 +28,7 @@ describe('depend/link', () => {
       const signal = ref(42)
       const effect = { run: vi.fn() }
 
-      const link = linkSignalToEffect(effect as any, signal)
+      const link = createDepLink(effect as any, signal)
 
       // Check link properties
       expect(link.signal).toBe(signal)
@@ -48,8 +48,8 @@ describe('depend/link', () => {
       const signal2 = ref(2)
       const effect = { run: vi.fn() }
 
-      const link1 = linkSignalToEffect(effect as any, signal1)
-      const link2 = linkSignalToEffect(effect as any, signal2)
+      const link1 = createDepLink(effect as any, signal1)
+      const link2 = createDepLink(effect as any, signal2)
 
       // Check that effect has both links in its dependency list
       expect((effect as any)[EFFECT_DEP_HEAD]).toBe(link1)
@@ -72,14 +72,14 @@ describe('depend/link', () => {
       const signal = ref(42)
       const effect = { run: vi.fn() }
 
-      const link = linkSignalToEffect(effect as any, signal)
+      const link = createDepLink(effect as any, signal)
 
       // Verify link exists
       expect((effect as any)[EFFECT_DEP_HEAD]).toBe(link)
       expect((signal as any)[SIGNAL_DEP_HEAD]).toBe(link)
 
       // Destroy the link
-      unlinkSignalFromEffect(link)
+      destroyDepLink(link)
 
       // Verify link is removed
       expect((effect as any)[EFFECT_DEP_HEAD]).toBeUndefined()
@@ -101,8 +101,8 @@ describe('depend/link', () => {
       const signal2 = ref(2)
       const effect = { run: vi.fn() }
 
-      linkSignalToEffect(effect as any, signal1)
-      linkSignalToEffect(effect as any, signal2)
+      createDepLink(effect as any, signal1)
+      createDepLink(effect as any, signal2)
 
       // Verify dependencies exist
       expect((effect as any)[EFFECT_DEP_HEAD]).toBeDefined()
@@ -125,8 +125,8 @@ describe('depend/link', () => {
       const effect1 = { run: vi.fn() }
       const effect2 = { run: vi.fn() }
 
-      linkSignalToEffect(effect1 as any, signal)
-      linkSignalToEffect(effect2 as any, signal)
+      createDepLink(effect1 as any, signal)
+      createDepLink(effect2 as any, signal)
 
       // Verify effects exist
       expect((signal as any)[SIGNAL_DEP_HEAD]).toBeDefined()
@@ -147,8 +147,8 @@ describe('depend/link', () => {
       const effect1 = { run: vi.fn() }
       const effect2 = { run: vi.fn() }
 
-      linkSignalToEffect(effect1 as any, signal)
-      linkSignalToEffect(effect2 as any, signal)
+      createDepLink(effect1 as any, signal)
+      createDepLink(effect2 as any, signal)
 
       const effects = Array.from(iterateLinkedEffects(signal))
 
@@ -172,8 +172,8 @@ describe('depend/link', () => {
       const signal2 = ref(2)
       const effect = { run: vi.fn() }
 
-      linkSignalToEffect(effect as any, signal1)
-      linkSignalToEffect(effect as any, signal2)
+      createDepLink(effect as any, signal1)
+      createDepLink(effect as any, signal2)
 
       const signals = Array.from(iterateLinkedSignals(effect as any))
 

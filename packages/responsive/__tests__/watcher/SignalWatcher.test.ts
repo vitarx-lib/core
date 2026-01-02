@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ref, RefSignalWatcher } from '../../src/index.js'
+import { createDepLink, ref, RefSignalWatcher } from '../../src/index.js'
 
 describe('watcher/SignalWatcher', () => {
   describe('constructor', () => {
@@ -17,7 +17,7 @@ describe('watcher/SignalWatcher', () => {
       const callback = vi.fn()
       const createDepLinkSpy = vi.spyOn(
         await import('../../src/core/signal/index.js'),
-        'linkSignalToEffect'
+        'createDepLink'
       )
 
       new RefSignalWatcher(signal, callback, {})

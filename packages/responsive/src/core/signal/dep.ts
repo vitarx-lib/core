@@ -142,7 +142,7 @@ export class DepLink {
  * - 使用 EFFECT_DEP_HEAD/EFFECT_DEP_TAIL 和 SIGNAL_DEP_HEAD/SIGNAL_DEP_TAIL 作为链表头尾的标记
  * - 维护了双向链表的前驱(ePrev/sigPrev)和后继(eNext/sigNext)指针
  */
-export function linkSignalToEffect(effect: EffectHandle, signal: Signal): DepLink {
+export function createDepLink(effect: EffectHandle, signal: Signal): DepLink {
   // 创建新的链表节点
   const link = new DepLink(signal, effect)
 
@@ -179,7 +179,7 @@ export function linkSignalToEffect(effect: EffectHandle, signal: Signal): DepLin
  *
  * @internal 内部核心助手函数
  */
-export function unlinkSignalFromEffect(link: DepLink): void {
+export function destroyDepLink(link: DepLink): void {
   const { effect, signal } = link
 
   // -------------------
@@ -214,7 +214,7 @@ export function clearEffectLinks(effect: EffectHandle): void {
   let link = effect[EFFECT_DEP_HEAD]
   while (link) {
     const next = link.eNext
-    unlinkSignalFromEffect(link)
+    destroyDepLink(link)
     link = next
   }
   effect[DEP_VERSION] =
@@ -230,7 +230,7 @@ export function clearSignalLinks(signal: Signal): void {
   let link = signal[SIGNAL_DEP_HEAD]
   while (link) {
     const next = link.sigNext
-    unlinkSignalFromEffect(link)
+    destroyDepLink(link)
     link = next
   }
   signal[SIGNAL_DEP_HEAD] = signal[SIGNAL_DEP_TAIL] = undefined
