@@ -88,27 +88,52 @@ function finalizeDeps(effect: EffectHandle): void {
 }
 
 /**
- * 收集信号函数，用于追踪函数执行期间的依赖关系
+ * 收集信号，用于追踪和建立函数执行期间的依赖关系
+ *
+ * 此 API 偏向于底层实现，开发者应使用上层API，如 watchEffect、watch 等。
+ *
+ * @example
+ * ```typescript
+ * const count = ref(1)
+ * // 收集信号，并建立依赖
+ * collectSignal(() => {
+ *   console.log(count.value) // 输出：1
+ * })
+ * count.value++ // 输出：2
+ *
+ * // 自定义句柄/回调函数
+ * const handle = ()=>{console.log('依赖变化了')}
+ * collectSignal(() => count.value,handle)
+ * count.value++ // 输出：3 依赖变化了
+ *
+ * // 获取依赖链
+ * const effectDeps = iterateLinkedSignals(handle) // 可迭代的信号依赖链
+ * const signalDeps = iterateLinkedEffects(count) // 可迭代的副作用依赖链
+ *
+ * // 清除依赖关系，下面仅是示例，实际上的关联和清除都是双向的，仅需要一侧调用即可
+ * clearEffectLinks(handle) // 清除副作用链接的所有信号
+ * clearSignalLinks(count) // 清除信号链接的所有副作用
+ * ```
  *
  * @template T - 函数返回值的类型
- * @param fn - 需要执行的函数，其返回值将被返回
- * @param effect - 依赖效果对象，用于追踪依赖关系
+ * @param effect - 需要执行的副作用函数，收集信号
+ * @param [handle] - 副作用句柄，绑定给信号，如果不传入则默认为 effect
  * @returns {T} 返回执行 fn 函数的结果
  */
-export function collectSignal<T>(fn: () => T, effect: EffectHandle): T {
+export function collectSignal<T>(effect: () => T, handle: EffectHandle = effect): T {
   // 设置当前活动的效果为传入的 effect
-  currentActiveEffect = effect
+  currentActiveEffect = handle
   // 获取并更新效果对象的版本号
-  const oldVersion = effect[DEP_VERSION]
-  effect[DEP_VERSION] = (oldVersion ?? 0) + 1
+  const oldVersion = handle[DEP_VERSION]
+  handle[DEP_VERSION] = (oldVersion ?? 0) + 1
   try {
     // 执行传入的函数并返回其结果
-    return fn()
+    return effect()
   } finally {
     // 无论执行成功与否，最终都会执行以下代码
     // 重置当前活动的效果为 null
     currentActiveEffect = null
     // 如果存在旧版本号，则完成依赖关系的最终处理
-    if (oldVersion) finalizeDeps(effect)
+    if (oldVersion) finalizeDeps(handle)
   }
 }
