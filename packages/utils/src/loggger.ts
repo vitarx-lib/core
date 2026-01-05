@@ -169,7 +169,7 @@ export class Logger {
     if (source && this.config.includeSourceInfo) {
       const { fileName, lineNumber, columnNumber } = source
       const shortFileName = fileName.split('/').pop() || fileName
-      return `${prefix} ${message} \nat ${shortFileName}:${lineNumber}:${columnNumber}`
+      return `${prefix} ${message}\n    at (${shortFileName}:${lineNumber}:${columnNumber})`
     }
 
     return `${prefix} ${message}`
