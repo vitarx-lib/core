@@ -237,3 +237,30 @@ export class Logger {
  * vitarx框架共享的日志助手实例
  */
 export const logger = new Logger()
+
+/**
+ * 获取当前调用栈的字符串表示
+ *
+ * @example
+ * ```ts
+ * console.log(getStackTrace())
+ * // 输出结果：
+ * // at getStackTrace (file:///path/to/your/file.js:123:45)
+ * ```
+ *
+ * @param skip - 要跳过的堆栈帧数量，默认为1，跳过当前方法本身
+ * @returns {string} 返回格式化后的调用栈字符串，如果无法获取则返回空字符串
+ */
+export function getStackTrace(skip: number = 1): string {
+  // 创建一个Error对象以获取调用栈信息
+  const err = new Error()
+  // 获取Error对象的堆栈轨迹
+  const stack = err.stack
+  // 如果没有堆栈信息，直接返回空字符串
+  if (!stack) return ''
+  // 将堆栈轨迹按换行符分割成多行
+  const lines = stack.split('\n')
+  // lines[0] 通常是 "Error"
+  // 从 skip + 1 开始裁剪，跳过指定数量的堆栈帧
+  return '\n' + lines.slice(skip + 1).join('\n')
+}
