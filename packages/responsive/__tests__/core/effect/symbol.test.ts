@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  ACTIVE_SCOPE,
-  NEXT_EFFECT,
-  OWNER_SCOPE,
-  PREV_EFFECT
-} from '../../../src/core/effect/symbol.js'
+import { NEXT_EFFECT, OWNER_SCOPE, PREV_EFFECT } from '../../../src/core/effect/symbol.js'
 
 describe('effect/symbol', () => {
   describe('PREV_EFFECT', () => {
@@ -34,16 +29,6 @@ describe('effect/symbol', () => {
 
     it('should have correct description', () => {
       expect(OWNER_SCOPE.toString()).toBe('Symbol(__v_effect:owner_scope)')
-    })
-  })
-
-  describe('ACTIVE_SCOPE', () => {
-    it('should be a Symbol', () => {
-      expect(typeof ACTIVE_SCOPE).toBe('symbol')
-    })
-
-    it('should have correct description', () => {
-      expect(ACTIVE_SCOPE.toString()).toBe('Symbol(__v_effect:active_context)')
     })
   })
 })
