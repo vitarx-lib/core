@@ -1,5 +1,5 @@
-import { getActiveScope, removeFromOwnerScope, reportEffectError } from './helpers.js'
-import { type DisposableEffect, EffectScope } from './scope.js'
+import { removeFromOwnerScope, reportEffectError } from './helpers.js'
+import { type DisposableEffect, EffectScope, getActiveScope } from './scope.js'
 
 /**
  * 副作用状态枚举

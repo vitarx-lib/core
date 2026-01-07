@@ -38,11 +38,6 @@ yarn add @vitarx/responsive
 
 | 模块              | 导出项                   | 类型 | 描述                          |
 |-----------------|-----------------------|----|-----------------------------|
-| context         | Context               | 类  | 上下文管理器静态类                   |
-| context         | getContext            | 函数 | 获取指定标签的上下文对象                |
-| context         | runInContext          | 函数 | 在指定上下文中同步执行函数               |
-| context         | runContext            | 函数 | runInContext的别名             |
-| context         | withAsyncContext      | 函数 | 在异步任务中管理上下文                 |
 | depend          | getActiveEffect       | 函数 | 获取当前活动的副作用函数                |
 | depend          | isTrackingPaused      | 函数 | 判断跟踪是否已暂停                   |
 | depend          | withSuspendedTracking | 函数 | 暂停依赖追踪的辅助函数                 |

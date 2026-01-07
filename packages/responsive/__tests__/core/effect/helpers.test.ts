@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ACTIVE_SCOPE } from '../../../src/core/effect/symbol.js'
 import {
   addToActiveScope,
-  Context,
   createScope,
   EffectScope,
   getActiveScope,
@@ -28,7 +26,7 @@ describe('effect/helpers', () => {
   describe('getActiveScope', () => {
     it('should return the active scope from context', () => {
       const scope = new EffectScope()
-      Context.run(ACTIVE_SCOPE, scope, () => {
+      scope.run(() => {
         expect(getActiveScope()).toBe(scope)
       })
     })
@@ -65,8 +63,7 @@ describe('effect/helpers', () => {
       const scope = new EffectScope()
       const addSpy = vi.spyOn(scope, 'add')
       const effect = { run: vi.fn(), state: 'active' }
-
-      Context.run(ACTIVE_SCOPE, scope, () => {
+      scope.run(() => {
         addToActiveScope(effect as any)
         expect(addSpy).toHaveBeenCalledWith(effect)
       })

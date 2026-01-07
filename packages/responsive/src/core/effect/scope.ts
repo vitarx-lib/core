@@ -1,7 +1,6 @@
 import { logger, type VoidCallback } from '@vitarx/utils'
-import { runInContext } from '../context/index.js'
 import { type EffectState } from './effect.js'
-import { ACTIVE_SCOPE, NEXT_EFFECT, OWNER_SCOPE, PREV_EFFECT } from './symbol.js'
+import { NEXT_EFFECT, OWNER_SCOPE, PREV_EFFECT } from './symbol.js'
 
 /**
  * 作用域错误处理函数
@@ -78,6 +77,8 @@ export interface DisposableEffect {
    */
   resume?: () => void
 }
+
+let currentActiveScope: EffectScope | undefined
 
 /**
  * EffectScope 作用域
@@ -255,7 +256,12 @@ export class EffectScope {
    * @returns {T} 函数执行的结果
    */
   run<T>(fn: () => T): T {
-    return runInContext(ACTIVE_SCOPE, this, fn)
+    try {
+      currentActiveScope = this
+      return fn()
+    } finally {
+      currentActiveScope = undefined
+    }
   }
 
   /**
@@ -386,3 +392,11 @@ export class EffectScope {
     }
   }
 }
+
+/**
+ * 获取当前活跃的作用域(EffectScope)
+ * 该函数用于从上下文中获取当前的作用域对象
+ *
+ * @returns {EffectScope | undefined} 返回当前的作用域(EffectScope)对象，如果不存在则返回undefined
+ */
+export const getActiveScope = (): EffectScope | undefined => currentActiveScope

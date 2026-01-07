@@ -1,4 +1,4 @@
-import { getActiveScope } from './helpers.js'
+import { getActiveScope } from './scope.js'
 
 /**
  * 在作用域销毁时执行回调函数的通用函数

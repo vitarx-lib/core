@@ -1,12 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ACTIVE_SCOPE } from '../../../src/core/effect/symbol.js'
-import {
-  Context,
-  EffectScope,
-  onScopeDispose,
-  onScopePause,
-  onScopeResume
-} from '../../../src/index.js'
+import { EffectScope, onScopeDispose, onScopePause, onScopeResume } from '../../../src/index.js'
 
 describe('effect/lifecycle', () => {
   describe('onScopeDispose', () => {
@@ -14,8 +7,7 @@ describe('effect/lifecycle', () => {
       const scope = new EffectScope()
       const onDisposeSpy = vi.spyOn(scope, 'onDispose')
       const callback = vi.fn()
-
-      Context.run(ACTIVE_SCOPE, scope, () => {
+      scope.run(() => {
         onScopeDispose(callback)
         expect(onDisposeSpy).toHaveBeenCalledWith(callback)
       })
@@ -50,7 +42,7 @@ describe('effect/lifecycle', () => {
       const onPauseSpy = vi.spyOn(scope, 'onPause')
       const callback = vi.fn()
 
-      Context.run(ACTIVE_SCOPE, scope, () => {
+      scope.run(() => {
         onScopePause(callback)
         expect(onPauseSpy).toHaveBeenCalledWith(callback)
       })
@@ -85,7 +77,7 @@ describe('effect/lifecycle', () => {
       const onResumeSpy = vi.spyOn(scope, 'onResume')
       const callback = vi.fn()
 
-      Context.run(ACTIVE_SCOPE, scope, () => {
+      scope.run(() => {
         onScopeResume(callback)
         expect(onResumeSpy).toHaveBeenCalledWith(callback)
       })
