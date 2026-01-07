@@ -121,18 +121,19 @@ function finalizeDeps(effect: EffectHandle): void {
  * @returns {T} 返回执行 fn 函数的结果
  */
 export function collectSignal<T>(effect: () => T, handle: EffectHandle = effect): T {
-  // 设置当前活动的效果为传入的 effect
-  currentActiveEffect = handle
+  const preEffect = currentActiveEffect
   // 获取并更新效果对象的版本号
   const oldVersion = handle[DEP_VERSION]
   handle[DEP_VERSION] = (oldVersion ?? 0) + 1
   try {
+    // 设置当前活动的效果为传入的 effect
+    currentActiveEffect = handle
     // 执行传入的函数并返回其结果
     return effect()
   } finally {
     // 无论执行成功与否，最终都会执行以下代码
     // 重置当前活动的效果为 null
-    currentActiveEffect = null
+    currentActiveEffect = preEffect
     // 如果存在旧版本号，则完成依赖关系的最终处理
     if (oldVersion) finalizeDeps(handle)
   }

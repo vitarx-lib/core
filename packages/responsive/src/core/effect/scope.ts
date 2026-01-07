@@ -256,11 +256,12 @@ export class EffectScope {
    * @returns {T} 函数执行的结果
    */
   run<T>(fn: () => T): T {
+    const preScope = currentActiveScope
     try {
       currentActiveScope = this
       return fn()
     } finally {
-      currentActiveScope = undefined
+      currentActiveScope = preScope
     }
   }
 
