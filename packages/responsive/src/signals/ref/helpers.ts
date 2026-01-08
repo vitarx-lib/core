@@ -29,7 +29,7 @@ export function ref(): ValueRef
  *
  * @example
  * ```js
- * const count = ref<number>() // Ref<number | undefined, true>
+ * const count = ref<number>() // ValueRef<number | undefined, true>
  * console.log(count.value) // undefined
  * count.value = 1
  * console.log(count.value) // 1
@@ -48,7 +48,7 @@ export function ref<Value>(): ValueRef<Value | undefined>
  *
  * @example
  * ```js
- * const count = ref(0) // Ref<number, true>
+ * const count = ref(0) // ValueRef<number, true>
  * const user = ref({ name: 'Zhang' }) // Ref<{ name: string }, true>
  * console.log(count.value) // 0
  * count.value = 1
