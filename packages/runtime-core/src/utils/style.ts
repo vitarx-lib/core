@@ -94,6 +94,7 @@ export class StyleUtils {
    * @returns {StyleRules}  转换后的style对象
    */
   static cssStyleValueToObject(style: StyleProperties): StyleRules {
+    if (!style) return {}
     if (isString(style)) {
       const styleObj: Record<string, any> = {}
       style.split(';').forEach(styleRule => {
@@ -116,6 +117,7 @@ export class StyleUtils {
    * @returns {string[]} 返回一个数组，数组元素为类名
    */
   static cssClassValueToArray(classInput: ClassProperties): string[] {
+    if (!classInput) return []
     if (typeof classInput === 'string') {
       return classInput.split(' ').filter(Boolean)
     }
@@ -132,7 +134,7 @@ export class StyleUtils {
       return classArray
     }
 
-    if (typeof classInput === 'object' && classInput !== null) {
+    if (typeof classInput === 'object') {
       // 如果是对象类型，返回键名数组
       return Object.keys(classInput).filter(key => classInput[key])
     }
@@ -147,6 +149,7 @@ export class StyleUtils {
    * @returns {string} 返回一个字符串，字符串元素为类名
    */
   static cssClassValueToString(classInput: ClassProperties): string {
+    if (!classInput) return ''
     if (typeof classInput === 'string') {
       return classInput.trim()
     }
@@ -161,7 +164,7 @@ export class StyleUtils {
       }
       return classText.trim()
     }
-    if (typeof classInput === 'object' && classInput !== null) {
+    if (typeof classInput === 'object') {
       // 如果是对象类型，返回键名数组
       return Object.keys(classInput)
         .filter(key => classInput[key])
