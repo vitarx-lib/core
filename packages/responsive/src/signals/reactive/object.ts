@@ -39,7 +39,7 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
 /**
  * ReactiveProperty 类用于跟踪和响应对象属性的变化，仅在reactive内部使用
  *
- * 它实现了 Signal 接口，用于包装对象的单个属性，使其具有响应式能力。
+ * 用于包装对象的单个属性，使其具有响应式能力。
  * 当属性被访问时会建立依赖关系，当属性被修改时会触发更新通知。
  *
  * @template T - 目标对象的类型，必须是一个对象类型
