@@ -12,7 +12,7 @@ export type AnyCallback = AnyFunction
 /** void 回调函数 */
 export type VoidCallback = VoidFunction
 /** 任意对象 */
-export type AnyRecord = Record<AnyKey, any>
+export type AnyRecord = Record<AnyProperty, any>
 /** 任意数组 */
 export type AnyArray = Array<any>
 /** 任意 Map */
@@ -24,7 +24,7 @@ export type AnyWeakSet = WeakSet<WeakKey>
 /** 任意 Set */
 export type AnySet = Set<any>
 /** 任意键 */
-export type AnyKey = string | number | symbol
+export type AnyProperty = string | number | symbol
 /** 任意集合对象 */
 export type AnyCollection = AnyMap | AnyWeakMap | AnyWeakSet | AnySet
 /** 任意对象类型 函数除外 */
