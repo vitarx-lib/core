@@ -7,7 +7,7 @@ import type { AnyCallback, FnCallback } from './types'
  * @param obj
  * @param key
  */
-export function popProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+export function popProperty<T extends object, K extends keyof T>(obj: T, key: K): T[K] {
   if (isObject(obj)) {
     if (key in obj) {
       const value = obj[key]
