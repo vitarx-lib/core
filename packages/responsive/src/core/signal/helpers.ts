@@ -25,7 +25,7 @@ export interface RunEffectOptions extends DebuggerOptions {
    */
   track?: 'always' | 'once'
 }
-
+export type StopRunEffect = () => void
 /**
  * 运行时一个副作用函数
  *
@@ -35,12 +35,12 @@ export interface RunEffectOptions extends DebuggerOptions {
  * @param [options.track = 'always'] - 跟踪模式
  * @param [options.onTrigger] - 跟踪调试器，仅在开发模式下有效
  * @param [options.onTrack] - 触发调试器，仅在开发模式下有效
- * @returns { VoidFunction | undefined } 停止运行的函数
+ * @returns { StopRunEffect | undefined } 停止运行的函数
  */
 export function runEffect(
   effect: () => void,
   options: RunEffectOptions = {}
-): (() => void) | undefined {
+): StopRunEffect | undefined {
   if (typeof effect !== 'function') throw new TypeError('effect is not a function')
   const { flush = 'main', track = 'always' } = options
   const runner = track === 'always' ? () => trackEffectDeps(effect, handle) : effect
