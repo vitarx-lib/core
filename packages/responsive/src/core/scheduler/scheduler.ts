@@ -74,7 +74,7 @@ export function nextTick(fn?: () => void): Promise<void> {
 function scheduleFlush(): void {
   if (!isFlushPending) {
     isFlushPending = true
-    nextTick(() => flushAll()).then()
+    nextTick(() => flushSync()).then()
   }
 }
 
@@ -125,33 +125,6 @@ function flushJobMap(queue: QueueSet): void {
       }
     }
     // 如果在执行过程中有新任务加入，它们会在下一轮循环中被处理
-  }
-}
-
-/**
- * 按顺序执行所有队列中的任务
- *
- * 执行顺序：preFlush → main → postFlush
- *
- * 处理流程：
- * 1. 检查是否已在刷新中，避免并发刷新
- * 2. 重置刷新状态
- * 3. 依次执行各队列中的任务
- * 4. 清理递归计数器并重置刷新状态
- */
-function flushAll(): void {
-  if (isFlushing) return
-
-  isFlushPending = false
-  isFlushing = true
-
-  try {
-    // 按顺序执行各阶段任务
-    flushJobMap(preFlushQueue)
-    flushJobMap(mainQueue)
-    flushJobMap(postFlushQueue)
-  } finally {
-    isFlushing = false
   }
 }
 
@@ -231,7 +204,19 @@ export function removeJob(job: Job, mode: JobRemovalMode = 'all'): boolean {
  * - 如果正在刷新中，则跳过执行以避免并发问题
  */
 export function flushSync(): void {
-  flushAll()
+  if (isFlushing) return
+
+  isFlushPending = false
+  isFlushing = true
+
+  try {
+    // 按顺序执行各阶段任务
+    flushJobMap(preFlushQueue)
+    flushJobMap(mainQueue)
+    flushJobMap(postFlushQueue)
+  } finally {
+    isFlushing = false
+  }
 }
 
 /**

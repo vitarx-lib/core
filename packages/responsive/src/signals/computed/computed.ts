@@ -3,12 +3,12 @@ import {
   addToActiveScope,
   bindDebuggerOptions,
   clearEffectLinks,
-  collectSignal,
   type DebuggerOptions,
   type DisposableEffect,
   type EffectHandle,
   removeFromOwnerScope,
   reportEffectError,
+  trackEffectDeps,
   trackSignal,
   triggerSignal
 } from '../../core/index.js'
@@ -208,7 +208,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
    */
   recompute(): this {
     // 调用重新计算方法
-    collectSignal(() => {
+    trackEffectDeps(() => {
       try {
         this._value = this._getter(this._value)
       } catch (e) {

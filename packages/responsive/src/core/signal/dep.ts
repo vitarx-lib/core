@@ -248,7 +248,6 @@ export function* iterateLinkedEffects(signal: Signal): IterableIterator<EffectHa
     node = node.sigNext
   }
 }
-
 /**
  * 迭代一个 effect 依赖的所有 signal
  *

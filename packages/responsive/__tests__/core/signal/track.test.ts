@@ -1,76 +1,121 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ref, trackSignal, withSuspendedTracking } from '../../../src/index.js'
+import {
+  getActiveEffect,
+  hasLinkedSignal,
+  isTrackingPaused,
+  peekSignal,
+  ref,
+  trackEffectDeps,
+  trackSignal,
+  withSuspendedTracking
+} from '../../../src/index.js'
 
-describe('depend/track', () => {
-  describe('trackSignal', () => {
-    it('should not track when tracking is paused', async () => {
-      const signal = ref(42)
-      const effect = { run: vi.fn() }
+describe('depend/collect', () => {
+  describe('getActiveEffect', () => {
+    it('should return null when no active effect', () => {
+      expect(getActiveEffect()).toBeNull()
+    })
+  })
 
-      // Mock getActiveEffect to return our test effect
-      const collectModule = await import('../../../src/core/signal/collect.js')
-      const getActiveEffectSpy = vi
-        .spyOn(collectModule, 'getActiveEffect')
-        .mockReturnValue(effect as any)
+  describe('isTrackingPaused', () => {
+    it('should return false by default', () => {
+      expect(isTrackingPaused()).toBe(false)
+    })
+  })
 
-      // Track when not paused
-      trackSignal(signal)
-      expect(getActiveEffectSpy).toHaveBeenCalled()
+  describe('withSuspendedTracking', () => {
+    it('should temporarily suspend tracking', () => {
+      expect(isTrackingPaused()).toBe(false)
 
-      // Reset spy
-      getActiveEffectSpy.mockClear()
-
-      // Track when paused
-      withSuspendedTracking(() => {
-        trackSignal(signal)
+      const result = withSuspendedTracking(() => {
+        expect(isTrackingPaused()).toBe(true)
+        return 'test-result'
       })
 
-      // getActiveEffect should not be called when tracking is paused
-      expect(getActiveEffectSpy).not.toHaveBeenCalled()
+      expect(result).toBe('test-result')
+      expect(isTrackingPaused()).toBe(false)
     })
 
-    it('should not track when no active effect', async () => {
-      const signal = ref(42)
+    it('should restore tracking state even if function throws', () => {
+      expect(isTrackingPaused()).toBe(false)
 
-      // Mock getActiveEffect to return null
-      const collectModule = await import('../../../src/core/signal/collect.js')
-      const getActiveEffectSpy = vi.spyOn(collectModule, 'getActiveEffect').mockReturnValue(null)
+      expect(() => {
+        withSuspendedTracking(() => {
+          expect(isTrackingPaused()).toBe(true)
+          throw new Error('test error')
+        })
+      }).toThrow('test error')
 
-      trackSignal(signal)
-
-      // getActiveEffect should be called but no tracking should happen
-      expect(getActiveEffectSpy).toHaveBeenCalled()
+      expect(isTrackingPaused()).toBe(false)
     })
+  })
 
-    it('should call track handler when there is an active effect', async () => {
+  describe('peekSignal', () => {
+    it('should read signal value without tracking', async () => {
       const signal = ref(42)
+
+      const fn = () => peekSignal(signal, 'value')
+      const value = trackEffectDeps(fn)
+      expect(hasLinkedSignal(fn)).toBe(false)
+      expect(value).toBe(42)
+    })
+  })
+
+  describe('trackEffectDeps', () => {
+    it('should set and reset active effect', async () => {
       const effect = {
         run: vi.fn(),
-        [Symbol('DEP_VERSION')]: 1,
-        [Symbol('DEP_INDEX_MAP')]: new WeakMap()
+        [(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]: 1
       }
 
-      // Mock getActiveEffect to return our test effect
-      const collectModule = await import('../../../src/core/signal/collect.js')
-      vi.spyOn(collectModule, 'getActiveEffect').mockReturnValue(effect as any)
+      let capturedEffect
+      const result = trackEffectDeps(() => {
+        capturedEffect = getActiveEffect()
+        return 'test-result'
+      }, effect as any)
 
-      // Mock triggerOnTrack for dev environment
-      const debugModule = await import('../../../src/core/signal/debug.js')
-      const triggerOnTrackSpy = vi.spyOn(debugModule, 'triggerOnTrack').mockImplementation(() => {})
+      expect(result).toBe('test-result')
+      expect(capturedEffect).toBe(effect)
+      expect(getActiveEffect()).toBeNull()
+    })
 
-      trackSignal(signal, 'get', { key: 'test' })
-
-      // In dev mode, triggerOnTrack should be called
-      if ((globalThis as any).__DEV__) {
-        expect(triggerOnTrackSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            effect,
-            signal,
-            type: 'get',
-            key: 'test'
-          })
-        )
+    it('should increment effect version', async () => {
+      const effect = {
+        run: vi.fn(),
+        [(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]: 1
       }
+
+      trackEffectDeps(() => 'test', effect as any)
+
+      // Version should be incremented
+      expect(effect[(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]).toBe(2)
+    })
+
+    it('should handle effects without initial version', async () => {
+      const effect = {
+        run: vi.fn()
+        // No initial version
+      }
+
+      trackEffectDeps(() => 'test', effect as any)
+
+      // Version should be set to 1
+      expect(
+        (effect as any)[(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]
+      ).toBe(1)
+    })
+  })
+
+  describe('trackSignal', () => {
+    it('should call track handler when there is an active effect', async () => {
+      const signal = ref(42)
+      const effect = vi.fn()
+
+      trackEffectDeps(() => {
+        trackSignal(signal, 'get', { key: 'test' })
+      }, effect)
+
+      expect(hasLinkedSignal(effect)).toBe(true)
     })
   })
 })
