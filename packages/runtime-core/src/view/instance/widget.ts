@@ -1,10 +1,11 @@
-import { EffectScope, markRaw } from '@vitarx/responsive'
+import { EffectScope, isRef, markRaw, type Ref } from '@vitarx/responsive'
 import { isPromise, logger } from '@vitarx/utils'
 import { App } from '../../app/index.js'
 import { withWidgetContext } from '../../runtime/context.js'
 import type { ErrorSource, HookStore } from '../../runtime/hook.js'
 import { withDirectives } from '../../runtime/index.js'
 import { LifecycleStage } from '../../shared/constants/lifecycle.js'
+import { SUSPENSE_COUNTER } from '../../shared/constants/symbol.js'
 import { ViewState } from '../../shared/constants/viewState.js'
 import { isView } from '../../shared/utils/is.js'
 import type {
@@ -16,6 +17,16 @@ import type {
   WidgetView
 } from '../../types/index.js'
 import { ViewInstance } from './base.js'
+
+const findSuspense = (instance: WidgetInstance): Ref<number> | undefined => {
+  let parent = instance.owner
+  while (parent) {
+    const suspense = parent.provide?.get(SUSPENSE_COUNTER)
+    if (isRef(suspense)) return suspense
+    parent = parent.owner
+  }
+  return undefined
+}
 
 /**
  * 组件运行时上下文
@@ -137,10 +148,16 @@ export class WidgetInstance extends ViewInstance {
         'hook:prepare'
       )
     }
-    try {
-      await Promise.all(promises)
-    } catch (e) {
-      this.reportError(e, 'hook:prepare')
+    if (promises.length) {
+      const suspense = findSuspense(this)
+      try {
+        if (suspense) suspense.value++
+        await Promise.all(promises)
+      } catch (e) {
+        this.reportError(e, 'hook:prepare')
+      } finally {
+        if (suspense) suspense.value--
+      }
     }
   }
 }
