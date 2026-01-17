@@ -1,6 +1,6 @@
 import { createDepLink, destroyDepLink, isRef } from '@vitarx/responsive'
 import { App } from '../../app/index.js'
-import { getRenderer, replaceView, withDirectives } from '../../runtime/index.js'
+import { getRenderer, withDirectives } from '../../runtime/index.js'
 import { ViewState } from '../../shared/constants/viewState.js'
 import { isView } from '../../shared/utils/is.js'
 import type { DynamicView, HostNode, ParentView, TextView, View } from '../../types/index.js'
@@ -94,12 +94,14 @@ export class DynamicInstance extends ViewInstance {
    * @param parent - 父视图
    * @param owner - 所属组件实例
    * @param app - 应用实例
+   * @param replaceView - 视图替换方法
    */
   constructor(
     view: DynamicView,
     parent: ParentView | null,
     owner: WidgetInstance | null,
-    app: App | null
+    app: App | null,
+    private replaceView: (oldView: View, newView: View) => View
   ) {
     super(parent, owner, app)
 
@@ -166,7 +168,7 @@ export class DynamicInstance extends ViewInstance {
     }
 
     // 视图不同但类型相同，需要替换
-    this._child = replaceView(this._child, next.view)
+    this._child = this.replaceView(this._child, next.view)
   }
 
   /**
@@ -182,7 +184,7 @@ export class DynamicInstance extends ViewInstance {
       withDirectives(nextView, Array.from(view.directives))
     }
 
-    this._child = replaceView(this._child, nextView)
+    this._child = this.replaceView(this._child, nextView)
     this._kind = next.kind
   }
 }
