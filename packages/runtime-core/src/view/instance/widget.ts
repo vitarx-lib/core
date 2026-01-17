@@ -18,7 +18,7 @@ import type {
 } from '../../types/index.js'
 import { ViewInstance } from './base.js'
 
-const findSuspense = (instance: WidgetInstance): Ref<number> | undefined => {
+const useSuspenseCounter = (instance: WidgetInstance): Ref<number> | undefined => {
   let parent = instance.owner
   while (parent) {
     const suspense = parent.provide?.get(SUSPENSE_COUNTER)
@@ -149,7 +149,7 @@ export class WidgetInstance extends ViewInstance {
       )
     }
     if (promises.length) {
-      const suspense = findSuspense(this)
+      const suspense = useSuspenseCounter(this)
       try {
         if (suspense) suspense.value++
         await Promise.all(promises)
