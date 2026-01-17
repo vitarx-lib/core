@@ -1,27 +1,26 @@
 import type { AnyFunction } from '@vitarx/utils'
-import type { VNode } from '../types/index.js'
-import { isStatefulWidgetNode } from '../utils/vnode.js'
-import { getCurrentVNode } from './context.js'
-import { findParentNode } from './relations.js'
+import { logger } from '@vitarx/utils'
+import { WidgetInstance } from '../view/index.js'
+import { getWidgetInstance } from './context.js'
 
 /**
- * 提供依赖数据,实现小部件间的依赖注入
+ * 提供依赖数据,实现组件间的依赖注入
  *
- * 注意：依赖有状态的组件上下文，仅支持在有状态函数/类组件初始化阶段使用！！！
+ * 注意：依赖组件上下文，仅支持在组件构造阶段使用！
  *
  * @param name - 依赖数据的唯一标识符
  * @param value - 要提供的数据值
- * @throws {Error} 当不在有状态小部件上下文中调用时抛出错误
  *
  * @example
  * ```ts
- * // 类组件
+ * // 类组件中使用
  * class MyWidget extends Widget {
- *   onCreate() {
+ *   constructor(props){
+ *    super(props)
  *    provide('theme', 'dark');
  *   }
  * }
- * // 函数组件
+ * // 函数组件中使用
  * function Foo() {
  *   provide('theme', 'dark');
  *   return <div>...</div>
@@ -29,14 +28,15 @@ import { findParentNode } from './relations.js'
  * ```
  */
 export function provide(name: string | symbol, value: any): void {
-  const currentVNode = getCurrentVNode()
-  if (!isStatefulWidgetNode(currentVNode)) {
-    throw new Error('provide must be called in stateful widget')
+  const ctx = getWidgetInstance()
+  if (!ctx) {
+    logger.error('[provide]：provide must be called in a widget context')
+    return void 0
   }
-  if (!currentVNode.injectionStore) {
-    currentVNode.injectionStore = new Map([[name, value]])
+  if (ctx.provide) {
+    ctx.provide.set(name, value)
   } else {
-    currentVNode.injectionStore.set(name, value)
+    ctx.provide = new Map([[name, value]])
   }
 }
 
@@ -96,31 +96,31 @@ export function inject<T extends AnyFunction>(
  * @param name - 依赖数据的唯一标识符
  * @param defaultValue - 默认值或工厂函数
  * @param treatDefaultAsFactory - 是否将默认值作为工厂函数,默认为 false
- * @returns 注入的数据或默认值
- * @throws {Error} 当不在小部件上下文中调用时抛出错误
+ * @returns {T} 注入的数据或默认值
+ * @throws {Error} 非组件上下文中调用时抛出错误
  */
 export function inject<T>(
   name: string | symbol,
   defaultValue?: T,
   treatDefaultAsFactory?: boolean
 ): T {
-  const currentVNode = getCurrentVNode()
-  if (!currentVNode) {
+  const ctx = getWidgetInstance()
+  if (!ctx) {
     throw new Error('inject must be called in widget')
   }
 
   // 向上查找祖先节点
-  let parentNode: VNode | undefined = findParentNode(currentVNode)
-  while (parentNode) {
-    if (isStatefulWidgetNode(parentNode) && parentNode.injectionStore?.has(name)) {
-      const value = parentNode.injectionStore.get(name)
+  let parent: WidgetInstance | null = ctx.owner
+  while (parent) {
+    if (parent && parent.provide?.has(name)) {
+      const value = parent.provide.get(name)
       if (value !== undefined) return value
     }
-    parentNode = findParentNode(parentNode)
+    parent = parent.owner
   }
   // 尝试从 appContext 中获取数据
-  if (currentVNode.appContext?.hasProvide(name)) {
-    return currentVNode.appContext.inject(name, defaultValue)
+  if (ctx.app?.hasProvide(name)) {
+    return ctx.app.inject(name, defaultValue)
   }
   // 处理默认值
   if (typeof defaultValue === 'function' && treatDefaultAsFactory) {

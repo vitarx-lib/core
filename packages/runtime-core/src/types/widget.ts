@@ -1,18 +1,10 @@
 import type { RequiredKeys } from '@vitarx/utils'
-import type { IS_STATELESS_WIDGET } from '../constants/index.js'
-import type { __WIDGET_INTRINSIC_METHOD_KEYWORDS__ } from '../constants/widget.js'
-import type { Widget } from '../widget/index.js'
-import type { StatelessWidgetNode, VNode } from './nodes/index.js'
-import type { AnyChild, Renderable } from './vnode.js'
+import type { View } from './view.js'
 
 /**
  * 任意组件属性类型
  */
-export type AnyProps = Record<string, any>
-/**
- * 组件的子节点构建器
- */
-export type ChildBuilder = Widget['build']
+export type AnyProps = { [k: string]: any }
 /**
  * 组件可选配置项。
  *
@@ -32,13 +24,6 @@ export type WidgetOptions = {
    *
    * @example
    * ```ts
-   * // 类组件
-   * class MyWidget extends Widget<{ name?: string; age: number }> {
-   *   static defaultProps = {
-   *     age: 18,
-   *   };
-   * }
-   *
    * // 函数组件
    * function MyFunctionWidget(props: { name?: string; age: number }) {
    *   return <div>{props.name}</div>;
@@ -69,91 +54,26 @@ export type WidgetOptions = {
    */
   validateProps?: (props: AnyProps) => string | false | unknown
   /**
-   * 组件名称
-   *
-   * 如果匿名组件不定义此名称，则默认使用 `AnonymousWidget` 作为名称。
+   * 组件展示的名称，仅用于调试。
    */
   displayName?: string
-  /**
-   * 加载状态呈现的占位节点
-   *
-   * 仅异步组件支持
-   */
-  loading?: VNode
 }
 /**
- * 类小部件构造器类型
+ * 组件实例类型
  *
- * @template P - 小部件的属性类型
- * @template I - 小部件实例类型
+ * 这是一个
  */
-export type ClassWidget<P extends AnyProps = any, I extends Widget = Widget<P, any>> = {
-  new (props: P): I
+export type WidgetPublicInstance = { readonly [key: string]: any }
+export type Widget<P extends AnyProps = AnyProps, Exposed extends {} = {}> = {
+  (props: P): View
+  __exposed?: Exposed
 } & WidgetOptions
-
-/**
- * 模块小部件类型
- */
-export interface LazyLoadModule {
-  default: WidgetType
-}
-/**
- * 函数小部件有效地返回值
- *
- * - `null | false | undefined`：不渲染任何内容（但存在注释节点做为定位的锚点）
- * - `string | number`：渲染为文本节点
- * - `VNode`：虚拟节点
- * - `VNodeBuilder`：虚拟节点构建器 依赖跟踪的关键，一般由编译器自动生成
- * - `Promise<Renderable>`：异步返回受支持的Renderable，如字符串，元素节点等
- * - `Promise<VNodeBuilder>`：异步返回视图节点构建器
- * - `Promise<{ default: WidgetType }>`：异步返回EsModule对象，必须有默认导出才能识别为懒加载小部件
- */
-export type FWBuildType =
-  | Renderable
-  | ChildBuilder
-  | Promise<Renderable | LazyLoadModule | ChildBuilder>
-
-/**
- * 函数小部件类型
- */
-export type FunctionWidget<P extends AnyProps = any, R extends FWBuildType = FWBuildType> = {
-  (props: P): R
-} & WidgetOptions
-
-/**
- * 函数小部件类型别名
- */
-export type FC<P extends AnyProps = any> = FunctionWidget<P>
-/**
- * 函数小部件类型别名
- */
-export type FW<P extends AnyProps = any> = FunctionWidget<P>
-/**
- * 小部件结构类型
- *
- * - StatefulWidget
- *    - ClassWidget：类小部件
- *    - FunctionWidget：函数小部件
- * - StatelessWidget：标记为无状态的小部件
- */
-export type WidgetType<P extends AnyProps = any> = StatefulWidget<P> | StatelessWidget<P>
 /**
  * 小部件实例推导
  *
  * 通过小部件构造函数推导出小部件的实例类型
  */
-export type WidgetInstanceType<T extends ClassWidget | FunctionWidget> =
-  T extends ClassWidget<any, infer I> ? I : T extends FunctionWidget<infer P> ? Widget<P> : Widget
-
-/**
- * 组件children类型提取
- */
-export type ExtractChildrenType<P extends AnyProps> = P extends { children: infer U }
-  ? U
-  : P extends { children?: infer U }
-    ? U | undefined
-    : never
-
+export type WidgetPublicInstanceOf<T extends Widget> = Exclude<T['__exposed'], undefined>
 /**
  * 带默认值的属性类型
  *
@@ -195,92 +115,12 @@ type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = D ex
   : Omit<P, keyof D> & {
       [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
     }
-
 /**
  * 组件props类型重载
  */
-export type WidgetPropsType<T extends WidgetType> =
-  T extends WidgetType<infer P>
+export type WidgetPropsType<T extends Widget> =
+  T extends Widget<infer P>
     ? 'defaultProps' extends RequiredKeys<T>
       ? WithDefaultProps<P, T['defaultProps']>
       : P
     : {}
-
-/**
- * 懒加载小部件类型
- *
- * 懒加载小部件也被视为异步函数组件的一种变体
- */
-export type LazyLoadWidget<P extends AnyProps = any, T extends WidgetType = WidgetType<P>> = {
-  (): Promise<{
-    default: T
-  }>
-} & WidgetOptions
-
-/**
- * 异步函数小部件类型
- *
- * @example
- * ```tsx
- * async function MyWidget(props) {
- *   // withAsyncContext 用于待异步解析完毕后恢复组件上下文，编译时通常会自动添加（必须是具名组件，且符合驼峰命名规范）
- *   await withAsyncContext(new Promise((resolve) => setTimeout(resolve, 1000)));
- *   onMount(() => {
- *     console.log('mounted');
- *   })
- *   return <div>Hello World</div>;
- * }
- * ```
- */
-export type AsyncWidget<P extends AnyProps = any> = {
-  (props: P): Promise<AnyChild | LazyLoadModule | ChildBuilder>
-} & WidgetOptions
-
-/**
- * 无状态小部件
- */
-export type StatelessWidget<P extends AnyProps = any, R extends Renderable = Renderable> = {
-  readonly [IS_STATELESS_WIDGET]: true
-  (props: P): R
-} & WidgetOptions
-
-export interface StatelessWidgetSymbol {
-  readonly [IS_STATELESS_WIDGET]: true
-}
-
-/**
- * 有状态的小部件
- *
- * 只要未显式标记为无状态的小部件，则默认为有状态的小部件
- */
-export type StatefulWidget<P extends AnyProps = any> = ClassWidget<P> | FunctionWidget<P>
-
-/** 排除组件内部保留的方法 */
-export type ExcludeWidgetIntrinsicMethods<T> = Omit<
-  T,
-  (typeof __WIDGET_INTRINSIC_METHOD_KEYWORDS__)[number]
->
-
-/**
- * 引用小部件类型
- *
- * 此工具会排除实例中的固有方法。
- *
- * @example
- * ```ts
- * class Test extends Widget {
- *   name = 'Test'
- * }
- * const refTest:ImpostWidget<Test> = {} as any
- * refTest.name // ✅ TS 语法校验通过！
- * refTest.onMount() // ❌ TS 语法校验不通过！
- * ```
- */
-export type ImpostWidget<T extends ClassWidget | FunctionWidget> = T extends StatelessWidget
-  ? StatelessWidgetNode<T>
-  : ExcludeWidgetIntrinsicMethods<WidgetInstanceType<T>>
-
-/**
- * 可以做为元素的组件类型构造函数
- */
-export type JSXElementConstructor<P> = ((props: P) => FWBuildType) | (new (props: P) => Widget<any>)

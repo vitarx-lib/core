@@ -1,18 +1,18 @@
 import { IS_RAW } from '@vitarx/responsive'
-import { IS_VIEW, ViewFlag, ViewState } from '../../constants/index.js'
-import type { CodeLocation, ValidProps, WidgetType, WidgetView } from '../../types/index.js'
-import { resolveProps } from '../runtime/props.js'
+import { IS_VIEW } from '../../shared/constants/symbol.js'
+import { ViewFlag } from '../../shared/constants/viewFlag.js'
+import type { CodeLocation, Widget, WidgetPropsType, WidgetView } from '../../types/index.js'
+import { resolveProps } from './utils.js'
 
-export function createWidgetView<T extends WidgetType>(
+export function createWidgetView<T extends Widget>(
   type: T,
-  props: ValidProps<T> | null = null,
+  props: WidgetPropsType<T> | null = null,
   key?: unknown,
   location?: CodeLocation
 ): WidgetView<T> {
   return {
     [IS_VIEW]: true,
     [IS_RAW]: true,
-    state: ViewState.CREATED,
     flag: ViewFlag.WIDGET,
     key,
     location,

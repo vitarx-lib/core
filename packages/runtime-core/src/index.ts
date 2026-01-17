@@ -1,9 +1,10 @@
-export * from './types/index.js'
+import { defineDirective } from './runtime/index.js'
+import { show } from './shared/directives/show.js'
+
+export type * from './types/index.js'
 export * from './app/index.js'
-export * from './constants/index.js'
-export * from './directive/index.js'
-export * from './renderer/index.js'
+export * from './view/index.js'
 export * from './runtime/index.js'
-export * from './utils/index.js'
-export * from './vnode/index.js'
-export * from './widget/index.js'
+export * from './shared/index.js'
+
+defineDirective('show', show)

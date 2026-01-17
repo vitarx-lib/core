@@ -1,7 +1,8 @@
 import { IS_RAW } from '@vitarx/responsive'
-import { IS_VIEW, ViewFlag, ViewState } from '../../constants/index.js'
+import { IS_VIEW } from '../../shared/constants/symbol.js'
+import { ViewFlag } from '../../shared/constants/viewFlag.js'
 import type { CodeLocation, FragmentView, ValidChildren } from '../../types/index.js'
-import { resolveChildren } from '../runtime/children.js'
+import { resolveChildren } from './utils.js'
 
 export function createFragmentView(
   children: ValidChildren,
@@ -11,10 +12,9 @@ export function createFragmentView(
   return {
     [IS_RAW]: true,
     [IS_VIEW]: true,
-    state: ViewState.CREATED,
+    flag: ViewFlag.FRAGMENT,
     key,
     location,
-    flag: ViewFlag.FRAGMENT,
     children: resolveChildren(children)
   }
 }

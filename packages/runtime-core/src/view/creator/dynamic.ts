@@ -1,16 +1,18 @@
-import { IS_RAW } from '@vitarx/responsive'
-import { IS_VIEW, ViewFlag, ViewState } from '../../constants/index.js'
-import type { CodeLocation, DynamicView, View, ViewRef } from '../../types/index.js'
+import { IS_RAW, type Ref } from '@vitarx/responsive'
+import { IS_VIEW } from '../../shared/constants/symbol.js'
+import { ViewFlag } from '../../shared/constants/viewFlag.js'
+import type { CodeLocation, DynamicView } from '../../types/index.js'
 
-export function createDynamicView<T extends View>(
-  ref: ViewRef<T>,
+export function createDynamicView<T extends any>(
+  ref: Ref<T>,
+  key?: unknown,
   location?: CodeLocation
 ): DynamicView<T> {
   return {
     [IS_RAW]: true,
     [IS_VIEW]: true,
-    state: ViewState.CREATED,
     flag: ViewFlag.DYNAMIC,
+    key,
     child: ref,
     location
   }
