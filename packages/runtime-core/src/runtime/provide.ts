@@ -112,7 +112,7 @@ export function inject<T>(
   // 向上查找祖先节点
   let parent: WidgetInstance | null = ctx.owner
   while (parent) {
-    if (parent && parent.provide?.has(name)) {
+    if (parent.provide?.has(name)) {
       const value = parent.provide.get(name)
       if (value !== undefined) return value
     }
