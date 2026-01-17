@@ -1,3 +1,4 @@
+import { isFunction } from '@vitarx/utils'
 import { trackSignal, triggerSignal } from '../../core/index.js'
 import { IS_REF, IS_SIGNAL, type RefSignal } from '../shared/index.js'
 
@@ -42,5 +43,22 @@ export class ShallowRef<T = any> implements RefSignal<T> {
     triggerSignal(this, 'set', { key: 'value', newValue, oldValue })
     // 更新值
     this._value = newValue
+  }
+  toString(): string {
+    const val = this.value
+    if (val?.toString && isFunction(val.toString)) {
+      return val.toString()
+    }
+    return `[Object Ref<${typeof val}>]`
+  }
+  [Symbol.toPrimitive](hint: string): any {
+    switch (hint) {
+      case 'number':
+        return this.value
+      case 'string':
+        return this.toString()
+      case 'default':
+        return this.value
+    }
   }
 }

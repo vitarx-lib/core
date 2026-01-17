@@ -1,4 +1,4 @@
-import { type AnyObject, isObject, logger } from '@vitarx/utils'
+import { type AnyObject, isFunction, isObject, logger } from '@vitarx/utils'
 import { trackSignal, triggerSignal } from '../../core/index.js'
 import type { Reactive } from '../reactive/base.js'
 import { reactive } from '../reactive/index.js'
@@ -65,5 +65,22 @@ export class ValueRef<T = any> implements RefSignal<ToRefValue<T>, T> {
     this._value = toReactive(newValue)
     this._rawValue = newValue
     triggerSignal(this, 'set', { key: 'value', oldValue, newValue })
+  }
+  toString(): string {
+    const val = this.value
+    if (val?.toString && isFunction(val.toString)) {
+      return val.toString()
+    }
+    return `[Object Ref<${typeof val}>]`
+  }
+  [Symbol.toPrimitive](hint: string): any {
+    switch (hint) {
+      case 'number':
+        return this.value
+      case 'string':
+        return this.toString()
+      case 'default':
+        return this.value
+    }
   }
 }

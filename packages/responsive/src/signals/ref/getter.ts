@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils'
+import { isFunction, logger } from '@vitarx/utils'
 import { IS_READONLY, IS_REF, type Ref } from '../shared/index.js'
 
 /**
@@ -32,5 +32,22 @@ export class GetterRef<T> implements Ref<T> {
    */
   set value(_newVal: T) {
     logger.warn('[ReadonlyRef] Cannot set value to a readonly ref')
+  }
+  toString(): string {
+    const val = this.value
+    if (val?.toString && isFunction(val.toString)) {
+      return val.toString()
+    }
+    return `[Object Ref<${typeof val}>]`
+  }
+  [Symbol.toPrimitive](hint: string): any {
+    switch (hint) {
+      case 'number':
+        return this.value
+      case 'string':
+        return this.toString()
+      case 'default':
+        return this.value
+    }
   }
 }

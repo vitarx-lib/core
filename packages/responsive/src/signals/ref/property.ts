@@ -1,3 +1,4 @@
+import { isFunction } from '@vitarx/utils'
 import { IS_REF, type Ref } from '../shared/index.js'
 
 /**
@@ -44,5 +45,22 @@ export class PropertyRef<T extends object, K extends keyof T> implements Ref<T[K
   }
   set value(newVal: T[K]) {
     this._target[this._key] = newVal
+  }
+  toString(): string {
+    const val = this.value
+    if (val?.toString && isFunction(val.toString)) {
+      return val.toString()
+    }
+    return `[Object Ref<${typeof val}>]`
+  }
+  [Symbol.toPrimitive](hint: string): any {
+    switch (hint) {
+      case 'number':
+        return this.value
+      case 'string':
+        return this.toString()
+      case 'default':
+        return this.value
+    }
   }
 }
