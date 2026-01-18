@@ -171,7 +171,7 @@ export const onDispose = createHookRegistrar(LifecycleStage.dispose)
  *
  * @param {Record<string, any>} exposed - 键值对对象。
  */
-export function defineExpose(exposed: Record<string, any>): void {
+export function defineExpose<T extends { [key: string]: any }>(exposed: T): void {
   const ctx = getWidgetInstance()
   if (!ctx) {
     logger.error('[defineExpose]：defineExpose must be called in a WidgetContext')
