@@ -201,7 +201,7 @@ export function mergeProps<T extends AnyProps>(...sources: AnyProps[]): AnyProps
  * @param children 子节点或子节点列表，可以是单个值、数组或嵌套数组
  * @returns {ResolvedChildren} 解析后的子节点数组
  */
-export const resolveChildren = (children: ValidChildren): ResolvedChildren => {
+export function resolveChildren(children: ValidChildren): ResolvedChildren {
   if (children === null || children === undefined || typeof children === 'boolean') return []
 
   const childList: View[] = []
