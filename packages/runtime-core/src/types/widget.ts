@@ -1,16 +1,18 @@
 import type { RequiredKeys } from '@vitarx/utils'
 import type { View } from './view.js'
 
-/**
- * 任意组件属性类型
- */
 export type AnyProps = { [k: string]: any }
+
 /**
- * 组件可选配置项。
- *
- * @template P - 组件的 props 类型
+ * 组件公开实例类型
  */
-export type WidgetOptions = {
+export type WidgetPublicInstance = { readonly [key: string]: any }
+
+/**
+ * 组件类型
+ */
+export type Widget<P extends AnyProps = any> = {
+  (props: P): View
   /**
    * 定义组件的默认属性。
    *
@@ -33,7 +35,7 @@ export type WidgetOptions = {
    * };
    * ```
    */
-  defaultProps?: Record<string, any>
+  defaultProps?: AnyProps
   /**
    * 属性验证函数。
    *
@@ -58,22 +60,7 @@ export type WidgetOptions = {
    */
   displayName?: string
 }
-/**
- * 组件实例类型
- *
- * 这是一个
- */
-export type WidgetPublicInstance = { readonly [key: string]: any }
-export type Widget<P extends AnyProps = AnyProps, Exposed extends {} = {}> = {
-  (props: P): View
-  __exposed?: Exposed
-} & WidgetOptions
-/**
- * 小部件实例推导
- *
- * 通过小部件构造函数推导出小部件的实例类型
- */
-export type WidgetPublicInstanceOf<T extends Widget> = Exclude<T['__exposed'], undefined>
+
 /**
  * 带默认值的属性类型
  *
