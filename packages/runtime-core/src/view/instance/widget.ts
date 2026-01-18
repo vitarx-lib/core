@@ -16,8 +16,22 @@ import type {
   WidgetPublicInstance,
   WidgetView
 } from '../../types/index.js'
+import { createAnchorView, createDynamicView, createTextView } from '../creator/index.js'
 import { ViewInstance } from './base.js'
 
+const normalizeChild = (child: any): View => {
+  // 直接处理当前项，避免重复的类型检查
+  if (child == null) return createAnchorView('v-if')
+  // 直接进行类型判断，减少函数调用开销
+  if (isView(child)) {
+    return child
+  }
+  // 引用
+  if (isRef(child)) {
+    return createDynamicView(child)
+  }
+  return createTextView(String(child))
+}
 const useSuspenseCounter = (instance: WidgetInstance): Ref<number> | undefined => {
   let parent = instance.owner
   while (parent) {
@@ -48,6 +62,8 @@ export class WidgetInstance extends ViewInstance {
   public directiveStore: Map<string, Directive> | null = null
   /** @internal - 组件的子视图 */
   public readonly child: View
+  /** @internal - 实例的视图 */
+  public view: WidgetView
   constructor(
     view: WidgetView,
     parent: ParentView | null,
@@ -55,11 +71,13 @@ export class WidgetInstance extends ViewInstance {
     app: App | null
   ) {
     super(parent, owner, app)
+    this.view = view
     const widget = view.type
     this.name = widget.displayName ?? widget.name ?? 'anonymous'
     this.scope = new EffectScope({ name: this.name })
     this.publicInstance = markRaw({})
-    this.child = withWidgetContext(this, () => widget(view.props ?? {}))
+    const result = withWidgetContext(this, () => widget(view.props ?? {}))
+    this.child = normalizeChild(result)
     if (__DEV__ && !isView(this.child)) {
       throw new Error(
         `[Widget<${this.name}>]: function widget return value can only be a view object`
