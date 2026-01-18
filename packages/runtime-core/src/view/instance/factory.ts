@@ -57,9 +57,7 @@ export function renderView(
   owner: WidgetInstance | null = null,
   app: App | null = null
 ): void {
-  if (view.instance) {
-    throw new Error('[renderView]: view has already been rendered')
-  }
+  if (view.instance) return
   const instance = createViewInstance(view, parent, owner, app)
   const driver = getDriver(view.flag)
   driver.render(instance)
@@ -86,8 +84,8 @@ export function mountView(
 ): void {
   if (!view.instance) {
     renderView(view)
-  } else if (view.instance.state === ViewState.MOUNTED) {
-    throw new Error('[mountView]: view mounted cannot be mounted repeatedly')
+  } else if (view.instance.state !== ViewState.READY) {
+    throw new Error('[mountView]: view must be ready to mount')
   }
   const driver = getDriver(view.flag)
   driver.mount(view as ViewRuntime, containerOrAnchor, type)
@@ -130,9 +128,6 @@ export function disposeView(view: View, failSilently: boolean = false): void {
  */
 export function replaceView(oldView: View, newView: View): View {
   if (!oldView.instance) return newView
-  if (newView.instance) {
-    throw new Error('[replaceView]: new view has already been rendered')
-  }
   if (oldView.instance.state === ViewState.DISPOSED) {
     throw new Error('[replaceView]: old view has been disposed')
   }
