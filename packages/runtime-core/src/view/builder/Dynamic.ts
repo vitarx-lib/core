@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
 import type { AnyProps, CreatableType, ValidChildren, View } from '../../types/index.js'
-import { tracked } from '../compiler/index.js'
+import { TrackedCompute } from '../compiler/index.js'
 import { createAnchorView } from '../creator/anchor.js'
 import { createDynamicView } from '../creator/dynamic.js'
 import { createView } from '../creator/factory.js'
@@ -45,7 +45,7 @@ export const Dynamic = builder((props: DynamicProps, key, location): View => {
       }
     })
   }
-  const view = tracked(() => {
+  const view = new TrackedCompute(() => {
     const is = props['is']
     if (!is) {
       const message = `Dynamic "is" prop is mandatory and cannot be empty.`
