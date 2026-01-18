@@ -2,7 +2,7 @@ import { isFunction, logger } from '@vitarx/utils'
 import type { AnyCallback } from '@vitarx/utils/src/index.js'
 import { LifecycleStage } from '../shared/constants/lifecycle.js'
 import type { WidgetPublicInstance } from '../types/index.js'
-import { getWidgetInstance } from './context.js'
+import { getInstance } from './context.js'
 
 /**
  * 错误来源联合类型
@@ -77,7 +77,7 @@ function createHookRegistrar<T extends LifecycleStage | 'error'>(
   hook: T
 ): (cb: HookCallback<T>) => void {
   return (cb: HookCallback<T>): void => {
-    const ctx = getWidgetInstance()
+    const ctx = getInstance()
     if (!ctx) {
       logger.error('[HookRegister]：must be called in a Widget')
       return void 0
@@ -103,7 +103,7 @@ function createHookRegistrar<T extends LifecycleStage | 'error'>(
  *
  * @param {Function} cb - 回调函数，小部件初始化时触发
  */
-export const onSetup = createHookRegistrar(LifecycleStage.prepare)
+export const onPrepare = createHookRegistrar(LifecycleStage.prepare)
 /**
  * 小部件挂载前要触发的钩子
  *
@@ -172,7 +172,7 @@ export const onDispose = createHookRegistrar(LifecycleStage.dispose)
  * @param {Record<string, any>} exposed - 键值对对象。
  */
 export function defineExpose<T extends { [key: string]: any }>(exposed: T): void {
-  const ctx = getWidgetInstance()
+  const ctx = getInstance()
   if (!ctx) {
     logger.error('[defineExpose]：defineExpose must be called in a WidgetContext')
     return void 0

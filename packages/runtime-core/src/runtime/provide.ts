@@ -1,7 +1,7 @@
 import type { AnyFunction } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
 import { WidgetInstance } from '../view/index.js'
-import { getWidgetInstance } from './context.js'
+import { getInstance } from './context.js'
 
 /**
  * 提供依赖数据,实现组件间的依赖注入
@@ -28,7 +28,7 @@ import { getWidgetInstance } from './context.js'
  * ```
  */
 export function provide(name: string | symbol, value: any): void {
-  const ctx = getWidgetInstance()
+  const ctx = getInstance()
   if (!ctx) {
     logger.error('[provide]：provide must be called in a widget context')
     return void 0
@@ -104,7 +104,7 @@ export function inject<T>(
   defaultValue?: T,
   treatDefaultAsFactory?: boolean
 ): T {
-  const ctx = getWidgetInstance()
+  const ctx = getInstance()
   if (!ctx) {
     throw new Error('inject must be called in widget')
   }

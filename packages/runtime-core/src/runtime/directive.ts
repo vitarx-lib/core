@@ -1,7 +1,7 @@
 import { isArray, isPlainObject, logger } from '@vitarx/utils'
 import { ViewFlag } from '../shared/constants/viewFlag.js'
 import type { Directive, DirectiveBinding, ElementView, HostElement, View } from '../types/index.js'
-import { getWidgetInstance } from './context.js'
+import { getInstance } from './context.js'
 
 const globalDirectives = new Map<string, Directive>()
 
@@ -21,7 +21,7 @@ export function defineDirective(name: string, directive: Directive): void {
   if (!normalizedName) throw new Error('Directive name cannot be empty.')
 
   // 获取当前组件上下文
-  const ctx = getWidgetInstance()
+  const ctx = getInstance()
 
   // 存储指令到适当的缓存中
   if (ctx) {
@@ -45,7 +45,7 @@ export function defineDirective(name: string, directive: Directive): void {
  */
 export function resolveDirective(name: string): Directive | undefined {
   if (name.startsWith('v-')) name = name.slice(2)
-  const ctx = getWidgetInstance()
+  const ctx = getInstance()
   if (ctx) {
     if (ctx.directiveStore?.has(name)) {
       // 获取组件局部指令

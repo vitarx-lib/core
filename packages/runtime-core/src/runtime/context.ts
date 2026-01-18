@@ -32,7 +32,7 @@ export function withWidgetContext<T>(ctx: WidgetInstance, fn: () => T): T {
  *
  * @returns {WidgetInstance | null} 返回当前活动的小部件实例，如果没有则返回null
  */
-export function getWidgetInstance(): WidgetInstance | null {
+export function getInstance(): WidgetInstance | null {
   return activeWidgetInstance
 }
 
