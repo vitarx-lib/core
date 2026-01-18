@@ -54,7 +54,7 @@ export const Dynamic = builder((props: DynamicProps, key, location): View => {
     }
     return createView(is, resolvedProps, key, location)
   })
-  return view.isStatic ? view.value : createDynamicView(view, location)
+  return view.isStatic ? view.value : createDynamicView(view, key, location)
 })
 
 export type Dynamic = ViewBuilder<DynamicProps> & { __is_dynamic: true }

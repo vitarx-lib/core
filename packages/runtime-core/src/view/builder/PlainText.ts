@@ -25,7 +25,7 @@ export const PlainText = builder(
       return String(props.text)
     })
     return textView.isStatic
-      ? createTextView(textView.value)
+      ? createTextView(textView.value, key, location)
       : createDynamicView(textView, key, location)
   }
 )
