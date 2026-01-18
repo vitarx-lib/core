@@ -3,7 +3,7 @@ import type {
   HostElement,
   HostElementTag,
   Widget,
-  WidgetPublicInstanceOf
+  WidgetPublicInstance
 } from '../../types/index.js'
 
 /**
@@ -15,7 +15,7 @@ type InstanceOf<T> = ShallowRef<
       : T extends HostElementTag
         ? HostElement<T>
         : T extends Widget
-          ? WidgetPublicInstanceOf<T>
+          ? WidgetPublicInstance
           : T)
   | null
 >
