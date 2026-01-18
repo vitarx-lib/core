@@ -13,7 +13,7 @@ export abstract class ViewInstance {
   /** @internal - 平台节点，运行在浏览器中时则是HTMLElement,Text,Comment...等实例 */
   abstract readonly hostNode: HostNode
   /** @internal - 视图运行状态 */
-  state: ViewState = ViewState.ALLOCATED
+  state: ViewState = ViewState.CREATED
   /** @internal - 是否在Svg命名空间 */
   svgNamespace: boolean
   /** @internal - 副作用清理，仅 DynamicView 和 ElementView 运行时存在需要清理的副作用 */
