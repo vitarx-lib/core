@@ -1,5 +1,5 @@
 import type { RequiredKeys } from '@vitarx/utils'
-import type { View } from './view.js'
+import type { ValidChild } from './view.js'
 
 export type AnyProps = { [k: string]: any }
 
@@ -12,7 +12,7 @@ export type WidgetPublicInstance = { readonly [key: string]: any }
  * 组件类型
  */
 export type Widget<P extends AnyProps = any> = {
-  (props: P): View
+  (props: P): ValidChild
   /**
    * 定义组件的默认属性。
    *
