@@ -86,24 +86,12 @@ interface LazyProps<T extends Widget> extends LazyLoadOptions {
  * Lazy组件，用于延迟加载子组件，
  * 提供了延迟加载、超时处理、加载状态显示等功能
  *
- * @param T 泛型参数，必须继承自Widget类型
- * @param delay 延迟加载的时间
- * @param timeout 超时时间
- * @param loading 加载状态的视图
- * @param loader 加载函数，返回Promise
- * @param children 子组件
- * @param inject 注入的属性
- * @param onError 异常处理函数
+ * @template T - 子组件类型
+ * @param { LazyProps<T> } props - 惰性加载配置选项
+ * @returns { View } - 返回一个视图，用于延迟加载子组件
  */
-function Lazy<T extends Widget>({
-  delay = 200,
-  timeout = 0,
-  loading,
-  loader,
-  children,
-  inject,
-  onError
-}: LazyProps<T>): View {
+function Lazy<T extends Widget>(props: LazyProps<T>): View {
+  const { delay = 200, timeout = 0, loading, loader, children, inject, onError } = props
   let suspenseCounter: Ref<number> | undefined // 用于计数Suspense的引用
   let cancelTask: (() => void) | undefined = undefined // 用于取消异步任务的函数
   const showView = shallowRef<View>(createAnchorView('<Lazy> loading ...')) // 当前显示的视图
