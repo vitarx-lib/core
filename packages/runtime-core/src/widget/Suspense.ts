@@ -114,4 +114,4 @@ Suspense.validateProps = (props: AnyProps) => {
   }
 }
 
-export default Suspense
+export { Suspense, SuspenseProps }
