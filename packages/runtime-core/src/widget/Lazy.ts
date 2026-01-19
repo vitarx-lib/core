@@ -186,7 +186,7 @@ Lazy.validateProps = (props: AnyProps): void => {
  * @param [options.onError] - 处理器加载失败/返回备用View
  * @returns { ViewBuilder } 懒加载组件的视图构建器
  */
-export function lazy<T extends Widget>(
+function lazy<T extends Widget>(
   loader: () => Promise<{ default: T }>,
   options?: LazyLoadOptions
 ): ViewBuilder<WidgetPropsType<T>, WidgetView<typeof Lazy<T>>> {
@@ -195,4 +195,4 @@ export function lazy<T extends Widget>(
   })
 }
 
-export { Lazy, LazyProps, LazyLoadOptions }
+export { Lazy, lazy, LazyProps, LazyLoadOptions }
