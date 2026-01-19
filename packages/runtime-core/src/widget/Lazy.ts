@@ -41,7 +41,7 @@ interface LazyLoadOptions {
    *
    * @default 200
    */
-  delay: number
+  delay?: number
   /**
    * 超时时间
    *
@@ -49,7 +49,7 @@ interface LazyLoadOptions {
    *
    * @default 0
    */
-  timeout: number
+  timeout?: number
   /**
    * 异常处理钩子
    *
@@ -96,8 +96,8 @@ interface LazyProps<T extends Widget> extends LazyLoadOptions {
  * @param onError 异常处理函数
  */
 function Lazy<T extends Widget>({
-  delay,
-  timeout,
+  delay = 200,
+  timeout = 0,
   loading,
   loader,
   children,
@@ -147,10 +147,7 @@ function Lazy<T extends Widget>({
   })
   return createDynamicView(showView)
 }
-Lazy.defaultProps = {
-  delay: 200,
-  timeout: 0
-}
+
 Lazy.validateProps = (props: AnyProps): void => {
   if (typeof props.loader !== 'function') {
     throw new TypeError(`[Lazy]: loader 期望得到一个异步函数，实际类型为 ${typeof props.loader}`)
