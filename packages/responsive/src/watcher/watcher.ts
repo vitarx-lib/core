@@ -64,6 +64,7 @@ export interface WatcherOptions extends DebuggerOptions {
  * @implements EffectHandle
  */
 export abstract class Watcher extends Effect {
+  private dirty: boolean = false
   /**
    * 静态缓存 scheduler 对象，用于存储不同 flush 模式对应的调度器实例。
    *
@@ -99,7 +100,13 @@ export abstract class Watcher extends Effect {
     } else {
       this.scheduler = scheduler
     }
-    this.effectHandle = () => this.scheduler(this.execute)
+    this.effectHandle = () => {
+      if (this.isPaused) {
+        this.dirty = true
+      } else {
+        this.scheduler(this.execute)
+      }
+    }
     // 判断是否为开发环境
     if (__DEV__) {
       bindDebuggerOptions(this.effectHandle, options)
@@ -130,6 +137,20 @@ export abstract class Watcher extends Effect {
     this.runEffect()
   }
 
+  /**
+   * 重写恢复后的处理方法
+   * 当组件或实例恢复后，此方法会被调用
+   * 主要用于检查是否有未执行的任务，并在需要时重新调度执行
+   */
+  protected override afterResume() {
+    // 检查是否有标记为"dirty"的未执行任务
+    if (this.dirty) {
+      // 清除dirty标记，表示任务即将被执行
+      this.dirty = false
+      // 调度执行任务，传入execute方法作为回调
+      this.scheduler(this.execute)
+    }
+  }
   /**
    * 在对象被销毁前执行清理操作
    * 这是一个重写的方法，用于在组件或实例被销毁前执行必要的清理工作
