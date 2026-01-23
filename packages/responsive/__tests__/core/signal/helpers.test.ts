@@ -61,7 +61,7 @@ describe('runEffect', () => {
   it('没有依赖时不返回停止函数', () => {
     const effect = vi.fn()
     const stop = runEffect(effect)
-    expect(stop).toBe(undefined)
+    expect(stop).toBe(null)
     stop?.()
   })
 
