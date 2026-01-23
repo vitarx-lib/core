@@ -1,8 +1,7 @@
 import { IS_RAW } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
-import type { ErrorInfo } from '../runtime/index.js'
-import type { Directive, HostContainer, View, Widget } from '../types/index.js'
-import { createWidgetView } from '../view/index.js'
+import { ComponentView } from '../core/index.js'
+import type { Component, Directive, ErrorInfo, HostContainer, View } from '../types/index.js'
 
 /** 应用配置 */
 export type AppConfig = Vitarx.AppConfig
@@ -117,9 +116,9 @@ export class App {
    * @param root - 根组件 / 根节点
    * @param config - 配置选项
    */
-  constructor(root: View | Widget, config?: AppConfig) {
+  constructor(root: View | Component, config?: AppConfig) {
     if (typeof root === 'function') {
-      this.#rootView = createWidgetView(root, {})
+      this.#rootView = new ComponentView(root)
     } else {
       this.#rootView = root
     }

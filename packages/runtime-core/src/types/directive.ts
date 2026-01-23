@@ -1,5 +1,5 @@
+import type { ElementView } from '../core/index.js'
 import type { HostElement } from './element.js'
-import type { ElementView } from './view.js'
 
 export interface DirectiveBinding {
   /**

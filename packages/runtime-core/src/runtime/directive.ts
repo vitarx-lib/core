@@ -1,6 +1,7 @@
 import { isArray, isPlainObject, logger } from '@vitarx/utils'
-import { ViewFlag } from '../shared/constants/viewFlag.js'
-import type { Directive, DirectiveBinding, ElementView, HostElement, View } from '../types/index.js'
+import { ViewKind } from '../constants/index.js'
+import type { ElementView } from '../core/index.js'
+import type { Directive, DirectiveBinding, HostElement, View } from '../types/index.js'
 import { getInstance } from './context.js'
 
 const globalDirectives = new Map<string, Directive>()
@@ -95,9 +96,9 @@ export function withDirectives<T extends View>(
   directives: Array<[name: string | Directive, binding: DirectiveBinding]> | Array<Directive>
 ): T {
   if (
-    view.flag !== ViewFlag.ELEMENT &&
-    view.flag !== ViewFlag.WIDGET &&
-    view.flag !== ViewFlag.DYNAMIC
+    view.kind !== ViewKind.ELEMENT &&
+    view.kind !== ViewKind.COMPONENT &&
+    view.kind !== ViewKind.SWITCH
   ) {
     return view
   }

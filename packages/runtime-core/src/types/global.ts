@@ -1,11 +1,12 @@
-import type { ErrorHandler } from '../runtime/hook.js'
+import type { Component } from './component.js'
+import type { ErrorHandler } from './hook.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
   JSXElementAttributes,
+  MaybeRef,
   WithRefProps
 } from './props.js'
 import type { View } from './view.js'
-import type { Widget } from './widget.js'
 
 declare global {
   namespace Vitarx {
@@ -86,7 +87,64 @@ declare global {
     /**
      * Vitarx 框架内置固有属性
      */
-    interface IntrinsicAttributes extends GlobalIntrinsicAttributes {}
+    interface IntrinsicAttributes extends GlobalIntrinsicAttributes {
+      /**
+       * 显示/隐藏节点
+       *
+       * 此属性会给元素添加上 `display: none` 样式，
+       * 它可能会和元素原有的样式冲突，请自行处理。
+       *
+       * @example
+       * ```tsx
+       * const show = ref(false)
+       * // v-show 语法的使用 可以忽略.value
+       * <div v-show={show}></div>
+       * // 渲染结果
+       * <div style="display: none;"></div>
+       * ```
+       */
+      'v-show'?: MaybeRef<boolean>
+      /**
+       * 条件渲染指令 - v-if
+       *
+       * 用于条件性地渲染元素。
+       * 当表达式的值为真时，元素将被渲染；否则，元素不会被渲染到DOM中。
+       *
+       * ```tsx
+       * const show = ref(true)
+       * // v-if指令不支持 ref 自动解包，必须使用.value
+       * <div v-if={show.value}></div>
+       * ```
+       */
+      'v-if'?: unknown
+      /**
+       * 条件渲染指令 - v-else
+       *
+       * 用于表示else块。
+       * 必须紧跟在v-if或v-else-if元素后面。
+       *
+       * ```tsx
+       * const show = ref(false)
+       * <div v-if={show.value}></div>
+       * <div v-else></div>
+       * ```
+       */
+      'v-else'?: unknown
+      /**
+       * 条件渲染指令 - v-else-if
+       *
+       * 用于表示else-if块。
+       * 必须紧跟在v-if或v-else-if元素后面。
+       *
+       * ```tsx
+       * const show = ref(1)
+       * <div v-if={show.value === 0}></div>
+       * <div v-else-if={show.value === 1}></div>
+       * <div v-else></div>
+       * ```
+       */
+      'v-else-if'?: unknown
+    }
     /**
      * App配置项
      */
@@ -118,7 +176,7 @@ declare global {
      * 定义 JSX 元素的类型，可以是字符串（原生 HTML 标签）或组件构造函数
      * 例如：'div'、MyWidget 等
      */
-    type ElementType = string | Widget
+    type ElementType = string | Component
     type Element = View
     /**
      * JSX 内置属性接口，扩展了 Vitarx 的内置属性

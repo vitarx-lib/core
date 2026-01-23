@@ -1,9 +1,9 @@
 import type { Ref, UnwrapRef } from '@vitarx/responsive'
 import type { PickRequired } from '@vitarx/utils'
-import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../view/index.js'
+import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../core/index.js'
+import type { AnyProps, Component, ComponentProps } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
 import type { CreatableType } from './view.js'
-import type { AnyProps, Widget, WidgetPropsType } from './widget.js'
 
 /**
  * 可能是引用值的类型
@@ -110,22 +110,6 @@ export interface IntrinsicAttributes {
    */
   ref?: Ref<unknown>
   /**
-   * 显示/隐藏节点
-   *
-   * 此属性会给元素添加上 `display: none` 样式，
-   * 它可能会和元素原有的样式冲突，请自行处理。
-   *
-   * @example
-   * ```tsx
-   * const show = ref(false)
-   * // v-show 语法的使用 可以忽略.value
-   * <div v-show={show}></div>
-   * // 渲染结果
-   * <div style="display: none;"></div>
-   * ```
-   */
-  'v-show'?: MaybeRef<boolean>
-  /**
    * 绑定属性
    *
    * 注意：不能通过 `v-bind` 指令绑定全局属性(ref、key、children...)，简单组件除外。
@@ -136,46 +120,6 @@ export interface IntrinsicAttributes {
    *  第二个元素可以指定哪些属性不需要绑定。
    */
   'v-bind'?: BindAttributes
-  /**
-   * 条件渲染指令 - v-if
-   *
-   * 用于条件性地渲染元素。
-   * 当表达式的值为真时，元素将被渲染；否则，元素不会被渲染到DOM中。
-   *
-   * ```tsx
-   * const show = ref(true)
-   * // v-if指令不支持 ref 自动解包，必须使用.value
-   * <div v-if={show.value}></div>
-   * ```
-   */
-  'v-if'?: unknown
-  /**
-   * 条件渲染指令 - v-else
-   *
-   * 用于表示else块。
-   * 必须紧跟在v-if或v-else-if元素后面。
-   *
-   * ```tsx
-   * const show = ref(false)
-   * <div v-if={show.value}></div>
-   * <div v-else></div>
-   * ```
-   */
-  'v-else'?: unknown
-  /**
-   * 条件渲染指令 - v-else-if
-   *
-   * 用于表示else-if块。
-   * 必须紧跟在v-if或v-else-if元素后面。
-   *
-   * ```tsx
-   * const show = ref(1)
-   * <div v-if={show.value === 0}></div>
-   * <div v-else-if={show.value === 1}></div>
-   * <div v-else></div>
-   * ```
-   */
-  'v-else-if'?: unknown
   /**
    * 支持传入未知属性
    */
@@ -292,8 +236,8 @@ export type ExtractProps<T extends CreatableType> = T extends Dynamic
     ? FragmentProps
     : T extends HostElementTag
       ? IntrinsicElements[T]
-      : T extends Widget
-        ? WidgetPropsType<T>
+      : T extends Component
+        ? ComponentProps<T>
         : AnyProps
 
 /**
@@ -343,8 +287,8 @@ export type WithProps<T extends CreatableType, K extends keyof any = 'children'>
 /**
  * 此类型工具用于提供给 JSX.LibraryManagedAttributes 使用，确保类型推导正确。
  */
-export type JSXElementAttributes<C, P> = C extends Widget
-  ? WithVModel<WithRefProps<WithVModelUpdate<WidgetPropsType<C>>>>
+export type JSXElementAttributes<C, P> = C extends Component
+  ? WithVModel<WithRefProps<WithVModelUpdate<ComponentProps<C>>>>
   : P extends object
     ? WithRefProps<P>
     : {}

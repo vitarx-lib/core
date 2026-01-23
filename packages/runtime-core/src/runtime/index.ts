@@ -1,6 +1,5 @@
 export * from './context.js'
 export * from './directive.js'
-export * from './driver.js'
 export * from './hook.js'
 export * from './provide.js'
 export * from './renderer.js'

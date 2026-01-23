@@ -1,5 +1,5 @@
 import { ShallowRef } from '@vitarx/responsive'
-import { SUSPENSE_COUNTER } from '../shared/constants/symbol.js'
+import { SUSPENSE_COUNTER } from '../constants/index.js'
 import { inject } from './provide.js'
 
 /**

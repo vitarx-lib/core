@@ -1,6 +1,6 @@
 import type { AnyFunction } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import { WidgetInstance } from '../view/index.js'
+import type { ComponentInstance } from '../core/index.js'
 import { getInstance } from './context.js'
 
 /**
@@ -110,13 +110,13 @@ export function inject<T>(
   }
 
   // 向上查找祖先节点
-  let parent: WidgetInstance | null = ctx.owner
+  let parent: ComponentInstance | null = ctx.parent
   while (parent) {
     if (parent.provide?.has(name)) {
       const value = parent.provide.get(name)
       if (value !== undefined) return value
     }
-    parent = parent.owner
+    parent = parent.parent
   }
   // 尝试从 appContext 中获取数据
   if (ctx.app?.hasProvide(name)) {

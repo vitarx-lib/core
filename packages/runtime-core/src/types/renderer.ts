@@ -1,3 +1,4 @@
+import type { FragmentView } from '../core/index.js'
 import type {
   HostComment,
   HostContainer,
@@ -7,7 +8,6 @@ import type {
   HostNode,
   HostText
 } from './element.js'
-import type { FragmentView } from './view.js'
 
 /**
  * 平台适配渲染器接口，定义了操作DOM元素基本的方法
@@ -49,6 +49,11 @@ export interface ViewRenderer {
    * @param node - 节点
    */
   isElement(node: HostNode): node is HostElement
+  /**
+   * 判断是否为svg元素
+   * @param node
+   */
+  isSVGElement(node: HostNode): boolean
   /**
    * 判断是否为文本节点
    *

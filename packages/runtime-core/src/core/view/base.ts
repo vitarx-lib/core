@@ -1,0 +1,116 @@
+import { IS_RAW } from '@vitarx/responsive'
+import { App } from '../../app/index.js'
+import { ViewState } from '../../constants/index.js'
+import { IS_VIEW } from '../../constants/symbol.js'
+import { ViewKind } from '../../constants/viewKind.js'
+import type {
+  CodeLocation,
+  HostContainer,
+  HostNode,
+  MountType,
+  ViewContext
+} from '../../types/index.js'
+import type { ComponentInstance } from './component.js'
+
+export abstract class BaseView<K extends ViewKind> {
+  /** @internal 标记为视图对象，方便isView判断 */
+  readonly [IS_VIEW]: true = true
+  /** @internal 避免被响应式代理 */
+  readonly [IS_RAW]: true = true
+  /** @internal 视图类型 */
+  abstract readonly kind: K
+  /** @internal DOM节点 */
+  public abstract $node: HostNode | null
+  /** @internal 仅For组件使用 */
+  public key?: unknown
+  /** @internal 代码位置，仅调试模式存在 */
+  public location?: CodeLocation
+  /** @internal 上下文*/
+  public ctx?: ViewContext
+  /** @internal 视图状态 */
+  protected state: ViewState = ViewState.UNUSED
+  protected constructor(key?: unknown, location?: CodeLocation) {
+    this.key = key
+    this.location = location
+  }
+  get owner(): ComponentInstance | null {
+    return this.ctx?.owner ?? null
+  }
+  get app(): App | null {
+    return this.ctx?.app ?? null
+  }
+  get isActivated(): boolean {
+    return this.state === ViewState.ACTIVATED
+  }
+  get isInitialized(): boolean {
+    return this.state === ViewState.INITIALIZED
+  }
+  get isDeactivated(): boolean {
+    return this.state === ViewState.DEACTIVATED
+  }
+  get isUnused(): boolean {
+    return this.state === ViewState.UNUSED
+  }
+  /** 初始化运行时（不创建 DOM，不可见） */
+  init(ctx?: ViewContext): void {
+    if (__DEV__ && this.state !== ViewState.UNUSED) {
+      throw new Error('[View.init]: 视图正在运行，不能进行初始化')
+    }
+    this.ctx = ctx
+    this.doInit?.()
+    this.state = ViewState.INITIALIZED
+  }
+  /** 挂载到宿主（创建 / 插入 DOM） */
+  mount(containerOrAnchor: HostContainer | HostNode, type: MountType = 'append'): void {
+    if (__SSR__) {
+      throw new Error('[View.mount]: is not supported in SSR mode')
+    }
+    if (this.state === ViewState.ACTIVATED) {
+      throw new Error('[View.mount]: The view is mounted and cannot be mounted repeatedly')
+    }
+    if (this.state === ViewState.UNUSED) this.init()
+    this.doMount?.(containerOrAnchor, type)
+    this.state = ViewState.ACTIVATED
+  }
+  /** 彻底销毁（不可再次使用，或需重新 init） */
+  dispose(): void {
+    if (this.state === ViewState.UNUSED) return
+    this.doDispose?.()
+    delete this.ctx
+    this.state = ViewState.UNUSED
+  }
+
+  /**
+   * 激活视图
+   *
+   * @warning ⚠️ `Freeze` 组件调用，开发者请勿随意调用！！！
+   *
+   * @internal - 内部核心方法，开发者勿随意调用！！！
+   */
+  activate(): void {
+    if (this.state !== ViewState.DEACTIVATED) {
+      throw new Error('[View.activate]: The view is not deactivated and cannot be activated')
+    }
+    this.doActivate?.()
+    this.state = ViewState.ACTIVATED
+  }
+  /**
+   * 停用视图
+   *
+   * @warning ⚠️ `Freeze` 组件调用，开发者请勿随意调用！！！
+   *
+   * @internal - 内部核心方法，开发者勿随意调用！！！
+   */
+  deactivate(): void {
+    if (this.state !== ViewState.ACTIVATED) {
+      throw new Error('[View.deactivate]: The view is not activated and cannot be deactivated')
+    }
+    this.doDeactivate?.()
+    this.state = ViewState.DEACTIVATED
+  }
+  protected doActivate?(): void
+  protected doDeactivate?(): void
+  protected doInit?(): void
+  protected doMount?(containerOrAnchor: HostContainer | HostNode, type: MountType): void
+  protected doDispose?(): void
+}
