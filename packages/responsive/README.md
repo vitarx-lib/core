@@ -43,7 +43,6 @@ yarn add @vitarx/responsive
 | depend          | withSuspendedTracking | 函数 | 暂停依赖追踪的辅助函数                                |
 | depend          | peekSignal            | 函数 | 查看信号的当前值而不触发跟踪                             |
 | depend          | trackEffectDeps       | 函数 | 追踪函数执行期间的依赖关系，并在依赖变化后重新执行                  |
-| depend          | runEffect             | 函数 | trackEffectDeps 和 clearEffectLinks 的组合助手函数 |
 | depend          | trackSignal           | 函数 | 跟踪信号变化的函数                                  |
 | depend          | triggerSignal         | 函数 | 触发信号的处理函数                                  |
 | depend          | EffectHandle          | 接口 | 副作用句柄                                      |
