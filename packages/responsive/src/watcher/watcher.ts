@@ -85,6 +85,7 @@ export abstract class Watcher extends Effect {
   public scheduler: Scheduler
   /** cleanup 回调 */
   private readonly cleanups: VoidCallback[] = []
+  /** 副作用句柄 */
   protected readonly effectHandle: EffectHandle
   /**
    * 构造函数
@@ -100,13 +101,15 @@ export abstract class Watcher extends Effect {
     } else {
       this.scheduler = scheduler
     }
-    this.effectHandle = () => {
-      if (this.isPaused) {
+    const execute = (): void => {
+      if (!this.isActive) {
         this.dirty = true
-      } else {
-        this.scheduler(this.execute)
+        return
       }
+      this.runCleanup()
+      this.runEffect()
     }
+    this.effectHandle = () => this.scheduler(execute)
     // 判断是否为开发环境
     if (__DEV__) {
       bindDebuggerOptions(this.effectHandle, options)
@@ -118,25 +121,12 @@ export abstract class Watcher extends Effect {
    * @param cleanupFn - 清理函数
    * @throws {TypeError} 如果清理函数不是函数类型，则抛出一个类型错误
    */
-  public onCleanup = (cleanupFn: VoidCallback): void => {
+  public readonly onCleanup = (cleanupFn: VoidCallback): void => {
     if (typeof cleanupFn !== 'function') {
       throw new TypeError('[onWatcherCleanup] Invalid cleanup function.')
     }
     this.cleanups.push(cleanupFn)
   }
-
-  /**
-   * 执行副作用
-   *
-   * 立即执行副作用函数，包含错误处理和清理工作。
-   * 与 schedule() 不同，此方法会同步执行，不经过调度器。
-   */
-  protected execute = (): void => {
-    if (!this.isActive) return
-    this.runCleanup()
-    this.runEffect()
-  }
-
   /**
    * 重写恢复后的处理方法
    * 当组件或实例恢复后，此方法会被调用
@@ -145,10 +135,8 @@ export abstract class Watcher extends Effect {
   protected override afterResume() {
     // 检查是否有标记为"dirty"的未执行任务
     if (this.dirty) {
-      // 清除dirty标记，表示任务即将被执行
       this.dirty = false
-      // 调度执行任务，传入execute方法作为回调
-      this.scheduler(this.execute)
+      this.effectHandle()
     }
   }
   /**
