@@ -1,8 +1,6 @@
 import { isString, logger } from '@vitarx/utils'
-import type { DynamicView, TextView } from '../../types/index.js'
 import { TrackedCompute } from '../compiler/index.js'
-import { createDynamicView } from '../creator/dynamic.js'
-import { createTextView } from '../creator/text.js'
+import { SwitchView, TextView } from '../views/index.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface TextProps {
@@ -17,20 +15,20 @@ export interface TextProps {
  * @return {TextView} TextView对象
  */
 export const PlainText = builder(
-  (props: TextProps, key, location): TextView | DynamicView<string> => {
+  (props: TextProps, key, location): TextView | SwitchView<string> => {
     const textView = new TrackedCompute(() => {
       if (__DEV__ && !isString(props.text)) {
-        logger.warn('[PlainText]: text must be a string.', location)
+        logger.warn('[PlainText]: text must be a string.', props.text, location)
       }
       return String(props.text)
     })
 
     return textView.isStatic
-      ? createTextView(textView.value, key, location)
-      : createDynamicView(textView, key, location)
+      ? new TextView(textView.value, key, location)
+      : new SwitchView(textView, key, location)
   }
 )
 
-export type PlainText = ViewBuilder<TextProps, TextView | DynamicView<TextView>> & {
+export type PlainText = ViewBuilder<TextProps, TextView | SwitchView<TextView>> & {
   __is_text: true
 }

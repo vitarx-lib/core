@@ -1,4 +1,4 @@
-import { IS_VIEW_RESOLVER } from '../../shared/constants/symbol.js'
+import { IS_VIEW_BUILDER } from '../../shared/constants/symbol.js'
 import type { AnyProps, CodeLocation, View } from '../../types/index.js'
 
 /**
@@ -6,7 +6,7 @@ import type { AnyProps, CodeLocation, View } from '../../types/index.js'
  */
 export type ViewBuilder<P extends AnyProps = any, R extends View = View> = {
   (props: P | null, key?: unknown, location?: CodeLocation): R
-  [IS_VIEW_RESOLVER]: true
+  [IS_VIEW_BUILDER]: true
 }
 
 /**
@@ -39,7 +39,7 @@ export type ViewBuilder<P extends AnyProps = any, R extends View = View> = {
 export function builder<P extends AnyProps, R extends View>(
   builder: (props: P, key?: unknown, location?: CodeLocation) => R
 ): ViewBuilder<P, R> {
-  Object.defineProperty(builder, IS_VIEW_RESOLVER, {
+  Object.defineProperty(builder, IS_VIEW_BUILDER, {
     value: true,
     configurable: false,
     enumerable: false

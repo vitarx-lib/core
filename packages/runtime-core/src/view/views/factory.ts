@@ -1,18 +1,16 @@
-import { isViewResolver } from '../../shared/utils/is.js'
+import { isViewResolver } from '../../shared/index.js'
 import type {
   AnyProps,
   CodeLocation,
+  Component,
   CreatableType,
-  ElementView,
   HostElementTag,
   ValidProps,
-  View,
-  Widget,
-  WidgetView
+  View
 } from '../../types/index.js'
-import { type ViewBuilder } from '../builder/factory.js'
-import { createElementView } from './element.js'
-import { createWidgetView } from './widget.js'
+import type { ViewBuilder } from '../builder/index.js'
+import { ComponentView } from './component.js'
+import { ElementView } from './element.js'
 
 export function createView<P extends AnyProps, B extends View>(
   type: ViewBuilder<P, B>,
@@ -20,12 +18,12 @@ export function createView<P extends AnyProps, B extends View>(
   key?: unknown,
   location?: CodeLocation
 ): B
-export function createView<T extends Widget>(
+export function createView<T extends Component>(
   type: T,
   props?: ValidProps<T> | null,
   key?: unknown,
   location?: CodeLocation
-): WidgetView<T>
+): ComponentView<T>
 export function createView<T extends HostElementTag>(
   type: T,
   props?: ValidProps<T> | null,
@@ -44,14 +42,16 @@ export function createView<T extends CreatableType>(
   key?: unknown,
   location?: CodeLocation
 ): View {
-  if (isViewResolver(type)) {
-    return type(props, key, location)
-  }
+  let view: View
+
   if (typeof type === 'string') {
-    return createElementView(type, props, key, location)
+    view = new ElementView(type, props)
+  } else if (typeof type === 'function') {
+    view = isViewResolver(type) ? type(props, key, location) : new ComponentView(type, props)
+  } else {
+    throw new Error(`[Vitarx] Invalid block type: ${type}`)
   }
-  if (typeof type === 'function') {
-    return createWidgetView(type, props, key, location)
-  }
-  throw new Error(`[Vitarx] Invalid block type: ${type}`)
+  view.key = key
+  view.location = location
+  return view
 }

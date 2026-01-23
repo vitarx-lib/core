@@ -10,15 +10,15 @@ import type {
   ValidChildren,
   View
 } from '../../types/index.js'
-import { createDynamicView } from './dynamic.js'
-import { createTextView } from './text.js'
+import { TextView } from '../views/atomic.js'
+import { SwitchView } from '../views/switch.js'
 
 type ResolvePropsResult<T extends AnyProps> = {
   ref?: Ref
   props: T | null
 }
 
-const SPECIAL_MERGERS = {
+const SPECIAL_PROP_MERGERS = {
   style: StyleUtils.mergeCssStyle,
   class: StyleUtils.mergeCssClass,
   className: StyleUtils.mergeCssClass,
@@ -73,8 +73,8 @@ export function bindProps(props: AnyProps, bind: BindAttributes): AnyProps {
     const inBinding = hasOwnProperty(binding, key)
 
     // ---- class / style 合并 ----
-    if (key in SPECIAL_MERGERS && inProps && inBinding) {
-      const merger = SPECIAL_MERGERS[key as keyof typeof SPECIAL_MERGERS]
+    if (key in SPECIAL_PROP_MERGERS && inProps && inBinding) {
+      const merger = SPECIAL_PROP_MERGERS[key as keyof typeof SPECIAL_PROP_MERGERS]
       Object.defineProperty(result, key, {
         enumerable: true,
         get() {
@@ -108,6 +108,7 @@ export function bindProps(props: AnyProps, bind: BindAttributes): AnyProps {
 
   return result
 }
+
 /**
  * 解析组件的props属性
  *
@@ -130,6 +131,7 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   if (isRef(ref)) result.ref = ref
   return result
 }
+
 /**
  * 合并多个对象属性的工具函数
  *
@@ -155,7 +157,7 @@ export function mergeProps<T extends AnyProps>(...sources: AnyProps[]): AnyProps
   }
   // ---------- 定义 getter ----------
   for (const key of keys) {
-    const merger = SPECIAL_MERGERS[key as keyof typeof SPECIAL_MERGERS]
+    const merger = SPECIAL_PROP_MERGERS[key as keyof typeof SPECIAL_PROP_MERGERS]
 
     Object.defineProperty(result, key, {
       enumerable: true,
@@ -187,6 +189,7 @@ export function mergeProps<T extends AnyProps>(...sources: AnyProps[]): AnyProps
   }
   return result as T
 }
+
 /**
  * 解析并扁平化子节点数组
  *
@@ -202,12 +205,10 @@ export function mergeProps<T extends AnyProps>(...sources: AnyProps[]): AnyProps
  * @returns {ResolvedChildren} 解析后的子节点数组
  */
 export function resolveChildren(children: ValidChildren): ResolvedChildren {
-  if (children === null || children === undefined || typeof children === 'boolean') return []
-
   const childList: View[] = []
+  if (children == null) return childList
   // 使用单个栈来处理嵌套结构，避免多次创建数组
   const stack: Array<unknown> = Array.isArray(children) ? [...children] : [children]
-
   while (stack.length > 0) {
     const current = stack.pop()!
 
@@ -221,15 +222,16 @@ export function resolveChildren(children: ValidChildren): ResolvedChildren {
     }
 
     // 直接处理当前项，避免重复的类型检查
-    if (current == null || typeof current === 'boolean') continue
+    if (current == null) continue
 
     // 直接进行类型判断，减少函数调用开销
     if (isView(current)) {
       childList.push(current)
     } else if (isRef(current)) {
-      childList.push(createDynamicView(current))
+      childList.push(new SwitchView(current))
     } else {
-      childList.push(createTextView(String(current)))
+      const str = String(current)
+      if (str.length) childList.push(new TextView(str))
     }
   }
 

@@ -1,9 +1,7 @@
 import { logger } from '@vitarx/utils'
 import type { AnyProps, CreatableType, ValidChildren, View } from '../../types/index.js'
 import { TrackedCompute } from '../compiler/index.js'
-import { createAnchorView } from '../creator/anchor.js'
-import { createDynamicView } from '../creator/dynamic.js'
-import { createView } from '../creator/factory.js'
+import { CommentView, createView, SwitchView } from '../views/index.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface DynamicProps {
@@ -50,11 +48,11 @@ export const Dynamic = builder((props: DynamicProps, key, location): View => {
     if (!is) {
       const message = `Dynamic "is" prop is mandatory and cannot be empty.`
       logger.warn(message, location)
-      return createAnchorView(message)
+      return new CommentView(message)
     }
     return createView(is, resolvedProps, key, location)
   })
-  return view.isStatic ? view.value : createDynamicView(view, key, location)
+  return view.isStatic ? view.value : new SwitchView(view, key, location)
 })
 
 export type Dynamic = ViewBuilder<DynamicProps> & { __is_dynamic: true }

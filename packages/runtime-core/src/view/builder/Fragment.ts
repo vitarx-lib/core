@@ -1,5 +1,5 @@
-import type { FragmentView, ValidChildren } from '../../types/index.js'
-import { createFragmentView } from '../creator/fragment.js'
+import type { ValidChildren } from '../../types/index.js'
+import { FragmentView } from '../views/index.js'
 import type { DynamicProps } from './Dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
@@ -14,7 +14,7 @@ export interface FragmentProps {
  * @return {FragmentView} FragmentView 对象
  */
 export const Fragment = builder((props: FragmentProps, key, location): FragmentView => {
-  return createFragmentView(props.children, key, location)
+  return new FragmentView(props.children, key, location)
 })
 
 export type Fragment = ViewBuilder<DynamicProps, FragmentView> & { __is_fragment: true }

@@ -1,5 +1,5 @@
 import type { View } from '../../types/index.js'
-import { createDynamicView } from '../creator/index.js'
+import { SwitchView } from '../views/switch.js'
 import { BranchCompute, TrackedCompute } from './compute.js'
 
 /**
@@ -13,7 +13,6 @@ import { BranchCompute, TrackedCompute } from './compute.js'
  * @returns {TrackedCompute} 返回一个 TrackedCompute 对象
  */
 export function tracked<T = any>(getter: () => T): TrackedCompute<T> {
-  // 判断计算值是否是静态的，如果是则返回计算值，否则返回 TrackedCompute 对象
   return new TrackedCompute<T>(getter)
 }
 
@@ -27,7 +26,6 @@ export function tracked<T = any>(getter: () => T): TrackedCompute<T> {
  * @returns {BranchCompute<T>} - 返回一个分支计算对象
  */
 export function branch<T = any>(select: () => number, branches: (() => T)[]): BranchCompute<T> {
-  // 判断是否为静态计算，如果是则返回计算值，否则返回计算对象
   return new BranchCompute(select, branches)
 }
 
@@ -45,5 +43,5 @@ export function build(build: () => View): View {
   // 创建一个TrackedCompute实例，传入构建函数
   const trackedCompute = new TrackedCompute<View>(build)
   // 判断如果是静态视图，直接返回计算值；否则创建动态视图
-  return trackedCompute.isStatic ? trackedCompute.value : createDynamicView(trackedCompute)
+  return trackedCompute.isStatic ? trackedCompute.value : new SwitchView(trackedCompute)
 }
