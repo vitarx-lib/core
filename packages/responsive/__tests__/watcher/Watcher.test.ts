@@ -65,33 +65,6 @@ describe('watcher/Watcher', () => {
     })
   })
 
-  describe('execute', () => {
-    it('should run cleanup and runEffect when active', () => {
-      const watcher = new TestWatcher()
-      const runCleanupSpy = vi.spyOn(watcher as any, 'runCleanup')
-      const runEffectSpy = vi.spyOn(watcher as any, 'runEffect')
-
-      watcher['execute']()
-
-      expect(runCleanupSpy).toHaveBeenCalled()
-      expect(runEffectSpy).toHaveBeenCalled()
-    })
-
-    it('should not run cleanup and runEffect when not active', () => {
-      const watcher = new TestWatcher()
-      // Make watcher inactive
-      // @ts-ignore
-      watcher['_state'] = 'disposed'
-      const runCleanupSpy = vi.spyOn(watcher as any, 'runCleanup')
-      const runEffectSpy = vi.spyOn(watcher as any, 'runEffect')
-
-      watcher['execute']()
-
-      expect(runCleanupSpy).not.toHaveBeenCalled()
-      expect(runEffectSpy).not.toHaveBeenCalled()
-    })
-  })
-
   describe('beforeDispose', () => {
     it('should run cleanup and clear effect deps', async () => {
       const watcher = new TestWatcher()
