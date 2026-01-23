@@ -1,5 +1,5 @@
+import type { DeepReadonly } from '@vitarx/utils'
 import { isObject, logger } from '@vitarx/utils'
-import type { DeepReadonly } from '@vitarx/utils/src/index.js'
 import {
   type DeepUnwrapRefs,
   IS_RAW,
