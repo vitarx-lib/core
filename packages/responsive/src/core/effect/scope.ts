@@ -1,4 +1,4 @@
-import { logger, type VoidCallback } from '@vitarx/utils'
+import { type VoidCallback } from '@vitarx/utils'
 import { type EffectState } from './effect.js'
 import { NEXT_EFFECT, OWNER_SCOPE, PREV_EFFECT } from './symbol.js'
 
@@ -287,10 +287,7 @@ export class EffectScope {
    * 这是链表的销毁方法，执行后链表将不再可用
    */
   dispose(): void {
-    if (this.state === 'disposed') {
-      logger.warn(`[EffectScope][${String(this.name)}] has been disposed.`)
-      return
-    }
+    if (this.state === 'disposed') return
     this._state = 'disposed'
     let node = this._head // 从链表头节点开始遍历
     while (node) {
@@ -320,9 +317,7 @@ export class EffectScope {
    * 调用完成后，会触发 'pause' 回调
    */
   pause(): void {
-    if (this.state !== 'active') {
-      throw new Error(`[EffectScope][${String(this.name)}] Cannot pause. Scope is not active.`)
-    }
+    if (this.state !== 'active') return
     this._state = 'paused'
     this.traverseEffects('pause')
   }
@@ -333,9 +328,7 @@ export class EffectScope {
    * 最后会触发 'resume' 类型的回调函数
    */
   resume(): void {
-    if (this.state !== 'paused') {
-      throw new Error(`[EffectScope][${String(this.name)}] Cannot resume. Scope is not paused.`)
-    }
+    if (this.state !== 'paused') return
     this._state = 'active'
     this.traverseEffects('resume')
   }

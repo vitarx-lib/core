@@ -62,8 +62,7 @@ export abstract class Effect implements DisposableEffect {
    * 弃用当前副作用实例
    */
   dispose(): void {
-    if (this.isDisposed) throw new Error('Effect is already disposed.')
-
+    if (this.isDisposed) return
     this.beforeDispose?.()
     this._state = 'disposed'
     // 从作用域链表中删除自己
@@ -75,7 +74,7 @@ export abstract class Effect implements DisposableEffect {
    * 暂停当前副作用实例
    */
   pause(): void {
-    if (!this.isActive) throw new Error('Effect must be active to pause.')
+    if (!this.isActive) return
     this.beforePause?.()
     this._state = 'paused'
     this.afterPause?.()
@@ -85,11 +84,12 @@ export abstract class Effect implements DisposableEffect {
    * 恢复当前副作用实例
    */
   resume(): void {
-    if (!this.isPaused) throw new Error('Effect must be paused to resume.')
+    if (!this.isPaused) return
     this.beforeResume?.()
     this._state = 'active'
     this.afterResume?.()
   }
+
   /**
    * 报告非预期异常
    *
