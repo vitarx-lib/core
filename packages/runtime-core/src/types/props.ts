@@ -100,10 +100,11 @@ export type UnwrapRefProps<T extends AnyProps> = { [K in keyof T]: UnwrapRef<T[K
  *   - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，第二个元素可以指定哪些属性不需要绑定。
  */
 export type BindAttributes = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
+
 /**
- * 元素引用
+ * 实例引用
  */
-export type ElementRef<T = unknown> = Ref<T | null> | ((el: T) => void)
+export type InstanceRef<T = unknown> = Ref<T | null> | ((el: T) => void)
 /**
  * 支持的全局属性
  */
@@ -111,7 +112,7 @@ export interface IntrinsicAttributes {
   /**
    * 引用组件/元素实例
    */
-  ref?: ElementRef
+  ref?: InstanceRef
   /**
    * 绑定属性
    *

@@ -7,11 +7,11 @@ import type {
   CodeLocation,
   DirectiveMap,
   ElementProps,
-  ElementRef,
   HostContainer,
   HostElement,
   HostElementTag,
   HostNode,
+  InstanceRef,
   IntrinsicElements,
   MountType,
   ResolvedChildren,
@@ -28,7 +28,7 @@ export class ElementView<
   public readonly tag: T
   public readonly props: ElementProps<T> | null
   public readonly children: BaseView<any>[]
-  public readonly ref: ElementRef | undefined
+  public readonly ref: InstanceRef | undefined
   /** @internal 指令映射表 */
   public directives?: DirectiveMap
   private effects: ViewEffect[] | null = null

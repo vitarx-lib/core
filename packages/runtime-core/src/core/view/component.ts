@@ -10,12 +10,12 @@ import type {
   ComponentProps,
   Directive,
   DirectiveMap,
-  ElementRef,
   ErrorHandler,
   ErrorSource,
   HookStore,
   HostContainer,
   HostNode,
+  InstanceRef,
   MountType,
   PublicComponentInstance,
   View,
@@ -257,7 +257,7 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
   /** @internal 类型标识 */
   public readonly kind = ViewKind.COMPONENT
   /** @internal 引用组件公开实例 */
-  public readonly ref: ElementRef | undefined
+  public readonly ref: InstanceRef | undefined
   /** @internal 组件实体函数 */
   public readonly component: T
   /** @internal 传递给组件的参数 */

@@ -6,7 +6,7 @@ import { isView } from '../../shared/utils/is.js'
 import type {
   AnyProps,
   BindAttributes,
-  ElementRef,
+  InstanceRef,
   ResolvedChildren,
   ValidChildren,
   View
@@ -15,7 +15,7 @@ import { TextView } from '../view/atomic.js'
 import { SwitchView } from '../view/switch.js'
 
 type ResolvePropsResult<T extends AnyProps> = {
-  ref?: ElementRef
+  ref?: InstanceRef
   props: T | null
 }
 
@@ -186,7 +186,7 @@ export function resolveChildren(children: ValidChildren): ResolvedChildren {
  * @param ref - 引用对象，可以是函数或对象
  * @param el - 要应用引用的元素
  */
-export function applyRef(ref: ElementRef, el: unknown) {
+export function applyRef(ref: InstanceRef, el: unknown) {
   // 如果引用不存在，则直接返回
   if (!ref) return
   // 判断引用是否为函数类型
