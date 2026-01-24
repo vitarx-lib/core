@@ -2,7 +2,7 @@ import { type Ref } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { viewEffect, type ViewEffect } from '../../runtime/effect.js'
-import { getRenderer } from '../../runtime/index.js'
+import { applyDirective, getRenderer } from '../../runtime/index.js'
 import type {
   AnyProps,
   CodeLocation,
@@ -54,15 +54,6 @@ export class ElementView<
     this.props = resolvedProps
     if (ref) this.ref = ref
   }
-
-  protected override doDispose(): void {
-    if (this.effects) {
-      for (const effect of this.effects) effect()
-      this.effects = null
-    }
-    for (const child of this.children) child.dispose()
-    if (this.$node) getRenderer().remove(this.$node)
-  }
   protected override doInit(): void {
     for (const child of this.children) child.init(this.ctx)
   }
@@ -87,8 +78,21 @@ export class ElementView<
     }
     if (this.props) this.setProps(this.$node, this.props, renderer)
     if (this.ref) this.ref.value = this.$node
+    applyDirective(this, this.$node, 'created')
     renderer[type](this.$node, containerOrAnchor)
     for (const child of this.children) child.mount(this.$node, 'append')
+    applyDirective(this, this.$node, 'mounted')
+  }
+  protected override doDispose(): void {
+    if (this.effects) {
+      for (const effect of this.effects) effect()
+      this.effects = null
+    }
+    for (const child of this.children) child.dispose()
+    if (this.$node) {
+      applyDirective(this, this.$node, 'dispose')
+      getRenderer().remove(this.$node)
+    }
   }
   private setProps(node: HostElement, props: AnyProps, renderer: ViewRenderer): void {
     const effects: ViewEffect[] = []
