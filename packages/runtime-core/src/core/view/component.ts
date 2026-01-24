@@ -278,13 +278,15 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
   }
   protected override doActivate(): void {
     this.subView?.activate()
-    this.instance?.show()
+    // 子 -> 父
     this.instance?.scope.resume()
+    this.instance?.show()
   }
   protected override doDeactivate(): void {
-    this.subView?.deactivate()
-    this.instance?.hide()
+    // 父 -> 子
     this.instance?.scope.pause()
+    this.instance?.hide()
+    this.subView?.deactivate()
   }
   protected override doInit(): void {
     this.instance = new ComponentInstance<T>(this)
@@ -292,14 +294,17 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
     this.instance.subView.init(this.instance.subViewContext)
   }
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType) {
+    // 父 -> 子
     this.instance!.beforeMount()
     if (this.ref) this.ref.value = this.instance!.publicInstance
     this.subView!.mount(containerOrAnchor, type)
+    // 子 -> 父
     this.instance!.mounted()
   }
   protected override doDispose(): void {
-    this.subView!.dispose()
+    // 父 -> 子
     this.instance!.dispose()
+    this.subView!.dispose()
     this.instance = null
   }
 }
