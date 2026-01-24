@@ -5,6 +5,7 @@ import { Lifecycle, SUSPENSE_COUNTER, ViewKind } from '../../constants/index.js'
 import { runComponent, withDirectives } from '../../runtime/index.js'
 import { isView } from '../../shared/index.js'
 import type {
+  AnyProps,
   CodeLocation,
   Component,
   ComponentProps,
@@ -22,10 +23,106 @@ import type {
   ViewContext,
   ViewSwitchHandler
 } from '../../types/index.js'
-import { applyRef, resolveProps } from '../compiler/resolve.js'
+import { applyRef, mergeDefaultProps, resolveProps } from '../compiler/resolve.js'
 import { CommentView, TextView } from './atomic.js'
 import { BaseView } from './base.js'
 import { SwitchView } from './switch.js'
+
+/**
+ * ComponentView 是用于管理和渲染组件实例的视图类。
+ * 它负责组件的初始化、挂载、更新和销毁等生命周期管理。
+ *
+ * 核心功能：
+ * - 组件实例的创建和管理
+ * - 组件属性解析和引用处理
+ * - 组件生命周期控制（初始化、挂载、销毁）
+ * - 组件子视图的管理
+ *
+ * @example
+ * ```typescript
+ * const componentView = new ComponentView(MyComponent, { prop1: 'value' }, 'myKey');
+ * componentView.init();
+ * componentView.mount(container);
+ * ```
+ *
+ * @template T - 组件类型，默认为 Component
+ *
+ * @param component - 组件实体函数，定义组件的实现
+ * @param props - 传递给组件的属性对象，可以为 null
+ * @param key - 可选的唯一标识符，用于视图追踪
+ * @param location - 可选的代码位置信息，用于调试
+ *
+ * @remarks
+ * - 组件实例在初始化时创建，在销毁时释放
+ * - 组件引用(ref)会在挂载时自动设置
+ * - 组件销毁时会自动清理子视图和实例
+ */
+export class ComponentView<T extends Component = Component> extends BaseView<ViewKind.COMPONENT> {
+  /** @internal 类型标识 */
+  public readonly kind = ViewKind.COMPONENT
+  /** @internal 引用组件公开实例 */
+  public readonly ref: InstanceRef | undefined
+  /** @internal 组件实体函数 */
+  public readonly component: T
+  /** @internal 传递给组件的参数 */
+  public readonly props: AnyProps
+  /** @internal 指令映射表 */
+  public directives?: DirectiveMap
+  /** @internal 组件运行时实例 */
+  public instance: ComponentInstance<T> | null = null
+  constructor(
+    component: T,
+    props: ComponentProps<T> | null = null,
+    key?: unknown,
+    location?: CodeLocation
+  ) {
+    super(key, location)
+    this.component = component
+    const { props: inputProps, ref } = resolveProps(props)
+    this.ref = ref
+    const resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
+    // 开发时直接冻结
+    if (__DEV__) Object.freeze(resolvedProps)
+    this.props = resolvedProps
+  }
+  get $node(): HostNode | null {
+    return this.instance?.subView.$node ?? null
+  }
+  get subView(): View | null {
+    return this.instance?.subView ?? null
+  }
+  protected override doActivate(): void {
+    this.subView?.activate()
+    // 子 -> 父
+    this.instance?.scope.resume()
+    this.instance?.show()
+  }
+  protected override doDeactivate(): void {
+    // 父 -> 子
+    this.instance?.scope.pause()
+    this.instance?.hide()
+    this.subView?.deactivate()
+  }
+  protected override doInit(): void {
+    this.instance = new ComponentInstance<T>(this)
+    this.instance.init()
+    this.instance.subView.init(this.instance.subViewContext)
+  }
+  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType) {
+    // 父 -> 子
+    this.instance!.beforeMount()
+    if (this.ref) applyRef(this.ref, this.instance!.publicInstance)
+    this.subView!.mount(containerOrAnchor, type)
+    // 子 -> 父
+    this.instance!.mounted()
+  }
+  protected override doDispose(): void {
+    // 父 -> 子
+    this.instance!.dispose()
+    this.subView!.dispose()
+    this.instance = null
+  }
+}
 
 /**
  * 组件实例类，用于管理和维护组件的运行时状态。
@@ -85,7 +182,7 @@ export class ComponentInstance<T extends Component = Component> {
       }
     })
     this.publicInstance = markRaw({})
-    const result = runComponent(this, () => view.component(view.props || {}))
+    const result = runComponent(this, () => view.component(view.props))
     this.subView = this.normalizeView(result)
     this.subViewContext = Object.freeze({
       owner: this,
@@ -221,98 +318,5 @@ export class ComponentInstance<T extends Component = Component> {
       parent = parent.parent
     }
     return undefined
-  }
-}
-
-/**
- * ComponentView 是用于管理和渲染组件实例的视图类。
- * 它负责组件的初始化、挂载、更新和销毁等生命周期管理。
- *
- * 核心功能：
- * - 组件实例的创建和管理
- * - 组件属性解析和引用处理
- * - 组件生命周期控制（初始化、挂载、销毁）
- * - 组件子视图的管理
- *
- * @example
- * ```typescript
- * const componentView = new ComponentView(MyComponent, { prop1: 'value' }, 'myKey');
- * componentView.init();
- * componentView.mount(container);
- * ```
- *
- * @template T - 组件类型，默认为 Component
- *
- * @param component - 组件实体函数，定义组件的实现
- * @param props - 传递给组件的属性对象，可以为 null
- * @param key - 可选的唯一标识符，用于视图追踪
- * @param location - 可选的代码位置信息，用于调试
- *
- * @remarks
- * - 组件实例在初始化时创建，在销毁时释放
- * - 组件引用(ref)会在挂载时自动设置
- * - 组件销毁时会自动清理子视图和实例
- */
-export class ComponentView<T extends Component = Component> extends BaseView<ViewKind.COMPONENT> {
-  /** @internal 类型标识 */
-  public readonly kind = ViewKind.COMPONENT
-  /** @internal 引用组件公开实例 */
-  public readonly ref: InstanceRef | undefined
-  /** @internal 组件实体函数 */
-  public readonly component: T
-  /** @internal 传递给组件的参数 */
-  public readonly props: ComponentProps<T> | null
-  /** @internal 指令映射表 */
-  public directives?: DirectiveMap
-  /** @internal 组件运行时实例 */
-  public instance: ComponentInstance<T> | null = null
-  constructor(
-    component: T,
-    props: ComponentProps<T> | null = null,
-    key?: unknown,
-    location?: CodeLocation
-  ) {
-    super(key, location)
-    this.component = component
-    const { props: resolvedProps, ref } = resolveProps(props)
-    this.ref = ref
-    this.props = resolvedProps
-  }
-  get $node(): HostNode | null {
-    return this.instance?.subView.$node ?? null
-  }
-  get subView(): View | null {
-    return this.instance?.subView ?? null
-  }
-  protected override doActivate(): void {
-    this.subView?.activate()
-    // 子 -> 父
-    this.instance?.scope.resume()
-    this.instance?.show()
-  }
-  protected override doDeactivate(): void {
-    // 父 -> 子
-    this.instance?.scope.pause()
-    this.instance?.hide()
-    this.subView?.deactivate()
-  }
-  protected override doInit(): void {
-    this.instance = new ComponentInstance<T>(this)
-    this.instance.init()
-    this.instance.subView.init(this.instance.subViewContext)
-  }
-  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType) {
-    // 父 -> 子
-    this.instance!.beforeMount()
-    if (this.ref) applyRef(this.ref, this.instance!.publicInstance)
-    this.subView!.mount(containerOrAnchor, type)
-    // 子 -> 父
-    this.instance!.mounted()
-  }
-  protected override doDispose(): void {
-    // 父 -> 子
-    this.instance!.dispose()
-    this.subView!.dispose()
-    this.instance = null
   }
 }
