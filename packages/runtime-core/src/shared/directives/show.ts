@@ -1,16 +1,13 @@
-import { runEffect } from '@vitarx/responsive'
+import { viewEffect } from '../../runtime/effect.js'
 import type { Directive, DirectiveBinding, HostElement } from '../../types/index.js'
 
 export const show: Directive = {
   created(el: HostElement, binding: DirectiveBinding) {
     const originalDisplay = el.style.display
-    el.__effect = runEffect(
-      () => {
-        const value = binding.value
-        el.style.display = value ? originalDisplay : 'none'
-      },
-      { track: 'once' }
-    )
+    el.__effect = viewEffect(() => {
+      const value = binding.value
+      el.style.display = value ? originalDisplay : 'none'
+    })
   },
   dispose(el: HostElement) {
     el.__effect?.()
