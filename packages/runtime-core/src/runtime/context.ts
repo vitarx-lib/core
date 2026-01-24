@@ -8,15 +8,15 @@ let activeComponentInstance: ComponentInstance | null = null
  * 确保在函数执行期间可以获取到组件实例。
  *
  * @template T - 返回值类型
- * @param ctx - 要设置为活动实例的小部件实例
+ * @param instance - 要设置为活动实例的小部件实例
  * @param fn - 要在特定小部件实例上下文中执行的函数
  * @returns {T} 返回执行函数的结果
  */
-export function runComponent<T>(ctx: ComponentInstance, fn: () => T): T {
+export function runComponent<T>(instance: ComponentInstance, fn: () => T): T {
   // 保存当前活动的小部件实例
   const preActiveWidgetRuntime = activeComponentInstance
   // 设置新的活动小部件实例
-  activeComponentInstance = ctx
+  activeComponentInstance = instance
   try {
     // 执行传入的函数并返回其结果
     return fn()
