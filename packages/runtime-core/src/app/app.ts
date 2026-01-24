@@ -56,9 +56,6 @@ const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
 /**
  * 应用程序主类，负责管理整个应用的生命周期和核心功能
  *
- * 注意：通常你应使用宿主平台依赖包提供的工厂函数创建App实例，它们内部会注册全局渲染器和节点控制器，
- * 如果直接实例化此App，需在入口脚本中使用setRenderer、registerController助手函数来设置全局渲染器和节点控制器。
- *
  * 主要功能：
  * - 管理应用配置和根节点
  * - 提供依赖注入机制
@@ -69,7 +66,7 @@ const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
  * @example
  * ```typescript
  * // 创建应用实例
- * const app = new App(YourRootWidget, {
+ * const app = new App(AppComponent, {
  *   errorHandler: customErrorHandler,
  *   idPrefix: 'my-app'
  * });
