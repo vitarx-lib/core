@@ -68,10 +68,10 @@ export type ResolvedChildren = View[]
  *
  * 可以被创建为视图的类型，包括：
  * - JSX 元素名称（如 'div'、'span' 等）
- * - 组件类型
+ * - 组件
  * - 视图构建器
  */
-export type CreatableType = JSXElementNames | Component | ViewBuilder
+export type JSXElementType = JSXElementNames | Component | ViewBuilder
 
 /**
  * 挂载类型

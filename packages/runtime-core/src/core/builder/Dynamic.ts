@@ -1,5 +1,5 @@
 import { logger } from '@vitarx/utils'
-import type { AnyProps, CreatableType, ValidChildren, View } from '../../types/index.js'
+import type { AnyProps, JSXElementType, ValidChildren, View } from '../../types/index.js'
 import { TrackedCompute } from '../compiler/index.js'
 import { CommentView } from '../view/atomic.js'
 import { createView } from '../view/factory.js'
@@ -7,7 +7,7 @@ import { SwitchView } from '../view/switch.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface DynamicProps {
-  is: CreatableType
+  is: JSXElementType
   children?: ValidChildren
   [key: string]: any
 }

@@ -4,8 +4,8 @@ import type {
   AnyProps,
   CodeLocation,
   Component,
-  CreatableType,
   HostElementTag,
+  JSXElementType,
   ValidChildren,
   ValidProps,
   View
@@ -35,13 +35,13 @@ export function createView<T extends HostElementTag>(
   key?: unknown,
   location?: CodeLocation
 ): ElementView<T>
-export function createView<T extends CreatableType>(
+export function createView<T extends JSXElementType>(
   type: T,
   props?: ValidProps<T> | null,
   key?: unknown,
   location?: CodeLocation
 ): View
-export function createView<T extends CreatableType>(
+export function createView<T extends JSXElementType>(
   type: T,
   props: ValidProps<T> | null = null,
   key?: unknown,
