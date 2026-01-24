@@ -1,7 +1,6 @@
 import { unref } from '@vitarx/responsive'
 import { hasOwnProperty, isRecordObject } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/index.js'
-import { getRenderer } from '../../runtime/index.js'
 import type { AnyProps, View } from '../../types/index.js'
 import { SPECIAL_PROP_MERGERS } from './resolve.js'
 
@@ -64,16 +63,31 @@ export function mergeProps<T extends AnyProps>(...sources: AnyProps[]): AnyProps
 }
 
 /**
- * 替换视图函数，用于处理视图的切换和生命周期管理
+ * 替换视图
+ *
+ * 此 API 仅做逻辑形替换，并不影响树结构，需自行确保树结构正确。
+ *
+ * @internal - 视图核心助手函数，开发者慎用！！！
  * @param prev - 前一个视图实例
  * @param next - 即将显示的新视图实例
  */
 export function replaceView(prev: View, next: View): void {
   // 检查前一个视图是否已激活，如果未激活则直接返回
   if (!prev.isUnused) return
+  // 检查前一个视图是否已被停用，如果已被停用则抛出错误
+  if (prev.isDeactivated) {
+    throw new Error(
+      `[replaceView]: Attempted to replace view, but previous view is already deactivated. ` +
+        `This may occur when switching dynamic views too rapidly or due to a bug.`
+    )
+  }
   // 检查新视图是否已经激活，如果已激活则抛出错误
-  if (next.isActivated) {
-    getRenderer().insert(prev.$node!, next.$node!)
+  if (!next.isUnused && !next.isInitialized) {
+    throw new Error(
+      `[replaceView]: Attempted to replace view, but next view is already active. ` +
+        `This may occur when switching dynamic views too rapidly or due to an unexpected state. ` +
+        `Ensure that views are properly managed during transitions. `
+    )
   }
   // 根据前一个视图的初始化状态决定如何处理新视图
   if (prev.isInitialized) {
