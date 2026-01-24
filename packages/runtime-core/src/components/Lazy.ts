@@ -7,7 +7,6 @@ import {
   createComponentView,
   createSwitchView,
   createView,
-  mergeProps,
   type ViewBuilder
 } from '../core/index.js'
 import { onDispose, onInit, useSuspense } from '../runtime/index.js'
@@ -111,8 +110,12 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
     try {
       const module = await task
       if (module && isFunction(module.default)) {
-        const p1 = { children }
-        const p = inject ? mergeProps(p1, inject) : p1
+        const p = inject ? inject : ({} as AnyProps)
+        if (children && !p.children) {
+          Object.defineProperty(p, 'children', {
+            value: children
+          })
+        }
         showView.value = createView(module.default, p as ExtractProps<T>)
       }
     } catch (e) {
