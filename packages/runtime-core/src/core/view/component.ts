@@ -82,9 +82,11 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
     this.ref = ref
     const resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
     // 开发时直接冻结
-    if (__DEV__) Object.freeze(resolvedProps)
-    if (isFunction(component.validateProps)) {
-      component.validateProps(resolvedProps)
+    if (__DEV__) {
+      Object.freeze(resolvedProps)
+      if (isFunction(component.validateProps)) {
+        component.validateProps(resolvedProps)
+      }
     }
     this.props = resolvedProps
   }
