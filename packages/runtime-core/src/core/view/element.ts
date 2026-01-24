@@ -1,4 +1,3 @@
-import { type Ref } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { viewEffect, type ViewEffect } from '../../runtime/effect.js'
@@ -8,6 +7,7 @@ import type {
   CodeLocation,
   DirectiveMap,
   ElementProps,
+  ElementRef,
   HostContainer,
   HostElement,
   HostElementTag,
@@ -17,7 +17,7 @@ import type {
   ResolvedChildren,
   ViewRenderer
 } from '../../types/index.js'
-import { resolveChildren, resolveProps } from '../compiler/resolve.js'
+import { applyRef, resolveChildren, resolveProps } from '../compiler/resolve.js'
 import { BaseView } from './base.js'
 
 export class ElementView<
@@ -28,7 +28,7 @@ export class ElementView<
   public readonly tag: T
   public readonly props: ElementProps<T> | null
   public readonly children: BaseView<any>[]
-  public readonly ref: Ref | undefined
+  public readonly ref: ElementRef | undefined
   /** @internal 指令映射表 */
   public directives?: DirectiveMap
   private effects: ViewEffect[] | null = null
@@ -77,7 +77,7 @@ export class ElementView<
       this.$node = renderer.createElement(this.tag, svg)
     }
     if (this.props) this.setProps(this.$node, this.props, renderer)
-    if (this.ref) this.ref.value = this.$node
+    if (this.ref) applyRef(this.ref, this.$node)
     applyDirective(this, this.$node, 'created')
     renderer[type](this.$node, containerOrAnchor)
     for (const child of this.children) child.mount(this.$node, 'append')

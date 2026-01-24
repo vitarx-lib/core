@@ -1,11 +1,12 @@
-import { isRef, Ref, unref } from '@vitarx/responsive'
-import { hasOwnProperty, isObject, isRecordObject, popProperty } from '@vitarx/utils'
+import { isRef, unref } from '@vitarx/responsive'
+import { hasOwnProperty, isFunction, isObject, isRecordObject, popProperty } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/index.js'
 import { StyleUtils } from '../../shared/index.js'
 import { isView } from '../../shared/utils/is.js'
 import type {
   AnyProps,
   BindAttributes,
+  ElementRef,
   ResolvedChildren,
   ValidChildren,
   View
@@ -14,7 +15,7 @@ import { TextView } from '../view/atomic.js'
 import { SwitchView } from '../view/switch.js'
 
 type ResolvePropsResult<T extends AnyProps> = {
-  ref?: Ref
+  ref?: ElementRef
   props: T | null
 }
 
@@ -128,7 +129,7 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   // 构建返回结果对象
   const result: ResolvePropsResult<T> = { props: resolvedProps }
   // 如果存在ref，则将其添加到结果中
-  if (isRef(ref)) result.ref = ref
+  if (isRef(ref) || isFunction(ref)) result.ref = ref
   return result
 }
 
@@ -178,4 +179,22 @@ export function resolveChildren(children: ValidChildren): ResolvedChildren {
   }
 
   return childList
+}
+
+/**
+ * 应用引用（ref）到指定元素
+ * @param ref - 引用对象，可以是函数或对象
+ * @param el - 要应用引用的元素
+ */
+export function applyRef(ref: ElementRef, el: unknown) {
+  // 如果引用不存在，则直接返回
+  if (!ref) return
+  // 判断引用是否为函数类型
+  if (typeof ref === 'function') {
+    // 如果是函数，则调用函数并传入元素
+    ref(el)
+  } else {
+    // 如果是对象，则将元素的值赋给引用对象的value属性
+    ref.value = el
+  }
 }

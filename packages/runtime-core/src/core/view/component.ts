@@ -10,6 +10,7 @@ import type {
   ComponentProps,
   Directive,
   DirectiveMap,
+  ElementRef,
   ErrorHandler,
   ErrorSource,
   HookStore,
@@ -21,7 +22,7 @@ import type {
   ViewContext,
   ViewSwitchHandler
 } from '../../types/index.js'
-import { resolveProps } from '../compiler/resolve.js'
+import { applyRef, resolveProps } from '../compiler/resolve.js'
 import { CommentView, TextView } from './atomic.js'
 import { BaseView } from './base.js'
 import { SwitchView } from './switch.js'
@@ -256,7 +257,7 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
   /** @internal 类型标识 */
   public readonly kind = ViewKind.COMPONENT
   /** @internal 引用组件公开实例 */
-  public readonly ref: Ref | undefined
+  public readonly ref: ElementRef | undefined
   /** @internal 组件实体函数 */
   public readonly component: T
   /** @internal 传递给组件的参数 */
@@ -303,7 +304,7 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType) {
     // 父 -> 子
     this.instance!.beforeMount()
-    if (this.ref) this.ref.value = this.instance!.publicInstance
+    if (this.ref) applyRef(this.ref, this.instance!.publicInstance)
     this.subView!.mount(containerOrAnchor, type)
     // 子 -> 父
     this.instance!.mounted()
