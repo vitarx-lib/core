@@ -83,6 +83,9 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
     const resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
     // 开发时直接冻结
     if (__DEV__) Object.freeze(resolvedProps)
+    if (isFunction(component.validateProps)) {
+      component.validateProps(resolvedProps)
+    }
     this.props = resolvedProps
   }
   get $node(): HostNode | null {
@@ -253,12 +256,8 @@ export class ComponentInstance<T extends Component = Component> {
     delete this.hooks[Lifecycle.dispose]
     this.scope.dispose()
   }
-  private reportError(
-    error: unknown,
-    source: ErrorSource,
-    instance?: PublicComponentInstance
-  ): void {
-    instance ??= this.publicInstance
+  private reportError(error: unknown, source: ErrorSource, instance?: ComponentInstance): void {
+    instance ??= this
     const errorInfo = { source, instance }
     if (isFunction(this.errorHandler)) {
       try {
