@@ -1,3 +1,4 @@
+import type { ViewBuilder } from '../core/index.js'
 import type { Component } from './component.js'
 import type { ErrorHandler } from './hook.js'
 import type {
@@ -173,10 +174,10 @@ declare global {
    */
   namespace JSX {
     /**
-     * 定义 JSX 元素的类型，可以是字符串（原生 HTML 标签）或组件构造函数
-     * 例如：'div'、MyWidget 等
+     * 定义 JSX 元素的类型，可以是字符串（原生 HTML 标签）或组件
+     * 例如：'div'、MyComponent 等
      */
-    type ElementType = string | Component
+    type ElementType = keyof IntrinsicElements | Component | ViewBuilder
     type Element = View
     /**
      * JSX 内置属性接口，扩展了 Vitarx 的内置属性
