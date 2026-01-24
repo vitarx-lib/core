@@ -16,7 +16,7 @@ import type {
   HostContainer,
   HostNode,
   MountType,
-  PublicInstance,
+  PublicComponentInstance,
   View,
   ViewContext,
   ViewSwitchHandler
@@ -56,7 +56,7 @@ export class ComponentInstance<T extends Component = Component> {
   /** @internal - 组件的副作用管理作用域 */
   public readonly scope: EffectScope
   /** @internal - 组件公开实例，只读！*/
-  public readonly publicInstance: PublicInstance
+  public readonly publicInstance: PublicComponentInstance
   /** @internal - 组件提供数据 */
   public provide: Map<string | symbol, any> | null = null
   /** @internal - 组件指令存储 */
@@ -152,7 +152,11 @@ export class ComponentInstance<T extends Component = Component> {
     this.invokeVoidHook(Lifecycle.dispose)
     this.scope.dispose()
   }
-  private reportError(error: unknown, source: ErrorSource, instance?: PublicInstance): void {
+  private reportError(
+    error: unknown,
+    source: ErrorSource,
+    instance?: PublicComponentInstance
+  ): void {
     instance ??= this.publicInstance
     const errorInfo = { source, instance }
     if (isFunction(this.errorHandler)) {

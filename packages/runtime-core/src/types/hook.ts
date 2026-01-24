@@ -1,6 +1,6 @@
 import type { AnyCallback } from '@vitarx/utils'
 import { Lifecycle } from '../constants/index.js'
-import type { PublicInstance } from './component.js'
+import type { PublicComponentInstance } from './component.js'
 import type { View } from './view.js'
 
 /**
@@ -27,7 +27,7 @@ export interface ErrorInfo {
   /**
    * 抛出异常的实例
    */
-  instance: PublicInstance
+  instance: PublicComponentInstance
 }
 
 /**

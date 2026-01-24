@@ -1,3 +1,4 @@
+import { IS_RAW } from '@vitarx/responsive'
 import type { RequiredKeys } from '@vitarx/utils'
 import type { ValidChild } from './view.js'
 
@@ -6,7 +7,10 @@ export type AnyProps = { [k: string]: any }
 /**
  * 组件公开实例类型
  */
-export type PublicInstance = { readonly [key: string]: any }
+export type PublicComponentInstance = {
+  readonly [IS_RAW]: true
+  readonly [key: string]: any
+}
 
 export type Component<P extends AnyProps = any> = {
   (props: P): ValidChild
