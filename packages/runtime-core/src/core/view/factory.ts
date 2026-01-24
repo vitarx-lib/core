@@ -1,5 +1,5 @@
 import type { Ref } from '@vitarx/responsive'
-import { isViewResolver } from '../../shared/index.js'
+import { isViewBuilder } from '../../shared/index.js'
 import type {
   AnyProps,
   CodeLocation,
@@ -52,7 +52,7 @@ export function createView<T extends JSXElementType>(
   if (typeof type === 'string') {
     view = new ElementView(type, props)
   } else if (typeof type === 'function') {
-    view = isViewResolver(type) ? type(props, key, location) : new ComponentView(type, props)
+    view = isViewBuilder(type) ? type(props, key, location) : new ComponentView(type, props)
   } else {
     throw new Error(`[Vitarx] Invalid block type: ${type}`)
   }
