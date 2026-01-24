@@ -17,11 +17,18 @@ export type ViewEffect = {
 export function viewEffect(effect: () => void): ViewEffect | null {
   let isActivated: boolean = true
   let dirty: boolean = false
-  const handle = () => {
-    if (!isActivated) {
+  const runEffect = () => {
+    if (isActivated) {
       dirty = true
     } else {
-      queueJob(effect)
+      effect()
+    }
+  }
+  const handle = () => {
+    if (isActivated) {
+      queueJob(runEffect)
+    } else {
+      dirty = true
     }
   }
   trackEffectDeps(effect, handle)
