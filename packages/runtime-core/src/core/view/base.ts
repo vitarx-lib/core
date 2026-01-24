@@ -79,17 +79,20 @@ export abstract class BaseView<K extends ViewKind> {
     delete this.ctx
     this.state = ViewState.UNUSED
   }
-
   /**
    * 激活视图
    *
-   * @warning ⚠️ `Freeze` 组件调用，开发者请勿随意调用！！！
+   * 激活已被冻结的视图树，必须与 `deactivate` 搭配使用
    *
-   * @internal - 内部核心方法，开发者勿随意调用！！！
+   * @internal
    */
   activate(): void {
     if (this.state !== ViewState.DEACTIVATED) {
-      throw new Error('[View.activate]: The view is not deactivated and cannot be activated')
+      throw new Error(
+        `[View.activate]: Cannot activate view: expected state '${ViewState.DEACTIVATED}', ` +
+          `but current state is '${this.state}'. ` +
+          `Only deactivated views can be activated.`
+      )
     }
     this.doActivate?.()
     this.state = ViewState.ACTIVATED
@@ -97,13 +100,17 @@ export abstract class BaseView<K extends ViewKind> {
   /**
    * 停用视图
    *
-   * @warning ⚠️ `Freeze` 组件调用，开发者请勿随意调用！！！
+   * 冻结视图树并停用响应式，必须与 activate 搭配使用
    *
-   * @internal - 内部核心方法，开发者勿随意调用！！！
+   * @internal
    */
   deactivate(): void {
     if (this.state !== ViewState.ACTIVATED) {
-      throw new Error('[View.deactivate]: The view is not activated and cannot be deactivated')
+      throw new Error(
+        `[View.deactivate]: Cannot deactivate view: expected state '${ViewState.ACTIVATED}', ` +
+          `but current state is '${this.state}'. ` +
+          `Only activated views can be deactivated.`
+      )
     }
     this.doDeactivate?.()
     this.state = ViewState.DEACTIVATED
