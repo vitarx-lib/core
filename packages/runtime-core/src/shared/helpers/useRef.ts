@@ -14,7 +14,6 @@ type InstanceOf<T> = ShallowRef<
           : T)
   | null
 >
-/** 引用元素类型 */
 /**
  * 引用元素/组件实例
  *
