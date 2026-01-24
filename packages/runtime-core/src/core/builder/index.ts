@@ -1,4 +1,4 @@
-export * from './Anchor.js'
+export * from './Comment.js'
 export * from './PlainText.js'
 export * from './Fragment.js'
 export * from './Dynamic.js'

@@ -1,7 +1,7 @@
 import { CommentView } from '../view/atomic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
-export interface AnchorProps {
+export interface CommentProps {
   text: string
 }
 /**
@@ -13,8 +13,8 @@ export interface AnchorProps {
  * @param [props.text] - 静态的锚点提示内容
  * @return {CommentView} AnchorView
  */
-export const Anchor = builder((props: AnchorProps, key, location): CommentView => {
+export const Comment = builder((props: CommentProps, key, location): CommentView => {
   return new CommentView(String(props.text), key, location)
 })
 
-export type Anchor = ViewBuilder<AnchorProps, CommentView> & { __is_comment: true }
+export type Comment = ViewBuilder<CommentProps, CommentView> & { __is_comment: true }
