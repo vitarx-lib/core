@@ -33,7 +33,10 @@ export function viewEffect(effect: () => void): ViewEffect | null {
   }
   trackEffectDeps(effect, handle)
   if (hasLinkedSignal(handle)) {
-    const stop = () => clearEffectLinks(handle)
+    const stop = () => {
+      isActivated = false
+      clearEffectLinks(handle)
+    }
     stop.pause = () => {
       isActivated = false
     }
