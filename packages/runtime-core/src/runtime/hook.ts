@@ -1,6 +1,12 @@
 import { getStackTrace, isFunction, logger } from '@vitarx/utils'
 import { Lifecycle } from '../constants/index.js'
-import type { ErrorHandler, HookCallback, ViewSwitchHandler } from '../types/index.js'
+import type {
+  AnyProps,
+  Component,
+  ErrorHandler,
+  HookCallback,
+  ViewSwitchHandler
+} from '../types/index.js'
 import { getInstance } from './context.js'
 
 /**
@@ -152,4 +158,22 @@ export function defineExpose<T extends { [key: string]: any }>(exposed: T): void
       enumerable: true
     })
   }
+}
+
+/**
+ * 定义组件属性验证函数
+ *
+ * @param component - 要验证的组件
+ * @param validator - 验证函数，接收组件属性作为参数
+ * @returns {void} 无返回值
+ */
+export function defineValidate<P extends AnyProps>(
+  component: Component<P>,
+  validator: (props: AnyProps) => void
+): void {
+  if (__DEV__ && !isFunction(validator)) {
+    throw new TypeError(`[defineValidate]: validator must be a function`)
+  }
+  // 函数无返回值
+  component.validateProps = validator
 }
