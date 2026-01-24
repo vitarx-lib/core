@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils'
+import { isString, logger } from '@vitarx/utils'
 import { CommentView } from '../core/index.js'
 import {
   getInstance,
@@ -6,7 +6,8 @@ import {
   onDispose,
   onHide,
   onInit,
-  onMounted
+  onMounted,
+  onShow
 } from '../runtime/index.js'
 import { isView } from '../shared/index.js'
 import type { CodeLocation, HostContainer, View } from '../types/index.js'
@@ -23,13 +24,8 @@ interface TeleportProps {
    * ```
    */
   children: View
-  /**
-   * 传送的目标
-   *
-   * - string: 选择器
-   * - HostContainer: 父元素
-   */
-  to: string | HostContainer
+  /** 传送的目标 */
+  to: string
   /**
    * 是否延迟渲染
    *
@@ -61,30 +57,37 @@ const getTarget = (to: string | HostContainer, location?: CodeLocation): HostCon
  *
  * @param {TeleportProps} { children, to, defer, disabled } - 组件属性
  *   - children: 要被传送的子组件
- *   - to: 目标位置的选择器或元素
+ *   - to: 目标位置的选择器
  *   - defer: 是否延迟挂载（在 mounted 阶段挂载）
  *   - disabled: 是否禁用传送功能
  * @returns {View} 返回一个锚点视图
  *
  * @example
+ * ```jsx
  * // 基本用法
  * <Teleport to="#modal">
  *   <ModalContent />
  * </Teleport>
+ * ```
  *
  * @example
+ * ```jsx
  * // 延迟挂载
  * <Teleport to="#modal" defer>
  *   <ModalContent />
  * </Teleport>
+ * ```
  *
  * @example
+ * ```jsx
  * // 禁用传送
  * <Teleport to="#modal" disabled>
  *   <ModalContent />
  * </Teleport>
+ * ```
  */
 function Teleport({ children, to, defer, disabled }: TeleportProps): View {
+  if (__SSR__) return new CommentView(`teleport to ${to}`)
   if (disabled) return children
   const instance = getInstance()!
   let teleported = false
@@ -104,7 +107,13 @@ function Teleport({ children, to, defer, disabled }: TeleportProps): View {
     onBeforeMount(mount)
   }
   if (teleported) {
-    onHide(() => {})
+    // 兼容停用/恢复
+    onShow(() => {
+      if (children.isDeactivated) children.activate()
+    })
+    onHide(() => {
+      children.deactivate()
+    })
   }
   onDispose(() => children.dispose())
   return new CommentView('teleport')
@@ -117,7 +126,7 @@ Teleport.validateProps = (props: Record<string, any>): void => {
       `Teleport.children property expects to get a node object, given ${typeof props.children}`
     )
   }
-  if (!props.disabled && !props.to) {
+  if (!props.disabled && !isString(props.to)) {
     throw new TypeError(
       `Teleport.to property expects to get a selector or DOM element, given ${typeof props.to}`
     )
