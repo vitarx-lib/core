@@ -123,7 +123,7 @@ Teleport.defaultProps = { defer: false, disabled: false } as const
 Teleport.validateProps = (props: Record<string, any>): void => {
   if (!isView(props.children)) {
     throw new TypeError(
-      `Teleport.children property expects to get a node object, given ${typeof props.children}`
+      `Teleport.children property expects to get a view object, given ${typeof props.children}`
     )
   }
   if (!props.disabled && !isString(props.to)) {
