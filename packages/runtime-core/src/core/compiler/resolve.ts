@@ -232,7 +232,7 @@ export function mergeDefaultProps(
       get() {
         // 使用getter函数实现属性值的获取逻辑
         // 如果props中存在该属性，返回props的值
-        if (hasOwnProperty(props, key)) {
+        if (props[key] != null) {
           return props[key]
         }
         // 否则返回defaultProps中的值
