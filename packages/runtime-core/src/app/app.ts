@@ -125,7 +125,6 @@ export class App {
     // 使用展开运算符合并配置，提供默认错误处理
     this.config = this.initConfig(config)
   }
-
   /**
    * 获取当前应用的根节点
    *
@@ -150,8 +149,10 @@ export class App {
    * @param container 可以是DOM元素节点或选择器字符串
    * @returns {this} 返回当前App实例，支持链式调用
    * @example
-   * const app = createApp(YourAppHomeWidget)
+   * ```js
+   * const app = createApp(AppComponent)
    * app.mount('#app') // 挂载到id为#app的元素
+   * ```
    */
   mount(container: HostContainer | string): this {
     // 如果传入的是字符串，则通过querySelector获取对应的DOM元素
@@ -164,12 +165,36 @@ export class App {
         )
       }
     }
+    this.#rootView.init({ app: this })
     // 调用组件的mount方法，将组件挂载到指定的容器中
-    // mountNode(this.rootBlock, container)
+    this.rootView.mount(container)
     // 返回当前组件实例，支持链式调用
     return this
   }
 
+  /**
+   * 卸载应用
+   */
+  unmount(): void {
+    // 调用根视图的dispose方法，释放相关资源
+    this.rootView.dispose()
+  }
+
+  /**
+   * 初始化应用配置
+   *
+   * @param config 可选的应用配置对象
+   * @return {Required<AppConfig>} 返回一个包含完整配置的对象，所有必需属性都已设置
+   */
+  protected initConfig(config?: AppConfig): Required<AppConfig> {
+    // 使用展开运算符合并配置，提供默认错误处理
+    // 将默认配置与传入的配置合并，传入的配置会覆盖默认配置中的相同属性
+    return {
+      errorHandler: defaultErrorHandler, // 设置默认的错误处理函数
+      idPrefix: 'v', // 设置默认的ID前缀
+      ...config // 展开传入的配置对象，覆盖默认值
+    }
+  }
   /**
    * 获取指令
    *
@@ -236,7 +261,6 @@ export class App {
       return this.#directives.get(name)
     }
   }
-
   /**
    * 应用级数据提供
    *
@@ -246,22 +270,6 @@ export class App {
   provide(name: string | symbol, value: any): this {
     this.#provide.set(name, value)
     return this
-  }
-
-  /**
-   * 初始化应用配置
-   *
-   * @param config 可选的应用配置对象
-   * @return {Required<AppConfig>} 返回一个包含完整配置的对象，所有必需属性都已设置
-   */
-  protected initConfig(config?: AppConfig): Required<AppConfig> {
-    // 使用展开运算符合并配置，提供默认错误处理
-    // 将默认配置与传入的配置合并，传入的配置会覆盖默认配置中的相同属性
-    return {
-      errorHandler: defaultErrorHandler, // 设置默认的错误处理函数
-      idPrefix: 'v', // 设置默认的ID前缀
-      ...config // 展开传入的配置对象，覆盖默认值
-    }
   }
   /**
    * 检查提供者是否存在
