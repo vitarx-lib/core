@@ -20,18 +20,15 @@ export type Component<P extends AnyProps = any> = {
    * - 在组件实例创建时，`defaultProps` 会自动注入到 `props` 中。
    * - 当外部未传入某个属性时，其默认值通过代理的 `get` 拦截动态返回，
    *   因此 **不会直接合并到 `props` 对象本身**。
-   * - 注意：在组件实例中，`props` 是只读的响应式代理：
-   *   - 属性值不可修改；
-   *   - 使用 `key in props` 无法判断默认值是否存在；
-   *   - 默认值的访问由代理层动态处理。
+   * - 注意：在组件实例中，`props` 是只读的对象：
    *
    * @example
    * ```ts
    * // 函数组件
-   * function MyFunctionWidget(props: { name?: string; age: number }) {
+   * function MyComponent(props: { name?: string; age: number }) {
    *   return <div>{props.name}</div>;
    * }
-   * MyFunctionWidget.defaultProps = {
+   * MyComponent.defaultProps = {
    *   age: 18,
    * };
    * ```
@@ -51,6 +48,15 @@ export type Component<P extends AnyProps = any> = {
    * - 其他值/void：校验通过。
    *
    * 框架在开发模式下会自动捕获异常并将其转换为校验错误。
+   *
+   * @example
+   * ```ts
+   * defineValidate(MyComponent, (props) => {
+   *   if (props.age < 0) {
+   *     return 'age cannot be less than 0';
+   *   }
+   * });
+   * ```
    *
    * @param props - 传入的组件属性对象
    * @returns {string | false | unknown} 校验结果
