@@ -85,7 +85,16 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
     if (__DEV__) {
       Object.freeze(resolvedProps)
       if (isFunction(component.validateProps)) {
-        component.validateProps(resolvedProps)
+        const result = component.validateProps(resolvedProps)
+        const name = component.displayName ?? component.name ?? 'anonymous'
+        // 校验失败处理
+        if (result === false) {
+          // 记录错误日志，包含源信息
+          logger.error(`Component<${name}> props validation failed.`, this.location)
+        } else if (typeof result === 'string') {
+          // 如果返回的是字符串，则记录警告日志
+          logger.warn(`Component<${name}>: ${result}`, this.location)
+        }
       }
     }
     this.props = resolvedProps
