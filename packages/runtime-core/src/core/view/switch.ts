@@ -72,13 +72,14 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH> {
   private effect?: ViewEffect
   private cachedView: View | null = null
   private cachedType: NormalizedChild['type'] | null = null
-  private dirty: boolean = false
   constructor(source: Ref, key?: unknown, location?: CodeLocation) {
     super(key, location)
     this.source = source
   }
   /**
    * 获取当前视图
+   *
+   * 仅在init后存在视图
    *
    * @returns {View} 返回当前缓存的视图实例
    */
@@ -101,12 +102,12 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH> {
     this.effect?.resume()
   }
   protected override doDeactivate(): void {
-    this.cachedView!.deactivate()
     this.effect?.pause()
+    this.cachedView!.deactivate()
   }
   protected override doDispose(): void {
-    this.cachedView!.dispose()
     this.effect?.()
+    this.cachedView!.dispose()
     this.cachedView = null
     this.cachedType = null
   }
