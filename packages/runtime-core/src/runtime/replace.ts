@@ -1,4 +1,4 @@
-import type { View } from '../../types/index.js'
+import type { View } from '../types/index.js'
 
 /**
  * 替换视图

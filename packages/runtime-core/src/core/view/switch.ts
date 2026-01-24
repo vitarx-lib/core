@@ -1,7 +1,7 @@
 import { type Ref } from '@vitarx/responsive'
 import { ViewKind } from '../../constants/index.js'
 import { type ViewEffect, viewEffect } from '../../runtime/effect.js'
-import { withDirectives } from '../../runtime/index.js'
+import { replaceView, withDirectives } from '../../runtime/index.js'
 import { isView } from '../../shared/index.js'
 import type {
   CodeLocation,
@@ -11,7 +11,6 @@ import type {
   MountType,
   View
 } from '../../types/index.js'
-import { replaceView } from '../compiler/index.js'
 import { CommentView, TextView } from './atomic.js'
 import { BaseView } from './base.js'
 
