@@ -1,6 +1,6 @@
 import { ComponentView } from '../core/index.js'
-import { getRenderer, onDispose, onViewSwitch } from '../runtime/index.js'
-import { isComponentView } from '../shared/index.js'
+import { defineValidate, getRenderer, onDispose, onViewSwitch } from '../runtime/index.js'
+import { isComponentView, isSwitchView, isView } from '../shared/index.js'
 import type { Component, View } from '../types/index.js'
 
 /**
@@ -121,8 +121,9 @@ const shouldCache = (
  * @returns {View} 返回子视图
  */
 function Freeze(props: FreezeProps): View {
-  const { include = [], exclude = [], max = 0 } = props
-
+  const { include = [], exclude = [], max = 0, children } = props
+  if (!isSwitchView(children)) {
+  }
   /**
    * 缓存映射表
    * key: 组件类型
@@ -190,7 +191,13 @@ function Freeze(props: FreezeProps): View {
     cache.clear()
   })
 
-  return props.children
+  return children
 }
-
+defineValidate(Freeze, props => {
+  if (!isView(props.children)) {
+    throw new Error(
+      `Freeze.children property expects to get a view object, given ${typeof props.children}`
+    )
+  }
+})
 export { Freeze, type FreezeProps }
