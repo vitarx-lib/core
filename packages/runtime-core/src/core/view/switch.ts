@@ -115,36 +115,64 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH> {
     this.cachedView!.mount(containerOrAnchor, type)
   }
   private updateDerivedView(value: unknown): void {
-    const normalize = normalizeDynamicChild(value)
+    const normalized = normalizeDynamicChild(value)
+
+    // 初始化路径
     if (!this.cachedView) {
-      this.cachedType = normalize.type
-      this.cachedView = materialize(normalize)
+      this.cachedType = normalized.type
+      this.cachedView = materialize(normalized)
       return
     }
-    if (this.cachedType === normalize.type) {
-      switch (normalize.type) {
+
+    const prevView = this.cachedView
+    const prevType = this.cachedType
+
+    // 快路径：同类型、可就地更新
+    if (prevType === normalized.type) {
+      switch (normalized.type) {
         case 'text':
-          ;(this.cachedView as TextView).text = normalize.value
+          ;(prevView as TextView).text = normalized.value
           return
+
         case 'empty':
           return
+
         default:
-          if (this.cachedView === normalize.view) return
+          // 组件 / 元素：完全相同引用，无需处理
+          if (normalized.view === prevView) return
       }
     }
-    // 慢速路径：结构变化
-    const nextView = materialize(normalize)
-    // 只在结构切换时透传指令
-    if (this.directives) withDirectives(nextView, Array.from(this.directives))
-    let handled = false
-    const owner = this.owner
-    // 如果做为父组件的根视图时，调用父组件的切换处理器
-    if (owner && owner.subView === this && owner.onViewSwitch) {
-      const result = owner.onViewSwitch(nextView, this.cachedView)
-      if (result === false) handled = true
+
+    // 慢路径：结构变化，构造候选 View
+    const nextView = materialize(normalized)
+
+    // 结构切换透传指令
+    if (this.directives) {
+      withDirectives(nextView, Array.from(this.directives))
     }
-    if (!handled) replaceView(this.cachedView, nextView)
+
+    const owner = this.owner
+
+    // 允许父级接管视图切换
+    if (owner?.subView === this && owner.onViewSwitch) {
+      const result = owner.onViewSwitch(prevView, nextView)
+      if (isView(result)) {
+        if (__DEV__ && result.kind !== nextView.kind) {
+          throw new Error(
+            '[SwitchView]: View kind mismatch detected: ' +
+              `Expected view kind ${nextView.kind}, but received ${result.kind}. ` +
+              'This error occurs when a custom onViewSwitch handler returns a view with a different kind ' +
+              'than the one being switched to. Ensure the returned view kind matches the expected kind.'
+          )
+        }
+        // ⚠️ 关键点：完全阻止默认 replaceView
+        this.cachedView = result
+        this.cachedType = normalized.type
+        return
+      }
+    }
+    replaceView(prevView, nextView)
     this.cachedView = nextView
-    this.cachedType = normalize.type
+    this.cachedType = normalized.type
   }
 }
