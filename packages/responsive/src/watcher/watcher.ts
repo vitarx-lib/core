@@ -1,4 +1,5 @@
-import { logger, type VoidCallback } from '@vitarx/utils'
+import { type VoidCallback } from '@vitarx/utils'
+import { logger } from '@vitarx/utils/src/index.js'
 import {
   bindDebuggerOptions,
   clearEffectLinks,
@@ -102,14 +103,20 @@ export abstract class Watcher extends Effect {
       this.scheduler = scheduler
     }
     const execute = (): void => {
-      if (!this.isActive) {
+      if (this.isActive) {
+        this.runCleanup()
+        this.runEffect()
+      } else {
         this.dirty = true
-        return
       }
-      this.runCleanup()
-      this.runEffect()
     }
-    this.effectHandle = () => this.scheduler(execute)
+    this.effectHandle = (): void => {
+      if (this.isActive) {
+        this.scheduler(execute)
+      } else {
+        this.dirty = true
+      }
+    }
     // 判断是否为开发环境
     if (__DEV__) {
       bindDebuggerOptions(this.effectHandle, options)
