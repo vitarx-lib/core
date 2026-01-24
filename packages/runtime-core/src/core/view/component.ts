@@ -132,9 +132,11 @@ export class ComponentInstance<T extends Component = Component> {
   }
   public beforeMount(): void {
     this.invokeVoidHook(Lifecycle.beforeMount)
+    delete this.hooks[Lifecycle.mounted]
   }
   public mounted(): void {
     this.invokeVoidHook(Lifecycle.mounted)
+    delete this.hooks[Lifecycle.mounted]
     this.show()
   }
   public show(): void {
@@ -150,6 +152,7 @@ export class ComponentInstance<T extends Component = Component> {
   public dispose(): void {
     this.hide()
     this.invokeVoidHook(Lifecycle.dispose)
+    delete this.hooks[Lifecycle.dispose]
     this.scope.dispose()
   }
   private reportError(
