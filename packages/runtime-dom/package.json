@@ -27,17 +27,6 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
-    },
-    "./renderer": {
-      "import": {
-        "types": "./dist/DomRenderer.d.ts",
-        "default": "./dist/DomRenderer.js"
-      }
-    },
-    "./types": {
-      "import": {
-        "types": "./dist/types/index.d.ts"
-      }
     }
   },
   "dependencies": {
