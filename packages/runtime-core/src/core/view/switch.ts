@@ -37,7 +37,7 @@ const normalizeDynamicChild = (input: any): NormalizedChild => {
     return { type: 'view', view: input }
   }
   // 空值返回空节点
-  if (input == null) {
+  if (input == null || typeof input === 'boolean') {
     return { type: 'empty' }
   }
   const str = String(input)

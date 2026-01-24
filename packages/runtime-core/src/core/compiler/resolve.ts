@@ -165,7 +165,7 @@ export function resolveChildren(children: ValidChildren): ResolvedChildren {
     }
 
     // 直接处理当前项，避免重复的类型检查
-    if (current == null) continue
+    if (current == null || typeof current === 'boolean') continue
 
     // 直接进行类型判断，减少函数调用开销
     if (isView(current)) {

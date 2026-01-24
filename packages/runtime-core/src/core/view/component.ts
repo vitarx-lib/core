@@ -297,7 +297,7 @@ export class ComponentInstance<T extends Component = Component> {
   }
   private normalizeView(child: unknown): View {
     // 直接处理当前项，避免重复的类型检查
-    if (child == null) return new CommentView('v-if')
+    if (child == null || typeof child === 'boolean') return new CommentView('v-if')
     // 直接进行类型判断，减少函数调用开销
     if (isView(child)) return child
     // 引用
