@@ -1,7 +1,6 @@
 import type { Ref } from '@vitarx/responsive'
 import type { AnyPrimitive } from '@vitarx/utils'
 import type { App } from '../app/index.js'
-import { ViewKind } from '../constants/index.js'
 import type {
   CommentView,
   ComponentInstance,
@@ -30,34 +29,8 @@ export interface CodeLocation {
 }
 /**
  * 视图联合类型
- *
- * 根据传入的视图标志返回对应的视图接口类型
- *
- * 如果不传入泛型 T 参数，则返回所有视图接口类型的联合类型
- *
- * @template T - 视图标志类型，用于指定返回的具体视图类型
- *
- * @example
- * // 获取所有视图类型的联合
- * type AllViews = View;
- *
- * @example
- * // 获取特定类型的视图
- * type TextViewType = View<ViewFlag.TEXT>;
  */
-export type View<T extends ViewKind = ViewKind> = T extends ViewKind.TEXT
-  ? TextView
-  : T extends ViewKind.COMMENT
-    ? CommentView
-    : T extends ViewKind.ELEMENT
-      ? ElementView
-      : T extends ViewKind.FRAGMENT
-        ? FragmentView
-        : T extends ViewKind.SWITCH
-          ? SwitchView
-          : T extends ViewKind.COMPONENT
-            ? ComponentView
-            : never
+export type View = TextView | CommentView | ElementView | FragmentView | SwitchView | ComponentView
 export interface ViewContext {
   owner?: ComponentInstance | null
   app?: App | null
