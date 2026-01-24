@@ -5,13 +5,13 @@ export interface CommentProps {
   text: string
 }
 /**
- * AnchorView 组件化构建器
+ * CommentView 组件化构建器
  *
- * 用于创建 Anchor 视图节点。
+ * 用于创建 Comment 视图节点。
  *
- * @param props - Anchor 节点的属性对象
- * @param [props.text] - 静态的锚点提示内容
- * @return {CommentView} AnchorView
+ * @param props - Comment 节点的属性对象
+ * @param [props.text] - 注释内容，不能动态更新！
+ * @return {CommentView} CommentView
  */
 export const Comment = builder((props: CommentProps, key, location): CommentView => {
   return new CommentView(String(props.text), key, location)
