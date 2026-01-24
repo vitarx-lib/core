@@ -1,6 +1,6 @@
 import type { AnyCallback } from '@vitarx/utils'
 import { Lifecycle } from '../constants/index.js'
-import type { PublicComponentInstance } from './component.js'
+import { ComponentInstance } from '../core/index.js'
 import type { View } from './view.js'
 
 /**
@@ -27,7 +27,7 @@ export interface ErrorInfo {
   /**
    * 抛出异常的实例
    */
-  instance: PublicComponentInstance
+  instance: ComponentInstance
 }
 
 /**
@@ -35,9 +35,9 @@ export interface ErrorInfo {
  */
 export type ErrorHandler = (error: unknown, info: ErrorInfo) => boolean | void
 /**
- * 组件根视图切换处理器类型
+ * 视图切换处理器
  */
-export type ViewSwitchHandler = (next: View, prev: View) => void | false
+export type ViewSwitchHandler = (prev: View, next: View) => void | View
 /**
  * 生命周期钩子映射表
  * 存储各个生命周期对应的回调函数数组
