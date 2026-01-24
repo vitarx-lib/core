@@ -111,11 +111,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
       const module = await task
       if (module && isFunction(module.default)) {
         const p = inject ? inject : ({} as AnyProps)
-        if (children && !p.children) {
-          Object.defineProperty(p, 'children', {
-            value: children
-          })
-        }
+        if (children && !p.children) p.children = children
         showView.value = createView(module.default, p as ExtractProps<T>)
       }
     } catch (e) {
