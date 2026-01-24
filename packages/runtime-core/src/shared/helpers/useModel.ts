@@ -1,11 +1,10 @@
 import {
   IS_REF,
   IS_SIGNAL,
-  onScopeDispose,
   type RefSignal,
-  runEffect,
   ShallowRef,
-  shallowRef
+  shallowRef,
+  watch
 } from '@vitarx/responsive'
 import type { AnyProps } from '../../types/index.js'
 
@@ -44,16 +43,12 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
     this._eventName = `onUpdate:${propName.toString()}`
     this._ref = shallowRef(props[propName])
     // 双向绑定的关键，监听属性值的变化，如果改变，则更新_ref.value
-    const stop = runEffect(
-      () => {
-        if (this._ref.value !== props[propName]) {
-          this._ref.value = props[propName]
-        }
-      },
-      { flush: 'sync', track: 'once' }
+    watch(
+      () => props[propName],
+      newValue => {
+        if (this._ref.value !== newValue) this._ref.value = newValue
+      }
     )
-    // 销毁时，清除关联
-    if (stop) onScopeDispose(stop, true)
     // 初始化默认值通过 this.value 使外部变量更新
     if (arguments.length > 2 && this._ref.value === undefined) this.value = defaultValue!
   }
