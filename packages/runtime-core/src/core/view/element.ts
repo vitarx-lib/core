@@ -31,7 +31,7 @@ export class ElementView<
   public readonly ref: Ref | undefined
   /** @internal 指令映射表 */
   public directives?: DirectiveMap
-  public effects: ViewEffect[] | null = null
+  private effects: ViewEffect[] | null = null
 
   constructor(
     tag: T,
@@ -56,12 +56,12 @@ export class ElementView<
   }
 
   protected override doDispose(): void {
-    for (const child of this.children) child.dispose()
-    if (this.$node) getRenderer().remove(this.$node)
     if (this.effects) {
       for (const effect of this.effects) effect()
       this.effects = null
     }
+    for (const child of this.children) child.dispose()
+    if (this.$node) getRenderer().remove(this.$node)
   }
   protected override doInit(): void {
     for (const child of this.children) child.init(this.ctx)
@@ -73,10 +73,10 @@ export class ElementView<
     }
   }
   protected override doDeactivate(): void {
-    for (const child of this.children) child.deactivate()
     if (this.effects) {
       for (const effect of this.effects) effect.pause()
     }
+    for (const child of this.children) child.deactivate()
   }
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
     const renderer = getRenderer()
