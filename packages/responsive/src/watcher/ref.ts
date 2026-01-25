@@ -1,4 +1,4 @@
-import { createDepLink, peekSignal } from '../core/index.js'
+import { createDepLink } from '../core/index.js'
 import { triggerOnTrack } from '../core/signal/debug.js'
 import type { RefSignal } from '../signals/index.js'
 import type { WatchCallback } from './types.js'
@@ -43,6 +43,6 @@ export class RefSignalWatcher<T> extends ValueWatcher<T> {
    * @inheritDoc
    */
   protected override getter(): T {
-    return peekSignal(this.sig, 'value')
+    return this.sig.value
   }
 }
