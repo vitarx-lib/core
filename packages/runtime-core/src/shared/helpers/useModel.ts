@@ -47,7 +47,8 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
       () => props[propName],
       newValue => {
         if (this._ref.value !== newValue) this._ref.value = newValue
-      }
+      },
+      { flush: 'sync' }
     )
     // 初始化默认值通过 this.value 使外部变量更新
     if (arguments.length > 2 && this._ref.value === undefined) this.value = defaultValue!
@@ -83,20 +84,15 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
 /**
  * 创建一个支持双向绑定的属性引用
  *
- * 该函数用于创建一个特殊的Ref对象，它可以与组件的props属性进行双向绑定。
- * 当通过该`.value`修改值时，会智能地更新原始props中的对应属性或Ref。
- *
- * 主要特性：
- * 1. 如果原始props中的属性传入的是RefSignal，则直接更新该Ref的值
- * 2. 如果原始props中的属性是普通值，则更新该属性并通知依赖更新
- * 3. 提供与普通Ref一致的接口，可无缝集成到响应式系统中
+ * 该函数用于创建一个特殊的 `ModelRef` 对象，它可以与组件的props属性进行双向绑定。
+ * 当通过该`.value`修改值时，会自动触发 `onUpdate:propName` 事件。
  *
  * @template T - props对象的类型
  * @template K - 属性名的类型
  * @param {T} props - 组件的props对象
  * @param {K} propName - 需要进行双向绑定的属性名
  * @param {T[K]} [defaultValue] - 可选，当属性不存在时的默认值
- * @returns {RefSignal} 返回一个支持双向绑定的Ref对象
+ * @returns { ModelRef } 返回一个 `ModelRef` 实例
  *
  * @example
  * ```jsx
