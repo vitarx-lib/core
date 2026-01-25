@@ -32,12 +32,7 @@ describe('watcher/SignalWatcher', () => {
       const callback = vi.fn()
       const watcher = new RefSignalWatcher(signal, callback, {})
 
-      const peekSignalSpy = vi
-        .spyOn(await import('../../src/core/signal/index.js'), 'peekSignal')
-        .mockReturnValue(42)
-
       const result = watcher['getter']()
-      expect(peekSignalSpy).toHaveBeenCalledWith(signal, 'value')
       expect(result).toBe(42)
     })
   })

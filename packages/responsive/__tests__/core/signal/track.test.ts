@@ -2,62 +2,15 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   getActiveEffect,
   hasLinkedSignal,
-  isTrackingPaused,
-  peekSignal,
   ref,
   trackEffectDeps,
-  trackSignal,
-  withSuspendedTracking
+  trackSignal
 } from '../../../src/index.js'
 
-describe('depend/collect', () => {
+describe('depend/track', () => {
   describe('getActiveEffect', () => {
     it('should return null when no active effect', () => {
       expect(getActiveEffect()).toBeNull()
-    })
-  })
-
-  describe('isTrackingPaused', () => {
-    it('should return false by default', () => {
-      expect(isTrackingPaused()).toBe(false)
-    })
-  })
-
-  describe('withSuspendedTracking', () => {
-    it('should temporarily suspend tracking', () => {
-      expect(isTrackingPaused()).toBe(false)
-
-      const result = withSuspendedTracking(() => {
-        expect(isTrackingPaused()).toBe(true)
-        return 'test-result'
-      })
-
-      expect(result).toBe('test-result')
-      expect(isTrackingPaused()).toBe(false)
-    })
-
-    it('should restore tracking state even if function throws', () => {
-      expect(isTrackingPaused()).toBe(false)
-
-      expect(() => {
-        withSuspendedTracking(() => {
-          expect(isTrackingPaused()).toBe(true)
-          throw new Error('test error')
-        })
-      }).toThrow('test error')
-
-      expect(isTrackingPaused()).toBe(false)
-    })
-  })
-
-  describe('peekSignal', () => {
-    it('should read signal value without tracking', async () => {
-      const signal = ref(42)
-
-      const fn = () => peekSignal(signal, 'value')
-      const value = trackEffectDeps(fn)
-      expect(hasLinkedSignal(fn)).toBe(false)
-      expect(value).toBe(42)
     })
   })
 
