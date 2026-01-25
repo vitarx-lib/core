@@ -3,14 +3,15 @@ import type { Ref } from '../signals/index.js'
 import type { WatcherOptions } from './watcher.js'
 
 /**
- * 刷新模式类型
+ * 刷新模式
  *
  * 控制观察者回调函数的执行时机：
- * - 'pre': 在组件更新前执行（默认）
- * - 'post': 在组件更新后执行
- * - 'sync': 同步执行，值变化时立即执行
+ * - 'pre': 前置队列执行（默认）
+ * - 'main': 主队列执行 （业务侧逻辑请勿使用此模式！）
+ * - 'post': 后置队列执行
+ * - 'sync': 同步执行，接收到触发信号后立即执行
  */
-export type FlushMode = 'pre' | 'post' | 'sync'
+export type FlushMode = 'pre' | 'main' | 'post' | 'sync'
 
 /**
  * 观察者清理回调函数类型

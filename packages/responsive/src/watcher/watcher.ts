@@ -1,13 +1,12 @@
-import { type VoidCallback } from '@vitarx/utils'
-import { logger } from '@vitarx/utils/src/index.js'
+import { logger, type VoidCallback } from '@vitarx/utils'
 import {
   bindDebuggerOptions,
   clearEffectLinks,
-  type DebuggerHandler,
   type DebuggerOptions,
   Effect,
   type EffectHandle,
   EffectScope,
+  queueJob,
   queuePostFlushJob,
   queuePreFlushJob,
   type Scheduler
@@ -39,6 +38,7 @@ export interface WatcherOptions extends DebuggerOptions {
    * 指定副作用执行时机
    *
    * - 'pre'：在主任务之前执行副作用
+   * - 'main'：主任务（视图更新是主任务，业务侧不应该使用此模式）
    * - 'post'：在主任务之后执行副作用
    * - 'sync'：同步执行副作用
    *
@@ -73,6 +73,7 @@ export abstract class Watcher extends Effect {
    */
   private static readonly schedulerMap: Record<FlushMode, Scheduler> = {
     pre: queuePreFlushJob,
+    main: queueJob,
     post: queuePostFlushJob,
     sync: (job: () => void) => job()
   }
