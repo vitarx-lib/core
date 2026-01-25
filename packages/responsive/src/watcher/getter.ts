@@ -8,7 +8,7 @@ import { type WatcherOptions } from './watcher.js'
  *
  * 该类继承自 ValueChangeWatcher，用于观察 getter 函数返回值的变化并在值发生变化时执行回调函数。
  * 它会自动追踪 getter 函数的依赖，并在依赖的响应式数据发生变化时重新收集依赖。
- * 当检测到依赖变化时（通过 Object.is 进行比较），触发注册的回调函数。
+ * 当检测到依赖变化时（通过 compare 函数比较，默认使用 Object.is），触发注册的回调函数。
  *
  * @template T - 被观察值的类型
  *
