@@ -13,8 +13,8 @@ export interface CommentProps {
  * @param [props.text] - 注释内容，不能动态更新！
  * @return {CommentView} CommentView
  */
-export const Comment = builder((props: CommentProps, key, location): CommentView => {
-  return new CommentView(String(props.text), key, location)
+export const Comment = builder((props: CommentProps, location): CommentView => {
+  return new CommentView(String(props.text), location)
 })
 
 export type Comment = ViewBuilder<CommentProps, CommentView> & { __is_comment: true }

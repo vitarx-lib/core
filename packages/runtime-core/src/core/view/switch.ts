@@ -71,8 +71,8 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH> {
   private effect?: ViewEffect
   private cachedView: View | null = null
   private cachedType: NormalizedChild['type'] | null = null
-  constructor(source: Ref, key?: unknown, location?: CodeLocation) {
-    super(key, location)
+  constructor(source: Ref, location?: CodeLocation) {
+    super(location)
     this.source = source
   }
   /**

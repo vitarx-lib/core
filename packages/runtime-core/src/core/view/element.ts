@@ -33,13 +33,8 @@ export class ElementView<
   public directives?: DirectiveMap
   private effects: ViewEffect[] | null = null
 
-  constructor(
-    tag: T,
-    props: IntrinsicElements[T] | null = null,
-    key?: unknown,
-    location?: CodeLocation
-  ) {
-    super(key, location)
+  constructor(tag: T, props: IntrinsicElements[T] | null = null, location?: CodeLocation) {
+    super(location)
     this.tag = tag
     let resolvedChildren: ResolvedChildren // 声明一个已解析子元素的变量
     // 检查props是否存在且包含children属性

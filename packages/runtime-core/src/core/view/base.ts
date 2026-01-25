@@ -21,16 +21,13 @@ export abstract class BaseView<K extends ViewKind> {
   abstract readonly kind: K
   /** @internal DOM节点 */
   public abstract $node: HostNode | null
-  /** @internal 仅For组件使用 */
-  public key?: unknown
   /** @internal 代码位置，仅调试模式存在 */
   public location?: CodeLocation
   /** @internal 上下文*/
   public ctx?: ViewContext
   /** @internal 视图状态 */
   protected state: ViewState = ViewState.UNUSED
-  protected constructor(key?: unknown, location?: CodeLocation) {
-    this.key = key
+  protected constructor(location?: CodeLocation) {
     this.location = location
   }
   get owner(): ComponentInstance | null {

@@ -16,8 +16,8 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT> {
   public readonly kind = ViewKind.FRAGMENT
   public readonly children: ResolvedChildren
   public $node: HostFragment | null = null
-  constructor(children: ValidChildren, key?: unknown, location?: CodeLocation) {
-    super(key, location)
+  constructor(children: ValidChildren, location?: CodeLocation) {
+    super(location)
     this.children = resolveChildren(children)
   }
   protected override doInit(): void {

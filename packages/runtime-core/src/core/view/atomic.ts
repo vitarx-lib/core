@@ -17,8 +17,8 @@ abstract class BaseAtomicView<
 > extends BaseView<Kind> {
   public $node: Node | null = null
 
-  constructor(text: string, key?: unknown, location?: CodeLocation) {
-    super(key, location)
+  constructor(text: string, location?: CodeLocation) {
+    super(location)
     this._text = text
   }
 

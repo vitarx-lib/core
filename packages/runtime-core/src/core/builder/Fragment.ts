@@ -13,8 +13,8 @@ export interface FragmentProps {
  * @param [props.children] - 子视图列表
  * @return {FragmentView} FragmentView 对象
  */
-export const Fragment = builder((props: FragmentProps, key, location): FragmentView => {
-  return new FragmentView(props.children, key, location)
+export const Fragment = builder((props: FragmentProps, location): FragmentView => {
+  return new FragmentView(props.children, location)
 })
 
 export type Fragment = ViewBuilder<DynamicProps, FragmentView> & { __is_fragment: true }

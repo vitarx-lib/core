@@ -70,13 +70,8 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
   public directives?: DirectiveMap
   /** @internal 组件运行时实例 */
   public instance: ComponentInstance<T> | null = null
-  constructor(
-    component: T,
-    props: ComponentProps<T> | null = null,
-    key?: unknown,
-    location?: CodeLocation
-  ) {
-    super(key, location)
+  constructor(component: T, props: ComponentProps<T> | null = null, location?: CodeLocation) {
+    super(location)
     this.component = component
     const { props: inputProps, ref } = resolveProps(props)
     this.ref = ref

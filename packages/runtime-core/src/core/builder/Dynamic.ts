@@ -35,7 +35,7 @@ export interface DynamicProps {
  * @param [props.otherProps] - 动态组件的其它属性
  * @returns {View} - 返回动态组件的视图对象
  */
-export const Dynamic = builder((props: DynamicProps, key, location): View => {
+export const Dynamic = builder((props: DynamicProps, location): View => {
   const resolvedProps: AnyProps = {}
   for (const key in props) {
     if (key === 'is') continue
@@ -52,9 +52,9 @@ export const Dynamic = builder((props: DynamicProps, key, location): View => {
       logger.warn(message, location)
       return new CommentView(message)
     }
-    return createView(is, resolvedProps, key, location)
+    return createView(is, resolvedProps, location)
   })
-  return view.isStatic ? view.value : new SwitchView(view, key, location)
+  return view.isStatic ? view.value : new SwitchView(view, location)
 })
 
 export type Dynamic = ViewBuilder<DynamicProps> & { __is_dynamic: true }

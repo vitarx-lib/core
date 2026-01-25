@@ -5,7 +5,7 @@ import type { AnyProps, CodeLocation, View } from '../../types/index.js'
  * 视图解析器
  */
 export type ViewBuilder<P extends AnyProps = any, R extends View = View> = {
-  (props: P | null, key?: unknown, location?: CodeLocation): R
+  (props: P | null, location?: CodeLocation): R
   [IS_VIEW_BUILDER]: true
 }
 
@@ -37,7 +37,7 @@ export type ViewBuilder<P extends AnyProps = any, R extends View = View> = {
  * @returns {ViewBuilder<T>} - 返回视图构建函数
  */
 export function builder<P extends AnyProps, R extends View>(
-  builder: (props: P, key?: unknown, location?: CodeLocation) => R
+  builder: (props: P, location?: CodeLocation) => R
 ): ViewBuilder<P, R> {
   Object.defineProperty(builder, IS_VIEW_BUILDER, {
     value: true,
