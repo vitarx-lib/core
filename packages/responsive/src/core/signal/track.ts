@@ -180,7 +180,7 @@ export function trackSignal(
   debugData?: ExtraDebugData
 ): void {
   // 如果跟踪被暂停，则直接返回，不执行任何操作
-  if (isTrackingPaused()) return
+  if (isTrackingSuspended) return
   // 获取当前活动的副作用函数
   const activeEffect = currentActiveEffect
   // 如果没有活动的副作用函数，则直接返回
