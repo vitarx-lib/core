@@ -209,7 +209,7 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
     // 更新属性值
     setValue(target, p, newValue)
     // 如果是新属性，触发添加信号的回调
-    if (!hadKey) this.triggerSignal('add', { key: p, oldValue: undefined, newValue })
+    if (!hadKey) this.triggerSignal('set', { key: p, oldValue: undefined, newValue })
     return true // 设置成功返回true
   }
 }
@@ -274,7 +274,7 @@ export class ArrayReactive<T extends any[]> extends ObjectReactive<T> {
       // 触发长度更新通知，必须主动触发，不能通过修改子信号值触发，因为子信号会判断值是否一致
       triggerSignal(this.lengthSignal, 'set', { oldValue, newValue })
       // 触发代理对象 结构变化信号
-      this.triggerSignal('add', { key: p, oldValue, newValue })
+      this.triggerSignal('set', { key: p, oldValue, newValue })
       return true
     }
     return super.set(target, p, newValue, receiver)
