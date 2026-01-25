@@ -58,7 +58,9 @@ const traverse = <T>(
 
   // 处理数组类型：遍历数组元素
   if (isArray(value)) {
-    for (let i = 0; i < value.length; i++) {
+    // 记录数组长度，避免迭代时条件判断重复跟踪长度，优化性能
+    const length = value.length
+    for (let i = 0; i < length; i++) {
       traverse(value[i], nextDepth, seen)
     }
     return value
