@@ -1,3 +1,2 @@
-export * from './DomRenderer.js'
-export * from './factory.js'
-export * from './types/index.js'
+export * from './renderer/index.js'
+export type * from './types/index.js'
