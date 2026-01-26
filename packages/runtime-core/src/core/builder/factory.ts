@@ -4,7 +4,7 @@ import type { AnyProps, CodeLocation, View } from '../../types/index.js'
 /**
  * 视图解析器
  */
-export type ViewBuilder<P extends AnyProps = any, R extends View = View> = {
+export type ViewBuilder<P extends AnyProps = AnyProps, R extends View = View> = {
   (props: P | null, location?: CodeLocation): R
   [IS_VIEW_BUILDER]: true
 }
