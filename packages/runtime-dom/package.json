@@ -32,7 +32,6 @@
   "dependencies": {
     "@vitarx/runtime-core": "workspace:^",
     "@vitarx/utils": "workspace:^",
-    "@vitarx/runtime-drivers": "workspace:^",
     "csstype": "^3.1.3"
   }
 }
