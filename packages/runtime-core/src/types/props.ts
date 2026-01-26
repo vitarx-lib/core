@@ -1,6 +1,6 @@
 import type { Ref, UnwrapRef } from '@vitarx/responsive'
 import type { PickRequired } from '@vitarx/utils'
-import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../core/index.js'
+import type { Dynamic, DynamicProps, Fragment, FragmentProps, ViewBuilder } from '../core/index.js'
 import type { AnyProps, Component, ComponentProps } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
 import type { ViewTag } from './view.js'
@@ -288,11 +288,11 @@ export type WithProps<T extends ViewTag, K extends keyof any = 'children'> = Omi
   K
 >
 
-/**
- * 此类型工具用于提供给 JSX.LibraryManagedAttributes 使用，确保类型推导正确。
- */
-export type JSXElementAttributes<C, P> = C extends Component
-  ? WithVModel<WithRefProps<WithVModelUpdate<ComponentProps<C>>>>
-  : P extends object
-    ? WithRefProps<P>
-    : {}
+export type JSXElementAttributes<C, P> =
+  C extends ViewBuilder<infer U>
+    ? U
+    : C extends Component
+      ? WithVModel<WithRefProps<WithVModelUpdate<ComponentProps<C>>>>
+      : P extends object
+        ? WithRefProps<P>
+        : {}
