@@ -21,7 +21,7 @@ export function viewEffect(effect: () => void): ViewEffect | null {
     if (isActivated) {
       dirty = true
     } else {
-      effect()
+      trackEffectDeps(effect, handle)
     }
   }
   const handle = () => {
@@ -31,7 +31,7 @@ export function viewEffect(effect: () => void): ViewEffect | null {
       dirty = true
     }
   }
-  trackEffectDeps(effect, handle)
+  runEffect()
   if (hasLinkedSignal(handle)) {
     const stop = () => {
       isActivated = false
