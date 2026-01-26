@@ -78,7 +78,6 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
     const resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
     // 开发时直接冻结
     if (__DEV__) {
-      Object.freeze(resolvedProps)
       if (isFunction(component.validateProps)) {
         const result = component.validateProps(resolvedProps)
         const name = component.displayName ?? component.name ?? 'anonymous'
