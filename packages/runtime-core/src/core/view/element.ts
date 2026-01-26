@@ -55,7 +55,7 @@ export class ElementView<
   public $node: HostElement<T> | null = null
   public readonly tag: T
   public readonly props: ElementProps<T> | null
-  public readonly children: BaseView<any>[]
+  public readonly children: ResolvedChildren
   public readonly ref: InstanceRef | undefined
   /** @internal 指令映射表 */
   public directives?: DirectiveMap
