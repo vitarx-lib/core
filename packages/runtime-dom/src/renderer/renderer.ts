@@ -1,5 +1,6 @@
 import {
   type ClassProperties,
+  ForView,
   type FragmentView,
   type HostComment,
   type HostContainer,
@@ -8,12 +9,13 @@ import {
   type HostFragment,
   type HostNode,
   type HostText,
+  isFragmentView,
   type StyleProperties,
   StyleUtils,
   type ViewRenderer
 } from '@vitarx/runtime-core'
 import { logger } from '@vitarx/utils'
-import type { HTMLEventOptions } from './types/index.js'
+import type { HTMLEventOptions } from '../types/index.js'
 
 const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
 const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
@@ -66,10 +68,11 @@ export class DOMRenderer implements ViewRenderer {
     }
     return el as HostElement<T>
   }
-  createFragment(view: FragmentView): HostFragment {
+  createFragment(view: FragmentView | ForView): HostFragment {
     const el = document.createDocumentFragment() as HostFragment
-    el.$startAnchor = document.createComment('Fragment start')
-    el.$endAnchor = document.createComment('Fragment end')
+    const type = isFragmentView(view) ? 'Fragment' : 'For'
+    el.$startAnchor = document.createComment(`${type} start`)
+    el.$endAnchor = document.createComment(`${type} end`)
     el.$view = view
     return el
   }
