@@ -1,31 +1,14 @@
 import {
-  App,
-  hasRenderer,
-  type HostElements,
-  type HostParentElement,
-  type HostRenderer,
-  NodeState,
-  setRenderer
+  type AppConfig,
+  type Component,
+  type HostContainer,
+  setRenderer,
+  type View,
+  type ViewRenderer
 } from '@vitarx/runtime-core'
-import { DomRenderer } from '@vitarx/runtime-dom'
+import { DOMRenderer, WebApp } from '@vitarx/runtime-dom'
 import { hydrate } from '../client/hydrate.js'
-import { __IS_BROWSER__ } from '../shared/constants.js'
 
-if (__IS_BROWSER__) {
-  if (!hasRenderer()) {
-    setRenderer(new DomRenderer())
-  }
-} else {
-  setRenderer(
-    new Proxy({} as HostRenderer, {
-      get(_target: HostRenderer, p: string | symbol, _receiver: any): any {
-        return () => {
-          throw new Error(`HostRenderer.${p.toString()} is not supported in server side`)
-        }
-      }
-    })
-  )
-}
 interface MountOptions {
   /**
    * SSR上下文
@@ -63,7 +46,7 @@ interface MountOptions {
  * await hydrate(app, '#root', window.__INITIAL_STATE__)
  * ```
  */
-export class SSRApp extends App {
+export class SSRApp extends WebApp {
   /**
    * 挂载应用到容器
    *
@@ -72,22 +55,12 @@ export class SSRApp extends App {
    * - 如果没有 SSR 内容，则进行正常的客户端渲染
    *
    * @param container - 挂载容器，可以是 DOM 元素或选择器字符串
-   * @param options
+   * @param SSRContext - SSR上下文
    * @returns {this} 返回当前应用实例，支持链式调用
    */
-  override mount(container: HostElements | Element | string, options: MountOptions = {}): this {
-    const { isHydrate = true, context } = options
-    if (this.rootNode.state === NodeState.Created) {
-      if (isHydrate) {
-        hydrate(this, container as HostElements, context)
-      } else {
-        super.mount(container as HostParentElement)
-      }
-      return this
-    }
-    throw new Error(
-      `[Vitarx.createSSRApp][ERROR]: rootNode in (${this.rootNode.state})state cannot be mounted.`
-    )
+  override mount(container: HostContainer | string, SSRContext?: Record<string, any>): this {
+    hydrate(this, container, SSRContext)
+    return this
   }
   /**
    * 水合激活应用
@@ -95,14 +68,41 @@ export class SSRApp extends App {
    * 它和 mount 方法类似，但会返回一个 Promise，表示水合操作的完成。
    *
    * @param container - 可以是HostElements、Element或字符串类型的DOM元素选择器
-   * @param context - 可选的上下文对象，包含一些需要传递的上下文数据
+   * @param SSRContext - 服务端渲染挂载到 window.__INITIAL_STATE__ 上的上下文。
    * @returns {Promise<void>} - 返回一个Promise对象，表示水合操作的完成
    */
-  async hydrate(
-    container: HostElements | Element | string,
-    context?: Record<string, any>
-  ): Promise<void> {
+  async hydrate(container: HostContainer, SSRContext?: Record<string, any>): Promise<void> {
     // 调用实际的水合函数，将当前实例、容器元素和上下文传递过去
-    await hydrate(this, container as HostElements, context)
+    await hydrate(this, container, SSRContext)
   }
+}
+
+/**
+ * 创建 SSR 应用实例
+ *
+ * @param root - 根组件或虚拟节点
+ * @param config - 应用配置
+ * @returns SSR 应用实例
+ *
+ * @example
+ * ```ts
+ * const app = createSSRApp(App)
+ * const html = await renderToString(app)
+ * ```
+ */
+export function createSSRApp(root: View | Component, config?: AppConfig): SSRApp {
+  if (__SSR__) {
+    setRenderer(
+      new Proxy({} as ViewRenderer, {
+        get(_target: ViewRenderer, p: string | symbol, _receiver: any): any {
+          return () => {
+            throw new Error(`ViewRenderer.${p.toString()} is not supported in server side`)
+          }
+        }
+      })
+    )
+  } else {
+    setRenderer(new DOMRenderer())
+  }
+  return new SSRApp(root, config)
 }
