@@ -20,6 +20,34 @@ import type {
 import { applyRef, resolveChildren, resolveProps } from '../compiler/resolve.js'
 import { BaseView } from './base.js'
 
+/**
+ * ElementView 类用于表示和管理 DOM 元素视图，支持属性、子元素、指令和引用等功能。
+ *
+ * 核心功能：
+ * - 创建和管理 DOM 元素节点
+ * - 处理元素属性和子元素
+ * - 支持指令（directives）和引用（ref）
+ * - 管理视图的生命周期（初始化、挂载、激活、停用、销毁）
+ *
+ * @example
+ * ```typescript
+ * const elementView = new ElementView('div', { class: 'container', children: [new TextView('Hello')] })
+ * elementView.init(ctx)
+ * elementView.mount(document.body, 'append')
+ * ```
+ *
+ * @template T - 扩展自 HostElementTag，表示 DOM 元素的标签名
+ *
+ * @constructor
+ * @param {T} tag - DOM 元素的标签名（如 'div', 'span' 等）
+ * @param {IntrinsicElements[T] | null} [props=null] - 元素的属性对象，包括事件处理器、样式、类名等
+ * @param {CodeLocation} [location] - 可选的代码位置信息，用于调试
+ *
+ * @remarks
+ * - 内部使用 directives 属性来管理指令映射表
+ * - effects 属性用于管理视图的副作用，会在视图销毁时自动清理
+ * - $node 属性在挂载前为 null，挂载后会引用实际的 DOM 节点
+ */
 export class ElementView<
   T extends HostElementTag = HostElementTag
 > extends BaseView<ViewKind.ELEMENT> {
