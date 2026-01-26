@@ -49,6 +49,18 @@ abstract class BaseAtomicView<
   protected abstract createNode(renderer: ViewRenderer, text: string): Node
 }
 
+/**
+ * TextView 类用于表示和渲染文本节点。
+ * 核心功能：
+ * - 创建和管理文本节点
+ * - 提供文本渲染的基础功能
+ *
+ * @example
+ * ```typescript
+ * const textView = new TextView();
+ * textView.mount(container);
+ * ```
+ */
 export class TextView extends BaseAtomicView<ViewKind.TEXT, HostText> {
   readonly kind = ViewKind.TEXT
   protected override createNode(renderer: ViewRenderer, text: string): HostText {
@@ -56,6 +68,19 @@ export class TextView extends BaseAtomicView<ViewKind.TEXT, HostText> {
   }
 }
 
+/**
+ * CommentView 类用于表示和渲染注释节点。
+ *
+ * 核心功能：
+ * - 继承自 BaseAtomicView，专门处理注释类型的视图
+ * - 提供注释渲染的基础功能
+ *
+ * 使用示例：
+ * ```typescript
+ * const commentView = new CommentView();
+ * commentView.mount(container);
+ * ```
+ */
 export class CommentView extends BaseAtomicView<ViewKind.COMMENT, HostComment> {
   readonly kind = ViewKind.COMMENT
   protected override createNode(renderer: ViewRenderer, text: string): HostComment {
