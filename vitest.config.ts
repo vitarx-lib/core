@@ -3,8 +3,9 @@ import { entries } from './scripts/alias'
 
 export default defineConfig({
   define: {
-    __DEV__: JSON.stringify(true),
-    __SSR__: JSON.stringify(false)
+    __DEV__: true,
+    __SSR__: false,
+    ____VERSION__: JSON.stringify('0.0.0')
   },
   resolve: {
     alias: entries
