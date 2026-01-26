@@ -9,6 +9,8 @@ export const enum ViewKind {
   ELEMENT,
   /** 切换视图 */
   SWITCH,
+  /** 列表视图 */
+  FOR,
   /** 组件节点 */
   COMPONENT
 }

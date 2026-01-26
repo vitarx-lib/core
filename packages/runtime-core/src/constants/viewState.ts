@@ -10,8 +10,8 @@
  * - 已挂载（ACTIVATED）:
  *   View 已挂载到 DOM 树中。
  *
- * - 已挂载（DEACTIVATED）:
- *   View 已从 DOM 树中移除。
+ * - 停用（DEACTIVATED）:
+ *   View 已从 DOM 树中移除 / 不可见。
  *
  * - 已卸载（UNUSED）:
  *   当视图被销毁时，会重新回到 UNUSED 状态。
