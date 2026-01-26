@@ -3,7 +3,7 @@ import type { PickRequired } from '@vitarx/utils'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../core/index.js'
 import type { AnyProps, Component, ComponentProps } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
-import type { JSXElementType } from './view.js'
+import type { ViewTag } from './view.js'
 
 /**
  * 可能是引用值的类型
@@ -234,7 +234,7 @@ type WithVModelUpdate<T extends AnyProps> = T & {
 /**
  * 提取节点属性类型
  */
-export type ExtractProps<T extends JSXElementType> = T extends Dynamic
+export type ExtractProps<T extends ViewTag> = T extends Dynamic
   ? DynamicProps
   : T extends Fragment
     ? FragmentProps
@@ -251,7 +251,7 @@ export type ExtractProps<T extends JSXElementType> = T extends Dynamic
  * - 元素或组件定义的属性
  * - 全局属性（如key、ref、v-show等）
  */
-export type ValidProps<T extends JSXElementType> = ExtractProps<T> & IntrinsicAttributes
+export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttributes
 
 /**
  * 根据节点类型推断其对应的属性类型
@@ -283,7 +283,7 @@ export type ValidProps<T extends JSXElementType> = ExtractProps<T> & IntrinsicAt
  * @template T - 节点类型，必须继承自 ValidNodeType
  * @template K - 忽略的属性名称，默认为 'children'
  */
-export type WithProps<T extends JSXElementType, K extends keyof any = 'children'> = Omit<
+export type WithProps<T extends ViewTag, K extends keyof any = 'children'> = Omit<
   ExtractProps<T>,
   K
 >

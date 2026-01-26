@@ -12,7 +12,7 @@ import type {
   ViewBuilder
 } from '../core/index.js'
 import type { Component } from './component.js'
-import type { JSXElementNames } from './element.js'
+import type { HostElementTag } from './element.js'
 
 /**
  * 代码位置
@@ -71,7 +71,7 @@ export type ResolvedChildren = View[]
  * - 组件
  * - 视图构建器
  */
-export type JSXElementType = JSXElementNames | Component | ViewBuilder
+export type ViewTag = HostElementTag | Component | ViewBuilder
 
 /**
  * 挂载类型

@@ -7,7 +7,7 @@ export type AnyProps = { [k: string]: any }
 /**
  * 组件公开实例类型
  */
-export type PublicComponentInstance = {
+export type ComponentPublicInstance = {
   readonly [IS_RAW]: true
   readonly [key: string]: any
 }

@@ -42,10 +42,4 @@ export type HostNode = HostElement | HostText | HostComment | HostFragment
  */
 export type HostContainer = Vitarx.HostContainerNode
 
-/**
- * JSX内置元素名称类型
- * 表示所有内置JSX元素的名称联合类型
- */
-export type JSXElementNames = keyof JSX.IntrinsicElements
-
 export type ElementProps<T extends HostElementTag> = Omit<IntrinsicElements[T], 'children'>
