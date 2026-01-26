@@ -61,9 +61,8 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT> {
     const renderer = getRenderer()
     if (!this.$node) {
       // 判断是否为svg命名空间
-      this.$node = renderer.createFragment(this as any)
+      this.$node = renderer.createFragment(this)
     }
-    renderer[type](this.$node, containerOrAnchor)
     for (const child of this.children) child.mount(this.$node, 'append')
   }
 }
