@@ -151,17 +151,7 @@ export class App {
    * app.mount('#app') // 挂载到id为#app的元素
    * ```
    */
-  mount(container: HostContainer | string): this {
-    // 如果传入的是字符串，则通过querySelector获取对应的DOM元素
-    if (typeof container === 'string') {
-      // container = getRenderer().querySelector(container)! as HostParentElement
-      // 如果找不到对应的DOM元素，抛出错误
-      if (!container) {
-        throw new Error(
-          `[App.mount][ERROR]: The element corresponding to the specified selector ${container} was not found.`
-        )
-      }
-    }
+  mount(container: HostContainer): this {
     this.#rootView.init({ app: this })
     // 调用组件的mount方法，将组件挂载到指定的容器中
     this.rootView.mount(container)
