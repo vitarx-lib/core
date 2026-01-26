@@ -1,5 +1,4 @@
-import { isFunction } from '@vitarx/utils'
-import { logger } from '@vitarx/utils/src/index.js'
+import { isFunction, logger } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { type ViewEffect, viewEffect } from '../../runtime/effect.js'
 import { getRenderer } from '../../runtime/index.js'
