@@ -61,7 +61,35 @@ const materialize = (node: NormalizedChild): View => {
       return new CommentView('v-if')
   }
 }
-
+/**
+ * SwitchView 用于根据响应式数据的变化来动态渲染不同的视图。
+ *
+ * 核心功能：
+ * - 监听响应式数据源的变化，自动更新视图
+ * - 支持视图的快速路径更新（同类型视图）和慢路径更新（结构变化）
+ * - 提供视图切换的钩子函数，允许父级接管视图切换逻辑
+ * - 支持指令透传
+ *
+ * 使用示例：
+ * ```typescript
+ * const source = ref('text')
+ * const switchView = new SwitchView(source)
+ * switchView.init(ctx)
+ * ```
+ *
+ * 构造函数参数：
+ * @param source - 响应式数据源，用于决定当前渲染的视图
+ * @param location - 可选，代码位置信息，用于调试
+ *
+ * 使用限制：
+ * - 必须在初始化后才能访问 current 属性
+ * - 视图切换时，如果父级提供了 onViewSwitch 钩子，必须确保返回的视图类型匹配
+ * - 内部使用 viewEffect 进行响应式追踪，需要确保在适当的时候调用 dispose 进行清理
+ *
+ * 潜在副作用：
+ * - 视图切换可能会触发 DOM 操作
+ * - 如果 onViewSwitch 钩子返回了不匹配的视图类型，在开发模式下会抛出错误
+ */
 export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH> {
   public readonly kind = ViewKind.SWITCH
   /** @internal 视图来源 */
