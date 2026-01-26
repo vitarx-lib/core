@@ -11,24 +11,6 @@ import type { View } from './view.js'
 declare global {
   namespace Vitarx {
     /**
-     * 宿主平台父节点接口
-     *
-     * 为了能让 `v-parent` 的类型声明符合运行时元素实例的类型要求，宿主平台特定包需要重写此接口。
-     *
-     * @example
-     * ```ts
-     * declare global {
-     *   namespace Vitarx {
-     *     // 重写 DOM 平台的支持做为父元素的元素类型
-     *     interface HostParentNode extends ParentNode {
-     *
-     *     }
-     *   }
-     * }
-     * ```
-     */
-    interface HostContainerNode {}
-    /**
      * 允许渲染的元素
      *
      * 宿主平台包可以重写此接口以支持Tsx类型校验。
