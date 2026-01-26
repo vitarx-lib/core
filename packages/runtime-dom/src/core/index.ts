@@ -1,2 +1,2 @@
 export * from './renderer.js'
-export * from './factory.js'
+export * from './app.js'
