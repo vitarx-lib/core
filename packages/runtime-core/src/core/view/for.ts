@@ -105,6 +105,16 @@ type BuildResult = {
   newIndexToOldIndex: number[]
   removedChildren: View[]
 }
+/**
+ * 构建新的子节点列表
+ *
+ * @param newEach
+ * @param oldChildren
+ * @param oldKeyedMap
+ * @param getKey
+ * @param render
+ * @param location
+ */
 const buildChildren = <T>(
   newEach: readonly T[],
   oldChildren: ResolvedChildren,
@@ -157,6 +167,44 @@ const buildChildren = <T>(
   }
   return { keyedMap, children, newIndexToOldIndex, removedChildren }
 }
+
+/**
+ * ForView 是一个用于渲染列表数据的视图组件，它继承自 BaseView，专门处理基于数组的动态列表渲染。
+ *
+ * 核心功能：
+ * - 支持基于数组的动态列表渲染，能够高效地处理列表项的增删改查
+ * - 提供基于 key 的列表项追踪机制，优化列表更新性能
+ * - 支持响应式更新，当数据变化时自动重新渲染列表
+ *
+ * 代码示例：
+ * ```typescript
+ * const listView = new ForView({
+ *   each: [1, 2, 3],
+ *   key: (item) => item,
+ *   children: (item, index) => {
+ *     return new TextView({ text: `Item ${item}` })
+ *   }
+ * })
+ * listView.init(ctx)
+ * listView.mount(container)
+ * ```
+ *
+ * 构造函数参数：
+ * - props: ForProps<T> - 列表视图的属性对象，包含：
+ *   - each: readonly T[] - 要渲染的数据数组
+ *   - key?: (item: T, index: number) => Key - 可选的 key 生成函数，用于追踪列表项
+ *   - children: (item: T, index: number) => View - 渲染每个列表项的函数
+ * - location?: CodeLocation - 可选的代码位置信息，用于错误报告
+ *
+ * 使用限制：
+ * - children 属性必须是一个函数，否则会抛出错误
+ * - 如果提供了 key 函数，返回的 key 必须是唯一的，否则会发出警告
+ * - 组件内部使用了 LRU 缓存机制，大量数据时可能会有性能影响
+ *
+ * 副作用：
+ * - 组件会在初始化时创建 DOM 片段节点
+ * - 组件会自动管理子视图的生命周期，包括初始化、挂载、激活和销毁
+ */
 export class ForView<T = unknown> extends BaseView<ViewKind.FOR> {
   public $node: HostNode | null = null
   public readonly kind: ViewKind.FOR = ViewKind.FOR
