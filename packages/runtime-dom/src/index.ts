@@ -1,2 +1,2 @@
-export * from './renderer/index.js'
+export * from './core/index.js'
 export type * from './types/index.js'
