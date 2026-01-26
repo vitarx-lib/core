@@ -49,6 +49,7 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT> {
   }
   protected override doDispose() {
     for (const child of this.children) child.dispose()
+    if (this.$node) getRenderer().remove(this.$node)
   }
   protected override doActivate(): void {
     for (const child of this.children) child.activate()
