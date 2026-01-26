@@ -204,7 +204,7 @@ const buildChildren = <T>(
  * - 组件会在初始化时创建 DOM 片段节点
  * - 组件会自动管理子视图的生命周期，包括初始化、挂载、激活和销毁
  */
-export class ForView<T = unknown> extends BaseView<ViewKind.FOR> {
+export class ForView<T = any> extends BaseView<ViewKind.FOR> {
   public $node: HostNode | null = null
   public readonly kind: ViewKind.FOR = ViewKind.FOR
 
