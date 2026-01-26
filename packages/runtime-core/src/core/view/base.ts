@@ -52,16 +52,17 @@ export abstract class BaseView<K extends ViewKind> {
     return this._state === ViewState.UNUSED
   }
   /** 初始化运行时（不创建 DOM，不可见） */
-  init(ctx?: ViewContext): void {
+  init(ctx?: ViewContext): this {
     if (__DEV__ && this._state !== ViewState.UNUSED) {
       throw new Error('[View.init]: 视图正在运行，不能进行初始化')
     }
     this.ctx = ctx
     this.doInit?.()
     this._state = ViewState.INITIALIZED
+    return this
   }
   /** 挂载到宿主（创建 / 插入 DOM） */
-  mount(containerOrAnchor: HostContainer | HostNode, type: MountType = 'append'): void {
+  mount(containerOrAnchor: HostContainer | HostNode, type: MountType = 'append'): this {
     if (__SSR__) {
       throw new Error('[View.mount]: is not supported in SSR mode')
     }
@@ -71,13 +72,15 @@ export abstract class BaseView<K extends ViewKind> {
     if (this.state === ViewState.UNUSED) this.init()
     this.doMount?.(containerOrAnchor, type)
     this._state = ViewState.ACTIVATED
+    return this
   }
   /** 彻底销毁（不可再次使用，或需重新 init） */
-  dispose(): void {
-    if (this._state === ViewState.UNUSED) return
+  dispose(): this {
+    if (this._state === ViewState.UNUSED) return this
     this.doDispose?.()
     delete this.ctx
     this._state = ViewState.UNUSED
+    return this
   }
   /**
    * 激活视图
@@ -86,7 +89,7 @@ export abstract class BaseView<K extends ViewKind> {
    *
    * @internal
    */
-  activate(): void {
+  activate(): this {
     if (this._state !== ViewState.DEACTIVATED) {
       throw new Error(
         `[View.activate]: Cannot activate view: expected state '${ViewState.DEACTIVATED}', ` +
@@ -96,6 +99,7 @@ export abstract class BaseView<K extends ViewKind> {
     }
     this.doActivate?.()
     this._state = ViewState.ACTIVATED
+    return this
   }
   /**
    * 停用视图
@@ -104,7 +108,7 @@ export abstract class BaseView<K extends ViewKind> {
    *
    * @internal
    */
-  deactivate(): void {
+  deactivate(): this {
     if (this._state !== ViewState.ACTIVATED) {
       throw new Error(
         `[View.deactivate]: Cannot deactivate view: expected state '${ViewState.ACTIVATED}', ` +
@@ -114,6 +118,7 @@ export abstract class BaseView<K extends ViewKind> {
     }
     this.doDeactivate?.()
     this._state = ViewState.DEACTIVATED
+    return this
   }
   protected doActivate?(): void
   protected doDeactivate?(): void
