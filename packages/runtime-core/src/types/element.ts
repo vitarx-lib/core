@@ -40,6 +40,6 @@ export type HostNode = HostElement | HostText | HostComment | HostFragment
  * 平台宿主容器节点类型
  * 表示可以包含其他节点的宿主容器
  */
-export type HostContainer = HostElement | HostFragment
+export type HostContainer = HostElement | HostFragment | Vitarx.HostContainerNode
 
 export type ElementProps<T extends HostElementTag> = Omit<IntrinsicElements[T], 'children'>
