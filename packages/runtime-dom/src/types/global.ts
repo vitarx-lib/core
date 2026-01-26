@@ -5,7 +5,7 @@ import type { HTMLElementTagMap, HTMLIntrinsicElement } from './element.js'
 declare global {
   namespace Vitarx {
     interface IntrinsicElements extends HTMLIntrinsicElement {}
-    interface HostContainer extends ParentNode {}
+    interface HostContainerNode extends ParentNode {}
     interface HostFragmentNode extends DocumentFragment {
       $startAnchor: HostCommentNode
       $endAnchor: HostCommentNode

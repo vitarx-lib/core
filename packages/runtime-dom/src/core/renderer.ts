@@ -207,10 +207,9 @@ export class DOMRenderer implements ViewRenderer {
   setText(node: HostNode, text: string): void {
     node.textContent = text
   }
-  isFragment(el: HostNode): el is HostFragment {
+  isFragment(el: HostNode | HostContainer): el is HostFragment {
     return el.nodeType === Node.DOCUMENT_FRAGMENT_NODE
   }
-
   private setClass(el: HostElement, classValue: ClassProperties): void {
     const className = StyleUtils.cssClassValueToString(classValue)
     if (el.className !== className) {
@@ -271,11 +270,7 @@ export class DOMRenderer implements ViewRenderer {
    * @param value - 属性值
    * @returns {boolean} 如果成功设置属性则返回true，否则返回false
    */
-  private trySetDirectProperty<T extends HTMLElement | SVGElement>(
-    el: T,
-    name: string,
-    value: any
-  ): boolean {
+  private trySetDirectProperty<T extends Element>(el: T, name: string, value: any): boolean {
     // 检查元素是否具有指定的属性
     if (!(name in el)) return false
     try {
@@ -299,7 +294,7 @@ export class DOMRenderer implements ViewRenderer {
    * element.removeEventListener("click", clickHandler);
    */
   private removeEventListener(
-    el: HTMLElement | SVGElement,
+    el: Element,
     name: string,
     handler: (...args: any[]) => any,
     useCapture: boolean = false
@@ -325,7 +320,7 @@ export class DOMRenderer implements ViewRenderer {
    * element.addEventListener("click", (e) => console.log("clicked"), { capture: true });
    */
   private addEventListener(
-    el: HTMLElement | SVGElement,
+    el: Element,
     name: string,
     handler: (...args: any[]) => any,
     options?: HTMLEventOptions
