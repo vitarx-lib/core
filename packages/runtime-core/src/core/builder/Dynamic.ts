@@ -13,7 +13,7 @@ export interface DynamicProps {
 }
 
 /**
- * DynamicView 组件化解析器
+ * 动态视图构建器
  *
  * 它接受一个名为 "is" 的属性，该属性指定要动态渲染/元素。
  * 运行时会根据 "is" 属性值动态加载并渲染相应的组件/元素。
