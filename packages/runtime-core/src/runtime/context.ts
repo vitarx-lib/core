@@ -1,5 +1,5 @@
 import type { App } from '../app/index.js'
-import type { ComponentInstance } from '../core/index.js'
+import { type ComponentInstance, ComponentView } from '../core/index.js'
 
 let activeComponentInstance: ComponentInstance | null = null
 
@@ -35,7 +35,12 @@ export function runComponent<T>(instance: ComponentInstance, fn: () => T): T {
 export function getInstance(): ComponentInstance | null {
   return activeComponentInstance
 }
-
+/**
+ * 获取当前组件对应的视图
+ */
+export function getComponentView(): ComponentView | null {
+  return activeComponentInstance?.view ?? null
+}
 /**
  * 获取应用程序上下文的函数
  * 该函数用于从全局上下文中获取App类型的实例

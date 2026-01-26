@@ -9,6 +9,7 @@ import type {
   CodeLocation,
   Component,
   ComponentProps,
+  ComponentPublicInstance,
   Directive,
   DirectiveMap,
   ErrorHandler,
@@ -18,7 +19,6 @@ import type {
   HostNode,
   InstanceRef,
   MountType,
-  PublicComponentInstance,
   View,
   ViewContext,
   ViewSwitchHandler
@@ -163,7 +163,7 @@ export class ComponentInstance<T extends Component = Component> {
   /** @internal - 组件的副作用管理作用域 */
   public readonly scope: EffectScope
   /** @internal - 组件公开实例，只读！*/
-  public readonly publicInstance: PublicComponentInstance
+  public readonly publicInstance: ComponentPublicInstance
   /** @internal - 组件提供数据 */
   public provide: Map<string | symbol, any> | null = null
   /** @internal - 组件指令存储 */
