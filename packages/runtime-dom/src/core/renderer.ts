@@ -80,7 +80,14 @@ export class DOMRenderer implements ViewRenderer {
     return document.createTextNode(text)
   }
   append(child: HostNode, parent: HostContainer): void {
-    parent.appendChild(child)
+    child = this.recoveryFragmentChildren(child)
+    // 如果是插入到片段节点中，则判断是否已挂载
+    if (this.isFragment(parent) && parent.$endAnchor.parentNode) {
+      const endAnchor = parent.$endAnchor
+      endAnchor.parentNode!.insertBefore(child, endAnchor)
+    } else {
+      parent.appendChild(child)
+    }
   }
   insert(child: HostNode, anchor: HostNode): void {
     // 如果锚点元素是Fragment，则插入到第一个子元素
@@ -120,7 +127,7 @@ export class DOMRenderer implements ViewRenderer {
     if (!parent) {
       if (__DEV__) {
         logger.warn(
-          '[DOMRenderer.replace][WARN]: The old node does not have a parent node',
+          '[DOMRenderer.replace]: The old node does not have a parent node',
           newNode,
           oldNode
         )
