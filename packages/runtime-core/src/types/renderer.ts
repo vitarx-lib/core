@@ -1,4 +1,3 @@
-import type { FragmentView } from '../core/index.js'
 import type {
   HostComment,
   HostContainer,
@@ -8,6 +7,7 @@ import type {
   HostNode,
   HostText
 } from './element.js'
+import type { ResolvedChildren } from './view.js'
 
 /**
  * 平台适配渲染器接口，定义了操作DOM元素基本的方法
@@ -41,7 +41,7 @@ export interface ViewRenderer {
    *
    * @param view - 片段的运行时块
    */
-  createFragment(view: FragmentView): HostFragment
+  createFragment(view: { children: ResolvedChildren }): HostFragment
   /* ---------- 类型判断 ---------- */
   /**
    * 判断是否为元素
