@@ -127,7 +127,9 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   // 如果存在v-bind绑定，则进行props绑定处理
   const resolvedProps = isObject(binding) ? (bindProps(props, binding) as T) : props
   // 构建返回结果对象
-  const result: ResolvePropsResult<T> = { props: resolvedProps }
+  const result: ResolvePropsResult<T> = {
+    props: __DEV__ ? Object.freeze(resolvedProps) : resolvedProps
+  }
   // 如果存在ref，则将其添加到结果中
   if (isRef(ref) || isFunction(ref)) result.ref = ref
   return result
@@ -177,8 +179,7 @@ export function resolveChildren(children: ValidChildren): ResolvedChildren {
       if (str.length) childList.push(new TextView(str))
     }
   }
-
-  return childList
+  return __DEV__ ? Object.freeze(childList) : childList
 }
 
 /**
