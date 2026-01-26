@@ -1,15 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "__tests__",
-    "tests"
-  ]
+  "compilerOptions": { "outDir": "dist" },
+  "include": ["src","../../vite-env.d.ts"],
+  "exclude": ["dist", "node_modules", "__tests__"]
 }
