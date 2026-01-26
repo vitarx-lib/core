@@ -26,9 +26,12 @@ export abstract class BaseView<K extends ViewKind> {
   /** @internal 上下文*/
   public ctx?: ViewContext
   /** @internal 视图状态 */
-  protected state: ViewState = ViewState.UNUSED
+  private _state: ViewState = ViewState.UNUSED
   protected constructor(location?: CodeLocation) {
     this.location = location
+  }
+  get state(): ViewState {
+    return this._state
   }
   get owner(): ComponentInstance | null {
     return this.ctx?.owner ?? null
@@ -37,25 +40,25 @@ export abstract class BaseView<K extends ViewKind> {
     return this.ctx?.app ?? null
   }
   get isActivated(): boolean {
-    return this.state === ViewState.ACTIVATED
+    return this._state === ViewState.ACTIVATED
   }
   get isInitialized(): boolean {
-    return this.state === ViewState.INITIALIZED
+    return this._state === ViewState.INITIALIZED
   }
   get isDeactivated(): boolean {
-    return this.state === ViewState.DEACTIVATED
+    return this._state === ViewState.DEACTIVATED
   }
   get isUnused(): boolean {
-    return this.state === ViewState.UNUSED
+    return this._state === ViewState.UNUSED
   }
   /** 初始化运行时（不创建 DOM，不可见） */
   init(ctx?: ViewContext): void {
-    if (__DEV__ && this.state !== ViewState.UNUSED) {
+    if (__DEV__ && this._state !== ViewState.UNUSED) {
       throw new Error('[View.init]: 视图正在运行，不能进行初始化')
     }
     this.ctx = ctx
     this.doInit?.()
-    this.state = ViewState.INITIALIZED
+    this._state = ViewState.INITIALIZED
   }
   /** 挂载到宿主（创建 / 插入 DOM） */
   mount(containerOrAnchor: HostContainer | HostNode, type: MountType = 'append'): void {
@@ -67,14 +70,14 @@ export abstract class BaseView<K extends ViewKind> {
     }
     if (this.state === ViewState.UNUSED) this.init()
     this.doMount?.(containerOrAnchor, type)
-    this.state = ViewState.ACTIVATED
+    this._state = ViewState.ACTIVATED
   }
   /** 彻底销毁（不可再次使用，或需重新 init） */
   dispose(): void {
-    if (this.state === ViewState.UNUSED) return
+    if (this._state === ViewState.UNUSED) return
     this.doDispose?.()
     delete this.ctx
-    this.state = ViewState.UNUSED
+    this._state = ViewState.UNUSED
   }
   /**
    * 激活视图
@@ -84,15 +87,15 @@ export abstract class BaseView<K extends ViewKind> {
    * @internal
    */
   activate(): void {
-    if (this.state !== ViewState.DEACTIVATED) {
+    if (this._state !== ViewState.DEACTIVATED) {
       throw new Error(
         `[View.activate]: Cannot activate view: expected state '${ViewState.DEACTIVATED}', ` +
-          `but current state is '${this.state}'. ` +
+          `but current state is '${this._state}'. ` +
           `Only deactivated views can be activated.`
       )
     }
     this.doActivate?.()
-    this.state = ViewState.ACTIVATED
+    this._state = ViewState.ACTIVATED
   }
   /**
    * 停用视图
@@ -102,15 +105,15 @@ export abstract class BaseView<K extends ViewKind> {
    * @internal
    */
   deactivate(): void {
-    if (this.state !== ViewState.ACTIVATED) {
+    if (this._state !== ViewState.ACTIVATED) {
       throw new Error(
         `[View.deactivate]: Cannot deactivate view: expected state '${ViewState.ACTIVATED}', ` +
-          `but current state is '${this.state}'. ` +
+          `but current state is '${this._state}'. ` +
           `Only activated views can be deactivated.`
       )
     }
     this.doDeactivate?.()
-    this.state = ViewState.DEACTIVATED
+    this._state = ViewState.DEACTIVATED
   }
   protected doActivate?(): void
   protected doDeactivate?(): void
