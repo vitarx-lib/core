@@ -16,7 +16,10 @@ export default defineConfig({
 
     // 指定需要包含的测试文件的匹配模式
     // 这里会匹配所有__tests__目录下的.test或.spec结尾的各种JavaScript/TypeScript文件
-    include: ['**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [
+      '**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      '**/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+    ],
 
     // 指定需要排除的文件或目录
     // 这里排除了node_modules和dist目录，避免测试这些构建和依赖文件
@@ -30,7 +33,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       // 指定在收集覆盖率时需要排除的文件
       // 这里排除了node_modules、dist和测试文件本身
-      exclude: ['**/node_modules/**', '**/dist/**', '**/__tests__/**']
+      exclude: ['**/node_modules/**', '**/dist/**', '**/__tests__/**', '**/tests/**']
     },
 
     // 设置单个测试用例的超时时间为10秒
