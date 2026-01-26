@@ -1,9 +1,9 @@
 import { ShallowRef, shallowRef } from '@vitarx/responsive'
 import type {
   Component,
+  ComponentPublicInstance,
   HostElement,
-  HostElementTag,
-  PublicComponentInstance
+  HostElementTag
 } from '../../types/index.js'
 
 /**
@@ -15,7 +15,7 @@ type InstanceOf<T> = ShallowRef<
       : T extends HostElementTag
         ? HostElement<T>
         : T extends Component
-          ? PublicComponentInstance
+          ? ComponentPublicInstance
           : T)
   | null
 >
