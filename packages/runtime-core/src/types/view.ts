@@ -11,6 +11,7 @@ import type {
   TextView,
   ViewBuilder
 } from '../core/index.js'
+import type { ForView } from '../core/view/for.js'
 import type { Component } from './component.js'
 import type { HostElementTag } from './element.js'
 
@@ -30,7 +31,14 @@ export interface CodeLocation {
 /**
  * 视图联合类型
  */
-export type View = TextView | CommentView | ElementView | FragmentView | SwitchView | ComponentView
+export type View =
+  | TextView
+  | CommentView
+  | ElementView
+  | FragmentView
+  | SwitchView
+  | ComponentView
+  | ForView
 export interface ViewContext {
   owner?: ComponentInstance | null
   app?: App | null
@@ -61,7 +69,7 @@ export type ValidChildren = ValidChild | Iterable<ValidChildren>
  *
  * 子节点被解析后最终得到的视图数组
  */
-export type ResolvedChildren = View[]
+export type ResolvedChildren = readonly View[]
 
 /**
  * 可创建类型
