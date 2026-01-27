@@ -1,13 +1,14 @@
 import { ViewKind } from '../../constants/index.js'
 import { IS_VIEW, IS_VIEW_BUILDER } from '../../constants/symbol.js'
-import type {
-  CommentView,
-  ComponentView,
-  ElementView,
-  FragmentView,
-  SwitchView,
-  TextView,
-  ViewBuilder
+import {
+  type CommentView,
+  type ComponentView,
+  type ElementView,
+  ForView,
+  type FragmentView,
+  type SwitchView,
+  type TextView,
+  type ViewBuilder
 } from '../../core/index.js'
 import type { View } from '../../types/index.js'
 
@@ -79,6 +80,16 @@ export const isElementView = (val: any): val is ElementView => {
  */
 export const isFragmentView = (val: any): val is FragmentView => {
   return val?.[IS_VIEW] && val.kind === ViewKind.FRAGMENT
+}
+
+/**
+ * 检查给定值是否为ForView循环视图类型
+ *
+ * @param val - 需要检查的任意值
+ * @return {boolean} 如果值是ForView循环视图类型则返回true，否则返回false
+ */
+export const isForView = (val: any): val is ForView => {
+  return val?.[IS_VIEW] && val.kind === ViewKind.FOR
 }
 
 /**
