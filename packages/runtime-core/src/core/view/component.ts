@@ -80,18 +80,27 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
     if (__DEV__) {
       if (isFunction(component.validateProps)) {
         const result = component.validateProps(resolvedProps)
-        const name = component.displayName ?? component.name ?? 'anonymous'
         // 校验失败处理
         if (result === false) {
           // 记录错误日志，包含源信息
-          logger.error(`Component<${name}> props validation failed.`, this.location)
+          logger.error(`${this.name} props validation failed.`, this.location)
         } else if (typeof result === 'string') {
           // 如果返回的是字符串，则记录警告日志
-          logger.warn(`Component<${name}>: ${result}`, this.location)
+          logger.warn(`${this.name}: ${result}`, this.location)
         }
       }
     }
     this.props = resolvedProps
+  }
+  /**
+   * 获取组件名称的getter方法
+   * 如果组件有displayName属性则使用displayName，否则使用name属性，如果都没有则使用默认值'anonymous'
+   *
+   * 返回格式为"Component<实际名称>"的字符串
+   */
+  get name(): string {
+    const displayName = this.component.displayName ?? this.component.name ?? 'anonymous'
+    return `Component<${displayName}>`
   }
   get $node(): HostNode | null {
     return this.instance?.subView.$node ?? null
@@ -151,8 +160,6 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
  * - ⚠️ 所有属性面向开发者都是只读的，请勿随意修改！！！
  */
 export class ComponentInstance<T extends Component = Component> {
-  /** @internal - 组件展示的名称 */
-  public readonly name: string
   /** @internal - 应用 */
   public readonly app: App | null = null
   /** @internal - 父组件实例 */
@@ -180,11 +187,10 @@ export class ComponentInstance<T extends Component = Component> {
   /** @internal - 组件是否可见 */
   private _visible = false
   constructor(public readonly view: ComponentView<T>) {
-    this.name = view.component.displayName ?? view.component.name ?? 'anonymous'
     this.parent = view.owner
     this.app = view.app
     this.scope = new EffectScope({
-      name: this.name,
+      name: view.name,
       errorHandler: (error, source) => {
         this.reportError(error, `effect:${source}`)
       }
@@ -269,7 +275,10 @@ export class ComponentInstance<T extends Component = Component> {
         const result = this.errorHandler(error, errorInfo)
         if (result === false) return
       } catch (e) {
-        logger.error(`[${this.name}] Infinite loop detected: error thrown in onError hook`, error)
+        logger.error(
+          `[${this.view.name}] Infinite loop detected: error thrown in onError hook`,
+          error
+        )
       }
     }
     if (this.parent) {
@@ -277,7 +286,7 @@ export class ComponentInstance<T extends Component = Component> {
     } else if (this.app?.config.errorHandler) {
       this.app.config.errorHandler.call(this.publicInstance, error, errorInfo)
     } else {
-      logger.error(`Unhandled exception in ${this.name}: `, error, errorInfo)
+      logger.error(`Unhandled exception in ${this.view.name}: `, error, errorInfo)
     }
   }
   private invokeVoidHook(stage: Exclude<Lifecycle, Lifecycle.init>): void {
@@ -308,7 +317,7 @@ export class ComponentInstance<T extends Component = Component> {
     if (isRef(child)) return new SwitchView(child)
     // DEV 下给警告
     if (!isString(child) && !isNumber(child)) {
-      const message = `[Component<${this.name}>] Component returned unsupported value type`
+      const message = `[${this.view.name}] Component returned unsupported value type`
       if (__DEV__) logger.warn(message, child)
       return new CommentView(message)
     }
