@@ -28,17 +28,29 @@ export interface CodeLocation {
   /** 源代码列号 */
   columnNumber: number
 }
+
 /**
- * 视图联合类型
+ * 宿主节点视图
+ *
+ * 包括 Element、Fragment、Text、Comment 四种UI可见视图
  */
-export type View =
-  | TextView
-  | CommentView
-  | ElementView
-  | FragmentView
-  | SwitchView
-  | ComponentView
-  | ForView
+export type HostView = ElementView | FragmentView | TextView | CommentView
+
+/**
+ * 结构控制视图
+ *
+ * 包括 ForView 和 SwitchView 是基于响应式数据驱动的结构控制视图。
+ */
+export type StructuralView = ForView | SwitchView
+
+/**
+ * 统一视图类型
+ */
+export type View = HostView | StructuralView | ComponentView
+
+/**
+ * 视图运行时上下文关系
+ */
 export interface ViewContext {
   owner?: ComponentInstance | null
   app?: App | null
