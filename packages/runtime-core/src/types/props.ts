@@ -224,7 +224,7 @@ type WithVModelUpdate<T extends AnyProps> = T & {
   /**
    * 双向绑定属性更新事件
    *
-   * 组件内部使用 `useSync` | `usePropSync` 同步属性时，值变化会自动触发事件。
+   * 组件内部使用 `useModel` 同步属性时，值变化会自动触发事件。
    *
    * @param v - 新的值
    */
@@ -288,11 +288,8 @@ export type WithProps<T extends ViewTag, K extends keyof any = 'children'> = Omi
   K
 >
 
-export type JSXElementAttributes<C, P> =
-  C extends ViewBuilder<infer U>
-    ? U
-    : C extends Component
-      ? WithVModel<WithRefProps<WithVModelUpdate<ComponentProps<C>>>>
-      : P extends object
-        ? WithRefProps<P>
-        : {}
+export type JSXElementAttributes<C, P> = P extends object
+  ? WithVModel<WithRefProps<WithVModelUpdate<P>>>
+  : C extends ViewBuilder<infer U>
+    ? WithVModel<WithRefProps<WithVModelUpdate<U>>>
+    : {}
