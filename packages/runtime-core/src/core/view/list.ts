@@ -1,5 +1,6 @@
 import { ViewKind } from '../../constants/index.js'
 import { getRenderer } from '../../runtime/index.js'
+import { isView } from '../../shared/index.js'
 import type {
   CodeLocation,
   HostContainer,
@@ -21,9 +22,9 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
   private head?: ListItemView | null = null
   private tail?: ListItemView | null = null
   private size = 0
-  constructor(items: View[], location?: CodeLocation) {
+  constructor(items?: View[], location?: CodeLocation) {
     super(location)
-    for (const item of items) this.append(item)
+    if (Array.isArray(items)) for (const item of items) this.append(item)
   }
   get length(): number {
     return this.size
@@ -45,6 +46,9 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
    * @param child
    */
   append(child: ListItemView): void {
+    if (__DEV__ && !isView(child)) {
+      throw new TypeError('child must be a view')
+    }
     child.__parent = this
     if (!this.head) {
       this.head = this.tail = child
@@ -66,6 +70,9 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
    * @param anchor - 插入位置
    */
   insert(child: ListItemView, anchor: ListItemView): void {
+    if (__DEV__ && !isView(child)) {
+      throw new TypeError('child must be a view')
+    }
     if (anchor.__parent !== this) {
       throw new Error('anchor must be a child of this list')
     }
@@ -88,6 +95,9 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
    * @param child
    */
   remove(child: ListItemView): void {
+    if (__DEV__ && !isView(child)) {
+      throw new TypeError('child must be a view')
+    }
     const prev = child.__prev
     const next = child.__next
     if (prev) prev.__next = next
