@@ -149,7 +149,7 @@ function Freeze(props: FreezeProps): View {
         // 从缓存中移除（因为即将被激活使用）
         cache.delete(type)
         // 重新插入节点
-        renderer.insert(cachedView.$node!, prev.$node!)
+        renderer.insert(cachedView.node, prev.node)
         // 激活缓存的视图（恢复事件监听等）
         cachedView.activate()
         reuse = cachedView
@@ -160,11 +160,11 @@ function Freeze(props: FreezeProps): View {
       const type = prev.component
       // 如果next没有被复用，则需要先挂载next
       if (!reuse) {
-        next.mount(prev.$node!, 'insert')
+        next.mount(prev.node, 'insert')
         reuse = next
       }
       // 移除DOM节点
-      renderer.remove(prev.$node!)
+      renderer.remove(prev.node)
       // 冻结视图
       prev.deactivate()
       // 存入缓存
