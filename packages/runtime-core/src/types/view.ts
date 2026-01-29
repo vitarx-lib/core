@@ -7,11 +7,11 @@ import type {
   ComponentView,
   ElementView,
   FragmentView,
+  ListView,
   SwitchView,
   TextView,
   ViewBuilder
 } from '../core/index.js'
-import type { ForView } from '../core/view/for.js'
 import type { Component } from './component.js'
 import type { HostElementTag } from './element.js'
 
@@ -37,16 +37,9 @@ export interface CodeLocation {
 export type HostView = ElementView | FragmentView | TextView | CommentView
 
 /**
- * 结构控制视图
- *
- * 包括 ForView 和 SwitchView 是基于响应式数据驱动的结构控制视图。
- */
-export type StructuralView = ForView | SwitchView
-
-/**
  * 统一视图类型
  */
-export type View = HostView | StructuralView | ComponentView
+export type View = HostView | ListView | SwitchView | ComponentView
 
 /**
  * 视图运行时上下文关系
