@@ -88,7 +88,19 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
     }
     this.size++
   }
-
+  /**
+   * 移动一个视图到指定锚点之前
+   *
+   * @param child - 要移动的视图
+   * @param anchor - 移动位置，传入 null 等同于 append
+   */
+  move(child: ListItemView, anchor: ListItemView | null): void {
+    if (anchor) {
+      this.insert(child, anchor)
+    } else {
+      this.append(child)
+    }
+  }
   /**
    * 从列表删除一个视图
    *
