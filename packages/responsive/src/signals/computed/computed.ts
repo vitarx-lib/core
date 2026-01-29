@@ -5,10 +5,10 @@ import {
   clearEffectLinks,
   type DebuggerOptions,
   type DisposableEffect,
-  type EffectHandle,
+  type EffectRunner,
   removeFromOwnerScope,
   reportEffectError,
-  trackEffectDeps,
+  trackEffect,
   trackSignal,
   triggerSignal
 } from '../../core/index.js'
@@ -68,7 +68,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
   /**
    * 副作用句柄，用于管理计算属性的副作用
    */
-  private readonly _effect: EffectHandle
+  private readonly _effect: EffectRunner
 
   constructor(getter: ComputedGetter<T>, debuggerOptions?: DebuggerOptions)
 
@@ -208,7 +208,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
    */
   recompute(): this {
     // 调用重新计算方法
-    trackEffectDeps(() => {
+    trackEffect(() => {
       try {
         this._value = this._getter(this._value)
       } catch (e) {

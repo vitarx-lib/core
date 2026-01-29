@@ -13,7 +13,7 @@ import {
   createDepLink,
   DepLink,
   destroyDepLink,
-  type EffectHandle,
+  type EffectRunner,
   hasLinkedEffect,
   hasLinkedSignal,
   iterateLinkedEffects,
@@ -193,12 +193,12 @@ describe('depend/link', () => {
   // 测试用例
   describe('isWithSignal', () => {
     it('当effect对象具有EFFECT_DEP_HEAD属性时应该返回true', () => {
-      const effectWithSignal = { [EFFECT_DEP_HEAD]: {} } as EffectHandle
+      const effectWithSignal = { [EFFECT_DEP_HEAD]: {} } as EffectRunner
       expect(hasLinkedSignal(effectWithSignal)).toBe(true)
     })
 
     it('当effect对象不具有EFFECT_DEP_HEAD属性时应该返回false', () => {
-      const effectWithoutSignal = {} as EffectHandle
+      const effectWithoutSignal = {} as EffectRunner
       expect(hasLinkedSignal(effectWithoutSignal)).toBe(false)
     })
 
@@ -211,12 +211,12 @@ describe('depend/link', () => {
     })
 
     it('当EFFECT_DEP_HEAD属性值为null时应该返回false', () => {
-      const effectWithNullDep = { [EFFECT_DEP_HEAD]: null } as unknown as EffectHandle
+      const effectWithNullDep = { [EFFECT_DEP_HEAD]: null } as unknown as EffectRunner
       expect(hasLinkedSignal(effectWithNullDep)).toBe(false)
     })
 
     it('当EFFECT_DEP_HEAD属性值为undefined时应该返回false', () => {
-      const effectWithUndefinedDep = { [EFFECT_DEP_HEAD]: undefined } as EffectHandle
+      const effectWithUndefinedDep = { [EFFECT_DEP_HEAD]: undefined } as EffectRunner
       expect(hasLinkedSignal(effectWithUndefinedDep)).toBe(false)
     })
   })

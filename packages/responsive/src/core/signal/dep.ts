@@ -40,13 +40,13 @@ export interface Signal {
   [P: keyof any]: any
 }
 /**
- * EffectHandle 协议接口（内部使用）
+ * EffectRunner 协议接口（内部使用）
  *
- * Effect 描述对象，可以触发依赖关系。
+ * Effect 执行器，用于依赖系统触发执行。
  *
  * @internal
  */
-export interface EffectHandle extends DebuggerOptions {
+export interface EffectRunner extends DebuggerOptions {
   /**
    * 依赖版本号
    */
@@ -105,7 +105,7 @@ export class DepLink {
    */
   constructor(
     public signal: Signal,
-    public effect: EffectHandle
+    public effect: EffectRunner
   ) {}
 }
 
@@ -142,7 +142,7 @@ export class DepLink {
  * - 使用 EFFECT_DEP_HEAD/EFFECT_DEP_TAIL 和 SIGNAL_DEP_HEAD/SIGNAL_DEP_TAIL 作为链表头尾的标记
  * - 维护了双向链表的前驱(ePrev/sigPrev)和后继(eNext/sigNext)指针
  */
-export function createDepLink(effect: EffectHandle, signal: Signal): DepLink {
+export function createDepLink(effect: EffectRunner, signal: Signal): DepLink {
   // 创建新的链表节点
   const link = new DepLink(signal, effect)
 
@@ -210,7 +210,7 @@ export function destroyDepLink(link: DepLink): void {
 /**
  * 清除 Effect 依赖链
  */
-export function clearEffectLinks(effect: EffectHandle): void {
+export function clearEffectLinks(effect: EffectRunner): void {
   let link = effect[EFFECT_DEP_HEAD]
   while (link) {
     const next = link.eNext
@@ -241,7 +241,7 @@ export function clearSignalLinks(signal: Signal): void {
  *
  * @warning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function* iterateLinkedEffects(signal: Signal): IterableIterator<EffectHandle> {
+export function* iterateLinkedEffects(signal: Signal): IterableIterator<EffectRunner> {
   let node = signal[SIGNAL_DEP_HEAD] as DepLink | undefined
   while (node) {
     yield node.effect
@@ -253,7 +253,7 @@ export function* iterateLinkedEffects(signal: Signal): IterableIterator<EffectHa
  *
  * @warning ⚠️ 注意：O(n)，主要用于测试 / 调试
  */
-export function* iterateLinkedSignals(effect: EffectHandle): IterableIterator<Signal> {
+export function* iterateLinkedSignals(effect: EffectRunner): IterableIterator<Signal> {
   let node = effect[EFFECT_DEP_HEAD] as DepLink | undefined
   while (node) {
     yield node.signal
@@ -267,7 +267,7 @@ export function* iterateLinkedSignals(effect: EffectHandle): IterableIterator<Si
  * @param effect - 待检查的副作用对象
  * @returns {boolean} 如果副作用对象具有信号依赖返回true，否则返回false
  */
-export function hasLinkedSignal(effect: EffectHandle): boolean {
+export function hasLinkedSignal(effect: EffectRunner): boolean {
   return !!effect?.[EFFECT_DEP_HEAD]
 }
 

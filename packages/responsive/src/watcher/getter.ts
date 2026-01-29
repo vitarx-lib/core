@@ -1,4 +1,4 @@
-import { trackEffectDeps } from '../core/index.js'
+import { trackEffect } from '../core/index.js'
 import type { WatchCallback } from './types.js'
 import { ValueWatcher } from './value.js'
 import { type WatcherOptions } from './watcher.js'
@@ -47,7 +47,7 @@ export class GetterWatcher<T> extends ValueWatcher<T> {
    */
   protected override getter(): T {
     try {
-      return trackEffectDeps(this._getter, this.effectHandle) // 收集信号并返回结果
+      return trackEffect(this._getter, this.effectHandle) // 收集信号并返回结果
     } catch (e) {
       this.reportError(e, 'getter')
       return undefined as T

@@ -4,7 +4,7 @@ import {
   clearEffectLinks,
   type DebuggerOptions,
   Effect,
-  type EffectHandle,
+  type EffectRunner,
   EffectScope,
   queueJob,
   queuePostFlushJob,
@@ -62,7 +62,7 @@ export interface WatcherOptions extends DebuggerOptions {
  * - 子类应该需要使用 collectSignal / linkSignalWatcher 助手函数来绑定依赖关系。（销毁时会自动解绑）
  *
  * @abstract
- * @implements EffectHandle
+ * @implements EffectRunner
  */
 export abstract class Watcher extends Effect {
   private dirty: boolean = false
@@ -88,7 +88,7 @@ export abstract class Watcher extends Effect {
   /** cleanup 回调 */
   private readonly cleanups: VoidCallback[] = []
   /** 副作用句柄 */
-  protected readonly effectHandle: EffectHandle
+  protected readonly effectHandle: EffectRunner
   /**
    * 构造函数
    * @param options 调试钩子选项

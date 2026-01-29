@@ -43,7 +43,7 @@ yarn add @vitarx/responsive
 | signal          | triggerSignal        | 函数 | 触发信号的处理函数                   |
 | signal          | EffectHandle         | 接口 | 副作用句柄                       |
 | signal          | DepLink              | 类  | 依赖关系中的双向链表节点类               |
-| signal          | trackEffectDeps      | 函数 | 跟踪副作用依赖的信号                  |
+| signal          | trackEffect          | 函数 | 跟踪副作用依赖的信号                  |
 | signal          | createDepLink        | 函数 | 创建 signal <-> effect 双向链表关联 |
 | signal          | destroyDepLink       | 函数 | 销毁 signal <-> effect 链表关联   |
 | signal          | clearEffectLinks     | 函数 | 移除 effect 关联的所有信号依赖         |

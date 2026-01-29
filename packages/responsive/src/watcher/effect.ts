@@ -1,5 +1,5 @@
 import { isFunction } from '@vitarx/utils'
-import { trackEffectDeps } from '../core/index.js'
+import { trackEffect } from '../core/index.js'
 import type { WatcherOnCleanup } from './types.js'
 import { Watcher, type WatcherOptions } from './watcher.js'
 
@@ -38,7 +38,7 @@ export class EffectWatcher<T = any> extends Watcher {
    */
   protected runEffect(): void {
     try {
-      trackEffectDeps(() => this.effect(this.onCleanup), this.effectHandle)
+      trackEffect(() => this.effect(this.onCleanup), this.effectHandle)
     } catch (e) {
       this.reportError(e, 'effect')
     }

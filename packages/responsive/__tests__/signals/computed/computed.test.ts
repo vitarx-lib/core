@@ -139,7 +139,7 @@ describe('signal/computed/computed', () => {
       const computed = new Computed(() => source.value * 2)
       const collectSignalSpy = vi.spyOn(
         await import('../../../src/core/signal/index.js'),
-        'trackEffectDeps'
+        'trackEffect'
       )
 
       // Access value to trigger recomputation

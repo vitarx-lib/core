@@ -3,7 +3,7 @@ import {
   getActiveEffect,
   hasLinkedSignal,
   ref,
-  trackEffectDeps,
+  trackEffect,
   trackSignal
 } from '../../../src/index.js'
 
@@ -22,7 +22,7 @@ describe('depend/track', () => {
       }
 
       let capturedEffect
-      const result = trackEffectDeps(() => {
+      const result = trackEffect(() => {
         capturedEffect = getActiveEffect()
         return 'test-result'
       }, effect as any)
@@ -38,7 +38,7 @@ describe('depend/track', () => {
         [(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]: 1
       }
 
-      trackEffectDeps(() => 'test', effect as any)
+      trackEffect(() => 'test', effect as any)
 
       // Version should be incremented
       expect(effect[(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]).toBe(2)
@@ -50,7 +50,7 @@ describe('depend/track', () => {
         // No initial version
       }
 
-      trackEffectDeps(() => 'test', effect as any)
+      trackEffect(() => 'test', effect as any)
 
       // Version should be set to 1
       expect(
@@ -64,7 +64,7 @@ describe('depend/track', () => {
       const signal = ref(42)
       const effect = vi.fn()
 
-      trackEffectDeps(() => {
+      trackEffect(() => {
         trackSignal(signal, 'get', { key: 'test' })
       }, effect)
 

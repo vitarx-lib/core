@@ -1,5 +1,5 @@
 import { logger } from '@vitarx/utils'
-import type { EffectHandle, Signal } from './dep.js'
+import type { EffectRunner, Signal } from './dep.js'
 
 export type SignalOpType = keyof ProxyHandler<any> | string
 export interface ExtraDebugData {
@@ -38,9 +38,9 @@ export interface DebuggerEvent extends ExtraDebugData {
    */
   signal: Signal
   /**
-   * 副作用对象（通常是Watcher派生类实例）
+   * 副作用执行者
    */
-  effect: EffectHandle
+  effect: EffectRunner
   /**
    * 触发类型
    *
@@ -85,7 +85,7 @@ export function triggerOnTrigger(event: DebuggerEvent) {
  * @param effect - 响应式效果的句柄
  * @param debuggerOptions - 调试器的钩子对象，包含onTrack和onTrigger方法
  */
-export function bindDebuggerOptions(effect: EffectHandle, debuggerOptions: DebuggerOptions): void {
+export function bindDebuggerOptions(effect: EffectRunner, debuggerOptions: DebuggerOptions): void {
   // 仅在开发环境下执行调试钩子的绑定
   if (__DEV__) {
     // 当追踪依赖时调用调试钩子的onTrack方法
