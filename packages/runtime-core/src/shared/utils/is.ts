@@ -4,8 +4,8 @@ import {
   type CommentView,
   type ComponentView,
   type ElementView,
-  ForView,
   type FragmentView,
+  ListView,
   type SwitchView,
   type TextView,
   type ViewBuilder
@@ -83,13 +83,13 @@ export const isFragmentView = (val: any): val is FragmentView => {
 }
 
 /**
- * 检查给定值是否为ForView循环视图类型
+ * 检查给定值是否为ListView列表视图类型
  *
  * @param val - 需要检查的任意值
- * @return {boolean} 如果值是ForView循环视图类型则返回true，否则返回false
+ * @return {boolean} 如果值是ListView列表视图类型则返回true，否则返回false
  */
-export const isForView = (val: any): val is ForView => {
-  return val?.[IS_VIEW] && val.kind === ViewKind.FOR
+export const isListView = (val: any): val is ListView => {
+  return val?.[IS_VIEW] && val.kind === ViewKind.LIST
 }
 
 /**
