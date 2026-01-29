@@ -10,7 +10,7 @@ export const show: Directive = {
     })
   },
   dispose(el: HostElement) {
-    el.__effect?.()
+    el.__effect?.stop()
   },
   getSSRProps(binding: DirectiveBinding): Record<string, any> {
     return binding.value ? {} : { style: { display: 'none' } }

@@ -1,10 +1,11 @@
-import { clearEffectLinks, hasLinkedSignal, queueJob, trackEffectDeps } from '@vitarx/responsive'
+import { clearEffectLinks, hasLinkedSignal, queueJob, trackEffect } from '@vitarx/responsive'
 
-export type ViewEffect = {
-  (): void
+export type ViewEffectHandle = {
+  stop: () => void
   pause: () => void
   resume: () => void
 }
+
 /**
  * 用于执行一个视图副作用函数，
  * 主要服务于视图运行时，如视图更新调度，业务层副作用谨慎使用！
@@ -12,42 +13,37 @@ export type ViewEffect = {
  * @warning - ⚠️ 需在合适的时机主动销毁副作用，否则可能会造成内存泄露。
  * @internal - 仅限视图运行时使用
  * @param effect - 要执行的副作用函数
- * @returns { ViewEffect | null } 副作用存在信号依赖则返回视图副作用句柄函数，否则返回 NULL
+ * @returns { ViewEffectHandle | null } 副作用存在信号依赖则返回视图副作用句柄函数，否则返回 NULL
  */
-export function viewEffect(effect: () => void): ViewEffect | null {
+export function viewEffect(effect: () => void): ViewEffectHandle | null {
   let isActivated: boolean = true
   let dirty: boolean = false
-  const runEffect = () => {
-    if (isActivated) {
-      dirty = true
-    } else {
-      trackEffectDeps(effect, handle)
-    }
+  const runner = () => {
+    isActivated ? queueJob(runEffect) : (dirty = true)
   }
-  const handle = () => {
-    if (isActivated) {
-      queueJob(runEffect)
-    } else {
-      dirty = true
-    }
+  const runEffect = () => {
+    isActivated ? (dirty = true) : trackEffect(effect, runner)
   }
   runEffect()
-  if (hasLinkedSignal(handle)) {
-    const stop = () => {
-      isActivated = false
-      clearEffectLinks(handle)
-    }
-    stop.pause = () => {
-      isActivated = false
-    }
-    stop.resume = () => {
-      isActivated = true
-      if (dirty) {
-        dirty = false
-        handle()
+  if (hasLinkedSignal(runner)) {
+    return {
+      pause(): void {
+        isActivated = false
+      },
+      resume(): void {
+        if (!isActivated) {
+          isActivated = true
+          if (dirty) {
+            dirty = false
+            runner()
+          }
+        }
+      },
+      stop(): void {
+        isActivated = false
+        clearEffectLinks(runner)
       }
     }
-    return stop
   }
   return null
 }
