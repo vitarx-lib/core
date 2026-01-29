@@ -57,7 +57,10 @@ import { SwitchView } from './switch.js'
  * - 组件引用(ref)会在挂载时自动设置
  * - 组件销毁时会自动清理子视图和实例
  */
-export class ComponentView<T extends Component = Component> extends BaseView<ViewKind.COMPONENT> {
+export class ComponentView<T extends Component = Component> extends BaseView<
+  ViewKind.COMPONENT,
+  HostNode
+> {
   /** @internal 类型标识 */
   public readonly kind = ViewKind.COMPONENT
   /** @internal 引用组件公开实例 */
@@ -102,8 +105,8 @@ export class ComponentView<T extends Component = Component> extends BaseView<Vie
     const displayName = this.component.displayName ?? this.component.name ?? 'anonymous'
     return `Component<${displayName}>`
   }
-  get $node(): HostNode | null {
-    return this.instance?.subView.$node ?? null
+  protected get hostNode(): HostNode | null {
+    return this.instance?.subView.node ?? null
   }
   get subView(): View | null {
     return this.instance?.subView ?? null

@@ -36,10 +36,10 @@ import { BaseView } from './base.js'
  * - 子视图的生命周期方法会按照顺序依次调用
  * - 不建议直接实例化该类，通常通过视图系统自动创建
  */
-export class FragmentView extends BaseView<ViewKind.FRAGMENT> {
+export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   public readonly kind = ViewKind.FRAGMENT
   public readonly children: ResolvedChildren
-  public $node: HostFragment | null = null
+  public hostNode: HostFragment | null = null
   constructor(children: ValidChildren, location?: CodeLocation) {
     super(location)
     this.children = resolveChildren(children)
@@ -49,7 +49,7 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT> {
   }
   protected override doDispose() {
     for (const child of this.children) child.dispose()
-    if (this.$node) getRenderer().remove(this.$node)
+    if (this.hostNode) getRenderer().remove(this.hostNode)
   }
   protected override doActivate(): void {
     for (const child of this.children) child.activate()
@@ -59,10 +59,10 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT> {
   }
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
     const renderer = getRenderer()
-    if (!this.$node) {
+    if (!this.hostNode) {
       // 判断是否为svg命名空间
-      this.$node = renderer.createFragment(this)
+      this.hostNode = renderer.createFragment(this)
     }
-    for (const child of this.children) child.mount(this.$node, 'append')
+    for (const child of this.children) child.mount(this.hostNode, 'append')
   }
 }

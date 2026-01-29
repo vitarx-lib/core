@@ -12,19 +12,19 @@ import type {
 } from '../../types/index.js'
 import type { ComponentInstance } from './component.js'
 
-export abstract class BaseView<K extends ViewKind> {
+export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   /** @internal 标记为视图对象，方便isView判断 */
   readonly [IS_VIEW]: true = true
   /** @internal 避免被响应式代理 */
   readonly [IS_RAW]: true = true
   /** @internal 视图类型 */
   abstract readonly kind: K
-  /** @internal DOM节点 */
-  public abstract $node: HostNode | null
+  /** @internal 上下文 */
+  public ctx?: ViewContext
   /** @internal 代码位置，仅调试模式存在 */
   public location?: CodeLocation
-  /** @internal 上下文*/
-  public ctx?: ViewContext
+  /** @internal DOM节点 */
+  protected abstract hostNode: Node | null
   /** @internal 视图状态 */
   private _state: ViewState = ViewState.UNUSED
   protected constructor(location?: CodeLocation) {
@@ -50,6 +50,22 @@ export abstract class BaseView<K extends ViewKind> {
   }
   get isUnused(): boolean {
     return this._state === ViewState.UNUSED
+  }
+  /**
+   * 获取host节点
+   *
+   * @returns {Node} host节点
+   * @throws {Error} 当HOST节点不存在时抛出异常
+   */
+  get node(): Node {
+    if (!this.hostNode) {
+      throw new Error(
+        `[View.node]: Host Node access failed. Current view state is '${this._state}', ` +
+          `but the host node has not been created or has been destroyed. ` +
+          `Ensure the view is properly initialized and mounted before accessing the node.`
+      )
+    }
+    return this.hostNode
   }
   /** 初始化运行时（不创建 DOM，不可见） */
   init(ctx?: ViewContext): this {

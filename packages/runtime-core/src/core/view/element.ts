@@ -48,11 +48,12 @@ import { BaseView } from './base.js'
  * - effects 属性用于管理视图的副作用，会在视图销毁时自动清理
  * - $node 属性在挂载前为 null，挂载后会引用实际的 DOM 节点
  */
-export class ElementView<
-  T extends HostElementTag = HostElementTag
-> extends BaseView<ViewKind.ELEMENT> {
-  readonly kind = ViewKind.ELEMENT
-  public $node: HostElement<T> | null = null
+export class ElementView<T extends HostElementTag = HostElementTag> extends BaseView<
+  ViewKind.ELEMENT,
+  HostElement<T>
+> {
+  public readonly kind = ViewKind.ELEMENT
+  protected hostNode: HostElement<T> | null = null
   public readonly tag: T
   public readonly props: ElementProps<T> | null
   public readonly children: ResolvedChildren
@@ -94,17 +95,17 @@ export class ElementView<
   }
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
     const renderer = getRenderer()
-    if (!this.$node) {
+    if (!this.hostNode) {
       // 判断是否为svg命名空间
       const svg = this.tag === 'svg' || renderer.isSVGElement(containerOrAnchor)
-      this.$node = renderer.createElement(this.tag, svg)
+      this.hostNode = renderer.createElement(this.tag, svg)
     }
-    if (this.props) this.setProps(this.$node, this.props, renderer)
-    if (this.ref) applyRef(this.ref, this.$node)
-    applyDirective(this, this.$node, 'created')
-    renderer[type](this.$node, containerOrAnchor)
-    for (const child of this.children) child.mount(this.$node, 'append')
-    applyDirective(this, this.$node, 'mounted')
+    if (this.props) this.setProps(this.hostNode, this.props, renderer)
+    if (this.ref) applyRef(this.ref, this.hostNode)
+    applyDirective(this, this.hostNode, 'created')
+    renderer[type](this.hostNode, containerOrAnchor)
+    for (const child of this.children) child.mount(this.hostNode, 'append')
+    applyDirective(this, this.hostNode, 'mounted')
   }
   protected override doDispose(): void {
     if (this.effects) {
@@ -112,9 +113,9 @@ export class ElementView<
       this.effects = null
     }
     for (const child of this.children) child.dispose()
-    if (this.$node) {
-      applyDirective(this, this.$node, 'dispose')
-      getRenderer().remove(this.$node)
+    if (this.hostNode) {
+      applyDirective(this, this.hostNode, 'dispose')
+      getRenderer().remove(this.hostNode)
     }
   }
   private setProps(node: HostElement, props: AnyProps, renderer: ViewRenderer): void {

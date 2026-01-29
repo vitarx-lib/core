@@ -90,36 +90,31 @@ const materialize = (node: NormalizedChild): View => {
  * - 视图切换可能会触发 DOM 操作
  * - 如果 onViewSwitch 钩子返回了不匹配的视图类型，在开发模式下会抛出错误
  */
-export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH> {
+export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
   public readonly kind = ViewKind.SWITCH
   /** @internal 视图来源 */
   public readonly source: Ref<T>
   /** @internal 指令映射表 */
   public directives?: DirectiveMap
+  protected cachedView: View | null = null
+  /** @private 切换副作用 */
   private effect?: ViewEffect
-  private cachedView: View | null = null
+  /** @private 缓存当前视图的类型 */
   private cachedType: NormalizedChild['type'] | null = null
   constructor(source: Ref, location?: CodeLocation) {
     super(location)
     this.source = source
   }
-  /**
-   * 获取当前视图
-   *
-   * 仅在init后存在视图
-   *
-   * @returns {View} 返回当前缓存的视图实例
-   */
   get current(): View | null {
     return this.cachedView
   }
-  get $node(): HostNode | null {
-    return this.cachedView?.$node ?? null
+  protected get hostNode(): HostNode | null {
+    return this.cachedView?.node ?? null
   }
   protected override doInit(): void {
     const stop = viewEffect(() => {
       const value = this.source.value
-      this.updateDerivedView(value)
+      this.updateView(value)
     })
     if (stop) this.effect = stop
     this.cachedView!.init(this.ctx)
@@ -141,7 +136,7 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH> {
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
     this.cachedView!.mount(containerOrAnchor, type)
   }
-  private updateDerivedView(value: unknown): void {
+  private updateView(value: unknown): void {
     const normalized = normalizeDynamicChild(value)
 
     // 初始化路径

@@ -14,8 +14,8 @@ import { BaseView } from './base.js'
 abstract class BaseAtomicView<
   Kind extends ViewKind.TEXT | ViewKind.COMMENT,
   Node extends HostText | HostComment
-> extends BaseView<Kind> {
-  public $node: Node | null = null
+> extends BaseView<Kind, Node> {
+  protected override hostNode: Node | null = null
 
   constructor(text: string, location?: CodeLocation) {
     super(location)
@@ -30,19 +30,19 @@ abstract class BaseAtomicView<
 
   set text(text: string) {
     this._text = text
-    if (this.$node) {
-      getRenderer().setText(this.$node, text)
+    if (this.hostNode) {
+      getRenderer().setText(this.hostNode, text)
     }
   }
 
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
     const renderer = getRenderer()
-    if (!this.$node) this.$node = this.createNode(renderer, this._text)
-    renderer[type](this.$node, containerOrAnchor)
+    if (!this.hostNode) this.hostNode = this.createNode(renderer, this._text)
+    renderer[type](this.hostNode, containerOrAnchor)
   }
 
   protected override doDispose(): void {
-    if (this.$node) getRenderer().remove(this.$node)
+    if (this.hostNode) getRenderer().remove(this.hostNode)
   }
 
   /** 子类决定具体创建哪种 HostNode */
