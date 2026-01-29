@@ -13,7 +13,7 @@ export type ViewEffect = {
  * @warning - ⚠️ 需在合适的时机主动停止副作用，否则可能会造成内存泄露。
  * @internal - 仅限视图运行时使用
  * @param effect - 要执行的副作用函数
- * @returns { ViewEffect | null } 副作用存在信号依赖则返回视图副作用句柄函数，否则返回 NULL
+ * @returns { ViewEffect | null } 副作用存在信号依赖则返回视图副作用控制对象，否则返回 NULL
  */
 export function viewEffect(effect: () => void): ViewEffect | null {
   let isActivated: boolean = true
