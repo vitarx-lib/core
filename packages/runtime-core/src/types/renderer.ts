@@ -1,4 +1,4 @@
-import { ForView, type FragmentView } from '../core/index.js'
+import { type FragmentView, ListView } from '../core/index.js'
 import type {
   HostComment,
   HostContainer,
@@ -41,7 +41,7 @@ export interface ViewRenderer {
    *
    * @param view - 视图
    */
-  createFragment(view: FragmentView | ForView): HostFragment
+  createFragment(view: FragmentView | ListView): HostFragment
   /* ---------- 类型判断 ---------- */
   /**
    * 判断是否为元素
