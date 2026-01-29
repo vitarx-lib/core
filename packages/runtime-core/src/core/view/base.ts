@@ -78,7 +78,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     return this
   }
   /** 挂载到宿主（创建 / 插入 DOM） */
-  mount(containerOrAnchor: HostContainer | HostNode, type: MountType = 'append'): this {
+  mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
     if (__SSR__) {
       throw new Error('[View.mount]: is not supported in SSR mode')
     }
@@ -86,7 +86,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
       throw new Error('[View.mount]: The view is mounted and cannot be mounted repeatedly')
     }
     if (this.state === ViewState.UNUSED) this.init()
-    this.doMount?.(containerOrAnchor, type)
+    this.doMount?.(target, type)
     this._state = ViewState.ACTIVATED
     return this
   }
@@ -139,6 +139,6 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   protected doActivate?(): void
   protected doDeactivate?(): void
   protected doInit?(): void
-  protected doMount?(containerOrAnchor: HostContainer | HostNode, type: MountType): void
+  protected doMount?(target: HostContainer | HostNode, type: MountType): void
   protected doDispose?(): void
 }
