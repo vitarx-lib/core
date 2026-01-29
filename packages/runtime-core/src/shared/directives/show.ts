@@ -1,4 +1,4 @@
-import { viewEffect } from '../../runtime/effect.js'
+import { type ViewEffect, viewEffect } from '../../runtime/effect.js'
 import type { Directive, DirectiveBinding, HostElement } from '../../types/index.js'
 
 export const show: Directive = {
@@ -10,7 +10,7 @@ export const show: Directive = {
     })
   },
   dispose(el: HostElement) {
-    el.__effect?.stop()
+    ;(el.__effect as ViewEffect)?.dispose()
   },
   getSSRProps(binding: DirectiveBinding): Record<string, any> {
     return binding.value ? {} : { style: { display: 'none' } }

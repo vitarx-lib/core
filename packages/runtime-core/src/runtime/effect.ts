@@ -1,7 +1,7 @@
 import { clearEffectLinks, hasLinkedSignal, queueJob, trackEffect } from '@vitarx/responsive'
 
 export type ViewEffect = {
-  stop: () => void
+  dispose: () => void
   pause: () => void
   resume: () => void
 }
@@ -39,7 +39,7 @@ export function viewEffect(effect: () => void): ViewEffect | null {
           }
         }
       },
-      stop(): void {
+      dispose(): void {
         isActivated = false
         clearEffectLinks(runner)
       }

@@ -6,7 +6,7 @@ import {
   IS_SIGNAL,
   onScopeDispose,
   type RefSignal,
-  trackEffectDeps,
+  trackEffect,
   trackSignal,
   triggerSignal
 } from '@vitarx/responsive'
@@ -78,11 +78,11 @@ export class TrackedCompute<T = any> extends BaseCompute<T> {
     super()
   }
   protected override initTracking(): boolean {
-    this.cached = trackEffectDeps(this.getter, this.effectHandle)
+    this.cached = trackEffect(this.getter, this.effectHandle)
     return super.initTracking()
   }
   protected recompute(): T {
-    return trackEffectDeps(this.getter, this.effectHandle)
+    return trackEffect(this.getter, this.effectHandle)
   }
 }
 
@@ -130,7 +130,7 @@ export class BranchCompute<T = any> extends BaseCompute<T> {
     return super.initTracking()
   }
   private compute(): T {
-    const index = trackEffectDeps(this.select, this.effectHandle)
+    const index = trackEffect(this.select, this.effectHandle)
     if (index === this.cachedIndex) {
       return this.cached
     }

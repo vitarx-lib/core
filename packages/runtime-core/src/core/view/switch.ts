@@ -1,6 +1,6 @@
 import { type Ref } from '@vitarx/responsive'
 import { ViewKind } from '../../constants/index.js'
-import { type ViewEffect, viewEffect } from '../../runtime/effect.js'
+import { viewEffect, type ViewEffect } from '../../runtime/effect.js'
 import { replaceView, withDirectives } from '../../runtime/index.js'
 import { isView } from '../../shared/index.js'
 import type {
@@ -128,7 +128,7 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
     this.cachedView!.deactivate()
   }
   protected override doDispose(): void {
-    this.effect?.()
+    this.effect?.dispose()
     this.cachedView!.dispose()
     this.cachedView = null
     this.cachedType = null
