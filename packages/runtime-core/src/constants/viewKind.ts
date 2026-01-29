@@ -10,7 +10,7 @@ export const enum ViewKind {
   /** 切换视图 */
   SWITCH,
   /** 列表视图 */
-  FOR,
+  LIST,
   /** 组件节点 */
   COMPONENT
 }
