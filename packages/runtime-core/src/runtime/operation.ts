@@ -33,7 +33,7 @@ export function replaceView(prev: View, next: View): void {
     next.init(prev.ctx)
   } else {
     // 如果前一个视图未初始化，则直接挂载新视图到指定节点
-    next.mount(prev.$node!, 'insert')
+    next.mount(prev.node, 'insert')
   }
   // 处理完新视图后，销毁前一个视图
   prev.dispose()
@@ -52,5 +52,5 @@ export function renderView<T extends View>(
   ctx?: ViewContext
 ): void {
   // 返回类型与输入的视图类型相同
-  view.init(ctx).mount(container, 'replace')
+  view.init(ctx).mount(container, 'append')
 }
