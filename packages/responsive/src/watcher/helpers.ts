@@ -206,6 +206,60 @@ export function watch<T>(getter: () => T, cb: WatchCallback<T>, options?: WatchO
  * @param {boolean} [options.scope=true] - 是否绑定到组件作用域
  * @param {boolean | number} [options.deep=false] - 是否深度监听，可指定深度数值
  * @returns {Watcher} Watcher 实例，调用 dispose() 可停止监听
+ *
+ * @example
+ * ```ts
+ * // 基本用法 - 监听ref
+ * const count = ref(0);
+ * watch(count, (newVal, oldVal) => {
+ *   console.log(`count changed from ${oldVal} to ${newVal}`);
+ * });
+ * count.value++; // 触发回调
+ *
+ * // Vue类比：类似于Vue 3中的watch
+ * // Vue 3: watch(() => state.count, (newVal, oldVal) => {...})
+ * watch(() => state.count, (newVal, oldVal) => {
+ *   console.log(`count changed from ${oldVal} to ${newVal}`);
+ * });
+ *
+ * // 监听getter函数
+ * const state = reactive({ count: 1 });
+ * watch(() => state.count, (newVal, oldVal) => {
+ *   console.log(`count changed: ${oldVal} -> ${newVal}`);
+ * }, { immediate: true });
+ *
+ * // 监听多个数据源
+ * const firstName = ref('John');
+ * const lastName = ref('Doe');
+ * watch([firstName, lastName], ([newFirst, newLast], [oldFirst, oldLast]) => {
+ *   console.log(`${oldFirst} ${oldLast} -> ${newFirst} ${newLast}`);
+ * });
+ *
+ * // 深度监听
+ * const obj = reactive({ nested: { value: 1 } });
+ * watch(obj, (newObj, oldObj) => {
+ *   console.log('obj changed', newObj);
+ * }, { deep: true });
+ *
+ * // 监听选项
+ * watch(count, (newVal, oldVal) => {
+ *   console.log('count changed');
+ * }, { once: true }); // 只执行一次
+ *
+ * // 使用清理函数
+ * watch(
+ *   () => props.id,
+ *   (newId, oldId, onCleanup) => {
+ *     let timer = setTimeout(() => {
+ *       console.log('timer executed');
+ *     }, 1000);
+ *
+ *     onCleanup(() => {
+ *       clearTimeout(timer); // 在下次回调前清理
+ *     });
+ *   }
+ * );
+ * ```
  */
 export function watch<T>(
   source: WatchSource<T>,
