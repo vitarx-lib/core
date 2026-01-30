@@ -1,7 +1,7 @@
 import { shallowRef } from '@vitarx/responsive'
 import { isFunction, logger, withDelayAndTimeout } from '@vitarx/utils'
 import { createCommentView, createView, SwitchView } from '../../../core/index.js'
-import { defineValidate, getInstance, onDispose, onInit } from '../../../runtime/index.js'
+import { getInstance, onDispose, onInit } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type {
   AnyProps,
@@ -94,7 +94,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   const { delay = 200, timeout = 0, loading, loader, children, inject, onError } = props
   const location = getInstance()!.view.location
   let cancelTask: (() => void) | undefined = undefined // 用于取消异步任务的函数
-  const showView = shallowRef<View>(createCommentView('<Lazy> loading ...')) // 当前显示的视图
+  const showView = shallowRef<View>(createCommentView('Lazy:loading')) // 当前显示的视图
   onInit(async (): Promise<void> => {
     const task = withDelayAndTimeout(loader, {
       delay,
@@ -131,16 +131,16 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   return new SwitchView(showView)
 }
 
-defineValidate(Lazy, (props: AnyProps): void => {
-  if (typeof props.loader !== 'function') {
-    throw new TypeError(`[Lazy]: loader 期望得到一个异步函数，给定 ${typeof props.loader}`)
+Lazy.validateProps = (props: AnyProps): void => {
+  if (!isFunction(props.loader)) {
+    throw new TypeError(`[Lazy]: loader expects an async function, got ${typeof props.loader}`)
   }
-  if (props.loading && !isView(props.loading)) {
-    throw new TypeError(`[Lazy]: loading 期望得到一个节点对象，给定 ${typeof props.loading}`)
+  if (props.loading && !isFunction(props.loading)) {
+    throw new TypeError(`[Lazy]: loading expects a node object, got ${typeof props.loading}`)
   }
-  if (props.onError && typeof props.onError !== 'function') {
-    throw new TypeError(`[Lazy]: onError 期望得到一个回调函数，给定 ${typeof props.onError}`)
+  if (props.onError && !isFunction(props.onError)) {
+    throw new TypeError(`[Lazy]: onError expects a callback function, got ${typeof props.onError}`)
   }
-})
+}
 
 export { Lazy, type LazyProps, type LazyLoadOptions }
