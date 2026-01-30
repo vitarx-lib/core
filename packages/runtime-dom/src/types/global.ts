@@ -1,4 +1,4 @@
-import { ForView, FragmentView } from '@vitarx/runtime-core'
+import { FragmentView, ListView } from '@vitarx/runtime-core'
 import type { HTMLStyleRules } from './attributes.js'
 import type { HTMLElementTagMap, HTMLIntrinsicElement } from './element.js'
 
@@ -9,7 +9,7 @@ declare global {
     interface HostFragmentNode extends DocumentFragment {
       $startAnchor: HostCommentNode
       $endAnchor: HostCommentNode
-      $view: FragmentView | ForView
+      $view: FragmentView | ListView
     }
     interface HostTextNode extends Text {}
     interface HostCommentNode extends Comment {}

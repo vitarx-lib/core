@@ -1,6 +1,5 @@
 import {
   type ClassProperties,
-  ForView,
   type FragmentView,
   type HostComment,
   type HostContainer,
@@ -10,6 +9,7 @@ import {
   type HostNode,
   type HostText,
   isFragmentView,
+  ListView,
   type StyleProperties,
   StyleUtils,
   type ViewRenderer
@@ -68,9 +68,9 @@ export class DOMRenderer implements ViewRenderer {
     }
     return el as HostElement<T>
   }
-  createFragment(view: FragmentView | ForView): HostFragment {
+  createFragment(view: FragmentView | ListView): HostFragment {
     const el = document.createDocumentFragment() as HostFragment
-    const type = isFragmentView(view) ? 'Fragment' : 'For'
+    const type = isFragmentView(view) ? 'Fragment' : 'List'
     el.$startAnchor = document.createComment(`${type} start`)
     el.$endAnchor = document.createComment(`${type} end`)
     el.$view = view
@@ -343,8 +343,8 @@ export class DOMRenderer implements ViewRenderer {
         el.appendChild(el.$startAnchor)
         // 递归恢复片段节点
         for (const child of children) {
-          if (child.$node) {
-            el.appendChild(this.recoveryFragmentChildren(child.$node))
+          if (child.node) {
+            el.appendChild(this.recoveryFragmentChildren(child.node))
           }
         }
         el.appendChild(el.$endAnchor)
