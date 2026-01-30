@@ -86,10 +86,10 @@ export class ComponentView<T extends Component = Component> extends BaseView<
         // 校验失败处理
         if (result === false) {
           // 记录错误日志，包含源信息
-          logger.error(`${this.name} props validation failed.`, this.location)
+          logger.error(`[${this.name}] props validation failed.`, this.location)
         } else if (typeof result === 'string') {
           // 如果返回的是字符串，则记录警告日志
-          logger.warn(`${this.name}: ${result}`, this.location)
+          logger.warn(`[${this.name}]: ${result}`, this.location)
         }
       }
     }
@@ -102,8 +102,7 @@ export class ComponentView<T extends Component = Component> extends BaseView<
    * 返回格式为"Component<实际名称>"的字符串
    */
   get name(): string {
-    const displayName = this.component.displayName ?? this.component.name ?? 'anonymous'
-    return `Component<${displayName}>`
+    return this.component.displayName ?? this.component.name ?? 'anonymous'
   }
   protected get hostNode(): HostNode | null {
     return this.instance?.subView.node ?? null
