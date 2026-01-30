@@ -10,7 +10,7 @@ export default mergeConfig(
   baseConfig,
   defineConfig({
     test: {
-      setupFiles: [fileURLToPath(new URL('./__tests__/setup.ts', import.meta.url))]
+      setupFiles: [fileURLToPath(new URL('./tests/setup.ts', import.meta.url))]
     }
   })
 )
