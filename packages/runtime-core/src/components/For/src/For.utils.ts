@@ -1,18 +1,18 @@
 import { logger } from '@vitarx/utils'
 import { ListView } from '../../../core/index.js'
+import { getRenderer } from '../../../runtime/index.js'
 import type { CodeLocation, View } from '../../../types/index.js'
 
 export type KeyedViewMap = Map<unknown, { view: View; index: number }>
 export type ViewFactory<T> = (item: T, index: number) => View
-export type KeyExtractor<T> = (item: T, index: number) => unknown
-export interface MovePlan {
+export type KeyExtractor<T> = (item: T, index: number) => any
+export interface MoveViewPlan {
   view: View
   type: 'mount' | 'move'
   anchor?: View | null
 }
-export interface DiffResult {
-  newChildren: View[]
-  sourceIndex: number[]
+export interface ListDiffResult {
+  plans: MoveViewPlan[]
   keyedMap: KeyedViewMap
   removedChildren: View[]
 }
@@ -33,7 +33,7 @@ export interface DiffResult {
  * @param arr - 输入数组，包含 -1 表示无效位置
  * @returns {number[]} 最长递增子序列的索引数组
  */
-function getLIS(arr: number[]): number[] {
+export function getLIS(arr: number[]): number[] {
   // p 数组记录每个位置的前驱节点索引
   const p = arr.slice()
   // result 数组记录当前递增序列的末尾索引
@@ -76,6 +76,39 @@ function getLIS(arr: number[]): number[] {
 }
 
 /**
+ * 计算最小移动计划，确定视图的最优移动策略
+ *
+ * @param newChildren - 新的子视图数组
+ * @param sourceIndex - 源索引数组，表示每个子视图在旧数组中的位置
+ * @returns {MoveViewPlan[]} 返回移动计划数组，包含每个视图的移动类型和锚点视图
+ */
+function planMinimalMove(newChildren: View[], sourceIndex: number[]): MoveViewPlan[] {
+  const plans: MoveViewPlan[] = [] // 存储最终的移动计划
+  const lis = getLIS(sourceIndex) // 获取最长递增子序列(LIS)
+  let lisIndex = lis.length - 1 // LIS数组的索引，从末尾开始
+  let anchor: View | null = null // 锚点视图，用于确定插入位置
+
+  // 从后向前遍历新子视图数组
+  for (let i = newChildren.length - 1; i >= 0; i--) {
+    const view = newChildren[i] // 当前处理的视图
+    const oldIndex = sourceIndex[i] // 视图在旧数组中的索引
+
+    // 如果视图存在于旧数组中，且当前索引在LIS中，则不需要移动
+    if (oldIndex !== -1 && lisIndex >= 0 && lis[lisIndex] === i) {
+      // LIS 中 → 不移动
+      lisIndex--
+      anchor = view
+      continue
+    }
+
+    plans.push({ view, type: oldIndex === -1 ? 'mount' : 'move', anchor })
+    anchor = view
+  }
+
+  return plans
+}
+
+/**
  * 构建差异比较结果
  *
  * 用于高效地比较新旧两组子元素，并确定需要添加、保留或移除的视图。
@@ -85,15 +118,15 @@ function getLIS(arr: number[]): number[] {
  * @param build 用于创建新视图的工厂函数
  * @param getKey 用于从元素中提取键的函数
  * @param location 可选的代码位置信息，用于错误报告
- * @returns {DiffResult} 返回一个包含差异比较结果的对象
+ * @returns {ListDiffResult} 返回一个包含差异比较结果的对象
  */
-export function buildDiff<T>(
+export function buildListDiff<T>(
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
   build: ViewFactory<T>,
   getKey: KeyExtractor<T>,
   location?: CodeLocation
-): DiffResult {
+): ListDiffResult {
   // 返回差异比较结果
   const newChildren: View[] = [] // 存储新创建的视图
   const keyedMap: KeyedViewMap = new Map() // 新元素的键值映射表
@@ -128,41 +161,8 @@ export function buildDiff<T>(
   for (const [key, { view }] of oldKeyedMap) {
     if (!keyedMap.has(key)) removedChildren.push(view) // 将需要移除的视图添加到数组中
   }
-
-  return { newChildren, sourceIndex, keyedMap, removedChildren } // 返回差异比较结果
-}
-
-/**
- * 计算最小移动计划，确定视图的最优移动策略
- *
- * @param newChildren - 新的子视图数组
- * @param sourceIndex - 源索引数组，表示每个子视图在旧数组中的位置
- * @returns {MovePlan[]} 返回移动计划数组，包含每个视图的移动类型和锚点视图
- */
-export function planMinimalMove(newChildren: View[], sourceIndex: number[]): MovePlan[] {
-  const plans: MovePlan[] = [] // 存储最终的移动计划
-  const lis = getLIS(sourceIndex) // 获取最长递增子序列(LIS)
-  let lisIndex = lis.length - 1 // LIS数组的索引，从末尾开始
-  let anchor: View | null = null // 锚点视图，用于确定插入位置
-
-  // 从后向前遍历新子视图数组
-  for (let i = newChildren.length - 1; i >= 0; i--) {
-    const view = newChildren[i] // 当前处理的视图
-    const oldIndex = sourceIndex[i] // 视图在旧数组中的索引
-
-    // 如果视图存在于旧数组中，且当前索引在LIS中，则不需要移动
-    if (oldIndex !== -1 && lisIndex >= 0 && lis[lisIndex] === i) {
-      // LIS 中 → 不移动
-      lisIndex--
-      anchor = view
-      continue
-    }
-
-    plans.push({ view, type: oldIndex === -1 ? 'mount' : 'move', anchor })
-    anchor = view
-  }
-
-  return plans
+  const plans = planMinimalMove(newChildren, sourceIndex) // 计算最小移动计划
+  return { plans, keyedMap, removedChildren } // 返回差异比较结果
 }
 
 /**
@@ -176,7 +176,7 @@ export function planMinimalMove(newChildren: View[], sourceIndex: number[]): Mov
  * @param [location] - 可选参数，代码位置信息，用于错误报告
  * @returns {KeyedViewMap} 更新后的键值映射表
  */
-export function initChildren<T>(
+export function initListChildren<T>(
   listView: ListView,
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
@@ -200,4 +200,69 @@ export function initChildren<T>(
     listView.append(view)
   }
   return oldKeyedMap // 返回更新后的映射表
+}
+
+/**
+ * 更新列表子元素的函数
+ *
+ * @param listView - 列表视图实例，用于管理视图的插入、移动和删除
+ * @param oldKeyedMap - 旧的键值映射表，记录之前列表的视图映射关系
+ * @param each - 当前要渲染的数据数组
+ * @param build - 视图工厂函数，用于根据数据创建视图
+ * @param getKey - 键提取函数，用于从数据中获取唯一标识
+ * @param [location] - 可选的代码位置信息，用于调试
+ * @returns {KeyedViewMap} 返回更新后的键值映射表
+ */
+export function updateListChildren<T>(
+  listView: ListView,
+  oldKeyedMap: KeyedViewMap,
+  each: readonly T[],
+  build: ViewFactory<T>,
+  getKey: KeyExtractor<T>,
+  location?: CodeLocation
+): KeyedViewMap {
+  // 构建列表差异计划，包括需要移动、挂载和卸载的视图
+  const { plans, keyedMap, removedChildren } = buildListDiff(
+    oldKeyedMap,
+    each,
+    build,
+    getKey,
+    location
+  )
+  const renderer = getRenderer()
+  // 执行所有计划中的操作
+  for (const plan of plans) {
+    const { view, type, anchor } = plan
+
+    // 先操作链表，再操作 DOM
+    // 如果有锚点，则插入到锚点前，否则追加到末尾
+    if (type === 'move') {
+      if (anchor) listView.insert(view, anchor)
+      else listView.append(view)
+      // 如果锚点已激活，则在 DOM 中插入对应的节点
+
+      if (anchor?.isActivated) renderer.insert(view.node, anchor.node)
+      // 如果有锚点，则插入到锚点前，否则追加到末尾
+    } else if (type === 'mount') {
+      if (anchor) listView.insert(view, anchor)
+      else listView.append(view)
+      // 如果视图未被标记为未使用，则初始化视图
+
+      if (!listView.isUnused) {
+        // 如果列表已激活，则挂载视图到 DOM
+        view.init(listView.ctx)
+        if (listView.isActivated) {
+          if (anchor) view.mount(anchor.node, 'insert')
+          else view.mount(listView.node, 'append')
+        }
+      }
+    }
+  }
+  // 清理旧节点
+  for (const view of removedChildren) {
+    listView.remove(view)
+    view.dispose()
+  }
+
+  return keyedMap
 }
