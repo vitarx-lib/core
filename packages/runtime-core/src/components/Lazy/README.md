@@ -8,9 +8,9 @@ Lazy 组件允许你将应用程序拆分为更小的代码块，并按需加载
 
 ## API
 
-### Lazy 组件
+## Lazy 组件
 
-#### Props
+### Props
 
 | 属性         | 类型                              | 必需 | 默认值   | 描述                             |
 |------------|---------------------------------|----|-------|--------------------------------|
@@ -22,7 +22,7 @@ Lazy 组件允许你将应用程序拆分为更小的代码块，并按需加载
 | `inject`   | `WithProps<T>`                  | 否  | -     | 需要透传给加载完成后的组件的属性               |
 | `children` | `ComponentProps<T>['children']` | 否  | -     | 透传给加载完成后的组件的子元素                |
 
-#### 示例
+### 示例
 
 ```jsx
 import { Lazy } from '@vitarx/runtime-core'
@@ -40,22 +40,22 @@ function App() {
 }
 ```
 
-### lazy 工厂函数
+## lazy 工厂函数
 
 `lazy` 是一个辅助函数，用于创建懒加载组件的视图构建器。
 
-#### 参数
+### 参数
 
 | 参数        | 类型                              | 必需 | 描述                                               |
 |-----------|---------------------------------|----|--------------------------------------------------|
 | `loader`  | `() => Promise<{ default: T }>` | 是  | 惰性加载器函数，返回一个包含默认导出组件的 Promise                    |
 | `options` | `LazyLoadOptions`               | 否  | 懒加载组件选项，包括 `loading`、`delay`、`timeout`、`onError` |
 
-#### 返回值
+### 返回值
 
 - `ViewBuilder<ComponentProps<T>, ComponentView<typeof Lazy<T>>>` - 懒加载组件的视图构建器
 
-#### 示例
+### 示例
 
 ```jsx
 import { lazy } from '@vitarx/runtime-core'
