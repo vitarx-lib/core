@@ -39,10 +39,10 @@ export class ShallowRef<T = any> implements RefSignal<T> {
     const oldValue = this._value
     // 如果新旧值相同，则不触发更新
     if (Object.is(newValue, oldValue)) return
-    // 触发信号更新，通知依赖
-    triggerSignal(this, 'set', { key: 'value', newValue, oldValue })
     // 更新值
     this._value = newValue
+    // 触发信号更新，通知依赖
+    triggerSignal(this, 'set', { key: 'value', newValue, oldValue })
   }
   toString(): string {
     const val = this.value
