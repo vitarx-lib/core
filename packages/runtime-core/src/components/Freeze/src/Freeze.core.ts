@@ -1,7 +1,7 @@
-import { ComponentView } from '../core/index.js'
-import { defineValidate, getRenderer, onDispose, onViewSwitch } from '../runtime/index.js'
-import { isComponentView, isSwitchView, isView } from '../shared/index.js'
-import type { Component, View } from '../types/index.js'
+import { defineValidate, getRenderer, onDispose, onViewSwitch } from '../../../runtime/index.js'
+import { isSwitchView, isView } from '../../../shared/index.js'
+import type { Component, View } from '../../../types/index.js'
+import { pruneCache, shouldCache } from './Freeze.utils.js'
 
 /**
  * Freeze 组件属性接口
@@ -22,59 +22,6 @@ interface FreezeProps {
 }
 
 /**
- * 清理超出最大缓存数量的视图
- * 采用 LRU (Least Recently Used) 策略，移除最早缓存的视图
- *
- * @param cache - 缓存映射表，key 为组件类型，value 为视图实例
- * @param max - 最大缓存数量
- */
-const pruneCache = (cache: Map<Component, View>, max: number): void => {
-  // max 小于 1 表示不限制缓存数量
-  if (max < 1) return
-  // 当前缓存数量未超过限制，无需清理
-  if (cache.size <= max) return
-
-  // 获取最早缓存的组件类型（Map 的迭代顺序保证）
-  const firstType = cache.keys().next().value
-  if (!firstType) return
-
-  // 获取对应的视图实例
-  const firstView = cache.get(firstType)
-
-  if (firstView) {
-    // 销毁视图，释放资源
-    firstView.dispose()
-    // 从缓存中移除
-    cache.delete(firstType)
-  }
-}
-
-/**
- * 判断视图是否应该被缓存
- *
- * @param view - 待判断的视图
- * @param include - 需要缓存的组件类型列表
- * @param exclude - 不需要缓存的组件类型列表
- * @returns 如果视图是组件视图且满足缓存条件，返回 true
- */
-const shouldCache = (
-  view: View,
-  include: Component[],
-  exclude: Component[]
-): view is ComponentView => {
-  // 非组件视图不能缓存
-  if (!isComponentView(view)) return false
-
-  const type = view.component
-  // 排除列表优先级最高
-  if (exclude.length && exclude.includes(type)) return false
-  // 如果指定了包含列表，只缓存列表中的组件
-  if (include.length) return include.includes(type)
-  // 默认情况下缓存所有组件
-  return true
-}
-
-/**
  * Freeze 组件实现
  * 用于缓存和复用组件视图，避免重复创建和销毁，提升性能
  *
@@ -90,7 +37,7 @@ const shouldCache = (
  * <Freeze>
  *   { cond ? <ComponentA /> : <ComponentB />}
  * </Freeze>
- * // 基础用法：动态渲染缓存
+ * // 组合Dynamic：动态渲染缓存
  * <Freeze>
  *   <Dynamic is={activeComponent} />
  * </Freeze>
@@ -123,7 +70,9 @@ const shouldCache = (
 function Freeze(props: FreezeProps): View {
   const { include = [], exclude = [], max = 0, children } = props
   if (!isSwitchView(children)) {
+    return children
   }
+
   /**
    * 缓存映射表
    * key: 组件类型
@@ -155,14 +104,14 @@ function Freeze(props: FreezeProps): View {
         reuse = cachedView
       }
     }
+    // 如果next没有被复用，则需要先挂载next
+    if (!reuse) {
+      next.mount(prev.node, 'insert')
+      reuse = next
+    }
     // 2️⃣  处理 prev（即将离开的视图）：冻结并缓存
     if (shouldCache(prev, include, exclude)) {
       const type = prev.component
-      // 如果next没有被复用，则需要先挂载next
-      if (!reuse) {
-        next.mount(prev.node, 'insert')
-        reuse = next
-      }
       // 移除DOM节点
       renderer.remove(prev.node)
       // 冻结视图
@@ -171,6 +120,8 @@ function Freeze(props: FreezeProps): View {
       cache.set(type, prev)
       // 检查并清理超出限制的缓存
       pruneCache(cache, max)
+    } else {
+      prev.dispose()
     }
     return reuse
   })
@@ -196,8 +147,11 @@ function Freeze(props: FreezeProps): View {
 defineValidate(Freeze, props => {
   if (!isView(props.children)) {
     throw new Error(
-      `Freeze.children property expects to get a view object, given ${typeof props.children}`
+      `[Freeze]: children property expects to get a view object, given ${typeof props.children}`
     )
+  }
+  if (!isSwitchView(props.children)) {
+    return `child view doesn't happen, and using Freeze is pointless`
   }
 })
 export { Freeze, type FreezeProps }
