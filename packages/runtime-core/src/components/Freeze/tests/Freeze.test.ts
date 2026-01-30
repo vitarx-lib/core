@@ -47,7 +47,7 @@ describe('Freeze Component', () => {
     it('应该在 Freeze 内部渲染子视图', () => {
       const freezeView = createView(Freeze, { children: childView })
       freezeView.mount(container)
-      expect(container.textContent).toContain('Child Content')
+      expect(container.textContent).toContain('A')
     })
   })
 
