@@ -112,11 +112,11 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
     return this.cachedView?.node ?? null
   }
   protected override doInit(): void {
-    const stop = viewEffect(() => {
+    const effect = viewEffect(() => {
       const value = this.source.value
       this.updateView(value)
     })
-    if (stop) this.effect = stop
+    if (effect) this.effect = effect
     this.cachedView!.init(this.ctx)
   }
   protected override doActivate(): void {
