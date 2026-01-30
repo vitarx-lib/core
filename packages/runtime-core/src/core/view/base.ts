@@ -69,8 +69,8 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   }
   /** 初始化运行时（不创建 DOM，不可见） */
   init(ctx?: ViewContext): this {
-    if (__DEV__ && this._state !== ViewState.UNUSED) {
-      throw new Error('[View.init]: 视图正在运行，不能进行初始化')
+    if (__DEV__ && !this.isUnused) {
+      throw new Error('[View.init]: the view is running and cannot be initialized')
     }
     this.ctx = ctx
     this.doInit?.()
