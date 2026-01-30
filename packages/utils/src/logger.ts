@@ -172,7 +172,7 @@ export class Logger {
       return `${prefix}${message}\n    at (${shortFileName}:${lineNumber}:${columnNumber})`
     }
 
-    return `${prefix} ${message}`
+    return `${prefix}${message}`
   }
 
   /**
