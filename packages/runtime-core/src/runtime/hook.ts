@@ -5,6 +5,7 @@ import type {
   Component,
   ErrorHandler,
   HookCallback,
+  ValidateProps,
   ViewSwitchHandler
 } from '../types/index.js'
 import { getInstance } from './context.js'
@@ -169,7 +170,7 @@ export function defineExpose<T extends { [key: string]: any }>(exposed: T): void
  */
 export function defineValidate<P extends AnyProps>(
   component: Component<P>,
-  validator: (props: AnyProps) => void
+  validator: ValidateProps
 ): void {
   if (__DEV__ && !isFunction(validator)) {
     throw new TypeError(`[defineValidate]: validator must be a function`)

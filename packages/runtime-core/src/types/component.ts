@@ -1,6 +1,6 @@
 import { IS_RAW } from '@vitarx/responsive'
 import type { RequiredKeys } from '@vitarx/utils'
-import type { ValidChild } from './view.js'
+import type { CodeLocation, ValidChild } from './view.js'
 
 export type AnyProps = { [k: string]: any }
 
@@ -11,7 +11,10 @@ export type ComponentPublicInstance = {
   readonly [IS_RAW]: true
   readonly [key: string]: any
 }
-
+/**
+ * 属性验证函数
+ */
+export type ValidateProps = (props: AnyProps, location?: CodeLocation) => string | false | unknown
 export type Component<P extends AnyProps = any> = {
   (props: P): ValidChild
   /**
@@ -61,7 +64,7 @@ export type Component<P extends AnyProps = any> = {
    * @param props - 传入的组件属性对象
    * @returns {string | false | unknown} 校验结果
    */
-  validateProps?: (props: AnyProps) => string | false | unknown
+  validateProps?: ValidateProps
   /**
    * 组件展示的名称，仅用于调试。
    */
