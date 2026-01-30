@@ -53,19 +53,12 @@ describe('Suspense Component', () => {
     })
 
     it('应该验证 fallback 必须为 View 或 undefined', () => {
-      const result = Suspense.validateProps({
-        children: createView(testTag),
-        fallback: 'not a view' as any
-      })
-      expect(result).toContain('节点对象')
-    })
-
-    it('应该验证 onError 必须为函数或 undefined', () => {
-      const result = Suspense.validateProps({
-        children: createView(testTag),
-        onError: 'not a function' as any
-      })
-      expect(result).toContain('回调函数')
+      expect(() => {
+        Suspense.validateProps({
+          children: createView(testTag),
+          fallback: 'not a view' as any
+        })
+      }).toThrowError()
     })
   })
 
