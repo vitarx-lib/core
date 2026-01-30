@@ -164,15 +164,15 @@ export class Logger {
         prefix += '[ERROR]'
         break
     }
-
+    // 如果message开头没有空格，则添加一个空格
+    const formattedMessage = message.startsWith(' ') ? message : ` ${message}`
     // 添加源代码位置信息
     if (source && this.config.includeSourceInfo) {
       const { fileName, lineNumber, columnNumber } = source
       const shortFileName = fileName.split('/').pop() || fileName
-      return `${prefix}${message}\n    at (${shortFileName}:${lineNumber}:${columnNumber})`
+      return `${prefix}${formattedMessage}\n    at (${shortFileName}:${lineNumber}:${columnNumber})`
     }
-
-    return `${prefix}${message}`
+    return prefix + formattedMessage
   }
 
   /**
