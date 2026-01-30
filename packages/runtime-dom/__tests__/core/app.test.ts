@@ -16,6 +16,6 @@ describe('createApp', () => {
   it('应该支持挂载', () => {
     const app = createApp(mockView)
     app.mount(document.body)
-    expect(document.body.contains(mockView.$node)).toBe(true)
+    expect(document.body.contains(mockView.hostNode)).toBe(true)
   })
 })
