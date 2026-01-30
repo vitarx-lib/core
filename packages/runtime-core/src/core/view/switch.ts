@@ -117,7 +117,7 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
       this.updateView(value)
     })
     if (effect) this.effect = effect
-    this.cachedView!.init(this.ctx)
+    if (this.cachedView?.isUnused) this.cachedView!.init(this.ctx)
   }
   protected override doActivate(): void {
     this.cachedView!.activate()
