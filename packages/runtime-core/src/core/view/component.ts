@@ -82,7 +82,7 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     // 开发时直接冻结
     if (__DEV__) {
       if (isFunction(component.validateProps)) {
-        const result = component.validateProps(resolvedProps)
+        const result = component.validateProps(resolvedProps, location)
         // 校验失败处理
         if (result === false) {
           // 记录错误日志，包含源信息
