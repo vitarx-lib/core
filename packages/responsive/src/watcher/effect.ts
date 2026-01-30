@@ -57,6 +57,64 @@ export class EffectWatcher<T = any> extends Watcher {
  * @param [options.onTrack] - 调试钩子，在跟踪依赖时触发
  *
  * @returns {EffectWatcher} 返回一个 EffectWatcher 实例，可以用于手动停止观察
+ *
+ * @example
+ * ```ts
+ * // 基本用法
+ * const count = ref(0);
+ * 
+ * watchEffect(() => {
+ *   console.log('count changed:', count.value);
+ * });
+ * 
+ * // Vue类比：类似于Vue 3中的watchEffect
+ * // Vue 3: watchEffect(() => { console.log('count changed:', count.value); })
+ * 
+ * count.value++; // 输出: count changed: 1
+ * 
+ * // 使用清理函数
+ * watchEffect((onCleanup) => {
+ *   const timer = setTimeout(() => {
+ *     console.log('timeout executed');
+ *   }, 1000);
+ *   
+ *   onCleanup(() => {
+ *     clearTimeout(timer); // 在下次执行前清理之前的定时器
+ *     console.log('cleanup executed');
+ *   });
+ * });
+ * 
+ * // 与watch的区别示例
+ * const state = reactive({
+ *   firstName: 'John',
+ *   lastName: 'Doe'
+ * });
+ * 
+ * // watchEffect - 立即执行并自动追踪依赖
+ * watchEffect(() => {
+ *   console.log(`Full name: ${state.firstName} ${state.lastName}`);
+ * });
+ * 
+ * // watch - 需要显式指定监听源
+ * watch(
+ *   () => state.firstName,
+ *   (newVal, oldVal) => {
+ *     console.log(`First name changed: ${oldVal} -> ${newVal}`);
+ *   }
+ * );
+ * 
+ * // 传递选项
+ * watchEffect(
+ *   () => {
+ *     console.log('executed');
+ *   },
+ *   {
+ *     flush: 'post', // DOM更新后执行
+ *     onTrigger: (event) => console.log('triggered', event),
+ *     onTrack: (event) => console.log('tracked', event)
+ *   }
+ * );
+ * ```
  */
 export function watchEffect(
   effect: (onCleanup: WatcherOnCleanup) => void,
