@@ -109,7 +109,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
   }
   protected override doDispose(): void {
     if (this.effects) {
-      for (const effect of this.effects) effect()
+      for (const effect of this.effects) effect.dispose()
       this.effects = null
     }
     for (const child of this.children) child.dispose()
