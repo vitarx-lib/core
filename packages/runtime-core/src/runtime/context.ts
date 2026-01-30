@@ -19,7 +19,7 @@ export function runComponent<T>(instance: ComponentInstance, fn: () => T): T {
   activeComponentInstance = instance
   try {
     // 执行传入的函数并返回其结果
-    return fn()
+    return instance.scope.run(fn)
   } finally {
     // 无论是否发生异常，都恢复之前的活动小部件实例
     activeComponentInstance = preActiveWidgetRuntime
