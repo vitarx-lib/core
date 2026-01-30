@@ -1,10 +1,10 @@
 import { queuePostFlushJob, shallowRef, watch } from '@vitarx/responsive'
 import { isFunction } from '@vitarx/utils'
 import { SUSPENSE_COUNTER } from '../../../constants/index.js'
-import { build, CommentView } from '../../../core/index.js'
-import { defineValidate, getInstance, onInit, provide } from '../../../runtime/index.js'
+import { CommentView, SwitchView } from '../../../core/index.js'
+import { getInstance, onInit, provide } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
-import type { AnyProps, ValidChild, View } from '../../../types/index.js'
+import type { AnyProps, View } from '../../../types/index.js'
 
 /**
  * Suspense小部件的配置选项
@@ -24,7 +24,7 @@ interface SuspenseProps {
    * 在异步子节点加载完成之前会显示该属性传入的节点，
    * 加载完成过后会立即切换为子节点内容。
    */
-  fallback?: ValidChild
+  fallback?: View
   /**
    * 监听子节点渲染完成
    *
@@ -50,10 +50,10 @@ interface SuspenseProps {
  * <Suspense fallback={<div>Loading...</div>}>
  *   <AsyncComponent />
  * </Suspense>
- * 
+ *
  * // 使用 onResolved 回调
- * <Suspense 
- *   fallback={<div>Loading...</div>} 
+ * <Suspense
+ *   fallback={<div>Loading...</div>}
  *   onResolved={() => console.log('Async content loaded!')}>
  *   <AsyncComponent />
  * </Suspense>
@@ -62,8 +62,8 @@ interface SuspenseProps {
 function Suspense({ fallback, children, onResolved }: SuspenseProps): View {
   const instance = getInstance()!
   const counter = shallowRef(0)
-  const showFallback = shallowRef(true)
   const fallbackView = isView(fallback) ? fallback : new CommentView('Suspense:fallback')
+  const showView = shallowRef(fallbackView)
   // 提供计数器给子组件使用
   provide(SUSPENSE_COUNTER, counter)
 
@@ -74,37 +74,35 @@ function Suspense({ fallback, children, onResolved }: SuspenseProps): View {
   const counterWatcher = watch(
     counter,
     newValue => {
-      const shouldShowFallback = newValue >= 1
-
       // 当计数器归零且当前显示fallback时，切换到子节点
-      if (!shouldShowFallback && showFallback.value) {
+      if (showView.value === fallbackView && newValue <= 0) {
         counterWatcher.dispose()
-        showFallback.value = false
+        showView.value = children
         queuePostFlushJob(() => {
           if (isFunction(onResolved)) onResolved()
           resolvePromise?.()
         })
       }
     },
-    { flush: 'sync' }
+    {
+      flush: 'sync'
+    }
   )
-
   // 准备阶段渲染子节点
   onInit(() => {
     children.init(instance.subViewContext)
     // 如果计数器为0，立即显示子节点
     if (counter.value === 0) {
-      showFallback.value = false
+      showView.value = children
       return
     }
     // 返回Promise等待异步内容加载
     return new Promise<void>(resolve => (resolvePromise = resolve))
   })
-
-  return build(() => (showFallback.value ? fallbackView : children))
+  return new SwitchView(showView)
 }
 
-defineValidate(Suspense, (props: AnyProps) => {
+Suspense.validateProps = (props: AnyProps) => {
   // 验证children属性
   if (!isView(props.children)) {
     throw new TypeError(
@@ -123,6 +121,6 @@ defineValidate(Suspense, (props: AnyProps) => {
       `[Suspense]: onResolved property expects a function, received ${typeof props.onResolved}`
     )
   }
-})
+}
 
 export { Suspense, type SuspenseProps }
