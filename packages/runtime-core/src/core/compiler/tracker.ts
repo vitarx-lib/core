@@ -39,7 +39,7 @@ abstract class BaseTracker<T> implements RefSignal<T> {
 
   protected initTracking(): void {
     if (hasLinkedSignal(this.effectHandle)) {
-      onScopeDispose(() => clearEffectLinks(this.effectHandle))
+      onScopeDispose(() => clearEffectLinks(this.effectHandle), false)
       this.isStatic = false
     } else {
       this.isStatic = true
