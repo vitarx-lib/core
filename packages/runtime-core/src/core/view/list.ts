@@ -148,6 +148,7 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
       this.remove(safeChild)
       safeChild.dispose()
     }
+    if (this.hostNode) getRenderer().remove(this.hostNode)
   }
 
   /**
