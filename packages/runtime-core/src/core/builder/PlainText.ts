@@ -1,5 +1,5 @@
-import { isString, logger } from '@vitarx/utils'
-import { TrackedCompute } from '../compiler/index.js'
+import { isNumber, isString, logger } from '@vitarx/utils'
+import { ExprTracker } from '../compiler/index.js'
 import { TextView } from '../view/atomic.js'
 import { SwitchView } from '../view/switch.js'
 import { builder, type ViewBuilder } from './factory.js'
@@ -16,11 +16,12 @@ export interface TextProps {
  * @return {TextView} TextView对象
  */
 export const PlainText = builder((props: TextProps, location): TextView | SwitchView<string> => {
-  const textView = new TrackedCompute(() => {
-    if (__DEV__ && !isString(props.text)) {
+  const textView = new ExprTracker(() => {
+    const text = props.text
+    if (__DEV__ && !isString(text) && !isNumber(text)) {
       logger.warn('[PlainText]: text must be a string.', props.text, location)
     }
-    return String(props.text)
+    return String(text)
   })
 
   return textView.isStatic
@@ -28,6 +29,6 @@ export const PlainText = builder((props: TextProps, location): TextView | Switch
     : new SwitchView(textView, location)
 })
 
-export type PlainText = ViewBuilder<TextProps, TextView | SwitchView<TextView>> & {
+export type PlainText = ViewBuilder<TextProps, TextView | SwitchView<string>> & {
   __is_text: true
 }

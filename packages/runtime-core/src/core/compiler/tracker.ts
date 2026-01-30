@@ -12,19 +12,16 @@ import {
 } from '@vitarx/responsive'
 
 /* ----------------------------------------
- * BaseCompute（内部使用，不暴露）
+ * BaseTracker（内部使用，不暴露）
  * ------------------------------------- */
-
-abstract class BaseCompute<T> implements RefSignal<T> {
+abstract class BaseTracker<T> implements RefSignal<T> {
   readonly [IS_SIGNAL]: true = true
   readonly [IS_REF]: true = true
   readonly [IS_READONLY]: true = true
-  public readonly isStatic: boolean
+  public isStatic!: boolean
   protected dirty = false
   protected cached!: T
-  protected constructor() {
-    this.isStatic = this.initTracking()
-  }
+  protected constructor() {}
   get value(): T {
     if (!this.isStatic) return this.cached
     if (this.dirty) {
@@ -40,19 +37,20 @@ abstract class BaseCompute<T> implements RefSignal<T> {
     triggerSignal(this)
   }
 
-  protected initTracking(): boolean {
+  protected initTracking(): void {
     if (hasLinkedSignal(this.effectHandle)) {
       onScopeDispose(() => clearEffectLinks(this.effectHandle))
-      return false
+      this.isStatic = false
+    } else {
+      this.isStatic = true
     }
-    return true
   }
 
   protected abstract recompute(): T
 }
 
 /**
- * TrackedCompute 是一个带有依赖追踪功能的计算类。
+ * ExprTracker 是一个带有依赖追踪功能的计算类。
  * 它通过追踪 getter 函数的依赖关系，在依赖项变化时自动重新计算值。
  *
  * 核心功能：
@@ -61,25 +59,19 @@ abstract class BaseCompute<T> implements RefSignal<T> {
  *
  * 使用示例：
  * ```typescript
- * const trackedCompute = new TrackedCompute(() => {
- *   return someValue * 2;
+ * const expr = new ExprTracker(() => {
+ *   return cond ? <A/> : <B/>;
  * });
  * ```
  *
  * 构造函数参数：
  * - getter: 用于计算值的函数，该函数的依赖会被自动追踪
- *
- * 使用限制：
- * - getter 函数必须是纯函数，避免产生副作用
- * - 不应手动修改 cached 属性，以免破坏依赖追踪机制
  */
-export class TrackedCompute<T = any> extends BaseCompute<T> {
+export class ExprTracker<T = any> extends BaseTracker<T> {
   constructor(private readonly getter: () => T) {
     super()
-  }
-  protected override initTracking(): boolean {
     this.cached = trackEffect(this.getter, this.effectHandle)
-    return super.initTracking()
+    this.initTracking()
   }
   protected recompute(): T {
     return trackEffect(this.getter, this.effectHandle)
@@ -97,11 +89,11 @@ export class TrackedCompute<T = any> extends BaseCompute<T> {
  *
  * @example
  * ```typescript
- * const branchCompute = new BranchCompute(
+ * const branch = new BranchTracker(
  *   () => Math.random() > 0.5 ? 0 : 1, // 选择函数
  *   [() => '结果A', () => '结果B']     // 分支函数数组
  * )
- * console.log(branchCompute.value) // 会根据选择函数返回不同的结果
+ * console.log(branch.value) // 会根据选择函数返回不同的结果
  * ```
  *
  * @param select - 返回索引值的选择函数，用于决定执行哪个分支
@@ -112,7 +104,7 @@ export class TrackedCompute<T = any> extends BaseCompute<T> {
  * - branches数组是只读的，构造后不能修改
  * - 分支函数的执行结果会被缓存，直到选择函数返回不同的索引值
  */
-export class BranchCompute<T = any> extends BaseCompute<T> {
+export class BranchTracker<T = any> extends BaseTracker<T> {
   private cachedIndex = -1
 
   constructor(
@@ -120,16 +112,11 @@ export class BranchCompute<T = any> extends BaseCompute<T> {
     private readonly branches: readonly (() => T)[]
   ) {
     super()
+    this.cached = this.recompute()
+    this.initTracking()
   }
 
   protected recompute(): T {
-    return this.compute()
-  }
-  protected override initTracking(): boolean {
-    this.cached = this.compute()
-    return super.initTracking()
-  }
-  private compute(): T {
     const index = trackEffect(this.select, this.effectHandle)
     if (index === this.cachedIndex) {
       return this.cached

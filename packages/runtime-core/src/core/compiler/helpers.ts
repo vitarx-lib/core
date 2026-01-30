@@ -1,6 +1,6 @@
 import type { View } from '../../types/index.js'
 import { SwitchView } from '../view/switch.js'
-import { BranchCompute, TrackedCompute } from './compute.js'
+import { BranchTracker, ExprTracker } from './tracker.js'
 
 /**
  * 创建一个可追踪的计算值
@@ -10,10 +10,10 @@ import { BranchCompute, TrackedCompute } from './compute.js'
  *
  * @internal - 编译器使用
  * @param getter - 一个返回值的函数，该值将被追踪
- * @returns {TrackedCompute} 返回一个 TrackedCompute 对象
+ * @returns {ExprTracker} 返回一个 TrackedCompute 对象
  */
-export function tracked<T = any>(getter: () => T): TrackedCompute<T> {
-  return new TrackedCompute<T>(getter)
+export function tracked<T = any>(getter: () => T): ExprTracker<T> {
+  return new ExprTracker<T>(getter)
 }
 
 /**
@@ -23,10 +23,10 @@ export function tracked<T = any>(getter: () => T): TrackedCompute<T> {
  * @template T - 返回值的类型，默认为 any
  * @param {() => number} select - 选择器函数，用于决定执行哪个分支
  * @param {(() => T)[]} branches - 分支函数数组，每个函数返回一个计算值
- * @returns {BranchCompute<T>} - 返回一个分支计算对象
+ * @returns {BranchTracker<T>} - 返回一个分支计算对象
  */
-export function branch<T = any>(select: () => number, branches: (() => T)[]): BranchCompute<T> {
-  return new BranchCompute(select, branches)
+export function branch<T = any>(select: () => number, branches: (() => T)[]): BranchTracker<T> {
+  return new BranchTracker(select, branches)
 }
 
 /**
@@ -41,7 +41,7 @@ export function branch<T = any>(select: () => number, branches: (() => T)[]): Br
  */
 export function build(build: () => View): View {
   // 创建一个TrackedCompute实例，传入构建函数
-  const trackedCompute = new TrackedCompute<View>(build)
+  const trackedCompute = new ExprTracker<View>(build)
   // 判断如果是静态视图，直接返回计算值；否则创建动态视图
   return trackedCompute.isStatic ? trackedCompute.value : new SwitchView(trackedCompute)
 }
