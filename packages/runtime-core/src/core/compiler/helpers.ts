@@ -41,7 +41,7 @@ export function branch<T = any>(select: () => number, branches: (() => T)[]): Br
  */
 export function build(build: () => View): View {
   // 创建一个TrackedCompute实例，传入构建函数
-  const trackedCompute = new ExprTracker<View>(build)
+  const expr = new ExprTracker<View>(build)
   // 判断如果是静态视图，直接返回计算值；否则创建动态视图
-  return trackedCompute.isStatic ? trackedCompute.value : new SwitchView(trackedCompute)
+  return expr.isStatic ? expr.value : new SwitchView(expr)
 }
