@@ -11,7 +11,7 @@ import type { HostContainer, View, ViewContext } from '../types/index.js'
  */
 export function replaceView(prev: View, next: View): void {
   // 检查前一个视图是否已激活，如果未激活则直接返回
-  if (!prev.isUnused) return
+  if (prev.isUnused) return
   // 检查前一个视图是否已被停用，如果已被停用则抛出错误
   if (prev.isDeactivated) {
     throw new Error(
