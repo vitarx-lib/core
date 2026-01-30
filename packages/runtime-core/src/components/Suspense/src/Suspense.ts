@@ -26,9 +26,9 @@ interface SuspenseProps {
    */
   fallback?: View
   /**
-   * 监听子节点渲染完成
+   * 监听解析完成事件
    *
-   * 该钩子会在子节点全部渲染完成后执行
+   * 该钩子会在子元素全部解析并替换完成后执行。
    */
   onResolved?: () => void
 }
