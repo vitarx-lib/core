@@ -74,7 +74,7 @@ declare global {
      * ```
      */
     interface HostElementTagMap {
-      svg: SVGElement
+      svg: {}
     }
     /**
      * 元素支持的样式规则
