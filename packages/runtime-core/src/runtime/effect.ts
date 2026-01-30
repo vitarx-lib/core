@@ -22,7 +22,7 @@ export function viewEffect(effect: () => void): ViewEffect | null {
     isActivated ? queueJob(runEffect) : (dirty = true)
   }
   const runEffect = () => {
-    isActivated ? (dirty = true) : trackEffect(effect, runner)
+    isActivated ? trackEffect(effect, runner) : (dirty = true)
   }
   runEffect()
   if (hasLinkedSignal(runner)) {
