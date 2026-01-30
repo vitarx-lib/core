@@ -38,7 +38,7 @@ export abstract class ValueWatcher<T> extends Watcher {
    *
    * @param oldValue - 旧值
    */
-  runCallback(oldValue: T) {
+  runCallback(oldValue: T): void {
     try {
       this.callback(this._value, oldValue, this.onCleanup)
     } catch (e) {
@@ -48,13 +48,13 @@ export abstract class ValueWatcher<T> extends Watcher {
   /**
    * 依赖变化时执行的方法
    */
-  protected override runEffect() {
+  protected override runEffect(): void {
     // 获取当前值
     const newValue = this.getter()
-    // 使用 compare 函数比较新旧值，如果相同则直接返回
-    if (this.compare(newValue, this._value)) return
     // 保存旧值，更新新值，并调用回调函数
     const oldValue = this._value
+    // 使用 compare 函数比较新旧值，如果相同则直接返回
+    if (this.compare(newValue, oldValue)) return
     this._value = newValue
     // 调用回调函数，传入新值、旧值和清理函数
     this.runCallback(oldValue)
