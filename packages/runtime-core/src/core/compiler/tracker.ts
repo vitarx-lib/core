@@ -23,7 +23,7 @@ abstract class BaseTracker<T> implements RefSignal<T> {
   protected cached!: T
   protected constructor() {}
   get value(): T {
-    if (!this.isStatic) return this.cached
+    if (this.isStatic) return this.cached
     if (this.dirty) {
       this.dirty = false
       this.cached = this.recompute()
@@ -39,7 +39,7 @@ abstract class BaseTracker<T> implements RefSignal<T> {
 
   protected initTracking(): void {
     if (hasLinkedSignal(this.effectHandle)) {
-      onScopeDispose(() => clearEffectLinks(this.effectHandle), false)
+      onScopeDispose(() => clearEffectLinks(this.effectHandle), true)
       this.isStatic = false
     } else {
       this.isStatic = true
