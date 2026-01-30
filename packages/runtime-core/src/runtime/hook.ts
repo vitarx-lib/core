@@ -203,7 +203,7 @@ export const onViewSwitch = (handler: ViewSwitchHandler): void => {
     }
     ctx.onViewSwitch = handler
   } else {
-    logger.warn(`onSwitch must be called in a widget`, getStackTrace())
+    logger.warn(`onViewSwitch must be called in a component`, getStackTrace())
   }
 }
 
