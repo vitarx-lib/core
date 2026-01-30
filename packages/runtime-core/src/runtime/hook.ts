@@ -89,7 +89,54 @@ export const onDispose = createHookRegistrar(Lifecycle.dispose)
 /**
  * 组件异常处理钩子函数
  *
+ * 用于捕获和处理组件内部发生的异常，提供统一的错误处理机制。
+ *
  * @param handler - 异常处理函数
+ *
+ * @example
+ * ```ts
+ * // 基本用法
+ * function MyComponent() {
+ *   onError((error) => {
+ *     console.error('组件发生错误:', error);
+ *     return false // 返回false表示错误已被处理，不需要向上抛出
+ *   });
+ *
+ *   // 可能引发错误的操作
+ *   const riskyOperation = () => {
+ *     throw new Error('模拟错误');
+ *   };
+ *
+ *   return <button onClick={riskyOperation}>触发错误</button>;
+ * }
+ *
+ * // Vue类比：类似于Vue 3中的onErrorCaptured
+ * // Vue 3: onErrorCaptured((error, instance, info) => { ... })
+ *
+ * // 高级用法：发送错误报告
+ * function ErrorBoundary(props) {
+ *   const showView = shallowRef<View>()
+ *   onError((error,info) => {
+ *     // 发送错误报告到服务器
+ *     fetch('/api/error-report', {
+ *       method: 'POST',
+ *       body: JSON.stringify({
+ *         message: error.message,
+ *         stack: error.stack,
+ *         source: info.source,
+ *         component: info.instance.name,
+ *       })
+ *     }).catch(console.error)
+ *
+ *     showView.value = <div>组件出现异常，工程师正在紧急修复中...</div>
+ *     return false // 返回false表示错误已被处理，不需要向上抛出
+ *   });
+ *
+ *   return (<>
+ *     {showView.value ? showView : props.children }
+ *   </>)
+ * }
+ * ```
  */
 export const onError = (handler: ErrorHandler): void => {
   if (__DEV__ && !isFunction(handler)) {
@@ -111,6 +158,39 @@ export const onError = (handler: ErrorHandler): void => {
  * 如果执行了自定义的切换逻辑，需返回切换后的视图对象阻止默认视图切换行为！
  *
  * @param handler - 视图切换处理器函数
+ *
+ * @example
+ * ```ts
+ * // 基本用法
+ * function MyComponent(props) {
+ *   onViewSwitch((prevView, nextView) => {
+ *     console.log('视图即将切换:', prevView, '->', nextView);
+ *     // 自定义切换逻辑，例如添加动画
+ *     return nextView; // 返回新视图以完成切换
+ *   });
+ *
+ *   return props.children;
+ * }
+ *
+ * // 高级用法：条件切换
+ * function ConditionalComponent() {
+ *   onViewSwitch((prevView, nextView) => {
+ *     // 根据某些条件决定是否切换
+ *     if (condition) {
+ *       // 添加过渡效果
+ *       setTimeout(() => {
+ *         // 执行切换
+ *       }, 300);
+ *       return nextView;
+ *     } else {
+ *       // 阻止切换
+ *       return prevView;
+ *     }
+ *   });
+ *
+ *   return build(()=>condition ? <div>View A</div> : <div>View B</div>)
+ * }
+ * ```
  */
 export const onViewSwitch = (handler: ViewSwitchHandler): void => {
   if (__DEV__ && !isFunction(handler)) {
@@ -126,6 +206,7 @@ export const onViewSwitch = (handler: ViewSwitchHandler): void => {
     logger.warn(`onSwitch must be called in a widget`, getStackTrace())
   }
 }
+
 /**
  * 暴露函数组件的内部成员，供外部ref使用。
  *
