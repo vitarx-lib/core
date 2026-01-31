@@ -9,20 +9,6 @@ import {
 import { DOMRenderer, WebApp } from '@vitarx/runtime-dom'
 import { hydrate } from '../client/hydrate.js'
 
-interface MountOptions {
-  /**
-   * SSR上下文
-   *
-   * 会和 window.__INITIAL_STATE__ 进行合并（如果有）
-   */
-  context?: Record<string, any>
-  /**
-   * 是否进行水合（Hydration）
-   *
-   * @default true
-   */
-  isHydrate?: boolean
-}
 /**
  * SSR 应用类
  *
