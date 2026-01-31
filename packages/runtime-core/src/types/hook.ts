@@ -32,6 +32,8 @@ export interface ErrorInfo {
 
 /**
  * 错误处理器类型
+ *
+ * 如果返回 false 则终止错误处理流程
  */
 export type ErrorHandler = (error: unknown, info: ErrorInfo) => boolean | void
 /**
