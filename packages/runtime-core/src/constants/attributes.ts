@@ -6,7 +6,6 @@
  *
  * 属性说明：
  * - children: 子节点列表
- * - key: 节点的唯一标识，用于diff算法
  * - ref: 节点引用，用于直接访问DOM元素或组件实例
  */
-export const INTRINSIC_ATTRIBUTES = new Set<string>(['children', 'ref', 'key'])
+export const INTRINSIC_ATTRIBUTES = new Set<string>(['children', 'ref'])
