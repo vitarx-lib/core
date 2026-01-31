@@ -20,7 +20,7 @@ export function defineDirective(name: string, directive: Directive): void {
   const normalizedName = name.trim()
 
   if (!normalizedName) throw new Error('Directive name cannot be empty.')
-
+  directive.name = normalizedName
   // 获取当前组件上下文
   const ctx = getInstance()
 
@@ -137,10 +137,14 @@ export function withDirectives<T extends View>(
 export function applyDirective(
   view: ElementView,
   element: HostElement,
-  hook: Exclude<keyof Directive, 'getSSRProps'>
+  hook: Exclude<keyof Directive, 'getSSRProps' | 'name'>
 ): void {
   if (!view.directives) return
   for (const [directive, binding] of view.directives.entries()) {
-    directive[hook]?.(element, binding, view)
+    try {
+      directive[hook]?.(element, binding, view)
+    } catch (e) {
+      logger.error(`[applyDirective] Error in directive<v-${directive.name}>`, e, view.location)
+    }
   }
 }
