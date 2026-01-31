@@ -5,7 +5,7 @@ export default defineConfig({
   define: {
     __DEV__: true,
     __SSR__: false,
-    ____VERSION__: JSON.stringify('0.0.0')
+    __VERSION__: JSON.stringify('0.0.0')
   },
   resolve: {
     alias: entries
