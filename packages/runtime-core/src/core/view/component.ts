@@ -269,20 +269,34 @@ export class ComponentInstance<T extends Component = Component> {
     delete this.hooks[Lifecycle.dispose]
     this.scope.dispose()
   }
-  private reportError(error: unknown, source: ErrorSource, instance?: ComponentInstance): void {
+  /**
+   * 报告错误的方法
+   *
+   * @param error - 发生的错误对象
+   * @param source - 错误来源
+   * @param instance - 可选的组件实例，默认为当前实例
+   */
+  public reportError(error: unknown, source: ErrorSource, instance?: ComponentInstance): void {
+    // 如果没有提供实例，则使用当前实例
     instance ??= this
+    // 创建错误信息对象，包含错误来源和实例
     const errorInfo = { source, instance }
+    // 检查是否存在错误处理器函数
     if (isFunction(this.errorHandler)) {
       try {
+        // 调用错误处理器并获取结果
         const result = this.errorHandler(error, errorInfo)
+        // 如果处理器返回false，则终止错误处理流程
         if (result === false) return
       } catch (e) {
+        // 如果错误处理器本身抛出错误，记录无限循环错误
         logger.error(
           `[${this.view.name}] Infinite loop detected: error thrown in onError hook`,
           error
         )
       }
     }
+    // 如果存在父组件，将错误上报给父组件
     if (this.parent) {
       this.parent.reportError(error, errorInfo.source, instance)
     } else if (this.app?.config.errorHandler) {
