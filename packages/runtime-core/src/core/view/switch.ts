@@ -96,6 +96,7 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
   public readonly source: Ref<T>
   /** @internal 指令映射表 */
   public directives?: DirectiveMap
+  /** @internal 缓存的视图 */
   protected cachedView: View | null = null
   /** @private 切换副作用 */
   private effect?: ViewEffect
@@ -113,8 +114,18 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
   }
   protected override doInit(): void {
     const effect = viewEffect(() => {
-      const value = this.source.value
-      this.updateView(value)
+      try {
+        this.switchView(this.source.value)
+      } catch (err) {
+        if (!this.cachedView) {
+          this.cachedView = new CommentView(`SwitchView Error: init failed`)
+        }
+        if (this.owner) {
+          this.owner.reportError(err, 'view:switch')
+        } else {
+          throw err
+        }
+      }
     })
     if (effect) this.effect = effect
     if (this.cachedView?.isUnused) this.cachedView!.init(this.ctx)
@@ -136,7 +147,7 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
     this.cachedView!.mount(containerOrAnchor, type)
   }
-  private updateView(value: unknown): void {
+  private switchView(value: unknown): void {
     const normalized = normalizeDynamicChild(value)
 
     // 初始化路径
@@ -179,17 +190,18 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
     if (owner?.subView === this && owner.onViewSwitch) {
       const result = owner.onViewSwitch(prevView, nextView)
       if (isView(result)) {
-        if (__DEV__ && result.kind !== nextView.kind) {
-          throw new Error(
-            '[SwitchView]: View kind mismatch detected: ' +
-              `Expected view kind ${nextView.kind}, but received ${result.kind}. ` +
-              'This error occurs when a custom onViewSwitch handler returns a view with a different kind ' +
-              'than the one being switched to. Ensure the returned view kind matches the expected kind.'
-          )
+        if (__DEV__) {
+          if (result.state !== this.state) {
+            throw new Error(
+              '[SwitchView]: View state mismatch detected: ' +
+                `Expected view state ${this.state}, but received ${result.state}. ` +
+                'This error occurs when a custom onViewSwitch handler returns a view with a different state ' +
+                'than the one being switched to. Ensure the returned view state matches the expected state.'
+            )
+          }
         }
-        // ⚠️ 关键点：完全阻止默认 replaceView
         this.cachedView = result
-        this.cachedType = normalized.type
+        this.cachedType = result === nextView ? normalized.type : 'view'
         return
       }
     }
