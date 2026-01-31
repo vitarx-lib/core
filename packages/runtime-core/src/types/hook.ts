@@ -8,13 +8,12 @@ import type { View } from './view.js'
  *
  * 定义了框架中可能发生错误的各种来源。
  *
- * @example
- * ```ts
- * const effectSource: ErrorSource = 'effect:watcher';
- * const hookSource: ErrorSource = 'hook:mounted';
- * ```
+ * - `effect:${string}`：表示在执行某个 effect 时发生的错误。
+ * - `hook:${Lifecycle}`：表示在执行某个生命周期钩子时发生的错误。
+ * - `view:switch`：表示在切换视图时发生的错误，SwitchView 发出。
+ * - `view:update`：表示在更新视图时发生的错误，ElementView 发出。
  */
-export type ErrorSource = `effect:${string}` | `hook:${Lifecycle}`
+export type ErrorSource = `effect:${string}` | `hook:${Lifecycle}` | 'view:switch' | 'view:update'
 
 /**
  * 错误信息对象接口
