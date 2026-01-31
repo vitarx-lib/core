@@ -110,9 +110,21 @@ export function toRef<T extends object, K extends keyof T>(
  *
  * @example
  * ```js
+ * // 创建一个 GetterRef
  * const getCount = () => 42
  * const countRef = toRef(getCount) // 等效于 readonlyRef(getCount)
  * console.log(countRef.value) // 42
+ *
+ * // 创建一个可写的 Ref
+ * const count = toRef(0)
+ *
+ * // 创建一个 PropertyRef
+ * const state = reactive({ count: 0 })
+ * const countRef = toRef(state, 'count')
+ * console.log(countRef.value) // 0
+ * countRef.value++
+ * console.log(state.count) // 1
+ * console.log(countRef.value) // 1
  * ```
  */
 export function toRef(arg1: any, arg2?: any, arg3?: any): Ref {
