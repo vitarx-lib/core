@@ -302,12 +302,12 @@ export class EffectScope {
       }
       node = next // 移动到下一个节点
     }
+    // 触发dispose回调通知监听者
+    this.triggerCallback('dispose')
     // 清空链表的头尾节点引用，使链表完全为空
     this._head = this._tail = undefined
     // 清空错误处理器引用，防止内存泄漏
     this.errorHandler = undefined
-    // 触发dispose回调通知监听者
-    this.triggerCallback('dispose')
     // 清空所有回调引用，完成资源释放
     this._callbacks = undefined
   }
