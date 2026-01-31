@@ -13,6 +13,8 @@ export interface DirectiveBinding {
 }
 export type DirectiveHook = (el: HostElement, binding: DirectiveBinding, view: ElementView) => void
 export interface Directive {
+  /** 指令名称，仅用于调试 */
+  name?: string
   /**
    * 元素已经创建时调用
    *
