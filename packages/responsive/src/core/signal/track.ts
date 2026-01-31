@@ -1,8 +1,10 @@
+import type { AnyFunction } from '@vitarx/utils'
 import { type ExtraDebugData, type SignalOpType, triggerOnTrack } from './debug.js'
 import { createDepLink, DepLink, destroyDepLink, type EffectRunner, type Signal } from './dep.js'
 import { DEP_INDEX_MAP, DEP_VERSION, EFFECT_DEP_HEAD } from './symbol.js'
 
 let currentActiveEffect: EffectRunner | null = null
+let currentActiveSignal: Signal | null = null
 
 /**
  * 获取当前活动的副作用函数
@@ -129,6 +131,10 @@ export function trackSignal(
   type: SignalOpType = 'get',
   debugData?: ExtraDebugData
 ): void {
+  // ✅ 无论有没有 effect，都允许标记 signal 被访问
+  if (currentActiveSignal === null) {
+    currentActiveSignal = signal
+  }
   // 获取当前活动的副作用函数
   const activeEffect = currentActiveEffect
   // 如果没有活动的副作用函数，则直接返回
@@ -137,7 +143,47 @@ export function trackSignal(
   if (__DEV__) {
     triggerOnTrack({ ...debugData, effect: activeEffect, signal, type })
   }
-
   // 执行实际的跟踪处理逻辑
   trackHandler(activeEffect, signal)
+}
+
+/**
+ * 检查给定的函数中是否有跟踪信号
+ *
+ * 该 api 用于判断函数执行过程中是否有信号被跟踪。
+ *
+ * @param fn - 一个无参数函数，用于检测是否包含信号
+ * @returns {boolean} 如果getter函数执行过程中有信号则返回true，否则返回false
+ */
+export function hasTrack(fn: AnyFunction): boolean {
+  const pre = currentActiveSignal
+  currentActiveSignal = null
+  try {
+    fn()
+    // noinspection PointlessBooleanExpressionJS
+    return currentActiveSignal !== null
+  } finally {
+    currentActiveSignal = pre
+  }
+}
+
+/**
+ * 检查对象的属性上是否有信号跟踪
+ *
+ * 该 api 可以高效的判断一个对象属性是否具有响应性。
+ *
+ * @param obj - 要检查的对象
+ * @param key - 要检查的属性键
+ * @returns { boolean } 如果属性上有信号跟踪则返回true，否则返回false
+ */
+export function hasPropTrack<T extends object>(obj: T, key: keyof T): boolean {
+  const pre = currentActiveSignal
+  currentActiveSignal = null
+  try {
+    obj[key]
+    // noinspection PointlessBooleanExpressionJS
+    return currentActiveSignal !== null
+  } finally {
+    currentActiveSignal = pre
+  }
 }

@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
+import { DEP_VERSION } from '../../../src/core/signal/symbol.js'
 import {
   getActiveEffect,
   hasLinkedSignal,
+  hasPropTrack,
+  hasTrack,
+  reactive,
   ref,
   trackEffect,
   trackSignal
@@ -15,10 +19,10 @@ describe('depend/track', () => {
   })
 
   describe('trackEffectDeps', () => {
-    it('should set and reset active effect', async () => {
+    it('should set and reset active effect', () => {
       const effect = {
         run: vi.fn(),
-        [(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]: 1
+        [DEP_VERSION]: 1
       }
 
       let capturedEffect
@@ -32,19 +36,19 @@ describe('depend/track', () => {
       expect(getActiveEffect()).toBeNull()
     })
 
-    it('should increment effect version', async () => {
+    it('should increment effect version', () => {
       const effect = {
         run: vi.fn(),
-        [(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]: 1
+        [DEP_VERSION]: 1
       }
 
       trackEffect(() => 'test', effect as any)
 
       // Version should be incremented
-      expect(effect[(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]).toBe(2)
+      expect(effect[DEP_VERSION]).toBe(2)
     })
 
-    it('should handle effects without initial version', async () => {
+    it('should handle effects without initial version', () => {
       const effect = {
         run: vi.fn()
         // No initial version
@@ -53,14 +57,12 @@ describe('depend/track', () => {
       trackEffect(() => 'test', effect as any)
 
       // Version should be set to 1
-      expect(
-        (effect as any)[(await import('../../../src/core/signal/symbol.js')).DEP_VERSION]
-      ).toBe(1)
+      expect((effect as any)[DEP_VERSION]).toBe(1)
     })
   })
 
   describe('trackSignal', () => {
-    it('should call track handler when there is an active effect', async () => {
+    it('should call track handler when there is an active effect', () => {
       const signal = ref(42)
       const effect = vi.fn()
 
@@ -69,6 +71,35 @@ describe('depend/track', () => {
       }, effect)
 
       expect(hasLinkedSignal(effect)).toBe(true)
+    })
+  })
+  describe('hasTrack', () => {
+    it('should return true if there is an get ref', () => {
+      const signal = ref(42)
+      const fn = () => signal.value
+
+      expect(hasTrack(fn)).toBe(true)
+    })
+    it('should return false if there is no get ref', () => {
+      const fn = () => null
+      expect(hasTrack(fn)).toBe(false)
+    })
+    it('should return true if there is an get reactive prop', async () => {
+      const obj = reactive({ a: 1 })
+      const fn = () => obj.a
+
+      expect(hasTrack(fn)).toBe(true)
+    })
+  })
+  describe('hasPropTrack', () => {
+    it('should return true if there is an get reactive prop', () => {
+      const obj = reactive({ a: 1 })
+      expect(hasPropTrack(obj, 'a')).toBe(true)
+    })
+
+    it('should return false if there is no get reactive prop', () => {
+      const obj = { a: 1 }
+      expect(hasPropTrack(obj, 'a')).toBe(false)
     })
   })
 })
