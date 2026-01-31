@@ -35,16 +35,16 @@ import { IS_REF, type Ref } from '../shared/index.js'
 export class PropertyRef<T extends object, K extends keyof T> implements Ref<T[K]> {
   readonly [IS_REF]: true = true
   constructor(
-    private readonly _target: T,
-    private readonly _key: K,
-    private readonly _defaultValue?: T[K]
+    private readonly target: T,
+    private readonly key: K,
+    private readonly defaultValue?: T[K]
   ) {}
   get value(): T[K] {
-    const v = this._target[this._key]
-    return v === undefined ? this._defaultValue! : v
+    const v = this.target[this.key]
+    return v === undefined ? this.defaultValue! : v
   }
   set value(newVal: T[K]) {
-    this._target[this._key] = newVal
+    this.target[this.key] = newVal
   }
   toString(): string {
     const val = this.value
