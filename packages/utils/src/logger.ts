@@ -192,7 +192,7 @@ export class Logger {
     let source: LogSource | undefined
 
     // 检查最后一个参数是否是源代码位置信息
-    const lastArg = args[args.length - 1]
+    const lastArg = args.at(-1)
     if (
       args.length > 0 &&
       lastArg &&
