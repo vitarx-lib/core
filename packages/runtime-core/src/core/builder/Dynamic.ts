@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
 import type { AnyProps, ValidChildren, View, ViewTag } from '../../types/index.js'
-import { ExprTracker } from '../compiler/index.js'
+import { DynamicViewSource } from '../compiler/index.js'
 import { CommentView } from '../view/atomic.js'
 import { createView } from '../view/factory.js'
 import { SwitchView } from '../view/switch.js'
@@ -45,7 +45,7 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
       }
     })
   }
-  const view = new ExprTracker(() => {
+  const view = new DynamicViewSource(() => {
     const is = props['is']
     if (!is) {
       const message = `Dynamic "is" prop is mandatory and cannot be empty.`
