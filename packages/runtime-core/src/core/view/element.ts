@@ -112,17 +112,18 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
       for (const effect of this.effects) effect.dispose()
       this.effects = null
     }
+    if (this.hostNode) applyDirective(this, this.hostNode, 'dispose')
     for (const child of this.children) child.dispose()
     if (this.hostNode) {
-      applyDirective(this, this.hostNode, 'dispose')
       getRenderer().remove(this.hostNode)
+      this.hostNode = null
     }
   }
   private setProps(node: HostElement, props: AnyProps, renderer: ViewRenderer): void {
     const effects: ViewEffect[] = []
     for (const key in props) {
       let prevHandler: any = null
-      const stop = viewEffect(() => {
+      const effect = viewEffect(() => {
         // getter 在 effect 中执行，建立依赖
         const value = props[key]
         // 执行真实副作用
@@ -130,7 +131,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
         // 事件处理器缓存
         prevHandler = typeof value === 'function' ? value : null
       })
-      if (stop) effects.push(stop)
+      if (effect) effects.push(effect)
     }
     if (effects.length) this.effects = effects
   }

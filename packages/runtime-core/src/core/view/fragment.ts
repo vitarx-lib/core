@@ -49,7 +49,10 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   }
   protected override doDispose() {
     for (const child of this.children) child.dispose()
-    if (this.hostNode) getRenderer().remove(this.hostNode)
+    if (this.hostNode) {
+      getRenderer().remove(this.hostNode)
+      this.hostNode = null
+    }
   }
   protected override doActivate(): void {
     for (const child of this.children) child.activate()
@@ -57,12 +60,13 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   protected override doDeactivate(): void {
     for (const child of this.children) child.deactivate()
   }
-  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
+  protected override doMount(target: HostContainer | HostNode, type: MountType): void {
     const renderer = getRenderer()
     if (!this.hostNode) {
       // 判断是否为svg命名空间
       this.hostNode = renderer.createFragment(this)
     }
+    renderer[type](this.hostNode, target)
     for (const child of this.children) child.mount(this.hostNode, 'append')
   }
 }

@@ -42,7 +42,10 @@ abstract class BaseAtomicView<
   }
 
   protected override doDispose(): void {
-    if (this.hostNode) getRenderer().remove(this.hostNode)
+    if (this.hostNode) {
+      getRenderer().remove(this.hostNode)
+      this.hostNode = null
+    }
   }
 
   /** 子类决定具体创建哪种 HostNode */
