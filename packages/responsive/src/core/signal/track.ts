@@ -1,4 +1,3 @@
-import type { AnyFunction } from '@vitarx/utils'
 import { type ExtraDebugData, type SignalOpType, triggerOnTrack } from './debug.js'
 import { createDepLink, DepLink, destroyDepLink, type EffectRunner, type Signal } from './dep.js'
 import { DEP_INDEX_MAP, DEP_VERSION, EFFECT_DEP_HEAD } from './symbol.js'
@@ -155,13 +154,14 @@ export function trackSignal(
  * @param fn - 一个无参数函数，用于检测是否包含信号
  * @returns {boolean} 如果getter函数执行过程中有信号则返回true，否则返回false
  */
-export function hasTrack(fn: AnyFunction): boolean {
+export function hasTrack<V>(fn: () => V): { isTrack: boolean; value: V } {
   const pre = currentActiveSignal
   currentActiveSignal = null
   try {
-    fn()
+    const value = fn()
     // noinspection PointlessBooleanExpressionJS
-    return currentActiveSignal !== null
+    const isTrack = currentActiveSignal !== null
+    return { isTrack, value }
   } finally {
     currentActiveSignal = pre
   }
@@ -176,13 +176,17 @@ export function hasTrack(fn: AnyFunction): boolean {
  * @param key - 要检查的属性键
  * @returns { boolean } 如果属性上有信号跟踪则返回true，否则返回false
  */
-export function hasPropTrack<T extends object>(obj: T, key: keyof T): boolean {
+export function hasPropTrack<T extends object, K extends keyof T>(
+  obj: T,
+  key: K
+): { isTrack: boolean; value: T[K] } {
   const pre = currentActiveSignal
   currentActiveSignal = null
   try {
-    obj[key]
+    const value = obj[key]
     // noinspection PointlessBooleanExpressionJS
-    return currentActiveSignal !== null
+    const isTrack = currentActiveSignal !== null
+    return { isTrack, value }
   } finally {
     currentActiveSignal = pre
   }

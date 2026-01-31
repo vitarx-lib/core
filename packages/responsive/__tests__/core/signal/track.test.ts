@@ -78,28 +78,28 @@ describe('depend/track', () => {
       const signal = ref(42)
       const fn = () => signal.value
 
-      expect(hasTrack(fn)).toBe(true)
+      expect(hasTrack(fn).isTrack).toBe(true)
     })
     it('should return false if there is no get ref', () => {
       const fn = () => null
-      expect(hasTrack(fn)).toBe(false)
+      expect(hasTrack(fn).isTrack).toBe(false)
     })
     it('should return true if there is an get reactive prop', async () => {
       const obj = reactive({ a: 1 })
       const fn = () => obj.a
 
-      expect(hasTrack(fn)).toBe(true)
+      expect(hasTrack(fn).isTrack).toBe(true)
     })
   })
   describe('hasPropTrack', () => {
     it('should return true if there is an get reactive prop', () => {
       const obj = reactive({ a: 1 })
-      expect(hasPropTrack(obj, 'a')).toBe(true)
+      expect(hasPropTrack(obj, 'a').isTrack).toBe(true)
     })
 
     it('should return false if there is no get reactive prop', () => {
       const obj = { a: 1 }
-      expect(hasPropTrack(obj, 'a')).toBe(false)
+      expect(hasPropTrack(obj, 'a').isTrack).toBe(false)
     })
   })
 })
