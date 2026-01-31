@@ -141,13 +141,14 @@ export class App {
   }
 
   /**
-   * 将组件挂载到指定的DOM容器中
+   * 将组件挂载到指定的宿主容器中
    *
-   * @param container 可以是DOM元素节点或选择器字符串
+   * @param container 宿主平台容器节点
    * @returns {this} 返回当前App实例，支持链式调用
    * @example
    * ```js
    * const app = createApp(AppComponent)
+   * // web 示例
    * app.mount(document.querySelector('#app')!)
    * ```
    */
