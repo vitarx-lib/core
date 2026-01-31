@@ -124,12 +124,19 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     for (const key in props) {
       let prevHandler: any = null
       const effect = viewEffect(() => {
-        // getter 在 effect 中执行，建立依赖
-        const value = props[key]
-        // 执行真实副作用
-        renderer.setAttribute(node, key, value, prevHandler)
-        // 事件处理器缓存
-        prevHandler = typeof value === 'function' ? value : null
+        try {
+          // getter 执行，建立依赖
+          const value = props[key]
+          renderer.setAttribute(node, key, value, prevHandler)
+          // 缓存事件处理器
+          prevHandler = typeof value === 'function' ? value : null
+        } catch (err) {
+          if (this.owner) {
+            this.owner.reportError(err, `view:update`)
+          } else {
+            throw err
+          }
+        }
       })
       if (effect) effects.push(effect)
     }
