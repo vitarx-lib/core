@@ -1,6 +1,6 @@
 import { shallowRef } from '@vitarx/responsive'
 import { isFunction, logger, withDelayAndTimeout } from '@vitarx/utils'
-import { createCommentView, createView, SwitchView } from '../../../core/index.js'
+import { createCommentView, createView, DynamicView } from '../../../core/index.js'
 import { getInstance, onDispose, onInit } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type {
@@ -128,7 +128,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   onDispose(() => {
     cancelTask?.()
   })
-  return new SwitchView(showView)
+  return new DynamicView(showView)
 }
 
 Lazy.validateProps = (props: AnyProps): void => {

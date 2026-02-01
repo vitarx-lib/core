@@ -1,7 +1,7 @@
 import { hasPropTrack, PropertyRef } from '@vitarx/responsive'
 import { isNumber, isString, logger } from '@vitarx/utils'
 import { CommentView, TextView } from '../view/atomic.js'
-import { SwitchView } from '../view/switch.js'
+import { DynamicView } from '../view/dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface TextProps {
@@ -16,20 +16,20 @@ export interface TextProps {
  * @return {TextView} TextView对象
  */
 export const PlainText = builder(
-  (props: TextProps, location): TextView | SwitchView<string> | CommentView => {
+  (props: TextProps, location): TextView | DynamicView<string> | CommentView => {
     const { value, isTrack } = hasPropTrack(props, 'text')
     if (__DEV__ && !isString(value) && !isNumber(value)) {
       logger.warn('[PlainText]: text must be a string.', value, location)
     }
     const str = String(value)
     return isTrack
-      ? new SwitchView(new PropertyRef(props, 'text'), location)
+      ? new DynamicView(new PropertyRef(props, 'text'), location)
       : str.length
         ? new TextView(str, location)
         : new CommentView('PlainText:empty', location)
   }
 )
 
-export type PlainText = ViewBuilder<TextProps, TextView | SwitchView<string> | CommentView> & {
+export type PlainText = ViewBuilder<TextProps, TextView | DynamicView<string> | CommentView> & {
   __is_text: true
 }

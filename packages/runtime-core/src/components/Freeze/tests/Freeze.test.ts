@@ -1,6 +1,6 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { build, ComponentView, createView, SwitchView } from '../../../core/index.js'
+import { build, ComponentView, createView, DynamicView } from '../../../core/index.js'
 import type { HostElementTag } from '../../../types/index.js'
 import { Freeze } from '../src/index.js'
 
@@ -10,7 +10,7 @@ describe('Freeze Component', () => {
   const ComponentA = () => 'A'
   const ComponentB = () => 'B'
   const showComponent = ref(ComponentA)
-  const childView = build(() => createView(showComponent.value)) as SwitchView<ComponentView>
+  const childView = build(() => createView(showComponent.value)) as DynamicView<ComponentView>
   beforeEach(() => {
     showComponent.value = ComponentA
     container = document.createElement('div')

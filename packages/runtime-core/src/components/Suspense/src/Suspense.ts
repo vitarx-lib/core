@@ -1,7 +1,7 @@
 import { queuePostFlushJob, shallowRef, watch } from '@vitarx/responsive'
 import { isFunction } from '@vitarx/utils'
 import { SUSPENSE_COUNTER } from '../../../constants/index.js'
-import { CommentView, SwitchView } from '../../../core/index.js'
+import { CommentView, DynamicView } from '../../../core/index.js'
 import { getInstance, onInit, provide } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type { AnyProps, View } from '../../../types/index.js'
@@ -99,7 +99,7 @@ function Suspense({ fallback, children, onResolved }: SuspenseProps): View {
     // 返回Promise等待异步内容加载
     return new Promise<void>(resolve => (resolvePromise = resolve))
   })
-  return new SwitchView(showView)
+  return new DynamicView(showView)
 }
 
 Suspense.validateProps = (props: AnyProps) => {
