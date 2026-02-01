@@ -101,9 +101,8 @@ export function createView<T extends ViewTag>(
   } else if (typeof type === 'function') {
     view = isViewBuilder(type) ? type(props, location) : new ComponentView(type, props)
   } else {
-    throw new Error(`[Vitarx] Invalid block type: ${type}`)
+    throw new TypeError(`createView(): invalid type - expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}: ${String(type)}`)
   }
-  view.location = location
   return view
 }
 
