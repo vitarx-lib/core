@@ -98,7 +98,7 @@ export function withDirectives<T extends View>(
   if (
     view.kind !== ViewKind.ELEMENT &&
     view.kind !== ViewKind.COMPONENT &&
-    view.kind !== ViewKind.SWITCH
+    view.kind !== ViewKind.DYNAMIC
   ) {
     return view
   }
