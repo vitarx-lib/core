@@ -3,10 +3,10 @@ import { IS_VIEW, IS_VIEW_BUILDER } from '../../constants/symbol.js'
 import {
   type CommentView,
   type ComponentView,
+  type DynamicView,
   type ElementView,
   type FragmentView,
   ListView,
-  type SwitchView,
   type TextView,
   type ViewBuilder
 } from '../../core/index.js'
@@ -38,8 +38,8 @@ export const isComponentView = (val: any): val is ComponentView => {
  * @param val - 需要检查的任意值
  * @returns {boolean} 如果值是SwitchView条件视图类型则返回true，否则返回false
  */
-export const isSwitchView = (val: any): val is SwitchView => {
-  return val?.[IS_VIEW] && val.kind === ViewKind.SWITCH
+export const isSwitchView = (val: any): val is DynamicView => {
+  return val?.[IS_VIEW] && val.kind === ViewKind.DYNAMIC
 }
 
 /**
