@@ -97,11 +97,13 @@ export function createView<T extends ViewTag>(
   let view: View
 
   if (typeof type === 'string') {
-    view = new ElementView(type, props)
+    view = new ElementView(type, props, location)
   } else if (typeof type === 'function') {
-    view = isViewBuilder(type) ? type(props, location) : new ComponentView(type, props)
+    view = isViewBuilder(type) ? type(props, location) : new ComponentView(type, props, location)
   } else {
-    throw new TypeError(`createView(): invalid type - expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}: ${String(type)}`)
+    throw new TypeError(
+      `createView(): invalid type - expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}: ${String(type)}`
+    )
   }
   return view
 }
