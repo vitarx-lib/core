@@ -135,14 +135,6 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     this.cachedView!.init(this.ctx)
   }
 
-  private initView(value: T): void {
-    const normalized = normalizeDynamicChild(value)
-    const view = materialize(normalized)
-    if (this.directives) withDirectives(view, Array.from(this.directives))
-    this.cachedType = normalized.type
-    this.cachedView = view
-    this.cachedValue = value
-  }
   protected override doActivate(): void {
     this.cachedView!.activate()
     this.effect?.resume()
@@ -161,8 +153,33 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     this.cachedView!.mount(containerOrAnchor, type)
   }
 
+  /**
+   * 初始化视图
+   *
+   * @param value - 需要渲染的值
+   * @description
+   * - 对输入值进行规范化处理
+   * - 将规范化后的值物化为视图
+   * - 如果存在指令，则将指令应用到视图上
+   * - 缓存视图的类型、视图对象和原始值
+   */
+  private initView(value: T): void {
+    const normalized = normalizeDynamicChild(value)
+    const view = materialize(normalized)
+    if (this.directives) withDirectives(view, Array.from(this.directives))
+    this.cachedType = normalized.type
+    this.cachedView = view
+    this.cachedValue = value
+  }
+
+  /**
+   * 更新视图显示内容
+   *
+   * @param value - 要更新的值
+   * @returns void
+   */
   private updateView(value: T): void {
-    if (this.cachedValue === value) return
+    if (Object.is(this.cachedValue, value)) return
     this.cachedValue = value
     const normalized = normalizeDynamicChild(value)
     const prevView = this.cachedView!
