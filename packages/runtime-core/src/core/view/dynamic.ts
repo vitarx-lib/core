@@ -62,7 +62,7 @@ const materialize = (node: NormalizedChild): View => {
   }
 }
 /**
- * SwitchView 用于根据响应式数据的变化来动态渲染不同的视图。
+ * DynamicView 用于根据响应式数据的变化来动态渲染不同的视图。
  *
  * 核心功能：
  * - 监听响应式数据源的变化，自动更新视图
@@ -73,8 +73,7 @@ const materialize = (node: NormalizedChild): View => {
  * 使用示例：
  * ```typescript
  * const source = ref('text')
- * const switchView = new SwitchView(source)
- * switchView.init(ctx)
+ * const view = new DynamicView(source)
  * ```
  *
  * 构造函数参数：
@@ -83,15 +82,14 @@ const materialize = (node: NormalizedChild): View => {
  *
  * 使用限制：
  * - 必须在初始化后才能访问 current 属性
- * - 视图切换时，如果父级提供了 onViewSwitch 钩子，必须确保返回的视图类型匹配
- * - 内部使用 viewEffect 进行响应式追踪，需要确保在适当的时候调用 dispose 进行清理
+ * - 视图切换时，如果所属组件提供了 onViewSwitch 钩子，必须确保返回的视图状态匹配
  *
  * 潜在副作用：
  * - 视图切换可能会触发 DOM 操作
- * - 如果 onViewSwitch 钩子返回了不匹配的视图类型，在开发模式下会抛出错误
+ * - 如果 onViewSwitch 钩子返回的视图状态不匹配，会抛出错误
  */
-export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
-  public readonly kind = ViewKind.SWITCH
+export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
+  public readonly kind = ViewKind.DYNAMIC
   /** @internal 视图来源 */
   public readonly source: Ref<T>
   /** @internal 指令映射表 */
@@ -190,15 +188,13 @@ export class SwitchView<T = any> extends BaseView<ViewKind.SWITCH, HostNode> {
     if (owner?.subView === this && owner.onViewSwitch) {
       const result = owner.onViewSwitch(prevView, nextView)
       if (isView(result)) {
-        if (__DEV__) {
-          if (result.state !== this.state) {
-            throw new Error(
-              '[SwitchView]: View state mismatch detected: ' +
-                `Expected view state ${this.state}, but received ${result.state}. ` +
-                'This error occurs when a custom onViewSwitch handler returns a view with a different state ' +
-                'than the one being switched to. Ensure the returned view state matches the expected state.'
-            )
-          }
+        if (result.state !== this.state) {
+          throw new Error(
+            '[SwitchView]: View state mismatch detected: ' +
+              `Expected view state ${this.state}, but received ${result.state}. ` +
+              'This error occurs when a custom onViewSwitch handler returns a view with a different state ' +
+              'than the one being switched to. Ensure the returned view state matches the expected state.'
+          )
         }
         this.cachedView = result
         this.cachedType = result === nextView ? normalized.type : 'view'

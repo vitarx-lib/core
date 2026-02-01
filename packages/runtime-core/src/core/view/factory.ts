@@ -13,9 +13,9 @@ import type {
 import type { ViewBuilder } from '../builder/index.js'
 import { CommentView, TextView } from './atomic.js'
 import { ComponentView } from './component.js'
+import { DynamicView } from './dynamic.js'
 import { ElementView } from './element.js'
 import { FragmentView } from './fragment.js'
-import { SwitchView } from './switch.js'
 
 /**
  * 创建视图的工厂函数
@@ -158,15 +158,19 @@ export function createFragmentView(children: ValidChildren, location?: CodeLocat
 }
 
 /**
- * 创建切换视图
- * 切换视图根据响应式引用的值动态渲染不同的子视图
+ * 创建动态视图
+ *
+ * 动态视图根据响应式引用的值动态渲染不同的子视图
  *
  * @param source 响应式引用，用于决定显示哪个子视图
  * @param location 代码位置信息，用于调试
- * @returns {SwitchView} 切换视图实例
+ * @returns {DynamicView} 切换视图实例
  */
-export function createSwitchView<T = any>(source: Ref<T>, location?: CodeLocation): SwitchView<T> {
-  return new SwitchView(source, location)
+export function createDynamicView<T = any>(
+  source: Ref<T>,
+  location?: CodeLocation
+): DynamicView<T> {
+  return new DynamicView(source, location)
 }
 
 /**
