@@ -31,7 +31,7 @@ export class GetterRef<T> implements Ref<T> {
    * @throws - 总是抛出错误，因为这是只读引用
    */
   set value(_newVal: T) {
-    logger.warn('[ReadonlyRef] Cannot set value to a readonly ref')
+    logger.warn('[GetterRef] Cannot set value to a getter ref')
   }
   toString(): string {
     const val = this.value
