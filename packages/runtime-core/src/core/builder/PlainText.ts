@@ -26,7 +26,7 @@ export const PlainText = builder(
       ? new DynamicView(new PropertyRef(props, 'text'), location)
       : str.length
         ? new TextView(str, location)
-        : new CommentView('PlainText:empty', location)
+        : new CommentView('empty:string', location)
   }
 )
 
