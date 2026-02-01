@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  propertyRef,
   PropertyRef,
+  propertyRef,
   reactive,
   ref,
   ShallowRef,
