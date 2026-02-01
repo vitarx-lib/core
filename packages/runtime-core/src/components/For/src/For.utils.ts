@@ -33,7 +33,7 @@ export interface ListDiffResult {
  * @param arr - 输入数组，包含 -1 表示无效位置
  * @returns {number[]} 最长递增子序列的索引数组
  */
-export function getLIS(arr: number[]): number[] {
+function getLIS(arr: number[]): number[] {
   // p 数组记录每个位置的前驱节点索引
   const p = arr.slice()
   // result 数组记录当前递增序列的末尾索引
