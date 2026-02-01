@@ -5,10 +5,10 @@ import type {
   CommentView,
   ComponentInstance,
   ComponentView,
+  DynamicView,
   ElementView,
   FragmentView,
   ListView,
-  SwitchView,
   TextView,
   ViewBuilder
 } from '../core/index.js'
@@ -39,7 +39,7 @@ export type HostView = ElementView | FragmentView | TextView | CommentView
 /**
  * 统一视图类型
  */
-export type View = HostView | ListView | SwitchView | ComponentView
+export type View = HostView | ListView | DynamicView | ComponentView
 
 /**
  * 视图运行时上下文关系
