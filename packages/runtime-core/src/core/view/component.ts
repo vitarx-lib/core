@@ -1,9 +1,8 @@
 import { EffectScope, isRef, markRaw, type Ref } from '@vitarx/responsive'
-import { isFunction, isNumber, isPromise, isString, logger } from '@vitarx/utils'
+import { isFunction, isPromise, logger } from '@vitarx/utils'
 import { App } from '../../app/index.js'
 import { Lifecycle, SUSPENSE_COUNTER, ViewKind } from '../../constants/index.js'
 import { runComponent, withDirectives } from '../../runtime/index.js'
-import { isView } from '../../shared/index.js'
 import type {
   AnyProps,
   CodeLocation,
@@ -23,10 +22,11 @@ import type {
   ViewContext,
   ViewSwitchHandler
 } from '../../types/index.js'
-import { applyRef, mergeDefaultProps, resolveProps } from '../compiler/resolve.js'
-import { CommentView, TextView } from './atomic.js'
+import { applyRef, mergeDefaultProps, normalizeView, resolveProps } from '../compiler/resolve.js'
+import { CommentView } from './atomic.js'
 import { BaseView } from './base.js'
-import { SwitchView } from './switch.js'
+
+const EMPTY_COMPONENT_MESSAGE = (name: string) => `Component<${name}>:empty`
 
 /**
  * ComponentView 是用于管理和渲染组件实例的视图类。
@@ -324,20 +324,27 @@ export class ComponentInstance<T extends Component = Component> {
     }
     if (stage === Lifecycle.dispose) delete this.hooks?.[stage]
   }
+  /**
+   * 规范化视图，将各种类型的子节点转换为标准的 View 对象
+   *
+   * 处理顺序：
+   * 1. null/undefined/boolean - 转换为空组件注释
+   * 2. View 对象 - 直接返回
+   * 3. Ref 对象 - 包装为 DynamicView
+   * 4. 字符串/数字 - 转换为 TextView 或空组件注释
+   * 5. 其他类型 - 记录警告并返回错误注释
+   *
+   * @param child - 要规范化的子节点，可以是任意类型
+   * @returns {View} - 规范化后的 View 对象
+   * @throws {Error} 当转换过程中发生错误时抛出
+   */
   private normalizeView(child: unknown): View {
-    // 直接处理当前项，避免重复的类型检查
-    if (child == null || typeof child === 'boolean') return new CommentView('v-if')
-    // 直接进行类型判断，减少函数调用开销
-    if (isView(child)) return child
-    // 引用
-    if (isRef(child)) return new SwitchView(child)
-    // DEV 下给警告
-    if (!isString(child) && !isNumber(child)) {
-      const message = `[${this.view.name}] Component returned unsupported value type`
-      if (__DEV__) logger.warn(message, child)
-      return new CommentView(message)
+    // 处理 null/undefined/boolean
+    if (child == null || typeof child === 'boolean') {
+      return new CommentView(`Component<${this.view.name}>:empty`)
     }
-    return new TextView(String(child))
+    // 处理不支持的类型 - 记录警告并返回错误注释
+    return normalizeView(child)
   }
   private useSuspenseCounter(): Ref<number> | undefined {
     let parent = this.parent
