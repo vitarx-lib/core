@@ -100,6 +100,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
   private effect?: ViewEffect
   /** @private 缓存当前视图的类型 */
   private cachedType: NormalizedChild['type'] | null = null
+  private cachedValue: T | null = null
   constructor(source: Ref, location?: CodeLocation) {
     super(location)
     this.source = source
@@ -110,13 +111,15 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
   protected get hostNode(): HostNode | null {
     return this.cachedView?.node ?? null
   }
+
   protected override doInit(): void {
+    let handler: (value: T) => void = this.initView.bind(this)
     const effect = viewEffect(() => {
       try {
-        this.switchView(this.source.value)
+        handler(this.source.value)
       } catch (err) {
         if (!this.cachedView) {
-          this.cachedView = new CommentView(`SwitchView Error: init failed`)
+          this.cachedView = new CommentView(`DynamicView Error: init failed`)
         }
         if (this.owner) {
           this.owner.reportError(err, 'view:switch')
@@ -125,8 +128,20 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
         }
       }
     })
-    if (effect) this.effect = effect
-    if (this.cachedView?.isUnused) this.cachedView!.init(this.ctx)
+    if (effect) {
+      this.effect = effect
+      handler = this.updateView.bind(this)
+    }
+    this.cachedView!.init(this.ctx)
+  }
+
+  private initView(value: T): void {
+    const normalized = normalizeDynamicChild(value)
+    const view = materialize(normalized)
+    if (this.directives) withDirectives(view, Array.from(this.directives))
+    this.cachedType = normalized.type
+    this.cachedView = view
+    this.cachedValue = value
   }
   protected override doActivate(): void {
     this.cachedView!.activate()
@@ -145,18 +160,13 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
     this.cachedView!.mount(containerOrAnchor, type)
   }
-  private switchView(value: unknown): void {
+
+  private updateView(value: T): void {
+    if (this.cachedValue === value) return
+    this.cachedValue = value
     const normalized = normalizeDynamicChild(value)
-
-    // 初始化路径
-    if (!this.cachedView) {
-      this.cachedType = normalized.type
-      this.cachedView = materialize(normalized)
-      return
-    }
-
-    const prevView = this.cachedView
-    const prevType = this.cachedType
+    const prevView = this.cachedView!
+    const prevType = this.cachedType!
 
     // 快路径：同类型、可就地更新
     if (prevType === normalized.type) {
@@ -181,9 +191,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     if (this.directives) {
       withDirectives(nextView, Array.from(this.directives))
     }
-
     const owner = this.owner
-
     // 允许父级接管视图切换
     if (owner?.subView === this && owner.onViewSwitch) {
       const result = owner.onViewSwitch(prevView, nextView)
