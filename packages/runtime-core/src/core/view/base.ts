@@ -69,9 +69,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   }
   /** 初始化运行时（不创建 DOM，不可见） */
   init(ctx?: ViewContext): this {
-    if (__DEV__ && !this.isUnused) {
-      throw new Error('[View.init]: the view is running and cannot be initialized')
-    }
+    if (!this.isUnused) return this
     this.ctx = ctx
     this.doInit?.()
     this._state = ViewState.INITIALIZED
@@ -82,10 +80,15 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     if (__SSR__) {
       throw new Error('[View.mount]: is not supported in SSR mode')
     }
-    if (this.state === ViewState.ACTIVATED) {
-      throw new Error('[View.mount]: The view is mounted and cannot be mounted repeatedly')
+    if (this.isUnused) {
+      this.init()
+    }else if (!this.isInitialized){
+      throw new Error(
+        `[View.mount]: Mount operation can only be executed when view is in '${ViewState.INITIALIZED}' state. ` +
+          `Current view state is '${this._state}', which does not meet the pre-condition for mount operation. ` +
+          `Ensure the view has completed initialization phase (init() method called) before attempting to mount.`
+      )
     }
-    if (this.state === ViewState.UNUSED) this.init()
     this.doMount?.(target, type)
     this._state = ViewState.ACTIVATED
     return this
