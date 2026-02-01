@@ -7,8 +7,8 @@ export const enum ViewKind {
   FRAGMENT,
   /** 元素，如 `<div>`、`<span>` 等 */
   ELEMENT,
-  /** 切换视图 */
-  SWITCH,
+  /** 动态视图 */
+  DYNAMIC,
   /** 列表视图 */
   LIST,
   /** 组件节点 */
