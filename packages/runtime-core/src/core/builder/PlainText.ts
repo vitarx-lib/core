@@ -1,5 +1,6 @@
-import { hasPropTrack, PropertyRef } from '@vitarx/responsive'
+import { hasPropTrack } from '@vitarx/responsive'
 import { isNumber, isString, logger } from '@vitarx/utils'
+import { readonlyProp } from '../compiler/index.js'
 import { CommentView, TextView } from '../view/atomic.js'
 import { DynamicView } from '../view/dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
@@ -23,7 +24,7 @@ export const PlainText = builder(
     }
     const str = String(value)
     return isTrack
-      ? new DynamicView(new PropertyRef(props, 'text'), location)
+      ? new DynamicView(readonlyProp(props, 'text'), location)
       : str.length
         ? new TextView(str, location)
         : new CommentView('empty:string', location)
