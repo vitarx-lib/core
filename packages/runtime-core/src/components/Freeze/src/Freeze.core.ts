@@ -1,5 +1,5 @@
 import { defineValidate, getRenderer, onDispose, onViewSwitch } from '../../../runtime/index.js'
-import { isSwitchView, isView } from '../../../shared/index.js'
+import { isDynamicView, isView } from '../../../shared/index.js'
 import type { Component, View } from '../../../types/index.js'
 import { pruneCache, shouldCache } from './Freeze.utils.js'
 
@@ -69,7 +69,7 @@ interface FreezeProps {
  */
 function Freeze(props: FreezeProps): View {
   const { include = [], exclude = [], max = 0, children } = props
-  if (!isSwitchView(children)) {
+  if (!isDynamicView(children)) {
     return children
   }
 
@@ -149,9 +149,6 @@ defineValidate(Freeze, props => {
     throw new Error(
       `[Freeze]: children property expects to get a view object, given ${typeof props.children}`
     )
-  }
-  if (!isSwitchView(props.children)) {
-    return `child view doesn't happen, and using Freeze is pointless`
   }
 })
 export { Freeze, type FreezeProps }
