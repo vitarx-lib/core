@@ -1,5 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
+import { CommentView, DynamicView, TextView, ViewKind } from '../../../src/index.js'
 import {
   applyRef,
   bindProps,
@@ -8,8 +9,7 @@ import {
   resolveChildren,
   resolveProps,
   SPECIAL_PROP_MERGERS
-} from '../../../src/core/compiler/resolve.js'
-import { CommentView, DynamicView, TextView, ViewKind } from '../../../src/index.js'
+} from '../../../src/view/compiler/resolve.js'
 
 describe('Compiler Resolve', () => {
   describe('SPECIAL_PROP_MERGERS', () => {
