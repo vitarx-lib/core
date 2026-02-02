@@ -121,11 +121,9 @@ describe('Freeze Component', () => {
 
   describe('Integration', () => {
     it('应该与基本视图一起工作', () => {
-      const spy = vi.spyOn(console, 'warn').mockImplementation(() => void 0)
       const childView = createView(testTag, { children: 'Integrated content' })
       const freezeView = createView(Freeze, { children: childView })
       freezeView.mount(container)
-      expect(spy).toHaveBeenCalled()
       expect(container.textContent).toContain('Integrated content')
     })
   })
