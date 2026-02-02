@@ -106,7 +106,7 @@ export function inject<T>(
 ): T {
   const ctx = getInstance()
   if (!ctx) {
-    throw new Error('inject must be called in widget')
+    throw new Error('inject must be called in component')
   }
 
   // 向上查找祖先节点
