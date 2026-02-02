@@ -42,7 +42,8 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
     Object.defineProperty(resolvedProps, key, {
       get() {
         return props[key]
-      }
+      },
+      enumerable: true
     })
   }
   const view = new DynamicViewSource(() => {
