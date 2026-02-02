@@ -1,11 +1,7 @@
 import { ShallowRef } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import { inject, SUSPENSE_COUNTER, useSuspense } from '../../src/index.js'
-
-// Mock inject
-vi.mock('../../src/runtime/provide', () => ({
-  inject: vi.fn()
-}))
+import { SUSPENSE_COUNTER, useSuspense } from '../../src/index.js'
+import * as contextModule from '../../src/runtime/context.js'
 
 describe('runtime/suspense', () => {
   beforeEach(() => {
@@ -15,20 +11,35 @@ describe('runtime/suspense', () => {
   describe('useSuspense', () => {
     it('应该从 inject 返回 suspense 计数器', () => {
       const mockCounter = new ShallowRef(0)
-      ;(inject as any).mockReturnValue(mockCounter)
+      const mockParentInstance = {
+        provide: new Map([[SUSPENSE_COUNTER, mockCounter]]),
+        parent: null,
+        app: null
+      }
+      const mockInstance = {
+        provide: new Map(),
+        parent: mockParentInstance,
+        app: null
+      }
+
+      vi.spyOn(contextModule, 'getInstance').mockReturnValue(mockInstance as any)
 
       const result = useSuspense()
 
-      expect(inject).toHaveBeenCalledWith(SUSPENSE_COUNTER, undefined)
       expect(result).toBe(mockCounter)
     })
 
     it('当没有 suspense 计数器时应该返回 undefined', () => {
-      ;(inject as any).mockReturnValue(undefined)
+      const mockInstance = {
+        provide: new Map(),
+        parent: null,
+        app: null
+      }
+
+      vi.spyOn(contextModule, 'getInstance').mockReturnValue(mockInstance as any)
 
       const result = useSuspense()
 
-      expect(inject).toHaveBeenCalledWith(SUSPENSE_COUNTER, undefined)
       expect(result).toBeUndefined()
     })
   })
