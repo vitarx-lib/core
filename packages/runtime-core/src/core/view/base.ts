@@ -27,7 +27,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   protected abstract hostNode: Node | null
   /** @internal 视图状态 */
   private _state: ViewState = ViewState.UNUSED
-  protected constructor(location?: CodeLocation) {
+  constructor(location?: CodeLocation) {
     this.location = location
   }
   get state(): ViewState {
@@ -82,7 +82,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     }
     if (this.isUnused) {
       this.init()
-    }else if (!this.isInitialized){
+    } else if (!this.isInitialized) {
       throw new Error(
         `[View.mount]: Mount operation can only be executed when view is in '${ViewState.INITIALIZED}' state. ` +
           `Current view state is '${this._state}', which does not meet the pre-condition for mount operation. ` +
