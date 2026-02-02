@@ -4,19 +4,31 @@ import type { CodeLocation, ValidChild } from '../../types/index.js'
 import { DynamicView } from '../view/index.js'
 import { DynamicViewSource, SwitchViewSource } from './source.js'
 
+const readonlyPropCache = new WeakMap<object, Map<PropertyKey, Ref>>()
 /**
  * 创建一个只读的响应式引用对象
+ *
  * @param obj - 源对象
  * @param key - 源对象上的键
- * @returns 返回一个只读的引用对象
+ * @returns {Ref} 返回一个只读的引用对象
  */
-export function readonlyProp<T extends object, K extends keyof T>(obj: T, key: K): Ref {
-  return {
-    [IS_REF]: true,
-    get value(): T[K] {
-      return obj[key]
-    }
+export function readonlyProp<T extends object, K extends keyof T>(obj: T, key: K): Ref<T[K]> {
+  let map = readonlyPropCache.get(obj)
+  if (!map) {
+    map = new Map()
+    readonlyPropCache.set(obj, map)
   }
+  let cached = map.get(key)
+  if (!cached) {
+    cached = {
+      [IS_REF]: true,
+      get value(): T[K] {
+        return obj[key]
+      }
+    }
+    map.set(key, cached)
+  }
+  return cached as Ref<T[K]>
 }
 
 /**
@@ -60,7 +72,7 @@ export function memberExpressions<T extends object, K extends keyof T>(
  * 构建视图的辅助函数
  *
  * 因为编译器只针对 jsx 模板代码进行编译转换，组件返回三元表达式无法更新视图，
- * 所以需要使用 build 辅助构建出一个 SwitchView，来更新视图。
+ * 所以需要使用 build 辅助构建出一个 DynamicView 来更新视图。
  *
  * @example
  * ```ts
