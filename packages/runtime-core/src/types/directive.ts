@@ -20,7 +20,7 @@ export interface Directive {
    *
    * @param el - 宿主元素实例
    * @param binding - 指令绑定信息对象
-   * @param block - 节点实例
+   * @param view - 节点实例
    */
   created?: DirectiveHook
   /**
@@ -28,7 +28,7 @@ export interface Directive {
    *
    * @param el - 宿主元素实例
    * @param binding - 指令绑定信息对象
-   * @param block - 节点实例
+   * @param view - 节点实例
    */
   mounted?: DirectiveHook
   /**
