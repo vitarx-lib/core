@@ -1,9 +1,9 @@
 import { logger } from '@vitarx/utils'
 import type { AnyProps, ValidChildren, View, ViewTag } from '../../types/index.js'
 import { DynamicViewSource } from '../compiler/index.js'
-import { CommentView } from '../impl/atomic.js'
-import { DynamicView } from '../impl/dynamic.js'
-import { createView } from '../impl/factory.js'
+import { CommentView } from '../implements/atomic.js'
+import { DynamicView } from '../implements/dynamic.js'
+import { createView } from '../implements/factory.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface DynamicProps {

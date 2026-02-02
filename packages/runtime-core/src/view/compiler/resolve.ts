@@ -11,8 +11,8 @@ import type {
   ValidChildren,
   View
 } from '../../types/index.js'
-import { CommentView, TextView } from '../impl/atomic.js'
-import { DynamicView } from '../impl/dynamic.js'
+import { CommentView, TextView } from '../implements/atomic.js'
+import { DynamicView } from '../implements/dynamic.js'
 
 type ResolvePropsResult<T extends AnyProps> = {
   ref?: InstanceRef

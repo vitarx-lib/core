@@ -1,7 +1,7 @@
 import { IS_RAW } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { IS_VIEW, ViewKind, ViewState } from '../../../src/index.js'
-import { BaseView } from '../../../src/view/impl/base.js'
+import { BaseView } from '../../../src/view/implements/base.js'
 
 describe('BaseView', () => {
   // 创建一个具体的 BaseView 子类用于测试

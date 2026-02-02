@@ -1,7 +1,7 @@
 import { hasPropTrack, IS_REF, type Ref } from '@vitarx/responsive'
 import { isFunction } from '@vitarx/utils'
 import type { CodeLocation, ValidChild } from '../../types/index.js'
-import { DynamicView } from '../impl/index.js'
+import { DynamicView } from '../implements/index.js'
 import { DynamicViewSource, SwitchViewSource } from './source.js'
 
 const readonlyPropCache = new WeakMap<object, Map<PropertyKey, Ref>>()

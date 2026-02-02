@@ -1,5 +1,5 @@
 import type { ValidChildren } from '../../types/index.js'
-import { FragmentView } from '../impl/fragment.js'
+import { FragmentView } from '../implements/fragment.js'
 import type { DynamicProps } from './Dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
