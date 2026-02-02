@@ -39,8 +39,8 @@ export class StyleUtils {
    */
   static mergeCssClass(c1: ClassProperties, c2: ClassProperties): string[] {
     // 将 c1 和 c2 转换为数组
-    const arr1 = this.cssClassValueToArray(c1)
-    const arr2 = this.cssClassValueToArray(c2)
+    const arr1 = StyleUtils.cssClassValueToArray(c1)
+    const arr2 = StyleUtils.cssClassValueToArray(c2)
 
     // 合并并去重
     return Array.from(new Set([...arr1, ...arr2]))
@@ -55,9 +55,9 @@ export class StyleUtils {
    */
   static mergeCssStyle(style1: StyleProperties, style2: StyleProperties): StyleRules {
     // 如果style1是字符串，先转换为对象
-    const obj1 = this.cssStyleValueToObject(style1)
+    const obj1 = StyleUtils.cssStyleValueToObject(style1)
     // 如果style2是字符串，先转换为对象
-    const obj2 = this.cssStyleValueToObject(style2)
+    const obj2 = StyleUtils.cssStyleValueToObject(style2)
 
     // 合并对象，后者覆盖前者
     return { ...obj1, ...obj2 }
