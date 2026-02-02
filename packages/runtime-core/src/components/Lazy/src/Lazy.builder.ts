@@ -1,5 +1,5 @@
-import { builder, ComponentView, type ViewBuilder } from '../../../core/index.js'
 import type { Component, ComponentProps } from '../../../types/index.js'
+import { builder, ComponentView, type ViewBuilder } from '../../../view/index.js'
 import { Lazy, type LazyLoadOptions } from './Lazy.core.js'
 
 /**

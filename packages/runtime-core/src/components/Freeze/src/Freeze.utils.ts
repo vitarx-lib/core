@@ -1,6 +1,6 @@
-import { ComponentView } from '../../../core/index.js'
 import { isComponentView } from '../../../shared/index.js'
 import type { Component, View } from '../../../types/index.js'
+import { ComponentView } from '../../../view/index.js'
 
 /**
  * 清理超出最大缓存数量的视图

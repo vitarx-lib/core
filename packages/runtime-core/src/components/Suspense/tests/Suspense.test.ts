@@ -1,9 +1,9 @@
 import { flushSync } from '@vitarx/responsive'
 import { sleep } from '@vitarx/utils'
 import { afterEach, beforeEach, describe } from 'vitest'
-import { createView } from '../../../core/index.js'
 import { useSuspense } from '../../../runtime/index.js'
 import type { HostElementTag, View } from '../../../types/index.js'
+import { createView } from '../../../view/index.js'
 import { Lazy } from '../../Lazy/src/index.js'
 import { Suspense } from '../src/index.js'
 

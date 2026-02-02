@@ -1,6 +1,6 @@
 import type { Ref, UnwrapRef } from '@vitarx/responsive'
 import type { PickRequired } from '@vitarx/utils'
-import type { Dynamic, DynamicProps, Fragment, FragmentProps, ViewBuilder } from '../core/index.js'
+import type { Dynamic, DynamicProps, Fragment, FragmentProps, ViewBuilder } from '../view/index.js'
 import type { AnyProps, Component, ComponentProps } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
 import type { ViewTag } from './view.js'

@@ -1,5 +1,5 @@
 import type { App } from '../app/index.js'
-import { type ComponentInstance, ComponentView } from '../core/index.js'
+import { type ComponentInstance, ComponentView } from '../view/index.js'
 
 let activeComponentInstance: ComponentInstance | null = null
 

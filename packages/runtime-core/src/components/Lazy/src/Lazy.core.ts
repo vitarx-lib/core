@@ -1,6 +1,5 @@
 import { shallowRef } from '@vitarx/responsive'
 import { isFunction, logger, withDelayAndTimeout } from '@vitarx/utils'
-import { createCommentView, createView, DynamicView } from '../../../core/index.js'
 import { getInstance, onDispose, onInit } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type {
@@ -11,6 +10,7 @@ import type {
   View,
   WithProps
 } from '../../../types/index.js'
+import { createCommentView, createView, DynamicView } from '../../../view/index.js'
 
 /**
  * 惰性加载配置选项

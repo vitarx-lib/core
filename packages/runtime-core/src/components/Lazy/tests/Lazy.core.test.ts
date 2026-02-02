@@ -1,8 +1,8 @@
 import { flushSync } from '@vitarx/responsive'
 import { sleep } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createView } from '../../../core/index.js'
 import type { HostElementTag, View } from '../../../types/index.js'
+import { createView } from '../../../view/index.js'
 import { Lazy } from '../src/index.js'
 
 describe('Lazy Component', () => {

@@ -1,6 +1,6 @@
 import type { AnyCallback } from '@vitarx/utils'
 import { Lifecycle } from '../constants/index.js'
-import { ComponentInstance } from '../core/index.js'
+import { ComponentInstance } from '../view/index.js'
 import type { View } from './view.js'
 
 /**

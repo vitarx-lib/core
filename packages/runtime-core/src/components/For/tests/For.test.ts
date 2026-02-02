@@ -1,7 +1,7 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { createView } from '../../../core/index.js'
 import type { HostElementTag } from '../../../types/index.js'
+import { createView } from '../../../view/index.js'
 import { For } from '../src/index.js'
 
 describe('For Component', () => {

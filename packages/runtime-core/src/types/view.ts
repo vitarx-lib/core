@@ -11,7 +11,7 @@ import type {
   ListView,
   TextView,
   ViewBuilder
-} from '../core/index.js'
+} from '../view/index.js'
 import type { Component } from './component.js'
 import type { HostElementTag } from './element.js'
 

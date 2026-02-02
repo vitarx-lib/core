@@ -1,7 +1,7 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { build, ComponentView, createView, DynamicView } from '../../../core/index.js'
 import type { HostElementTag } from '../../../types/index.js'
+import { build, ComponentView, createView, DynamicView } from '../../../view/index.js'
 import { Freeze } from '../src/index.js'
 
 describe('Freeze Component', () => {

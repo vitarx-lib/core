@@ -1,7 +1,7 @@
 import { isFunction } from '@vitarx/utils'
-import { ListView } from '../../../core/index.js'
 import { viewEffect } from '../../../runtime/effect.js'
 import { defineValidate, getInstance, onDispose, onHide, onShow } from '../../../runtime/index.js'
+import { ListView } from '../../../view/index.js'
 import {
   initListChildren,
   type KeyedViewMap,

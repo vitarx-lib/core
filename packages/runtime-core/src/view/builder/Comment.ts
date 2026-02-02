@@ -1,4 +1,4 @@
-import { CommentView } from '../view/atomic.js'
+import { CommentView } from '../impl/atomic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface CommentProps {

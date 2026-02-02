@@ -1,7 +1,7 @@
 import { logger } from '@vitarx/utils'
-import { ListView } from '../../../core/index.js'
 import { getRenderer } from '../../../runtime/index.js'
 import type { CodeLocation, View } from '../../../types/index.js'
+import { ListView } from '../../../view/index.js'
 
 export type KeyedViewMap = Map<unknown, { view: View; index: number }>
 export type ViewFactory<T> = (item: T, index: number) => View
