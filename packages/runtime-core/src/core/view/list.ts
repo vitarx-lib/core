@@ -95,6 +95,8 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
    * @param anchor - 移动位置，传入 null 等同于 append
    */
   move(child: ListItemView, anchor: ListItemView | null): void {
+    // 如果子视图已经在列表中，先移除它
+    if (child.__parent === this) this.remove(child)
     if (anchor) {
       this.insert(child, anchor)
     } else {
