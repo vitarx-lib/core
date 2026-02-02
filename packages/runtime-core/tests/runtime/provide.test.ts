@@ -151,7 +151,7 @@ describe('runtime/provide', () => {
 
       expect(() => {
         inject(name)
-      }).toThrow('inject must be called in widget')
+      }).toThrow('inject must be called in component')
     })
 
     it('应该在所有祖先中查找提供的值', () => {
