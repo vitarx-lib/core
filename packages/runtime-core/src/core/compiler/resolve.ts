@@ -79,7 +79,7 @@ export function bindProps(props: AnyProps, bind: BindAttributes): AnyProps {
       Object.defineProperty(result, key, {
         enumerable: true,
         get() {
-          return merger(unref(binding[key]), unref(props[key]))
+          return merger(unref(props[key]), unref(binding[key]))
         }
       })
       continue
