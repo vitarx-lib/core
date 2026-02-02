@@ -1,8 +1,6 @@
 import {
-  type CodeLocation,
   CommentView,
   getInstance,
-  type HostContainer,
   isView,
   onBeforeMount,
   onDispose,
@@ -12,7 +10,8 @@ import {
   onShow,
   type View
 } from '@vitarx/runtime-core'
-import { isString, logger } from '@vitarx/utils'
+import { isString } from '@vitarx/utils'
+import { getTarget } from './Teleport.utils.js'
 
 interface TeleportProps {
   /**
@@ -40,26 +39,6 @@ interface TeleportProps {
    * @default false
    */
   disabled: boolean
-}
-
-export const getTarget = (to: string, location?: CodeLocation): HostContainer | null => {
-  try {
-    const target = document.querySelector(to)
-    if (!target) {
-      logger.warn(
-        `Teleport target element not found: selector '${to}' does not match any element in the DOM`,
-        location
-      )
-    }
-    return target
-  } catch (error) {
-    logger.warn(
-      `Teleport target selector invalid: '${to}' is not a valid CSS selector - `,
-      error,
-      location
-    )
-    return null
-  }
 }
 
 /**

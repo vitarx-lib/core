@@ -1,1 +1,1 @@
-export * from './Teleport.js'
+export * from './Teleport.core.js'
