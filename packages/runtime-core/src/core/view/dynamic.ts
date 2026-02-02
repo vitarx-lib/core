@@ -1,7 +1,7 @@
 import { type Ref } from '@vitarx/responsive'
 import { ViewKind } from '../../constants/index.js'
 import { viewEffect, type ViewEffect } from '../../runtime/effect.js'
-import { replaceView, withDirectives } from '../../runtime/index.js'
+import { withDirectives } from '../../runtime/index.js'
 import { isView } from '../../shared/index.js'
 import type {
   CodeLocation,
@@ -226,8 +226,27 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
         return
       }
     }
-    replaceView(prevView, nextView)
+    this.replaceView(prevView, nextView)
     this.cachedView = nextView
     this.cachedType = normalized.type
+  }
+
+  /**
+   * 替换视图
+   *
+   * @param prev - 前一个视图实例
+   * @param next - 新视图实例
+   */
+  private replaceView(prev: View, next: View): void {
+    // 根据前一个视图的初始化状态决定如何处理新视图
+    if (prev.isInitialized) {
+      // 如果前一个视图已初始化，则使用相同的上下文初始化新视图
+      next.init(prev.ctx)
+    } else {
+      // 如果前一个视图未初始化，则直接挂载新视图到指定节点
+      next.mount(prev.node, 'insert')
+    }
+    // 处理完新视图后，销毁前一个视图
+    prev.dispose()
   }
 }
