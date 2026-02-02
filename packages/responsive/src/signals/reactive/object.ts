@@ -302,12 +302,12 @@ const setCache = (instance: ReactiveSource<any>) => {
  * 创建对象的响应式代理
  *
  * 该函数根据目标对象的类型创建相应的响应式代理：
- * - 数组使用 ArrayProxy
- * - Map 使用 MapProxy
- * - Set 使用 SetProxy
- * - WeakSet 使用 WeakSetProxy
- * - WeakMap 使用 WeakMapProxy
- * - 普通对象使用 ObjectProxy
+ * - 数组使用 ArrayReactive
+ * - Map 使用 MapReactive
+ * - Set 使用 SetReactive
+ * - WeakSet 使用 WeakSetReactive
+ * - WeakMap 使用 WeakMapReactive
+ * - 普通对象使用 ObjectReactive
  *
  * 同时使用缓存机制避免重复创建相同的代理对象。
  *
