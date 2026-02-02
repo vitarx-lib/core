@@ -48,7 +48,7 @@ abstract class BaseViewSource<T> implements RefSignal<T> {
 }
 
 /**
- * ComputeViewSource 是一个带有依赖追踪功能的计算类。
+ * DynamicViewSource 是一个带有依赖追踪功能的计算类。
  * 它通过追踪 getter 函数的依赖关系，在依赖项变化时自动重新计算值。
  *
  * 核心功能：
@@ -75,8 +75,9 @@ export class DynamicViewSource<T = any> extends BaseViewSource<T> {
     return trackEffect(this.getter, this.effectHandle)
   }
 }
+
 /**
- * 分支计算类，用于根据选择函数的结果动态执行不同的分支函数并返回结果。
+ * SwitchViewSource 用于根据选择函数的结果动态执行不同的分支函数并返回结果。
  * 该类实现了基于条件选择的多分支计算逻辑，并支持依赖追踪和缓存优化。
  *
  * 核心功能：
@@ -86,7 +87,7 @@ export class DynamicViewSource<T = any> extends BaseViewSource<T> {
  *
  * @example
  * ```typescript
- * const branch = new BranchViewSource(
+ * const branch = new SwitchViewSource(
  *   () => Math.random() > 0.5 ? 0 : 1, // 选择函数
  *   [() => '结果A', () => '结果B']     // 分支函数数组
  * )
