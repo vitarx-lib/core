@@ -6,7 +6,7 @@ import { DynamicView } from '../view/dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface TextProps {
-  text: string
+  text: string | number
 }
 
 /**
@@ -20,7 +20,10 @@ export const PlainText = builder(
   (props: TextProps, location): TextView | DynamicView<string> | CommentView => {
     const { value, isTrack } = hasPropTrack(props, 'text')
     if (__DEV__ && !isString(value) && !isNumber(value)) {
-      logger.warn('[PlainText]: text must be a string.', value, location)
+      logger.warn(
+        `[PlainText]: expected text needs to be given a string, given ${typeof value}`,
+        location
+      )
     }
     const str = String(value)
     return isTrack
