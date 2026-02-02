@@ -160,7 +160,7 @@ export function normalizeView(child: unknown): View {
  *
  * 主要处理流程：
  * 1. 使用栈结构进行迭代处理，扁平化嵌套数组
- * 2. 非Block的child转换为动态/文本块
+ * 2. 非View的child转换为动态/文本视图
  * 3. 建立子节点与父节点的关联
  *
  * @param children 子节点或子节点列表，可以是单个值、数组或嵌套数组
@@ -169,24 +169,39 @@ export function normalizeView(child: unknown): View {
 export function resolveChildren(children: ValidChildren): ResolvedChildren {
   const childList: View[] = []
   if (children == null) return childList
-  // 使用单个栈来处理嵌套结构，避免多次创建数组
-  const stack: Array<unknown> = Array.isArray(children) ? [...children] : [children]
+
+  // 使用 ValidChildren 类型替代 unknown，提高类型安全性
+  const stack: ValidChildren[] = []
+
+  // 辅助函数：将数组逆序推入栈
+  const pushArrayToStack = (arr: ValidChildren[]) => {
+    for (let i = arr.length - 1; i >= 0; i--) {
+      stack.push(arr[i])
+    }
+  }
+
+  // 初始化栈
+  if (Array.isArray(children)) {
+    pushArrayToStack(children)
+  } else {
+    stack.push(children)
+  }
+
   while (stack.length > 0) {
     const current = stack.pop()!
 
-    // 处理数组情况：直接展开并按正确顺序推入栈
+    // 处理数组情况：展开并推入栈
     if (Array.isArray(current)) {
-      // 按原顺序逆向推入栈，这样弹出时就是正确的顺序
-      for (let i = current.length - 1; i >= 0; i--) {
-        stack.push(current[i])
-      }
+      pushArrayToStack(current)
       continue
     }
 
-    // 直接处理当前项，避免重复的类型检查
+    // 过滤无效值并规范化视图
     if (current == null || typeof current === 'boolean') continue
+
     childList.push(normalizeView(current))
   }
+
   return __DEV__ ? Object.freeze(childList) : childList
 }
 
