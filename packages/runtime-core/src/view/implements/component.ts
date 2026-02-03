@@ -26,8 +26,6 @@ import { applyRef, mergeDefaultProps, normalizeView, resolveProps } from '../com
 import { CommentView } from './atomic.js'
 import { BaseView } from './base.js'
 
-const EMPTY_COMPONENT_MESSAGE = (name: string) => `Component<${name}>:empty`
-
 /**
  * ComponentView 是用于管理和渲染组件实例的视图类。
  * 它负责组件的初始化、挂载、更新和销毁等生命周期管理。
