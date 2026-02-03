@@ -215,7 +215,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       if (isView(result)) {
         if (result.state !== this.state) {
           throw new Error(
-            '[SwitchView]: View state mismatch detected: ' +
+            '[DynamicView]: View state mismatch detected: ' +
               `Expected view state ${this.state}, but received ${result.state}. ` +
               'This error occurs when a custom onViewSwitch handler returns a view with a different state ' +
               'than the one being switched to. Ensure the returned view state matches the expected state.'
