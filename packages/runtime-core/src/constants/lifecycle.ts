@@ -10,10 +10,10 @@ export const enum Lifecycle {
   beforeMount = 'beforeMount',
   /** 显式阶段 */
   show = 'show',
-  /** 隐藏阶段 */
-  hide = 'hide',
   /** 即将挂载阶段 */
   mounted = 'mounted',
+  /** 隐藏阶段 */
+  hide = 'hide',
   /** 即将卸载阶段 */
   dispose = 'dispose'
 }
