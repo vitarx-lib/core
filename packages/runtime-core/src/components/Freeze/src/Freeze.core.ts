@@ -84,11 +84,10 @@ function Freeze(props: FreezeProps): View {
    * 监听视图切换事件
    * 在视图切换时拦截，实现视图的缓存和复用
    */
-  onViewSwitch((prev: View, next: View): View | void => {
-    // 非活跃状态直接返回，不进行任何处理
-    if (!prev.isActivated) return void 0
+  onViewSwitch((tx): false | void => {
     const renderer = getRenderer()
     let reuse: View | undefined = undefined
+    const { next, prev } = tx
     // 1️⃣ 处理 next（即将显示的视图）：尝试复用缓存
     if (shouldCache(next, include, exclude)) {
       const type = next.component
@@ -97,8 +96,10 @@ function Freeze(props: FreezeProps): View {
       if (cachedView) {
         // 从缓存中移除（因为即将被激活使用）
         cache.delete(type)
-        // 重新插入节点
-        renderer.insert(cachedView.node, prev.node)
+        if (prev.isMounted) {
+          // 重新插入节点
+          renderer.insert(cachedView.node, prev.node)
+        }
         // 激活缓存的视图（恢复事件监听等）
         cachedView.activate()
         reuse = cachedView
@@ -106,7 +107,8 @@ function Freeze(props: FreezeProps): View {
     }
     // 如果next没有被复用，则需要先挂载next
     if (!reuse) {
-      next.mount(prev.node, 'insert')
+      next.init(prev.ctx)
+      if (prev.isMounted) next.mount(prev.node, 'insert')
       reuse = next
     }
     // 2️⃣  处理 prev（即将离开的视图）：冻结并缓存
@@ -123,7 +125,8 @@ function Freeze(props: FreezeProps): View {
     } else {
       prev.dispose()
     }
-    return reuse
+    tx.commit({ next: reuse, mode: 'pointer-only' })
+    return false
   })
 
   /**
