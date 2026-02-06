@@ -22,7 +22,7 @@ function createHookRegistrar<T extends Lifecycle>(hook: T): (cb: HookCallback<T>
     }
     const ctx = getInstance()
     if (!ctx) {
-      logger.error(`on${toCapitalize(hook)}(): must be called in a Component`)
+      logger.error(`on${toCapitalize(hook)}(): must be called in a component`)
       return void 0
     }
     if (ctx.hooks[hook]) {
@@ -224,7 +224,7 @@ export const onViewSwitch = (handler: ViewSwitchHandler): void => {
 export function defineExpose<T extends { [key: string]: any }>(exposed: T): void {
   const ctx = getInstance()
   if (!ctx) {
-    logger.error('[defineExpose]：defineExpose must be called in a WidgetContext')
+    logger.error('defineExpose(): must be called in a component')
     return void 0
   }
   const publicInstance = ctx.publicInstance

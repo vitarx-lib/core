@@ -30,7 +30,7 @@ import { getInstance } from './context.js'
 export function provide(name: string | symbol, value: any): void {
   const ctx = getInstance()
   if (!ctx) {
-    logger.error('[provide]：provide must be called in a widget context')
+    logger.error('provide(): must be called in a component context')
     return void 0
   }
   if (ctx.provide) {
