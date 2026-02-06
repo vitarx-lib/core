@@ -10,10 +10,10 @@ export type LogSource = {
  * 日志级别枚举
  */
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3
+  DEBUG = 'Debug',
+  INFO = 'Info',
+  WARN = 'Warn',
+  ERROR = 'Error'
 }
 /**
  * 日志配置接口
@@ -143,29 +143,10 @@ export class Logger {
    * @returns 格式化后的消息
    */
   public formatMessage(level: LogLevel, message: string, source?: LogSource): string {
-    let prefix = ''
-
-    // 添加自定义前缀
-    if (this.config.prefix) {
-      prefix += this.config.prefix
-    }
-    // 添加日志级别标识
-    switch (level) {
-      case LogLevel.DEBUG:
-        prefix += '[DEBUG]'
-        break
-      case LogLevel.INFO:
-        prefix += '[INFO]'
-        break
-      case LogLevel.WARN:
-        prefix += '[WARN]'
-        break
-      case LogLevel.ERROR:
-        prefix += '[ERROR]'
-        break
-    }
+    let prefix = this.config.prefix ? `[${this.config.prefix} ${level}]` : `[${level}]`
     // 如果message开头没有空格，则添加一个空格
-    const formattedMessage = message.startsWith(' ') ? message : ` ${message}`
+    const formattedMessage =
+      message.startsWith(' ') || message.startsWith('[') ? message : ` ${message}`
     // 添加源代码位置信息
     if (source && this.config.includeSourceInfo) {
       const { fileName, lineNumber, columnNumber } = source
@@ -236,7 +217,7 @@ export class Logger {
 /**
  * vitarx框架共享的日志助手实例
  */
-export const logger = new Logger()
+export const logger = new Logger({ prefix: 'Vitarx' })
 
 /**
  * 获取当前调用栈的字符串表示
