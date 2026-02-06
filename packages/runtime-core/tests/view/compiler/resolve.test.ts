@@ -5,7 +5,7 @@ import {
   applyRef,
   bindProps,
   mergeDefaultProps,
-  normalizeView,
+  resolveChild,
   resolveChildren,
   resolveProps,
   SPECIAL_PROP_MERGERS
@@ -112,32 +112,31 @@ describe('Compiler Resolve', () => {
   describe('normalizeView', () => {
     it('当输入是 View 对象时应该直接返回', () => {
       const textView = new TextView('test')
-      const result = normalizeView(textView)
+      const result = resolveChild(textView)
 
       expect(result).toBe(textView)
     })
 
     it('当输入是 Ref 对象时应该包装为 DynamicView', () => {
       const textRef = ref('test')
-      const result = normalizeView(textRef)
+      const result = resolveChild(textRef)
 
       expect(result).toBeInstanceOf(DynamicView)
-      expect(result.kind).toBe(ViewKind.DYNAMIC)
+      expect(result!.kind).toBe(ViewKind.DYNAMIC)
     })
 
     it('当输入是空字符串时应该返回 CommentView', () => {
-      const result = normalizeView('')
+      const result = resolveChild('')
 
       expect(result).toBeInstanceOf(CommentView)
-      expect(result.kind).toBe(ViewKind.COMMENT)
+      expect(result!.kind).toBe(ViewKind.COMMENT)
     })
 
-    it('当输入是其他类型时应该转换为 TextView', () => {
-      const testCases = ['test', 123, true, null, undefined]
+    it('当输入是其他类型时应该转换为 null', () => {
+      const testCases = [true, null, undefined, {}, Symbol('test')]
       testCases.forEach(input => {
-        const result = normalizeView(input)
-        expect(result).toBeInstanceOf(TextView)
-        expect(result.kind).toBe(ViewKind.TEXT)
+        const result = resolveChild(input)
+        expect(result).toBe(null)
       })
     })
   })
