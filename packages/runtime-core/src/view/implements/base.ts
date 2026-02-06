@@ -121,7 +121,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     if (this.isRuntime) {
       throw new Error(
         `[View.init]: The view has already been initialized. ` +
-          `Ensure the view is not initialized multiple times.`
+          `\nEnsure the view is not initialized multiple times.`
       )
     }
     this.ctx = ctx
@@ -135,13 +135,13 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     if (__SSR__) {
       throw new Error('[View.mount]: is not supported in SSR mode')
     }
-    if (!this.isRuntime) {
+    if (this.isDetached) {
       this.init()
     } else if (!this.isInitialized) {
       throw new Error(
         `[View.mount]: Mount operation can only be executed when view is in '${ViewState.INITIALIZED}' state. ` +
-          `Current view state is '${this.#state}', which does not meet the pre-condition for mount operation. ` +
-          `Ensure the view has completed initialization phase (init() method called) before attempting to mount.`
+          `\nCurrent view state is '${this.#state}', which does not meet the pre-condition for mount operation. ` +
+          `\nEnsure the view has completed initialization phase (init() method called) before attempting to mount.`
       )
     }
     this.doMount?.(target, type)
