@@ -39,7 +39,7 @@ import { BaseView } from './base.js'
 export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   public readonly kind = ViewKind.FRAGMENT
   public readonly children: ResolvedChildren
-  public hostNode: HostFragment | null = null
+  protected hostNode: HostFragment | null = null
   constructor(children: ValidChildren, location?: CodeLocation) {
     super(location)
     this.children = resolveChildren(children)
@@ -51,7 +51,6 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
     for (const child of this.children) child.dispose()
     if (this.hostNode) {
       getRenderer().remove(this.hostNode)
-      this.hostNode = null
     }
   }
   protected override doActivate(): void {

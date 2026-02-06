@@ -19,12 +19,12 @@ import type {
   InstanceRef,
   MountType,
   View,
-  ViewContext,
-  ViewSwitchHandler
+  ViewContext
 } from '../../types/index.js'
-import { applyRef, mergeDefaultProps, normalizeView, resolveProps } from '../compiler/resolve.js'
+import { applyRef, mergeDefaultProps, resolveChild, resolveProps } from '../compiler/resolve.js'
 import { CommentView } from './atomic.js'
 import { BaseView } from './base.js'
+import type { ViewSwitchHandler } from './dynamic.js'
 
 /**
  * ComponentView 是用于管理和渲染组件实例的视图类。
@@ -184,8 +184,6 @@ export class ComponentInstance<T extends Component = Component> {
   public async?: Promise<unknown>
   /** @internal - 给子视图继承的上下文 */
   public readonly subViewContext: ViewContext
-  /** @internal - 组件是否可见 */
-  private _visible = false
   constructor(public readonly view: ComponentView<T>) {
     this.parent = view.owner
     this.app = view.app
@@ -204,10 +202,6 @@ export class ComponentInstance<T extends Component = Component> {
     })
     // 透传指令
     if (view.directives) withDirectives(this.subView, Array.from(view.directives))
-  }
-  /** 组件是否处于可见状态 */
-  public get isVisible(): boolean {
-    return this._visible
   }
   public init(): void {
     const hooks = this.hooks[Lifecycle.init]
@@ -252,13 +246,9 @@ export class ComponentInstance<T extends Component = Component> {
     this.show()
   }
   public show(): void {
-    if (this._visible) return
-    this._visible = true
     this.invokeVoidHook(Lifecycle.show)
   }
   public hide(): void {
-    if (!this._visible) return
-    this._visible = false
     this.invokeVoidHook(Lifecycle.hide)
   }
   public dispose(): void {
@@ -298,7 +288,7 @@ export class ComponentInstance<T extends Component = Component> {
     if (this.parent) {
       this.parent.reportError(error, errorInfo.source, instance)
     } else if (this.app?.config.errorHandler) {
-      this.app.config.errorHandler.call(this.publicInstance, error, errorInfo)
+      this.app.config.errorHandler(error, errorInfo)
     } else {
       logger.error(`Unhandled exception in ${this.view.name}: `, error, errorInfo)
     }
@@ -337,12 +327,11 @@ export class ComponentInstance<T extends Component = Component> {
    * @throws {Error} 当转换过程中发生错误时抛出
    */
   private normalizeView(child: unknown): View {
-    // 处理 null/undefined/boolean
-    if (child == null || typeof child === 'boolean') {
-      return new CommentView(`Component<${this.view.name}>:empty`)
+    let view = resolveChild(child)
+    if (view === null) {
+      view = new CommentView(`Component<${this.view.name}>:empty`)
     }
-    // 处理不支持的类型 - 记录警告并返回错误注释
-    return normalizeView(child)
+    return view
   }
   private useSuspenseCounter(): Ref<number> | undefined {
     let parent = this.parent
