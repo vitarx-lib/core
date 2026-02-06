@@ -5,9 +5,9 @@ import type {
   Component,
   ErrorHandler,
   HookCallback,
-  ValidateProps,
-  ViewSwitchHandler
+  ValidateProps
 } from '../types/index.js'
+import type { ViewSwitchHandler } from '../view/index.js'
 import { getInstance } from './context.js'
 
 /**
@@ -153,7 +153,7 @@ export const onError = (handler: ErrorHandler): void => {
 /**
  * 视图切换处理器
  *
- * 仅在组件根视图是 `SwitchView` 时生效。
+ * 仅在组件根视图是 `DynamicView` 时生效。
  *
  * 如果执行了自定义的切换逻辑，需返回切换后的视图对象阻止默认视图切换行为！
  *
@@ -163,32 +163,28 @@ export const onError = (handler: ErrorHandler): void => {
  * ```ts
  * // 基本用法
  * function MyComponent(props) {
- *   onViewSwitch((prevView, nextView) => {
- *     console.log('视图即将切换:', prevView, '->', nextView);
- *     // 自定义切换逻辑，例如添加动画
- *     return nextView; // 返回新视图以完成切换
+ *   onViewSwitch((tx) => {
+ *     console.log('视图即将切换:', tx.prev, '->', tx.next);
+ *     tx.commit() // 立即切换
+ *     return false; // 阻止默认事件
  *   });
  *
- *   return props.children;
+ *   return props.children; // 假设是 DynamicView
  * }
  *
- * // 高级用法：条件切换
+ * // 高级用法：延迟切换
  * function ConditionalComponent() {
- *   onViewSwitch((prevView, nextView) => {
- *     // 根据某些条件决定是否切换
- *     if (condition) {
- *       // 添加过渡效果
- *       setTimeout(() => {
- *         // 执行切换
- *       }, 300);
- *       return nextView;
- *     } else {
- *       // 阻止切换
- *       return prevView;
- *     }
+ *   onViewSwitch((tx) => {
+ *      // 自定义一些过渡动画，在动画完成后才提交切换
+ *      setTimeout(() => {
+ *          // 添加过渡效果
+ *          // ...
+ *         tx.commit() // 执行切换
+ *      }, 300);
+ *      return false;
  *   });
  *
- *   return build(()=>condition ? <div>View A</div> : <div>View B</div>)
+ *   return build(()=>condition ? <A/> : <B/>)
  * }
  * ```
  */
