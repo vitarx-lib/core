@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils'
+import { isFunction, logger, popProperty } from '@vitarx/utils'
 import type { AnyProps, ValidChildren, View, ViewTag } from '../../types/index.js'
 import { DynamicViewSource } from '../compiler/index.js'
 import { CommentView } from '../implements/atomic.js'
@@ -7,7 +7,18 @@ import { createView } from '../implements/factory.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface DynamicProps {
+  /**
+   * 动态视图
+   *
+   * 支持组件、元素标签
+   */
   is: ViewTag
+  /**
+   * 是否根据标签记住视图
+   *
+   * @default false
+   */
+  memo?: boolean
   children?: ValidChildren
   [key: string]: any
 }
@@ -31,12 +42,16 @@ export interface DynamicProps {
  *
  * @param props - 动态组件的属性对象
  * @param props.is - 动态组件要加载的组件类型
+ * * @param [props.memo] - 是否记住组件
  * @param [props.children] - 动态组件的子节点
- * @param [props.otherProps] - 动态组件的其它属性
+ * @param [props.otherProps] - 其他透传的属性
  * @returns {View} - 返回动态组件的视图对象
  */
 export const Dynamic = builder((props: DynamicProps, location): View => {
   const resolvedProps: AnyProps = {}
+  const memo = popProperty(props, 'memo') ?? false
+  const cache: WeakMap<Function, View> | null = memo ? new WeakMap() : null
+  // 动态 props 代理
   for (const key in props) {
     if (key === 'is') continue
     Object.defineProperty(resolvedProps, key, {
@@ -46,16 +61,22 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
       enumerable: true
     })
   }
-  const view = new DynamicViewSource(() => {
+
+  const viewSource = new DynamicViewSource(() => {
     const is = props['is']
     if (!is) {
       const message = `Dynamic "is" prop is mandatory and cannot be empty.`
       logger.warn(message, location)
       return new CommentView(message)
     }
+    if (cache && isFunction(is)) {
+      const cached = cache.get(is)
+      if (cached) return cached
+    }
     return createView(is, resolvedProps, location)
   })
-  return view.isStatic ? view.value : new DynamicView(view, location)
+
+  return viewSource.isStatic ? viewSource.value : new DynamicView(viewSource, location)
 })
 
 export type Dynamic = ViewBuilder<DynamicProps> & { __is_dynamic: true }
