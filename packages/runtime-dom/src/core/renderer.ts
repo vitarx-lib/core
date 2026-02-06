@@ -99,7 +99,7 @@ export class DOMRenderer implements ViewRenderer {
     if (!parent) {
       if (__DEV__) {
         logger.warn(
-          '[DOMRenderer.insert][WARN]: The anchor node does not have a parent node',
+          '[DOMRenderer.insert]: The anchor node does not have a parent node',
           child,
           anchor
         )
