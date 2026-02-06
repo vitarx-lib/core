@@ -40,8 +40,12 @@ describe('Freeze Component', () => {
 
   describe('Basic Functionality', () => {
     it('应该直接返回子视图', () => {
+      const w = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const e = vi.spyOn(console, 'error').mockImplementation(() => {})
       const result = Freeze({ children: childView })
       expect(result).toBe(childView)
+      w.mockRestore()
+      e.mockRestore()
     })
 
     it('应该在 Freeze 内部渲染子视图', () => {
@@ -65,11 +69,11 @@ describe('Freeze Component', () => {
       await nextTick()
       const bView = childView.current!
       expect(container.textContent).toContain('B')
-      expect(aView.isDeactivated).toBe(true)
+      expect(aView.active).toBe(false)
       showComponent.value = ComponentA
       await nextTick()
       expect(container.textContent).toContain('A')
-      expect(bView.isUnused).toBe(true)
+      expect(bView.isDetached).toBe(true)
     })
 
     it('应该支持 exclude 选项以跳过缓存特定组件', async () => {
@@ -83,7 +87,7 @@ describe('Freeze Component', () => {
       expect(container.textContent).toContain('A')
       showComponent.value = ComponentB
       await nextTick()
-      expect(aView.isUnused).toBe(true)
+      expect(aView.isDetached).toBe(true)
       expect(container.textContent).toContain('B')
     })
 
