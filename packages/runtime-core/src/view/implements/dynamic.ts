@@ -221,6 +221,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     this.#switching = true
     let cancelled = false
     let committed = false
+
     const tx: ViewSwitchTransaction = {
       get prev(): View {
         return prev
