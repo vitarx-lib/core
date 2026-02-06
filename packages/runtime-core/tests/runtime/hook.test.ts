@@ -1,3 +1,4 @@
+import { logger, LogLevel, toCapitalize } from '@vitarx/utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   defineExpose,
@@ -89,7 +90,10 @@ describe('runtime/hook', () => {
           hook(callback)
 
           expect(consoleError).toHaveBeenCalledWith(
-            '[ERROR] [HookRegister]：must be called in a Widget'
+            logger.formatMessage(
+              LogLevel.ERROR,
+              `on${toCapitalize(lifecycle)}(): must be called in a component`
+            )
           )
           consoleError.mockRestore()
         })
@@ -214,7 +218,7 @@ describe('runtime/hook', () => {
       defineExpose(exposed)
 
       expect(consoleError).toHaveBeenCalledWith(
-        '[ERROR] [defineExpose]：defineExpose must be called in a WidgetContext'
+        logger.formatMessage(LogLevel.ERROR, `defineExpose(): must be called in a component`)
       )
       consoleError.mockRestore()
     })
