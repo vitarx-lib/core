@@ -51,6 +51,7 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
     for (const child of this.children) child.dispose()
     if (this.hostNode) {
       getRenderer().remove(this.hostNode)
+      this.hostNode = null
     }
   }
   protected override doActivate(): void {
