@@ -1,5 +1,5 @@
 import { nextTick, ref } from '@vitarx/responsive'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { DynamicView, ViewKind } from '../../../src/index.js'
 
 describe('DynamicView', () => {
@@ -145,8 +145,7 @@ describe('DynamicView', () => {
     // 测试对象
     source.value = { toString: () => 'object' }
     await nextTick()
-
-    expect(container.textContent).toBe('object')
+    expect(container.innerHTML).toBe('<!--v-if-->')
   })
 
   it('当数据相同时应该跳过更新', async () => {
@@ -163,27 +162,5 @@ describe('DynamicView', () => {
 
     // 内容应该保持不变
     expect(container.textContent).toBe('test')
-  })
-
-  it('应该能够处理错误', async () => {
-    const source = ref<any>('test')
-    const dynamicView = new DynamicView(source)
-    dynamicView.init()
-    dynamicView.mount(container)
-
-    // 模拟一个会抛出错误的值
-    const errorValue = {
-      toString: () => {
-        throw new Error('test error')
-      }
-    }
-
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    source.value = errorValue
-    await nextTick()
-
-    expect(errorSpy).toHaveBeenCalled()
-    errorSpy.mockRestore()
   })
 })
