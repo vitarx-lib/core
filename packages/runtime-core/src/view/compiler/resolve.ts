@@ -136,20 +136,25 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
 }
 
 /**
- * 规范化视图函数
+ * 解析子元素并转换为适当的视图类型
  *
- * 将各种类型的输入转换为标准的 View 对象
- * @param child - 需要规范化的输入，可以是任意类型
- * @returns 返回一个标准的 View 对象
+ * @param child - 需要解析的子元素，可以是任意类型
+ * @returns 返回对应的视图对象，如果无法处理则返回 null
  */
-export function normalizeView(child: unknown): View {
+export function resolveChild(child: unknown): null | View {
   // 处理 View 对象 - 直接返回，避免不必要的包装
   if (isView(child)) return child
   // 处理 Ref 对象 - 包装为 DynamicView
   if (isRef(child)) return new DynamicView(child)
-  const text = String(child)
-  // 处理空字符串情况 - 返回注释视图
-  return text.length === 0 ? new CommentView('empty:string') : new TextView(text)
+  const type = typeof child
+  // 处理字符串和数字类型
+  if (type === 'string' || type === 'number') {
+    const text = String(child)
+    // 处理空字符串情况 - 返回注释视图
+    return text.length === 0 ? new CommentView('empty:string') : new TextView(text)
+  }
+  // 处理其他类型 - 返回 null
+  return null
 }
 
 /**
@@ -195,11 +200,8 @@ export function resolveChildren(children: ValidChildren): ResolvedChildren {
       pushArrayToStack(current)
       continue
     }
-
-    // 过滤无效值并规范化视图
-    if (current == null || typeof current === 'boolean') continue
-
-    childList.push(normalizeView(current))
+    const view = resolveChild(current)
+    if (view) childList.push(view)
   }
 
   return __DEV__ ? Object.freeze(childList) : childList
