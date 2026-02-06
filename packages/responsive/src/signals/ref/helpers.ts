@@ -11,7 +11,7 @@ import { ValueRef } from './value.js'
  *
  * @example
  * ```js
- * const count = ref() // Ref<undefined, true>
+ * const count = ref() // Ref<any>
  * console.log(count.value) // undefined
  * count.value = 1
  * console.log(count.value) // 1
@@ -29,7 +29,7 @@ export function ref(): ValueRef
  *
  * @example
  * ```js
- * const count = ref<number>() // ValueRef<number | undefined, true>
+ * const count = ref<number>() // ValueRef<number | undefined>
  * console.log(count.value) // undefined
  * count.value = 1
  * console.log(count.value) // 1
@@ -48,8 +48,8 @@ export function ref<Value>(): ValueRef<Value | undefined>
  *
  * @example
  * ```js
- * const count = ref(0) // ValueRef<number, true>
- * const user = ref({ name: 'Zhang' }) // Ref<{ name: string }, true>
+ * const count = ref(0) // ValueRef<number>
+ * const user = ref({ name: 'Zhang' }) // ValueRef<{ name: string }>
  * console.log(count.value) // 0
  * count.value = 1
  * console.log(count.value) // 1
@@ -61,12 +61,6 @@ export function ref<Value>(value: Value): ValueRef<Value>
  * 创建响应式引用，值变化时自动触发依赖更新
  *
  * @param value - 初始值
- * @example
- * ```js
- * const count = ref(0)
- * const user = ref({ name: 'Zhang' })
- * const shallow = ref({ a: { b: 1 } }, false) // 浅层响应式
- * ```
  */
 export function ref(value?: any): ValueRef {
   return new ValueRef(value)
@@ -81,7 +75,7 @@ export function ref(value?: any): ValueRef {
  *
  * @example
  * ```js
- * const count = shallowRef() // Ref<undefined, false>
+ * const count = shallowRef() // ShallowRef<any>
  * console.log(count.value) // undefined
  * count.value = 1
  * console.log(count.value) // 1
@@ -99,7 +93,7 @@ export function shallowRef(): ShallowRef
  *
  * @example
  * ```js
- * const count = shallowRef<number>() // Ref<number | undefined, false>
+ * const count = shallowRef<number>() // ShallowRef<number | undefined>
  * console.log(count.value) // undefined
  * count.value = 1
  * console.log(count.value) // 1
@@ -118,8 +112,8 @@ export function shallowRef<T>(): ShallowRef<T | undefined>
  *
  * @example
  * ```js
- * const count = shallowRef(0) // Ref<number, false>
- * const user = shallowRef({ name: 'Zhang' }) // Ref<{ name: string }, false>
+ * const count = shallowRef(0) // ShallowRef<number>
+ * const user = shallowRef({ name: 'Zhang' }) // ShallowRef<{ name: string }>
  * console.log(count.value) // 0
  * count.value = 1
  * console.log(count.value) // 1
@@ -134,8 +128,10 @@ export function shallowRef<T>(value: T): ShallowRef<T>
  * @example
  * ```js
  * const user = shallowRef({ profile: { age: 25 } })
+ * watch(user, () => console.log(user.value))
  * user.value.profile.age = 26 // 不会触发更新
- * user.trigger() // 强制触发更新
+ * triggerSignal(user) // 强制触发
+ * // { profile: { age: 26 } }
  * ```
  */
 export function shallowRef(value?: any): ShallowRef {
