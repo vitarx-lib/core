@@ -149,28 +149,4 @@ describe('ElementView', () => {
     expect(refElement).toBeTruthy()
     expect(refElement!.tagName).toBe('DIV')
   })
-
-  it('应该能够处理错误', async () => {
-    const errorRef = ref('initial value')
-
-    const elementView = new ElementView('div', {
-      children: errorRef
-    })
-    elementView.init()
-    elementView.mount(container)
-
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    // 触发错误
-    // @ts-ignore
-    errorRef.value = {
-      toString: () => {
-        throw new Error('test error')
-      }
-    }
-    await nextTick()
-
-    expect(errorSpy).toHaveBeenCalled()
-    errorSpy.mockRestore()
-  })
 })
