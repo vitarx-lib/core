@@ -169,8 +169,9 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       this.effect = effect
       handler = this.#updateView.bind(this)
     }
-
-    this.cachedView!.init(this.ctx)
+    if (this.cachedView?.isDetached) {
+      this.cachedView!.init(this.ctx)
+    }
   }
   /**
    * 释放资源
