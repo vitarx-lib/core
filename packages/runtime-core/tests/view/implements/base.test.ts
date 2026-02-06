@@ -69,66 +69,44 @@ describe('BaseView', () => {
   })
 
   describe('状态管理', () => {
-    it('初始状态应该是 UNUSED', () => {
-      expect(view.state).toBe(ViewState.UNUSED)
-      expect(view.isUnused).toBe(true)
-      expect(view.isInitialized).toBe(false)
-      expect(view.isActivated).toBe(false)
-      expect(view.isDeactivated).toBe(false)
+    it('初始状态应该是 DETACHED', () => {
+      expect(view.state).toBe(ViewState.DETACHED)
     })
 
     it('初始化后状态应该是 INITIALIZED', () => {
       view.init()
 
       expect(view.state).toBe(ViewState.INITIALIZED)
-      expect(view.isUnused).toBe(false)
-      expect(view.isInitialized).toBe(true)
-      expect(view.isActivated).toBe(false)
-      expect(view.isDeactivated).toBe(false)
+      expect(view.active).toBe(true)
     })
 
-    it('挂载后状态应该是 ACTIVATED', () => {
+    it('挂载后状态应该是 MOUNTED', () => {
       view.mount(container)
 
-      expect(view.state).toBe(ViewState.ACTIVATED)
-      expect(view.isUnused).toBe(false)
-      expect(view.isInitialized).toBe(false)
-      expect(view.isActivated).toBe(true)
-      expect(view.isDeactivated).toBe(false)
+      expect(view.state).toBe(ViewState.MOUNTED)
     })
 
-    it('销毁后状态应该是 UNUSED', () => {
+    it('销毁后状态应该是 DETACHED', () => {
       view.mount(container)
       view.dispose()
 
-      expect(view.state).toBe(ViewState.UNUSED)
-      expect(view.isUnused).toBe(true)
-      expect(view.isInitialized).toBe(false)
-      expect(view.isActivated).toBe(false)
-      expect(view.isDeactivated).toBe(false)
+      expect(view.state).toBe(ViewState.DETACHED)
+      expect(view.active).toBe(false)
     })
 
     it('停用时状态应该是 DEACTIVATED', () => {
       view.mount(container)
       view.deactivate()
-
-      expect(view.state).toBe(ViewState.DEACTIVATED)
-      expect(view.isUnused).toBe(false)
-      expect(view.isInitialized).toBe(false)
-      expect(view.isActivated).toBe(false)
-      expect(view.isDeactivated).toBe(true)
+      expect(view.state).toBe(ViewState.MOUNTED)
+      expect(view.active).toBe(false)
     })
 
     it('激活后状态应该是 ACTIVATED', () => {
       view.mount(container)
       view.deactivate()
       view.activate()
-
-      expect(view.state).toBe(ViewState.ACTIVATED)
-      expect(view.isUnused).toBe(false)
-      expect(view.isInitialized).toBe(false)
-      expect(view.isActivated).toBe(true)
-      expect(view.isDeactivated).toBe(false)
+      expect(view.state).toBe(ViewState.MOUNTED)
+      expect(view.active).toBe(true)
     })
   })
 
@@ -144,7 +122,7 @@ describe('BaseView', () => {
       expect(() => {
         view.mount(container)
       }).not.toThrow()
-      expect(view.state).toBe(ViewState.ACTIVATED)
+      expect(view.state).toBe(ViewState.MOUNTED)
     })
 
     it('应该能够销毁', () => {
@@ -152,7 +130,7 @@ describe('BaseView', () => {
       expect(() => {
         view.dispose()
       }).not.toThrow()
-      expect(view.state).toBe(ViewState.UNUSED)
+      expect(view.state).toBe(ViewState.DETACHED)
     })
 
     it('应该能够停用', () => {
@@ -160,7 +138,7 @@ describe('BaseView', () => {
       expect(() => {
         view.deactivate()
       }).not.toThrow()
-      expect(view.state).toBe(ViewState.DEACTIVATED)
+      expect(view.active).toBe(false)
     })
 
     it('应该能够激活', () => {
@@ -169,7 +147,7 @@ describe('BaseView', () => {
       expect(() => {
         view.activate()
       }).not.toThrow()
-      expect(view.state).toBe(ViewState.ACTIVATED)
+      expect(view.state).toBe(ViewState.MOUNTED)
     })
   })
 
