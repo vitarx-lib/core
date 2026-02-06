@@ -1,4 +1,3 @@
-import { flushSync } from '@vitarx/responsive'
 import { sleep } from '@vitarx/utils'
 import { afterEach, beforeEach, describe } from 'vitest'
 import { useSuspense } from '../../../runtime/index.js'
@@ -71,8 +70,8 @@ describe('Suspense Component', () => {
         })
       })
       view.mount(container)
-
       expect(container.textContent).toContain('Loading...')
+      view.dispose()
     })
 
     it('应该在异步完成后显示子节点', async () => {
@@ -85,7 +84,6 @@ describe('Suspense Component', () => {
       view.mount(container)
 
       await sleep(20)
-      flushSync()
 
       expect(container.textContent).toContain('Loaded Content')
     })
@@ -128,6 +126,7 @@ describe('Suspense Component', () => {
         })
       })
       view.mount(container)
+      view.dispose()
     })
 
     it('应该累加多个异步子节点的计数', async () => {
@@ -149,9 +148,9 @@ describe('Suspense Component', () => {
         children: createView(ParentWidget, {})
       })
       view.mount(container)
-
       // 多个 Lazy 组件会累加 counter
       expect(container.textContent).toContain('Loading...')
+      view.dispose()
     })
 
     it('应该在计数归零时停止 Suspense', async () => {
@@ -209,7 +208,7 @@ describe('Suspense Component', () => {
         children: child
       })
       view.init()
-      expect(fallback.isUnused).toBe(true)
+      expect(fallback.isDetached).toBe(true)
       expect(child.isInitialized).toBe(true)
     })
   })
