@@ -1,4 +1,4 @@
-import { getStackTrace, isFunction, logger } from '@vitarx/utils'
+import { getStackTrace, isFunction, logger, toCapitalize } from '@vitarx/utils'
 import { Lifecycle } from '../constants/index.js'
 import type {
   AnyProps,
@@ -17,12 +17,12 @@ function createHookRegistrar<T extends Lifecycle>(hook: T): (cb: HookCallback<T>
   return (cb: HookCallback<T>): void => {
     if (__DEV__ && !isFunction(cb)) {
       throw new TypeError(
-        `[HookRegistrar]：${hook} callback must be a callback function, given ${typeof cb}`
+        `on${toCapitalize(hook)}(): callback must be a callback function, given ${typeof cb}`
       )
     }
     const ctx = getInstance()
     if (!ctx) {
-      logger.error('[HookRegister]：must be called in a Widget')
+      logger.error(`on${toCapitalize(hook)}(): must be called in a Component`)
       return void 0
     }
     if (ctx.hooks[hook]) {
