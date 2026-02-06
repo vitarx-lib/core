@@ -100,8 +100,8 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     if (!this.hostNode) {
       throw new Error(
         `[View.node]: Host Node access failed. Current view state is '${this.#state}', ` +
-          `but the host node has not been created or has been destroyed. ` +
-          `Ensure the view is properly initialized and mounted before accessing the node.`
+          `\nbut the host node has not been created or has been destroyed. ` +
+          `\nEnsure the view is properly initialized and mounted before accessing the node.`
       )
     }
     return this.hostNode
