@@ -241,17 +241,17 @@ export function updateListChildren<T>(
       else listView.append(view)
       // 如果锚点已激活，则在 DOM 中插入对应的节点
 
-      if (anchor?.isActivated) renderer.insert(view.node, anchor.node)
+      if (anchor?.isMounted) renderer.insert(view.node, anchor.node)
       // 如果有锚点，则插入到锚点前，否则追加到末尾
     } else if (type === 'mount') {
       if (anchor) listView.insert(view, anchor)
       else listView.append(view)
       // 如果视图未被标记为未使用，则初始化视图
 
-      if (!listView.isUnused) {
+      if (!listView.isDetached) {
         // 如果列表已激活，则挂载视图到 DOM
         view.init(listView.ctx)
-        if (listView.isActivated) {
+        if (listView.isMounted) {
           if (anchor) view.mount(anchor.node, 'insert')
           else view.mount(listView.node, 'append')
         }
