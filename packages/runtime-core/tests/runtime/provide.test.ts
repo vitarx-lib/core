@@ -1,3 +1,4 @@
+import { logger, LogLevel } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
 import { inject, provide, runComponent } from '../../src/index.js'
 
@@ -67,9 +68,8 @@ describe('runtime/provide', () => {
       const value = 'test value'
 
       provide(name, value)
-
       expect(consoleError).toHaveBeenCalledWith(
-        '[ERROR] [provide]：provide must be called in a widget context'
+        logger.formatMessage(LogLevel.ERROR, `provide(): must be called in a component context`)
       )
       consoleError.mockRestore()
     })
