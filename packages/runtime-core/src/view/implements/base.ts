@@ -154,7 +154,6 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     this.doDispose?.()
     delete this.ctx
     this.#active = false
-    this.hostNode = null
     this.#setState(ViewState.DETACHED)
     return this
   }
