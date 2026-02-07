@@ -1,5 +1,6 @@
 import { nextTick, ref } from '@vitarx/responsive'
-import { build, createView, type HostElementTag } from '@vitarx/runtime-core'
+import { build, createView, type HostElementTag, withDirectives } from '@vitarx/runtime-core'
+import { sleep, type VoidCallback } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Transition } from '../src/index.js'
 
@@ -64,6 +65,34 @@ describe('Transition 组件', () => {
       expect(container.querySelector('#nested-child')).toBeTruthy()
       expect(container.textContent).toContain('Nested Content')
 
+      transitionView.dispose()
+    })
+    it('应该支持 v-show 指令', async () => {
+      const show = ref(true)
+      const showView = withDirectives(
+        createView('div', {
+          children: 'Nested Content'
+        }),
+        [
+          [
+            'v-show',
+            {
+              get value() {
+                return show.value
+              }
+            }
+          ]
+        ]
+      )
+      const onLeave = vi.fn((_, done: VoidCallback) => done())
+      const transitionView = createView(Transition, {
+        onLeave,
+        children: showView
+      })
+      transitionView.mount(container)
+      show.value = false
+      await sleep(500)
+      expect(onLeave).toHaveBeenCalled()
       transitionView.dispose()
     })
   })
