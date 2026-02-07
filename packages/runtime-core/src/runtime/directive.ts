@@ -41,7 +41,7 @@ export function defineDirective(name: string, directive: Directive): void {
  * 根据指令名称查找并返回对应的指令对象。
  * 查找顺序遵循优先级：组件局部指令 > 应用级指令 > 全局指令。
  *
- * @param name - 要查找的指令名称
+ * @param name - 要查找的指令名称，`v-` 前缀可省略
  * @returns { Directive | undefined } 找到的指令对象，如果未找到则返回undefined
  */
 export function resolveDirective(name: string): Directive | undefined {
