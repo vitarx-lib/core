@@ -90,16 +90,16 @@ export class DOMRenderer implements ViewRenderer {
     }
   }
   insert(child: HostNode, anchor: HostNode): void {
-    // 如果锚点元素是Fragment，则插入到第一个子元素
+    // 如果锚点元素是Fragment，则插入到结束锚点之后
     if (this.isFragment(anchor)) {
-      anchor = anchor.$startAnchor
+      anchor = anchor.$endAnchor
     }
     // 获取锚点元素的父级元素
     const parent = anchor.parentNode
     if (!parent) {
       if (__DEV__) {
         logger.warn(
-          '[DOMRenderer.insert]: The anchor node does not have a parent node',
+          'DOMRenderer.insert(): The anchor node does not have a parent node',
           child,
           anchor
         )
@@ -107,7 +107,12 @@ export class DOMRenderer implements ViewRenderer {
       return
     }
     child = this.recoveryFragmentChildren(child)
-    parent.insertBefore(child, anchor)
+    const nextSibling = anchor.nextSibling
+    if (nextSibling) {
+      parent.insertBefore(child, nextSibling)
+    } else {
+      parent.appendChild(child)
+    }
   }
   isElement(node: HostNode): node is HostElement {
     return node.nodeType === Node.ELEMENT_NODE
