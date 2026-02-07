@@ -7,5 +7,6 @@ export * from './view/index.js'
 export * from './runtime/index.js'
 export * from './shared/index.js'
 export * from './constants/index.js'
+export * from './components/index.js'
 
 defineDirective('show', show)
