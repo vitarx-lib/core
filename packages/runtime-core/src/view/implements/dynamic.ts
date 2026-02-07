@@ -25,21 +25,6 @@ interface CommitOptions {
    */
   next?: View
   /**
-   * 挂载锚点
-   *
-   * @default `prev.node`
-   */
-  anchor?: HostNode
-  /**
-   * 挂载类型
-   *
-   * 在 `full` 模式且需对齐到挂载状态时有效，
-   * 默认会插入的 `anchor` 之前
-   *
-   * @default `insert`
-   */
-  mountType?: MountType
-  /**
    * 提交模式
    *
    * - `full`：完全替换
@@ -263,7 +248,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
    */
   #commitSwitch(tx: ViewSwitchTransaction, options?: CommitOptions): void {
     if (tx.cancelled || tx.committed) return
-    const { next: overrideNext, anchor, mountType = 'insert', mode = 'full' } = options ?? {}
+    const { next: overrideNext, mode = 'full' } = options ?? {}
     const prev = tx.prev
     const next = overrideNext ?? tx.next
     const type = next === tx.next ? tx.type : 'view'
@@ -274,7 +259,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
         if (!next.isInitialized) next.init(prev.ctx)
         // 若 prev 已挂载，则挂载新 view
         if (this.isMounted) {
-          next.mount(anchor || prev.node, mountType)
+          next.mount(prev.node, 'insert')
         }
       }
       // 同步 active 状态（但不等同 runtime）
