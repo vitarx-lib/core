@@ -125,13 +125,24 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     this.instance.init()
     this.instance.subView.init(this.instance.subViewContext)
   }
+
+  /**
+   * @inheritDoc
+   */
+  override mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
+    super.mount(target, type)
+    // 子 -> 父
+    this.instance!.mounted()
+    return this
+  }
+
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType) {
     // 父 -> 子
     this.instance!.beforeMount()
     if (this.ref) applyRef(this.ref, this.instance!.publicInstance)
     this.subView!.mount(containerOrAnchor, type)
     // 子 -> 父
-    this.instance!.mounted()
+    this.instance!.show()
   }
   protected override doDispose(): void {
     // 父 -> 子
@@ -243,7 +254,6 @@ export class ComponentInstance<T extends Component = Component> {
   public mounted(): void {
     this.invokeVoidHook(Lifecycle.mounted)
     delete this.hooks[Lifecycle.mounted]
-    this.show()
   }
   public show(): void {
     this.invokeVoidHook(Lifecycle.show)
