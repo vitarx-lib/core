@@ -34,7 +34,6 @@
     "@vitarx/responsive": "workspace:^",
     "@vitarx/utils": "workspace:^",
     "@vitarx/runtime-core": "workspace:^",
-    "@vitarx/runtime-dom": "workspace:^",
-    "@vitarx/runtime-drivers": "workspace:^"
+    "@vitarx/runtime-dom": "workspace:^"
   }
 }
