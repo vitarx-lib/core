@@ -1,4 +1,4 @@
-import { getInstance, onShow, onViewSwitch } from '@vitarx/runtime-core'
+import { getInstance, onMounted, onViewSwitch } from '@vitarx/runtime-core'
 import type { TransitionProps } from './Transition.types.js'
 import { cancelTransition, createAnchor, isElement, runTransition } from './Transition.utils.js'
 
@@ -11,13 +11,8 @@ import { cancelTransition, createAnchor, isElement, runTransition } from './Tran
 function Transition(props: TransitionProps) {
   const instance = getInstance()!
   if (props.appear) {
-    let firstShow = true
-    onShow(() => {
-      if (firstShow) {
-        runTransition(instance.view.node, 'appear', props)
-        return (firstShow = false)
-      }
-      runTransition(instance.view.node, 'enter', props)
+    onMounted(() => {
+      runTransition(instance.view.node, 'appear', props)
     })
   }
   onViewSwitch(tx => {
