@@ -120,7 +120,7 @@ function planMinimalMove(newChildren: View[], sourceIndex: number[]): MoveViewPl
  * @param location 可选的代码位置信息，用于错误报告
  * @returns {ListDiffResult} 返回一个包含差异比较结果的对象
  */
-export function listDiff<T>(
+export function _listDiff<T>(
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
   build: ViewFactory<T>,
@@ -176,7 +176,7 @@ export function listDiff<T>(
  * @param [location] - 可选参数，代码位置信息，用于错误报告
  * @returns {KeyedViewMap} 更新后的键值映射表
  */
-export function initListChildren<T>(
+export function _initListChildren<T>(
   listView: ListView,
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
@@ -213,7 +213,7 @@ export function initListChildren<T>(
  * @param [location] - 可选的代码位置信息，用于调试
  * @returns {KeyedViewMap} 返回更新后的键值映射表
  */
-export function updateListChildren<T>(
+export function _updateListChildren<T>(
   listView: ListView,
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
@@ -222,7 +222,7 @@ export function updateListChildren<T>(
   location?: CodeLocation
 ): KeyedViewMap {
   // 构建列表差异计划，包括需要移动、挂载和卸载的视图
-  const { plans, keyedMap, removedChildren } = listDiff(oldKeyedMap, each, build, getKey, location)
+  const { plans, keyedMap, removedChildren } = _listDiff(oldKeyedMap, each, build, getKey, location)
   const renderer = getRenderer()
   // 执行所有计划中的操作
   for (const plan of plans) {

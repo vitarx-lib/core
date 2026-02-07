@@ -3,10 +3,10 @@ import { viewEffect } from '../../../runtime/effect.js'
 import { defineValidate, getInstance, onDispose, onHide, onShow } from '../../../runtime/index.js'
 import { ListView } from '../../../view/index.js'
 import {
-  initListChildren,
+  _initListChildren,
+  _updateListChildren,
   type KeyedViewMap,
   type KeyExtractor,
-  updateListChildren,
   type ViewFactory
 } from './For.utils.js'
 
@@ -87,7 +87,7 @@ function For<T>(props: ForProps<T>): ListView {
   const listView = new ListView()
 
   // 初始化子项渲染器
-  let runner = initListChildren
+  let runner = _initListChildren
   // 创建视图效果，用于处理列表更新
   const effectHandle = viewEffect(() => {
     // 运行子项更新逻辑，更新键值映射和列表视图
@@ -97,7 +97,7 @@ function For<T>(props: ForProps<T>): ListView {
   // 如果存在效果句柄，则处理组件的生命周期
   if (effectHandle) {
     // 更新子项渲染器为更新模式
-    runner = updateListChildren
+    runner = _updateListChildren
     // 组件卸载时，释放效果句柄
     onDispose(() => effectHandle.dispose())
     // 组件隐藏时，暂停效果句柄
