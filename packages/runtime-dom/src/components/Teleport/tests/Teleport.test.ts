@@ -1,5 +1,6 @@
 import type { HostElementTag } from '@vitarx/runtime-core'
 import { createView, setRenderer } from '@vitarx/runtime-core'
+import { logger, LogLevel } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DOMRenderer } from '../../../core/index.js'
 import { Teleport } from '../src/index.js'
@@ -101,7 +102,10 @@ describe('Teleport 组件', () => {
 
       // 检查警告是否被调用，只检查第一个参数
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[WARN] Teleport target element not found: selector '#non-existent-target' does not match any element in the DOM"
+        logger.formatMessage(
+          LogLevel.WARN,
+          "Teleport target element not found: selector '#non-existent-target' does not match any element in the DOM"
+        )
       )
 
       consoleSpy.mockRestore()
@@ -322,7 +326,10 @@ describe('Teleport 组件', () => {
       teleportView.mount(container)
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[WARN] Teleport target element not found: selector '#invalid-selector-that-does-not-exist' does not match any element in the DOM"
+        logger.formatMessage(
+          LogLevel.WARN,
+          "Teleport target element not found: selector '#invalid-selector-that-does-not-exist' does not match any element in the DOM"
+        )
       )
       // 内容不应该被传送，因为目标不存在
       expect(targetContainer.textContent).toBe('')

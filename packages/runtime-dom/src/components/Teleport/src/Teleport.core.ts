@@ -98,7 +98,7 @@ function Teleport({ children, to, defer, disabled }: TeleportProps): View {
   if (teleported) {
     // 兼容停用/恢复
     onShow(() => {
-      if (children.isDeactivated) children.activate()
+      if (!children.active) children.activate()
     })
     onHide(() => {
       children.deactivate()
