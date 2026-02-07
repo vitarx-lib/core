@@ -96,13 +96,14 @@ import { cancelTransition, createAnchor, isElement, runTransition } from './Tran
  * - `v-leave-from`：定义离开过渡的开始状态
  * - `v-leave-active`：定义离开过渡生效时的状态
  * - `v-leave-to`：定义离开过渡的结束状态
+ * - `v-appear-from`: 定义初次渲染时的进入过渡开始状态
+ * - `v-appear-active`: 定义初次渲染时的进入过渡生效时的状态
+ * - `v-appear-to`: 定义初次渲染时的进入过渡结束状态
  *
  * 其中 `v` 是 Transition 组件的 name 属性值，默认为 "v"。
  *
  * ## 注意事项
- *
  * - Transition 组件只能包裹单个子元素或组件。如果需要过渡多个元素，请使用 TransitionGroup
- * - 当子元素是动态渲染时，确保使用条件渲染（如 `{ show && <div v-show={show} v-if={show}/> }` 示例中是三种不同的条件渲染方式）或 key 属性来触发过渡
  * - 当使用 CSS 过渡时，确保在 CSS 中正确定义了过渡或动画属性
  */
 function Transition(props: TransitionProps) {
