@@ -22,9 +22,9 @@ function Transition(props: TransitionProps) {
   }
   onViewSwitch(tx => {
     const { prev, next } = tx
-    // 非活跃状态直接返回，不进行任何处理
+    // 非挂载状态直接返回，不进行任何处理
     if (!prev.isMounted) return void 0
-    if (!prev.isRuntime) next.init(prev.ctx)
+    if (!next.isRuntime) next.init(prev.ctx)
     // 根据不同的过渡模式执行动画
     switch (props.mode) {
       case 'out-in':
