@@ -300,7 +300,7 @@ export class ComponentInstance<T extends Component = Component> {
     } else if (this.app?.config.errorHandler) {
       this.app.config.errorHandler(error, errorInfo)
     } else {
-      logger.error(`Unhandled exception in ${this.view.name}: `, error, errorInfo)
+      logger.error(`Unhandled exception in ${this.view.name} - `, error, errorInfo)
     }
   }
   private invokeVoidHook(stage: Exclude<Lifecycle, Lifecycle.init>): void {
