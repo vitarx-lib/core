@@ -238,7 +238,7 @@ export class ComponentInstance<T extends Component = Component> {
   }
   public beforeMount(): void {
     this.invokeVoidHook(Lifecycle.beforeMount)
-    delete this.hooks[Lifecycle.mounted]
+    delete this.hooks[Lifecycle.beforeMount]
   }
   public mounted(): void {
     this.invokeVoidHook(Lifecycle.mounted)
