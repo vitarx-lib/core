@@ -4,7 +4,7 @@ import type { CodeLocation, View } from '../../../types/index.js'
 import { ListView } from '../../../view/index.js'
 
 export type KeyedViewMap = Map<unknown, { view: View; index: number }>
-export type ViewFactory<T> = (item: T, index: number) => View
+export type ItemViewFactory<T> = (item: T, index: number) => View
 export type KeyExtractor<T> = (item: T, index: number) => any
 export interface MoveViewPlan {
   view: View
@@ -123,7 +123,7 @@ function planMinimalMove(newChildren: View[], sourceIndex: number[]): MoveViewPl
 export function _listDiff<T>(
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
-  build: ViewFactory<T>,
+  build: ItemViewFactory<T>,
   getKey: KeyExtractor<T>,
   location?: CodeLocation
 ): ListDiffResult {
@@ -180,7 +180,7 @@ export function _initListChildren<T>(
   listView: ListView,
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
-  build: ViewFactory<T>,
+  build: ItemViewFactory<T>,
   getKey: KeyExtractor<T>,
   location?: CodeLocation
 ): KeyedViewMap {
@@ -217,7 +217,7 @@ export function _updateListChildren<T>(
   listView: ListView,
   oldKeyedMap: KeyedViewMap,
   each: readonly T[],
-  build: ViewFactory<T>,
+  build: ItemViewFactory<T>,
   getKey: KeyExtractor<T>,
   location?: CodeLocation
 ): KeyedViewMap {

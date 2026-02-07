@@ -5,9 +5,9 @@ import { ListView } from '../../../view/index.js'
 import {
   _initListChildren,
   _updateListChildren,
+  type ItemViewFactory,
   type KeyedViewMap,
-  type KeyExtractor,
-  type ViewFactory
+  type KeyExtractor
 } from './For.utils.js'
 
 /**
@@ -23,7 +23,7 @@ interface ForProps<T> {
    *
    * 用于创建新视图
    */
-  children: ViewFactory<T>
+  children: ItemViewFactory<T>
   /**
    * 键提取函数
    *
