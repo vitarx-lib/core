@@ -1,5 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CommentView, ComponentInstance, ComponentView, ViewKind } from '../../../src/index.js'
+import {
+  CommentView,
+  ComponentInstance,
+  ComponentView,
+  createComponentView,
+  onBeforeMount,
+  onDispose,
+  onHide,
+  onInit,
+  onMounted,
+  onShow,
+  ViewKind
+} from '../../../src/index.js'
 
 describe('ComponentView', () => {
   // 创建一个简单的组件用于测试
@@ -166,20 +178,31 @@ describe('ComponentInstance', () => {
   })
 
   it('应该能够执行生命周期钩子', () => {
-    componentView.init()
-    const instance = componentView.instance
-
-    expect(() => {
-      instance?.beforeMount()
-    }).not.toThrow()
-
-    expect(() => {
-      instance?.mounted()
-    }).not.toThrow()
-
-    expect(() => {
-      instance?.dispose()
-    }).not.toThrow()
+    const mockInit = vi.fn()
+    const mockShow = vi.fn()
+    const mockHide = vi.fn()
+    const mockBeforeMount = vi.fn()
+    const mockDispose = vi.fn()
+    const mockMounted = vi.fn()
+    const testLifecycle = () => {
+      onInit(mockInit)
+      onBeforeMount(mockBeforeMount)
+      onMounted(mockMounted)
+      onShow(mockShow)
+      onHide(mockHide)
+      onDispose(mockDispose)
+      return null
+    }
+    const view = createComponentView(testLifecycle)
+    view.init()
+    expect(mockInit).toHaveBeenCalled()
+    view.mount(container)
+    expect(mockBeforeMount).toHaveBeenCalled()
+    expect(mockMounted).toHaveBeenCalled()
+    expect(mockShow).toHaveBeenCalled()
+    view.dispose()
+    expect(mockHide).toHaveBeenCalled()
+    expect(mockDispose).toHaveBeenCalled()
   })
 
   it('应该能够显示和隐藏', () => {
