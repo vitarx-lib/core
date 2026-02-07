@@ -224,7 +224,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
         return committed
       },
       commit: (options?: CommitOptions) => {
-        if (committed) return
+        if (cancelled || committed) return
         this.#commitSwitch(tx, options)
         committed = true
         this.#done()
