@@ -90,13 +90,13 @@ describe('DOMRenderer', () => {
   })
 
   describe('insert', () => {
-    it('应该在锚点前插入节点', () => {
+    it('应该在锚点后插入节点', () => {
       const anchor = renderer.createElement('div', false)
       const child = renderer.createElement('span', false)
       container.appendChild(anchor)
       renderer.insert(child, anchor)
-      expect(container.firstChild).toBe(child)
-      expect(container.lastChild).toBe(anchor)
+      expect(container.lastChild).toBe(child)
+      expect(container.firstChild).toBe(anchor)
     })
 
     it('应该处理Fragment作为锚点的情况', () => {
@@ -105,7 +105,7 @@ describe('DOMRenderer', () => {
       container.appendChild(fragment.$startAnchor)
       container.appendChild(fragment.$endAnchor)
       renderer.insert(child, fragment)
-      expect(container.firstChild).toBe(child)
+      expect(container.lastChild).toBe(child)
     })
   })
 
