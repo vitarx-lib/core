@@ -105,6 +105,8 @@ export function runTransition(
 ): void {
   // 如果不是元素节点，不执行动画，但离开时需要删除元素
   if (!isElement(el)) return doneCallback?.()
+  // 取消已有动画
+  cancelTransition(el)
   // 将类型字符串首字母大写，用于拼接钩子函数名
   const capitalizeType = toCapitalize(type)
   // 获取钩子
@@ -117,8 +119,6 @@ export function runTransition(
   const onStart = typeof hookRaw === 'function' ? hookRaw : undefined
   const afterHook = typeof afterHookRaw === 'function' ? afterHookRaw : undefined
   const cancelledHook = typeof cancelledHookRaw === 'function' ? cancelledHookRaw : undefined
-  // 取消已有动画
-  cancelTransition(el)
   // 执行动画开始前的钩子
   beforeHook?.(el)
   let ended = false
