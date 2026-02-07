@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@vitarx/runtime-core": "workspace:^",
+    "@vitarx/responsive": "workspace:^",
     "@vitarx/utils": "workspace:^",
     "csstype": "^3.1.3"
   }
