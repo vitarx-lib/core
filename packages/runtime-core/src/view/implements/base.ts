@@ -5,6 +5,7 @@ import { IS_VIEW } from '../../constants/symbol.js'
 import { ViewKind } from '../../constants/viewKind.js'
 import type {
   CodeLocation,
+  DirectiveMap,
   HostContainer,
   HostNode,
   MountType,
@@ -29,6 +30,8 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   #state: ViewState | Ref<ViewState>
   /** @internal 是否冻结 */
   #active: boolean | ShallowRef<boolean>
+  /** @internal 指令映射表 */
+  public directives?: DirectiveMap
 
   constructor(location?: CodeLocation) {
     this.location = location

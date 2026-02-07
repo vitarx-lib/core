@@ -10,7 +10,6 @@ import type {
   ComponentProps,
   ComponentPublicInstance,
   Directive,
-  DirectiveMap,
   ErrorHandler,
   ErrorSource,
   HookStore,
@@ -67,8 +66,6 @@ export class ComponentView<T extends Component = Component> extends BaseView<
   public readonly component: T
   /** @internal 传递给组件的参数 */
   public readonly props: AnyProps
-  /** @internal 指令映射表 */
-  public directives?: DirectiveMap
   /** @internal 组件运行时实例 */
   public instance: ComponentInstance<T> | null = null
   constructor(component: T, props: ComponentProps<T> | null = null, location?: CodeLocation) {

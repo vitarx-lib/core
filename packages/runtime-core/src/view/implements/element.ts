@@ -5,7 +5,6 @@ import { applyDirective, getRenderer } from '../../runtime/index.js'
 import type {
   AnyProps,
   CodeLocation,
-  DirectiveMap,
   ElementProps,
   HostContainer,
   HostElement,
@@ -58,8 +57,6 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
   public readonly props: ElementProps<T> | null
   public readonly children: ResolvedChildren
   public readonly ref: InstanceRef | undefined
-  /** @internal 指令映射表 */
-  public directives?: DirectiveMap
   private effects: ViewEffect[] | null = null
 
   constructor(tag: T, props: IntrinsicElements[T] | null = null, location?: CodeLocation) {

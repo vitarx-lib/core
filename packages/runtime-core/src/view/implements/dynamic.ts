@@ -4,14 +4,7 @@ import { ViewKind } from '../../constants/index.js'
 import { viewEffect, type ViewEffect } from '../../runtime/effect.js'
 import { withDirectives } from '../../runtime/index.js'
 import { isView } from '../../shared/index.js'
-import type {
-  CodeLocation,
-  DirectiveMap,
-  HostContainer,
-  HostNode,
-  MountType,
-  View
-} from '../../types/index.js'
+import type { CodeLocation, HostContainer, HostNode, MountType, View } from '../../types/index.js'
 import { CommentView, TextView } from './atomic.js'
 import { BaseView } from './base.js'
 
@@ -101,7 +94,6 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
   public readonly kind = ViewKind.DYNAMIC
 
   public readonly source: Ref<T>
-  public directives?: DirectiveMap
 
   private cachedView: View | null = null
   private cachedType: SourceValueType | null = null
