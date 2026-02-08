@@ -74,7 +74,7 @@ export function ensureMounted(
 ): void {
   // 若目标 view 与当前 view 生命周期不一致，需初始化
   if (view.state !== listView.state) {
-    if (!view.isInitialized) view.init(listView.ctx)
+    if (view.isDetached) view.init(listView.ctx)
     if (listView.isMounted) {
       if (anchor) {
         view.mount(anchor.node, 'insert')
