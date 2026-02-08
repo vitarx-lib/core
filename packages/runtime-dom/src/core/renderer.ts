@@ -107,12 +107,7 @@ export class DOMRenderer implements ViewRenderer {
       return
     }
     child = this.recoveryFragmentChildren(child)
-    const nextSibling = anchor.nextSibling
-    if (nextSibling) {
-      parent.insertBefore(child, nextSibling)
-    } else {
-      parent.appendChild(child)
-    }
+    parent.insertBefore(child, anchor)
   }
   isElement(node: HostNode): node is HostElement {
     return node.nodeType === Node.ELEMENT_NODE
