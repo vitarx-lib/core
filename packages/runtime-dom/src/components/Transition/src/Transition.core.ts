@@ -1,8 +1,53 @@
 import { watch } from '@vitarx/responsive'
-import { getInstance, onMounted, onViewSwitch, resolveDirective } from '@vitarx/runtime-core'
-import type { TransitionProps } from './Transition.types.js'
+import {
+  getInstance,
+  onMounted,
+  onViewSwitch,
+  resolveDirective,
+  type View
+} from '@vitarx/runtime-core'
+import type { BaseTransitionProps } from './Transition.types.js'
 import { cancelTransition, createAnchor, isElement, runTransition } from './Transition.utils.js'
 
+/**
+ * Transition 组件属性接口
+ *
+ * 定义了 Transition 组件的所有可配置属性，包括钩子函数、CSS 类名、
+ * 过渡模式、持续时间等设置。
+ */
+interface TransitionProps extends BaseTransitionProps {
+  /**
+   * 子节点
+   *
+   * 可以是单个，也可以是多个
+   * 仅元素类型/组件类型节点支持过渡。
+   *
+   * @example
+   * ```tsx
+   * <Transition>
+   *   {show && <div>内容</div>}
+   * </Transition>
+   *
+   * <Transition>
+   *   {show ? <A/> : <B/>}
+   * </Transition>
+   *
+   * <Transition>
+   *   <div v-if="show">内容</div>
+   * </Transition>
+   * ```
+   */
+  children: View
+  /**
+   * 过渡模式：
+   * - 'out-in': 当前元素先离开，新元素后进入
+   * - 'in-out': 新元素先进入，当前元素后离开
+   * - `default`: 同时进行进入和离开
+   *
+   * @default `default`
+   */
+  mode?: 'out-in' | 'in-out'
+}
 /**
  * Transition 组件：控制子节点的进入/离开动画
  *
@@ -86,4 +131,4 @@ function Transition(props: TransitionProps) {
 
   return props.children
 }
-export { Transition }
+export { Transition, type TransitionProps }

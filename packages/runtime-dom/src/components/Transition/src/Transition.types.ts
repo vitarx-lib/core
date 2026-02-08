@@ -1,4 +1,4 @@
-import type { HostElement, View } from '@vitarx/runtime-core'
+import type { HostElement } from '@vitarx/runtime-core'
 
 export type TransitionHandler = (el: HostElement) => void
 /**
@@ -81,44 +81,4 @@ export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass
    * - 'auto': 自动选择时间较长的类型
    */
   type?: TransitionType
-}
-
-/**
- * Transition 组件属性接口
- *
- * 定义了 Transition 组件的所有可配置属性，包括钩子函数、CSS 类名、
- * 过渡模式、持续时间等设置。
- */
-export interface TransitionProps extends BaseTransitionProps {
-  /**
-   * 子节点
-   *
-   * 可以是单个，也可以是多个
-   * 仅元素类型/组件类型节点支持过渡。
-   *
-   * @example
-   * ```tsx
-   * <Transition>
-   *   {show && <div>内容</div>}
-   * </Transition>
-   *
-   * <Transition>
-   *   {show ? <A/> : <B/>}
-   * </Transition>
-   *
-   * <Transition>
-   *   <div v-if="show">内容</div>
-   * </Transition>
-   * ```
-   */
-  children: View
-  /**
-   * 过渡模式：
-   * - 'out-in': 当前元素先离开，新元素后进入
-   * - 'in-out': 新元素先进入，当前元素后离开
-   * - `default`: 同时进行进入和离开
-   *
-   * @default `default`
-   */
-  mode?: 'out-in' | 'in-out'
 }
