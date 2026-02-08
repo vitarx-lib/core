@@ -63,7 +63,7 @@ export interface TransitionCssClass {
   leaveToClass?: string
 }
 export type TransitionDuration = number | { enter: number; leave: number }
-export type TransitionType = 'transition' | 'animation' | 'default'
+export type TransitionType = 'transition' | 'animation' | 'auto'
 export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass {
   /** 过渡名称前缀，用于生成 CSS 类名，默认为 'v' */
   name: string
@@ -116,9 +116,9 @@ export interface TransitionProps extends BaseTransitionProps {
    * 过渡模式：
    * - 'out-in': 当前元素先离开，新元素后进入
    * - 'in-out': 新元素先进入，当前元素后离开
-   * - 'default': 同时进行进入和离开
+   * - `default`: 同时进行进入和离开
    *
-   * @default 'default'
+   * @default `default`
    */
-  mode: 'out-in' | 'in-out' | 'default'
+  mode?: 'out-in' | 'in-out'
 }

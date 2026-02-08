@@ -138,7 +138,7 @@ export function runTransition(
       el,
       type === 'appear' ? 'enter' : type,
       props.duration,
-      props.type || 'default'
+      props.type || 'auto'
     )
     // 💡 强制（浏览器）重排，确保动画触发
     if ('offsetWidth' in el) void el.offsetWidth

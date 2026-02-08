@@ -177,7 +177,7 @@ Transition.defaultProps = {
   /** 默认使用 CSS 过渡类 */
   css: true,
   /** 默认使用自动计算 */
-  type: 'default',
+  type: 'auto',
   /** 默认过渡持续时间 */
   mode: 'default'
 } as const
