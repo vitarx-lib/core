@@ -1,13 +1,6 @@
+import { watch } from '@vitarx/responsive'
 import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
-import {
-  defineValidate,
-  getInstance,
-  getRenderer,
-  onDispose,
-  onHide,
-  onShow,
-  viewEffect
-} from '../../../runtime/index.js'
+import { defineValidate, getInstance, getRenderer } from '../../../runtime/index.js'
 import type { ValidChild, View } from '../../../types/index.js'
 import { resolveChild } from '../../../view/compiler/resolve.js'
 import { CommentView, ListView } from '../../../view/index.js'
@@ -22,7 +15,11 @@ interface ListItemRecord {
 }
 
 type ListItemMap = Map<any, ListItemRecord>
-
+interface DiffResult {
+  newChildren: View[]
+  sourceIndex: number[]
+  newItemMap: ListItemMap
+}
 export interface ListLifecycleHook {
   onLeave?: (view: View, done: VoidCallback) => void
   onEnter?: (view: View) => void
@@ -64,7 +61,7 @@ export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
 export function For<T>(props: ForProps<T>): ListView {
   const instance = getInstance()!
   const location = instance.view.location
-  const build = (item: T, i: number): View => {
+  const buildView = (item: T, i: number): View => {
     try {
       const child = props.children(item, i)
       return resolveChild(child) || new CommentView(`for:<${i}>_invalid`)
@@ -78,9 +75,6 @@ export function For<T>(props: ForProps<T>): ListView {
   const onEnterCb = props.onEnter
   const onBeforeUpdateCb = props.onBeforeUpdate
   const onAfterUpdateCb = props.onAfterUpdate
-
-  let keyedMap: ListItemMap = new Map()
-  const listView = new ListView()
   const checkKey = (key: unknown, index: number, map: ListItemMap): unknown => {
     if (map.has(key)) {
       logger.warn(`Duplicate key "${String(key)}"`, location)
@@ -88,55 +82,61 @@ export function For<T>(props: ForProps<T>): ListView {
     }
     return key
   }
-  /* ---------- mount ---------- */
-  let runner = (): void => {
+  const listView = new ListView()
+  let itemMap: ListItemMap = new Map()
+  let render: () => void | DiffResult
+  // 初始化
+  render = (): void => {
     const each = props.each
     for (let i = 0; i < each.length; i++) {
       const item = each[i]
-      const key = checkKey(keyExtractor(item, i), i, keyedMap)
-      const view = build(item, i)
-      keyedMap.set(key, { view, index: i })
+      const key = checkKey(keyExtractor(item, i), i, itemMap)
+      const view = buildView(item, i)
+      itemMap.set(key, { view, index: i })
       listView.append(view)
     }
+    render = diff
   }
-  const effect = viewEffect(() => {
-    runner()
-  })
-  if (effect) {
-    /* ---------- update ---------- */
-    runner = (): void => {
-      if (listView.isMounted) onBeforeUpdateCb?.(Array.from(listView.children))
-      const each = props.each
-      const length = each.length
-      const renderer = getRenderer()
-
-      const newMap: ListItemMap = new Map()
-      const newChildren = new Array<View>(length)
-      const sourceIndex = new Array<number>(length).fill(-1)
-
-      // build new children
-      for (let i = 0; i < length; i++) {
-        const item = each[i]
-        const key = checkKey(keyExtractor(item, i), i, newMap)
-        const cached = keyedMap.get(key)
-        let view: View
-        if (cached) {
-          view = cached.view
-          sourceIndex[i] = cached.index
-        } else {
-          view = build(item, i)
-        }
-        newMap.set(key, { view, index: i })
-        newChildren[i] = view
+  // diff 更新
+  const diff = (): DiffResult => {
+    const each = props.each
+    const length = each.length
+    const newItemMap: ListItemMap = new Map()
+    const newChildren = new Array<View>(length)
+    const sourceIndex = new Array<number>(length).fill(-1)
+    // build new children
+    for (let i = 0; i < length; i++) {
+      const item = each[i]
+      const key = checkKey(keyExtractor(item, i), i, newItemMap)
+      const cached = itemMap.get(key)
+      let view: View
+      if (cached) {
+        view = cached.view
+        sourceIndex[i] = cached.index
+      } else {
+        view = buildView(item, i)
       }
-
+      newItemMap.set(key, { view, index: i })
+      newChildren[i] = view
+    }
+    return { newChildren, sourceIndex, newItemMap }
+  }
+  // 启动观察器
+  watch(
+    () => render(),
+    diffResult => {
+      if (!diffResult) return
+      // 前置钩子
+      if (listView.isMounted) onBeforeUpdateCb?.(Array.from(listView.children))
+      const renderer = getRenderer()
+      const { newChildren, sourceIndex, newItemMap } = diffResult
+      const length = newChildren.length
       // LIS
       const lis = getLIS(sourceIndex)
       let lisCursor = lis.length - 1
 
       // apply move/insert
       let anchor: View | null = null
-
       for (let i = length - 1; i >= 0; i--) {
         const view = newChildren[i]
         const oldIndex = sourceIndex[i]
@@ -159,19 +159,19 @@ export function For<T>(props: ForProps<T>): ListView {
       }
 
       // remove stale
-      for (const [key, { view }] of keyedMap) {
-        if (!newMap.has(key)) {
+      for (const [key, { view }] of itemMap) {
+        if (!newItemMap.has(key)) {
           removeView(listView, view, onLeaveCb)
         }
       }
 
-      keyedMap = newMap
+      // update map
+      itemMap = newItemMap
+      // 后置钩子
       if (listView.isMounted) onAfterUpdateCb?.(Array.from(listView.children))
-    }
-    onDispose(effect.dispose)
-    onHide(effect.pause)
-    onShow(effect.resume)
-  }
+    },
+    { flush: 'main', immediate: true }
+  )
   return listView
 }
 
