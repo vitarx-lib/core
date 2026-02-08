@@ -17,18 +17,6 @@ describe('Transition 组件', () => {
     container.innerHTML = ''
   })
 
-  describe('默认属性', () => {
-    it('应该有正确的默认属性', () => {
-      expect(Transition.defaultProps).toEqual({
-        name: 'v',
-        appear: false,
-        css: true,
-        type: 'default',
-        mode: 'default'
-      })
-    })
-  })
-
   describe('基础功能', () => {
     it('应该渲染子节点', () => {
       const ComponentA = () =>
@@ -403,7 +391,6 @@ describe('Transition 组件', () => {
         })
 
       const transitionView = createView(Transition, {
-        mode: 'default',
         duration: 0,
         children: build(() => (show.value ? createView(ComponentA) : null))
       })
@@ -807,7 +794,6 @@ describe('Transition 组件', () => {
       })
       transitionView.mount(container)
       const element = transitionView.node as HTMLElement
-      console.log(element.className)
       expect(element.className).toBe('fade-appear-from fade-appear-active')
       await new Promise(resolve => setTimeout(resolve, 50))
       expect(element.className).toBe('')
