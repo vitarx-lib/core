@@ -12,7 +12,12 @@ import { ComponentInstance } from '../view/index.js'
  * - `view:switch`：表示在切换视图时发生的错误，SwitchView 发出。
  * - `view:update`：表示在更新视图时发生的错误，ElementView 发出。
  */
-export type ErrorSource = `effect:${string}` | `hook:${Lifecycle}` | 'view:switch' | 'view:update'
+export type ErrorSource =
+  | `effect:${string}`
+  | `hook:${Lifecycle}`
+  | 'view:switch'
+  | 'view:update'
+  | 'view:build'
 
 /**
  * 错误信息对象接口
