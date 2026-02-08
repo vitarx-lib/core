@@ -16,6 +16,35 @@ type ListItemView = View & {
   __prev?: ListItemView | null
   __next?: ListItemView | null
 }
+/**
+ * ListView 是一个用于管理列表视图的类，继承自 BaseView。
+ * 它提供了对列表项的增删改查功能，并维护列表项之间的顺序关系。
+ *
+ * 核心功能：
+ * - 添加视图到列表末尾（append）
+ * - 在指定位置插入视图（insert）
+ * - 移动视图到新位置（move）
+ * - 从列表中移除视图（remove）
+ * - 获取列表的长度、首尾元素和子视图迭代器
+ *
+ * 使用示例：
+ * ```typescript
+ * const list = new ListView([item1, item2]);
+ * list.append(item3);
+ * list.insert(item4, item2);
+ * list.move(item3, item1);
+ * list.remove(item2);
+ * ```
+ *
+ * 构造函数参数：
+ * @param items - 可选参数，初始化时要添加到列表中的视图数组
+ * @param location - 可选参数，代码位置信息
+ *
+ * 特殊说明：
+ * - 视图之间的顺序关系通过 __prev 和 __next 属性维护
+ * - 在开发模式下，会对参数类型进行严格检查
+ * - 所有操作都仅影响链表指针，需自行管理视图生命周期状态和DOM位置
+ */
 export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
   public readonly kind = ViewKind.LIST
   protected hostNode: HostFragment | null = null
@@ -62,14 +91,14 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
     }
     this.size++
   }
-
   /**
    * 插入一个视图到指定锚点之前
    *
    * @param child - 要插入的视图
    * @param anchor - 插入位置
    */
-  insert(child: ListItemView, anchor: ListItemView): void {
+  insert(child: ListItemView, anchor: ListItemView | null): void {
+    if (!anchor) return this.append(child)
     if (__DEV__ && !isView(child)) {
       throw new TypeError('child must be a view')
     }
@@ -127,7 +156,6 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
   protected override doInit(): void {
     for (const safeChild of this.safeChildren()) safeChild.init(this.ctx)
   }
-
   protected override doMount(target: HostContainer | HostNode, type: MountType): void {
     const renderer = getRenderer()
     if (!this.hostNode) {
@@ -136,15 +164,12 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
     renderer[type](this.hostNode, target)
     for (const safeChild of this.safeChildren()) safeChild.mount(this.hostNode, 'append')
   }
-
   protected override doActivate() {
     for (const safeChild of this.safeChildren()) safeChild.activate()
   }
-
   protected override doDeactivate() {
     for (const safeChild of this.safeChildren()) safeChild.deactivate()
   }
-
   protected override doDispose() {
     for (const safeChild of this.safeChildren()) {
       this.remove(safeChild)
