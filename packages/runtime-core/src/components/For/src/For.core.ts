@@ -25,14 +25,16 @@ type ListItemMap = Map<any, ListItemRecord>
 export interface ListLifecycleHook {
   onLeave?: (view: View, done: VoidCallback) => void
   onEnter?: (view: View) => void
-  onBeforeUpdate?: (view: View[]) => void
-  onAfterUpdate?: (views: View[]) => void
+  onBeforeUpdate?: (children: View[]) => void
+  onAfterUpdate?: (children: View[]) => void
 }
+
 export interface ListProps<T> {
   each: readonly T[]
   children: ListItemFactory<T>
   key?: ListKeyResolver<T>
 }
+
 export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
 
 /**
@@ -70,20 +72,19 @@ export function For<T>(props: ForProps<T>): ListView {
 
   let keyedMap: ListItemMap = new Map()
   const listView = new ListView()
-
+  const checkKey = (key: unknown, index: number): unknown => {
+    if (keyedMap.has(key)) {
+      logger.warn(`Duplicate key "${String(key)}"`, location)
+      return { __dup: key, index: index }
+    }
+    return key
+  }
   /* ---------- mount ---------- */
   let runner = (): void => {
     const each = props.each
-
     for (let i = 0; i < each.length; i++) {
       const item = each[i]
-      let key = keyExtractor(item, i)
-
-      if (keyedMap.has(key)) {
-        logger.warn(`Duplicate key "${String(key)}"`, location)
-        key = { __dup: key, index: i }
-      }
-
+      const key = checkKey(keyExtractor(item, i), i)
       const view = build(item, i)
       keyedMap.set(key, { view, index: i })
       listView.append(view)
@@ -95,7 +96,7 @@ export function For<T>(props: ForProps<T>): ListView {
   if (effect) {
     /* ---------- update ---------- */
     runner = (): void => {
-      onBeforeUpdateCb?.(Array.from(listView.children))
+      if (listView.isMounted) onBeforeUpdateCb?.(Array.from(listView.children))
       const each = props.each
       const length = each.length
       const renderer = getRenderer()
@@ -107,17 +108,10 @@ export function For<T>(props: ForProps<T>): ListView {
       // build new children
       for (let i = 0; i < length; i++) {
         const item = each[i]
-        let key = keyExtractor(item, i)
-
+        const key = checkKey(keyExtractor(item, i), i)
         const cached = keyedMap.get(key)
         const view = cached?.view ?? build(item, i)
-
         if (cached) sourceIndex[i] = cached.index
-
-        if (newMap.has(key)) {
-          logger.warn(`Duplicate key "${String(key)}"`, location)
-          key = { __dup: key, index: i }
-        }
 
         newMap.set(key, { view, index: i })
         newChildren[i] = view
@@ -142,8 +136,7 @@ export function For<T>(props: ForProps<T>): ListView {
 
         if (oldIndex === -1) {
           listView.insert(view, anchor)
-          ensureMounted(view, listView, anchor)
-          onEnterCb?.(view)
+          ensureMounted(view, listView, anchor, onEnterCb)
         } else {
           listView.move(view, anchor)
           moveDOM(renderer, listView, view, anchor)
@@ -160,7 +153,7 @@ export function For<T>(props: ForProps<T>): ListView {
       }
 
       keyedMap = newMap
-      onAfterUpdateCb?.(Array.from(listView.children))
+      if (listView.isMounted) onAfterUpdateCb?.(Array.from(listView.children))
     }
     onDispose(effect.dispose)
     onHide(effect.pause)
