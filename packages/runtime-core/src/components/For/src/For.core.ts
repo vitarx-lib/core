@@ -1,43 +1,38 @@
-import { isFunction } from '@vitarx/utils'
-import { viewEffect } from '../../../runtime/effect.js'
-import { defineValidate, getInstance, onDispose, onHide, onShow } from '../../../runtime/index.js'
-import { ListView } from '../../../view/index.js'
+import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
 import {
-  _initListChildren,
-  _updateListChildren,
-  type ItemViewFactory,
-  type KeyedViewMap,
-  type KeyExtractor
-} from './For.utils.js'
+  defineValidate,
+  getInstance,
+  getRenderer,
+  onDispose,
+  onHide,
+  onShow,
+  viewEffect
+} from '../../../runtime/index.js'
+import type { View } from '../../../types/index.js'
+import { ListView } from '../../../view/index.js'
+import { ensureMounted, getLIS, moveDOM, removeView } from './For.utils.js'
 
-/**
- * For 组件属性
- */
-interface ForProps<T> {
-  /**
-   * 要遍历的数据数组
-   */
+type ListItemFactory<T> = (item: T, index: number) => View
+type ListKeyResolver<T> = (item: T, index: number) => any
+
+interface ListItemRecord {
+  view: View
+  index: number
+}
+
+type ListItemMap = Map<any, ListItemRecord>
+
+export interface ListLifecycleHook {
+  onLeave?: (view: View, done: VoidCallback) => void
+  onEnter?: (view: View) => void
+  onBeforeUpdate?: (view: View[]) => void
+  onAfterUpdate?: (views: View[]) => void
+}
+
+export interface ForProps<T> extends ListLifecycleHook {
   each: readonly T[]
-  /**
-   * 视图工厂函数
-   *
-   * 用于创建新视图
-   */
-  children: ItemViewFactory<T>
-  /**
-   * 键提取函数
-   *
-   * 用于从数据中提取出唯一键
-   *
-   * 如果数据是不重复内容，可以不指定key提取函数，也能保证性能和效率。
-   *
-   * 如果数据行中有重复数据的情况下不指定 key 提取函数，会存在key重复的警告信息！
-   *
-   * 最佳实践：手动指定 key 提取函数，用数据中的唯一属性值做为 key。
-   *
-   * @default `( item ) => item`
-   */
-  key?: KeyExtractor<T>
+  children: ListItemFactory<T>
+  key?: ListKeyResolver<T>
 }
 
 /**
@@ -72,43 +67,120 @@ interface ForProps<T> {
  * }
  * ```
  */
-function For<T>(props: ForProps<T>): ListView {
-  // 获取当前实例
+export function For<T>(props: ForProps<T>): ListView {
   const instance = getInstance()!
-  // 获取实例视图的位置信息
+  if (__DEV__ && !instance) {
+    throw new Error('listReconciler(): can only be called in a component')
+  }
   const location = instance.view.location
-  // 获取视图构建工厂
   const build = props.children
-  // 获取键提取函数
-  const keyExtractor = props.key ?? ((item: T): T => item)
-  // 初始化键值映射表，用于跟踪列表项
-  let keyedMap: KeyedViewMap = new Map()
-  // 创建新的列表视图实例
+  const keyExtractor = props.key ?? ((item: T) => item)
+  const onLeaveCb = props.onLeave
+  const onEnterCb = props.onEnter
+  const onBeforeUpdateCb = props.onBeforeUpdate
+  const onAfterUpdateCb = props.onAfterUpdate
+
+  let keyedMap: ListItemMap = new Map()
   const listView = new ListView()
 
-  // 初始化子项渲染器
-  let runner = _initListChildren
-  // 创建视图效果，用于处理列表更新
-  const effectHandle = viewEffect(() => {
-    // 运行子项更新逻辑，更新键值映射和列表视图
-    keyedMap = runner(listView, keyedMap, props.each, build, keyExtractor, location)
-  })
+  /* ---------- mount ---------- */
+  let runner = (): void => {
+    const each = props.each
 
-  // 如果存在效果句柄，则处理组件的生命周期
-  if (effectHandle) {
-    // 更新子项渲染器为更新模式
-    runner = _updateListChildren
-    // 组件卸载时，释放效果句柄
-    onDispose(() => effectHandle.dispose())
-    // 组件隐藏时，暂停效果句柄
-    onHide(() => effectHandle.pause())
-    // 组件显示时，恢复效果句柄
-    onShow(() => effectHandle.resume())
+    for (let i = 0; i < each.length; i++) {
+      const item = each[i]
+      let key = keyExtractor(item, i)
+
+      if (keyedMap.has(key)) {
+        logger.warn(`Duplicate key "${String(key)}"`, location)
+        key = { __dup: key, index: i }
+      }
+
+      const view = build(item, i)
+      keyedMap.set(key, { view, index: i })
+      listView.append(view)
+    }
   }
+  const effect = viewEffect(() => {
+    runner()
+  })
+  if (effect) {
+    /* ---------- update ---------- */
+    runner = (): void => {
+      onBeforeUpdateCb?.(Array.from(listView.children))
+      const each = props.each
+      const length = each.length
+      const renderer = getRenderer()
 
-  // 返回列表视图实例
+      const newMap: ListItemMap = new Map()
+      const newChildren = new Array<View>(length)
+      const sourceIndex = new Array<number>(length).fill(-1)
+
+      // build new children
+      for (let i = 0; i < length; i++) {
+        const item = each[i]
+        let key = keyExtractor(item, i)
+
+        const cached = keyedMap.get(key)
+        const view = cached?.view ?? build(item, i)
+
+        if (cached) sourceIndex[i] = cached.index
+
+        if (newMap.has(key)) {
+          logger.warn(`Duplicate key "${String(key)}"`, location)
+          key = { __dup: key, index: i }
+        }
+
+        newMap.set(key, { view, index: i })
+        newChildren[i] = view
+      }
+
+      // LIS
+      const lis = getLIS(sourceIndex)
+      let lisCursor = lis.length - 1
+
+      // apply move/insert
+      let anchor: View | null = null
+
+      for (let i = length - 1; i >= 0; i--) {
+        const view = newChildren[i]
+        const oldIndex = sourceIndex[i]
+
+        if (oldIndex !== -1 && lisCursor >= 0 && lis[lisCursor] === i) {
+          lisCursor--
+          anchor = view
+          continue
+        }
+
+        if (oldIndex === -1) {
+          listView.insert(view, anchor)
+          ensureMounted(view, listView, anchor)
+          onEnterCb?.(view)
+        } else {
+          listView.move(view, anchor)
+          moveDOM(renderer, listView, view, anchor)
+        }
+
+        anchor = view
+      }
+
+      // remove stale
+      for (const [key, { view }] of keyedMap) {
+        if (!newMap.has(key)) {
+          removeView(listView, view, onLeaveCb)
+        }
+      }
+
+      keyedMap = newMap
+      onAfterUpdateCb?.(Array.from(listView.children))
+    }
+    onDispose(effect.dispose)
+    onHide(effect.pause)
+    onShow(effect.resume)
+  }
   return listView
 }
+
 defineValidate(For, (props): void => {
   if (!Array.isArray(props.each)) {
     throw new TypeError(`[For]: each expects an array, received ${typeof props.each}`)
@@ -119,5 +191,20 @@ defineValidate(For, (props): void => {
   if (props.key && !isFunction(props.key)) {
     throw new TypeError(`[For]: key expects a function, received ${typeof props.key}`)
   }
+  if (props.onLeave && !isFunction(props.key)) {
+    throw new TypeError(`[For]: onLeave expects a function, received ${typeof props.onLeave}`)
+  }
+  if (props.onEnter && !isFunction(props.onEnter)) {
+    throw new TypeError(`[For]: onEnter expects a function, received ${typeof props.onEnter}`)
+  }
+  if (props.onAfterUpdate && !isFunction(props.onAfterUpdate)) {
+    throw new TypeError(
+      `[For]: onAfterUpdate expects a function, received ${typeof props.onAfterUpdate}`
+    )
+  }
+  if (props.onBeforeUpdate && !isFunction(props.onBeforeUpdate)) {
+    throw new TypeError(
+      `[For]: onBeforeUpdate expects a function, received ${typeof props.onBeforeUpdate}`
+    )
+  }
 })
-export { For, type ForProps }
