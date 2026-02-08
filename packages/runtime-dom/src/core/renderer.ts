@@ -39,6 +39,7 @@ const DEFAULT_PROPERTIES_CACHE = new Map<string, Record<string, any>>()
  * - 此类实例注册在运行时核心中，用于处理浏览器环境下的DOM操作和渲染。
  */
 export class DOMRenderer implements ViewRenderer {
+  /** @inheritDoc */
   isSVGElement(node: HostNode): boolean {
     // 检查节点是否存在
     if (!node) return false
@@ -56,9 +57,11 @@ export class DOMRenderer implements ViewRenderer {
     // 其他类型节点（文本节点、注释节点等）不是 SVG 元素
     return false
   }
+  /** @inheritDoc */
   createComment(text: string): HostComment {
     return document.createComment(text)
   }
+  /** @inheritDoc */
   createElement<T extends HostElementTag>(tag: T, useSVGNamespace: boolean): HostElement<T> {
     let el: Element
     if (useSVGNamespace) {
@@ -68,17 +71,20 @@ export class DOMRenderer implements ViewRenderer {
     }
     return el as HostElement<T>
   }
+  /** @inheritDoc */
   createFragment(view: FragmentView | ListView): HostFragment {
     const el = document.createDocumentFragment() as HostFragment
     const type = isFragmentView(view) ? 'Fragment' : 'List'
-    el.$startAnchor = document.createComment(`${type} start`)
-    el.$endAnchor = document.createComment(`${type} end`)
+    el.$startAnchor = document.createComment(`${type}:start`)
+    el.$endAnchor = document.createComment(`${type}:end`)
     el.$view = view
     return el
   }
+  /** @inheritDoc */
   createText(text: string): HostText {
     return document.createTextNode(text)
   }
+  /** @inheritDoc */
   append(child: HostNode, parent: HostContainer): void {
     child = this.recoveryFragmentChildren(child)
     // 如果是插入到片段节点中，则判断是否已挂载
@@ -89,10 +95,12 @@ export class DOMRenderer implements ViewRenderer {
       parent.appendChild(child)
     }
   }
+
+  /** @inheritDoc */
   insert(child: HostNode, anchor: HostNode): void {
     // 如果锚点元素是Fragment，则插入到结束锚点之后
     if (this.isFragment(anchor)) {
-      anchor = anchor.$endAnchor
+      anchor = anchor.$startAnchor
     }
     // 获取锚点元素的父级元素
     const parent = anchor.parentNode
@@ -109,9 +117,11 @@ export class DOMRenderer implements ViewRenderer {
     child = this.recoveryFragmentChildren(child)
     parent.insertBefore(child, anchor)
   }
+  /** @inheritDoc */
   isElement(node: HostNode): node is HostElement {
     return node.nodeType === Node.ELEMENT_NODE
   }
+  /** @inheritDoc */
   remove(node: HostNode): void {
     if (!this.isFragment(node)) return node.remove()
     const { $startAnchor: start, $endAnchor: end } = node
@@ -120,6 +130,7 @@ export class DOMRenderer implements ViewRenderer {
     range.setEndAfter(end)
     range.deleteContents()
   }
+  /** @inheritDoc */
   replace(newNode: HostNode, oldNode: HostNode): void {
     const isFragment = this.isFragment(oldNode)
     // 获取父节点，片段元素使用 startAnchor 的父节点
@@ -143,6 +154,7 @@ export class DOMRenderer implements ViewRenderer {
       parent.replaceChild(newNode, oldNode)
     }
   }
+  /** @inheritDoc */
   setAttribute(el: HostElement, name: string, nextValue: any, prevValue: any): void {
     if (name === 'children') return
     try {
@@ -204,9 +216,11 @@ export class DOMRenderer implements ViewRenderer {
       )
     }
   }
+  /** @inheritDoc */
   setText(node: HostNode, text: string): void {
     node.textContent = text
   }
+  /** @inheritDoc */
   isFragment(el: HostNode | HostContainer): el is HostFragment {
     return el.nodeType === Node.DOCUMENT_FRAGMENT_NODE
   }
