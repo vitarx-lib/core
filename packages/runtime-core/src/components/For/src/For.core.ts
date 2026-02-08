@@ -8,11 +8,12 @@ import {
   onShow,
   viewEffect
 } from '../../../runtime/index.js'
-import type { View } from '../../../types/index.js'
-import { ListView } from '../../../view/index.js'
+import type { ValidChild, View } from '../../../types/index.js'
+import { resolveChild } from '../../../view/compiler/resolve.js'
+import { CommentView, ListView } from '../../../view/index.js'
 import { ensureMounted, getLIS, moveDOM, removeView } from './For.utils.js'
 
-type ListItemFactory<T> = (item: T, index: number) => View
+type ListItemFactory<T> = (item: T, index: number) => ValidChild
 type ListKeyResolver<T> = (item: T, index: number) => any
 
 interface ListItemRecord {
@@ -63,7 +64,15 @@ export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
 export function For<T>(props: ForProps<T>): ListView {
   const instance = getInstance()!
   const location = instance.view.location
-  const build = props.children
+  const build = (item: T, i: number): View => {
+    try {
+      const child = props.children(item, i)
+      return resolveChild(child) || new CommentView(`for:<${i}>_invalid`)
+    } catch (e) {
+      instance.reportError(e, 'view:build')
+      return new CommentView(`for:<${i}>_build_failed}`)
+    }
+  }
   const keyExtractor = props.key ?? ((item: T) => item)
   const onLeaveCb = props.onLeave
   const onEnterCb = props.onEnter
@@ -110,8 +119,13 @@ export function For<T>(props: ForProps<T>): ListView {
         const item = each[i]
         const key = checkKey(keyExtractor(item, i), i, newMap)
         const cached = keyedMap.get(key)
-        const view = cached?.view ?? build(item, i)
-        if (cached) sourceIndex[i] = cached.index
+        let view: View
+        if (cached) {
+          view = cached.view
+          sourceIndex[i] = cached.index
+        } else {
+          view = build(item, i)
+        }
         newMap.set(key, { view, index: i })
         newChildren[i] = view
       }
