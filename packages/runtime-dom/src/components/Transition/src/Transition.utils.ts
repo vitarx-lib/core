@@ -48,7 +48,7 @@ function computedDuration(el: HostElement, type: 'transition' | 'animation'): nu
  * @param type - 过渡类型，'transition' 或 'animation' 或两者
  * @returns - 过渡动画的持续时间（毫秒）
  */
-function getDuration(
+export function getDuration(
   el: HostElement,
   mode: 'enter' | 'leave',
   duration: TransitionDuration | undefined,
