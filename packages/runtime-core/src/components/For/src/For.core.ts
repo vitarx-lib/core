@@ -69,9 +69,6 @@ export interface ForProps<T> extends ListLifecycleHook {
  */
 export function For<T>(props: ForProps<T>): ListView {
   const instance = getInstance()!
-  if (__DEV__ && !instance) {
-    throw new Error('listReconciler(): can only be called in a component')
-  }
   const location = instance.view.location
   const build = props.children
   const keyExtractor = props.key ?? ((item: T) => item)
