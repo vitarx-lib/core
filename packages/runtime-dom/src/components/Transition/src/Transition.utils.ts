@@ -124,7 +124,7 @@ export function runTransition(
   let ended = false
   if (props.css) {
     // CSS 过渡模式
-    const cssPrefix = `${props.name}-${type}`
+    const cssPrefix = props.name.endsWith('-') ? `${props.name}${type}` : `${props.name}-${type}`
     const from = props[`${type}FromClass`] || `${cssPrefix}-from`
     const active = props[`${type}ActiveClass`] || `${cssPrefix}-active`
     const to = props[`${type}ToClass`] || `${cssPrefix}-to`
