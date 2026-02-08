@@ -355,10 +355,12 @@ export class DOMRenderer implements ViewRenderer {
       if (el.childNodes.length === 0) {
         const children = el.$view.children
         el.appendChild(el.$startAnchor)
-        // 递归恢复片段节点
-        for (const child of children) {
-          if (child.node) {
-            el.appendChild(this.recoveryFragmentChildren(child.node))
+        if (el.$view.isMounted) {
+          // 递归恢复片段节点
+          for (const child of children) {
+            if (child.node) {
+              el.appendChild(this.recoveryFragmentChildren(child.node))
+            }
           }
         }
         el.appendChild(el.$endAnchor)
