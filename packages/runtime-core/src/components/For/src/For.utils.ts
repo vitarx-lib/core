@@ -66,16 +66,31 @@ export function getLIS(arr: number[]): number[] {
  * View Helpers (Top-level)
  * ----------------------------------------- */
 
-export function ensureMounted(view: View, listView: ListView, anchor: View | null) {
-  if (view.isRuntime) return
-
-  view.init(listView.ctx)
-
-  if (anchor) view.mount(anchor.node, 'insert')
-  else view.mount(listView.node, 'append')
+export function ensureMounted(
+  view: View,
+  listView: ListView,
+  anchor: View | null,
+  cb: ListLifecycleHook['onEnter']
+): void {
+  // 若目标 view 与当前 view 生命周期不一致，需初始化
+  if (view.state !== listView.state) {
+    if (!view.isInitialized) view.init(listView.ctx)
+    if (listView.isMounted) {
+      if (anchor) {
+        view.mount(anchor.node, 'insert')
+      } else {
+        view.mount(listView.node, 'append')
+      }
+      cb?.(view)
+    }
+  }
+  // 同步 active 状态
+  if (listView.active !== view.active) {
+    view[listView.active ? 'activate' : 'deactivate']()
+  }
 }
 
-export function moveDOM(renderer: any, listView: ListView, view: View, anchor: View | null) {
+export function moveDOM(renderer: any, listView: ListView, view: View, anchor: View | null): void {
   if (anchor) renderer.insert(view.node, anchor.node)
   else renderer.append(listView.node, view.node)
 }
