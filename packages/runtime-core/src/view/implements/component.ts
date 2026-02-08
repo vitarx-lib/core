@@ -192,6 +192,7 @@ export class ComponentInstance<T extends Component = Component> {
   public async?: Promise<unknown>
   /** @internal - 给子视图继承的上下文 */
   public readonly subViewContext: ViewContext
+  #isMounted = false
   constructor(public readonly view: ComponentView<T>) {
     this.parent = view.owner
     this.app = view.app
@@ -210,6 +211,15 @@ export class ComponentInstance<T extends Component = Component> {
     })
     // 透传指令
     if (view.directives) withDirectives(this.subView, Array.from(view.directives))
+  }
+  /**
+   * 获取组件是否已挂载的状态
+   * 这是一个getter方法，用于返回组件的挂载状态
+   *
+   * @returns {boolean} 返回组件是否已挂载，true表示已挂载，false表示未挂载
+   */
+  get isMounted(): boolean {
+    return this.#isMounted
   }
   public init(): void {
     const hooks = this.hooks[Lifecycle.init]
@@ -249,6 +259,7 @@ export class ComponentInstance<T extends Component = Component> {
     delete this.hooks[Lifecycle.beforeMount]
   }
   public mounted(): void {
+    this.#isMounted = true
     this.invokeVoidHook(Lifecycle.mounted)
     delete this.hooks[Lifecycle.mounted]
   }
@@ -263,6 +274,7 @@ export class ComponentInstance<T extends Component = Component> {
     this.invokeVoidHook(Lifecycle.dispose)
     delete this.hooks[Lifecycle.dispose]
     this.scope.dispose()
+    this.#isMounted = false
   }
   /**
    * 报告错误的方法
