@@ -1,7 +1,6 @@
-import { type Ref } from '@vitarx/responsive'
+import { type Ref, watch, Watcher } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
-import { viewEffect, type ViewEffect } from '../../runtime/effect.js'
 import { withDirectives } from '../../runtime/index.js'
 import { isView } from '../../shared/index.js'
 import type { CodeLocation, HostContainer, HostNode, MountType, View } from '../../types/index.js'
@@ -97,7 +96,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
 
   private cachedView: View | null = null
   private cachedType: SourceValueType | null = null
-  private effect?: ViewEffect
+  private effect?: Watcher
 
   #switching = false
   #dirty: boolean = false
@@ -126,29 +125,25 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
    */
   protected override doInit(): void {
     let handler: (value: T) => void = this.#initView.bind(this)
-
-    const effect = viewEffect(() => {
-      try {
-        handler(this.source.value)
-      } catch (err) {
-        if (!this.cachedView) {
-          this.cachedView = new CommentView(`DynamicView Error: init failed`)
+    this.effect = watch(
+      this.source,
+      newValue => {
+        try {
+          handler(newValue)
+        } catch (err) {
+          if (!this.cachedView) {
+            this.cachedView = new CommentView(`DynamicView Error: init failed`)
+          }
+          if (this.owner) {
+            this.owner.reportError(err, 'view:switch')
+          } else {
+            logger.error(`Unhandled exception in DynamicView - `, err, this.location)
+          }
         }
-        if (this.owner) {
-          this.owner.reportError(err, 'view:switch')
-        } else {
-          logger.error(`Unhandled exception in DynamicView - `, err, this.location)
-        }
-      }
-    })
-
-    if (effect) {
-      this.effect = effect
-      handler = this.#updateView.bind(this)
-    }
-    if (this.cachedView?.isDetached) {
-      this.cachedView!.init(this.ctx)
-    }
+      },
+      { immediate: true, scope: false, flush: 'main' }
+    )
+    handler = this.#updateView.bind(this)
   }
   /**
    * 释放资源
@@ -248,7 +243,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     if (mode !== 'pointer-only') {
       // 若目标 view 与当前 view 生命周期不一致，需初始化
       if (next.state !== this.state) {
-        if (!next.isInitialized) next.init(prev.ctx)
+        if (next.isDetached) next.init(prev.ctx)
         // 若 prev 已挂载，则挂载新 view
         if (this.isMounted) {
           next.mount(prev.node, 'insert')
@@ -281,6 +276,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     // 缓存解析出的类型和视图
     this.cachedType = type
     this.cachedView = view
+    if (view.isDetached) view.init(this.ctx)
   }
   /**
    * 更新视图的方法，根据传入的值来决定如何更新或切换视图
