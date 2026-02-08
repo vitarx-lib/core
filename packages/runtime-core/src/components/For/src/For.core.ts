@@ -77,7 +77,16 @@ export function For<T>(props: ForProps<T>): ListView {
   const onAfterUpdateCb = props.onAfterUpdate
   const checkKey = (key: unknown, index: number, map: ListItemMap): unknown => {
     if (map.has(key)) {
-      logger.warn(`Duplicate key "${String(key)}"`, location)
+      if (__DEV__) {
+        const existingRecord = map.get(key)!
+        const errorMsg =
+          `Duplicate key "${String(key)}" detected in ${instance.view.name} component.\n` +
+          `  Key "${String(key)}" was already used at index ${existingRecord.index}, now encountered at index ${index}.\n` +
+          `  This can cause rendering issues and unexpected behavior.\n` +
+          `  Please ensure your key function returns unique values for each item.\n` +
+          `  Example: key={(item, index) => item.id}`
+        logger.warn(errorMsg, location)
+      }
       return { __dup: key, index: index }
     }
     return key
