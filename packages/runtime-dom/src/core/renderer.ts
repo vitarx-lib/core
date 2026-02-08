@@ -74,7 +74,7 @@ export class DOMRenderer implements ViewRenderer {
   /** @inheritDoc */
   createFragment(view: FragmentView | ListView): HostFragment {
     const el = document.createDocumentFragment() as HostFragment
-    const type = isFragmentView(view) ? 'Fragment' : 'List'
+    const type = isFragmentView(view) ? 'FragmentView' : 'ListView'
     el.$startAnchor = document.createComment(`${type}:start`)
     el.$endAnchor = document.createComment(`${type}:end`)
     el.$view = view
