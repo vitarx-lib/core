@@ -123,8 +123,9 @@ export function runTransition(
   beforeHook?.(el)
   let ended = false
   if (props.css) {
+    const name = props.name || 'v'
     // CSS 过渡模式
-    const cssPrefix = props.name.endsWith('-') ? `${props.name}${type}` : `${props.name}-${type}`
+    const cssPrefix = name.endsWith('-') ? `${name}${type}` : `${name}-${type}`
     const from = props[`${type}FromClass`] || `${cssPrefix}-from`
     const active = props[`${type}ActiveClass`] || `${cssPrefix}-active`
     const to = props[`${type}ToClass`] || `${cssPrefix}-to`
@@ -199,11 +200,11 @@ export function runTransition(
 /**
  * 创建一个文本节点作为锚点，并将其插入到指定节点的位置
  * @param child - 目标主机节点，将在该节点处插入锚点
- * @returns 返回创建的文本节点锚点
+ * @returns - 返回创建的文本节点锚点
  */
-export function createAnchor(child: HostNode): Text {
+export function createAnchor(child: HostNode): Comment {
   // 创建一个空的文本节点作为锚点
-  const anchor = document.createTextNode('')
+  const anchor = document.createComment('')
   // 检查目标节点是否有下一个兄弟节点
   if (child.nextSibling) {
     // 如果有，则将锚点插入到目标节点和它的下一个兄弟节点之间

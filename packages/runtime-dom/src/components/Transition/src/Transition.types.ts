@@ -66,11 +66,11 @@ export type TransitionDuration = number | { enter: number; leave: number }
 export type TransitionType = 'transition' | 'animation' | 'auto'
 export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass {
   /** 过渡名称前缀，用于生成 CSS 类名，默认为 'v' */
-  name: string
+  name?: string
   /** 是否在初始渲染时触发过渡，默认为 false */
-  appear: boolean
+  appear?: boolean
   /** 是否使用 CSS 过渡类，默认为 true。设为 false 时将只使用 JavaScript 钩子 */
-  css: boolean
+  css?: boolean
   /** 过渡持续时间（毫秒），可以是单个数字或包含 enter/leave 的对象 */
   duration?: TransitionDuration
   /**
@@ -78,9 +78,9 @@ export interface BaseTransitionProps extends TransitionHooks, TransitionCssClass
    *
    * - 'transition': 使用 CSS transition
    * - 'animation': 使用 CSS animation
-   * - 'default': 自动计算持续时间较长的类型
+   * - 'auto': 自动选择时间较长的类型
    */
-  type: TransitionType
+  type?: TransitionType
 }
 
 /**
