@@ -109,6 +109,7 @@ export function runTransition(
   cancelTransition(el)
   // 将类型字符串首字母大写，用于拼接钩子函数名
   const capitalizeType = toCapitalize(type)
+  const useCss = props.css ?? true
   // 获取钩子
   const beforeHookRaw = props[`onBefore${capitalizeType}`]
   const hookRaw = props[`on${capitalizeType}`]
@@ -122,7 +123,7 @@ export function runTransition(
   // 执行动画开始前的钩子
   beforeHook?.(el)
   let ended = false
-  if (props.css) {
+  if (useCss) {
     const name = props.name || 'v'
     // CSS 过渡模式
     const cssPrefix = name.endsWith('-') ? `${name}${type}` : `${name}-${type}`
