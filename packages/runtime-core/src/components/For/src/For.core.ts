@@ -72,8 +72,8 @@ export function For<T>(props: ForProps<T>): ListView {
 
   let keyedMap: ListItemMap = new Map()
   const listView = new ListView()
-  const checkKey = (key: unknown, index: number): unknown => {
-    if (keyedMap.has(key)) {
+  const checkKey = (key: unknown, index: number, map: ListItemMap): unknown => {
+    if (map.has(key)) {
       logger.warn(`Duplicate key "${String(key)}"`, location)
       return { __dup: key, index: index }
     }
@@ -84,7 +84,7 @@ export function For<T>(props: ForProps<T>): ListView {
     const each = props.each
     for (let i = 0; i < each.length; i++) {
       const item = each[i]
-      const key = checkKey(keyExtractor(item, i), i)
+      const key = checkKey(keyExtractor(item, i), i, keyedMap)
       const view = build(item, i)
       keyedMap.set(key, { view, index: i })
       listView.append(view)
@@ -108,11 +108,10 @@ export function For<T>(props: ForProps<T>): ListView {
       // build new children
       for (let i = 0; i < length; i++) {
         const item = each[i]
-        const key = checkKey(keyExtractor(item, i), i)
+        const key = checkKey(keyExtractor(item, i), i, newMap)
         const cached = keyedMap.get(key)
         const view = cached?.view ?? build(item, i)
         if (cached) sourceIndex[i] = cached.index
-
         newMap.set(key, { view, index: i })
         newChildren[i] = view
       }
