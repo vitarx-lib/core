@@ -40,6 +40,9 @@ declare global {
     interface RenderContext {
       [K: string]: any
     }
+    /**
+     * 宿主平台片段节点
+     */
     interface HostFragmentNode {}
     /**
      * 宿主平台文本节点接口
