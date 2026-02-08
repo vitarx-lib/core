@@ -10,7 +10,7 @@ export type HTMLElementTagMap = HTMLElementTagNameMap &
  *
  * 包含了所有HTML元素标签名，如div、span、a等元素
  */
-type HTMLElementTags = keyof HTMLElementTagMap
+type HTMLElementTag = keyof HTMLElementTagMap
 /**
  * 无子节点的元素标签映射类型
  */
@@ -32,7 +32,7 @@ export interface HTMLVoidElementMap {
 /**
  * 无子节点的元素标签
  */
-type VoidElementTags = keyof HTMLVoidElementMap
+export type VoidElementTag = keyof HTMLVoidElementMap
 /**
  * ## 固有元素节点映射，用于 jsx ide 提示
  *
@@ -45,7 +45,7 @@ type VoidElementTags = keyof HTMLVoidElementMap
  *    - `W3C`标准语法，如onclick。
  */
 export type HTMLIntrinsicElement = {
-  [K in HTMLElementTags]: K extends VoidElementTags
+  [K in HTMLElementTag]: K extends VoidElementTag
     ? Omit<HTMLElementProps<HTMLElementTagMap[K]>, 'children'> // 忽略 children 属性
     : HTMLElementProps<HTMLElementTagMap[K]>
 }
