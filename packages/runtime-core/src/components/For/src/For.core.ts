@@ -28,12 +28,12 @@ export interface ListLifecycleHook {
   onBeforeUpdate?: (view: View[]) => void
   onAfterUpdate?: (views: View[]) => void
 }
-
-export interface ForProps<T> extends ListLifecycleHook {
+export interface ListProps<T> {
   each: readonly T[]
   children: ListItemFactory<T>
   key?: ListKeyResolver<T>
 }
+export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
 
 /**
  * For组件函数，用于渲染动态列表视图
@@ -47,15 +47,6 @@ export interface ForProps<T> extends ListLifecycleHook {
  * // 基本用法
  * const items = ["apple", "banana", "cherry"];
  *
- * const ItemList = () => {
- *   return For({
- *     each: items,
- *     key: (item, index) => item,
- *     children: (item, index) => <div>{item}</div>
- *   });
- * };
- *
- * // 在JSX中使用
  * function App() {
  *   return (
  *     <For
