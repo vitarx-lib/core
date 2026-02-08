@@ -91,8 +91,10 @@ export function ensureMounted(
 }
 
 export function moveDOM(renderer: any, listView: ListView, view: View, anchor: View | null): void {
-  if (anchor) renderer.insert(view.node, anchor.node)
-  else renderer.append(listView.node, view.node)
+  if (view.isMounted) {
+    if (anchor) renderer.insert(view.node, anchor.node)
+    else renderer.append(listView.node, view.node)
+  }
 }
 
 export function removeView(listView: ListView, view: View, cb: ListLifecycleHook['onLeave']) {
