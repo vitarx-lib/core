@@ -51,7 +51,7 @@ export function toRef<T>(source: () => T): GetterRef<T>
  * console.log(count === countRef) // true
  * ```
  */
-export function toRef<T extends ValueRef>(value: T): T
+export function toRef<T extends Ref<any, any>>(value: T): T
 /**
  * 常规转换为 Ref
  *
