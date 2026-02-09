@@ -81,13 +81,13 @@ export function ensureMounted(
       } else {
         view.mount(listView.node, 'append')
       }
-      cb?.(view)
     }
   }
   // 同步 active 状态
   if (listView.active !== view.active) {
     view[listView.active ? 'activate' : 'deactivate']()
   }
+  cb?.(view)
 }
 
 export function moveDOM(renderer: any, listView: ListView, view: View, anchor: View | null): void {
@@ -99,7 +99,6 @@ export function moveDOM(renderer: any, listView: ListView, view: View, anchor: V
 
 export function removeView(listView: ListView, view: View, cb: ListLifecycleHook['onLeave']) {
   listView.remove(view)
-
   if (cb) {
     cb(view, () => view.dispose())
   } else {
