@@ -23,6 +23,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `item-${item}`,
@@ -47,6 +48,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `nested-item-${item}`,
@@ -72,6 +74,7 @@ describe('TransitionGroup 组件', () => {
       const transitionGroupView = createView(TransitionGroup<number>, {
         tag: 'ul',
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('li', {
             id: `list-item-${item}`,
@@ -95,6 +98,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `no-tag-item-${item}`,
@@ -121,6 +125,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onBeforeEnter,
         onAfterEnter,
         duration: 0,
@@ -154,6 +159,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onBeforeLeave,
         onAfterLeave,
         duration: 0,
@@ -184,6 +190,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `reorder-item-${item}`,
@@ -225,16 +232,18 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         name: 'list',
         moveClass: 'list-move',
         type: 'transition',
-        children: (item: number) =>
-          createView('div', {
+        children: (item: number) => {
+          return createView('div', {
             id: `move-item-${item}`,
             'data-id': item,
             style: 'position: relative; transition: transform 0.3s;',
             children: `Move Item ${item}`
           })
+        }
       })
 
       transitionGroupView.mount(container)
@@ -297,6 +306,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         name: 'fade',
         children: (item: number) =>
           createView('div', {
@@ -324,6 +334,7 @@ describe('TransitionGroup 组件', () => {
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
         name: 'custom',
+        key: item => item,
         enterFromClass: 'custom-enter-from',
         enterActiveClass: 'custom-enter-active',
         enterToClass: 'custom-enter-to',
@@ -353,6 +364,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onBeforeEnter,
         children: (item: number) =>
           createView('div', {
@@ -379,6 +391,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onAfterEnter,
         duration: 0,
         children: (item: number) =>
@@ -408,6 +421,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onBeforeLeave,
         duration: 0,
         children: (item: number) =>
@@ -436,6 +450,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onAfterLeave,
         duration: 0,
         children: (item: number) =>
@@ -469,6 +484,7 @@ describe('TransitionGroup 组件', () => {
         },
         css: false,
         onEnter,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `custom-enter-item-${item}`,
@@ -498,6 +514,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         css: false,
         onLeave,
         children: (item: number) =>
@@ -527,6 +544,7 @@ describe('TransitionGroup 组件', () => {
       const transitionGroupView = createView(TransitionGroup<number>, {
         tag: 'div',
         each: items.value,
+        key: item => item,
         bindProps: {
           id: 'container',
           className: 'custom-container'
@@ -553,6 +571,7 @@ describe('TransitionGroup 组件', () => {
       const transitionGroupView = createView(TransitionGroup<number>, {
         tag: 'ul',
         each: items.value,
+        key: item => item,
         bindProps: {
           className: 'list-container'
         },
@@ -580,6 +599,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `empty-item-${item}`,
@@ -599,6 +619,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) => `Text Item ${item}`
       })
 
@@ -618,6 +639,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         duration: 1,
         onAfterEnter,
         children: (item: number) =>
@@ -647,6 +669,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         duration: 0,
         onAfterEnter,
         children: (item: number) =>
@@ -677,6 +700,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onBeforeEnter,
         onBeforeLeave,
         duration: 0,
@@ -709,6 +733,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `lifecycle-item-${item}`,
@@ -732,6 +757,7 @@ describe('TransitionGroup 组件', () => {
 
       const transitionGroupView = createView(TransitionGroup<number>, {
         each: items.value,
+        key: item => item,
         children: (item: number) =>
           createView('div', {
             id: `multi-lifecycle-item-${item}`,
@@ -762,6 +788,7 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onEnterCancelled,
         duration: 1000,
         children: (item: number) =>
@@ -785,7 +812,6 @@ describe('TransitionGroup 组件', () => {
     })
 
     it('应该支持 onLeaveCancelled 钩子', async () => {
-      const cached = new Map<number, View>()
       const items = ref([1, 2])
       const onLeaveCancelled = vi.fn()
 
@@ -793,17 +819,14 @@ describe('TransitionGroup 组件', () => {
         get each() {
           return items.value
         },
+        key: item => item,
         onLeaveCancelled,
         duration: 10,
         children: (item: number) => {
-          const cacheView = cached.get(item)
-          if (cacheView) return cacheView
-          const view = createView('div', {
+          return createView('div', {
             id: `cancel-leave-item-${item}`,
             children: `Cancel Leave Item ${item}`
           })
-          cached.set(item, view)
-          return view
         }
       })
 
