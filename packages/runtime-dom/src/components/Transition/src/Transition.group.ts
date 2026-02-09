@@ -36,10 +36,12 @@ interface TransitionGroupProps<T, Tag extends ContainerTag>
  * @param props.tag - 容器标签名或组件函数
  * @param props.name - 过渡类名前缀
  * @param props.moveClass - 移动动画类名
- * @param props.bindProps - 绑定到容器组件的属性
+ * @param props.bindProps - 绑定到容器的属性
  * @returns - 返回渲染的视图
  */
-function TransitionGroup<T, Tag extends ContainerTag>(props: TransitionGroupProps<T, Tag>): View {
+function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
+  props: TransitionGroupProps<T, Tag>
+): View {
   // 获取当前实例
   const instance = getInstance()!
   // 获取容器标签
@@ -63,7 +65,7 @@ function TransitionGroup<T, Tag extends ContainerTag>(props: TransitionGroupProp
     // 更新前回调
     onBeforeUpdate: (children: View[]): void => {
       // 如果视图未挂载，则直接返回
-      if (!instance.view.isMounted) return void 0
+      if (!instance.isMounted) return void 0
       // 遍历子元素，记录它们的位置信息
       for (const child of children) {
         const el = child.node
@@ -75,7 +77,7 @@ function TransitionGroup<T, Tag extends ContainerTag>(props: TransitionGroupProp
     // 更新后回调
     onAfterUpdate: (children: View[]): void => {
       // 如果视图未挂载，则直接返回
-      if (!instance.view.isMounted) return void 0
+      if (!instance.isMounted) return void 0
       // 获取过渡类名前缀
       const name = props.name || 'v'
       // 获取移动动画类名
