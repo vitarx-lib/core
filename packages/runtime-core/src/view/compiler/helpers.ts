@@ -1,10 +1,9 @@
-import { hasPropTrack, IS_REF, type Ref } from '@vitarx/responsive'
+import { hasPropTrack, isRef, type Ref, toRef } from '@vitarx/responsive'
 import { isFunction } from '@vitarx/utils'
 import type { CodeLocation, ValidChild } from '../../types/index.js'
 import { DynamicView } from '../implements/index.js'
 import { DynamicViewSource, SwitchViewSource } from './source.js'
 
-const readonlyPropCache = new WeakMap<object, Map<PropertyKey, Ref>>()
 /**
  * 创建一个只读的响应式引用对象
  *
@@ -12,23 +11,9 @@ const readonlyPropCache = new WeakMap<object, Map<PropertyKey, Ref>>()
  * @param key - 源对象上的键
  * @returns {Ref} 返回一个只读的引用对象
  */
-export function readonlyProp<T extends object, K extends keyof T>(obj: T, key: K): Ref<T[K]> {
-  let map = readonlyPropCache.get(obj)
-  if (!map) {
-    map = new Map()
-    readonlyPropCache.set(obj, map)
-  }
-  let cached = map.get(key)
-  if (!cached) {
-    cached = {
-      [IS_REF]: true,
-      get value(): T[K] {
-        return obj[key]
-      }
-    }
-    map.set(key, cached)
-  }
-  return cached as Ref<T[K]>
+export function memberRef<T extends object, K extends keyof T>(obj: T, key: K): Ref<T[K]> {
+  if (isRef(obj) && key === 'value') return obj
+  return toRef(obj, key)
 }
 
 /**
@@ -65,7 +50,7 @@ export function memberExpressions<T extends object, K extends keyof T>(
   // 如果值是函数，则直接返回该函数
   if (isFunction(value)) return value
   // 如果需要跟踪，则返回 SwitchView 视图对象；否则直接返回值
-  return isTrack ? new DynamicView<T[K]>(readonlyProp(obj, key)) : value
+  return isTrack ? new DynamicView<T[K]>(memberRef(obj, key)) : value
 }
 
 /**

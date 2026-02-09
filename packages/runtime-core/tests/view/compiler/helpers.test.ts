@@ -4,7 +4,7 @@ import {
   build,
   DynamicView,
   memberExpressions,
-  readonlyProp,
+  memberRef,
   switchExpressions,
   ViewKind
 } from '../../../src/index.js'
@@ -13,7 +13,7 @@ describe('Compiler Helpers', () => {
   describe('readonlyProp', () => {
     it('应该创建一个只读的响应式引用对象', () => {
       const obj = { name: 'test' }
-      const propRef = readonlyProp(obj, 'name')
+      const propRef = memberRef(obj, 'name')
 
       expect(propRef).toHaveProperty('value')
       expect(propRef.value).toBe('test')
@@ -21,16 +21,16 @@ describe('Compiler Helpers', () => {
 
     it('应该缓存相同对象的相同属性引用', () => {
       const obj = { name: 'test' }
-      const ref1 = readonlyProp(obj, 'name')
-      const ref2 = readonlyProp(obj, 'name')
+      const ref1 = memberRef(obj, 'name')
+      const ref2 = memberRef(obj, 'name')
 
       expect(ref1).toBe(ref2)
     })
 
     it('应该为不同属性创建不同的引用', () => {
       const obj = { name: 'test', age: 18 }
-      const ref1 = readonlyProp(obj, 'name')
-      const ref2 = readonlyProp(obj, 'age')
+      const ref1 = memberRef(obj, 'name')
+      const ref2 = memberRef(obj, 'age')
 
       expect(ref1).not.toBe(ref2)
       expect(ref1.value).toBe('test')
@@ -40,8 +40,8 @@ describe('Compiler Helpers', () => {
     it('应该为不同对象创建不同的引用', () => {
       const obj1 = { name: 'test1' }
       const obj2 = { name: 'test2' }
-      const ref1 = readonlyProp(obj1, 'name')
-      const ref2 = readonlyProp(obj2, 'name')
+      const ref1 = memberRef(obj1, 'name')
+      const ref2 = memberRef(obj2, 'name')
 
       expect(ref1).not.toBe(ref2)
       expect(ref1.value).toBe('test1')
@@ -50,7 +50,7 @@ describe('Compiler Helpers', () => {
 
     it('应该返回最新的属性值', () => {
       const obj = { name: 'test' }
-      const propRef = readonlyProp(obj, 'name')
+      const propRef = memberRef(obj, 'name')
 
       expect(propRef.value).toBe('test')
 
