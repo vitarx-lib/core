@@ -4,6 +4,8 @@ import { GetterRef } from './getter.js'
 import { PropertyRef } from './property.js'
 import { ValueRef } from './value.js'
 
+const propertyRefStore = new WeakMap<object, Map<PropertyKey, Ref>>()
+
 /**
  * ToRef 类型工具，它根据输入类型 T 转换类型
  *
@@ -136,7 +138,19 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): Ref {
 
     const val = object[key]
     if (isRef(val)) return val
-    return new PropertyRef(object, key, defaultValue)
+    const cached = propertyRefStore.get(object)?.get(key)
+    if (cached) return cached
+    
+    const p = new PropertyRef(object, key, defaultValue)
+    
+    // 确保对象在WeakMap中有对应的Map
+    if (!propertyRefStore.has(object)) {
+      propertyRefStore.set(object, new Map())
+    }
+    
+    // 设置缓存
+    propertyRefStore.get(object)!.set(key, p)
+    return p
   }
 
   const value = arg1

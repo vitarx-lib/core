@@ -49,6 +49,36 @@ describe('signal/ref/utils', () => {
 
       expect(refWrapper).toBe(refValue)
     })
+
+    it('should cache PropertyRef for the same object and key', () => {
+      const obj = { prop: 42 }
+      const ref1 = toRef(obj, 'prop')
+      const ref2 = toRef(obj, 'prop')
+
+      expect(ref1).toBe(ref2)
+      expect(ref1).toBeInstanceOf(PropertyRef)
+    })
+
+    it('should create different PropertyRef for different keys', () => {
+      const obj = { prop1: 42, prop2: 'hello' }
+      const ref1 = toRef(obj, 'prop1')
+      const ref2 = toRef(obj, 'prop2')
+
+      expect(ref1).not.toBe(ref2)
+      expect(ref1.value).toBe(42)
+      expect(ref2.value).toBe('hello')
+    })
+
+    it('should create different PropertyRef for different objects', () => {
+      const obj1 = { prop: 42 }
+      const obj2 = { prop: 'hello' }
+      const ref1 = toRef(obj1, 'prop')
+      const ref2 = toRef(obj2, 'prop')
+
+      expect(ref1).not.toBe(ref2)
+      expect(ref1.value).toBe(42)
+      expect(ref2.value).toBe('hello')
+    })
   })
 
   describe('toRefs', () => {
