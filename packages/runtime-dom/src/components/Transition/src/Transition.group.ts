@@ -167,7 +167,9 @@ defineValidate(TransitionGroup, (props: AnyProps) => {
     )
   }
   if (props.key && !isFunction(props.key)) {
-    throw new TypeError(`[TransitionGroup]: key expects a function, received ${typeof props.key}`)
+    throw new TypeError(
+      `[TransitionGroup]: key expects a function or string (property name), received ${typeof props.key}`
+    )
   }
 })
 export { TransitionGroup, type TransitionGroupProps }
