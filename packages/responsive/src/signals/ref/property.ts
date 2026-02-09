@@ -1,4 +1,4 @@
-import { isFunction } from '@vitarx/utils'
+import { isFunction, isObject } from '@vitarx/utils'
 import { IS_REF, type Ref } from '../shared/index.js'
 
 /**
@@ -38,7 +38,9 @@ export class PropertyRef<T extends object, K extends keyof T> implements Ref<T[K
     private readonly target: T,
     private readonly key: K,
     private readonly defaultValue?: T[K]
-  ) {}
+  ) {
+    if (__DEV__ && !isObject(target)) throw new TypeError('target must be an object')
+  }
   get value(): T[K] {
     const v = this.target[this.key]
     return v === undefined ? this.defaultValue! : v
