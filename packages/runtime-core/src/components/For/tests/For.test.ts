@@ -41,15 +41,35 @@ describe('For Component', () => {
       }).toThrowError()
     })
 
-    it('应该验证 key 必须为函数', () => {
+    it('应该验证 key 类型正确性', () => {
+      // 测试有效的 key 类型
       expect(() => {
         // @ts-expect-error - Testing invalid input
         For.validateProps({
           each: [],
           children: (item: any) => createView(testTag),
-          key: 'not a function' as any
+          key: (item: any) => item.id // 函数类型
         })
-      }).toThrowError()
+      }).not.toThrow()
+
+      expect(() => {
+        // @ts-expect-error - Testing invalid input
+        For.validateProps({
+          each: [{ id: 1 }],
+          children: (item: any) => createView(testTag),
+          key: 'id' // 字符串类型（属性名）
+        })
+      }).not.toThrow()
+
+      // 测试无效的 key 类型
+      expect(() => {
+        // @ts-expect-error - Testing invalid input
+        For.validateProps({
+          each: [],
+          children: (item: any) => createView(testTag),
+          key: 123 as any // 数字类型应该是无效的
+        })
+      }).toThrow()
     })
 
     it('应该接受有效的 props', () => {
@@ -302,6 +322,38 @@ describe('For Component', () => {
       view.mount(container)
 
       expect(container.textContent).toBe('1twotruenull')
+    })
+
+    it('应该在没有提供key时显示优化的警告信息', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const items = ['apple', 'banana']
+
+      const view = createView(For<string>, {
+        each: items,
+        // 故意不提供 key prop
+        children: (item: string) =>
+          createView(testTag, {
+            children: item
+          })
+      })
+
+      view.mount(container)
+
+      // 验证警告信息包含优化后的内容
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('key prop is not provided'),
+        expect.any(Object)
+      )
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('While not mandatory'),
+        expect.any(Object)
+      )
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Consider adding a unique key'),
+        expect.any(Object)
+      )
+
+      warnSpy.mockRestore()
     })
   })
 })
