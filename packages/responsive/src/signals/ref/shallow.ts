@@ -44,6 +44,15 @@ export class ShallowRef<T = any> implements RefSignal<T> {
     // 触发信号更新，通知依赖
     triggerSignal(this, 'set', { key: 'value', newValue, oldValue })
   }
+
+  /** 读取原始值 - 不触发跟踪！(等同于raw)*/
+  get peek(): T {
+    return this._value
+  }
+  /** 读取原始值 - 不触发跟踪！(等同于peek)*/
+  get raw(): T {
+    return this._value
+  }
   toString(): string {
     const val = this.value
     if (val?.toString && isFunction(val.toString)) {

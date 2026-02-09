@@ -66,6 +66,14 @@ export class ValueRef<T = any> implements RefSignal<ToRefValue<T>, T> {
     this._rawValue = newValue
     triggerSignal(this, 'set', { key: 'value', oldValue, newValue })
   }
+  /** 偷偷读取value - 不触发跟踪！*/
+  get peek(): ToRefValue<T> {
+    return this._value
+  }
+  /** 读取原始值 - 不触发跟踪！*/
+  get raw(): T {
+    return this._rawValue
+  }
   toString(): string {
     const val = this.value
     if (val?.toString && isFunction(val.toString)) {
