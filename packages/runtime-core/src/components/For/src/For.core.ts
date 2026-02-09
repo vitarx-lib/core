@@ -231,14 +231,6 @@ defineValidate(For, (props): void => {
         `[For]: key expects a function or string (property name), received ${typeof props.key}`
       )
     }
-  } else {
-    logger.warn(
-      `[For]: key prop is not provided. ` +
-        `While not mandatory, providing a key helps optimize list rendering performance ` +
-        `and ensures proper component state preservation during list updates. ` +
-        `Consider adding a unique key for each item.`,
-      location
-    )
   }
   if (props.onLeave && !isFunction(props.onLeave)) {
     throw new TypeError(`[For]: onLeave expects a function, received ${typeof props.onLeave}`)
