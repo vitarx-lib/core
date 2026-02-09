@@ -9,7 +9,7 @@ import {
   type View,
   type WithProps
 } from '@vitarx/runtime-core'
-import { isFunction } from '@vitarx/utils'
+import { isFunction, logger } from '@vitarx/utils'
 import type { VoidElementTag } from '../../../types/index.js'
 import type { BaseTransitionProps } from './Transition.types.js'
 import { getDuration, isElement, runTransition } from './Transition.utils.js'
@@ -166,9 +166,20 @@ defineValidate(TransitionGroup, (props: AnyProps) => {
       `[TransitionGroup]: children expects a function, received ${typeof props.children}`
     )
   }
-  if (props.key && !isFunction(props.key)) {
-    throw new TypeError(
-      `[TransitionGroup]: key expects a function or string (property name), received ${typeof props.key}`
+  if (props.key !== undefined) {
+    // 验证 key 类型：必须是函数或字符串（对象属性名）
+    if (typeof props.key !== 'function' && typeof props.key !== 'string') {
+      throw new TypeError(
+        `[TransitionGroup]: key expects a function or string (property name), received ${typeof props.key}`
+      )
+    }
+  } else {
+    logger.warn(
+      `[TransitionGroup]: key prop is not provided. ` +
+        `While not mandatory, providing a key helps optimize list rendering performance ` +
+        `and ensures proper component state preservation during list updates. ` +
+        `Consider adding a unique key for each item.`,
+      location
     )
   }
 })
