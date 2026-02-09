@@ -135,18 +135,7 @@ export function normalizeKeyResolver<T>(
   location: CodeLocation | undefined,
   name: string
 ): (item: T, index: number) => unknown {
-  if (!key) {
-    if (__DEV__) {
-      logger.warn(
-        `[${name}]: key prop is not provided. ` +
-          `While not mandatory, providing a key helps optimize list rendering performance ` +
-          `and ensures proper component state preservation during list updates. ` +
-          `Consider adding a unique key for each item.`,
-        location
-      )
-    }
-    return () => Symbol()
-  }
+  if (!key) return () => Symbol()
   if (isFunction(key))
     return (item, index) => {
       try {
