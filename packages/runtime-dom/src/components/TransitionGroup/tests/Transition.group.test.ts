@@ -1,5 +1,5 @@
 import { nextTick, ref } from '@vitarx/responsive'
-import { createView, ElementView, ListView, type View, ViewKind } from '@vitarx/runtime-core'
+import { createView, ElementView, ListView, ViewKind } from '@vitarx/runtime-core'
 import { sleep } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TransitionGroup } from '../src/index.js'

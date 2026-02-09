@@ -11,8 +11,8 @@ import {
 } from '@vitarx/runtime-core'
 import { isFunction, logger } from '@vitarx/utils'
 import type { VoidElementTag } from '../../../types/index.js'
-import type { BaseTransitionProps } from './Transition.types.js'
-import { getDuration, isElement, runTransition } from './Transition.utils.js'
+import type { BaseTransitionProps } from '../../Transition/src/index.js'
+import { getDuration, isElement, runTransition } from '../../Transition/src/Transition.utils.js'
 
 type ContainerTag = Exclude<HostElementTag, VoidElementTag>
 interface TransitionGroupProps<T, Tag extends ContainerTag>
