@@ -1,20 +1,20 @@
-import { watch } from '@vitarx/responsive'
+import { type Ref, ShallowRef, shallowRef, watch } from '@vitarx/responsive'
 import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
 import { defineValidate, getInstance, getRenderer } from '../../../runtime/index.js'
 import type { ValidChild, View } from '../../../types/index.js'
 import { resolveChild } from '../../../view/compiler/resolve.js'
 import { CommentView, ListView } from '../../../view/index.js'
-import { ensureMounted, getLIS, moveDOM, removeView } from './For.utils.js'
+import { checkKey, ensureMounted, getLIS, moveDOM, normalizeKeyResolver } from './For.utils.js'
 
-type ListItemFactory<T> = (item: T, index: number) => ValidChild
-type ListKeyResolver<T> = (item: T, index: number) => any
+export type ListItemFactory<T> = (item: T, index: Ref<number>) => ValidChild
+export type ListKeyResolver<T> = keyof T | ((item: T) => any)
 
-interface ListItemRecord {
+export interface ListItemRecord {
   view: View
-  index: number
+  indexRef: ShallowRef<number>
 }
 
-type ListItemMap = Map<any, ListItemRecord>
+export type ListItemMap = Map<any, ListItemRecord>
 interface DiffResult {
   newChildren: View[]
   sourceIndex: number[]
@@ -34,7 +34,6 @@ export interface ListProps<T> {
 }
 
 export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
-
 /**
  * For组件函数，用于渲染动态列表视图
  *
@@ -51,7 +50,7 @@ export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
  *   return (
  *     <For
  *       each={items}
- *       key={(item, index) => item}
+ *       key={item => item}
  *       children={(item, index) => <div>{item}</div>}
  *     />
  *   );
@@ -61,47 +60,39 @@ export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
 export function For<T>(props: ForProps<T>): ListView {
   const instance = getInstance()!
   const location = instance.view.location
-  const buildView = (item: T, i: number): View => {
+  const componentName = instance.view.name
+  const buildView = (item: T, i: Ref<number>): View => {
     try {
       const child = props.children(item, i)
-      return resolveChild(child) || new CommentView(`for:<${i}>_invalid`)
+      return resolveChild(child) || new CommentView(`for:<${i.value}>_invalid`)
     } catch (e) {
       instance.reportError(e, 'view:build')
-      return new CommentView(`for:<${i}>_build_failed}`)
+      return new CommentView(`for:<${i.value}>_build_failed}`)
     }
   }
-  const keyExtractor = props.key ?? ((item: T) => item)
+  const keyOf = normalizeKeyResolver(props.key, location, componentName)
+
   const onLeaveCb = props.onLeave
   const onEnterCb = props.onEnter
   const onBeforeUpdateCb = props.onBeforeUpdate
   const onAfterUpdateCb = props.onAfterUpdate
-  const checkKey = (key: unknown, index: number, map: ListItemMap): unknown => {
-    if (map.has(key)) {
-      if (__DEV__) {
-        const existingRecord = map.get(key)!
-        const errorMsg =
-          `Duplicate key "${String(key)}" detected in ${instance.view.name} component.\n` +
-          `  Key "${String(key)}" was already used at index ${existingRecord.index}, now encountered at index ${index}.\n` +
-          `  This can cause rendering issues and unexpected behavior.\n` +
-          `  Please ensure your key function returns unique values for each item.\n` +
-          `  Example: key={(item, index) => item.id}`
-        logger.warn(errorMsg, location)
-      }
-      return { __dup: key, index: index }
-    }
-    return key
-  }
+
   const listView = new ListView()
   let itemMap: ListItemMap = new Map()
+  const pendingRemoved: ListItemMap = new Map()
   let render: () => void | DiffResult
   // 初始化
   render = (): void => {
     const each = props.each
     for (let i = 0; i < each.length; i++) {
       const item = each[i]
-      const key = checkKey(keyExtractor(item, i), i, itemMap)
-      const view = buildView(item, i)
-      itemMap.set(key, { view, index: i })
+      const rawKey = keyOf(item, i)
+      const key = checkKey(rawKey, i, itemMap, componentName)
+
+      const indexRef = shallowRef(i)
+      const view = buildView(item, indexRef)
+
+      itemMap.set(key, { view, indexRef })
       listView.append(view)
     }
     render = diff
@@ -116,16 +107,35 @@ export function For<T>(props: ForProps<T>): ListView {
     // build new children
     for (let i = 0; i < length; i++) {
       const item = each[i]
-      const key = checkKey(keyExtractor(item, i), i, newItemMap)
-      const cached = itemMap.get(key)
+      const rawKey = keyOf(item, i)
+      const key = checkKey(rawKey, i, newItemMap, componentName)
+
       let view: View
+      let indexRef: ShallowRef<number>
+
+      // find existing view
+      const cached = itemMap.get(key)
       if (cached) {
         view = cached.view
-        sourceIndex[i] = cached.index
+        indexRef = cached.indexRef
+        const oldIndex = indexRef.raw
+        indexRef.value = i
+        sourceIndex[i] = oldIndex
       } else {
-        view = buildView(item, i)
+        // try revive pending removed
+        const reused = pendingRemoved.get(key)
+        if (reused) {
+          pendingRemoved.delete(key)
+          view = reused.view
+          indexRef = reused.indexRef
+          indexRef.value = i
+        } else {
+          // create new view
+          indexRef = shallowRef(i)
+          view = buildView(item, indexRef)
+        }
       }
-      newItemMap.set(key, { view, index: i })
+      newItemMap.set(key, { view, indexRef })
       newChildren[i] = view
     }
     return { newChildren, sourceIndex, newItemMap }
@@ -136,7 +146,7 @@ export function For<T>(props: ForProps<T>): ListView {
     diffResult => {
       if (!diffResult) return
       // 前置钩子
-      if (listView.isMounted) onBeforeUpdateCb?.(Array.from(listView.children))
+      onBeforeUpdateCb?.(Array.from(listView.children))
       const renderer = getRenderer()
       const { newChildren, sourceIndex, newItemMap } = diffResult
       const length = newChildren.length
@@ -168,16 +178,39 @@ export function For<T>(props: ForProps<T>): ListView {
       }
 
       // remove stale
-      for (const [key, { view }] of itemMap) {
-        if (!newItemMap.has(key)) {
-          removeView(listView, view, onLeaveCb)
+      for (const [key, record] of itemMap) {
+        if (newItemMap.has(key)) continue
+        const view = record.view
+        listView.remove(view)
+        if (!onLeaveCb) {
+          // 直接销毁视图
+          view.dispose()
+          continue
+        }
+        pendingRemoved.set(key, record)
+
+        let isDone = false
+        const done = () => {
+          if (isDone) return
+          isDone = true
+          if (pendingRemoved.get(key)?.view === view) {
+            pendingRemoved.delete(key)
+            view.dispose()
+          }
+        }
+
+        try {
+          onLeaveCb(view, done)
+        } catch (e) {
+          logger.warn(`[${componentName}] onLeave callback throw error: ${e}`, location)
+          done()
         }
       }
 
       // update map
       itemMap = newItemMap
       // 后置钩子
-      if (listView.isMounted) onAfterUpdateCb?.(Array.from(listView.children))
+      onAfterUpdateCb?.(Array.from(listView.children))
     },
     { flush: 'main', immediate: true }
   )
@@ -194,7 +227,7 @@ defineValidate(For, (props): void => {
   if (props.key && !isFunction(props.key)) {
     throw new TypeError(`[For]: key expects a function, received ${typeof props.key}`)
   }
-  if (props.onLeave && !isFunction(props.key)) {
+  if (props.onLeave && !isFunction(props.onLeave)) {
     throw new TypeError(`[For]: onLeave expects a function, received ${typeof props.onLeave}`)
   }
   if (props.onEnter && !isFunction(props.onEnter)) {

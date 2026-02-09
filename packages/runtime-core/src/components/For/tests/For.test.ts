@@ -70,8 +70,8 @@ describe('For Component', () => {
 
       const view = createView(For<string>, {
         each: items,
-        key: (item: string, index: number) => `${item}-${index}`,
-        children: (item: string, index: number) =>
+        key: item => item,
+        children: (item: string, index) =>
           createView(testTag, {
             children: `${item}-${index}`
           })
@@ -107,8 +107,8 @@ describe('For Component', () => {
 
       const view = createView(For<string>, {
         each: items,
-        key: (item: string, index: number) => index,
-        children: (item: string, index: number) =>
+        key: item => item,
+        children: (item: string, index) =>
           createView(testTag, {
             children: `${item}-${index}`
           })
@@ -170,7 +170,7 @@ describe('For Component', () => {
           return items.value
         },
         key: (item: string) => item,
-        children: (item: string, _index: number) =>
+        children: (item: string) =>
           createView(testTag, {
             children: item
           })
@@ -232,7 +232,7 @@ describe('For Component', () => {
 
       const view = createView(For<number>, {
         each: items,
-        key: (item: number, index: number) => `${item}-${index}`,
+        key: item => item,
         children: (item: number) =>
           createView(testTag, {
             children: `num-${item}`
