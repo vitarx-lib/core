@@ -1,10 +1,12 @@
 import type { Ref } from '@vitarx/responsive'
+import { getCallSource } from '@vitarx/utils'
 import { isViewBuilder } from '../../shared/index.js'
 import type {
   AnyProps,
   CodeLocation,
   Component,
   HostElementTag,
+  ValidChild,
   ValidChildren,
   ValidProps,
   View,
@@ -189,4 +191,92 @@ export function createElementView<T extends HostElementTag>(
   location?: CodeLocation
 ): ElementView<T> {
   return new ElementView(tag, props, location)
+}
+
+/**
+ * 创建视图的工厂函数
+ *
+ * @template P - 视图属性的类型，必须扩展自 AnyProps
+ * @template B - 视图实例的类型，必须扩展自 View
+ * @param type - 视图构建器函数，用于创建指定类型的视图实例
+ * @param [props] - 可选的视图属性对象，默认为 null
+ * @param [children] - 可选的子视图
+ * @returns 返回创建的视图实例，类型为 B
+ */
+export function h<P extends AnyProps, B extends View>(
+  type: ViewBuilder<P, B>,
+  props?: P | null,
+  ...children: ValidChild[]
+): B
+
+/**
+ * 创建组件视图实例
+ * 当传入类型参数为组件时，创建对应的组件视图
+ *
+ * @template T 组件类型
+ * @param type 组件类型
+ * @param [props] 组件属性
+ * @param [children] 子视图
+ * @returns {ComponentView} 组件视图实例
+ */
+export function h<T extends Component>(
+  type: T,
+  props?: ValidProps<T> | null,
+  ...children: ValidChild[]
+): ComponentView<T>
+
+/**
+ * 创建元素视图实例
+ * 当传入类型参数为HTML标签时，创建对应的元素视图
+ *
+ * @template T HTML标签类型
+ * @param type HTML标签名称
+ * @param [props] 元素属性，默认为null
+ * @param [children] - 子元素
+ * @returns {ElementView} 元素视图实例
+ */
+export function h<T extends HostElementTag>(
+  type: T,
+  props?: ValidProps<T> | null,
+  ...children: ValidChild[] // 子视图
+): ElementView<T>
+
+/**
+ * 创建通用视图实例
+ * 当传入类型参数为视图标签时，创建对应的视图实例
+ *
+ * @template T 视图标签类型
+ * @param type 视图标签
+ * @param [props] 视图属性，默认为null
+ * @param [children] - 子视图
+ * @returns {View} 视图实例
+ */
+export function h<T extends ViewTag>(
+  type: T,
+  props?: ValidProps<T> | null,
+  ...children: ValidChild[]
+): View
+/**
+ * 创建视图
+ *
+ * @param type - 节点类型，可以是字符串、组件函数或类组件
+ * @param props - 节点属性对象，可选参数，默认为null
+ * @param children - 子节点，可以是任意数量的子节点
+ * @returns {View} 返回创建的虚拟DOM节点实例
+ */
+export function h<T extends ViewTag>(
+  type: T,
+  props: ValidProps<T> | null = null,
+  ...children: ValidChild[] // 子视图
+): View {
+  if (children.length) {
+    // 如果有子节点
+    props ??= {} as ValidProps<T>
+    ;(props as AnyProps).children = children.length === 1 ? children[0] : children
+  }
+  if (__DEV__) {
+    const location = getCallSource()
+    return createView(type, props, location)
+  }
+  return createView(type, props)
 }
