@@ -54,6 +54,9 @@ interface TransitionProps extends BaseTransitionProps {
  * Transition 会自动应用进入/离开过渡，可以由 CSS 过渡或动画库控制，
  * 也可以通过 JavaScript 钩子手动控制。
  *
+ * @param props Transition 组件属性
+ * @returns - View 实例
+ *
  * @example
  * ```jsx
  * <Transition>
@@ -64,7 +67,7 @@ interface TransitionProps extends BaseTransitionProps {
  * </Transition>
  * ```
  */
-function Transition(props: TransitionProps) {
+function Transition(props: TransitionProps): View {
   const instance = getInstance()!
   if (props.appear) {
     onMounted(() => {
