@@ -105,6 +105,17 @@ export class ComponentView<T extends Component = Component> extends BaseView<
   get subView(): View | null {
     return this.instance?.subView ?? null
   }
+
+  /**
+   * @inheritDoc
+   */
+  public override mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
+    super.mount(target, type)
+    // 子 -> 父
+    this.instance!.mounted()
+    return this
+  }
+
   protected override doActivate(): void {
     this.subView?.activate()
     // 子 -> 父
@@ -122,17 +133,6 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     this.instance.init()
     this.instance.subView.init(this.instance.subViewContext)
   }
-
-  /**
-   * @inheritDoc
-   */
-  override mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
-    super.mount(target, type)
-    // 子 -> 父
-    this.instance!.mounted()
-    return this
-  }
-
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType) {
     // 父 -> 子
     this.instance!.beforeMount()
