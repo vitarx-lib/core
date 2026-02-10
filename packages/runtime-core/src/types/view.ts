@@ -1,5 +1,5 @@
 import type { Ref } from '@vitarx/responsive'
-import type { AnyPrimitive } from '@vitarx/utils'
+import type { AnyPrimitive, CodeSource } from '@vitarx/utils'
 import type { App } from '../app/index.js'
 import type {
   CommentView,
@@ -20,14 +20,7 @@ import type { HostElementTag } from './element.js'
  *
  * 用于记录视图的生成位置
  */
-export interface CodeLocation {
-  /** 源文件名 */
-  fileName: string
-  /** 源代码行号 */
-  lineNumber: number
-  /** 源代码列号 */
-  columnNumber: number
-}
+export interface CodeLocation extends CodeSource {}
 
 /**
  * 宿主节点视图
