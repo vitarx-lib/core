@@ -1,15 +1,5 @@
-import {
-  type HostElements,
-  isVNode,
-  mountNode,
-  renderNode,
-  runInRenderContext,
-  setDefaultDriver,
-  type VNode
-} from '@vitarx/runtime-core'
-import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
+import { type HostContainer, isView, RENDER_CONTEXT, type View } from '@vitarx/runtime-core'
 import type { SSRApp } from '../app/index.js'
-import { SSRRenderDriver } from '../server/SSRRenderDriver.js'
 import type { SSRContext } from '../shared/context.js'
 import { hydrateNode } from './activate.js'
 import { resolveContainer } from './utils.js'
@@ -51,59 +41,46 @@ declare global {
  * ```
  */
 export function hydrate(
-  root: SSRApp | VNode,
-  container: HostElements | Element | string,
+  root: SSRApp | View,
+  container: HostContainer | string,
   context: SSRContext = {}
 ): Promise<void> {
-  // 1. 容器解析
+  // 容器解析
   const containerEl = resolveContainer(container)
   if (!containerEl) {
     throw new Error(`[hydrate] Container not found: ${container}`)
   }
-  // 2. 状态恢复 - 合并服务端注入的状态
-  if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
-    Object.assign(context, window.__INITIAL_STATE__)
-  }
+  const isApp = !isView(root)
   // 获取根节点
-  const rootNode: VNode = isVNode(root) ? root : root.rootNode
-  if (!rootNode) {
+  const rootView: View = isApp ? root.rootView : root
+  if (!rootView) {
     throw new TypeError('[hydrate] root is not a valid virtual node or App instance')
   }
+  if (isApp) {
+    // 状态恢复 - 合并服务端注入的状态
+    if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
+      Object.assign(context, window.__INITIAL_STATE__)
+    }
+    // 设置客户端水合标识
+    context.$isHydrating = true
+    // 提供客户端渲染上下文
+    root.provide(RENDER_CONTEXT, context)
+  }
+
   return new Promise(async resolve => {
     try {
-      await runInRenderContext(async () => {
-        if (containerEl.childNodes.length > 0) {
-          // 3. 上下文设置
-          context.$isHydrating = true
-          // 初始化节点异步任务映射（与服务端统一使用 WeakMap）
-          const nodeAsyncMap = new WeakMap<VNode, Promise<unknown>>()
-          context.$nodeAsyncMap = nodeAsyncMap
-          // 4. 注册水合驱动
-          setDefaultDriver(new SSRRenderDriver())
-
-          // 5. 预渲染 - 触发 onRender，收集异步任务到 WeakMap
-          renderNode(rootNode)
-
-          // 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
-          await hydrateNode(rootNode, containerEl as HostElements, nodeAsyncMap)
-        } else {
-          renderNode(rootNode)
-        }
-      }, context)
+      rootView.init(isApp ? { app: root } : undefined)
+      if (containerEl.childNodes.length > 0) {
+        // 6. 渐进式激活 - 逐节点激活，遇到异步节点时等待完成后继续
+        await hydrateNode(rootView, containerEl)
+      }
     } catch (err) {
       console.error('[hydrate] Hydration failed:', err)
       // 清空容器
       containerEl.innerHTML = ''
     } finally {
-      // 7. 移除水合驱动
-      setDefaultDriver(null)
-      // 8. 清理标识
-      delete context.$isHydrating
-      delete context.$nodeAsyncMap
-      // 9. 注册默认驱动
-      registerDefaultDrivers()
-      // 10. 挂载根节点
-      mountNode(rootNode, containerEl as HostElements)
+      context.$isHydrating = false
+      rootView.mount(containerEl)
       resolve()
     }
   })

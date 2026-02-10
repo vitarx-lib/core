@@ -27,8 +27,7 @@ export function serializeAttributes(props: Record<string, any>): string {
   for (const key in props) {
     const value = props[key]
     // 跳过事件处理程序和特殊值
-    if (typeof value === 'function' || value === null || value === undefined || key === 'children')
-      continue
+    if (typeof value === 'function' || value == null || key === 'children') continue
 
     // 处理 class 属性
     if (key === 'class' || key === 'className' || key === 'classname') {
@@ -99,3 +98,22 @@ export function tagSelfClosing(tagName: string, props: Record<string, any>): str
   const attrs = serializeAttributes(props)
   return `<${tagName}${attrs} />`
 }
+
+/**
+ * Void 元素集合(不支持子元素的自闭合标签)
+ */
+export const VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'source',
+  'track',
+  'wbr'
+])

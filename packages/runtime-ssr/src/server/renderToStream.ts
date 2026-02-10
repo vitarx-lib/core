@@ -1,16 +1,8 @@
-import {
-  isVNode,
-  renderNode,
-  runInRenderContext,
-  setDefaultDriver,
-  type VNode
-} from '@vitarx/runtime-core'
+import { isView, RENDER_CONTEXT, type View } from '@vitarx/runtime-core'
 import { SSRApp } from '../app/index.js'
-import type { NodeAsyncMap } from '../shared/context.js'
 import { type SSRContext } from '../shared/index.js'
-import { streamSerializeNode } from '../shared/serialize.js'
+import { serializeViewToSink } from '../shared/serialize.js'
 import type { StreamingSink } from '../shared/sink.js'
-import { SSRRenderDriver } from './SSRRenderDriver.js'
 
 /**
  * 将应用渲染为流（block 模式）
@@ -33,31 +25,19 @@ import { SSRRenderDriver } from './SSRRenderDriver.js'
  * ```
  */
 export async function renderToStream(
-  root: SSRApp | VNode,
+  root: SSRApp | View,
   context: SSRContext = {},
   options: StreamingSink
 ): Promise<void> {
-  // 注册服务器端驱动
-  setDefaultDriver(new SSRRenderDriver())
-
-  // 初始化节点异步任务映射
-  const nodeAsyncMap: NodeAsyncMap = new WeakMap()
-  context.$nodeAsyncMap = nodeAsyncMap
-
   try {
-    await runInRenderContext(async () => {
-      const rootNode: VNode = isVNode(root) ? root : root.rootNode
-
-      // 渲染根节点（构建虚拟节点树，异步任务绑定到节点）
-      renderNode(rootNode)
-
-      // 流式输出（逐个节点序列化，遇到异步则等待）
-      await streamSerializeNode(rootNode, options, nodeAsyncMap)
-
-      // 清理内部状态
-      delete context.$nodeAsyncMap
-      options.close()
-    }, context)
+    const isApp = !isView(root)
+    if (isApp) root.inject(RENDER_CONTEXT, context)
+    const rootView: View = isApp ? root.rootView : root
+    // 渲染根节点（构建虚拟节点树，异步任务绑定到节点）
+    rootView.init(isApp ? { app: root } : undefined)
+    // 流式输出（逐个节点序列化，遇到异步则等待）
+    await serializeViewToSink(rootView, options)
+    options.close()
   } catch (err) {
     options.error(err)
   }
@@ -77,7 +57,7 @@ export async function renderToStream(
  * ```
  */
 export function renderToReadableStream(
-  root: SSRApp | VNode,
+  root: SSRApp | View,
   context: SSRContext = {}
 ): ReadableStream<string> {
   let controller: ReadableStreamDefaultController<string>
@@ -117,7 +97,7 @@ export function renderToReadableStream(
  * ```
  */
 export async function renderToNodeStream(
-  root: SSRApp | VNode,
+  root: SSRApp | View,
   context: SSRContext = {}
 ): Promise<NodeJS.ReadableStream> {
   const { Readable } = await import('stream')
@@ -159,7 +139,7 @@ export async function renderToNodeStream(
  * ```
  */
 export async function pipeToWritable(
-  root: SSRApp | VNode,
+  root: SSRApp | View,
   writable: NodeJS.WritableStream,
   context: SSRContext = {}
 ): Promise<void> {

@@ -26,10 +26,7 @@ import { hydrate } from '../client/hydrate.js'
  *
  * // 客户端
  * const app = createSSRApp(App)
- * app.mount('#root', window.__INITIAL_STATE__)
- * // 等待应用激活完成
- * // 注意：app.mount 内也是调用的hydrate，因此使用其中一种方式
- * await hydrate(app, '#root', window.__INITIAL_STATE__)
+ * app.mount('#root')
  * ```
  */
 export class SSRApp extends WebApp {
@@ -47,19 +44,6 @@ export class SSRApp extends WebApp {
   override mount(container: HostContainer | string, SSRContext?: Record<string, any>): this {
     hydrate(this, container, SSRContext)
     return this
-  }
-  /**
-   * 水合激活应用
-   *
-   * 它和 mount 方法类似，但会返回一个 Promise，表示水合操作的完成。
-   *
-   * @param container - 可以是HostElements、Element或字符串类型的DOM元素选择器
-   * @param SSRContext - 服务端渲染挂载到 window.__INITIAL_STATE__ 上的上下文。
-   * @returns {Promise<void>} - 返回一个Promise对象，表示水合操作的完成
-   */
-  async hydrate(container: HostContainer, SSRContext?: Record<string, any>): Promise<void> {
-    // 调用实际的水合函数，将当前实例、容器元素和上下文传递过去
-    await hydrate(this, container, SSRContext)
   }
 }
 

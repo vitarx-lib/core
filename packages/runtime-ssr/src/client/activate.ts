@@ -1,154 +1,141 @@
+import { flushSync } from '@vitarx/responsive'
 import {
-  type FragmentNode,
+  FragmentView,
   getRenderer,
-  type HostCommentElement,
-  type HostElements,
-  type HostFragmentElement,
-  type HostTextElement,
-  invokeDirHook,
-  isWidgetNode,
-  NodeKind,
-  NodeState,
-  type RegularElementNode,
-  type VNode,
-  type WidgetNode
+  type HostComment,
+  type HostElement,
+  type HostFragment,
+  type HostNode,
+  type HostText,
+  isComponentView,
+  isDynamicView,
+  type View,
+  ViewKind
 } from '@vitarx/runtime-core'
 import { isArray, logger } from '@vitarx/utils'
-import type { NodeAsyncMap } from '../shared/context.js'
+import type { DOMElement, DOMNodeList } from '../shared/types.js'
 import { normalRender } from './render.js'
 import {
   appendChild,
   cleanupExtraDom,
   cleanupFragmentRange,
   countNodesBetween,
-  getFirstDomNode,
-  insertBefore,
-  replaceChild
+  getFirstNode,
+  getHostViewTag
 } from './utils.js'
 
 /**
  * 水合节点函数，用于将服务端渲染的DOM与客户端虚拟DOM进行匹配和同步
- * @param node - 当前需要水合的虚拟DOM节点
+ * @param view - 当前需要水合的虚拟DOM节点
  * @param container - 包含节点的DOM容器
- * @param nodeAsyncMap - 存储异步任务映射的Map
  * @param nodeIndex - 当前节点在容器中的索引位置，默认为0
  * @returns Promise<number> - 返回下一个节点的索引位置
  */
 export async function hydrateNode(
-  node: VNode,
-  container: HostElements | HostElements[],
-  nodeAsyncMap: NodeAsyncMap,
+  view: View,
+  container: DOMElement | DOMNodeList,
   nodeIndex: number = 0
 ): Promise<number> {
-  let nextIndex = nodeIndex + 1 // 初始化下一个节点的索引
-
-  // 1. Widget（包含异步逻辑）
-  if (isWidgetNode(node)) {
-    const pendingTask = nodeAsyncMap.get(node)
+  // 组件（包含异步逻辑）
+  if (isComponentView(view)) {
+    const pendingTask = view.instance!.initPromise
     if (pendingTask) {
       await pendingTask
-      nodeAsyncMap.delete(node)
+      // 清空队列任务，确保子视图更新完成。
+      flushSync()
     }
-    const child = (node as WidgetNode).instance!.child
-    nextIndex = await hydrateNode(child, container, nodeAsyncMap, nodeIndex)
-    invokeDirHook(node, 'created')
-    node.state = NodeState.Rendered
-    return nextIndex
+    const subView = view.instance!.subView
+    return await hydrateNode(subView, container, nodeIndex)
   }
-
-  // 2. 非 Widget
+  // 动态节点
+  if (isDynamicView(view)) {
+    return await hydrateNode(view.current!, container, nodeIndex)
+  }
   const renderer = getRenderer()
-  const reuse = getFirstDomNode(container, nodeIndex)
-  const { type: tagName, props, children, kind } = node as RegularElementNode
-
-  // 未找到可复用 DOM → 正常渲染并插入
-  if (!reuse) {
-    logger.warn(`[Hydration] Cannot find element for <${tagName}>`, node.devInfo?.source)
-    normalRender(node)
-    const element = node.el!
-    appendChild(container, element)
-    if (renderer.isFragment(element)) {
-      nextIndex += countNodesBetween(container, element.$startAnchor, element.$endAnchor) + 1
-    }
-    return nextIndex
+  const reuseNode = getFirstNode(container, nodeIndex)
+  const kind = view.kind
+  const tagName = getHostViewTag(view)
+  // 未找到可复用 DOM → 跳过当前激活
+  if (!reuseNode) {
+    logger.warn(`[hydrate] Cannot find dom node for <${tagName}>`, view.location)
+    // 渲染出元素/节点，避免最终
+    const el = normalRender(view, container)
+    // 追加到容器中
+    appendChild(container, el)
+    // 如果洗渲染的是片段，则需要 +1 原因是片段有两个锚点，
+    // 没有找到DOM的情况下，指针仅需进 1，实际后面已经没有节点了，下一次继续匹配还是会失败！。
+    if (renderer.isFragment(el)) nodeIndex++
+    return nodeIndex
   }
-
   // 标签 / 类型 不匹配 → fallback 渲染替换
-  if (reuse.kind !== kind || reuse.tag !== tagName) {
+  if (reuseNode.kind !== kind || reuseNode.tag !== tagName) {
     logger.warn(
       `[Hydration] Element mismatch: expected <${tagName}> but found ` +
-        `<${reuse.tag}> at index ${nodeIndex}. ` +
+        `<${reuseNode.tag}> at index ${nodeIndex}. ` +
         `This may happen if the server-rendered HTML doesn't match the client-side VNode structure.`,
-      node.devInfo?.source
+      view.location
     )
-    nextIndex = reuse.nextIndex
-
-    normalRender(node)
-    const element = node.el!
-    if (isArray(reuse.el)) {
-      insertBefore(container, element, reuse.el[0])
-      for (const child of reuse.el) child.remove()
+    const el = normalRender(view, container)
+    if (isArray(reuseNode.el)) {
+      renderer.insert(el, reuseNode.el[0] as HostNode)
+      for (const child of reuseNode.el) child.remove()
+      // 回退指针 * 片段长度
+      reuseNode.nextIndex -= reuseNode.el.length
     } else {
-      replaceChild(container, element, reuse.el)
+      renderer.replace(el, reuseNode.el as HostNode)
+      // 回退指针 * 1
+      reuseNode.nextIndex -= 1
     }
-    // 片段需要特殊计算位置
-    if (renderer.isFragment(element)) {
-      nextIndex += countNodesBetween(container, element.$startAnchor, element.$endAnchor) + 1
-    }
-    return nextIndex
+    // 还原指针
+    return (reuseNode.nextIndex += renderer.isFragment(el) ? 2 : 1)
   }
-
-  // 3. 匹配成功，按类型处理
-  switch (node.kind) {
-    case NodeKind.REGULAR_ELEMENT: {
-      const el = reuse.el as HostElements
-      node.el = el
-      renderer.setAttributes(el, props)
-
-      // hydrate children
-      for (let i = 0; i < children.length; i++) {
-        await hydrateNode(children[i], el, nodeAsyncMap, i)
+  // 匹配成功，按类型处理
+  switch (view.kind) {
+    case ViewKind.ELEMENT: {
+      const el = reuseNode.el as DOMElement
+      view['hostNode'] = el as HostElement
+      const children = view.children
+      let nextIndex = 0
+      if (children.length) {
+        // hydrate children
+        for (let i = 0; i < children.length; i++) {
+          nextIndex = await hydrateNode(children[i], el, nextIndex)
+        }
+        // 🔥 清除多余 SSR DOM
+        cleanupExtraDom(view)
       }
-      // 🔥 清除多余 SSR DOM
-      if (!props['v-html']) cleanupExtraDom(node as RegularElementNode)
-      invokeDirHook(node, 'created')
       break
     }
-    case NodeKind.VOID_ELEMENT: {
-      node.el = reuse.el as HostElements
-      renderer.setAttributes(reuse.el as HostElements, props)
-      invokeDirHook(node, 'created')
+    case ViewKind.TEXT:
+    case ViewKind.COMMENT: {
+      view['hostNode'] = reuseNode.el as HostText
+      renderer.setText(reuseNode.el as HostText, view.text)
       break
     }
-    case NodeKind.TEXT:
-    case NodeKind.COMMENT: {
-      node.el = reuse.el as unknown as HostTextElement
-      renderer.setText(node.el, props.text)
-      break
-    }
-    case NodeKind.FRAGMENT: {
-      const reuseEl = reuse.el as HostElements[]
-      const fragment = document.createDocumentFragment() as HostFragmentElement
-
-      fragment.$startAnchor = reuseEl[0] as unknown as HostCommentElement
-      fragment.$endAnchor = reuseEl[reuseEl.length - 1] as unknown as HostCommentElement
-      fragment.$vnode = node as FragmentNode
-
-      node.el = fragment
-
-      for (let i = 0; i < children.length; i++) {
-        await hydrateNode(children[i], reuseEl, nodeAsyncMap, i + 1)
+    default: {
+      const reuseEl = reuseNode.el as DOMNodeList
+      const fragment = document.createDocumentFragment() as HostFragment
+      fragment.$startAnchor = reuseEl[0] as unknown as HostComment
+      fragment.$endAnchor = reuseEl.at(-1) as unknown as HostComment
+      fragment.$view = view
+      ;(view as FragmentView)['hostNode'] = fragment
+      let nextIndex = 1
+      for (const child of view.children) {
+        nextIndex = await hydrateNode(child, reuseEl, nextIndex)
       }
-
       // 🔥 清除 Fragment 区间内多余的真实 DOM
-      cleanupFragmentRange(node as FragmentNode)
-
-      node.state = NodeState.Rendered
+      cleanupFragmentRange(view)
+      const rawCount = reuseEl.length - 2
+      const newCount = countNodesBetween(fragment.$startAnchor, fragment.$endAnchor)
+      if (newCount < rawCount) {
+        // 指针回退
+        reuseNode.nextIndex -= rawCount - newCount
+      } else if (newCount > rawCount) {
+        // 指针跃进
+        reuseNode.nextIndex += newCount - rawCount
+      }
       break
     }
-    default:
-      throw new Error(`[Hydration] Unknown node kind: ${node.kind}`)
   }
-  node.state = NodeState.Rendered
-  return nextIndex
+  return reuseNode.nextIndex
 }

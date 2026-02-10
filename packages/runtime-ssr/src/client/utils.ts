@@ -1,97 +1,138 @@
 import {
-  COMMENT_NODE_TYPE,
-  FRAGMENT_NODE_TYPE,
-  type FragmentNode,
-  type HostElements,
-  type HostFragmentElement,
-  type HostNodeElements,
-  type HostNodeType,
-  isVoidTag,
-  NodeKind,
-  type RegularElementNode,
-  type RegularElementNodeType,
-  TEXT_NODE_TYPE
+  ElementView,
+  FragmentView,
+  type HostContainer,
+  type HostElement,
+  type HostElementTag,
+  type HostFragment,
+  type HostNode,
+  type HostView,
+  isListView,
+  ListView,
+  ViewKind
 } from '@vitarx/runtime-core'
 import { isArray } from '@vitarx/utils'
+import type { DOMElement, DOMNode, DOMNodeList, NodeDescTag, NodeInfo } from '../shared/types.js'
 
-interface FirstNode {
-  el: HostElements | HostElements[]
-  nextIndex: number
-  kind: NodeKind
-  tag: HostNodeType
-}
-
-function elToKind(el: HostElements): { kind: NodeKind; tag: HostNodeType } {
+/**
+ * 解析DOM节点的类型和标签
+ * @param el DOM节点对象
+ * @returns - 返回包含节点类型和标签的对象，包含kind和tag两个属性
+ */
+function parseKindAndTag(el: DOMNode): Pick<NodeInfo, 'kind' | 'tag'> {
+  // 判断节点类型是否为注释节点
   if (el.nodeType === Node.COMMENT_NODE) {
-    return { kind: NodeKind.COMMENT, tag: COMMENT_NODE_TYPE }
+    return { kind: ViewKind.COMMENT, tag: 'comment-node' }
   } else if (el.nodeType === Node.TEXT_NODE) {
-    return { kind: NodeKind.TEXT, tag: TEXT_NODE_TYPE }
+    return { kind: ViewKind.TEXT, tag: 'text-node' }
   } else if (el.nodeType === Node.ELEMENT_NODE) {
     const tagName = (el as Element).tagName.toLowerCase()
-    if (isVoidTag(tagName)) {
-      return { kind: NodeKind.VOID_ELEMENT, tag: tagName }
-    }
-    return { kind: NodeKind.REGULAR_ELEMENT, tag: tagName as RegularElementNodeType }
-  } else if (el.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    return { kind: NodeKind.FRAGMENT, tag: FRAGMENT_NODE_TYPE }
+    return { kind: ViewKind.ELEMENT, tag: tagName as HostElementTag }
   }
-  return { kind: -1 as NodeKind, tag: 'unknown' as HostNodeType }
+  return { kind: -1 as ViewKind, tag: 'unknown' as any }
 }
+
+/**
+ * 解析节点的类型，判断是否为Fragment或List类型
+ * @param el - 需要解析的DOM节点
+ * @returns  返回节点的类型，'Fragment'、'List' 或 false（如果不是这两种类型）
+ */
+function parseFragmentType(el: DOMNode): 'Fragment' | 'List' | false {
+  let type: 'Fragment' | 'List' | false = false // 初始化类型为false
+  // 检查节点是否为注释节点
+  if (el.nodeType === Node.COMMENT_NODE) {
+    // 检查注释节点的内容，判断是Fragment还是List类型的开始标记
+    if (el.nodeValue === 'Fragment:start') {
+      type = 'Fragment' // 设置类型为Fragment
+    } else if (el.nodeValue === 'List:start') {
+      type = 'List' // 设置类型为List
+    }
+  }
+  return type // 返回解析得到的节点类型
+}
+
 /**
  * 获取指定索引的DOM节点，如果遇到Fragment片段则返回整个片段
  * @param el - HTML元素节点
  * @param index - 子节点的起始索引，默认为0
  * @returns {object} 返回一个对象，包含节点或节点数组以及下一个索引位置
  */
-export function getFirstDomNode(el: Element | HostElements[], index: number = 0): FirstNode | null {
-  const childNodes = isArray(el) ? el : el.childNodes
-  const firstNode = childNodes?.[index] as HostElements // 获取指定索引的子节点
+export function getFirstNode(el: DOMElement | DOMNodeList, index: number = 0): NodeInfo | null {
+  const childNodes = isArray(el) ? el : (el.childNodes as unknown as DOMNodeList)
+  const firstNode = childNodes?.[index]
   if (!firstNode) return null
+  const fragmentType = parseFragmentType(firstNode)
   // 检查第一个节点是否是Fragment start注释
-  if (firstNode.nodeType === Node.COMMENT_NODE && firstNode.nodeValue === 'Fragment start') {
-    const arr = [firstNode] as unknown as HostElements[] // 初始化数组，包含起始注释节点
-    let endIndex = index // 记录Fragment end注释的索引
-
+  if (fragmentType) {
+    const fragment = [firstNode] // 初始化数组，包含起始注释节点
+    let nestingFragment = 0
     // 遍历剩余节点，收集到Fragment end注释为止的所有节点
     for (let i = index + 1; i < childNodes.length; i++) {
       const node = childNodes[i]
-      arr.push(node as HostElements) // 将节点添加到数组中
+      fragment.push(node as HostElement) // 将节点添加到数组中
+      if (node.nodeType === Node.COMMENT_NODE && node.nodeValue === `${fragmentType}:start`) {
+        nestingFragment++
+        continue
+      }
       // 如果找到Fragment end注释，停止收集
-      if (node.nodeType === Node.COMMENT_NODE && node.nodeValue === 'Fragment end') {
-        endIndex = i // 记录Fragment end注释的索引
+      if (node.nodeType === Node.COMMENT_NODE && node.nodeValue === `${fragmentType}:end`) {
+        if (nestingFragment !== 0) {
+          nestingFragment--
+          continue
+        }
         break
       }
     }
     // 返回Fragment节点数组，nextIndex为Fragment end元素的index+1
-    return { el: arr, kind: NodeKind.FRAGMENT, nextIndex: endIndex + 1, tag: FRAGMENT_NODE_TYPE }
+    return {
+      el: fragment,
+      kind: ViewKind.FRAGMENT,
+      nextIndex: index + fragment.length,
+      tag: `${fragmentType.toLowerCase() as 'list' | 'fragment'}-node`
+    }
   } else {
     // 非Fragment节点，nextIndex为当前index+1
-    return { el: firstNode, nextIndex: index + 1, ...elToKind(firstNode) }
+    return { el: firstNode, nextIndex: index + 1, ...parseKindAndTag(firstNode) }
   }
 }
 
 /**
- * 计算 container 中 start 与 end 之间（**不包括 start/end**）的节点数量。
+ * 根据视图类型获取对应的宿主视图标签
  *
- * @param container - 父容器（必须包含 start 和 end，或至少包含 start）
+ * @param view - 输入的视图对象，可以是ListView或HostView类型
+ * @returns 返回对应的节点描述标签，包括：
+ *          - 'text-node' (文本节点)
+ *          - 元素标签名 (元素节点)
+ *          - 'fragment-node' (片段节点)
+ *          - 'comment-node' (注释节点)
+ *          - 'list-node' (列表节点)
+ */
+export function getHostViewTag(view: ListView | HostView): NodeDescTag {
+  const kind = view.kind
+  switch (view.kind) {
+    case ViewKind.TEXT:
+      return 'text-node'
+    case ViewKind.ELEMENT:
+      return view.tag
+    case ViewKind.FRAGMENT:
+      return 'fragment-node'
+    case ViewKind.COMMENT:
+      return 'comment-node'
+    case ViewKind.LIST:
+      return 'list-node'
+    default:
+      throw new Error(`Unknown view kind: ${String(kind)}`)
+  }
+}
+
+/**
+ * 计算 start 与 end 之间（**不包括 start/end**）的节点数量。
+ *
  * @param start - 起始节点（通常是注释锚点）
  * @param end - 结束节点（通常是注释锚点）
  * @returns number - start 和 end 之间的节点数量（不包含 start/end）。strict=true 且 end 不存在时抛错。
  */
-export function countNodesBetween(
-  container: Element | HostElements[],
-  start: Node,
-  end: Node
-): number {
-  if (isArray(container)) return container.length - 2
-  // 验证 container 参数为祖先（快速检测）
-  if (!container.contains(start)) {
-    throw new Error('countNodesBetween: start node is not contained in container')
-  }
-  if (!container.contains(end)) {
-    throw new Error('countNodesBetween: end node is not contained in container (strict mode)')
-  }
-
+export function countNodesBetween(start: Node, end: Node): number {
   let count = 0
   let cur: Node | null = start.nextSibling
 
@@ -109,7 +150,7 @@ export function countNodesBetween(
  * @param container - 目标容器，可以是单个元素或元素数组
  * @param el - 要添加的子元素
  */
-export function appendChild(container: Element | HostElements[], el: HostNodeElements): void {
+export function appendChild(container: DOMElement | DOMNodeList, el: HostNode): void {
   // 判断容器是否为数组类型
   if (isArray(container)) {
     // 获取数组最后一个元素
@@ -128,50 +169,18 @@ export function appendChild(container: Element | HostElements[], el: HostNodeEle
   }
 }
 
-/**
- * 在指定元素前插入新元素
- * @param container - 目标容器元素，可以是单个元素或元素数组
- * @param el - 要插入的元素
- * @param anchor - 参考元素，新元素将插入到此元素之前
- */
-export function insertBefore(
-  container: Element | HostElements[], // 目标容器，支持单个元素或元素数组
-  el: HostNodeElements, // 需要插入的元素
-  anchor: Node // 作为插入位置的参考节点
-): void {
-  // 判断容器是否为数组，如果是则取第一个元素的父元素，否则直接使用容器
-  const parent: Element = isArray(container) ? container.at(0)!.parentElement! : container
-  // 执行插入操作，将el插入到anchor节点之前
-  parent.insertBefore(el, anchor)
-}
-
-/**
- * 替换指定容器中的子节点
- * @param container - 目标容器，可以是单个Element或HostElements数组
- * @param el - 要插入的HostNodeElements节点
- * @param anchor - 作为参照的节点，新节点将替换此节点
- */
-export function replaceChild(
-  container: Element | HostElements[], // 容器元素，可以是单个元素或元素数组
-  el: HostNodeElements, // 要插入的节点元素
-  anchor: Node // 锚点节点，将被新节点替换
-) {
-  const parent: Element = isArray(container) ? container.at(0)!.parentElement! : container // 判断容器是否为数组，如果是则取第一个元素的父元素，否则直接使用容器
-  parent.replaceChild(el, anchor) // 使用父元素的replaceChild方法替换节点
-}
-
 /** 移除 container 下指定 index 之后的所有多余节点 */
-export function cleanupExtraDom(node: RegularElementNode): void {
-  const lastVNode = node.children.at(-1)
-  const container = node.el!
+export function cleanupExtraDom(view: ElementView): void {
+  const lastVNode = view.children.at(-1)
+  const container = view.node!
   if (!lastVNode) {
     container.innerHTML = ''
     return
   }
   // 获取最后一个子节点的真实 DOM
-  let lastChildEl = lastVNode.el!
+  let lastChildEl = lastVNode.node!
   if (lastChildEl.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    lastChildEl = (lastChildEl as HostFragmentElement).$endAnchor
+    lastChildEl = (lastChildEl as HostFragment).$endAnchor
   }
 
   // 删除 lastChildEl 之后到 container 末尾的所有节点
@@ -185,12 +194,13 @@ export function cleanupExtraDom(node: RegularElementNode): void {
 }
 
 /** 清除 Fragment 范围中过多的真实 DOM */
-export function cleanupFragmentRange(node: FragmentNode): void {
-  const start = node.el!.$startAnchor
-  const end = node.el!.$endAnchor
-
+export function cleanupFragmentRange(view: FragmentView | ListView): void {
+  const start = view.node!.$startAnchor
+  const end = view.node!.$endAnchor
+  const isList = isListView(view)
+  const length = isList ? view.length : view.children.length
   // 如果没有子节点，则清空 start/end 之间的所有节点
-  if (!node.children.length) {
+  if (!length) {
     const range = document.createRange()
     range.setStartAfter(start)
     range.setEndBefore(end)
@@ -198,10 +208,11 @@ export function cleanupFragmentRange(node: FragmentNode): void {
     return
   }
 
+  const firstView = isList ? view.first! : view.children.at(-1)!
   // 获取最后一个子节点对应的真实 DOM
-  let lastChildEl = node.children.at(-1)!.el!
+  let lastChildEl = firstView.node!
   if (lastChildEl.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    lastChildEl = (lastChildEl as HostFragmentElement).$endAnchor
+    lastChildEl = (lastChildEl as HostFragment).$endAnchor
   }
 
   // 删除 lastChildEl 之后到 end 之间的所有节点
@@ -219,7 +230,7 @@ export function cleanupFragmentRange(node: FragmentNode): void {
  * @returns {Element} 返回解析后的DOM元素
  * @throws {TypeError} 当container无法解析为有效DOM元素时抛出错误
  */
-export function resolveContainer(container: HostElements | Element | string): Element {
+export function resolveContainer(container: HostContainer | string): Element {
   const el = typeof container === 'string' ? document.body.querySelector(container) : container // 如果是字符串则查询DOM，否则直接使用原参数
   if (el instanceof Element) {
     return el // 如果是有效的DOM元素则直接返回

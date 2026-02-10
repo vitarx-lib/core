@@ -1,16 +1,9 @@
-import { useRenderContext, type VNode } from '@vitarx/runtime-core'
-
-export type NodeAsyncMap = WeakMap<VNode, Promise<unknown>>
+import { getRenderContext } from '@vitarx/runtime-core'
 
 /**
  * SSR 内部上下文（框架内部使用）
  */
 export interface SSRInternalContext {
-  /**
-   * 节点异步任务映射
-   * 将异步任务绑定到对应的节点，服务端和客户端统一使用
-   */
-  $nodeAsyncMap?: NodeAsyncMap
   /**
    * 是否处于水合阶段
    */
@@ -34,7 +27,7 @@ export interface SSRInternalContext {
  * runInRenderContext(() => hydrate(...), serverContext)
  * ```
  */
-export type SSRContext<T = Record<string, any>> = T & Partial<SSRInternalContext>
+export type SSRContext<T = Record<string, any>> = T & SSRInternalContext
 
 /**
  * 获取 SSR 上下文
@@ -56,8 +49,8 @@ export type SSRContext<T = Record<string, any>> = T & Partial<SSRInternalContext
  * }
  * ```
  */
-export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | undefined {
-  return useRenderContext<SSRContext<T>>()
+export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | null {
+  return getRenderContext<SSRContext<T>>()
 }
 
 /**
@@ -74,12 +67,12 @@ export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | undefi
  */
 export function isSSR(): boolean {
   const ctx = useSSRContext()
-  return Boolean(ctx !== undefined && !ctx.$isHydrating)
+  return Boolean(ctx && !ctx.$isHydrating)
 }
 /**
  * 检查当前是否在水合阶段
  *
- * @returns 如果在水合阶段返回true，否则返回false
+ * @returns - 如果在水合阶段返回true，否则返回false
  *
  * @example
  * ```ts
