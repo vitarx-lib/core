@@ -1,4 +1,5 @@
-import { show } from '../../../src/shared/directives/show.js'
+import { afterEach, beforeEach, describe, it } from 'vitest'
+import { show } from '../../src/directives/show.js'
 
 describe('Runtime Core Shared Directives - show', () => {
   let element: HTMLElement & { __effect?: any }
