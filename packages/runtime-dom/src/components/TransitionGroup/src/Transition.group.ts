@@ -30,6 +30,24 @@ interface TransitionGroupProps<T, Tag extends ContainerTag>
  * TransitionGroup 组件，用于处理一组元素的进入、离开、移动过渡动画。
  *
  * @param props - 组件属性
+ * @param props.each - 要渲染的元素数组
+ * @param props.children - 渲染函数，接收当前元素返回视图
+ * @param props.key - 用于唯一标识元素的键值函数或属性名
+ * @param props.tag - 包裹子节点的标签名
+ * @param props.name - 过渡名称前缀
+ * @param props.moveClass - 移动动画类名
+ * @param props.bindProps - 传递给包裹元素的属性
+ * @param props.css - 是否使用 CSS 过渡类
+ * @param props.type - 过渡类型
+ * @param props.duration - 过渡持续时间
+ * @param props.onBeforeEnter - 进入过渡前的钩子函数
+ * @param props.onEnter - 进入过渡时的钩子函数
+ * @param props.onAfterEnter - 进入过渡完成后的钩子函数
+ * @param props.onBeforeLeave - 离开过渡前的钩子函数
+ * @param props.onLeave - 离开过渡时的钩子函数
+ * @param props.onAfterLeave - 离开过渡完成后的钩子函数
+ * @param props.onEnterCancelled - 进入动画被取消时的钩子函数
+ * @param props.onLeaveCancelled - 离开动画被取消时的钩子函数
  * @returns - 返回渲染的视图
  *
  * @example
@@ -40,6 +58,7 @@ interface TransitionGroupProps<T, Tag extends ContainerTag>
  * </TransitionGroup>
  * ```
  * ```css
+ * .list-move,
  * .list-enter-active,
  * .list-leave-active {
  *   transition: all 0.5s ease;
@@ -74,7 +93,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
     get key() {
       return props.key
     },
-    // 更新前回调
+    // 更新前回调：记录元素当前位置
     onBeforeUpdate: (children: View[]): void => {
       // 如果视图未挂载，则直接返回
       if (!instance.isMounted) return void 0
@@ -86,7 +105,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
         }
       }
     },
-    // 更新后回调
+    // 更新后回调：处理元素移动动画
     onAfterUpdate: (children: View[]): void => {
       // 如果视图未挂载，则直接返回
       if (!instance.isMounted) return void 0
@@ -112,15 +131,17 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
         // 检查是否已有 move 动画，若有则取消
         const prevCancel = el.__cancelMoveTransition
         if (prevCancel) prevCancel()
+        // 保存原始样式
         const rawTransform = el.style.getPropertyValue('transform')
         const rawTransitionDuration = el.style.getPropertyValue('transitionDuration')
+        // 设置初始位置（从旧位置开始）
         el.style.setProperty('transform', `translate(${dx}px, ${dy}px)`)
         el.style.transitionDuration = '0s'
-        // 强制重排
+        // 强制重排，确保样式生效
         el.offsetWidth
         // 添加 moveClass，启用过渡
         el.classList.add(moveClass)
-        // 下一帧恢复到目标位置
+        // 下一帧恢复到目标位置（新位置）
         requestAnimationFrame(() => {
           if (rawTransform) {
             el.style.setProperty('transform', rawTransform)
@@ -147,6 +168,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
             delete el.__cancelMoveTransition
           }
         }, duration + 16)
+        // 保存取消函数，用于后续可能的取消操作
         el.__cancelMoveTransition = () => {
           try {
             clearTimeout(timer)
@@ -156,15 +178,19 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
           }
         }
       }
+      // 清空位置信息缓存
       prevRects.clear()
     },
+    // 进入动画回调
     onEnter: (view): void => {
       if (view.isMounted) runTransition(view.node, 'enter', props)
     },
+    // 离开动画回调
     onLeave: (view, done): void => {
       if (view.isMounted) runTransition(view.node, 'leave', props, done)
     }
   })
+  // 根据是否指定 tag 决定返回结构
   return typeof tag === 'string'
     ? createElementView(tag as ContainerTag, { children: listView, 'v-bind': props.bindProps })
     : listView
