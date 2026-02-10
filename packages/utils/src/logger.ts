@@ -1,4 +1,4 @@
-export type LogSource = {
+export type CodeSource = {
   /** 源文件名 */
   fileName: string
   /** 源代码行号 */
@@ -30,7 +30,7 @@ export interface LoggerConfig {
    * @param message - 日志消息
    * @param args - 其他参数
    */
-  handler?: (level: LogLevel, message: string, args: any[], source: LogSource | undefined) => void
+  handler?: (level: LogLevel, message: string, args: any[], source: CodeSource | undefined) => void
   /** 自定义前缀 */
   prefix?: string
 }
@@ -142,7 +142,7 @@ export class Logger {
    * @param source 源代码位置信息
    * @returns 格式化后的消息
    */
-  public formatMessage(level: LogLevel, message: string, source?: LogSource): string {
+  public formatMessage(level: LogLevel, message: string, source?: CodeSource): string {
     let prefix = this.config.prefix ? `[${this.config.prefix} ${level}]` : `[${level}]`
     // 如果message开头没有空格，则添加一个空格
     const formattedMessage =
@@ -170,7 +170,7 @@ export class Logger {
     }
     // 解析参数
     let data: any[]
-    let source: LogSource | undefined
+    let source: CodeSource | undefined
 
     // 检查最后一个参数是否是源代码位置信息
     const lastArg = args.at(-1)
@@ -182,7 +182,7 @@ export class Logger {
       'lineNumber' in lastArg &&
       'columnNumber' in lastArg
     ) {
-      source = lastArg as LogSource
+      source = lastArg as CodeSource
       data = args.slice(0, -1)
     } else {
       data = args
@@ -244,4 +244,54 @@ export function getStackTrace(skip: number = 1): string {
   // lines[0] 通常是 "Error"
   // 从 skip + 1 开始裁剪，跳过指定数量的堆栈帧
   return '\n' + lines.slice(skip + 1).join('\n')
+}
+
+/**
+ * 获取调用源文件信息
+ * 通过创建错误对象并解析其堆栈信息，获取调用者的文件名、行号和列号
+ * @returns {CodeSource} 返回包含文件名、行号和列号的对象
+ */
+export function getCallSource(): CodeSource {
+  // 创建一个错误对象以获取堆栈信息
+  const err = new Error()
+
+  // 如果错误对象没有堆栈信息，返回默认值
+  if (!err.stack) {
+    return {
+      fileName: 'unknown',
+      lineNumber: 0,
+      columnNumber: 0
+    }
+  }
+
+  // 将堆栈信息按行分割
+  const stack = err.stack.split('\n')
+
+  // stack 示例：
+  // 0 Error
+  // 1 at getCallSource (...)
+  // 2 at b (...)
+  // 3 at a (...)   <-- 我们想要这一层
+  // 获取目标调用行，优先选择第4行(索引3)，其次选择第3行(索引2)
+  const targetLine = stack[3] || stack[2] || ''
+
+  // Chrome / Node / V8 格式匹配
+  // 匹配两种格式的堆栈信息：带括号和不带括号的格式
+  const match = targetLine.match(/\((.*):(\d+):(\d+)\)/) || targetLine.match(/at (.*):(\d+):(\d+)/)
+
+  // 如果没有匹配到，返回默认值
+  if (!match) {
+    return {
+      fileName: 'unknown',
+      lineNumber: 0,
+      columnNumber: 0
+    }
+  }
+
+  // 返回解析后的文件名、行号和列号
+  return {
+    fileName: match[1],
+    lineNumber: Number(match[2]),
+    columnNumber: Number(match[3])
+  }
 }
