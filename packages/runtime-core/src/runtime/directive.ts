@@ -144,7 +144,7 @@ export function applyDirective(
     try {
       directive[hook]?.(element, binding, view)
     } catch (e) {
-      logger.error(`[applyDirective] Error in directive<v-${directive.name}>`, e, view.location)
+      logger.error(`Error in directive<v-${directive.name}>.${hook}: ${e}`, e, view.location)
     }
   }
 }
