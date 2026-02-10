@@ -46,7 +46,7 @@ export interface Directive {
    * @param view - 视图节点对象
    * @return {object} 属性对象
    */
-  getSSRProps?(binding: DirectiveBinding, view: ElementView): Record<string, string | number> | void
+  getSSRProps?(binding: DirectiveBinding, view: ElementView): Record<string, any> | void
 }
 
 export type DirectiveMap = Map<Directive, DirectiveBinding>
