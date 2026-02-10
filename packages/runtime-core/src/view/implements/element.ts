@@ -5,7 +5,6 @@ import { applyDirective, getRenderer } from '../../runtime/index.js'
 import type {
   AnyProps,
   CodeLocation,
-  ElementProps,
   HostContainer,
   HostElement,
   HostElementTag,
@@ -53,10 +52,15 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
 > {
   public readonly kind = ViewKind.ELEMENT
   protected hostNode: HostElement<T> | null = null
+  /** 元素标签 */
   public readonly tag: T
-  public readonly props: ElementProps<T> | null
+  /** 元素属性 */
+  public readonly props: AnyProps | null
+  /** 子视图列表 */
   public readonly children: ResolvedChildren
+  /** 元素引用 */
   public readonly ref: InstanceRef | undefined
+  /** 指令映射表 */
   private effects: ViewEffect[] | null = null
 
   constructor(tag: T, props: IntrinsicElements[T] | null = null, location?: CodeLocation) {
