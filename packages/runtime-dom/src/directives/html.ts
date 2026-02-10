@@ -19,7 +19,7 @@ const html: Directive = {
     }
     el[effect] = viewEffect(() => {
       const value = binding.value
-      if (value && isString(value)) {
+      if (value && isString(value) && el.innerHTML !== value) {
         el.innerHTML = value
       }
     })
