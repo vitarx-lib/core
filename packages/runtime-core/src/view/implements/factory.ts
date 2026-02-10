@@ -269,7 +269,7 @@ export function h<T extends ViewTag>(
   props: ValidProps<T> | null = null,
   ...children: ValidChild[] // 子视图
 ): View {
-  if (children.length) {
+  if (!props?.children && children.length) {
     // 如果有子节点
     props ??= {} as ValidProps<T>
     ;(props as AnyProps).children = children.length === 1 ? children[0] : children
