@@ -137,6 +137,7 @@ export class App {
    * @returns {string} - 版本号
    */
   get version(): string {
+    // Vite 编译时注入
     return __VERSION__
   }
 
