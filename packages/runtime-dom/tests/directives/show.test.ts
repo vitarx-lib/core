@@ -1,8 +1,9 @@
+import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, it } from 'vitest'
-import { show } from '../../src/directives/show.js'
+import show from '../../src/directives/show.js'
 
 describe('Runtime Core Shared Directives - show', () => {
-  let element: HTMLElement & { __effect?: any }
+  let element: HTMLElement
 
   beforeEach(() => {
     element = document.createElement('div')
@@ -10,6 +11,7 @@ describe('Runtime Core Shared Directives - show', () => {
   })
 
   afterEach(() => {
+    element.style.display = ''
     document.body.removeChild(element)
   })
 
@@ -21,11 +23,8 @@ describe('Runtime Core Shared Directives - show', () => {
       const binding = {
         value: true
       }
-
       show.created?.(element, binding as any, {} as any)
-
       expect(element.style.display).toBe('block')
-      expect((element as any).__effect).toBeDefined()
     })
 
     it('应该在值为 false 时设置 display 为 none', () => {
@@ -42,42 +41,32 @@ describe('Runtime Core Shared Directives - show', () => {
   })
 
   describe('dispose', () => {
-    it('应该清理响应式效果', () => {
+    it('应该还原样式', async () => {
+      const isShow = ref(true)
       const binding = {
-        value: true
+        get value() {
+          return isShow.value
+        }
       }
-
-      show.created?.(element, binding as any, {} as any)
-
-      // 检查 __effect 是否存在
-      if (element.__effect) {
-        const mockDispose = vi.spyOn(element.__effect, 'dispose')
-        show.dispose?.(element, binding as any, {} as any)
-        expect(mockDispose).toHaveBeenCalled()
-      } else {
-        // 如果 __effect 不存在，确保 dispose 方法不会抛出错误
-        expect(() => {
-          show.dispose?.(element, binding as any, {} as any)
-        }).not.toThrow()
-      }
-    })
-
-    it('应该处理没有 __effect 的情况', () => {
-      expect(() => {
-        // @ts-ignore
-        show.dispose(element)
-      }).not.toThrow()
+      element.style.display = 'block'
+      show.created?.(element, binding, {} as any)
+      expect(element.style.display).toBe('block')
+      isShow.value = false
+      await nextTick()
+      expect(element.style.display).toBe('none')
+      show.dispose?.(element, binding, {} as any)
+      expect(element.style.display).toBe('block')
     })
   })
 
   describe('getSSRProps', () => {
-    it('应该在值为 true 时返回空对象', () => {
+    it('应该在值为 true 时返回 undefined', () => {
       const binding = {
         value: true
       }
 
       const result = show.getSSRProps?.(binding as any, {} as any)
-      expect(result).toEqual({})
+      expect(result).toBeUndefined()
     })
 
     it('应该在值为 false 时返回 display: none 样式', () => {
