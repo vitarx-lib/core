@@ -1,4 +1,6 @@
 import type { App } from '../app/index.js'
+import { RENDER_CONTEXT } from '../constants/index.js'
+import type { RenderContext } from '../types/index.js'
 import { type ComponentInstance, ComponentView } from '../view/index.js'
 
 let activeComponentInstance: ComponentInstance | null = null
@@ -46,8 +48,20 @@ export function getComponentView(): ComponentView | null {
  * 该函数用于从全局上下文中获取App类型的实例
  *
  * @template T - 应用程序实例的类型，默认为App
- * @returns {App | undefined} 返回App类型的实例，如果不存在则返回undefined
+ * @returns {App | null} 返回App类型的实例，如果不存在则返回undefined
  */
 export function getApp<T extends App = App>(): T | null {
   return activeComponentInstance ? (activeComponentInstance.app as T) : null
+}
+
+/**
+ * 获取渲染上下文
+ *
+ * 渲染上下文是由 ssr 渲染注入的，用于存储渲染过程中的一些状态信息。
+ *
+ * @returns {object | null} 当前渲染上下文对象，如果不存在则返回 null
+ */
+export function getRenderContext<T extends RenderContext = RenderContext>(): T | null {
+  const app = getApp()
+  return app?.inject<T>(RENDER_CONTEXT) || null
 }

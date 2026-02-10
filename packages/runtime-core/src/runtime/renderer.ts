@@ -24,30 +24,3 @@ export function getRenderer(): ViewRenderer {
   if (globalRenderer) return globalRenderer
   throw new Error('[vitarx][ERROR] Renderer has not been registered.')
 }
-
-/**
- * 在渲染上下文中执行指定函数
- *
- * @param fn 要在渲染上下文中执行的函数
- * @param ctx 渲染上下文对象，包含渲染所需的各种属性和方法
- * @returns 函数执行的结果
- */
-export function withRenderContext<R>(fn: () => R, ctx: RenderContext = {}): R {
-  const preCtx = currentRenderContext
-  try {
-    currentRenderContext = ctx
-    return fn()
-  } finally {
-    currentRenderContext = preCtx
-  }
-}
-
-/**
- * 获取当前渲染上下文
- *
- * @alias getRenderContext
- * @returns {object|undefined} 当前上下文对象，如果不存在则返回undefined
- */
-export function getRenderContext<T extends RenderContext = RenderContext>(): T | undefined {
-  return currentRenderContext as T | undefined
-}
