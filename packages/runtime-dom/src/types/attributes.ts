@@ -621,10 +621,6 @@ interface CustomHTMLAttributes {
    */
   class?: string | string[] | Record<string, boolean>
   /**
-   * `v-html` 是框架的自定义属性，用于在元素中插入 HTML 代码。
-   */
-  'v-html'?: string
-  /**
    * 未知属性
    *
    * 支持任意自定义属性

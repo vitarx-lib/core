@@ -178,12 +178,6 @@ describe('DOMRenderer', () => {
       expect(el.style.color).toBe('red')
     })
 
-    it('应该设置v-html属性', () => {
-      const el = renderer.createElement('div', false)
-      renderer.setAttribute(el, 'v-html', '<span>test</span>', null)
-      expect(el.innerHTML).toBe('<span>test</span>')
-    })
-
     it('应该设置autoFocus属性', () => {
       const el = renderer.createElement('input', false)
       renderer.setAttribute(el, 'autoFocus', true, null)

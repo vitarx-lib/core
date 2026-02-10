@@ -156,7 +156,15 @@ export class DOMRenderer implements ViewRenderer {
   }
   /** @inheritDoc */
   setAttribute(el: HostElement, name: string, nextValue: any, prevValue: any): void {
-    if (name === 'children') return
+    if (
+      name === 'children' ||
+      name === 'innerHTML' ||
+      name === 'textContent' ||
+      name === 'nodeValue'
+    ) {
+      return
+    }
+
     try {
       if (nextValue == null) {
         this.removeAttribute(el, name, prevValue)
@@ -191,9 +199,6 @@ export class DOMRenderer implements ViewRenderer {
         case 'className':
         case 'classname':
           this.setClass(el, nextValue)
-          return
-        case 'v-html':
-          el.innerHTML = nextValue
           return
         case 'autoFocus':
           el.autofocus = Boolean(nextValue)
@@ -240,11 +245,6 @@ export class DOMRenderer implements ViewRenderer {
     if (el.style.length === 0) el.removeAttribute('style')
   }
   private removeAttribute(el: HostElement, key: string, prevValue?: any): void {
-    // 特殊处理 v-html属性
-    if (key === 'v-html' || key === 'innerHTML') {
-      el.innerHTML = ''
-      return
-    }
     // --- 1. class 特殊处理 ---
     if (key === 'class' || key === 'className' || key === 'classname') {
       el.removeAttribute('class')
