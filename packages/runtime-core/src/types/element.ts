@@ -9,7 +9,7 @@ export type HostElementTag = keyof Vitarx.HostElementTagMap
  * 表示平台特定的元素节点实例
  */
 export type HostElement<T extends HostElementTag = HostElementTag> = Vitarx.HostElementTagMap[T] & {
-  [key: string]: any
+  [key: string | symbol | number]: any
 }
 
 /**
