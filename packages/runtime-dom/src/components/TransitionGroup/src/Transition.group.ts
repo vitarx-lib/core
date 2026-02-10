@@ -30,14 +30,26 @@ interface TransitionGroupProps<T, Tag extends ContainerTag>
  * TransitionGroup 组件，用于处理一组元素的进入、离开、移动过渡动画。
  *
  * @param props - 组件属性
- * @param props.each - 要渲染的元素数组
- * @param props.children - 渲染函数，接收当前元素返回视图
- * @param props.key - 用于唯一标识元素的键值
- * @param props.tag - 容器标签名或组件函数
- * @param props.name - 过渡类名前缀
- * @param props.moveClass - 移动动画类名
- * @param props.bindProps - 绑定到容器的属性
  * @returns - 返回渲染的视图
+ *
+ * @example
+ * ```jsx
+ * const list = ref(['a', 'b', 'c'])
+ * <TransitionGroup each={list} key={item=>item}  name="list" tag="ul">
+ *    {item => <li>{item}</li>}
+ * </TransitionGroup>
+ * ```
+ * ```css
+ * .list-enter-active,
+ * .list-leave-active {
+ *   transition: all 0.5s ease;
+ * }
+ * .list-enter-from,
+ * .list-leave-to {
+ *   opacity: 0;
+ *   transform: translateX(30px);
+ * }
+ * ```
  */
 function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
   props: TransitionGroupProps<T, Tag>
