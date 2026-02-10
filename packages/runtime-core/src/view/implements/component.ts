@@ -189,7 +189,7 @@ export class ComponentInstance<T extends Component = Component> {
   /** @internal - 组件的子视图 */
   public readonly subView: View
   /** @internal - 异步初始化 */
-  public async?: Promise<unknown>
+  public asyncInitialized?: Promise<unknown>
   /** @internal - 给子视图继承的上下文 */
   public readonly subViewContext: ViewContext
   #isMounted = false
@@ -245,13 +245,13 @@ export class ComponentInstance<T extends Component = Component> {
     if (!promises.length) return void 0
     const suspense = this.useSuspenseCounter()
     if (suspense) suspense.value++
-    this.async = Promise.all(promises)
+    this.asyncInitialized = Promise.all(promises)
       .catch(e => {
         this.reportError(e, 'hook:init')
       })
       .finally(() => {
         if (suspense) suspense.value--
-        delete this.async
+        delete this.asyncInitialized
       })
   }
   public beforeMount(): void {
