@@ -1,5 +1,10 @@
-import { type ViewEffect, viewEffect } from '../../runtime/effect.js'
-import type { Directive, DirectiveBinding, HostElement } from '../../types/index.js'
+import {
+  type Directive,
+  type DirectiveBinding,
+  type HostElement,
+  type ViewEffect,
+  viewEffect
+} from '@vitarx/runtime-core'
 
 export const show: Directive = {
   created(el: HostElement, binding: DirectiveBinding): void {
