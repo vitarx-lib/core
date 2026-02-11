@@ -11,6 +11,6 @@ describe('SSR Context', () => {
   })
 
   it('当不在渲染上下文中时useSSRContext应该返回undefined', () => {
-    expect(useSSRContext()).toBe(undefined)
+    expect(useSSRContext()).toBe(null)
   })
 })

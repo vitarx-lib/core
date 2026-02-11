@@ -1,21 +1,7 @@
-import {
-  Fragment,
-  h,
-  onDestroy,
-  type Renderable,
-  resolveDirective,
-  Widget,
-  withDirectives
-} from '@vitarx/runtime-core'
+import { Fragment, h, onDispose, resolveDirective, withDirectives } from '@vitarx/runtime-core'
 import { describe, expect, it, vi } from 'vitest'
-import { createSSRApp } from '../../src/app/index.js'
-import { renderToString } from '../../src/server/renderToString.js'
-import {
-  createMockAsyncComponent,
-  createMockClassComponent,
-  createMockComponent,
-  createMockSSRContext
-} from '../helpers.js'
+import { createSSRApp, renderToString } from '../../src/index.js'
+import { createMockAsyncComponent, createMockComponent, createMockSSRContext } from '../helpers.js'
 
 describe('renderToString', () => {
   it('应该渲染基本元素', async () => {
@@ -31,13 +17,7 @@ describe('renderToString', () => {
   })
 
   it('应该渲染嵌套元素', async () => {
-    const App = () =>
-      h(
-        'div',
-        null,
-        h('header', null, h('h1', null, 'Title')),
-        h('main', null, h('p', null, 'Content'))
-      )
+    const App = () => h('div', [h('header', h('h1', 'Title')), h('main', h('p', 'Content'))])
     const app = createSSRApp(App)
 
     const html = await renderToString(app)
@@ -50,7 +30,7 @@ describe('renderToString', () => {
 
   it('应该渲染空元素', async () => {
     const App = () =>
-      h('div', null, h('img', { src: 'test.jpg', alt: 'Test' }), h('input', { type: 'text' }))
+      h('div', [h('img', { src: 'test.jpg', alt: 'Test' }), h('input', { type: 'text' })])
     const app = createSSRApp(App)
 
     const html = await renderToString(app)
@@ -111,15 +91,15 @@ describe('renderToString', () => {
   })
 
   it('应该渲染片段', async () => {
-    const App = () => h(Fragment, null, h('div', null, 'First'), h('div', null, 'Second'))
+    const App = () => h(Fragment, [h('div', null, 'First'), h('div', null, 'Second')])
     const app = createSSRApp(App)
 
     const html = await renderToString(app)
 
-    expect(html).toContain('<!--Fragment start-->')
+    expect(html).toContain('<!--Fragment:start-->')
     expect(html).toContain('<div>First</div>')
     expect(html).toContain('<div>Second</div>')
-    expect(html).toContain('<!--Fragment end-->')
+    expect(html).toContain('<!--Fragment:end-->')
   })
 
   it('应该渲染函数组件', async () => {
@@ -130,16 +110,6 @@ describe('renderToString', () => {
     const html = await renderToString(app)
 
     expect(html).toContain('Test Content')
-  })
-
-  it('应该渲染类组件', async () => {
-    const TestWidget = createMockClassComponent('Widget Content')
-    const App = () => h(TestWidget)
-    const app = createSSRApp(App)
-
-    const html = await renderToString(app)
-
-    expect(html).toContain('Widget Content')
   })
 
   it('应该处理v-show指令', async () => {
@@ -158,14 +128,21 @@ describe('renderToString', () => {
   })
 
   it('应该处理v-html指令', async () => {
-    const App = () => h('div', { 'v-html': '<span>Raw HTML</span>' })
+    const App = () => withDirectives(h('div'), [['html', { value: '<span>Raw HTML</span>' }]])
     const app = createSSRApp(App)
 
     const html = await renderToString(app)
 
     expect(html).toContain('<span>Raw HTML</span>')
   })
+  it('应该处理v-text指令', async () => {
+    const App = () => withDirectives(h('div'), [['text', { value: 'Raw Text' }]])
+    const app = createSSRApp(App)
 
+    const html = await renderToString(app)
+
+    expect(html).toContain('Raw Text')
+  })
   it('应该等待异步组件', async () => {
     const AsyncComponent = createMockAsyncComponent('Async Content', 20)
     const App = () => h('div', null, h(AsyncComponent))
@@ -192,7 +169,7 @@ describe('renderToString', () => {
     const Content = () => h('main', null, h('p', null, 'Main content'))
     const Footer = () => h('footer', null, h('p', null, 'Footer'))
 
-    const App = () => h('div', { class: 'app' }, h(Header), h(Content), h(Footer))
+    const App = () => h('div', { class: 'app' }, [h(Header), h(Content), h(Footer)])
     const app = createSSRApp(App)
 
     const html = await renderToString(app)
@@ -206,23 +183,12 @@ describe('renderToString', () => {
   })
   it('应该销毁组件', async () => {
     const fnDestroy = vi.fn()
-    const WidgetDestroy = vi.fn()
-    class MockClassWidget extends Widget {
-      override onDestroy() {
-        WidgetDestroy()
-      }
-      override build(): Renderable {
-        return undefined
-      }
+    function MockClassWidget() {
+      onDispose(fnDestroy)
+      return null
     }
-    const MockFunctionWidget = () => {
-      onDestroy(fnDestroy)
-      return h(MockClassWidget)
-    }
-    const App = () => h(MockFunctionWidget)
-    const app = createSSRApp(App)
+    const app = createSSRApp(h(MockClassWidget))
     await renderToString(app)
     expect(fnDestroy).toHaveBeenCalled()
-    expect(WidgetDestroy).toHaveBeenCalled()
   })
 })

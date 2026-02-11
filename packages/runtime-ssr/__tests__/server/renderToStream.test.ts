@@ -1,4 +1,4 @@
-import { h, onDestroy, type Renderable, Widget } from '@vitarx/runtime-core'
+import { h, onDispose } from '@vitarx/runtime-core'
 import { describe, expect, it, vi } from 'vitest'
 import { createSSRApp, renderToStream } from '../../src/index.js'
 import { createMockAsyncComponent } from '../helpers.js'
@@ -94,18 +94,9 @@ describe('renderToStream', () => {
 
   it('应该销毁组件', async () => {
     const fnDestroy = vi.fn()
-    const WidgetDestroy = vi.fn()
-    class MockClassWidget extends Widget {
-      override onDestroy() {
-        WidgetDestroy()
-      }
-      override build(): Renderable {
-        return undefined
-      }
-    }
     const MockFunctionWidget = () => {
-      onDestroy(fnDestroy)
-      return h(MockClassWidget)
+      onDispose(fnDestroy)
+      return null
     }
     const App = () => h(MockFunctionWidget)
     const app = createSSRApp(App)
@@ -119,6 +110,5 @@ describe('renderToStream', () => {
       }
     )
     expect(fnDestroy).toHaveBeenCalled()
-    expect(WidgetDestroy).toHaveBeenCalled()
   })
 })

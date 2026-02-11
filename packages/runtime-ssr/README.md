@@ -26,7 +26,7 @@ Vitarx 框架的服务端渲染 (SSR) 和客户端水合 (Hydration) 模块。
 | ⏳ **异步组件支持**  | 自动等待异步组件完成后再序列化                 |
 | 🔄 **客户端水合**  | 复用服务端渲染的 DOM，快速激活交互功能           |
 | 📦 **状态管理**   | 服务端注入状态，客户端自动恢复                 |
-| 🎯 **指令支持**   | 支持 v-show、v-html 等内置指令          |
+| 🎯 **指令支持**   | 支持 v-show、v-html、v-text 等内置指令   |
 | 🔒 **XSS 防护** | 自动转义 HTML 特殊字符，防止 XSS 攻击        |
 
 ## 安装
@@ -140,7 +140,7 @@ app.mount('#app')
 
 ```mermaid
 flowchart LR
-    A[创建 SSRApp] --> B[渲染 VNode 树]
+    A[创建 SSRApp] --> B[渲染 View 树]
     B --> C[等待异步任务]
     C --> D[序列化为 HTML]
     D --> E[返回字符串]
@@ -148,9 +148,9 @@ flowchart LR
 
 **工作原理：**
 
-1. **VNode 构建**：调用组件的 render 函数构建虚拟 DOM 树
+1. **View 构建**：调用组件的 render 函数构建虚拟 DOM 树
 2. **异步等待**：收集所有异步组件的 Promise，等待完成
-3. **字符串序列化**：遍历 VNode 树，将每个节点转换为 HTML 字符串
+3. **字符串序列化**：遍历 View 树，将每个节点转换为 HTML 字符串
 4. **HTML 输出**：返回完整的 HTML 字符串
 
 ### 客户端水合
@@ -159,7 +159,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[解析容器] --> B[渲染 VNode]
+    A[解析容器] --> B[渲染 View]
     B --> C[匹配 DOM 节点]
     C --> D[绑定事件监听器]
     D --> E[恢复状态]
@@ -169,7 +169,7 @@ flowchart LR
 **工作原理：**
 
 1. **DOM 解析**：获取服务端渲染的 DOM 结构
-2. **VNode 匹配**：按顺序遍历 VNode 树，将每个 VNode 与对应的 DOM 节点关联
+2. **View 匹配**：按顺序遍历 View 树，将每个 View 与对应的 DOM 节点关联
 3. **事件绑定**：为元素绑定事件监听器
 4. **状态恢复**：恢复服务端注入的状态
 5. **激活完成**：应用变为完全可交互的状态
@@ -214,14 +214,14 @@ flowchart LR
 **函数签名：**
 
 ```tsx
-export declare function createSSRApp(root: VNode | WidgetType, config?: AppConfig): SSRApp;
+export declare function createSSRApp(root: View | WidgetType, config?: AppConfig): SSRApp;
 ```
 
 **参数：**
 
 | 参数     | 类型                | 必填 | 说明      |
 |--------|-------------------|----|---------|
-| `root` | `VNode \| Widget` | 是  | 根组件或根节点 |
+| `root` | `View \| Widget` | 是  | 根组件或根节点 |
 
 **返回值：** `SSRApp` - SSR 应用实例
 
@@ -273,14 +273,14 @@ app.mount('#app')
 **函数签名：**
 
 ```tsx
-export declare function renderToString(root: SSRApp | VNode, context?: SSRContext): Promise<string>;
+export declare function renderToString(root: SSRApp | View, context?: SSRContext): Promise<string>;
 ```
 
 **参数：**
 
 | 参数        | 类型                | 必填 | 默认值  | 说明            |
 |-----------|-------------------|----|------|---------------|
-| `root`    | `SSRApp \| VNode` | 是  | -    | SSR 应用实例或虚拟节点 |
+| `root`    | `SSRApp \| View` | 是  | -    | SSR 应用实例或虚拟节点 |
 | `context` | `SSRContext`      | 否  | `{}` | SSR 上下文对象     |
 
 **返回值：** `Promise<string>` - HTML 字符串
@@ -305,14 +305,14 @@ console.log(html) // <div>Hello SSR</div>
 **函数签名：**
 
 ```ts
-export declare function renderToStream(root: SSRApp | VNode, context: SSRContext | undefined, options: StreamingSink): Promise<void>;
+export declare function renderToStream(root: SSRApp | View, context: SSRContext | undefined, options: StreamingSink): Promise<void>;
 ```
 
 **参数：**
 
 | 参数        | 类型                    | 必填 | 说明            |
 |-----------|-----------------------|----|---------------|
-| `root`    | `SSRApp \| VNode`     | 是  | SSR 应用实例或虚拟节点 |
+| `root`    | `SSRApp \| View`     | 是  | SSR 应用实例或虚拟节点 |
 | `context` | `SSRContext`          | 是  | SSR 上下文对象     |
 | `options` | `StreamRenderOptions` | 是  | 流式渲染选项        |
 
@@ -355,7 +355,7 @@ await renderToStream(app, {}, {
 **函数签名：**
 
 ```ts
-export declare function renderToReadableStream(root: SSRApp | VNode, context?: SSRContext): ReadableStream<string>;
+export declare function renderToReadableStream(root: SSRApp | View, context?: SSRContext): ReadableStream<string>;
 ```
 
 **示例：**
@@ -374,7 +374,7 @@ return new Response(stream, {
 **函数签名：**
 
 ```tsx
-export declare function renderToNodeStream(root: SSRApp | VNode, context?: SSRContext): Promise<NodeJS.ReadableStream>;
+export declare function renderToNodeStream(root: SSRApp | View, context?: SSRContext): Promise<NodeJS.ReadableStream>;
 ```
 
 **示例：**
@@ -495,7 +495,7 @@ SSR 上下文对象类型，可用于在服务端和客户端之间传递状态�
 
 ```tsx
 type SSRContext<T = Record<string, any>> = T & {
-  $nodeAsyncMap?: WeakMap<VNode, Promise<unknown>>  // 内部使用
+  $nodeAsyncMap?: WeakMap<View, Promise<unknown>>  // 内部使用
   $isHydrating?: boolean  // 内部使用
 }
 ```

@@ -56,7 +56,7 @@ export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | null {
 /**
  * 检查当前是否在 SSR 环境中
  *
- * @returns 如果在SSR环境中返回true，否则返回false
+ * @returns {boolean} 如果在SSR环境中返回true，否则返回false
  *
  * @example
  * ```ts

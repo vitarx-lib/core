@@ -14,15 +14,6 @@ export function createMockComponent(content: string) {
 }
 
 /**
- * 创建测试用的类组件
- */
-export function createMockClassComponent(content: string): Component {
-  return function TestComponent() {
-    return createView('div', { children: content })
-  }
-}
-
-/**
  * 创建延迟解析的异步组件
  */
 export function createMockAsyncComponent(content: string, delay: number = 10): Component {
