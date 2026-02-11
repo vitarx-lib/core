@@ -52,7 +52,6 @@ export type AppPlugin<T extends {} = {}> = AppObjectPlugin<T> | AppPluginInstall
  */
 const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
   logger.error('there are unhandled exceptions', error, info)
-
 /**
  * 应用程序主类，负责管理整个应用的生命周期和核心功能
  *
@@ -89,6 +88,8 @@ const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
  * @param config - 可选的应用配置对象，包含错误处理器和ID前缀等配置
  */
 export class App {
+  /** @readonly - 版本号 */
+  static readonly version: string = '0.0.0'
   readonly [IS_RAW] = true
   /** 配置选项 */
   public readonly config: Required<AppConfig>
@@ -137,8 +138,8 @@ export class App {
    * @returns {string} - 版本号
    */
   get version(): string {
-    // Vite 编译时注入
-    return __VERSION__
+    // Vitarx 主包运行时反向注入
+    return App.version
   }
 
   /**
