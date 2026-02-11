@@ -66,6 +66,11 @@ export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | null {
  * ```
  */
 export function isSSR(): boolean {
+  // 检查是否在 Node.js 环境
+  const isNodeEnv =
+    typeof process !== 'undefined' && process.versions != null && process.versions.node != null
+  // 如果不在 Node.js 环境，直接返回 false
+  if (!isNodeEnv) return false
   const ctx = useSSRContext()
   return Boolean(ctx && !ctx.$isHydrating)
 }
