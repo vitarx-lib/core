@@ -548,14 +548,14 @@ console.log(attrs) // ' id="test" class="foo bar" disabled'
 
 ### 异步组件 SSR
 
-#### Lazy 组件支持
+#### 异步懒加载支持
 
 Vitarx SSR 自动支持异步组件，在服务端渲染时会等待异步组件加载完成。
 
 ```tsx
-import { Lazy } from '@vitarx/runtime-core'
+import { lazy } from 'vitarx'
 
-const AsyncComponent = Lazy(() => import('./HeavyComponent'))
+const AsyncComponent = lazy(() => import('./HeavyComponent'))
 
 function App() {
   return (
@@ -571,24 +571,18 @@ const html = await renderToString(createSSRApp(App))
 
 #### 异步数据获取
 
-在 `onRender` 生命周期中获取异步数据：
+在 `onInit` 生命周期中获取异步数据：
 
 ```tsx
-import { Widget } from '@vitarx/runtime-core'
-
-class UserProfile extends Widget {
-  user = null
-  
-  async onRender() {
+import { ref, onInit } from 'vitarx'
+function UserProfile() {
+  const user = ref(null)
+  onInit(async ()=>{
     // 服务端渲染时会等待这个 Promise
     const response = await fetch('/api/user')
-    this.user = await response.json()
-  }
-  
-  build() {
-    if (!this.user) return <div>Loading...</div>
-    return <div>Hello {this.user.name}</div>
-  }
+    user.value = await response.json()
+  })
+  return <div>{user.value ? user.value.name : 'Loading...'}</div>
 }
 ```
 
@@ -789,32 +783,33 @@ function MyComponent() {
 
 服务端渲柕仅执行部分生命周期钩子：
 
-| 钩子            | 服务端 | 客户端 |
-|---------------|-----|-----|
-| `onCreate`    | ✓   | ✓   |
-| `onRender`    | ✓   | ✓   |
-| `onMounted`   | ✗   | ✓   |
-| `onUpdated`   | ✗   | ✓   |
-| `onUnmounted` | ✗   | ✓   |
+| 钩子              | 服务端 | 客户端 |
+|-----------------|-----|-----|
+| `onInit`        | ✓   | ✓   |
+| `onBeforeMount` | ✗   | ✓   |
+| `onMounted`     | ✗   | ✓   |
+| `onShow`        | ✗   | ✓   |
+| `onHide`        | ✗   | ✓   |
+| `onDispose`     | ✓   | ✓   |
 
 ```tsx
-import { Widget } from '@vitarx/runtime-core'
+import { onInit, onMounted, ref } from 'vitarx'
 
-class MyWidget extends Widget {
-  onCreate() {
+function MyComponent() {
+  const data = ref()
+  onInit(async ()=> {
     // 服务端和客户端都会执行
-    console.log('Component created')
-  }
+    console.log('Component init')
+    data.value = await fetchData()
+  })
   
-  onMounted() {
+  onMounted(()=>{
     // 仅客户端执行
     console.log('Component mounted')
     this.startTimer()
-  }
-  
-  build() {
-    return <div>Content</div>
-  }
+  })
+
+  return <div>{data}</div>
 }
 ```
 
@@ -902,15 +897,14 @@ const fullHTML = `
 
 #### 水合失败降级
 
-`hydrate()` 会自动处理水合失败，如果水合失败后，会清空容器内容，并回退到正常渲染模式。
+`hydrate()` 会自动处理水合失败，如果水合失败后，会清空容器内容，并回退到正常渲染挂载模式。
 
 ## 注意事项
 
 ### 生命周期钩子在 SSR 中的行为
 
-- `onCreate` 和 `onRender` 在服务端和客户端都会执行
-- `onMounted`、`onUpdated`、`onUnmounted` 仅在客户端执行
-- 避免在 `onCreate` 和 `onRender` 中访问 DOM
+- `onInit` 和 `onDispose` 在服务端和客户端都会执行
+- `onBeforeMounte`、`onMounted`、`onShow`、`onHide` 仅在客户端执行
 
 ### 浏览器 API 限制
 
@@ -923,9 +917,8 @@ const fullHTML = `
 
 ### 内存泄漏预防
 
-- 在 `onMounted` 中添加事件监听器，在 `onUnmounted` 中移除
+- 在 `onMounted` 中编写仅运行在客户端的逻辑
 - 避免全局状态污染
-- 及时清理定时器和订阅
 
 ## API 索引
 
