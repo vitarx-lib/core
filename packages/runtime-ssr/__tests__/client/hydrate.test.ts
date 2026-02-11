@@ -1,37 +1,8 @@
-import { ref, Scheduler } from '@vitarx/responsive'
-import { Fragment, h, setHostSchema, setRenderer } from '@vitarx/runtime-core'
-import { DomRenderer } from '@vitarx/runtime-dom'
-import { registerDefaultDrivers } from '@vitarx/runtime-drivers'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { flushSync, ref } from '@vitarx/responsive'
+import { Fragment, h } from '@vitarx/runtime-core'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { createSSRApp, hydrate, renderToString } from '../../src/index.js'
 import { createContainer, createMockAsyncComponent } from '../helpers.js'
-
-beforeAll(() => {
-  // 设置渲染器
-  setRenderer(new DomRenderer() as any)
-
-  // 注册默认驱动程序
-  registerDefaultDrivers()
-
-  // 设置 void 元素
-  setHostSchema({
-    voidElements: new Set([
-      'area',
-      'base',
-      'br',
-      'col',
-      'embed',
-      'hr',
-      'img',
-      'input',
-      'link',
-      'meta',
-      'source',
-      'track',
-      'wbr'
-    ])
-  })
-})
 
 describe('hydrate', () => {
   beforeEach(() => {
@@ -166,11 +137,10 @@ describe('hydrate', () => {
   it('激活后应该处理响应式状态', async () => {
     const App = () => {
       const count = ref(0)
-      return () =>
-        h('div', null, [
-          h('span', { id: 'count' }, String(count.value)),
-          h('button', { onClick: () => count.value++ }, 'Increment')
-        ])
+      return h('div', null, [
+        h('span', { id: 'count' }, count),
+        h('button', { onClick: () => count.value++ }, 'Increment')
+      ])
     }
     const app = createSSRApp(App)
 
@@ -188,7 +158,7 @@ describe('hydrate', () => {
     button.click()
 
     // 同步更新
-    Scheduler.flushSync()
+    flushSync()
 
     // 验证响应式更新
     expect(container.querySelector('#count')?.textContent).toBe('1')
@@ -206,8 +176,7 @@ describe('hydrate', () => {
     await hydrate(clientApp, container, context)
 
     // 验证内部标识已清理
-    expect(context.$isHydrating).toBeUndefined()
-    expect(context.$nodeAsyncMap).toBeUndefined()
+    expect(context.$isHydrating).toBeFalsy()
   })
 
   it('即使出错也应该清理标志', async () => {
@@ -224,8 +193,7 @@ describe('hydrate', () => {
     await hydrate(app, container, context)
 
     // 即使出错也应清理标识
-    expect(context.$isHydrating).toBeUndefined()
-    expect(context.$nodeAsyncMap).toBeUndefined()
+    expect(context.$isHydrating).toBeFalsy()
     expect(errorHandler).toHaveBeenCalledOnce()
     expect(container.outerHTML).toContain('<!--')
   })

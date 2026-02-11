@@ -1,8 +1,8 @@
 import { createVNode, h, NodeKind, resolveDirective, withDirectives } from '@vitarx/runtime-core'
 import { describe, expect, it } from 'vitest'
 import {
-  applyShowDirective,
   inheritShowDirective,
+  resolveDirectiveProps,
   serializeVNodeToSink
 } from '../../src/shared/serialize.js'
 import { StringSink } from '../../src/shared/sink.js'
@@ -14,7 +14,7 @@ describe('applyShowDirective', () => {
     withDirectives(node, [[showDirective, false]])
     const props: Record<string, any> = {}
 
-    applyShowDirective(node, props)
+    resolveDirectiveProps(node, props)
 
     expect(props.style).toBeDefined()
     expect(props.style.display).toBe('none')
@@ -25,7 +25,7 @@ describe('applyShowDirective', () => {
     withDirectives(node, [[showDirective, true]])
     const props: Record<string, any> = {}
 
-    applyShowDirective(node, props)
+    resolveDirectiveProps(node, props)
 
     expect(props.style).toBeUndefined()
   })
@@ -35,7 +35,7 @@ describe('applyShowDirective', () => {
     withDirectives(node, [[showDirective, false]])
     const props: Record<string, any> = { style: { color: 'red' } }
 
-    applyShowDirective(node, props)
+    resolveDirectiveProps(node, props)
 
     expect(props.style.color).toBe('red')
     expect(props.style.display).toBe('none')
@@ -45,7 +45,7 @@ describe('applyShowDirective', () => {
     const node = createVNode('div', {})
     const props: Record<string, any> = {}
 
-    applyShowDirective(node, props)
+    resolveDirectiveProps(node, props)
 
     expect(props.style).toBeUndefined()
   })

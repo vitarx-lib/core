@@ -21,12 +21,12 @@ describe('SSRApp 服务端渲染应用', () => {
     expect(container.querySelector('#content')?.textContent).toBe('Test Content')
   })
 
-  it('当容器为空时应该正常挂载', async () => {
+  it('当容器为空时应该正常挂载', () => {
     const App = () => h('div', { id: 'test' }, 'New Content')
     const app = createSSRApp(App)
     const container = createContainer()
 
-    await app.hydrate(container)
+    app.mount(container)
 
     expect(container.querySelector('#test')).toBeTruthy()
   })

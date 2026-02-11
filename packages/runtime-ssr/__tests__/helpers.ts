@@ -1,7 +1,7 @@
 /**
  * 测试辅助工具函数
  */
-import { type ClassWidget, createVNode, Widget } from '@vitarx/runtime-core'
+import { type Component, createView, onInit } from '@vitarx/runtime-core'
 import type { SSRContext } from '../src/shared/index.js'
 
 /**
@@ -9,33 +9,28 @@ import type { SSRContext } from '../src/shared/index.js'
  */
 export function createMockComponent(content: string) {
   return function TestComponent() {
-    return createVNode('div', { children: content })
+    return createView('div', { children: content })
   }
 }
 
 /**
  * 创建测试用的类组件
  */
-export function createMockClassComponent(content: string): ClassWidget {
-  return class TestWidget extends Widget {
-    build() {
-      return createVNode('div', { children: content })
-    }
+export function createMockClassComponent(content: string): Component {
+  return function TestComponent() {
+    return createView('div', { children: content })
   }
 }
 
 /**
  * 创建延迟解析的异步组件
  */
-export function createMockAsyncComponent(content: string, delay: number = 10): ClassWidget {
-  return class AsyncWidget extends Widget {
-    override async onRender() {
+export function createMockAsyncComponent(content: string, delay: number = 10): Component {
+  return function TestComponent() {
+    onInit(async () => {
       await new Promise(resolve => setTimeout(resolve, delay))
-    }
-
-    build() {
-      return createVNode('div', { children: content })
-    }
+    })
+    return createView('div', { children: content })
   }
 }
 
