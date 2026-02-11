@@ -1,18 +1,19 @@
-import type { Ref } from '@vitarx/responsive'
-import { getCallSource } from '@vitarx/utils'
+import { type Ref } from '@vitarx/responsive'
+import { getCallSource, isPlainObject } from '@vitarx/utils'
 import { isViewBuilder } from '../../shared/index.js'
 import type {
   AnyProps,
   CodeLocation,
   Component,
   HostElementTag,
-  ValidChild,
   ValidChildren,
   ValidProps,
   View,
+  ViewOf,
   ViewTag
 } from '../../types/index.js'
 import type { ViewBuilder } from '../builder/index.js'
+import { isValidChild } from '../compiler/resolve.js'
 import { CommentView, TextView } from './atomic.js'
 import { ComponentView } from './component.js'
 import { DynamicView } from './dynamic.js'
@@ -23,17 +24,17 @@ import { FragmentView } from './fragment.js'
  * 创建视图的工厂函数
  *
  * @template P - 视图属性的类型，必须扩展自 AnyProps
- * @template B - 视图实例的类型，必须扩展自 View
+ * @template V - 视图实例的类型，必须扩展自 View
  * @param type - 视图构建器函数，用于创建指定类型的视图实例
  * @param [props] - 可选的视图属性对象，默认为 null
  * @param location - 可选的代码位置信息，用于调试和错误追踪
  * @returns 返回创建的视图实例，类型为 B
  */
-export function createView<P extends AnyProps, B extends View>(
-  type: ViewBuilder<P, B>,
+export function createView<P extends AnyProps, V extends View>(
+  type: ViewBuilder<P, V>,
   props?: P | null,
   location?: CodeLocation
-): B
+): V
 
 /**
  * 创建组件视图实例
@@ -194,89 +195,41 @@ export function createElementView<T extends HostElementTag>(
 }
 
 /**
- * 创建视图的工厂函数
+ * 创建View对象的JS编码友好助手函数
  *
- * @template P - 视图属性的类型，必须扩展自 AnyProps
- * @template B - 视图实例的类型，必须扩展自 View
- * @param type - 视图构建器函数，用于创建指定类型的视图实例
- * @param [props] - 可选的视图属性对象，默认为 null
- * @param [children] - 可选的子视图
- * @returns 返回创建的视图实例，类型为 B
- */
-export function h<P extends AnyProps, B extends View>(
-  type: ViewBuilder<P, B>,
-  props?: P | null,
-  ...children: ValidChild[]
-): B
-
-/**
- * 创建组件视图实例
- * 当传入类型参数为组件时，创建对应的组件视图
+ * 此函数是对 `createView` 进行了二次封装，方便在直接使用js代码创建视图。
  *
- * @template T 组件类型
- * @param type 组件类型
- * @param [props] 组件属性
- * @param [children] 子视图
- * @returns {ComponentView} 组件视图实例
- */
-export function h<T extends Component>(
-  type: T,
-  props?: ValidProps<T> | null,
-  ...children: ValidChild[]
-): ComponentView<T>
-
-/**
- * 创建元素视图实例
- * 当传入类型参数为HTML标签时，创建对应的元素视图
- *
- * @template T HTML标签类型
- * @param type HTML标签名称
- * @param [props] 元素属性，默认为null
- * @param [children] - 子元素
- * @returns {ElementView} 元素视图实例
- */
-export function h<T extends HostElementTag>(
-  type: T,
-  props?: ValidProps<T> | null,
-  ...children: ValidChild[] // 子视图
-): ElementView<T>
-
-/**
- * 创建通用视图实例
- * 当传入类型参数为视图标签时，创建对应的视图实例
- *
- * @template T 视图标签类型
- * @param type 视图标签
- * @param [props] 视图属性，默认为null
- * @param [children] - 子视图
- * @returns {View} 视图实例
+ * @param type - 元素的类型，必须是ViewTag的子类型
+ * @param props - 元素的属性对象或子元素
+ * @param children - 元素的子元素
+ * @returns {View} 返回对应类型的视图对象
  */
 export function h<T extends ViewTag>(
   type: T,
-  props?: ValidProps<T> | null,
-  ...children: ValidChild[]
-): View
-/**
- * 创建视图
- *
- * @param type - 节点类型，可以是字符串、组件函数或类组件
- * @param props - 节点属性对象，可选参数，默认为null
- * @param children - 子节点，可以是任意数量的子节点
- * @returns {View} 返回创建的虚拟DOM节点实例
- */
-export function h<T extends ViewTag>(
-  type: T,
-  props: ValidProps<T> | null = null,
-  ...children: ValidChild[] // 子视图
-): View {
-  if (!props?.children && children.length) {
-    // 如果有子节点
-    props ??= {} as ValidProps<T>
-    ;(props as AnyProps).children = children.length === 1 ? children[0] : children
+  props?: AnyProps | ValidChildren,
+  children?: ValidChildren
+): ViewOf<T> {
+  let resolvedProps: AnyProps | null = null // 解析后的属性对象
+  let resolvedChildren: ValidChildren | undefined // 解析后的子元素
+
+  // props is actually children
+  if (props != null) {
+    if (isValidChild(props)) {
+      resolvedChildren = props as ValidChildren
+    } else if (isPlainObject(props)) {
+      resolvedProps = props as AnyProps
+    }
   }
-  if (__DEV__) {
-    const location = getCallSource()
-    return createView(type, props, location)
+  if (children !== undefined) {
+    resolvedChildren = children
   }
-  return createView(type, props)
+  // attach children to props if exists
+  if (resolvedChildren !== undefined) {
+    resolvedProps ??= {}
+    resolvedProps.children = resolvedChildren
+  }
+
+  const source = __DEV__ ? getCallSource() : undefined
+
+  return createView(type, resolvedProps as ValidProps<T>, source) as ViewOf<T>
 }

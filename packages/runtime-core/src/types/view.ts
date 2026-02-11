@@ -88,3 +88,14 @@ export type ViewTag = HostElementTag | Component | ViewBuilder
  * - 'replace': 替换已有节点
  */
 export type MountType = 'append' | 'insert' | 'replace'
+
+/**
+ * ViewTag 转 View 类型
+ */
+export type ViewOf<T extends ViewTag> = T extends HostElementTag
+  ? ElementView<T>
+  : T extends ViewBuilder<any, infer V>
+    ? V
+    : T extends Component
+      ? ComponentView<T>
+      : never
