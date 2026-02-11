@@ -193,31 +193,30 @@ export function createElementView<T extends HostElementTag>(
 ): ElementView<T> {
   return new ElementView(tag, props, location)
 }
-
 /**
  * 创建View对象的JS编码友好助手函数
  *
  * 此函数是对 `createView` 进行了二次封装，方便在直接使用js代码创建视图。
  *
  * @param type - 元素的类型，必须是ViewTag的子类型
- * @param props - 元素的属性对象或子元素
+ * @param propsOrChildren - 元素的属性对象或子元素
  * @param children - 元素的子元素
  * @returns {View} 返回对应类型的视图对象
  */
 export function h<T extends ViewTag>(
   type: T,
-  props?: AnyProps | ValidChildren,
+  propsOrChildren?: AnyProps | ValidChildren,
   children?: ValidChildren
 ): ViewOf<T> {
   let resolvedProps: AnyProps | null = null // 解析后的属性对象
   let resolvedChildren: ValidChildren | undefined // 解析后的子元素
 
   // props is actually children
-  if (props != null) {
-    if (isValidChild(props)) {
-      resolvedChildren = props as ValidChildren
-    } else if (isPlainObject(props)) {
-      resolvedProps = props as AnyProps
+  if (propsOrChildren != null) {
+    if (isValidChild(propsOrChildren)) {
+      resolvedChildren = propsOrChildren as ValidChildren
+    } else if (isPlainObject(propsOrChildren)) {
+      resolvedProps = propsOrChildren as AnyProps
     }
   }
   if (children !== undefined) {
