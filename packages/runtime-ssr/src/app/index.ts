@@ -1,1 +1,1 @@
-export { SSRApp } from './SSRApp.js'
+export { SSRApp, createSSRApp } from './SSRApp.js'

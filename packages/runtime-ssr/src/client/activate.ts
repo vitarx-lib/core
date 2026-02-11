@@ -14,7 +14,7 @@ import {
 } from '@vitarx/runtime-core'
 import { isArray, logger } from '@vitarx/utils'
 import type { DOMElement, DOMNodeList } from '../shared/types.js'
-import { normalRender } from './render.js'
+import { renderViewNode } from './render.js'
 import {
   appendChild,
   cleanupExtraDom,
@@ -57,9 +57,9 @@ export async function hydrateNode(
   const tagName = getHostViewTag(view)
   // 未找到可复用 DOM → 跳过当前激活
   if (!reuseNode) {
-    logger.warn(`[hydrate] Cannot find dom node for <${tagName}>`, view.location)
+    logger.warn(`[Hydration] Cannot find dom node for <${tagName}>`, view.location)
     // 渲染出元素/节点，避免最终
-    const el = normalRender(view, container)
+    const el = renderViewNode(view, container)
     // 追加到容器中
     appendChild(container, el)
     // 如果洗渲染的是片段，则需要 +1 原因是片段有两个锚点，
@@ -70,12 +70,12 @@ export async function hydrateNode(
   // 标签 / 类型 不匹配 → fallback 渲染替换
   if (reuseNode.kind !== kind || reuseNode.tag !== tagName) {
     logger.warn(
-      `[Hydration] Element mismatch: expected <${tagName}> but found ` +
+      `[Hydration] element mismatch: expected <${tagName}> but found ` +
         `<${reuseNode.tag}> at index ${nodeIndex}. ` +
-        `This may happen if the server-rendered HTML doesn't match the client-side VNode structure.`,
+        `This may happen if the server-rendered HTML doesn't match the client-side View structure.`,
       view.location
     )
-    const el = normalRender(view, container)
+    const el = renderViewNode(view, container)
     if (isArray(reuseNode.el)) {
       renderer.insert(el, reuseNode.el[0] as HostNode)
       for (const child of reuseNode.el) child.remove()
