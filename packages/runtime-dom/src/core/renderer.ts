@@ -90,8 +90,10 @@ export class DOMRenderer implements ViewRenderer {
     // 如果是插入到片段节点中，则判断是否已挂载
     if (this.isFragment(parent) && parent.$endAnchor.parentNode) {
       const endAnchor = parent.$endAnchor
+      if (child.parentNode === endAnchor.parentNode) return
       endAnchor.parentNode!.insertBefore(child, endAnchor)
     } else {
+      if (child.parentNode === parent) return
       parent.appendChild(child)
     }
   }
