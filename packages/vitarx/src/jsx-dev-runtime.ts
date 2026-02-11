@@ -1,13 +1,10 @@
 import {
-  type AnyProps,
-  type CreatableType,
-  setNodeDevInfo,
-  type SourceLocation,
-  type UniqueKey,
-  type VNodeOf
+  type CodeLocation,
+  createView,
+  type ValidProps,
+  type ViewOf,
+  type ViewTag
 } from '@vitarx/runtime-core'
-import type { AnyRecord } from '@vitarx/utils'
-import { jsx } from './jsx-runtime.js'
 
 export { Fragment } from './jsx-runtime.js'
 
@@ -16,29 +13,18 @@ export { Fragment } from './jsx-runtime.js'
  *
  * @param type - 类型
  * @param props - 属性
- * @param key - 唯一标识
- * @param isStatic - 是否静态
- * @param source - 源码位置信息
- * @param self - 组件实例
+ * @param location - 代码位置
+ * @returns { View } - 视图对象
  */
-export function jsxDEV<T extends CreatableType>(
+export function jsxDEV<T extends ViewTag>(
   type: T,
-  props: AnyProps | null,
-  key: UniqueKey | undefined,
-  isStatic: boolean,
-  source: SourceLocation,
-  self: any
-): VNodeOf<T> {
+  props: ValidProps<T> | null = null,
+  location: CodeLocation
+): ViewOf<T> {
   if (typeof type === 'function' && typeof window !== 'undefined') {
     // 获取最新模块
     const newModule = (window as any).__$VITARX_HMR$__?.replaceNewModule?.(type)
     if (newModule) type = newModule
   }
-  const vnode = jsx(type, props, key)
-  setNodeDevInfo(props as AnyRecord, {
-    source,
-    isStatic,
-    self
-  })
-  return vnode
+  return createView(type, props, location) as ViewOf<T>
 }

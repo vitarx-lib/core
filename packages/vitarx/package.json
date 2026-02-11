@@ -1,7 +1,7 @@
 {
   "name": "vitarx",
   "version": "4.0.0-alpha.2",
-  "description": "Vitarx是一个现代化的前端框架",
+  "description": "Vitarx is an advanced UI framework that provides engine-level control over the View runtime.",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
   "keywords": [
@@ -13,10 +13,10 @@
     "directory": "packages/vitarx"
   },
   "type": "module",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "unpkg": "./dist/index.iife.js",
-  "jsdelivr": "./dist/index.iife.js",
+  "module": "dist/vitarx.prod.js",
+  "types": "dist/vitarx.d.ts",
+  "unpkg": "dist/vitarx.iife.js",
+  "jsdelivr": "dist/vitarx.iife.js",
   "files": [
     "dist",
     "LICENSE",
@@ -25,8 +25,8 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "types": "./dist/vitarx.d.ts",
+        "default": "./dist/vitarx.prod.js"
       }
     },
     "./jsx-runtime": {
@@ -36,10 +36,6 @@
     "./jsx-dev-runtime": {
       "types": "./dist/jsx-dev-runtime.d.ts",
       "default": "./dist/jsx-dev-runtime.js"
-    },
-    "./ssr": {
-      "types": "./dist/ssr.d.ts",
-      "default": "./dist/ssr.js"
     }
   },
   "dependencies": {
