@@ -1,7 +1,6 @@
-import type { RenderContext, ViewRenderer } from '../types/index.js'
+import type { ViewRenderer } from '../types/index.js'
 
 let globalRenderer: ViewRenderer
-let currentRenderContext: RenderContext | undefined
 
 /**
  * 设置平台渲染适配器
