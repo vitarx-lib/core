@@ -105,7 +105,7 @@ function Teleport({ children, to, defer, disabled }: TeleportProps): View {
     })
   }
   onDispose(() => children.dispose())
-  return new CommentView('teleport')
+  return new CommentView(`teleport to ${to}`)
 }
 
 Teleport.defaultProps = { defer: false, disabled: false } as const
