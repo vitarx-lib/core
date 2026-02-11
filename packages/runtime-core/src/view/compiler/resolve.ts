@@ -134,7 +134,18 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   if (isRef(ref) || isFunction(ref)) result.ref = ref
   return result
 }
-
+/**
+ * 检查给定的值是否是有效的子元素
+ * @param value - 需要检查的值，可以是任何类型
+ * @returns {boolean} 返回一个布尔值，表示值是否是有效的子元素
+ *          如果值是字符串、数字、视图、数组或引用，则返回true
+ */
+export function isValidChild(value: any): value is ValidChildren {
+  const type = typeof value
+  return (
+    type === 'string' || type === 'number' || isView(value) || Array.isArray(value) || isRef(value)
+  )
+}
 /**
  * 解析子元素并转换为适当的视图类型
  *
