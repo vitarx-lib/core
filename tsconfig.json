@@ -7,8 +7,10 @@
       "DOM",
       "DOM.Iterable"
     ],
-    // 生成声明文件
-    "declaration": true,
+    // 不生成js文件
+    "noEmit": true,
+    // 不生成类型声明文件
+    "declaration": false,
     // 不生成 .js.map
     "sourceMap": false,
     // 确保换行符一致性
