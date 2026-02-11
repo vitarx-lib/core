@@ -7,12 +7,15 @@ import { ComponentInstance } from '../view/index.js'
  *
  * 定义了框架中可能发生错误的各种来源。
  *
+ * - `component:run`：表示在执行函数组件时发生的错误。
  * - `effect:${string}`：表示在执行某个 effect 时发生的错误。
  * - `hook:${Lifecycle}`：表示在执行某个生命周期钩子时发生的错误。
- * - `view:switch`：表示在切换视图时发生的错误，SwitchView 发出。
+ * - `view:switch`：表示在切换视图时发生的错误，DynamicView 发出。
  * - `view:update`：表示在更新视图时发生的错误，ElementView 发出。
+ * - `view:build`：表示在构建视图时发生的错误，For 组件发出。
  */
 export type ErrorSource =
+  | `component:run`
   | `effect:${string}`
   | `hook:${Lifecycle}`
   | 'view:switch'

@@ -24,6 +24,7 @@ import { applyRef, mergeDefaultProps, resolveChild, resolveProps } from '../comp
 import { CommentView } from './atomic.js'
 import { BaseView } from './base.js'
 import type { ViewSwitchHandler } from './dynamic.js'
+import { createCommentView } from './factory.js'
 
 /**
  * ComponentView 是用于管理和渲染组件实例的视图类。
@@ -203,7 +204,14 @@ export class ComponentInstance<T extends Component = Component> {
       }
     })
     this.publicInstance = markRaw({})
-    const result = runComponent(this, () => view.component(view.props))
+    const result = runComponent(this, () => {
+      try {
+        return view.component(view.props)
+      } catch (e) {
+        this.reportError(e, 'component:run')
+        return createCommentView(`Component<${view.name}>:failed`)
+      }
+    })
     this.subView = this.normalizeView(result)
     this.subViewContext = Object.freeze({
       owner: this,
