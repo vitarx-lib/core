@@ -17,8 +17,6 @@ import {
  *
  * 所有信号发出的通知都由值容器（Ref / Reactive / Computed 等）决定，
  * 开发者通常不直接操作 Signal，除非你理解依赖系统机制。
- *
- * @internal
  */
 export interface Signal {
   /**
@@ -43,8 +41,6 @@ export interface Signal {
  * EffectRunner 协议接口（内部使用）
  *
  * Effect 执行器，用于依赖系统触发执行。
- *
- * @internal
  */
 export interface EffectRunner extends DebuggerOptions {
   /**
@@ -112,8 +108,6 @@ export class DepLink {
 /**
  * 创建 signal <-> effect 双向链表关联
  *
- * @internal 内部核心助手函数
- *
  * @description
  * 该函数用于创建一个双向链表节点，将 effect 和 signal 进行双向关联。
  * 主要包含两个维度的链表维护：
@@ -176,8 +170,6 @@ export function createDepLink(effect: EffectRunner, signal: Signal): DepLink {
 }
 /**
  * 销毁 signal <-> effect 链表关联
- *
- * @internal 内部核心助手函数
  */
 export function destroyDepLink(link: DepLink): void {
   const { effect, signal } = link
