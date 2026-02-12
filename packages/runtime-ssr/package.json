@@ -14,8 +14,7 @@
     "directory": "packages/runtime-ssr"
   },
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
@@ -26,7 +25,7 @@
     ".": {
       "import": {
         "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
+        "default": "./dist/index.es.js"
       }
     }
   },
