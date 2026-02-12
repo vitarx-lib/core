@@ -20,6 +20,7 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/types": "^19.8.1",
+    "@microsoft/api-extractor": "^7.56.3",
     "@types/node": "^22.18.12",
     "@types/semver": "^7.7.1",
     "@vitarx/init-husky": "^1.1.0",
@@ -33,6 +34,7 @@
     "semver": "^7.7.3",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
+    "unplugin-dts": "1.0.0-beta.6",
     "vite": "^7.1.12",
     "vitest": "^3.2.4"
   }

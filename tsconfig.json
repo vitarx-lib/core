@@ -8,7 +8,7 @@
       "DOM.Iterable"
     ],
     // 不生成js文件
-    "noEmit": true,
+    "noEmit": false,
     // 不生成类型声明文件
     "declaration": false,
     // 不生成 .js.map
@@ -41,7 +41,8 @@
       "vitest/globals",
       "vite/client",
       "node"
-    ]
+    ],
+    "outDir": "dist"
   },
   "include": [
     "**/src/**/*.ts",
