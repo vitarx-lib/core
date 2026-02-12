@@ -19,6 +19,9 @@ interface PackageJson {
 }
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
+// 获取包所在目录的绝对路径
+const packagesDir = resolve(__dirname, '../packages')
+
 const PACKAGES = [
   'utils',
   'responsive',
@@ -27,7 +30,14 @@ const PACKAGES = [
   'runtime-ssr',
   'vitarx' // 主包最后构建
 ]
-async function runViteBuild(
+function resolveAlias(filename: string): Record<string, string> {
+  const alias: Record<string, string> = {}
+  PACKAGES.slice(0, -1).forEach(packDir => {
+    alias[`@vitarx/${packDir}`] = join(packagesDir, packDir, 'dist', `${filename}.js`)
+  })
+  return alias
+}
+async function buildSubPackage(
   packagePath: string,
   pkg: PackageJson,
   outDir: string,
@@ -49,10 +59,7 @@ async function runViteBuild(
   }
   const dependencies = pkg.dependencies
   const external: string[] = ['stream', 'node:stream']
-  if (pkg.name !== 'vitarx' && dependencies) {
-    external.push(...Object.keys(dependencies))
-  }
-
+  if (dependencies) external.push(...Object.keys(dependencies))
   const config: InlineConfig = {
     configFile: false,
     build: {
@@ -73,28 +80,112 @@ async function runViteBuild(
       emptyOutDir: false
     },
     plugins: plugins,
-    define: { __DEV__: dev, __SSR__: ssr, __VERSION__: JSON.stringify(pkg.version) }
+    define: { __DEV__: dev, __SSR__: ssr }
   }
-
   await build(mergeConfig(config, pkg.vite || {}))
 }
 
-async function buildVitarxIife(packagePath: string, pkg: PackageJson, outDir: string) {
-  const config: InlineConfig = {
+async function buildMainPackage(packagePath: string, pkg: PackageJson, outDir: string) {
+  const external: string[] = ['stream', 'node:stream']
+  const tsconfigPath = resolve(packagePath, 'tsconfig.json')
+  await build({
     configFile: false,
     build: {
+      outDir,
+      lib: {
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: ['es'],
+        fileName: 'index.es'
+      },
+      rollupOptions: {
+        external: external
+      },
+      emptyOutDir: false
+    },
+    plugins: [
+      dtsPlugin({
+        insertTypesEntry: true,
+        bundleTypes: true,
+        tsconfigPath: tsconfigPath,
+        root: packagePath
+      })
+    ],
+    define: { __DEV__: true, __SSR__: false }
+  })
+  await build({
+    configFile: false,
+    resolve: {
+      alias: resolveAlias('index.es-prod')
+    },
+    build: {
+      outDir,
+      lib: {
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: ['es'],
+        fileName: 'index.es-prod'
+      },
+      rollupOptions: {
+        external: external
+      },
+      emptyOutDir: false
+    },
+    define: { __DEV__: false, __SSR__: false }
+  })
+  await build({
+    configFile: false,
+    resolve: {
+      alias: resolveAlias('index.es.ssr')
+    },
+    build: {
+      outDir,
+      lib: {
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: ['es'],
+        fileName: 'index.es.ssr'
+      },
+      rollupOptions: {
+        external: external
+      },
+      emptyOutDir: false
+    },
+    define: { __DEV__: true, __SSR__: true }
+  })
+  await build({
+    configFile: false,
+    resolve: {
+      alias: resolveAlias('index.es.ssr-prod')
+    },
+    build: {
+      outDir,
+      lib: {
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: ['es'],
+        fileName: 'index.es.ssr-prod'
+      },
+      rollupOptions: {
+        external: external
+      },
+      emptyOutDir: false
+    },
+    define: { __DEV__: false, __SSR__: true }
+  })
+  await build({
+    configFile: false,
+    resolve: {
+      alias: resolveAlias('index.es-prod')
+    },
+    build: {
+      outDir,
       lib: {
         name: 'Vitarx',
         entry: resolve(packagePath, 'src/index.ts'),
         formats: ['iife'],
-        fileName: 'index.iife'
+        fileName: 'index'
       },
-      outDir,
       emptyOutDir: false
     },
     define: { __DEV__: false, __SSR__: false, __VERSION__: JSON.stringify(pkg.version) }
-  }
-  await build(config)
+  })
 }
 
 /**
@@ -132,12 +223,13 @@ async function buildPackage(
   const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
   // Vite bundle
   log.warn(`\n📦 Vite Building ${pkg.name}...`)
-  await runViteBuild(packagePath, pkg, dist, { dev: true, ssr: false, dts: true })
-  await runViteBuild(packagePath, pkg, dist, { dev: true, ssr: true })
-  await runViteBuild(packagePath, pkg, dist, { dev: false, ssr: false })
-  await runViteBuild(packagePath, pkg, dist, { dev: false, ssr: true })
   if (packageDirName === 'vitarx') {
-    await buildVitarxIife(packagePath, pkg, dist)
+    await buildMainPackage(packagePath, pkg, dist)
+  } else {
+    await buildSubPackage(packagePath, pkg, dist, { dev: true, ssr: false, dts: true })
+    await buildSubPackage(packagePath, pkg, dist, { dev: true, ssr: true })
+    await buildSubPackage(packagePath, pkg, dist, { dev: false, ssr: false })
+    await buildSubPackage(packagePath, pkg, dist, { dev: false, ssr: true })
   }
   log.success(`\n✓ Bundle ${pkg.name} compilation completed`)
   log.info(separator + '\n')
@@ -174,8 +266,6 @@ function parseArgs(): { packages: string[]; test: boolean; dev: boolean; ssr: bo
 async function buildAll() {
   // 从命令行参数中解析出目标包和测试标志
   const { packages: targetPackages, test } = parseArgs()
-  // 获取包所在目录的绝对路径
-  const packagesDir = resolve(__dirname, '../packages')
   // 确定要构建的包列表：如果指定了目标包则使用指定的包，否则获取所有符合条件的包
   const packages =
     targetPackages.length > 0
