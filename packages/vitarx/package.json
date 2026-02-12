@@ -13,10 +13,10 @@
     "directory": "packages/vitarx"
   },
   "type": "module",
-  "module": "dist/vitarx.prod.js",
-  "types": "dist/vitarx.d.ts",
-  "unpkg": "dist/vitarx.iife.js",
-  "jsdelivr": "dist/vitarx.iife.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.iife.js",
+  "jsdelivr": "dist/index.iife.js",
   "files": [
     "dist",
     "LICENSE",
@@ -25,8 +25,8 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/vitarx.d.ts",
-        "default": "./dist/vitarx.prod.js"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.es.js"
       }
     },
     "./jsx-runtime": {
