@@ -39,8 +39,8 @@ export interface LoggerConfig {
  * 默认日志配置
  */
 const DEFAULT_CONFIG: LoggerConfig = {
-  level: import.meta.env?.DEV ? LogLevel.DEBUG : LogLevel.ERROR,
-  includeSourceInfo: import.meta.env?.DEV,
+  level: __DEV__ ? LogLevel.DEBUG : LogLevel.ERROR,
+  includeSourceInfo: __DEV__,
   prefix: ''
 }
 
