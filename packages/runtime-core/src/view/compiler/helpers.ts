@@ -7,6 +7,7 @@ import { DynamicViewSource, SwitchViewSource } from './source.js'
 /**
  * 创建一个只读的响应式引用对象
  *
+ * @internal
  * @param obj - 源对象
  * @param key - 源对象上的键
  * @returns {Ref} 返回一个只读的引用对象

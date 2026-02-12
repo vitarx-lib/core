@@ -18,13 +18,13 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   readonly [IS_VIEW]: true = true
   /** @internal 避免被响应式代理 */
   readonly [IS_RAW]: true = true
-  /** @internal 代码位置，仅调试模式存在 */
-  public location?: CodeLocation
-  /** @internal 视图类型 */
+  /** @readonly 代码位置，仅调试模式存在 */
+  public readonly location?: CodeLocation
+  /** 视图类型 */
   abstract readonly kind: K
-  /** @internal 上下文 */
+  /** 上下文 */
   public ctx?: ViewContext
-  /** @internal DOM节点 */
+  /** DOM节点 */
   protected abstract hostNode: Node | null
   /** @internal 视图状态 */
   #state: ViewState | Ref<ViewState>
@@ -164,8 +164,6 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * 激活视图响应式
    *
    * 解除已被停用的视图树，恢复响应式，必须与 `deactivate` 搭配使用
-   *
-   * @internal
    */
   activate(): this {
     if (!this.isRuntime) {
@@ -188,8 +186,6 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * 停用视图响应式
    *
    * 停用视图树响应式，必须与 `activate` 搭配使用
-   *
-   * @internal
    */
   deactivate(): this {
     if (!this.isRuntime) {

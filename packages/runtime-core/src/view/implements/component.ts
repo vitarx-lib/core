@@ -58,15 +58,15 @@ export class ComponentView<T extends Component = Component> extends BaseView<
   ViewKind.COMPONENT,
   HostNode
 > {
-  /** @internal 类型标识 */
+  /** 类型标识 */
   public readonly kind = ViewKind.COMPONENT
   /** @internal 引用组件公开实例 */
   public readonly ref: InstanceRef | undefined
-  /** @internal 组件实体函数 */
+  /** 组件实体函数 */
   public readonly component: T
-  /** @internal 传递给组件的参数 */
+  /** 传递给组件的参数 */
   public readonly props: AnyProps
-  /** @internal 组件运行时实例 */
+  /** 组件运行时实例 */
   public instance: ComponentInstance<T> | null = null
   constructor(component: T, props: ComponentProps<T> | null = null, location?: CodeLocation) {
     super(location)
@@ -168,15 +168,15 @@ export class ComponentView<T extends Component = Component> extends BaseView<
  * - ⚠️ 所有属性面向开发者都是只读的，请勿随意修改！！！
  */
 export class ComponentInstance<T extends Component = Component> {
-  /** @internal - 应用 */
+  /** 所属应用应用 */
   public readonly app: App | null = null
-  /** @internal - 父组件实例 */
+  /** 所属父组件实例 */
   public readonly parent: ComponentInstance | null = null
   /** @internal - 组件注册的钩子 */
   public readonly hooks: HookStore = {}
-  /** @internal - 组件的副作用管理作用域 */
+  /** 组件的副作用管理作用域 */
   public readonly scope: EffectScope
-  /** @internal - 组件公开实例，只读！*/
+  /** 组件公开实例，只读！*/
   public readonly publicInstance: ComponentPublicInstance
   /** @internal - 组件提供数据 */
   public provide: Map<string | symbol, any> | null = null
@@ -186,12 +186,13 @@ export class ComponentInstance<T extends Component = Component> {
   public onViewSwitch: ViewSwitchHandler | null = null
   /** @internal - 异常处理器 */
   public errorHandler: ErrorHandler | null = null
-  /** @internal - 组件的子视图 */
+  /** 组件的子视图 */
   public readonly subView: View
-  /** @internal - 异步初始化 */
+  /** 异步初始化 */
   public initPromise?: Promise<unknown>
-  /** @internal - 给子视图继承的上下文 */
+  /** 给子视图继承的上下文 */
   public readonly subViewContext: ViewContext
+  /** 是否已挂载 */
   #isMounted = false
   constructor(public readonly view: ComponentView<T>) {
     this.parent = view.owner

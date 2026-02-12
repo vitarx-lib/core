@@ -14,7 +14,7 @@ import { checkKey, ensureMounted, getLIS, moveDOM, normalizeKeyResolver } from '
  * @template T - 列表项的数据类型
  * @param item - 当前列表项的数据
  * @param index - 当前项的索引引用（响应式）
- * @returns 返回有效的子元素（View实例、字符串、数字等）
+ * @returns - 返回有效的子元素（View实例、字符串、数字等）
  *
  * @example
  * ```jsx
