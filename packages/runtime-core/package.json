@@ -14,8 +14,8 @@
     "directory": "packages/runtime-dom"
   },
   "type": "module",
-  "module": "./dist/index.es.js",
-  "types": "./dist/index.d.ts",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist",
     "LICENSE",
@@ -24,7 +24,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.es.js"
+      "default": "./dist/index.es.js"
     }
   },
   "dependencies": {
