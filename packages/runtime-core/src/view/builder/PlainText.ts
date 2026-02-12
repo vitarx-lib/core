@@ -1,5 +1,5 @@
 import { hasPropTrack, toRef } from '@vitarx/responsive'
-import { isNumber, isString, logger } from '@vitarx/utils'
+import { isString, logger } from '@vitarx/utils'
 import { CommentView, TextView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
@@ -18,7 +18,7 @@ export interface TextProps {
 export const PlainText = builder(
   (props: TextProps, location): TextView | DynamicView<string> | CommentView => {
     const { value, isTrack } = hasPropTrack(props, 'text')
-    if (__DEV__ && !isString(value) && !isNumber(value)) {
+    if (__DEV__ && !isString(value) && typeof value !== 'number') {
       logger.warn(
         `[PlainText]: expected text needs to be given a string, given ${typeof value}`,
         location
