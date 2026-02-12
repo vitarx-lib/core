@@ -48,9 +48,15 @@ async function runViteBuild(
     )
   }
   const dependencies = pkg.dependencies
+  const external: string[] = ['stream', 'node:stream']
+  if (pkg.name !== 'vitarx' && dependencies) {
+    external.push(...Object.keys(dependencies))
+  }
+
   const config: InlineConfig = {
     configFile: false,
     build: {
+      outDir,
       lib: {
         entry: resolve(packagePath, 'src/index.ts'),
         formats: ['es'],
@@ -62,14 +68,14 @@ async function runViteBuild(
         }
       },
       rollupOptions: {
-        external: pkg.name === 'vitarx' || !dependencies ? [] : Object.keys(dependencies)
+        external: external
       },
-      outDir,
       emptyOutDir: false
     },
     plugins: plugins,
     define: { __DEV__: dev, __SSR__: ssr, __VERSION__: JSON.stringify(pkg.version) }
   }
+
   await build(mergeConfig(config, pkg.vite || {}))
 }
 
