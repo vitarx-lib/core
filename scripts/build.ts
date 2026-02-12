@@ -1,13 +1,15 @@
-import chalk from 'chalk'
-import { exec } from 'child_process'
-import { existsSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs'
 import { join, resolve } from 'path'
+import dtsPlugin from 'unplugin-dts/vite'
 import { fileURLToPath } from 'url'
-import { promisify } from 'util'
-import { type InlineConfig } from 'vite'
-
-const execAsync = promisify(exec)
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+import { build, type InlineConfig, mergeConfig, PluginOption } from 'vite'
+import {
+  createTsConfig,
+  log,
+  runClean,
+  runMadgeCheck,
+  runTypeCheck,
+  runVitestTest
+} from './utils.js'
 
 interface PackageJson {
   name: string
@@ -15,106 +17,73 @@ interface PackageJson {
   version: string
 }
 
-const log = {
-  info: (msg: string) => console.log(chalk.cyan(msg)),
-  success: (msg: string) => console.log(chalk.green(msg)),
-  warn: (msg: string) => console.log(chalk.yellow(msg)),
-  error: (msg: string) => console.error(chalk.red(msg))
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const PACKAGES = [
+  'utils',
+  'responsive',
+  'runtime-core',
+  'runtime-dom',
+  'runtime-ssr',
+  'vitarx' // 主包最后构建
+]
+async function runViteBuild(
+  packagePath: string,
+  pkg: PackageJson,
+  outDir: string,
+  env: { dev: boolean; ssr: boolean; dts?: boolean }
+): Promise<void> {
+  console.log('')
+  const { dev, ssr, dts = false } = env
+  const tsconfigPath = resolve(packagePath, 'tsconfig.json')
+  const plugins: PluginOption[] = []
+  if (dts) {
+    plugins.push(
+      dtsPlugin({
+        insertTypesEntry: true,
+        bundleTypes: true,
+        tsconfigPath: tsconfigPath,
+        root: packagePath
+      })
+    )
+  }
+  const config: InlineConfig = {
+    configFile: false,
+    build: {
+      lib: {
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: ['es'],
+        fileName: format => {
+          const p: string[] = ['index', `.${format}`]
+          if (ssr) p.push('.ssr')
+          if (!dev) p.push('-prod')
+          return `${p.join('')}.js`
+        }
+      },
+      outDir,
+      emptyOutDir: false
+    },
+    plugins: plugins,
+    define: { __DEV__: dev, __SSR__: ssr, __VERSION__: JSON.stringify(pkg.version) }
+  }
+  await build(mergeConfig(config, pkg.vite || {}))
 }
 
-/**
- * 使用 madge 检查指定目录下的 TypeScript 文件是否存在循环依赖。
- * 如果发现循环依赖，则记录错误并退出进程。
- * @param distPath 要检查的目录路径，例如 './dist'。
- */
-async function checkForCircularDependencies(distPath: string): Promise<void> {
-  // 构建命令
-  const command = `madge --extensions js --circular ${distPath} --warning --exclude '.*\\.d\\.ts$'`
-  log.warn(`\n⭕️ Checking for circular dependencies`)
-  try {
-    // 执行命令
-    // 注意：madge 在发现循环依赖时，会将信息输出到 stdout，但退出码为 1
-    const { stdout } = await execAsync(command)
-
-    // 如果命令成功执行（退出码为0），说明没有循环依赖
-    if (stdout) {
-      // madge 在没有循环依赖时通常不输出任何内容，但以防万一
-      log.success('Circular dependency check passed.')
-      log.success(`Madge output: ${stdout.trim()}`)
-    }
-  } catch (error: any) {
-    // execAsync 在命令返回非零退出码时会抛出错误
-    // 我们需要检查错误对象，它通常包含 stdout, stderr 和 code 属性
-
-    // madge 在发现循环依赖时，会将路径信息输出到 stdout
-    if (error.stdout) {
-      const circularPaths = error.stdout.trim()
-      log.error(`Circular dependencies detected:\n${circularPaths}`)
-      // 在这里，你可以选择更详细的日志记录，或者发送通知等
-    } else {
-      // 如果是其他类型的错误（例如 madge 未安装）
-      log.error(`An error occurred while running madge: ${error.message}`)
-      if (error.stderr) {
-        log.error(`Stderr: ${error.stderr}`)
-      }
-    }
-    // logger.error 已经记录了，这里直接退出
-    process.exit(1)
+async function buildVitarxIife(packagePath: string, pkg: PackageJson, outDir: string) {
+  const config: InlineConfig = {
+    configFile: false,
+    build: {
+      lib: {
+        name: 'Vitarx',
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: ['iife'],
+        fileName: 'index.iife'
+      },
+      outDir,
+      emptyOutDir: false
+    },
+    define: { __DEV__: false, __SSR__: false, __VERSION__: JSON.stringify(pkg.version) }
   }
-}
-
-/**
- * 清理指定的目录
- * @param dist - 需要清理的目录路径
- */
-function cleanDist(dist: string) {
-  // 检查目录是否存在并且是一个目录
-  if (existsSync(dist) && statSync(dist).isDirectory()) {
-    // 递归删除目录及其内容，强制删除
-    rmSync(dist, { recursive: true, force: true })
-    // 输出清理成功的日志信息
-    log.info(`  ✓ Cleaned dist directory: ${dist}`)
-  }
-}
-
-/**
- * 创建一个临时的TypeScript配置文件（用于构建）
- * @param packagePath - 项目包的路径
- * @returns {string} 返回临时配置文件的完整路径
- */
-function createTempTsConfig(packagePath: string): string {
-  // 定义临时配置文件的完整路径
-  const tsconfigPath = join(packagePath, 'tsconfig.json')
-  if (existsSync(tsconfigPath)) return tsconfigPath
-  // 定义临时配置文件的内容结构
-  const tsconfigJson = {
-    extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
-    compilerOptions: { outDir: 'dist' }, // 设置编译输出目录为dist
-    include: ['src', '../../vite-env.d.ts'], // 包含的文件和目录
-    exclude: ['dist', 'node_modules', '__tests__', 'tests'] // 排除的文件和目录
-  }
-  // 将配置对象写入JSON文件，使用2个空格进行格式化
-  writeFileSync(tsconfigPath, JSON.stringify(tsconfigJson, null, 2))
-  // 返回创建的临时配置文件路径
-  return tsconfigPath
-}
-
-/**
- * 执行命令的异步函数
- * @param cmd - 要执行的命令字符串
- * @param cwd - 可选参数，指定命令执行的工作目录
- */
-async function runCommand(cmd: string, cwd?: string) {
-  try {
-    // 尝试执行命令，如果提供了cwd参数，则在指定目录下执行
-    await execAsync(cmd, { cwd })
-  } catch (err: any) {
-    // 捕获执行过程中的错误
-    // 如果错误包含stdout信息则显示stdout，否则显示错误消息
-    log.error(`Command failed: ${cmd}\n${err?.stdout || err?.message}`)
-    // 以非零状态码退出进程，表示执行失败
-    process.exit(1)
-  }
+  await build(config)
 }
 
 /**
@@ -129,75 +98,37 @@ async function buildPackage(
   packageDirName: string,
   index: number,
   runTest: boolean
-) {
-  // 导入并解析包的 package.json 文件
-  const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
-  if (pkg.name === 'vitarx') {
-    throw new Error('vitarx package cannot be built')
-  }
+): Promise<void> {
   // 创建分隔线，用于日志输出
   const separator = '='.repeat(50)
   // 记录开始构建包的信息
-  log.info(`\n📦 Building package(${index + 1}): ${pkg.name}`)
+  log.info(`\n📦 Building package(${index + 1}): ${packageDirName}`)
   log.info(separator)
-
-  // 如果需要运行测试
-  if (runTest) {
-    const testDir1 = join(packagePath, '__tests__')
-    const testDir2 = join(packagePath, 'tests')
-
-    // 检查是否存在测试目录
-    if (!existsSync(testDir1) && !existsSync(testDir2)) {
-      log.warn('⚠️  No test directory found (__tests__ or tests)')
-    } else {
-      log.warn('🧪 Running vitest tests...')
-      const vitestConfig = join(packagePath, 'vitest.config.ts')
-      let cmd = `vitest run --dir ${packagePath}`
-      if (existsSync(vitestConfig)) cmd = `${cmd} --config ${vitestConfig}`
-      // 使用 vitest 运行测试
-      await runCommand(cmd)
-      log.success('  ✓ Tests passed successfully')
-    }
-  }
-
+  // 创建临时 tsconfig.json 文件
+  const tsconfigPath = createTsConfig(packagePath)
   // 解析 dist 目录路径
   const dist = resolve(packagePath, 'dist')
+  await runTypeCheck(tsconfigPath)
+  // 检测循环依赖
+  await runMadgeCheck(dist)
   // 清理 dist 目录
-  cleanDist(dist)
-
-  // TypeScript 编译阶段
-  log.warn('🔨 Compiling TypeScript...')
-  const isRemoveTempTsConfig = existsSync(join(packagePath, 'tsconfig.json'))
-  // 创建临时 TypeScript 配置文件
-  const tempTsConfig = createTempTsConfig(packagePath)
-  try {
-    // 使用 tsc 编译 TypeScript
-    await runCommand(`tsc -p ${tempTsConfig}`)
-  } finally {
-    // 删除临时配置文件
-    if (!isRemoveTempTsConfig) rmSync(tempTsConfig)
+  runClean(dist)
+  // 如果需要运行测试
+  if (runTest) {
+    await runVitestTest(packagePath, false, false)
   }
-  log.success('  ✓ TypeScript compilation completed')
+  // 导入并解析包的 package.json 文件
+  const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
   // Vite bundle
-  // log.warn('\n📦 Compiling bundle formats...')
-  // const name = toCamelCase(pkg.name)
-  // const defaultConfig: InlineConfig = {
-  //   configFile: false,
-  //   build: {
-  //     lib: {
-  //       name,
-  //       entry: resolve(packagePath, 'src/index.ts'),
-  //       formats: ['iife'],
-  //       fileName: format => `index.${format}.js`
-  //     },
-  //     outDir: dist,
-  //     emptyOutDir: false
-  //   },
-  //   define: { __VERSION__: JSON.stringify(pkg.version) }
-  // }
-  // await build(mergeConfig(defaultConfig, pkg.vite || {}))
-  log.success(`✓ Bundle ${packageDirName} compilation completed`)
-  await checkForCircularDependencies(dist)
+  log.warn(`\n📦 Vite Building ${pkg.name}...`)
+  await runViteBuild(packagePath, pkg, dist, { dev: true, ssr: false, dts: true })
+  await runViteBuild(packagePath, pkg, dist, { dev: true, ssr: true })
+  await runViteBuild(packagePath, pkg, dist, { dev: false, ssr: false })
+  await runViteBuild(packagePath, pkg, dist, { dev: false, ssr: true })
+  if (packageDirName === 'vitarx') {
+    await buildVitarxIife(packagePath, pkg, dist)
+  }
+  log.success(`\n✓ Bundle ${pkg.name} compilation completed`)
   log.info(separator + '\n')
 }
 
@@ -205,13 +136,15 @@ async function buildPackage(
  * 解析命令行参数的函数
  * @returns {Object} 返回一个包含解析结果的对象，包含packages数组和test布尔值
  */
-function parseArgs(): { packages: string[]; test: boolean } {
+function parseArgs(): { packages: string[]; test: boolean; dev: boolean; ssr: boolean } {
   // 获取命令行参数数组，去掉前两个元素(node和脚本路径)
   const args = process.argv.slice(2)
   // 初始化packages数组，用于存储包名
   const packages: string[] = []
   // 初始化test标志，默认为false
   let test = false
+  let dev = false
+  let ssr = false
   // 遍历所有命令行参数
   args.forEach(arg => {
     // 检查是否是测试参数
@@ -220,7 +153,7 @@ function parseArgs(): { packages: string[]; test: boolean } {
     else packages.push(arg)
   })
   // 返回解析结果
-  return { packages, test }
+  return { packages, test, dev, ssr }
 }
 
 /**
@@ -236,20 +169,13 @@ async function buildAll() {
   const packages =
     targetPackages.length > 0
       ? targetPackages // 如果指定了目标包，则使用指定的包列表
-      : readdirSync(packagesDir).filter(dir => {
-          // 否则扫描目录获取所有符合条件的包
-          // 获取目录状态信息
-          const stats = statSync(join(packagesDir, dir))
-          // 只返回是目录、不以点或下划线开头的目录名
-          return stats.isDirectory() && !dir.startsWith('.') && !dir.startsWith('_')
-        })
+      : PACKAGES
   // 记录开始构建的信息
   log.info(`🚀 Start Building Packages: ${packages.join(', ')}`)
-
   // 遍历所有包，逐个构建
   for (let i = 0; i < packages.length; i++) {
     const pkgDir = packages[i] // 当前包的目录名
-    const pkgPath = resolve(packagesDir, pkgDir) // 当前包的完整路径
+    const pkgPath = join(packagesDir, pkgDir) // 当前包的完整路径
     // 构建单个包，传入包路径、目录名、索引和测试标志
     await buildPackage(pkgPath, pkgDir, i, test)
   }
