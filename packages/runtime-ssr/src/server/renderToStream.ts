@@ -100,30 +100,34 @@ export async function renderToNodeStream(
   root: SSRApp | View,
   context: SSRContext = {}
 ): Promise<NodeJS.ReadableStream> {
-  const { Readable } = await import('stream')
-  const chunks: string[] = []
-  let resolveStream: (stream: NodeJS.ReadableStream) => void
-  let rejectStream: (err: unknown) => void
+  if (__SSR__) {
+    const { Readable } = await import('node:stream')
+    const chunks: string[] = []
+    let resolveStream: (stream: NodeJS.ReadableStream) => void
+    let rejectStream: (err: unknown) => void
 
-  const promise = new Promise<NodeJS.ReadableStream>((resolve, reject) => {
-    resolveStream = resolve
-    rejectStream = reject
-  })
+    const promise = new Promise<NodeJS.ReadableStream>((resolve, reject) => {
+      resolveStream = resolve
+      rejectStream = reject
+    })
 
-  await renderToStream(root, context, {
-    push(content) {
-      chunks.push(content)
-    },
-    close() {
-      const stream = Readable.from(chunks)
-      resolveStream(stream)
-    },
-    error(err) {
-      rejectStream(err)
-    }
-  })
+    await renderToStream(root, context, {
+      push(content) {
+        chunks.push(content)
+      },
+      close() {
+        const stream = Readable.from(chunks)
+        resolveStream(stream)
+      },
+      error(err) {
+        rejectStream(err)
+      }
+    })
 
-  return promise
+    return promise
+  } else {
+    throw new Error('renderToNodeStream only works in SSR mode')
+  }
 }
 
 /**
