@@ -15,6 +15,7 @@ interface PackageJson {
   name: string
   vite?: InlineConfig
   version: string
+  dependencies?: Record<string, string>
 }
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -46,6 +47,7 @@ async function runViteBuild(
       })
     )
   }
+  const dependencies = pkg.dependencies
   const config: InlineConfig = {
     configFile: false,
     build: {
@@ -58,6 +60,9 @@ async function runViteBuild(
           if (!dev) p.push('-prod')
           return `${p.join('')}.js`
         }
+      },
+      rollupOptions: {
+        external: pkg.name === 'vitarx' || !dependencies ? [] : Object.keys(dependencies)
       },
       outDir,
       emptyOutDir: false
