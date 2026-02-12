@@ -1,29 +1,8 @@
-import { NodeKind, setHostSchema } from '@vitarx/runtime-core'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { ViewKind } from '@vitarx/runtime-core'
+import { describe, expect, it } from 'vitest'
 import { getFirstNode } from '../../src/client/utils.js'
 
-beforeAll(() => {
-  // 设置 void 元素
-  setHostSchema({
-    voidElements: new Set([
-      'area',
-      'base',
-      'br',
-      'col',
-      'embed',
-      'hr',
-      'img',
-      'input',
-      'link',
-      'meta',
-      'source',
-      'track',
-      'wbr'
-    ])
-  })
-})
-
-describe('getFirstDomNode', () => {
+describe('getFirstNode', () => {
   it('应该在容器为空时返回null', () => {
     const container = document.createElement('div')
 
@@ -41,7 +20,7 @@ describe('getFirstDomNode', () => {
     const result = getFirstNode(container, 0)
 
     expect(result).not.toBeNull()
-    expect(result!.kind).toBe(NodeKind.REGULAR_ELEMENT)
+    expect(result!.kind).toBe(ViewKind.ELEMENT)
     expect(result!.tag).toBe('span')
     expect(result!.el).toBe(child)
     expect(result!.nextIndex).toBe(1)
@@ -55,7 +34,7 @@ describe('getFirstDomNode', () => {
     const result = getFirstNode(container, 0)
 
     expect(result).not.toBeNull()
-    expect(result!.kind).toBe(NodeKind.VOID_ELEMENT)
+    expect(result!.kind).toBe(ViewKind.ELEMENT)
     expect(result!.tag).toBe('img')
     expect(result!.el).toBe(img)
   })
@@ -68,7 +47,7 @@ describe('getFirstDomNode', () => {
     const result = getFirstNode(container, 0)
 
     expect(result).not.toBeNull()
-    expect(result!.kind).toBe(NodeKind.TEXT)
+    expect(result!.kind).toBe(ViewKind.TEXT)
     expect(result!.el).toBe(text)
   })
 
@@ -80,7 +59,7 @@ describe('getFirstDomNode', () => {
     const result = getFirstNode(container, 0)
 
     expect(result).not.toBeNull()
-    expect(result!.kind).toBe(NodeKind.COMMENT)
+    expect(result!.kind).toBe(ViewKind.COMMENT)
     expect(result!.el).toBe(comment)
   })
 
@@ -88,7 +67,7 @@ describe('getFirstDomNode', () => {
     const container = document.createElement('div')
 
     // 添加 Fragment start 注释
-    const startComment = document.createComment('Fragment start')
+    const startComment = document.createComment('Fragment:start')
     container.appendChild(startComment)
 
     // 添加 Fragment 内容
@@ -101,14 +80,14 @@ describe('getFirstDomNode', () => {
     container.appendChild(span2)
 
     // 添加 Fragment end 注释
-    const endComment = document.createComment('Fragment end')
+    const endComment = document.createComment('Fragment:end')
     container.appendChild(endComment)
 
     const result = getFirstNode(container, 0)
 
     expect(result).not.toBeNull()
-    expect(result!.kind).toBe(NodeKind.FRAGMENT)
-    expect(result!.tag).toBe('fragment')
+    expect(result!.kind).toBe(ViewKind.FRAGMENT)
+    expect(result!.tag).toBe('fragment-node')
     expect(Array.isArray(result!.el)).toBe(true)
     expect((result!.el as any[]).length).toBe(4) // start + 2 spans + end
     expect(result!.nextIndex).toBe(4) // Fragment end 的 index + 1
@@ -147,24 +126,24 @@ describe('getFirstDomNode', () => {
 
     // 获取第一个节点（文本）
     const result1 = getFirstNode(container, 0)
-    expect(result1!.kind).toBe(NodeKind.TEXT)
+    expect(result1!.kind).toBe(ViewKind.TEXT)
 
     // 获取第二个节点（元素）
     const result2 = getFirstNode(container, 1)
-    expect(result2!.kind).toBe(NodeKind.REGULAR_ELEMENT)
+    expect(result2!.kind).toBe(ViewKind.ELEMENT)
 
     // 获取第三个节点（注释）
     const result3 = getFirstNode(container, 2)
-    expect(result3!.kind).toBe(NodeKind.COMMENT)
+    expect(result3!.kind).toBe(ViewKind.COMMENT)
   })
 
   it('应该处理后面跟着其他节点的片段', () => {
     const container = document.createElement('div')
 
     // Fragment
-    container.appendChild(document.createComment('Fragment start'))
+    container.appendChild(document.createComment('Fragment:start'))
     container.appendChild(document.createElement('span'))
-    container.appendChild(document.createComment('Fragment end'))
+    container.appendChild(document.createComment('Fragment:end'))
 
     // 其他节点
     const afterFragment = document.createElement('div')
@@ -172,7 +151,7 @@ describe('getFirstDomNode', () => {
 
     // 获取 Fragment
     const fragmentResult = getFirstNode(container, 0)
-    expect(fragmentResult!.kind).toBe(NodeKind.FRAGMENT)
+    expect(fragmentResult!.kind).toBe(ViewKind.FRAGMENT)
     expect(fragmentResult!.nextIndex).toBe(3)
 
     // 获取 Fragment 后的节点
@@ -198,13 +177,13 @@ describe('getFirstDomNode', () => {
   it('应该处理空片段', () => {
     const container = document.createElement('div')
 
-    container.appendChild(document.createComment('Fragment start'))
-    container.appendChild(document.createComment('Fragment end'))
+    container.appendChild(document.createComment('Fragment:start'))
+    container.appendChild(document.createComment('Fragment:end'))
 
     const result = getFirstNode(container, 0)
 
     expect(result).not.toBeNull()
-    expect(result!.kind).toBe(NodeKind.FRAGMENT)
+    expect(result!.kind).toBe(ViewKind.FRAGMENT)
     expect((result!.el as any[]).length).toBe(2) // 只有起止注释
   })
 })
