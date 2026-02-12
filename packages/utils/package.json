@@ -10,8 +10,7 @@
     "directory": "packages/utils"
   },
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
