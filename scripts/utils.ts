@@ -67,6 +67,10 @@ export async function runVitestTest(
 ): Promise<void> {
   // 记录测试开始信息
   log.warn(`\n🧪 Running tests for package: ${chalk.bold(pkgPath)}`)
+  if (!existsSync(join(pkgPath, 'tests')) && !existsSync(join(pkgPath, '__tests__'))) {
+    log.warn(`⚠️ No tests or __tests__ found in ${pkgPath}`)
+    return void 0
+  }
   // 构建测试命令
   const cmdParts = ['vitest', 'run', `--dir ${pkgPath}`] // 基础命令
   if (watch) cmdParts.push('--watch') // 添加监视模式参数
