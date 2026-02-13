@@ -1,5 +1,5 @@
 import { isRef, unref } from '@vitarx/responsive'
-import { hasOwnProperty, isFunction, isObject, isRecordObject, popProperty } from '@vitarx/utils'
+import { hasOwnProperty, isFunction, isObject, isPlainObject, popProperty } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/attributes.js'
 import { StyleUtils } from '../../shared/index.js'
 import { isView } from '../../shared/utils/is.js'
@@ -44,13 +44,13 @@ export function bindProps(props: AnyProps, bind: BindAttributes): AnyProps {
   // ---------- 解析 binding ----------
   if (Array.isArray(bind)) {
     const [src, ex] = bind as [AnyProps, string[]]
-    if (!isRecordObject(src)) return props
+    if (!isPlainObject(src)) return props
     binding = src
     if (Array.isArray(ex) && ex.length) {
       exclude = new Set(ex)
     }
   } else {
-    if (!isRecordObject(bind)) return props
+    if (!isPlainObject(bind)) return props
     binding = bind
   }
 
@@ -251,7 +251,7 @@ export function mergeDefaultProps(
   // 如果没有传入props，返回defaultProps（如果存在）或空对象
   if (!props) return defaultProps ?? defaultProps ?? {}
   // 如果defaultProps不是对象类型，直接返回props
-  if (!isRecordObject(defaultProps)) return props
+  if (!isPlainObject(defaultProps)) return props
   // 创建一个结果对象
   const result: Record<string, any> = {}
   // 创建一个Set来收集所有属性键

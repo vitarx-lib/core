@@ -1,5 +1,5 @@
 import { toRaw } from '@vitarx/responsive'
-import { isRecordObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
+import { isPlainObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
 import type { StyleRules } from '../../types/index.js'
 
 /**
@@ -133,7 +133,7 @@ export class StyleUtils {
         }
       })
       return styleObj as StyleRules
-    } else if (isRecordObject(style)) {
+    } else if (isPlainObject(style)) {
       return style
     }
     return {}
