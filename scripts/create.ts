@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { createTsConfig } from './utils.js'
 
 const args = process.argv.slice(2)
 if (args.length !== 1) {
@@ -19,12 +20,11 @@ if (existsSync(packagePath)) {
 // 创建包目录结构
 mkdirSync(packagePath)
 mkdirSync(resolve(packagePath, 'src'))
-mkdirSync(resolve(packagePath, '__tests__'))
 
 // 创建 package.json
 const packageJson = {
   name: `@vitarx/${packageName}`,
-  version: '0.0.1',
+  version: '0.0.0',
   description: `Vitarx ${packageName} package`,
   author: 'ZhuChongLin <8210856@qq.com>',
   license: 'MIT',
@@ -35,11 +35,8 @@ const packageJson = {
     directory: `packages/${packageName}`
   },
   type: 'module',
-  main: './dist/index.js',
-  module: './dist/index.js',
+  module: 'dist/index.es.js',
   types: 'dist/index.d.ts',
-  // unpkg: 'dist/index.iife.js',
-  // jsdelivr: 'dist/index.iife.js',
   files: ['dist', 'LICENSE', 'README.md'],
   exports: {
     '.': {
@@ -48,22 +45,20 @@ const packageJson = {
         default: './dist/index.js'
       }
     }
-    // './unpkg': './dist/index.iife.js',
-    // './jsdelivr': './dist/index.iife.js'
   },
   dependencies: {
     '@vitarx/utils': 'workspace:^'
   }
 }
 
+// 创建 package.json
 writeFileSync(resolve(packagePath, 'package.json'), JSON.stringify(packageJson, null, 2))
-
+// 创建 tsconfig.json
+createTsConfig(packagePath)
 // 创建 src/index.ts
 writeFileSync(resolve(packagePath, 'src', 'index.ts'), '// Add exports here\n')
-
 // 创建 README.md
 writeFileSync(resolve(packagePath, 'README.md'), '')
-
 // 复制 LICENSE
 copyFileSync(resolve(process.cwd(), 'LICENSE'), resolve(packagePath, 'LICENSE'))
 
