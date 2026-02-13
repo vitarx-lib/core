@@ -183,7 +183,7 @@ if (isReleaseMainPackage) {
   console.log(chalk.blue('📝 Generating CHANGELOG.md...'))
   try {
     run(
-      `conventional-changelog -p angular -i CHANGELOG.md -s -r 0 --tag-prefix v --from v3.0.0 --pkg ${pkgJsonPath}`
+      `conventional-changelog -p angular -i CHANGELOG.md -s -r 5 --tag-prefix v --pkg ${pkgJsonPath}`
     )
   } catch {
     rollbackVersion()
