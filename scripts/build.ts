@@ -11,6 +11,9 @@ import {
   runVitestTest
 } from './utils.js'
 
+/**
+ * 包的 package.json 配置接口
+ */
 interface PackageJson {
   name: string
   vite?: InlineConfig
@@ -18,18 +21,46 @@ interface PackageJson {
   dependencies?: Record<string, string>
 }
 
+/**
+ * 构建环境配置接口
+ */
+interface BuildEnv {
+  dev: boolean
+  ssr: boolean
+  dts?: boolean
+}
+
+/**
+ * 主包构建配置接口
+ */
+interface MainPackageBuildConfig {
+  dev: boolean
+  ssr: boolean
+  format: 'es' | 'iife'
+  fileName: string
+  alias?: Record<string, string>
+  defineVersion?: boolean
+}
+
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
-// 获取包所在目录的绝对路径
 const packagesDir = resolve(__dirname, '../packages')
 
-const PACKAGES = [
-  'utils',
-  'responsive',
-  'runtime-core',
-  'runtime-dom',
-  'runtime-ssr',
-  'vitarx' // 主包最后构建
-]
+/**
+ * Node.js 内置模块，构建时需要排除
+ */
+const NODE_EXTERNALS = ['stream', 'node:stream']
+
+/**
+ * 需要构建的包列表（按依赖顺序排列）
+ */
+const PACKAGES = ['utils', 'responsive', 'runtime-core', 'runtime-dom', 'runtime-ssr', 'vitarx']
+
+/**
+ * 解析包的别名映射
+ * 用于主包构建时引用子包的构建产物
+ * @param filename - 文件名（不含扩展名）
+ * @returns 别名映射对象
+ */
 function resolveAlias(filename: string): Record<string, string> {
   const alias: Record<string, string> = {}
   PACKAGES.slice(0, -1).forEach(packDir => {
@@ -37,57 +68,164 @@ function resolveAlias(filename: string): Record<string, string> {
   })
   return alias
 }
-async function buildSubPackage(
+
+/**
+ * 获取需要排除的外部模块列表
+ * @param dependencies - 包的依赖对象
+ * @returns 外部模块列表
+ */
+function getExternalModules(dependencies?: Record<string, string>): string[] {
+  return dependencies ? [...NODE_EXTERNALS, ...Object.keys(dependencies)] : [...NODE_EXTERNALS]
+}
+
+/**
+ * 创建基础构建配置
+ * @param packagePath - 包路径
+ * @param outDir - 输出目录
+ * @param external - 外部模块列表
+ * @param define - 全局定义变量
+ * @returns Vite 构建配置
+ */
+function createBaseBuildConfig(
   packagePath: string,
-  pkg: PackageJson,
   outDir: string,
-  env: { dev: boolean; ssr: boolean; dts?: boolean }
-): Promise<void> {
-  console.log('')
-  const { dev, ssr, dts = false } = env
-  const tsconfigPath = resolve(packagePath, 'tsconfig.json')
-  const plugins: PluginOption[] = []
-  if (dts) {
-    plugins.push(
-      dtsPlugin({
-        insertTypesEntry: true,
-        bundleTypes: true,
-        tsconfigPath: tsconfigPath,
-        root: packagePath
-      })
-    )
-  }
-  const dependencies = pkg.dependencies
-  const external: string[] = ['stream', 'node:stream']
-  if (dependencies) external.push(...Object.keys(dependencies))
-  const config: InlineConfig = {
+  external: string[],
+  define: Record<string, unknown>
+): InlineConfig {
+  return {
     configFile: false,
     build: {
       outDir,
       lib: {
         entry: resolve(packagePath, 'src/index.ts'),
         formats: ['es'],
-        fileName: format => {
-          const p: string[] = ['index', `.${format}`]
-          if (ssr) p.push('.ssr')
-          if (!dev) p.push('-prod')
-          return `${p.join('')}.js`
-        }
+        fileName: 'index'
       },
-      rollupOptions: {
-        external: external
-      },
+      rollupOptions: { external },
       emptyOutDir: false
     },
-    plugins: plugins,
-    define: { __DEV__: dev, __SSR__: ssr }
+    define
   }
+}
+
+/**
+ * 构建子包
+ * @param packagePath - 包路径
+ * @param pkg - package.json 配置
+ * @param outDir - 输出目录
+ * @param env - 构建环境配置
+ */
+async function buildSubPackage(
+  packagePath: string,
+  pkg: PackageJson,
+  outDir: string,
+  env: BuildEnv
+): Promise<void> {
+  console.log('')
+  const { dev, ssr, dts = false } = env
+  const tsconfigPath = resolve(packagePath, 'tsconfig.json')
+  const plugins: PluginOption[] = []
+
+  // 如果需要生成类型声明文件
+  if (dts) {
+    plugins.push(
+      dtsPlugin({
+        insertTypesEntry: true,
+        bundleTypes: true,
+        tsconfigPath,
+        root: packagePath
+      })
+    )
+  }
+
+  const external = getExternalModules(pkg.dependencies)
+  const config: InlineConfig = {
+    ...createBaseBuildConfig(packagePath, outDir, external, { __DEV__: dev, __SSR__: ssr }),
+    build: {
+      outDir,
+      lib: {
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: ['es'],
+        fileName: format => {
+          const parts = ['index', `.${format}`]
+          if (ssr) parts.push('.ssr')
+          if (!dev) parts.push('-prod')
+          return `${parts.join('')}.js`
+        }
+      },
+      rollupOptions: { external },
+      emptyOutDir: false
+    },
+    plugins
+  }
+
   await build(mergeConfig(config, pkg.vite || {}))
 }
 
-async function buildMainPackage(packagePath: string, pkg: PackageJson, outDir: string) {
-  const external: string[] = ['stream', 'node:stream']
+/**
+ * 构建主包的单个配置变体
+ * @param packagePath - 包路径
+ * @param pkg - package.json 配置
+ * @param outDir - 输出目录
+ * @param config - 构建配置
+ */
+async function buildMainPackageConfig(
+  packagePath: string,
+  pkg: PackageJson,
+  outDir: string,
+  config: MainPackageBuildConfig
+): Promise<void> {
+  const external = getExternalModules()
+  const define: Record<string, unknown> = {
+    __DEV__: config.dev,
+    __SSR__: config.ssr
+  }
+
+  // IIFE 格式需要定义版本号
+  if (config.defineVersion) {
+    define.__VERSION__ = JSON.stringify(pkg.version)
+  }
+
+  const buildConfig: InlineConfig = {
+    configFile: false,
+    resolve: config.alias ? { alias: config.alias } : undefined,
+    build: {
+      outDir,
+      lib: {
+        entry: resolve(packagePath, 'src/index.ts'),
+        formats: [config.format],
+        fileName: config.fileName,
+        ...(config.format === 'iife' ? { name: 'Vitarx' } : {})
+      },
+      rollupOptions: { external },
+      emptyOutDir: false
+    },
+    define
+  }
+
+  await build(buildConfig)
+}
+
+/**
+ * 构建主包（vitarx）
+ * 主包需要构建多个变体：
+ * 1. ES Module 开发版（带类型声明）
+ * 2. ES Module 生产版
+ * 3. ES Module SSR 版
+ * 4. ES Module SSR 生产版
+ * 5. IIFE 格式（浏览器直接使用）
+ * @param packagePath - 包路径
+ * @param pkg - package.json 配置
+ * @param outDir - 输出目录
+ */
+async function buildMainPackage(
+  packagePath: string,
+  pkg: PackageJson,
+  outDir: string
+): Promise<void> {
   const tsconfigPath = resolve(packagePath, 'tsconfig.json')
+
+  // 构建 ES Module 开发版（带类型声明）
   await build({
     configFile: false,
     build: {
@@ -97,102 +235,64 @@ async function buildMainPackage(packagePath: string, pkg: PackageJson, outDir: s
         formats: ['es'],
         fileName: 'index.es'
       },
-      rollupOptions: {
-        external: external
-      },
+      rollupOptions: { external: NODE_EXTERNALS },
       emptyOutDir: false
     },
     plugins: [
       dtsPlugin({
         insertTypesEntry: true,
         bundleTypes: true,
-        tsconfigPath: tsconfigPath,
+        tsconfigPath,
         root: packagePath
       })
     ],
     define: { __DEV__: true, __SSR__: false }
   })
-  await build({
-    configFile: false,
-    resolve: {
+
+  // 定义其他构建变体
+  const buildConfigs: MainPackageBuildConfig[] = [
+    {
+      dev: false,
+      ssr: false,
+      format: 'es',
+      fileName: 'index.es-prod',
       alias: resolveAlias('index.es-prod')
     },
-    build: {
-      outDir,
-      lib: {
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['es'],
-        fileName: 'index.es-prod'
-      },
-      rollupOptions: {
-        external: external
-      },
-      emptyOutDir: false
-    },
-    define: { __DEV__: false, __SSR__: false }
-  })
-  await build({
-    configFile: false,
-    resolve: {
+    {
+      dev: true,
+      ssr: true,
+      format: 'es',
+      fileName: 'index.es.ssr',
       alias: resolveAlias('index.es.ssr')
     },
-    build: {
-      outDir,
-      lib: {
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['es'],
-        fileName: 'index.es.ssr'
-      },
-      rollupOptions: {
-        external: external
-      },
-      emptyOutDir: false
-    },
-    define: { __DEV__: true, __SSR__: true }
-  })
-  await build({
-    configFile: false,
-    resolve: {
+    {
+      dev: false,
+      ssr: true,
+      format: 'es',
+      fileName: 'index.es.ssr-prod',
       alias: resolveAlias('index.es.ssr-prod')
     },
-    build: {
-      outDir,
-      lib: {
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['es'],
-        fileName: 'index.es.ssr-prod'
-      },
-      rollupOptions: {
-        external: external
-      },
-      emptyOutDir: false
-    },
-    define: { __DEV__: false, __SSR__: true }
-  })
-  await build({
-    configFile: false,
-    resolve: {
-      alias: resolveAlias('index.es-prod')
-    },
-    build: {
-      outDir,
-      lib: {
-        name: 'Vitarx',
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['iife'],
-        fileName: 'index'
-      },
-      emptyOutDir: false
-    },
-    define: { __DEV__: false, __SSR__: false, __VERSION__: JSON.stringify(pkg.version) }
-  })
+    {
+      dev: false,
+      ssr: false,
+      format: 'iife',
+      fileName: 'index',
+      alias: resolveAlias('index.es-prod'),
+      defineVersion: true
+    }
+  ]
+
+  // 依次构建所有变体
+  for (const config of buildConfigs) {
+    await buildMainPackageConfig(packagePath, pkg, outDir, config)
+  }
 }
 
 /**
- * 构建包的异步函数
- * @param packagePath - 包的路径
- * @param packageDirName - 包的目录名称
- * @param index - 包的索引
+ * 构建单个包
+ * @param packagePath - 包路径
+ * @param packageDirName - 包目录名
+ * @param index - 包索引（用于日志显示）
  * @param runTest - 是否运行测试
  */
 async function buildPackage(
@@ -201,87 +301,80 @@ async function buildPackage(
   index: number,
   runTest: boolean
 ): Promise<void> {
-  // 创建分隔线，用于日志输出
   const separator = '='.repeat(50)
-  // 记录开始构建包的信息
   log.info(`\n📦 Building package(${index + 1}): ${packageDirName}`)
   log.info(separator)
-  // 创建临时 tsconfig.json 文件
+
+  // 创建临时 tsconfig.json
   const tsconfigPath = createTsConfig(packagePath)
-  // 解析 dist 目录路径
   const dist = resolve(packagePath, 'dist')
+
+  // 类型检查
   await runTypeCheck(tsconfigPath)
   // 检测循环依赖
   await runMadgeCheck(dist)
-  // 清理 dist 目录
+  // 清理输出目录
   runClean(dist)
-  // 如果需要运行测试
+
+  // 运行测试（如果需要）
   if (runTest) {
     await runVitestTest(packagePath, false, false)
   }
-  // 导入并解析包的 package.json 文件
+
+  // 加载 package.json
   const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
-  // Vite bundle
   log.warn(`\n📦 Vite Building ${pkg.name}...`)
+
+  // 根据包类型选择构建方式
   if (packageDirName === 'vitarx') {
     await buildMainPackage(packagePath, pkg, dist)
   } else {
+    // 子包需要构建 4 个变体
     await buildSubPackage(packagePath, pkg, dist, { dev: true, ssr: false, dts: true })
     await buildSubPackage(packagePath, pkg, dist, { dev: true, ssr: true })
     await buildSubPackage(packagePath, pkg, dist, { dev: false, ssr: false })
     await buildSubPackage(packagePath, pkg, dist, { dev: false, ssr: true })
   }
+
   log.success(`\n✓ Bundle ${pkg.name} compilation completed`)
   log.info(separator + '\n')
 }
 
 /**
- * 解析命令行参数的函数
- * @returns {Object} 返回一个包含解析结果的对象，包含packages数组和test布尔值
+ * 解析命令行参数
+ * @returns 解析后的参数对象
  */
-function parseArgs(): { packages: string[]; test: boolean; dev: boolean; ssr: boolean } {
-  // 获取命令行参数数组，去掉前两个元素(node和脚本路径)
+function parseArgs(): { packages: string[]; test: boolean } {
   const args = process.argv.slice(2)
-  // 初始化packages数组，用于存储包名
   const packages: string[] = []
-  // 初始化test标志，默认为false
   let test = false
-  let dev = false
-  let ssr = false
-  // 遍历所有命令行参数
+
   args.forEach(arg => {
-    // 检查是否是测试参数
-    if (arg === '--test') test = true
-    // 否则将参数添加到packages数组
-    else packages.push(arg)
+    if (arg === '--test') {
+      test = true
+    } else {
+      packages.push(arg)
+    }
   })
-  // 返回解析结果
-  return { packages, test, dev, ssr }
+
+  return { packages, test }
 }
 
 /**
  * 构建所有指定的包
- * 这是一个异步函数，用于遍历并构建指定目录下的所有包
  */
-async function buildAll() {
-  // 从命令行参数中解析出目标包和测试标志
+async function buildAll(): Promise<void> {
   const { packages: targetPackages, test } = parseArgs()
-  // 确定要构建的包列表：如果指定了目标包则使用指定的包，否则获取所有符合条件的包
-  const packages =
-    targetPackages.length > 0
-      ? targetPackages // 如果指定了目标包，则使用指定的包列表
-      : PACKAGES
-  // 记录开始构建的信息
+  const packages = targetPackages.length > 0 ? targetPackages : PACKAGES
+
   log.info(`🚀 Start Building Packages: ${packages.join(', ')}`)
-  // 遍历所有包，逐个构建
+
   for (let i = 0; i < packages.length; i++) {
-    const pkgDir = packages[i] // 当前包的目录名
-    const pkgPath = join(packagesDir, pkgDir) // 当前包的完整路径
-    // 构建单个包，传入包路径、目录名、索引和测试标志
+    const pkgDir = packages[i]
+    const pkgPath = join(packagesDir, pkgDir)
     await buildPackage(pkgPath, pkgDir, i, test)
   }
 
-  // 记录所有包构建完成的信息
   log.success(`✅  All packages built successfully!`)
 }
 
