@@ -39,7 +39,6 @@ interface MainPackageBuildConfig {
   format: 'es' | 'iife'
   fileName: string
   alias?: Record<string, string>
-  defineVersion?: boolean
 }
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -178,12 +177,8 @@ async function buildMainPackageConfig(
   const external = getExternalModules()
   const define: Record<string, unknown> = {
     __DEV__: config.dev,
-    __SSR__: config.ssr
-  }
-
-  // IIFE 格式需要定义版本号
-  if (config.defineVersion) {
-    define.__VERSION__ = JSON.stringify(pkg.version)
+    __SSR__: config.ssr,
+    __VERSION__: JSON.stringify(pkg.version)
   }
 
   const buildConfig: InlineConfig = {
@@ -246,7 +241,7 @@ async function buildMainPackage(
         root: packagePath
       })
     ],
-    define: { __DEV__: true, __SSR__: false }
+    define: { __DEV__: true, __SSR__: false, __VERSION__: JSON.stringify(pkg.version) }
   })
 
   // 定义其他构建变体
@@ -277,8 +272,7 @@ async function buildMainPackage(
       ssr: false,
       format: 'iife',
       fileName: 'index',
-      alias: resolveAlias('index.es-prod'),
-      defineVersion: true
+      alias: resolveAlias('index.es-prod')
     }
   ]
 
