@@ -98,7 +98,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     const renderer = getRenderer()
     if (!this.hostNode) {
       // 判断是否为svg命名空间
-      const svg = this.tag === 'svg' || renderer.isSVGElement(containerOrAnchor)
+      const svg = (this.tag as string) === 'svg' || renderer.isSVGElement(containerOrAnchor)
       this.hostNode = renderer.createElement(this.tag, svg)
     }
     if (this.props) this.setProps(this.hostNode, this.props, renderer)
