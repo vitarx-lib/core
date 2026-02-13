@@ -2,7 +2,7 @@
  * 测试辅助工具函数
  */
 import { type Component, createView, onInit } from '@vitarx/runtime-core'
-import type { SSRContext } from '../src/shared/index.js'
+import type { SSRContext } from '../src/index.js'
 
 /**
  * 创建测试用的函数组件
