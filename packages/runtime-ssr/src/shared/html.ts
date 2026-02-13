@@ -98,22 +98,3 @@ export function tagSelfClosing(tagName: string, props: Record<string, any>): str
   const attrs = serializeAttributes(props)
   return `<${tagName}${attrs} />`
 }
-
-/**
- * Void 元素集合(不支持子元素的自闭合标签)
- */
-export const VOID_TAGS = new Set([
-  'area',
-  'base',
-  'br',
-  'col',
-  'embed',
-  'hr',
-  'img',
-  'input',
-  'link',
-  'meta',
-  'source',
-  'track',
-  'wbr'
-])

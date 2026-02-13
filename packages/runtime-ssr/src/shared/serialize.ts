@@ -9,9 +9,27 @@ import {
   ViewKind
 } from '@vitarx/runtime-core'
 import { deepMergeObject, logger } from '@vitarx/utils'
-import { escapeHTML, tagClose, tagOpen, tagSelfClosing, VOID_TAGS } from './html.js'
+import { escapeHTML, tagClose, tagOpen, tagSelfClosing } from './html.js'
 import type { Sink } from './sink.js'
 
+/**
+ * Void 元素集合(不支持子元素的自闭合标签)
+ */
+const VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'source',
+  'track',
+  'wbr'
+])
 /**
  * 应用指令样式到 props
  */

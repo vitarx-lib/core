@@ -11,6 +11,21 @@ export interface Sink {
 }
 
 /**
+ * 流式接收器接口
+ */
+export interface StreamingSink extends Sink {
+  /**
+   * 关闭流
+   */
+  close(): void
+  /**
+   * 处理流异常
+   * @param error - 未知的错误
+   */
+  error(error: unknown): void
+}
+
+/**
  * 字符串接收器
  * 管理同步渲染的字符串输出缓冲区
  */
@@ -40,19 +55,4 @@ export class StringSink implements Sink {
   toString(): string {
     return this.buffer.join('')
   }
-}
-
-/**
- * 流式接收器接口
- */
-export interface StreamingSink extends Sink {
-  /**
-   * 关闭流
-   */
-  close(): void
-  /**
-   * 处理流异常
-   * @param error - 未知的错误
-   */
-  error(error: unknown): void
 }

@@ -5,10 +5,9 @@ import { serializeViewToSink } from '../shared/serialize.js'
 import type { StreamingSink } from '../shared/sink.js'
 
 /**
- * 将应用渲染为流（block 模式）
+ * 将应用渲染为流
  *
  * 流式渲染，逐步输出 HTML 内容，遇到异步任务时阻塞等待完成。
- * 最终输出内容与 sync 模式一致，水合逻辑也一致。
  *
  * @param root - SSR 应用实例或虚拟节点
  * @param context - SSR 上下文对象
