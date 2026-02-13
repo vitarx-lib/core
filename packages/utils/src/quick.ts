@@ -123,7 +123,7 @@ export function deepMergeObject<T extends Record<string, any>, U extends Record<
   }
 
   // 如果目标或源对象不是记录对象，抛出类型错误
-  throw new TypeError('deepMergeObject的参数1和2必须都是键值对对象类型')
+  throw new TypeError('Parameters 1 and 2 of deepMergeObject must be key-value pair object types')
 }
 
 /**
