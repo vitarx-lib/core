@@ -1,5 +1,5 @@
 import type { ValidChildren } from '@vitarx/runtime-core'
-import type { Properties as CssProperties } from 'csstype'
+import type { Properties } from 'csstype'
 import { type HTMLElementEvents } from './event.js'
 
 /**
@@ -381,8 +381,8 @@ interface PartAttributes {
 /**
  * CSS 样式规则类型
  */
-export type HTMLStyleRules = {
-  [K in keyof CssProperties]: CssProperties[K]
+export type CSSProperties = {
+  [K in keyof Properties]: Properties[K]
 } & {
   [key: `--${string}`]: string | 0
 }
@@ -400,7 +400,7 @@ interface GlobalAttributes {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/style 完整文档
    */
-  style?: string | HTMLStyleRules
+  style?: string | CSSProperties
   /**
    * 全局HTML属性`className`接受字符串、数组和`Record<string, boolean>`类型的对象。
    *

@@ -4,7 +4,7 @@
  * 测试目标：验证属性类型定义的类型推导和约束
  */
 import { describe, expect, it } from 'vitest'
-import type { HTMLElementProps, HTMLStyleRules } from '../../src/index.js'
+import type { CSSProperties, HTMLElementProps } from '../../src/index.js'
 
 describe('types/attributes', () => {
   describe('类型推导', () => {
@@ -76,7 +76,7 @@ describe('types/attributes', () => {
 
   describe('样式类型', () => {
     it('HTMLStyleRules 应该支持 CSS 属性', () => {
-      const styles: HTMLStyleRules = {
+      const styles: CSSProperties = {
         color: 'red',
         fontSize: '16px',
         margin: '10px',
@@ -92,7 +92,7 @@ describe('types/attributes', () => {
     })
 
     it('HTMLStyleRules 应该支持 CSS 变量', () => {
-      const styles: HTMLStyleRules = {
+      const styles: CSSProperties = {
         '--primary-color': 'blue',
         '--font-size': '14px',
         '--spacing': 0
