@@ -1,0 +1,8 @@
+{
+  "name": "tests",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "vitarx": "workspace:^"
+  }
+}
