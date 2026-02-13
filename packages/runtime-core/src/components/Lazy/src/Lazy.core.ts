@@ -1,5 +1,5 @@
 import { shallowRef } from '@vitarx/responsive'
-import { isFunction, logger, withDelayAndTimeout } from '@vitarx/utils'
+import { isFunction, logger, withDelayTimeout } from '@vitarx/utils'
 import { getInstance, onDispose, onInit } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type {
@@ -96,7 +96,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   let cancelTask: (() => void) | undefined = undefined // 用于取消异步任务的函数
   const showView = shallowRef<View>(createCommentView('Lazy:loading')) // 当前显示的视图
   onInit(async (): Promise<void> => {
-    const task = withDelayAndTimeout(loader, {
+    const task = withDelayTimeout(loader, {
       delay,
       timeout,
       onDelay: () => {
