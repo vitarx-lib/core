@@ -138,7 +138,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
         el.style.setProperty('transform', `translate(${dx}px, ${dy}px)`)
         el.style.transitionDuration = '0s'
         // 强制重排，确保样式生效
-        el.offsetWidth
+        void el.offsetWidth
         // 添加 moveClass，启用过渡
         el.classList.add(moveClass)
         // 下一帧恢复到目标位置（新位置）
