@@ -9,7 +9,7 @@ import {
 export { Fragment } from './jsx-runtime.js'
 
 /**
- * JSX构建VNode(开发模式)
+ * JSX构建View(开发模式)
  *
  * @param type - 类型
  * @param props - 属性

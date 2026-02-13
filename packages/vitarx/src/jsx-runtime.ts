@@ -7,7 +7,7 @@ import {
 } from '@vitarx/runtime-core'
 
 /**
- * JSX构建VNode
+ * JSX构建View
  *
  * @see createVNode
  */
