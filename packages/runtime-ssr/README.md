@@ -219,8 +219,8 @@ export declare function createSSRApp(root: View | WidgetType, config?: AppConfig
 
 **参数：**
 
-| 参数     | 类型                | 必填 | 说明      |
-|--------|-------------------|----|---------|
+| 参数     | 类型               | 必填 | 说明      |
+|--------|------------------|----|---------|
 | `root` | `View \| Widget` | 是  | 根组件或根节点 |
 
 **返回值：** `SSRApp` - SSR 应用实例
@@ -278,10 +278,10 @@ export declare function renderToString(root: SSRApp | View, context?: SSRContext
 
 **参数：**
 
-| 参数        | 类型                | 必填 | 默认值  | 说明            |
-|-----------|-------------------|----|------|---------------|
+| 参数        | 类型               | 必填 | 默认值  | 说明            |
+|-----------|------------------|----|------|---------------|
 | `root`    | `SSRApp \| View` | 是  | -    | SSR 应用实例或虚拟节点 |
-| `context` | `SSRContext`      | 否  | `{}` | SSR 上下文对象     |
+| `context` | `SSRContext`     | 否  | `{}` | SSR 上下文对象     |
 
 **返回值：** `Promise<string>` - HTML 字符串
 
@@ -312,7 +312,7 @@ export declare function renderToStream(root: SSRApp | View, context: SSRContext 
 
 | 参数        | 类型                    | 必填 | 说明            |
 |-----------|-----------------------|----|---------------|
-| `root`    | `SSRApp \| View`     | 是  | SSR 应用实例或虚拟节点 |
+| `root`    | `SSRApp \| View`      | 是  | SSR 应用实例或虚拟节点 |
 | `context` | `SSRContext`          | 是  | SSR 上下文对象     |
 | `options` | `StreamRenderOptions` | 是  | 流式渲染选项        |
 
