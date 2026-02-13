@@ -14,6 +14,6 @@ declare global {
     interface HostTextNode extends Text {}
     interface HostCommentNode extends Comment {}
     interface HostElementTagMap extends HTMLElementTagMap {}
-    interface HostStyleRules extends CSSProperties {}
+    interface HostCSSProperties extends CSSProperties {}
   }
 }
