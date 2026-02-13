@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { computed, flushSync, reactive, ref, watch } from '../../src/index.js'
+import { computed, flushSync, reactive, ref, watch, watchEffect } from '../../src/index.js'
+import { EffectWatcher } from '../../src/watcher/effect.js'
 
 describe('watcher/factory', () => {
   describe('watch', () => {
@@ -133,6 +134,24 @@ describe('watcher/factory', () => {
       expect(callback).toHaveBeenCalledWith([2, 1], [0, 1], expect.any(Function))
 
       watcher.dispose()
+    })
+  })
+
+  describe('watchEffect', () => {
+    it('should create an EffectWatcher instance', () => {
+      const effect = vi.fn()
+      const watcher = watchEffect(effect)
+
+      expect(watcher).toBeInstanceOf(EffectWatcher)
+      expect(effect).toHaveBeenCalled()
+    })
+
+    it('should accept options', () => {
+      const effect = vi.fn()
+      const watcher = watchEffect(effect, { flush: 'post' })
+
+      expect(watcher).toBeInstanceOf(EffectWatcher)
+      expect(effect).toHaveBeenCalled()
     })
   })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ref } from '../../src/index.js'
-import { EffectWatcher, watchEffect } from '../../src/watcher/effect.js'
+import { EffectWatcher } from '../../src/watcher/effect.js'
 
 describe('watcher/EffectWatcher', () => {
   describe('constructor', () => {
@@ -22,13 +22,13 @@ describe('watcher/EffectWatcher', () => {
   describe('runEffect', () => {
     it('should execute effect and collect signals', () => {
       const signal = ref(42)
-      const effect = vi.fn(onCleanup => {
+      const effect = vi.fn(() => {
         return signal.value
       })
-      const watcher = new EffectWatcher(effect, {})
-
+      new EffectWatcher(effect, { flush: 'sync' })
       expect(effect).toHaveBeenCalled()
-      // We can't easily verify collectSignal was called without mocking it
+      signal.value++
+      expect(effect).toHaveBeenCalledTimes(2)
     })
 
     it('should report error when effect throws', () => {
@@ -51,24 +51,6 @@ describe('watcher/EffectWatcher', () => {
 
       // The error should have been reported during construction
       expect(mockReportError).toHaveBeenCalledWith(error, 'effect')
-    })
-  })
-
-  describe('watchEffect', () => {
-    it('should create an EffectWatcher instance', () => {
-      const effect = vi.fn()
-      const watcher = watchEffect(effect)
-
-      expect(watcher).toBeInstanceOf(EffectWatcher)
-      expect(effect).toHaveBeenCalled()
-    })
-
-    it('should accept options', () => {
-      const effect = vi.fn()
-      const watcher = watchEffect(effect, { flush: 'post' })
-
-      expect(watcher).toBeInstanceOf(EffectWatcher)
-      expect(effect).toHaveBeenCalled()
     })
   })
 })
