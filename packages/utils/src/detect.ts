@@ -1,4 +1,4 @@
-import type { AnyArray, AnyCollection, AnyFunction, AnyRecord } from './types'
+import type { AnyCollection, AnyFunction, AnyRecord } from './types'
 
 const objectToString = Object.prototype.toString
 const toTypeString = (value: any): string => objectToString.call(value)
@@ -41,7 +41,6 @@ export function isObject(val: any): val is { [key: PropertyKey]: any } {
 export function isPlainObject(val: any): val is AnyRecord {
   return toTypeString(val) === '[object Object]'
 }
-export { isPlainObject as isRecordObject }
 
 /**
  * 判断是否为数组对象
@@ -207,75 +206,6 @@ export function isFunction(val: any): val is AnyFunction {
 }
 
 /**
- * 判断是否为纯函数，非类构造函数
- *
- * @param val - 要判断的变量
- * @returns {boolean} 如果是纯函数则返回true
- *
- * @example
- * ```typescript
- * isPureFunction(function() {}); // true
- * isPureFunction(() => {}); // true
- * isPureFunction(async function() {}); // true
- * isPureFunction(function*() {}); // true
- * isPureFunction(class {}); // false
- * isPureFunction({}); // false
- * isPureFunction("function"); // false
- * ```
- */
-export function isPureFunction(val: any): val is (...args: any[]) => any {
-  return typeof val === 'function' && !val.toString().startsWith('class ')
-}
-
-/**
- * 判断是否为类构造函数
- *
- * @note 使用 func.toString().startsWith('class ') 判断，可能存在性能问题
- *
- * @param func - 要判断的函数
- * @returns {boolean} 如果是类构造函数则返回true
- *
- * @example
- * ```typescript
- * isConstructor(class {}); // true
- * isConstructor(class Test {}); // true
- * isConstructor(function() {}); // false
- * isConstructor(() => {}); // false
- * isConstructor({}); // false
- * isConstructor("class"); // false
- * ```
- */
-export function isConstructor(func: any): func is new (...args: any[]) => any {
-  return typeof func === 'function' && func.toString().startsWith('class ')
-}
-
-/**
- * 判断是否为一个简单的getter函数
- *
- * @note 必须是 `()=>any` 写法
- *
- * @param fn - 要判断的函数
- * @returns {boolean} 如果是简单getter函数则返回true
- *
- * @example
- * ```typescript
- * isSimpleGetterFunction(() => 42); // true
- * isSimpleGetterFunction(() => "value"); // true
- * isSimpleGetterFunction(() => obj.prop); // true
- * isSimpleGetterFunction(() => { return 42; }); // false
- * isSimpleGetterFunction(function() { return 42; }); // false
- * isSimpleGetterFunction(val => val); // false
- * isSimpleGetterFunction({}); // false
- * ```
- */
-export function isSimpleGetterFunction(fn: any): fn is () => any {
-  if (typeof fn !== 'function') return false
-  const fnString = fn.toString().trim()
-  const regex = /^\(\s*\)\s*=>\s*[^{]+$/
-  return regex.test(fnString)
-}
-
-/**
  * 判断是否为纯数字字符串
  *
  * @param str - 待检测的字符串
@@ -405,40 +335,6 @@ export function isCollection(obj: any): obj is AnyCollection {
     obj != null &&
     (obj instanceof Map || obj instanceof Set || obj instanceof WeakMap || obj instanceof WeakSet)
   )
-}
-
-/**
- * 判断两个数组是否相等
- *
- * @param a - 第一个数组
- * @param b - 第二个数组
- * @returns {boolean} 如果两个数组长度相等且对应位置元素相等则返回true，否则返回false
- *
- * @example
- * ```typescript
- * isArrayEqual([1, 2, 3], [1, 2, 3]); // true
- * isArrayEqual(['a', 'b'], ['a', 'b']); // true
- * isArrayEqual([1, 2], [1, 2, 3]); // false
- * isArrayEqual([1, 2, 3], [1, 2, 4]); // false
- * isArrayEqual([1, 2], "1,2"); // false
- * isArrayEqual(null, []); // false
- * ```
- */
-export function isArrayEqual(a: AnyArray, b: AnyArray): boolean {
-  // 如果不是数组，直接返回false
-  if (!Array.isArray(a) || !Array.isArray(b)) return false
-
-  // 如果长度不同，直接返回false
-  if (a.length !== b.length) {
-    return false
-  }
-
-  // 逐个比较元素
-  for (let i = 0; i < a.length; i++) {
-    if (!Object.is(a[i], b[i])) return false
-  }
-
-  return true
 }
 
 /**

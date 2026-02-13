@@ -56,7 +56,7 @@ const addToParent = (
   key: string | number | symbol | 'set' | 'map',
   value: any,
   mapKey?: any
-) => {
+): void => {
   if (key === 'set') {
     parent.add(value)
   } else if (key === 'map') {
@@ -72,7 +72,7 @@ const addToParent = (
  * 可以克隆任意类型的对象，包括循环引用
  *
  * @param obj 需要克隆的对象
- * @returns 克隆后的新对象
+ * @returns - 克隆后的新对象
  */
 export function deepClone<T>(obj: T): T {
   // 处理基本类型，直接返回

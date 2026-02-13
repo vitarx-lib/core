@@ -4,7 +4,6 @@ import {
   isAsyncFunction,
   isBool,
   isCollection,
-  isConstructor,
   isDeepEqual,
   isEmpty,
   isFunction,
@@ -14,9 +13,7 @@ import {
   isObject,
   isPlainObject,
   isPromise,
-  isPureFunction,
   isSet,
-  isSimpleGetterFunction,
   isString,
   isWeakMap,
   isWeakSet
@@ -79,25 +76,6 @@ describe('detect', () => {
   it('should detect functions correctly', () => {
     expect(isFunction(() => {})).toBe(true)
     expect(isFunction('')).toBe(false)
-  })
-
-  it('should detect pure functions correctly', () => {
-    expect(isPureFunction(() => {})).toBe(true)
-    expect(isPureFunction(class {})).toBe(false)
-  })
-
-  it('should detect constructors correctly', () => {
-    expect(isConstructor(class {})).toBe(true)
-    expect(isConstructor(() => {})).toBe(false)
-  })
-
-  it('should detect simple getter functions correctly', () => {
-    expect(isSimpleGetterFunction(() => 'value')).toBe(true)
-    expect(
-      isSimpleGetterFunction(() => {
-        return 'value'
-      })
-    ).toBe(false)
   })
 
   it('should detect numeric strings correctly', () => {

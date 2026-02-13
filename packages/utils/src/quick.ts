@@ -57,7 +57,7 @@ type DeepMergeObjectOptions = {
  * @param {object} [options] 可选配置对象，用于控制合并行为
  * @param {boolean} [options.allowMergeUndefined=false] - 是否允许将`undefined'值合并到目标对象中
  * @param {boolean} [options.mergeArray=true] - 是否合并数组
- * @returns 返回一个新的对象，包含目标对象和源对象合并后的属性
+ * @returns - 返回一个新的对象，包含目标对象和源对象合并后的属性
  *
  * 注意：如果目标和源对象的同一属性都是对象，它们将被递归合并
  * 如果它们的同一属性都是数组，并且配置允许合并数组，它们将被合并为一个新的数组
