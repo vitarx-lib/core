@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { CommentView, TextView, ViewKind } from '../../../src/index.js'
+import { ViewKind } from '../../../src/index.js'
+import { CommentView, TextView } from '../../../src/view/implements/index.js'
 
 describe('Atomic Views', () => {
   describe('TextView', () => {

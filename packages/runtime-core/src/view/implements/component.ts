@@ -1,8 +1,10 @@
 import { EffectScope, isRef, markRaw, type Ref } from '@vitarx/responsive'
 import { isFunction, isPromise, logger } from '@vitarx/utils'
 import { App } from '../../app/index.js'
-import { Lifecycle, SUSPENSE_COUNTER, ViewKind } from '../../constants/index.js'
-import { runComponent, withDirectives } from '../../runtime/index.js'
+import { SUSPENSE_COUNTER, ViewKind } from '../../constants/index.js'
+import { Lifecycle } from '../../constants/lifecycle.js'
+import { runComponent } from '../../runtime/context.js'
+import { withDirectives } from '../../runtime/index.js'
 import type {
   AnyProps,
   CodeLocation,

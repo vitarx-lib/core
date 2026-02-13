@@ -1,77 +1,139 @@
-import { hasPropTrack, isRef, type Ref, toRef } from '@vitarx/responsive'
-import { isFunction } from '@vitarx/utils'
-import type { CodeLocation, ValidChild } from '../../types/index.js'
-import { DynamicView } from '../implements/index.js'
-import { DynamicViewSource, SwitchViewSource } from './source.js'
+import { isView } from '../../shared/index.js'
+import type { Component, HostContainer, RenderUnit, View, ViewContext } from '../../types/index.js'
+import { ComponentView, DynamicView } from '../implements/index.js'
+import { createComponentView } from './factory.js'
+import { DynamicViewSource } from './source.js'
 
 /**
- * 创建一个只读的响应式引用对象
+ * 渲染组件
  *
- * @internal
- * @param obj - 源对象
- * @param key - 源对象上的键
- * @returns {Ref} 返回一个只读的引用对象
- */
-export function memberRef<T extends object, K extends keyof T>(obj: T, key: K): Ref<T[K]> {
-  if (isRef(obj) && key === 'value') return obj
-  return toRef(obj, key)
-}
-
-/**
- * 处理条件渲染表达式
- *
- * @internal
- * @param select - 选择器函数，用于决定执行哪个分支
- * @param branches - 分支函数数组，每个函数返回一个计算值
- * @param location - 代码位置
- * @returns {DynamicView} - 切换视图
- */
-export function switchExpressions(
-  select: () => number,
-  branches: (() => unknown)[],
-  location?: CodeLocation
-): DynamicView {
-  return new DynamicView(new SwitchViewSource(select, branches), location)
-}
-
-/**
- * 处理成员表达式，根据对象的属性返回相应的值或视图
- *
- * @internal
- * @param obj - 要处理的对象，必须是 object 类型
- * @param key - 对象的属性键，必须是 obj 的键之一
- * @returns 返回属性值或 DynamicView 视图对象
- */
-export function memberExpressions<T extends object, K extends keyof T>(
-  obj: T,
-  key: K
-): T[K] | DynamicView<T[K]> {
-  // 检查对象是否有属性跟踪
-  const { value, isTrack } = hasPropTrack(obj, key)
-  // 如果值是函数，则直接返回该函数
-  if (isFunction(value)) return value
-  // 如果需要跟踪，则返回 SwitchView 视图对象；否则直接返回值
-  return isTrack ? new DynamicView<T[K]>(memberRef(obj, key)) : value
-}
-
-/**
- * 构建视图的辅助函数
- *
- * 因为编译器只针对 jsx 模板代码进行编译转换，组件返回三元表达式无法更新视图，
- * 所以需要使用 build 辅助构建出一个 DynamicView 来更新视图。
+ * @param component - 要渲染的组件
+ * @param container - 视图将被挂载到的宿主容器
+ * @param [ctx] - 可选的视图上下文参数
+ * @param [ctx.app] - 可选的应用实例
+ * @param [ctx.owner] - 可选的父组件实例
+ * @returns - 返回渲染后的视图对象
  *
  * @example
- * ```ts
+ * ```js
+ * import { ModalComponent } from 'xxxx'
+ * // 渲染组件到body中
+ * const view = render(ModalComponent, document.body)
+ * setTimeout(() => {
+ *    view.dispose() // 销毁
+ * }, 3000)
+ * ```
+ */
+export function render<T extends Component>(
+  component: Component,
+  container: HostContainer,
+  ctx?: ViewContext
+): ComponentView<T>
+
+/**
+ * 渲染视图
+ *
+ * @param view - 要渲染的视图
+ * @param container - 视图将被挂载到的宿主容器
+ * @param [ctx] - 可选的视图上下文参数
+ * @param [ctx.app] - 可选的应用实例
+ * @param [ctx.owner] - 可选的父组件实例
+ * @returns - 返回渲染后的视图对象
+ * @example
+ * ```jsx
+ * const view = render(<div>Hello World</div>, document.body)
+ * setTimeout(() => {
+ *    view.dispose() // 销毁
+ * }, 3000)
+ * ```
+ */
+export function render<T extends View>(view: T, container: HostContainer, ctx?: ViewContext): T
+
+/**
+ * 渲染视图或组件到指定容器
+ *
+ * @param view - 要渲染的视图或组件函数
+ * @param container - 目标容器
+ * @param ctx - 可选的视图上下文
+ * @returns - 渲染后的视图实例
+ */
+export function render(view: View | Component, container: HostContainer, ctx?: ViewContext): View {
+  // 如果传入的是函数，则创建组件视图
+  if (typeof view === 'function') {
+    view = createComponentView(view)
+  } else if (!isView(view)) {
+    throw new Error('render() param $1 must be a function or a View instance')
+  }
+  // 返回类型与输入的视图类型相同
+  return view.init(ctx).mount(container, 'append')
+}
+
+/**
+ * 创建一个表达式级动态视图（Expression-level Dynamic View）。
+ *
+ * `dynamic` 用于声明一个依赖响应式数据的动态子树。当构建函数内部
+ * 访问的响应式依赖发生变化时，当前动态视图会自动重新执行构建函数，
+ * 并根据新的返回结果更新对应的子视图。
+ *
+ * 它主要用于在 **非 JSX 编译上下文** 或 **普通函数体表达式**
+ * 中创建可自动更新的视图区域。
+ *
+ * 与 `Dynamic` 组件不同：
+ *
+ * - `Dynamic` 适用于根据 `is` 属性切换组件或标签类型（结构级动态）
+ * - `dynamic` 适用于根据响应式表达式结果重建子树（表达式级动态）
+ *
+ * ---
+ *
+ * ## 工作机制
+ *
+ * - 在首次执行时运行 `build` 构建初始子视图
+ * - 自动追踪 `build` 内部访问的响应式依赖
+ * - 当依赖变更时重新执行 `build`
+ * - 对新旧结果进行最小必要更新
+ *
+ * ---
+ *
+ * ## 适用场景
+ *
+ * - 三元表达式返回不同视图
+ * - 基于响应式条件切换视图
+ * - 在普通函数中构建可自动更新的视图
+ *
+ * ---
+ *
+ * ## 示例
+ *
+ * ```tsx
  * function App() {
  *   const show = ref(true)
- *   return build(() => show.value ? 'show' : 'hide')
+ *
+ *   return dynamic(() =>
+ *     show.value ? <A /> : <B />
+ *   )
  * }
  * ```
  *
- * @param build - 一个无参数返回View的函数，用于构建视图。
- * @returns { View } 返回构建好的视图，可能是静态视图也可能是动态视图
+ * 也可以返回原始类型：
+ *
+ * ```ts
+ * dynamic(() => count.value)
+ * ```
+ *
+ * ---
+ *
+ * ## 注意事项
+ *
+ * - `build` 必须是无参数函数
+ * - 不应在 `build` 中执行副作用逻辑
+ * - 返回值必须满足 `RenderUnit` 类型约束
+ *
+ * ---
+ *
+ * @template T - 构建函数返回值类型，必须符合 `RenderUnit`
+ * @param build 用于构建子视图的函数。函数内部可访问响应式数据。
+ * @returns 返回一个 `DynamicView<T>` 实例
  */
-export function build<T extends ValidChild>(build: () => T): DynamicView<T> {
-  // 判断如果是静态视图，直接返回计算值；否则创建动态视图
+export function dynamic<T extends RenderUnit>(build: () => T): DynamicView<T> {
   return new DynamicView(new DynamicViewSource(build))
 }

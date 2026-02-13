@@ -1,16 +1,16 @@
 import { ViewKind } from '../../constants/index.js'
 import { IS_VIEW, IS_VIEW_BUILDER } from '../../constants/symbol.js'
 import type { View } from '../../types/index.js'
-import {
-  type CommentView,
-  type ComponentView,
-  type DynamicView,
-  type ElementView,
-  type FragmentView,
+import type {
+  CommentView,
+  ComponentView,
+  DynamicView,
+  ElementView,
+  FragmentView,
   ListView,
-  type TextView,
-  type ViewBuilder
-} from '../../view/index.js'
+  TextView
+} from '../../view/implements/index.js'
+import { type ViewBuilder } from '../../view/index.js'
 
 /**
  * 检查给定值是否为View对象类型

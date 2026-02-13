@@ -1,7 +1,7 @@
 import { IS_RAW } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import type { Component, Directive, ErrorInfo, HostContainer, View } from '../types/index.js'
-import { ComponentView } from '../view/index.js'
+import { ComponentView } from '../view/implements/index.js'
 
 /** 应用配置 */
 export type AppConfig = Vitarx.AppConfig

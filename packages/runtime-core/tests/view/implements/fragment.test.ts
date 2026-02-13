@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { FragmentView, ViewKind } from '../../../src/index.js'
+import { ViewKind } from '../../../src/index.js'
+import { FragmentView } from '../../../src/view/implements'
 
 describe('FragmentView', () => {
   let container: HTMLElement

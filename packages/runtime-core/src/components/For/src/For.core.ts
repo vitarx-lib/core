@@ -3,7 +3,7 @@ import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
 import { defineValidate, getInstance, getRenderer } from '../../../runtime/index.js'
 import type { ValidChild, View } from '../../../types/index.js'
 import { resolveChild } from '../../../view/compiler/resolve.js'
-import { CommentView, ListView } from '../../../view/index.js'
+import { CommentView, ListView } from '../../../view/implements/index.js'
 import { checkKey, ensureMounted, getLIS, moveDOM, normalizeKeyResolver } from './For.utils.js'
 
 /**

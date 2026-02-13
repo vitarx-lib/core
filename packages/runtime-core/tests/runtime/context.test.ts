@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { App } from '../../src/app'
-import { getApp, getComponentView, getInstance, runComponent } from '../../src/index.js'
+import { getApp, getComponentView, getInstance } from '../../src/index.js'
+import { runComponent } from '../../src/runtime/context.js'
 import type { ComponentInstance } from '../../src/view'
 
 describe('runtime/context', () => {

@@ -1,9 +1,9 @@
 import { logger, LogLevel, toCapitalize } from '@vitarx/utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { Lifecycle } from '../../src/constants/lifecycle.js'
 import {
   defineExpose,
   defineValidate,
-  Lifecycle,
   onBeforeMount,
   onDispose,
   onError,
@@ -11,9 +11,9 @@ import {
   onInit,
   onMounted,
   onShow,
-  onViewSwitch,
-  runComponent
+  onViewSwitch
 } from '../../src/index.js'
+import { runComponent } from '../../src/runtime/context.js'
 import type { Component } from '../../src/types'
 
 describe('runtime/hook', () => {

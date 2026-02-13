@@ -1,6 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import { DynamicViewSource, SwitchViewSource } from '../../../src/index.js'
+import { DynamicViewSource, SwitchViewSource } from '../../../src/view/compiler/source.js'
 
 describe('Compiler Source', () => {
   describe('DynamicViewSource', () => {

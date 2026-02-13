@@ -1,15 +1,15 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  CommentView,
   type Component,
   createView,
   Dynamic,
-  DynamicView,
   type HostElementTag,
   IS_VIEW_BUILDER,
+  isDynamicView,
   ViewKind
 } from '../../../src/index.js'
+import { CommentView, DynamicView } from '../../../src/view/implements/index.js'
 
 describe('Dynamic Builder', () => {
   describe('构建器功能', () => {
@@ -217,7 +217,7 @@ describe('Dynamic Builder', () => {
 
       const view = Dynamic(props)
 
-      expect(view).toBeInstanceOf(DynamicView)
+      expect(isDynamicView(view)).toBeTruthy()
     })
 
     it('应该处理响应式的属性值', () => {

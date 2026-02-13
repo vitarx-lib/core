@@ -14,7 +14,7 @@ import {
 /* ----------------------------------------
  * BaseViewSource（内部使用，不暴露）
  * ------------------------------------- */
-abstract class BaseViewSource<T> implements RefSignal<T> {
+abstract class BaseViewComputed<T> implements RefSignal<T> {
   readonly [IS_SIGNAL]: true = true
   readonly [IS_REF]: true = true
   readonly [IS_READONLY]: true = true
@@ -65,7 +65,7 @@ abstract class BaseViewSource<T> implements RefSignal<T> {
  * 构造函数参数：
  * - getter: 用于计算值的函数，该函数的依赖会被自动追踪
  */
-export class DynamicViewSource<T = any> extends BaseViewSource<T> {
+export class DynamicViewSource<T = any> extends BaseViewComputed<T> {
   constructor(private readonly getter: () => T) {
     super()
     this.cached = this.recompute()
@@ -102,7 +102,7 @@ export class DynamicViewSource<T = any> extends BaseViewSource<T> {
  * - branches数组是只读的，构造后不能修改
  * - 分支函数的执行结果会被缓存，直到选择函数返回不同的索引值
  */
-export class SwitchViewSource<T = any> extends BaseViewSource<T> {
+export class SwitchViewSource<T = any> extends BaseViewComputed<T> {
   private cachedIndex = -1
   constructor(
     private readonly select: () => number,

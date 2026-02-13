@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { ListView, TextView, ViewKind } from '../../../src/index.js'
+import { ViewKind } from '../../../src/index.js'
+import { ListView, TextView } from '../../../src/view/implements'
 
 describe('ListView', () => {
   let listView: ListView

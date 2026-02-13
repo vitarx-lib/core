@@ -1,12 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
-import {
-  applyDirective,
-  defineDirective,
-  resolveDirective,
-  runComponent,
-  ViewKind,
-  withDirectives
-} from '../../src/index.js'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineDirective, ViewKind, withDirectives } from '../../src/index.js'
+import { runComponent } from '../../src/runtime/context.js'
+import { applyDirective, resolveDirective } from '../../src/runtime/directive.js'
 import type { Directive, DirectiveBinding, HostElement } from '../../src/types'
 import type { ElementView } from '../../src/view'
 

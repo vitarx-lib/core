@@ -1,71 +1,21 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it } from 'vitest'
 import {
-  build,
+  dynamic,
   DynamicView,
+  isDynamicView,
   memberExpressions,
-  memberRef,
   switchExpressions,
   ViewKind
 } from '../../../src/index.js'
 
 describe('Compiler Helpers', () => {
-  describe('readonlyProp', () => {
-    it('应该创建一个只读的响应式引用对象', () => {
-      const obj = { name: 'test' }
-      const propRef = memberRef(obj, 'name')
-
-      expect(propRef).toHaveProperty('value')
-      expect(propRef.value).toBe('test')
-    })
-
-    it('应该缓存相同对象的相同属性引用', () => {
-      const obj = { name: 'test' }
-      const ref1 = memberRef(obj, 'name')
-      const ref2 = memberRef(obj, 'name')
-
-      expect(ref1).toBe(ref2)
-    })
-
-    it('应该为不同属性创建不同的引用', () => {
-      const obj = { name: 'test', age: 18 }
-      const ref1 = memberRef(obj, 'name')
-      const ref2 = memberRef(obj, 'age')
-
-      expect(ref1).not.toBe(ref2)
-      expect(ref1.value).toBe('test')
-      expect(ref2.value).toBe(18)
-    })
-
-    it('应该为不同对象创建不同的引用', () => {
-      const obj1 = { name: 'test1' }
-      const obj2 = { name: 'test2' }
-      const ref1 = memberRef(obj1, 'name')
-      const ref2 = memberRef(obj2, 'name')
-
-      expect(ref1).not.toBe(ref2)
-      expect(ref1.value).toBe('test1')
-      expect(ref2.value).toBe('test2')
-    })
-
-    it('应该返回最新的属性值', () => {
-      const obj = { name: 'test' }
-      const propRef = memberRef(obj, 'name')
-
-      expect(propRef.value).toBe('test')
-
-      obj.name = 'updated'
-      expect(propRef.value).toBe('updated')
-    })
-  })
-
   describe('switchExpressions', () => {
     it('应该创建 DynamicView 实例', () => {
       const select = () => 0
       const branches = [() => 'branch 0', () => 'branch 1']
       const view = switchExpressions(select, branches)
 
-      expect(view).toBeInstanceOf(DynamicView)
       expect(view.kind).toBe(ViewKind.DYNAMIC)
     })
 
@@ -75,7 +25,7 @@ describe('Compiler Helpers', () => {
       const location = { fileName: 'test.ts', lineNumber: 1, columnNumber: 1 }
       const view = switchExpressions(select, branches, location)
 
-      expect(view).toBeInstanceOf(DynamicView)
+      expect(isDynamicView(view)).toBeTruthy()
       expect(view.location).toBe(location)
     })
   })
@@ -95,7 +45,7 @@ describe('Compiler Helpers', () => {
       const result = memberExpressions(obj, 'name')
 
       expect(result).toBe('test')
-      expect(result).not.toBeInstanceOf(DynamicView)
+      expect(isDynamicView(result)).toBeFalsy()
     })
 
     it('当属性是响应式时应该返回 DynamicView', () => {
@@ -107,24 +57,23 @@ describe('Compiler Helpers', () => {
       }
       const result = memberExpressions(obj, 'name')
 
-      expect(result).toBeInstanceOf(DynamicView)
       expect((result as DynamicView).kind).toBe(ViewKind.DYNAMIC)
     })
   })
 
   describe('build', () => {
     it('应该创建 DynamicView 实例', () => {
-      const view = build(() => 'test')
+      const view = dynamic(() => 'test')
 
-      expect(view).toBeInstanceOf(DynamicView)
+      expect(isDynamicView(view)).toBeTruthy()
       expect(view.kind).toBe(ViewKind.DYNAMIC)
     })
 
     it('应该追踪响应式依赖', () => {
       const isRef = ref(true)
-      const view = build(() => (isRef.value ? 'true' : 'false'))
+      const view = dynamic(() => (isRef.value ? 'true' : 'false'))
 
-      expect(view).toBeInstanceOf(DynamicView)
+      expect(view.kind).toBe(ViewKind.DYNAMIC)
     })
   })
 })

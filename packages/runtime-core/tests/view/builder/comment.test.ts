@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { Comment, CommentView, IS_VIEW_BUILDER, ViewKind } from '../../../src/index.js'
+import { Comment, IS_VIEW_BUILDER, isCommentView, ViewKind } from '../../../src/index.js'
 
 describe('Comment Builder', () => {
   describe('Builder Functionality', () => {
@@ -10,7 +10,6 @@ describe('Comment Builder', () => {
     it('应该创建 CommentView 实例', () => {
       const commentView = Comment({ text: 'test comment' })
 
-      expect(commentView).toBeInstanceOf(CommentView)
       expect(commentView.kind).toBe(ViewKind.COMMENT)
     })
 
@@ -31,7 +30,7 @@ describe('Comment Builder', () => {
     it('应该处理空字符串', () => {
       const commentView = Comment({ text: '' })
 
-      expect(commentView).toBeInstanceOf(CommentView)
+      expect(isCommentView(commentView)).toBeTruthy()
       expect(commentView.text).toBe('')
     })
 
@@ -39,13 +38,13 @@ describe('Comment Builder', () => {
       const location = { fileName: 'test.ts', lineNumber: 1, columnNumber: 1 }
       const commentView = Comment({ text: 'test' }, location)
 
-      expect(commentView).toBeInstanceOf(CommentView)
+      expect(isCommentView(commentView)).toBeTruthy()
     })
 
     it('应该在没有 location 参数时正常工作', () => {
       const commentView = Comment({ text: 'test' })
 
-      expect(commentView).toBeInstanceOf(CommentView)
+      expect(isCommentView(commentView)).toBeTruthy()
     })
   })
 
@@ -55,7 +54,7 @@ describe('Comment Builder', () => {
       const commentBuilder: typeof Comment = Comment
       const commentView = commentBuilder({ text: 'typed comment' })
 
-      expect(commentView).toBeInstanceOf(CommentView)
+      expect(isCommentView(commentView)).toBeTruthy()
     })
   })
 

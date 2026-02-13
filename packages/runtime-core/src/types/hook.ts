@@ -1,6 +1,6 @@
 import type { AnyCallback } from '@vitarx/utils'
-import { Lifecycle } from '../constants/index.js'
-import { ComponentInstance } from '../view/index.js'
+import type { Lifecycle } from '../constants/lifecycle.js'
+import { ComponentInstance } from '../view/implements/index.js'
 
 /**
  * 错误来源联合类型

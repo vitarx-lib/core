@@ -10,7 +10,7 @@ import type {
   View,
   WithProps
 } from '../../../types/index.js'
-import { createCommentView, createView, DynamicView } from '../../../view/index.js'
+import { createCommentView, createDynamicView, createView } from '../../../view/index.js'
 
 /**
  * 惰性加载配置选项
@@ -53,15 +53,15 @@ interface LazyProps<T extends Component> extends LazyLoadOptions {
    *
    * @example
    * ```ts
-   * // 小部件必须使用`export default`导出，否则会报错。
+   * // 组件必须使用`export default`导出，否则会报错。
    * () => import('./YourWidget.js')
    * ```
    */
   loader: () => Promise<{ default: T }>
   /**
-   * 需要透传给小部件的属性
+   * 绑定给加载组件的属性
    */
-  inject?: WithProps<T>
+  bindProps?: WithProps<T>
   /**
    * 原样透传给加载完成后的组件
    */
@@ -91,7 +91,7 @@ interface LazyProps<T extends Component> extends LazyLoadOptions {
  * ```
  */
 function Lazy<T extends Component>(props: LazyProps<T>): View {
-  const { delay = 200, timeout = 0, loading, loader, children, inject, onError } = props
+  const { delay = 200, timeout = 0, loading, loader, children, bindProps, onError } = props
   const location = getInstance()!.view.location
   let cancelTask: (() => void) | undefined = undefined // 用于取消异步任务的函数
   const showView = shallowRef<View>(createCommentView('Lazy:loading')) // 当前显示的视图
@@ -110,7 +110,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
     try {
       const module = await task
       if (module && isFunction(module.default)) {
-        const p = inject ? inject : ({} as AnyProps)
+        const p = bindProps ? bindProps : ({} as AnyProps)
         if (children && !p.children) p.children = children
         showView.value = createView(module.default, p as ExtractProps<T>)
       }
@@ -128,7 +128,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   onDispose(() => {
     cancelTask?.()
   })
-  return new DynamicView(showView)
+  return createDynamicView(showView)
 }
 
 Lazy.validateProps = (props: AnyProps): void => {

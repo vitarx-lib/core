@@ -1,6 +1,7 @@
 import { logger, LogLevel } from '@vitarx/utils'
-import { describe, expect, it, vi } from 'vitest'
-import { inject, provide, runComponent } from '../../src/index.js'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { inject, provide } from '../../src/index.js'
+import { runComponent } from '../../src/runtime/context.js'
 
 describe('runtime/provide', () => {
   let mockInstance: any

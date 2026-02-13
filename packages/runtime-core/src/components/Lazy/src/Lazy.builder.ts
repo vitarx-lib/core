@@ -1,5 +1,6 @@
 import type { Component, ComponentProps } from '../../../types/index.js'
-import { builder, ComponentView, type ViewBuilder } from '../../../view/index.js'
+import { ComponentView } from '../../../view/implements/index.js'
+import { builder, type ViewBuilder } from '../../../view/index.js'
 import { Lazy, type LazyLoadOptions } from './Lazy.core.js'
 
 /**
@@ -42,6 +43,6 @@ export function lazy<T extends Component>(
   options?: LazyLoadOptions
 ): ViewBuilder<ComponentProps<T>, ComponentView<typeof Lazy<T>>> {
   return builder((props: ComponentProps<T>): ComponentView<typeof Lazy<T>> => {
-    return new ComponentView(Lazy<T>, { loader, ...options, inject: props })
+    return new ComponentView(Lazy<T>, { loader, ...options, bindProps: props })
   })
 }

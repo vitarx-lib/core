@@ -1,9 +1,9 @@
 import { isFunction, logger, popProperty } from '@vitarx/utils'
 import type { AnyProps, ValidChildren, View, ViewTag } from '../../types/index.js'
-import { DynamicViewSource } from '../compiler/index.js'
+import { createView } from '../compiler/factory.js'
+import { DynamicViewSource } from '../compiler/source.js'
 import { CommentView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
-import { createView } from '../implements/factory.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface DynamicProps {
@@ -61,7 +61,6 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
       enumerable: true
     })
   }
-
   const viewSource = new DynamicViewSource(() => {
     const is = props['is']
     if (!is) {

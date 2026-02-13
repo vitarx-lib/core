@@ -1,22 +1,26 @@
 import { ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
-  CommentView,
-  ComponentView,
   createCommentView,
   createComponentView,
   createDynamicView,
   createElementView,
   createFragmentView,
+  createListView,
   createTextView,
   createView,
+  h,
+  ViewKind
+} from '../../../src/index.js'
+import {
+  CommentView,
+  ComponentView,
   DynamicView,
   ElementView,
   FragmentView,
-  TextView,
-  ViewKind,
-  h
-} from '../../../src/index.js'
+  ListView,
+  TextView
+} from '../../../src/view/implements/index.js'
 
 describe('View Factory Functions', () => {
   let container: HTMLElement
@@ -67,6 +71,7 @@ describe('View Factory Functions', () => {
       }).toThrow()
     })
   })
+
   describe('createTextView', () => {
     it('应该创建文本视图', () => {
       const view = createTextView('test text')
@@ -179,6 +184,13 @@ describe('View Factory Functions', () => {
       const view = createElementView('div', null, location)
 
       expect(view.location).toBe(location)
+    })
+  })
+
+  describe('createListView', () => {
+    it('应该创建ListView', () => {
+      const listView = createListView([])
+      expect(listView).toBeInstanceOf(ListView)
     })
   })
 

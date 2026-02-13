@@ -1,13 +1,6 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  CommentView,
-  DynamicView,
-  IS_VIEW_BUILDER,
-  PlainText,
-  TextView,
-  ViewKind
-} from '../../../src/index.js'
+import { IS_VIEW_BUILDER, isTextView, PlainText, TextView, ViewKind } from '../../../src/index.js'
 
 describe('PlainText Builder', () => {
   describe('构建器功能', () => {
@@ -18,7 +11,7 @@ describe('PlainText Builder', () => {
     it('应该创建 TextView 实例当 text 是静态字符串时', () => {
       const textView = PlainText({ text: 'test text' })
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
       expect(textView.kind).toBe(ViewKind.TEXT)
     })
 
@@ -30,21 +23,19 @@ describe('PlainText Builder', () => {
         }
       })
 
-      expect(textView).toBeInstanceOf(DynamicView)
       expect(textView.kind).toBe(ViewKind.DYNAMIC)
     })
 
     it('应该创建 CommentView 实例当 text 是空字符串时', () => {
       const textView = PlainText({ text: '' })
 
-      expect(textView).toBeInstanceOf(CommentView)
       expect(textView.kind).toBe(ViewKind.COMMENT)
     })
 
     it('应该将 text 转换为字符串', () => {
       const textView = PlainText({ text: 12345 })
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
       expect((textView as TextView).text).toBe('12345')
     })
 
@@ -52,14 +43,14 @@ describe('PlainText Builder', () => {
       const location = { fileName: 'test.ts', lineNumber: 1, columnNumber: 1 }
       const textView = PlainText({ text: 'test' }, location)
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
       expect(textView.location).toBe(location)
     })
 
     it('应该在没有 location 参数时正常工作', () => {
       const textView = PlainText({ text: 'test' })
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
     })
   })
 
@@ -131,7 +122,7 @@ describe('PlainText Builder', () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const textView = PlainText({ text: null as any })
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
       expect((textView as TextView).text).toBe('null')
       warnSpy.mockRestore()
     })
@@ -140,7 +131,7 @@ describe('PlainText Builder', () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const textView = PlainText({ text: undefined as any })
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
       expect((textView as TextView).text).toBe('undefined')
       warnSpy.mockRestore()
     })
@@ -197,7 +188,7 @@ describe('PlainText Builder', () => {
       const longText = 'a'.repeat(1000)
       const textView = PlainText({ text: longText })
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
       expect((textView as TextView).text).toBe(longText)
     })
 
@@ -205,7 +196,7 @@ describe('PlainText Builder', () => {
       const specialText = '<script>alert("test")</script>'
       const textView = PlainText({ text: specialText })
 
-      expect(textView).toBeInstanceOf(TextView)
+      expect(isTextView(textView)).toBeTruthy()
       expect((textView as TextView).text).toBe(specialText)
     })
   })

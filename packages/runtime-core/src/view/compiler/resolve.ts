@@ -1,6 +1,6 @@
 import { isRef, unref } from '@vitarx/responsive'
 import { hasOwnProperty, isFunction, isObject, isRecordObject, popProperty } from '@vitarx/utils'
-import { INTRINSIC_ATTRIBUTES } from '../../constants/index.js'
+import { INTRINSIC_ATTRIBUTES } from '../../constants/attributes.js'
 import { StyleUtils } from '../../shared/index.js'
 import { isView } from '../../shared/utils/is.js'
 import type {

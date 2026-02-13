@@ -1,4 +1,4 @@
-import { App, render, TextView } from '../../../src/index.js'
+import { App, createTextView, render } from '../../../src/index.js'
 
 describe('Runtime Core Shared Utils - view', () => {
   describe('render', () => {
@@ -14,7 +14,7 @@ describe('Runtime Core Shared Utils - view', () => {
     })
 
     it('应该初始化并挂载视图到容器', () => {
-      const view = new TextView('test text')
+      const view = createTextView('test text')
       render(view, container)
 
       expect(container.childNodes.length).toBe(1)
@@ -22,7 +22,7 @@ describe('Runtime Core Shared Utils - view', () => {
     })
 
     it('应该支持传递视图上下文', () => {
-      const view = new TextView('test text')
+      const view = createTextView('test text')
       const mockCtx = { app: {} as App }
       render(view, container, mockCtx)
 

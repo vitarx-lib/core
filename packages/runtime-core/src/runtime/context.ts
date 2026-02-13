@@ -1,7 +1,7 @@
 import type { App } from '../app/index.js'
 import { RENDER_CONTEXT } from '../constants/index.js'
 import type { RenderContext } from '../types/index.js'
-import { type ComponentInstance, ComponentView } from '../view/index.js'
+import type { ComponentInstance, ComponentView } from '../view/implements/index.js'
 
 let activeComponentInstance: ComponentInstance | null = null
 
@@ -53,7 +53,6 @@ export function getComponentView(): ComponentView | null {
 export function getApp<T extends App = App>(): T | null {
   return activeComponentInstance ? (activeComponentInstance.app as T) : null
 }
-
 /**
  * 获取渲染上下文
  *

@@ -1,7 +1,8 @@
 import { popProperty } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
+import { applyDirective } from '../../runtime/directive.js'
 import { viewEffect, type ViewEffect } from '../../runtime/effect.js'
-import { applyDirective, getRenderer } from '../../runtime/index.js'
+import { getRenderer } from '../../runtime/index.js'
 import type {
   AnyProps,
   CodeLocation,

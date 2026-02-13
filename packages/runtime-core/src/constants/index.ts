@@ -1,5 +1,3 @@
-export * from './attributes.js'
-export * from './lifecycle.js'
 export * from './symbol.js'
 export * from './viewKind.js'
 export * from './viewState.js'

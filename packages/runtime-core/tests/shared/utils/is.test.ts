@@ -1,10 +1,12 @@
 import { ref } from '@vitarx/responsive'
+import { describe, it } from 'vitest'
 import {
-  CommentView,
-  ComponentView,
-  DynamicView,
-  ElementView,
-  FragmentView,
+  createCommentView,
+  createComponentView,
+  createDynamicView,
+  createElementView,
+  createFragmentView,
+  createTextView,
   IS_VIEW,
   IS_VIEW_BUILDER,
   isCommentView,
@@ -16,15 +18,14 @@ import {
   isTextView,
   isView,
   isViewBuilder,
-  ListView,
-  TextView,
   ViewKind
 } from '../../../src/index.js'
+import { ListView } from '../../../src/view/implements/index.js'
 
 describe('Runtime Core Shared Utils - is', () => {
   describe('isView', () => {
     it('应该识别 View 对象', () => {
-      const view = new TextView('test')
+      const view = createTextView('text')
       expect(isView(view)).toBe(true)
     })
 
@@ -47,12 +48,12 @@ describe('Runtime Core Shared Utils - is', () => {
 
   describe('isComponentView', () => {
     it('应该识别 ComponentView 对象', () => {
-      const componentView = new ComponentView(() => 'test', {})
+      const componentView = createComponentView(() => 'test', {})
       expect(isComponentView(componentView)).toBe(true)
     })
 
     it('应该返回 false 对于非 ComponentView 对象', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('text')
       expect(isComponentView(textView)).toBe(false)
       expect(isComponentView({})).toBe(false)
     })
@@ -60,12 +61,12 @@ describe('Runtime Core Shared Utils - is', () => {
 
   describe('isDynamicView', () => {
     it('应该识别 DynamicView 对象', () => {
-      const dynamicView = new DynamicView(ref())
+      const dynamicView = createDynamicView(ref())
       expect(isDynamicView(dynamicView)).toBe(true)
     })
 
     it('应该返回 false 对于非 DynamicView 对象', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('text')
       expect(isDynamicView(textView)).toBe(false)
       expect(isDynamicView({})).toBe(false)
     })
@@ -73,12 +74,12 @@ describe('Runtime Core Shared Utils - is', () => {
 
   describe('isTextView', () => {
     it('应该识别 TextView 对象', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('text')
       expect(isTextView(textView)).toBe(true)
     })
 
     it('应该返回 false 对于非 TextView 对象', () => {
-      const elementView = new ElementView('div', {})
+      const elementView = createElementView('div', null)
       expect(isTextView(elementView)).toBe(false)
       expect(isTextView({})).toBe(false)
     })
@@ -86,12 +87,12 @@ describe('Runtime Core Shared Utils - is', () => {
 
   describe('isCommentView', () => {
     it('应该识别 CommentView 对象', () => {
-      const commentView = new CommentView('test')
+      const commentView = createCommentView('test')
       expect(isCommentView(commentView)).toBe(true)
     })
 
     it('应该返回 false 对于非 CommentView 对象', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('text')
       expect(isCommentView(textView)).toBe(false)
       expect(isCommentView({})).toBe(false)
     })
@@ -99,12 +100,12 @@ describe('Runtime Core Shared Utils - is', () => {
 
   describe('isElementView', () => {
     it('应该识别 ElementView 对象', () => {
-      const elementView = new ElementView('div', {})
+      const elementView = createElementView('div', null)
       expect(isElementView(elementView)).toBe(true)
     })
 
     it('应该返回 false 对于非 ElementView 对象', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('text')
       expect(isElementView(textView)).toBe(false)
       expect(isElementView({})).toBe(false)
     })
@@ -112,12 +113,12 @@ describe('Runtime Core Shared Utils - is', () => {
 
   describe('isFragmentView', () => {
     it('应该识别 FragmentView 对象', () => {
-      const fragmentView = new FragmentView([])
+      const fragmentView = createFragmentView([])
       expect(isFragmentView(fragmentView)).toBe(true)
     })
 
     it('应该返回 false 对于非 FragmentView 对象', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('text')
       expect(isFragmentView(textView)).toBe(false)
       expect(isFragmentView({})).toBe(false)
     })
@@ -125,12 +126,12 @@ describe('Runtime Core Shared Utils - is', () => {
 
   describe('isListView', () => {
     it('应该识别 ListView 对象', () => {
-      const listView = new ListView([])
+      const listView = new ListView()
       expect(isListView(listView)).toBe(true)
     })
 
     it('应该返回 false 对于非 ListView 对象', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('text')
       expect(isListView(textView)).toBe(false)
       expect(isListView({})).toBe(false)
     })

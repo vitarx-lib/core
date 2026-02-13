@@ -1,5 +1,5 @@
 import { getStackTrace, isFunction, logger, toCapitalize } from '@vitarx/utils'
-import { Lifecycle } from '../constants/index.js'
+import { Lifecycle } from '../constants/lifecycle.js'
 import type {
   AnyProps,
   Component,
@@ -7,7 +7,7 @@ import type {
   HookCallback,
   ValidateProps
 } from '../types/index.js'
-import type { ViewSwitchHandler } from '../view/index.js'
+import type { ViewSwitchHandler } from '../view/implements/index.js'
 import { getInstance } from './context.js'
 
 /**

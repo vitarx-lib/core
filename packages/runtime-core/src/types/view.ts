@@ -1,7 +1,7 @@
 import type { Ref } from '@vitarx/responsive'
 import type { AnyPrimitive, CodeSource } from '@vitarx/utils'
 import type { App } from '../app/index.js'
-import type {
+import {
   CommentView,
   ComponentInstance,
   ComponentView,
@@ -9,9 +9,9 @@ import type {
   ElementView,
   FragmentView,
   ListView,
-  TextView,
-  ViewBuilder
-} from '../view/index.js'
+  TextView
+} from '../view/implements/index.js'
+import type { ViewBuilder } from '../view/index.js'
 import type { Component } from './component.js'
 import type { HostElementTag } from './element.js'
 

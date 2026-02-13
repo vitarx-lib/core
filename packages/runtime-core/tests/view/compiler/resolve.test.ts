@@ -1,6 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import { CommentView, DynamicView, TextView, ViewKind } from '../../../src/index.js'
+import { createTextView, isDynamicView, isTextView, isView, ViewKind } from '../../../src/index.js'
 import {
   applyRef,
   bindProps,
@@ -111,7 +111,7 @@ describe('Compiler Resolve', () => {
 
   describe('normalizeView', () => {
     it('当输入是 View 对象时应该直接返回', () => {
-      const textView = new TextView('test')
+      const textView = createTextView('test')
       const result = resolveChild(textView)
 
       expect(result).toBe(textView)
@@ -121,14 +121,14 @@ describe('Compiler Resolve', () => {
       const textRef = ref('test')
       const result = resolveChild(textRef)
 
-      expect(result).toBeInstanceOf(DynamicView)
+      expect(isDynamicView(result)).toBeTruthy()
       expect(result!.kind).toBe(ViewKind.DYNAMIC)
     })
 
     it('当输入是空字符串时应该返回 CommentView', () => {
       const result = resolveChild('')
 
-      expect(result).toBeInstanceOf(CommentView)
+      expect(isView(result)).toBeTruthy()
       expect(result!.kind).toBe(ViewKind.COMMENT)
     })
 
@@ -154,7 +154,7 @@ describe('Compiler Resolve', () => {
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(1)
-      expect(result[0]).toBeInstanceOf(TextView)
+      expect(isTextView(result[0])).toBeTruthy()
     })
 
     it('当 children 为数组时应该返回扁平化后的数组', () => {
@@ -162,8 +162,8 @@ describe('Compiler Resolve', () => {
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(2)
-      expect(result[0]).toBeInstanceOf(TextView)
-      expect(result[1]).toBeInstanceOf(TextView)
+      expect(isTextView(result[0])).toBeTruthy()
+      expect(isTextView(result[1])).toBeTruthy()
     })
 
     it('应该处理嵌套数组', () => {
@@ -171,9 +171,9 @@ describe('Compiler Resolve', () => {
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(3)
-      expect(result[0]).toBeInstanceOf(TextView)
-      expect(result[1]).toBeInstanceOf(TextView)
-      expect(result[2]).toBeInstanceOf(TextView)
+      expect(isTextView(result[0])).toBeTruthy()
+      expect(isTextView(result[1])).toBeTruthy()
+      expect(isTextView(result[2])).toBeTruthy()
     })
 
     it('应该过滤掉 null 和 undefined 值', () => {
