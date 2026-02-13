@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isHydrating, isSSR, useSSRContext } from '../../src/shared/index.js'
+import { isHydrating, isSSR, useSSRContext } from '../../src/index.js'
 
 describe('SSR Context', () => {
   it('当不在SSR上下文中时isSSR应该返回false', () => {

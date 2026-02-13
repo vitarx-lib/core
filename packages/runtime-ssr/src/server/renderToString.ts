@@ -1,7 +1,8 @@
 import { isView, RENDER_CONTEXT, type View } from '@vitarx/runtime-core'
 import { SSRApp } from '../app/index.js'
-import { type SSRContext, StringSink } from '../shared/index.js'
+import { type SSRContext } from '../shared/index.js'
 import { serializeViewToSink } from '../shared/serialize.js'
+import { StringSink } from '../shared/sink.js'
 
 /**
  * 将应用渲染为 HTML 字符串（同步模式）

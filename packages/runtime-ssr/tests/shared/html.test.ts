@@ -5,7 +5,7 @@ import {
   tagClose,
   tagOpen,
   tagSelfClosing
-} from '../../src/index.js'
+} from '../../src/shared/html.js'
 
 describe('escapeHTML', () => {
   it('should escape HTML special characters', () => {
