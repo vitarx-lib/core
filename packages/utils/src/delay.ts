@@ -11,8 +11,8 @@ export interface DelayTimeoutOptions<T = any> {
   onResolve?: (value: T) => void
   /** 可选：在失败时执行 */
   onReject?: (error: unknown) => void
-  /** 可选：判断任务是否还有效 */
-  signal?: () => boolean
+  /** 可选：判断是否还活跃 */
+  isActive?: () => boolean
 }
 
 /**
@@ -39,12 +39,12 @@ export interface DelayTimeoutOptions<T = any> {
  *
  * @example
  * ```ts
- * // 使用signal检查任务是否仍然有效
+ * // 使用isActive检查任务是否仍然有效
  * let isActive = true;
  * const wrappedTask = withDelayAndTimeout(fetchData(), {
  *   delay: 200,
  *   timeout: 5000,
- *   signal: () => !isActive, // 如果isActive变为false，任务将被取消
+ *   isActive: () => !isActive, // 如果isActive变为false，任务将被取消
  *   onDelay: () => console.log('开始加载...')
  * });
  *
@@ -69,12 +69,12 @@ export interface DelayTimeoutOptions<T = any> {
  * }
  * ```
  */
-export function withDelayAndTimeout<T>(
+export function withDelayTimeout<T>(
   task: Promise<T> | (() => Promise<T>),
   options: DelayTimeoutOptions<T>
 ): Promise<T> & { cancel: () => void } {
   // 解构配置选项，设置默认值
-  const { delay = 0, timeout = 0, onDelay, onTimeout, onResolve, onReject, signal } = options
+  const { delay = 0, timeout = 0, onDelay, onTimeout, onResolve, onReject, isActive } = options
   // 声明定时器变量
   let delayTimer: number | undefined
   let timeoutTimer: number | undefined
@@ -92,16 +92,16 @@ export function withDelayAndTimeout<T>(
     // 处理延迟回调
     if (delay > 0 && onDelay) {
       delayTimer = setTimeout(() => {
-        if (!isSettled && !signal?.()) onDelay()
+        if (!isSettled && !isActive?.()) onDelay()
       }, delay) as unknown as number
-    } else if (delay <= 0 && onDelay && !signal?.()) {
+    } else if (delay <= 0 && onDelay && !isActive?.()) {
       onDelay()
     }
 
     // 处理超时逻辑
     if (timeout > 0) {
       timeoutTimer = setTimeout(() => {
-        if (isSettled || signal?.()) return
+        if (isSettled || isActive?.()) return
         isSettled = true
         const err = new Error(`task timeout (${timeout}ms)`)
         onTimeout?.(err)
@@ -118,14 +118,14 @@ export function withDelayAndTimeout<T>(
     // 处理原始Promise的成功和失败
     task
       .then(value => {
-        if (isSettled || signal?.()) return
+        if (isSettled || isActive?.()) return
         isSettled = true
         clearTimers()
         onResolve?.(value)
         resolve(value)
       })
       .catch(error => {
-        if (isSettled || signal?.()) return
+        if (isSettled || isActive?.()) return
         isSettled = true
         clearTimers()
         onReject?.(error)

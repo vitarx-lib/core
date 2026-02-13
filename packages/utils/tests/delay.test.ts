@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { withDelayAndTimeout } from '../src/delay'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { withDelayTimeout } from '../src/delay'
 
 describe('withDelayAndTimeout', () => {
   beforeEach(() => {
@@ -12,13 +12,13 @@ describe('withDelayAndTimeout', () => {
 
   it('should resolve with the task result', async () => {
     const task = Promise.resolve('result')
-    const result = await withDelayAndTimeout(task, {})
+    const result = await withDelayTimeout(task, {})
     expect(result).toBe('result')
   })
 
   it('should reject with the task error', async () => {
     const task = Promise.reject(new Error('task error'))
-    const wrappedTask = withDelayAndTimeout(task, {})
+    const wrappedTask = withDelayTimeout(task, {})
     await expect(wrappedTask).rejects.toThrow('task error')
   })
 
@@ -27,7 +27,7 @@ describe('withDelayAndTimeout', () => {
     const task = new Promise<string>(resolve => {
       setTimeout(() => resolve('done'), 500)
     })
-    withDelayAndTimeout(task, { delay: 100, onDelay })
+    withDelayTimeout(task, { delay: 100, onDelay })
 
     expect(onDelay).not.toHaveBeenCalled()
     vi.advanceTimersByTime(100)
@@ -39,21 +39,21 @@ describe('withDelayAndTimeout', () => {
     const task = new Promise<string>(resolve => {
       setTimeout(() => resolve('done'), 500)
     })
-    withDelayAndTimeout(task, { delay: 0, onDelay })
+    withDelayTimeout(task, { delay: 0, onDelay })
     expect(onDelay).toHaveBeenCalledTimes(1)
   })
 
   it('should not call onDelay if task resolves before delay', async () => {
     const onDelay = vi.fn()
     const task = Promise.resolve('quick result')
-    await withDelayAndTimeout(task, { delay: 100, onDelay })
+    await withDelayTimeout(task, { delay: 100, onDelay })
     expect(onDelay).not.toHaveBeenCalled()
   })
 
   it('should call onTimeout when task exceeds timeout', async () => {
     const onTimeout = vi.fn()
     const task = new Promise<string>(() => {})
-    const wrappedTask = withDelayAndTimeout(task, { timeout: 100, onTimeout })
+    const wrappedTask = withDelayTimeout(task, { timeout: 100, onTimeout })
 
     vi.advanceTimersByTime(100)
     await Promise.resolve()
@@ -66,14 +66,14 @@ describe('withDelayAndTimeout', () => {
   it('should not timeout if task resolves before timeout', async () => {
     const onTimeout = vi.fn()
     const task = Promise.resolve('result')
-    await withDelayAndTimeout(task, { timeout: 100, onTimeout })
+    await withDelayTimeout(task, { timeout: 100, onTimeout })
     expect(onTimeout).not.toHaveBeenCalled()
   })
 
   it('should call onResolve when task resolves', async () => {
     const onResolve = vi.fn()
     const task = Promise.resolve('result')
-    await withDelayAndTimeout(task, { onResolve })
+    await withDelayTimeout(task, { onResolve })
     expect(onResolve).toHaveBeenCalledWith('result')
   })
 
@@ -81,7 +81,7 @@ describe('withDelayAndTimeout', () => {
     const onReject = vi.fn()
     const error = new Error('task error')
     const task = Promise.reject(error)
-    const wrappedTask = withDelayAndTimeout(task, { onReject })
+    const wrappedTask = withDelayTimeout(task, { onReject })
 
     try {
       await wrappedTask
@@ -92,7 +92,7 @@ describe('withDelayAndTimeout', () => {
 
   it('should support task as a function', async () => {
     const taskFn = () => Promise.resolve('function result')
-    const result = await withDelayAndTimeout(taskFn, {})
+    const result = await withDelayTimeout(taskFn, {})
     expect(result).toBe('function result')
   })
 
@@ -100,7 +100,7 @@ describe('withDelayAndTimeout', () => {
     const onDelay = vi.fn()
     const onTimeout = vi.fn()
     const task = new Promise<string>(() => {})
-    const wrappedTask = withDelayAndTimeout(task, {
+    const wrappedTask = withDelayTimeout(task, {
       delay: 100,
       timeout: 500,
       onDelay,
@@ -120,12 +120,12 @@ describe('withDelayAndTimeout', () => {
     let cancelled = false
 
     const task = new Promise<string>(() => {})
-    withDelayAndTimeout(task, {
+    withDelayTimeout(task, {
       delay: 100,
       timeout: 500,
       onDelay,
       onTimeout,
-      signal: () => cancelled
+      isActive: () => cancelled
     })
 
     vi.advanceTimersByTime(50)
@@ -143,9 +143,9 @@ describe('withDelayAndTimeout', () => {
       setTimeout(() => resolve('done'), 200)
     })
 
-    const wrappedTask = withDelayAndTimeout(task, {
+    const wrappedTask = withDelayTimeout(task, {
       onResolve,
-      signal: () => cancelled
+      isActive: () => cancelled
     })
 
     vi.advanceTimersByTime(100)
@@ -164,9 +164,9 @@ describe('withDelayAndTimeout', () => {
       setTimeout(() => reject(new Error('error')), 200)
     })
 
-    withDelayAndTimeout(task, {
+    withDelayTimeout(task, {
       onReject,
-      signal: () => cancelled
+      isActive: () => cancelled
     })
 
     vi.advanceTimersByTime(100)
@@ -184,7 +184,7 @@ describe('withDelayAndTimeout', () => {
       resolveTask = resolve
     })
 
-    const wrappedTask = withDelayAndTimeout(task, { timeout: 100, onTimeout })
+    const wrappedTask = withDelayTimeout(task, { timeout: 100, onTimeout })
 
     vi.advanceTimersByTime(50)
     resolveTask!('done')
@@ -195,7 +195,7 @@ describe('withDelayAndTimeout', () => {
 
   it('should not call cancel if already settled', async () => {
     const task = Promise.resolve('result')
-    const wrappedTask = withDelayAndTimeout(task, {})
+    const wrappedTask = withDelayTimeout(task, {})
 
     await wrappedTask
     wrappedTask.cancel()
