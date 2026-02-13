@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  CommentView,
+  ComponentInstance,
+  ComponentView,
   createComponentView,
   onBeforeMount,
   onDispose,
@@ -9,7 +12,6 @@ import {
   onShow,
   ViewKind
 } from '../../../src/index.js'
-import { CommentView, ComponentInstance, ComponentView } from '../../../src/index.js'
 
 describe('ComponentView', () => {
   // 创建一个简单的组件用于测试
