@@ -1,5 +1,5 @@
 import { nextTick, ref } from '@vitarx/responsive'
-import { build, createView, type HostElementTag, withDirectives } from '@vitarx/runtime-core'
+import { createView, dynamic, type HostElementTag, withDirectives } from '@vitarx/runtime-core'
 import { sleep, type VoidCallback } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Transition } from '../src/index.js'
@@ -163,7 +163,7 @@ describe('Transition 组件', () => {
 
       const transitionView = createView(Transition, {
         onBeforeEnter,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -190,7 +190,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         onAfterEnter,
         duration: 0,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -218,7 +218,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         onBeforeLeave,
         duration: 0,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -245,7 +245,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         onAfterLeave,
         duration: 0,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -275,7 +275,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         css: false,
         onEnter,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -305,7 +305,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         css: false,
         onLeave,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -364,7 +364,7 @@ describe('Transition 组件', () => {
         appear: false,
         css: false,
         onAppear,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -392,7 +392,7 @@ describe('Transition 组件', () => {
 
       const transitionView = createView(Transition, {
         duration: 0,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -418,7 +418,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         mode: 'out-in',
         duration: 0,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -444,7 +444,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         mode: 'in-out',
         duration: 0,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -473,7 +473,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         duration: 100,
         onAfterEnter,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -501,7 +501,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         duration: { enter: 50, leave: 100 },
         onAfterEnter,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -613,7 +613,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         duration: 1,
         onAfterEnter,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -641,7 +641,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         duration: 0,
         onAfterEnter,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -671,7 +671,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         onEnterCancelled,
         duration: 1000,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -701,7 +701,7 @@ describe('Transition 组件', () => {
       const transitionView = createView(Transition, {
         onLeaveCancelled,
         duration: 1000,
-        children: build(() => (show.value ? v : null))
+        children: dynamic(() => (show.value ? v : null))
       })
 
       transitionView.mount(container)
@@ -729,7 +729,7 @@ describe('Transition 组件', () => {
         appear: true,
         onAppearCancelled,
         duration: 1000,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
@@ -757,7 +757,7 @@ describe('Transition 组件', () => {
         leaveActiveClass: 'slide-leave-active',
         leaveToClass: 'slide-leave-to',
         duration: 0,
-        children: build(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => (show.value ? createView(ComponentA) : null))
       })
 
       transitionView.mount(container)
