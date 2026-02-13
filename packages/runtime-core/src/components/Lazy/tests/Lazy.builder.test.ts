@@ -114,7 +114,7 @@ describe('Lazy Builder', () => {
       expect(view.props.loader).toBe(loader)
       expect(view.props.delay).toBe(300)
       expect(view.props.loading).toBe(loadingView)
-      expect(view.props.inject).toEqual({ children: 'Children Content' })
+      expect(view.props.bindProps).toEqual({ children: 'Children Content' })
     })
 
     it('should properly wrap the component with builder pattern', () => {
@@ -125,7 +125,7 @@ describe('Lazy Builder', () => {
 
       // 验证视图构建器模式正确包装了 Lazy 组件
       expect(view.component.name).toBe('Lazy')
-      expect(view.props.inject).toEqual({ className: 'test-class' })
+      expect(view.props.bindProps).toEqual({ className: 'test-class' })
       expect(typeof view.props.loader).toBe('function')
     })
   })

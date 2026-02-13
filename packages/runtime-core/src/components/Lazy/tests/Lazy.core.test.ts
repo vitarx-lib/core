@@ -119,7 +119,7 @@ describe('Lazy Component', () => {
 
       const view = createView(Lazy, {
         loader: createLoaderWithProps(),
-        inject: { testProp: 'testValue' }
+        bindProps: { testProp: 'testValue' }
       })
       view.mount(container)
 
