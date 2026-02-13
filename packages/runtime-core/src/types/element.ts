@@ -1,14 +1,20 @@
+/**
+ * 固有元素
+ */
 export type IntrinsicElements = Vitarx.IntrinsicElements
+type HostTag = keyof Vitarx.HostElementTagMap
 /**
  * 平台宿主元素标签类型
  * 表示所有支持的宿主元素标签的联合类型
  */
-export type HostElementTag = keyof Vitarx.HostElementTagMap
+export type HostElementTag = HostTag extends never ? string : keyof Vitarx.HostElementTagMap
 /**
  * 平台宿主元素类型
  * 表示平台特定的元素节点实例
  */
-export type HostElement<T extends HostElementTag = HostElementTag> = Vitarx.HostElementTagMap[T] & {
+export type HostElement<T extends HostElementTag = HostElementTag> = (T extends HostTag
+  ? Vitarx.HostElementTagMap[T]
+  : {}) & {
   [key: string | symbol | number]: any
 }
 
@@ -41,5 +47,3 @@ export type HostNode = HostElement | HostText | HostComment | HostFragment
  * 表示可以包含其他节点的宿主容器
  */
 export type HostContainer = HostElement | HostFragment | Vitarx.HostContainerNode
-
-export type ElementProps<T extends HostElementTag> = Omit<IntrinsicElements[T], 'children'>

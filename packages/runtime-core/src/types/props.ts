@@ -1,4 +1,4 @@
-import type { Ref, UnwrapRef } from '@vitarx/responsive'
+import type { Ref } from '@vitarx/responsive'
 import type { PickRequired } from '@vitarx/utils'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps, ViewBuilder } from '../view/index.js'
 import type { AnyProps, Component, ComponentProps } from './component.js'
@@ -66,33 +66,6 @@ export type MaybeRef<T> = T extends Ref<infer U, any> ? U | T : T | Ref<T>
 export type WithRefProps<T extends AnyProps> = { [K in keyof T]: MaybeRef<T[K]> }
 
 /**
- * 解包引用属性类型
- *
- * 将对象类型中的所有 RefSignal 类型解包为其内部值类型。
- * 这对于处理包含响应式引用的属性对象非常有用。
- *
- * @template T - 要解包的对象类型
- *
- * @example
- * ```ts
- * interface Props {
- *   count: Ref<number>;
- *   name: string;
- *   visible: Ref<boolean>;
- * }
- *
- * types UnwrappedProps = UnwrapRefProps<Props>;
- * // 等价于:
- * // {
- * //   count: number;
- * //   name: string;
- * //   visible: boolean;
- * // }
- * ```
- */
-export type UnwrapRefProps<T extends AnyProps> = { [K in keyof T]: UnwrapRef<T[K]> }
-
-/**
  * 绑定属性
  *
  * 可选值：
@@ -133,50 +106,7 @@ export interface IntrinsicAttributes {
 /**
  * CSS 样式规则类型
  */
-export type StyleRules = Vitarx.HostStyleRules
-/**
- * CSS样式规则类型
- *
- * @remarks
- * 该类型结合了csstype库的CssProperties类型和DOM原生CSSStyleDeclaration类型。
- * 它包含了所有标准CSS属性，同时也支持浏览器特定的样式属性。
- *
- * @example
- * ```ts
- * const styles: CssRules = {
- *   display: 'flex',
- *   backgroundColor: '#fff',
- *   WebkitUserSelect: 'none'
- * }
- * ```
- */
-export type StyleProperties = string | Vitarx.HostStyleRules
-/**
- * class属性值类型
- *
- * @remarks
- * 该类型支持多种形式的class定义：
- * - 字符串：单个或多个以空格分隔的类名
- * - 数组：数组的每个字符串元素都会被视为一个类名,会过滤掉==false的元素
- * - 对象：键为类名，值为布尔值，表示是否应用该类
- *
- * @example
- * ```ts
- * // 字符串形式
- * const class1: ClassProperties = 'btn btn-primary'
- *
- * // 数组形式
- * const class2: ClassProperties = ['btn', 'btn-primary']
- *
- * // 对象形式
- * const class3: ClassProperties = {
- *   btn: true,
- *   'btn-primary': true,
- *   'btn-large': false
- * }
- * ```
- */
-export type ClassProperties = string | Array<any> | Record<string, boolean>
+export type StyleRules = Vitarx.HostCSSProperties
 
 type VModelValue<T> = T extends Ref ? T : Ref<T>
 type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
@@ -254,33 +184,24 @@ export type ExtractProps<T extends ViewTag> = T extends Dynamic
 export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttributes
 
 /**
- * 根据节点类型推断其对应的属性类型
- *
- * 该类型用于根据不同的节点类型 T，推断出该节点所接受的属性类型：
- * 1. 如果 T 是支持的元素名称，则返回 `ElementProps<T>` 对应的属性类型
- * 3. 如果 T 是 Fragment 类型，则返回 Fragment 对应的属性类型
- * 4. 如果 T 是 Widget 类型，则返回该组件类型的属性类型
- * 5. 其他情况返回空对象类型
+ * 根据视图标签类型推断其对应的属性类型
  *
  * 去除了 children 属性，主要是为了编写组件Props接口时方便继承或使用其他元素/组件可透传绑定的属性。
  *
  * @example
  * ```ts
- * // 通过继承 WithNodeProps<div> 可以让组件支持所有div元素的属性，
- * // 在jsx表达式中可以获得良好的类型提示和代码补全。
- * interface MyWidgetProps extends WithProps<'div'> {
+ * // 通过继承 WithProps<div> 可以让组件支持所有div元素的属性，
+ * interface Props extends WithProps<'div'> {
  *   children: View
  *   // ... 其他自定义属性
  * }
- * const MyWidget = (props: MyWidgetProps) => {
- *   // 使用 v-bind 绑定属性 不支持 children v-show v-if 等特殊的固有属性
- *   // 所以我们需要单独处理 children 属性
+ * const MyComponent = (props: Props) => {
  *   return <div v-bind={props}>{props.children}</div>
  * }
- * export default MyWidget
+ * export default MyComponent
  * ```
  *
- * @template T - 节点类型，必须继承自 ValidNodeType
+ * @template T - 节点类型，必须继承自 ViewTag
  * @template K - 忽略的属性名称，默认为 'children'
  */
 export type WithProps<T extends ViewTag, K extends keyof any = 'children'> = Omit<

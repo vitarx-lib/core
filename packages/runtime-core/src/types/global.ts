@@ -32,7 +32,7 @@ declare global {
      * 宿主平台包可以重写此接口以支持Tsx类型校验。
      */
     interface IntrinsicElements {
-      svg: {}
+      [K: string]: GlobalIntrinsicAttributes
     }
     /**
      * 渲染上下文
@@ -76,15 +76,13 @@ declare global {
      * }
      * ```
      */
-    interface HostElementTagMap {
-      svg: SVGElement
-    }
+    interface HostElementTagMap {}
     /**
      * 元素支持的样式规则
      *
      * 运行时支持的样式规则映射，base 包中未定义任何规则，需要在各平台渲染包中扩展此类型。
      */
-    interface HostStyleRules {}
+    interface HostCSSProperties {}
     /**
      * Vitarx 框架内置固有属性
      */

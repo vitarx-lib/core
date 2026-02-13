@@ -1,7 +1,37 @@
 import { toRaw } from '@vitarx/responsive'
 import { isRecordObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
-import type { ClassProperties, StyleProperties, StyleRules } from '../../types/index.js'
+import type { StyleRules } from '../../types/index.js'
 
+/**
+ * style属性值
+ */
+export type StyleProperties = string | Vitarx.HostCSSProperties
+/**
+ * class属性值类型
+ *
+ * @remarks
+ * 该类型支持多种形式的class定义：
+ * - 字符串：单个或多个以空格分隔的类名
+ * - 数组：数组的每个字符串元素都会被视为一个类名,会过滤掉==false的元素
+ * - 对象：键为类名，值为布尔值，表示是否应用该类
+ *
+ * @example
+ * ```ts
+ * // 字符串形式
+ * const class1: ClassProperties = 'btn btn-primary'
+ *
+ * // 数组形式
+ * const class2: ClassProperties = ['btn', 'btn-primary']
+ *
+ * // 对象形式
+ * const class3: ClassProperties = {
+ *   btn: true,
+ *   'btn-primary': true,
+ *   'btn-large': false
+ * }
+ * ```
+ */
+export type ClassProperties = string | Array<any> | Record<string, boolean>
 /**
  * StyleUtils 类是一个用于处理 CSS 类和样式对象的静态工具类。
  * 提供了合并、转换 CSS 类和样式的方法，支持多种输入格式（字符串、数组、对象）之间的互相转换。
