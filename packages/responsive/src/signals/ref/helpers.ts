@@ -7,11 +7,11 @@ import { ValueRef } from './value.js'
  *
  * 创建一个未初始化的响应式引用，值为 undefined。
  *
- * @returns {ValueRef<undefined, true>} 返回一个未初始化的响应式引用
+ * @returns {ValueRef<any>} 返回一个未初始化的响应式引用
  *
  * @example
  * ```js
- * const count = ref() // Ref<any>
+ * const count = ref() // ValueRef<any>
  * console.log(count.value) // undefined
  * count.value = 1
  * console.log(count.value) // 1
@@ -25,7 +25,7 @@ export function ref(): ValueRef
  * 创建一个指定类型的响应式引用，初始值为 undefined。
  *
  * @template Value - 引用值的类型
- * @returns {ValueRef<Value | undefined, true>} 返回指定类型的响应式引用
+ * @returns {ValueRef<number | undefined>} 返回指定类型的响应式引用
  *
  * @example
  * ```js
@@ -44,7 +44,7 @@ export function ref<Value>(): ValueRef<Value | undefined>
  *
  * @template Value - 引用值的类型
  * @param value - 初始值
- * @returns {ValueRef<Value, true>} 返回带有初始值的响应式引用
+ * @returns {ValueRef<Value>} 返回带有初始值的响应式引用
  *
  * @example
  * ```js
