@@ -1,4 +1,4 @@
-import { FragmentView, ListView } from '../view/implements/index.js'
+import { FragmentView, ListView } from '../view/index.js'
 import type {
   HostComment,
   HostContainer,

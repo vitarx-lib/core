@@ -18,9 +18,9 @@ import {
   isTextView,
   isView,
   isViewBuilder,
+  ListView,
   ViewKind
 } from '../../../src/index.js'
-import { ListView } from '../../../src/view/implements/index.js'
 
 describe('Runtime Core Shared Utils - is', () => {
   describe('isView', () => {

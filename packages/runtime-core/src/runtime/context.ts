@@ -1,7 +1,7 @@
 import type { App } from '../app/index.js'
 import { RENDER_CONTEXT } from '../constants/index.js'
 import type { RenderContext } from '../types/index.js'
-import type { ComponentInstance, ComponentView } from '../view/implements/index.js'
+import type { ComponentInstance, ComponentView } from '../view/index.js'
 
 let activeComponentInstance: ComponentInstance | null = null
 

@@ -1,7 +1,7 @@
 import { isArray, isPlainObject, logger } from '@vitarx/utils'
 import { ViewKind } from '../constants/index.js'
 import type { Directive, DirectiveBinding, HostElement, View } from '../types/index.js'
-import type { ElementView } from '../view/implements/index.js'
+import type { ElementView } from '../view/index.js'
 import { getInstance } from './context.js'
 
 const globalDirectives = new Map<string, Directive>()

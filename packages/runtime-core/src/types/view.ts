@@ -10,7 +10,7 @@ import {
   FragmentView,
   ListView,
   TextView
-} from '../view/implements/index.js'
+} from '../view/index.js'
 import type { ViewBuilder } from '../view/index.js'
 import type { Component } from './component.js'
 import type { HostElementTag } from './element.js'

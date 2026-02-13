@@ -7,7 +7,7 @@ import type {
   HookCallback,
   ValidateProps
 } from '../types/index.js'
-import type { ViewSwitchHandler } from '../view/implements/index.js'
+import type { ViewSwitchHandler } from '../view/index.js'
 import { getInstance } from './context.js'
 
 /**

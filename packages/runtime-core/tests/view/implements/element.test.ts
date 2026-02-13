@@ -1,7 +1,6 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ViewKind } from '../../../src/index.js'
-import { ElementView } from '../../../src/view/implements'
+import { ElementView, ViewKind } from '../../../src/index.js'
 
 describe('ElementView', () => {
   let container: HTMLElement

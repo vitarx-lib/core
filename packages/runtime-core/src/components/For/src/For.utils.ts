@@ -1,6 +1,6 @@
 import { isFunction, isObject, logger } from '@vitarx/utils'
 import type { CodeLocation, View } from '../../../types/index.js'
-import type { ListView } from '../../../view/implements/index.js'
+import type { ListView } from '../../../view/index.js'
 import type { ListItemMap, ListKeyResolver, ListLifecycleHook } from './For.core.js'
 
 /**

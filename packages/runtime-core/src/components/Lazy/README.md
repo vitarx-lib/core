@@ -12,15 +12,15 @@ Lazy 组件允许你将应用程序拆分为更小的代码块，并按需加载
 
 ### Props
 
-| 属性         | 类型                              | 必需 | 默认值   | 描述                             |
-|------------|---------------------------------|----|-------|--------------------------------|
-| `loader`   | `() => Promise<{ default: T }>` | 是  | -     | 惰性加载器函数，返回一个包含默认导出组件的 Promise  |
-| `loading`  | `() => View`                    | 否  | -     | 加载期间显示的视图函数                    |
-| `delay`    | `number`                        | 否  | `200` | 显示加载视图前的延迟时间（毫秒），用于避免短暂的加载状态闪烁 |
-| `timeout`  | `number`                        | 否  | `0`   | 加载超时时间（毫秒），设为 `<=0` 表示不限制超时时间  |
-| `onError`  | `(e: unknown) => View`          | 否  | -     | 加载失败时的错误处理函数，返回错误状态视图          |
-| `inject`   | `WithProps<T>`                  | 否  | -     | 需要透传给加载完成后的组件的属性               |
-| `children` | `ComponentProps<T>['children']` | 否  | -     | 透传给加载完成后的组件的子元素                |
+| 属性          | 类型                              | 必需 | 默认值   | 描述                             |
+|-------------|---------------------------------|----|-------|--------------------------------|
+| `loader`    | `() => Promise<{ default: T }>` | 是  | -     | 惰性加载器函数，返回一个包含默认导出组件的 Promise  |
+| `loading`   | `() => View`                    | 否  | -     | 加载期间显示的视图函数                    |
+| `delay`     | `number`                        | 否  | `200` | 显示加载视图前的延迟时间（毫秒），用于避免短暂的加载状态闪烁 |
+| `timeout`   | `number`                        | 否  | `0`   | 加载超时时间（毫秒），设为 `<=0` 表示不限制超时时间  |
+| `onError`   | `(e: unknown) => View`          | 否  | -     | 加载失败时的错误处理函数，返回错误状态视图          |
+| `bindProps` | `WithProps<T>`                  | 否  | -     | 需要透传给加载完成后的组件的属性               |
+| `children`  | `ComponentProps<T>['children']` | 否  | -     | 透传给加载完成后的组件的子元素                |
 
 ### 示例
 
@@ -67,7 +67,7 @@ function App() {
   // color, children 都会透传给最终渲染的 Button 组件
   return <Button color="red">按钮</Button>
   // 等效于
-  // return <Lazy loader={() => import('./Button.js')} inject={{ color: "red" }}>按钮</Lazy>
+  // return <Lazy loader={() => import('./Button.js')} bindProps={{ color: "red" }}>按钮</Lazy>
 }
 
 // 带有 loading 和错误处理的用法

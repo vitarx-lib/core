@@ -1,4 +1,4 @@
-import { ElementView } from '../view/implements/index.js'
+import { ElementView } from '../view/index.js'
 import type { HostElement } from './element.js'
 
 export interface DirectiveBinding {

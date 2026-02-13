@@ -4,7 +4,7 @@ import { SUSPENSE_COUNTER } from '../../../constants/index.js'
 import { getInstance, onInit, provide } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type { AnyProps, View } from '../../../types/index.js'
-import { CommentView, DynamicView } from '../../../view/implements/index.js'
+import { CommentView, DynamicView } from '../../../view/index.js'
 
 /**
  * Suspense小部件的配置选项

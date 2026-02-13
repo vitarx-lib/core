@@ -1,6 +1,8 @@
 import { ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
+  CommentView,
+  ComponentView,
   createCommentView,
   createComponentView,
   createDynamicView,
@@ -9,18 +11,14 @@ import {
   createListView,
   createTextView,
   createView,
-  h,
-  ViewKind
-} from '../../../src/index.js'
-import {
-  CommentView,
-  ComponentView,
   DynamicView,
   ElementView,
   FragmentView,
+  h,
   ListView,
-  TextView
-} from '../../../src/view/implements/index.js'
+  TextView,
+  ViewKind
+} from '../../../src/index.js'
 
 describe('View Factory Functions', () => {
   let container: HTMLElement

@@ -9,7 +9,7 @@ import {
   isDynamicView,
   ViewKind
 } from '../../../src/index.js'
-import { CommentView, DynamicView } from '../../../src/view/implements/index.js'
+import { CommentView, DynamicView } from '../../../src/index.js'
 
 describe('Dynamic Builder', () => {
   describe('构建器功能', () => {

@@ -1,6 +1,6 @@
 import type { AnyFunction } from '@vitarx/utils'
 import { logger } from '@vitarx/utils'
-import { ComponentInstance } from '../view/implements/index.js'
+import { ComponentInstance } from '../view/index.js'
 import { getInstance } from './context.js'
 
 /**

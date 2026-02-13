@@ -1,6 +1,6 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { viewEffect } from '../../src/runtime/effect'
+import { viewEffect } from '../../src/index.js'
 
 describe('runtime/effect', () => {
   beforeEach(() => {
