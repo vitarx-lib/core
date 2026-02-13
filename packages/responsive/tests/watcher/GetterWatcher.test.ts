@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { GetterWatcher, ref } from '../../src/index.js'
+import { ref } from '../../src/index.js'
+import { GetterWatcher } from '../../src/watcher/getter.js'
 
 describe('watcher/GetterWatcher', () => {
   describe('constructor', () => {

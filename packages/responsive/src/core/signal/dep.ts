@@ -83,7 +83,7 @@ export interface EffectRunner extends DebuggerOptions {
  *
  * 这种结构允许在signal和effect之间建立高效的依赖关系
  */
-export class DepLink {
+class DepLink {
   // signal维度上的前驱节点
   sigPrev?: DepLink
   // signal维度上的后继节点
@@ -104,6 +104,7 @@ export class DepLink {
     public effect: EffectRunner
   ) {}
 }
+export type { DepLink }
 
 /**
  * 创建 signal <-> effect 双向链表关联

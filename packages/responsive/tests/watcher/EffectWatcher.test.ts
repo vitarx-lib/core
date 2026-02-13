@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { EffectWatcher, ref, watchEffect } from '../../src/index.js'
+import { ref } from '../../src/index.js'
+import { EffectWatcher, watchEffect } from '../../src/watcher/effect.js'
 
 describe('watcher/EffectWatcher', () => {
   describe('constructor', () => {

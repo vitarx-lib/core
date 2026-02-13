@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDepLink, ref, RefSignalWatcher } from '../../src/index.js'
+import { createDepLink, ref } from '../../src/index.js'
+import { RefSignalWatcher } from '../../src/watcher/ref.js'
 
 describe('watcher/SignalWatcher', () => {
   describe('constructor', () => {

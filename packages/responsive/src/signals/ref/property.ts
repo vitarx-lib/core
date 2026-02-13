@@ -22,9 +22,9 @@ import { IS_REF, type Ref } from '../shared/index.js'
  * console.log(obj.name); // 'Jane'
  * ```
  *
- * @param _target - 要引用属性的目标对象
- * @param _key - 要引用的属性键名
- * @param _defaultValue - 可选的默认值，当属性未定义时使用
+ * @param target - 要引用属性的目标对象
+ * @param key - 要引用的属性键名
+ * @param defaultValue - 可选的默认值，当属性未定义时使用
  *
  * @remarks
  * - 该类使用 TypeScript 的泛型确保类型安全
