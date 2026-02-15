@@ -1,13 +1,6 @@
-import { ref } from '@vitarx/responsive'
+import { isRef, ref } from '@vitarx/responsive'
 import { describe, expect, it } from 'vitest'
-import {
-  access,
-  branch,
-  dynamic,
-  DynamicView,
-  isDynamicView,
-  ViewKind
-} from '../../../src/index.js'
+import { access, branch, dynamic, isDynamicView, ViewKind } from '../../../src/index.js'
 
 describe('Compiler Helpers', () => {
   describe('branch', () => {
@@ -31,33 +24,24 @@ describe('Compiler Helpers', () => {
   })
 
   describe('access', () => {
-    it('当属性是函数时应该直接返回函数', () => {
-      const obj = { name: 'test', fn: () => 'function' }
-      const result = access(obj, 'fn')
-
-      expect(typeof result).toBe('function')
-      // @ts-ignore
-      expect(result()).toBe('function')
-    })
-
     it('当属性不是响应式时应该直接返回值', () => {
       const obj = { name: 'test' }
       const result = access(obj, 'name')
 
       expect(result).toBe('test')
-      expect(isDynamicView(result)).toBeFalsy()
+      expect(isRef(result)).toBeFalsy()
     })
 
-    it('当属性是响应式时应该返回 DynamicView', () => {
-      const isRef = ref(true)
+    it('当属性是响应式时应该返回 Ref', () => {
+      const r = ref(true)
       const obj = {
         get name() {
-          return isRef.value ? 'test' : 'updated'
+          return r.value ? 'test' : 'updated'
         }
       }
       const result = access(obj, 'name')
 
-      expect((result as DynamicView).kind).toBe(ViewKind.DYNAMIC)
+      expect(isRef(result)).toBe(true)
     })
   })
 
