@@ -14,7 +14,7 @@ import { SwitchViewSource } from './source.js'
  * @returns {DynamicView} - 切换视图
  */
 export function switchExpressions(
-  select: () => number,
+  select: () => number | null,
   branches: (() => unknown)[],
   location?: CodeLocation
 ): DynamicView {
@@ -27,11 +27,13 @@ export function switchExpressions(
  * @internal
  * @param obj - 要处理的对象，必须是 object 类型
  * @param key - 对象的属性键，必须是 obj 的键之一
+ * @param location - 代码位置
  * @returns 返回属性值或 DynamicView 视图对象
  */
 export function memberExpressions<T extends object, K extends keyof T>(
   obj: T,
-  key: K
+  key: K,
+  location?: CodeLocation
 ): T[K] | DynamicView<T[K]> {
   // 检查对象是否有属性跟踪
   const { value, isTrack } = hasPropTrack(obj, key)
@@ -39,6 +41,6 @@ export function memberExpressions<T extends object, K extends keyof T>(
   if (!isTrack) return value
   // 如果值是函数，则直接返回该函数
   if (isFunction(value)) return value
-  const source = isRef(obj) && key === 'value' ? obj : toRef(obj, key)
-  return new DynamicView<T[K]>(source)
+  const source = key === 'value' && isRef(obj) ? obj : toRef(obj, key)
+  return new DynamicView<T[K]>(source, location)
 }

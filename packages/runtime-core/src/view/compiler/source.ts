@@ -102,10 +102,10 @@ export class DynamicViewSource<T = any> extends BaseViewComputed<T> {
  * - branches数组是只读的，构造后不能修改
  * - 分支函数的执行结果会被缓存，直到选择函数返回不同的索引值
  */
-export class SwitchViewSource<T = any> extends BaseViewComputed<T> {
-  private cachedIndex = -1
+export class SwitchViewSource<T = any> extends BaseViewComputed<T | null> {
+  private cachedIndex: number | null = -1
   constructor(
-    private readonly select: () => number,
+    private readonly select: () => number | null,
     private readonly branches: readonly (() => T)[]
   ) {
     super()
@@ -113,10 +113,11 @@ export class SwitchViewSource<T = any> extends BaseViewComputed<T> {
     this.initTracking()
   }
 
-  protected override recompute(): T {
+  protected override recompute(): T | null {
     const index = trackEffect(this.select, this.effectHandle)
     if (index === this.cachedIndex) return this.cached
     this.cachedIndex = index
+    if (index === null) return null
     return this.branches[index]()
   }
 }
