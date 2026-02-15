@@ -42,12 +42,12 @@ const packageJson = {
     '.': {
       import: {
         types: './dist/index.d.ts',
-        default: './dist/index.js'
+        default: './dist/index.es.js'
       }
     }
   },
   dependencies: {
-    '@vitarx/utils': 'workspace:^'
+    '@vitarx/utils': 'workspace:*'
   }
 }
 

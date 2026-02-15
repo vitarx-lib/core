@@ -29,8 +29,7 @@
     }
   },
   "dependencies": {
-    "@vitarx/responsive": "workspace:^",
-    "@vitarx/utils": "workspace:^",
-    "csstype": "^3.1.3"
+    "@vitarx/responsive": "workspace:*",
+    "@vitarx/utils": "workspace:*"
   }
 }

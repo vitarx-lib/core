@@ -31,6 +31,6 @@
     }
   },
   "dependencies": {
-    "@vitarx/utils": "workspace:^"
+    "@vitarx/utils": "workspace:*"
   }
 }

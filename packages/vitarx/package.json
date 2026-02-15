@@ -31,10 +31,10 @@
     }
   },
   "dependencies": {
-    "@vitarx/utils": "workspace:^",
-    "@vitarx/responsive": "workspace:^",
-    "@vitarx/runtime-core": "workspace:^",
-    "@vitarx/runtime-dom": "workspace:^",
-    "@vitarx/runtime-ssr": "workspace:^"
+    "@vitarx/utils": "workspace:*",
+    "@vitarx/responsive": "workspace:*",
+    "@vitarx/runtime-core": "workspace:*",
+    "@vitarx/runtime-dom": "workspace:*",
+    "@vitarx/runtime-ssr": "workspace:*"
   }
 }

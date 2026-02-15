@@ -31,9 +31,9 @@
     }
   },
   "dependencies": {
-    "@vitarx/responsive": "workspace:^",
-    "@vitarx/utils": "workspace:^",
-    "@vitarx/runtime-core": "workspace:^",
-    "@vitarx/runtime-dom": "workspace:^"
+    "@vitarx/responsive": "workspace:*",
+    "@vitarx/utils": "workspace:*",
+    "@vitarx/runtime-core": "workspace:*",
+    "@vitarx/runtime-dom": "workspace:*"
   }
 }
