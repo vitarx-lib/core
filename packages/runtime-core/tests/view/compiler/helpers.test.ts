@@ -1,20 +1,20 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it } from 'vitest'
 import {
+  access,
+  branch,
   dynamic,
   DynamicView,
   isDynamicView,
-  memberExpressions,
-  switchExpressions,
   ViewKind
 } from '../../../src/index.js'
 
 describe('Compiler Helpers', () => {
-  describe('switchExpressions', () => {
+  describe('branch', () => {
     it('应该创建 DynamicView 实例', () => {
       const select = () => 0
       const branches = [() => 'branch 0', () => 'branch 1']
-      const view = switchExpressions(select, branches)
+      const view = branch(select, branches)
 
       expect(view.kind).toBe(ViewKind.DYNAMIC)
     })
@@ -23,17 +23,17 @@ describe('Compiler Helpers', () => {
       const select = () => 0
       const branches = [() => 'branch 0']
       const location = { fileName: 'test.ts', lineNumber: 1, columnNumber: 1 }
-      const view = switchExpressions(select, branches, location)
+      const view = branch(select, branches, location)
 
       expect(isDynamicView(view)).toBeTruthy()
       expect(view.location).toBe(location)
     })
   })
 
-  describe('memberExpressions', () => {
+  describe('access', () => {
     it('当属性是函数时应该直接返回函数', () => {
       const obj = { name: 'test', fn: () => 'function' }
-      const result = memberExpressions(obj, 'fn')
+      const result = access(obj, 'fn')
 
       expect(typeof result).toBe('function')
       // @ts-ignore
@@ -42,7 +42,7 @@ describe('Compiler Helpers', () => {
 
     it('当属性不是响应式时应该直接返回值', () => {
       const obj = { name: 'test' }
-      const result = memberExpressions(obj, 'name')
+      const result = access(obj, 'name')
 
       expect(result).toBe('test')
       expect(isDynamicView(result)).toBeFalsy()
@@ -55,13 +55,13 @@ describe('Compiler Helpers', () => {
           return isRef.value ? 'test' : 'updated'
         }
       }
-      const result = memberExpressions(obj, 'name')
+      const result = access(obj, 'name')
 
       expect((result as DynamicView).kind).toBe(ViewKind.DYNAMIC)
     })
   })
 
-  describe('build', () => {
+  describe('dynamic', () => {
     it('应该创建 DynamicView 实例', () => {
       const view = dynamic(() => 'test')
 
