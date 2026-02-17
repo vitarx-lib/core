@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "noEmit": true
-  },
-  "include": ["tests", "../../vite-env.d.ts"],
-  "exclude": ["node_modules"]
-}
