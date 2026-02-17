@@ -17,14 +17,13 @@ export type ViewBuilder<P extends AnyProps = AnyProps, R extends View = View> = 
  *
  * 视图构建器允许接收以下参数：
  * - props: 视图节点属性
- * - key: 视图节点key
  * - location: 节点位置，仅开发时，通常用于打印警告信息。
  *
  * @example
  * ```jsx
  * // 标记一个视图构建器
- * const Button = builder((props,key,location) => {
- *    return createView('button', props, key, location)
+ * const Button = builder((props,location) => {
+ *    return <button {...props}>{props.children}</button>
  * })
  * // 使用
  * function App() {
