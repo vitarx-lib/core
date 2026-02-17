@@ -15,7 +15,7 @@
   },
   "type": "module",
   "module": "dist/index.es.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/index.es.d.ts",
   "sideEffects": false,
   "files": [
     "dist",
@@ -24,7 +24,7 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/index.es.d.ts",
       "default": "./dist/index.es.js"
     }
   },

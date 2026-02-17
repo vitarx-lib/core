@@ -24,21 +24,12 @@ interface PackageJson {
 /**
  * 构建环境配置接口
  */
-interface BuildEnv {
-  dev: boolean
-  ssr: boolean
+interface BuildOptions {
+  format?: 'es' | 'iife'
+  define?: Record<string, string | boolean>
   dts?: boolean
-}
-
-/**
- * 主包构建配置接口
- */
-interface MainPackageBuildConfig {
-  dev: boolean
-  ssr: boolean
-  format: 'es' | 'iife'
-  fileName: string
-  alias?: Record<string, string>
+  fileName?: string
+  external?: string[]
 }
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -55,73 +46,36 @@ const NODE_EXTERNALS = ['stream', 'node:stream']
 const PACKAGES = ['utils', 'responsive', 'runtime-core', 'runtime-dom', 'runtime-ssr', 'vitarx']
 
 /**
- * 解析包的别名映射
- * 用于主包构建时引用子包的构建产物
- * @param filename - 文件名（不含扩展名）
- * @returns 别名映射对象
- */
-function resolveAlias(filename: string): Record<string, string> {
-  const alias: Record<string, string> = {}
-  PACKAGES.slice(0, -1).forEach(packDir => {
-    alias[`@vitarx/${packDir}`] = join(packagesDir, packDir, 'dist', `${filename}.js`)
-  })
-  return alias
-}
-
-/**
  * 获取需要排除的外部模块列表
  * @param dependencies - 包的依赖对象
- * @returns 外部模块列表
+ * @returns - 外部模块列表
  */
 function getExternalModules(dependencies?: Record<string, string>): string[] {
   return dependencies ? [...NODE_EXTERNALS, ...Object.keys(dependencies)] : [...NODE_EXTERNALS]
 }
 
 /**
- * 创建基础构建配置
- * @param packagePath - 包路径
- * @param outDir - 输出目录
- * @param external - 外部模块列表
- * @param define - 全局定义变量
- * @returns Vite 构建配置
- */
-function createBaseBuildConfig(
-  packagePath: string,
-  outDir: string,
-  external: string[],
-  define: Record<string, unknown>
-): InlineConfig {
-  return {
-    configFile: false,
-    build: {
-      outDir,
-      lib: {
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['es'],
-        fileName: 'index'
-      },
-      rollupOptions: { external },
-      emptyOutDir: false
-    },
-    define
-  }
-}
-
-/**
- * 构建子包
+ * vite 构建
+ *
  * @param packagePath - 包路径
  * @param pkg - package.json 配置
  * @param outDir - 输出目录
- * @param env - 构建环境配置
+ * @param options - 构建环境配置
  */
-async function buildSubPackage(
+async function viteBuild(
   packagePath: string,
   pkg: PackageJson,
   outDir: string,
-  env: BuildEnv
+  options?: BuildOptions
 ): Promise<void> {
   console.log('')
-  const { dev, ssr, dts = false } = env
+  const {
+    dts = true,
+    format = 'es',
+    define = {},
+    external,
+    fileName = `index.${format}`
+  } = options || {}
   const tsconfigPath = resolve(packagePath, 'tsconfig.json')
   const plugins: PluginOption[] = []
 
@@ -137,149 +91,28 @@ async function buildSubPackage(
     )
   }
 
-  const external = getExternalModules(pkg.dependencies)
+  const libName = pkg.name.charAt(0).toUpperCase() + pkg.name.slice(1)
+
   const config: InlineConfig = {
-    ...createBaseBuildConfig(packagePath, outDir, external, { __DEV__: dev, __SSR__: ssr }),
+    configFile: false,
     build: {
       outDir,
       lib: {
+        name: libName,
         entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['es'],
-        fileName: format => {
-          const parts = ['index', `.${format}`]
-          if (ssr) parts.push('.ssr')
-          if (!dev) parts.push('-prod')
-          return `${parts.join('')}.js`
-        }
+        formats: [format],
+        fileName
       },
       rollupOptions: { external },
       emptyOutDir: false
+    },
+    define: {
+      __VERSION__: JSON.stringify(pkg.version),
+      ...define
     },
     plugins
   }
-
   await build(mergeConfig(config, pkg.vite || {}))
-}
-
-/**
- * 构建主包的单个配置变体
- * @param packagePath - 包路径
- * @param pkg - package.json 配置
- * @param outDir - 输出目录
- * @param config - 构建配置
- */
-async function buildMainPackageConfig(
-  packagePath: string,
-  pkg: PackageJson,
-  outDir: string,
-  config: MainPackageBuildConfig
-): Promise<void> {
-  const external = getExternalModules()
-  const define: Record<string, unknown> = {
-    __DEV__: config.dev,
-    __SSR__: config.ssr,
-    __VERSION__: JSON.stringify(pkg.version)
-  }
-
-  const buildConfig: InlineConfig = {
-    configFile: false,
-    resolve: config.alias ? { alias: config.alias } : undefined,
-    build: {
-      outDir,
-      lib: {
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: [config.format],
-        fileName: config.fileName,
-        ...(config.format === 'iife' ? { name: 'Vitarx' } : {})
-      },
-      rollupOptions: { external },
-      emptyOutDir: false
-    },
-    define
-  }
-
-  await build(buildConfig)
-}
-
-/**
- * 构建主包（vitarx）
- * 主包需要构建多个变体：
- * 1. ES Module 开发版（带类型声明）
- * 2. ES Module 生产版
- * 3. ES Module SSR 版
- * 4. ES Module SSR 生产版
- * 5. IIFE 格式（浏览器直接使用）
- * @param packagePath - 包路径
- * @param pkg - package.json 配置
- * @param outDir - 输出目录
- */
-async function buildMainPackage(
-  packagePath: string,
-  pkg: PackageJson,
-  outDir: string
-): Promise<void> {
-  const tsconfigPath = resolve(packagePath, 'tsconfig.json')
-
-  // 构建 ES Module 开发版（带类型声明）
-  await build({
-    configFile: false,
-    build: {
-      outDir,
-      lib: {
-        entry: resolve(packagePath, 'src/index.ts'),
-        formats: ['es'],
-        fileName: 'index.es'
-      },
-      rollupOptions: { external: NODE_EXTERNALS },
-      emptyOutDir: false
-    },
-    plugins: [
-      dtsPlugin({
-        insertTypesEntry: true,
-        bundleTypes: true,
-        tsconfigPath,
-        root: packagePath
-      })
-    ],
-    define: { __DEV__: true, __SSR__: false, __VERSION__: JSON.stringify(pkg.version) }
-  })
-
-  // 定义其他构建变体
-  const buildConfigs: MainPackageBuildConfig[] = [
-    {
-      dev: false,
-      ssr: false,
-      format: 'es',
-      fileName: 'index.es-prod',
-      alias: resolveAlias('index.es-prod')
-    },
-    {
-      dev: true,
-      ssr: true,
-      format: 'es',
-      fileName: 'index.es.ssr',
-      alias: resolveAlias('index.es.ssr')
-    },
-    {
-      dev: false,
-      ssr: true,
-      format: 'es',
-      fileName: 'index.es.ssr-prod',
-      alias: resolveAlias('index.es.ssr-prod')
-    },
-    {
-      dev: false,
-      ssr: false,
-      format: 'iife',
-      fileName: 'index',
-      alias: resolveAlias('index.es-prod')
-    }
-  ]
-
-  // 依次构建所有变体
-  for (const config of buildConfigs) {
-    await buildMainPackageConfig(packagePath, pkg, outDir, config)
-  }
 }
 
 /**
@@ -321,13 +154,21 @@ async function buildPackage(
 
   // 根据包类型选择构建方式
   if (packageDirName === 'vitarx') {
-    await buildMainPackage(packagePath, pkg, dist)
+    await viteBuild(packagePath, pkg, dist, { external: NODE_EXTERNALS })
+    await viteBuild(packagePath, pkg, dist, {
+      dts: false,
+      format: 'iife',
+      define: { __DEV__: false, __SSR__: false },
+      fileName: 'index.iife'
+    })
+    await viteBuild(packagePath, pkg, dist, {
+      dts: false,
+      format: 'iife',
+      define: { __DEV__: false, __SSR__: false },
+      fileName: 'index.iife.prod'
+    })
   } else {
-    // 子包需要构建 4 个变体
-    await buildSubPackage(packagePath, pkg, dist, { dev: true, ssr: false, dts: true })
-    await buildSubPackage(packagePath, pkg, dist, { dev: true, ssr: true })
-    await buildSubPackage(packagePath, pkg, dist, { dev: false, ssr: false })
-    await buildSubPackage(packagePath, pkg, dist, { dev: false, ssr: true })
+    await viteBuild(packagePath, pkg, dist, { external: getExternalModules(pkg.dependencies) })
   }
 
   log.success(`\n✓ Bundle ${pkg.name} compilation completed`)

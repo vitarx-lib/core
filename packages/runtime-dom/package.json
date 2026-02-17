@@ -15,7 +15,7 @@
   },
   "type": "module",
   "main": "dist/index.es.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/index.es.d.ts",
   "files": [
     "dist",
     "LICENSE",
@@ -24,7 +24,7 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/index.d.ts",
+        "types": "./dist/index.es.d.ts",
         "default": "./dist/index.es.js"
       }
     }

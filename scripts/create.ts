@@ -36,12 +36,12 @@ const packageJson = {
   },
   type: 'module',
   module: 'dist/index.es.js',
-  types: 'dist/index.d.ts',
+  types: 'dist/index.es.d.ts',
   files: ['dist', 'LICENSE', 'README.md'],
   exports: {
     '.': {
       import: {
-        types: './dist/index.d.ts',
+        types: './dist/index.es.d.ts',
         default: './dist/index.es.js'
       }
     }
