@@ -108,7 +108,7 @@ export interface IntrinsicAttributes {
  */
 export type StyleRules = Vitarx.HostCSSProperties
 
-type VModelValue<T> = T extends Ref ? T : Ref<T>
+type VModelValue<T> = T extends Ref<any, infer S> ? T | S : Ref<T> | T
 type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
   ? 'modelValue' extends keyof PickRequired<T>
     ?
