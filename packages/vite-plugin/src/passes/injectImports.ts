@@ -1,5 +1,8 @@
 import * as t from '@babel/types'
-import type { TransformContext } from '../context'
+import type { TransformContext, RefApiAliases } from '../context'
+
+const REF_APIS = ['ref', 'toRef', 'toRefs', 'shallowRef', 'computed']
+const RESPONSIVE_MODULES = ['vitarx', '@vitarx/responsive']
 
 export function collectExistingImports(program: t.Program): {
   localNames: Set<string>
@@ -37,6 +40,122 @@ export function collectExistingImports(program: t.Program): {
   }
 
   return { localNames, vitarxImports }
+}
+
+export function collectRefApiAliases(program: t.Program): RefApiAliases {
+  const aliases: RefApiAliases = {
+    ref: null,
+    toRef: null,
+    toRefs: null,
+    shallowRef: null,
+    computed: null
+  }
+
+  for (const node of program.body) {
+    if (node.type !== 'ImportDeclaration') continue
+    const source = node.source.value
+    if (!RESPONSIVE_MODULES.includes(source)) continue
+
+    for (const specifier of node.specifiers) {
+      if (specifier.type !== 'ImportSpecifier') continue
+
+      const importedName =
+        specifier.imported.type === 'Identifier'
+          ? specifier.imported.name
+          : specifier.imported.value
+
+      if (REF_APIS.includes(importedName)) {
+        aliases[importedName as keyof RefApiAliases] = specifier.local.name
+      }
+    }
+  }
+
+  return aliases
+}
+
+export function collectRefVariables(program: t.Program, refApiAliases: RefApiAliases): Set<string> {
+  const refVariables = new Set<string>()
+  const refApiLocalNames = new Set<string>()
+  const toRefsLocalNames = new Set<string>()
+
+  for (const key of Object.keys(refApiAliases)) {
+    const alias = refApiAliases[key as keyof RefApiAliases]
+    if (alias) {
+      if (key === 'toRefs') {
+        toRefsLocalNames.add(alias)
+      } else {
+        refApiLocalNames.add(alias)
+      }
+    } else if (REF_APIS.includes(key)) {
+      if (key === 'toRefs') {
+        toRefsLocalNames.add(key)
+      } else {
+        refApiLocalNames.add(key)
+      }
+    }
+  }
+
+  function collectFromPattern(pattern: t.LVal, variables: string[]): void {
+    if (pattern.type === 'Identifier') {
+      variables.push(pattern.name)
+    } else if (pattern.type === 'ObjectPattern') {
+      for (const prop of pattern.properties) {
+        if (prop.type === 'RestElement') {
+          collectFromPattern(prop.argument, variables)
+        } else {
+          collectFromPattern(prop.value as t.LVal, variables)
+        }
+      }
+    } else if (pattern.type === 'ArrayPattern') {
+      for (const elem of pattern.elements) {
+        if (elem) {
+          collectFromPattern(elem as t.LVal, variables)
+        }
+      }
+    }
+  }
+
+  function collectFromObjectPattern(pattern: t.ObjectPattern, variables: string[]): void {
+    for (const prop of pattern.properties) {
+      if (prop.type === 'RestElement') {
+        collectFromPattern(prop.argument, variables)
+      } else if (prop.value.type === 'Identifier') {
+        variables.push(prop.value.name)
+      } else if (prop.value.type === 'ObjectPattern') {
+        collectFromObjectPattern(prop.value, variables)
+      }
+    }
+  }
+
+  for (const node of program.body) {
+    if (node.type !== 'VariableDeclaration') continue
+
+    for (const decl of node.declarations) {
+      if (!decl.init) continue
+      if (decl.id.type === 'VoidPattern') continue
+
+      const init = decl.init
+      if (init.type === 'CallExpression' && init.callee.type === 'Identifier') {
+        if (toRefsLocalNames.has(init.callee.name)) {
+          if (decl.id.type === 'ObjectPattern') {
+            const variables: string[] = []
+            collectFromObjectPattern(decl.id, variables)
+            for (const v of variables) {
+              refVariables.add(v)
+            }
+          }
+        } else if (refApiLocalNames.has(init.callee.name)) {
+          const variables: string[] = []
+          collectFromPattern(decl.id, variables)
+          for (const v of variables) {
+            refVariables.add(v)
+          }
+        }
+      }
+    }
+  }
+
+  return refVariables
 }
 
 export function collectLocalBindings(program: t.Program): Set<string> {

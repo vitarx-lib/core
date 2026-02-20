@@ -23,6 +23,14 @@ export interface VitarxImportAliases {
   isRef: string | null
 }
 
+export interface RefApiAliases {
+  ref: string | null
+  toRef: string | null
+  toRefs: string | null
+  shallowRef: string | null
+  computed: string | null
+}
+
 export interface TransformContext {
   code: string
   id: string
@@ -32,6 +40,8 @@ export interface TransformContext {
   imports: ImportInfo
   existingImports: Set<string>
   vitarxAliases: VitarxImportAliases
+  refApiAliases: RefApiAliases
+  refVariables: Set<string>
 }
 
 export function createContext(
@@ -68,6 +78,14 @@ export function createContext(
       unref: null,
       isRef: null,
     },
+    refApiAliases: {
+      ref: null,
+      toRef: null,
+      toRefs: null,
+      shallowRef: null,
+      computed: null,
+    },
+    refVariables: new Set(),
   }
 }
 

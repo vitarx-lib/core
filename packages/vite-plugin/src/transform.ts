@@ -8,7 +8,13 @@ import { processPureCompileComponent } from './passes/processPureCompileComponen
 import { processVIfChain } from './passes/processVIfChain'
 import { processJSXFragment } from './passes/processJSXFragment'
 import { processJSXElement } from './passes/processJSXElement'
-import { injectImports, collectExistingImports, collectLocalBindings } from './passes/injectImports'
+import { 
+  injectImports, 
+  collectExistingImports, 
+  collectLocalBindings,
+  collectRefApiAliases,
+  collectRefVariables
+} from './passes/injectImports'
 import { isJSXElement, isJSXFragment, isPureCompileComponent, getJSXElementName } from './utils/ast'
 
 export interface TransformResult {
@@ -68,6 +74,10 @@ export async function transform(
       ctx.vitarxAliases[apiName] = `${apiName}$1`
     }
   }
+
+  const refApiAliases = collectRefApiAliases(ast.program)
+  ctx.refApiAliases = refApiAliases
+  ctx.refVariables = collectRefVariables(ast.program, refApiAliases)
 
   traverse(ast, {
     JSXElement: {

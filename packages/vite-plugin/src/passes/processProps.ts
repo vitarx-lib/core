@@ -7,7 +7,7 @@ import {
   isNumericLiteral,
   isBooleanLiteral,
   isJSXExpressionContainer,
-  getAlias,
+  getAlias
 } from '../utils/ast'
 import { createError } from '../error'
 
@@ -17,10 +17,7 @@ export interface PropsResult {
   hasVBind: boolean
 }
 
-export function processProps(
-  node: t.JSXElement,
-  ctx: TransformContext
-): PropsResult {
+export function processProps(node: t.JSXElement, ctx: TransformContext): PropsResult {
   const attributes = node.openingElement.attributes
   const properties: (t.ObjectProperty | t.ObjectMethod | t.SpreadElement)[] = []
   const directives = new Map<string, t.Expression>()
@@ -55,12 +52,19 @@ export function processProps(
               throw createError('E001', node)
             }
             if (attr.value && attr.value.type === 'JSXExpressionContainer') {
-              properties.push(t.objectProperty(t.stringLiteral('v-bind'), attr.value.expression as t.Expression))
+              properties.push(
+                t.objectProperty(t.stringLiteral('v-bind'), attr.value.expression as t.Expression)
+              )
               hasVBind = true
             }
             continue
           }
-          if (directiveName !== 'v-if' && directiveName !== 'v-else-if' && directiveName !== 'v-else' && directiveName !== 'v-model') {
+          if (
+            directiveName !== 'v-if' &&
+            directiveName !== 'v-else-if' &&
+            directiveName !== 'v-else' &&
+            directiveName !== 'v-model'
+          ) {
             const value = getAttributeValue(attr.value, ctx)
             directives.set(directiveName, value)
           }
@@ -84,7 +88,9 @@ export function processProps(
               throw createError('E001', node)
             }
             if (attr.value && attr.value.type === 'JSXExpressionContainer') {
-              properties.push(t.objectProperty(t.stringLiteral('v-bind'), attr.value.expression as t.Expression))
+              properties.push(
+                t.objectProperty(t.stringLiteral('v-bind'), attr.value.expression as t.Expression)
+              )
               hasVBind = true
             }
             continue
@@ -130,10 +136,7 @@ export function processProps(
   return { props, directives, hasVBind }
 }
 
-function getAttributeValue(
-  value: t.JSXAttribute['value'],
-  ctx: TransformContext
-): t.Expression {
+function getAttributeValue(value: t.JSXAttribute['value'], ctx: TransformContext): t.Expression {
   if (!value) {
     return t.booleanLiteral(true)
   }
@@ -162,15 +165,22 @@ function createProperty(
   }
 
   if (isIdentifier(value)) {
+    if (ctx.refVariables.has(value.name)) {
+      return t.objectMethod(
+        'get',
+        t.identifier(key),
+        [],
+        t.blockStatement([t.returnStatement(t.memberExpression(value, t.identifier('value')))])
+      )
+    }
+
     markImport(ctx, 'unref')
     const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
     return t.objectMethod(
       'get',
       t.identifier(key),
       [],
-      t.blockStatement([
-        t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))
-      ])
+      t.blockStatement([t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))])
     )
   }
 
@@ -179,20 +189,11 @@ function createProperty(
       'get',
       t.identifier(key),
       [],
-      t.blockStatement([
-        t.returnStatement(value)
-      ])
+      t.blockStatement([t.returnStatement(value)])
     )
   }
 
-  return t.objectMethod(
-    'get',
-    t.identifier(key),
-    [],
-    t.blockStatement([
-      t.returnStatement(value)
-    ])
-  )
+  return t.objectMethod('get', t.identifier(key), [], t.blockStatement([t.returnStatement(value)]))
 }
 
 function createVModelProps(
@@ -209,71 +210,96 @@ function createVModelProps(
   const isRefAlias = getAlias(ctx.vitarxAliases, 'isRef')
 
   if (isIdentifier(value)) {
-    markImport(ctx, 'unref')
-    
-    props.push(t.objectMethod(
-      'get',
-      t.identifier('modelValue'),
-      [],
-      t.blockStatement([
-        t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))
-      ])
-    ))
+    const isKnownRef = ctx.refVariables.has(value.name)
 
-    const updateParam = t.identifier('v')
-    const updateBody: t.Statement[] = []
+    if (isKnownRef) {
+      props.push(
+        t.objectMethod(
+          'get',
+          t.identifier('modelValue'),
+          [],
+          t.blockStatement([t.returnStatement(t.memberExpression(value, t.identifier('value')))])
+        )
+      )
 
-    if (ctx.options.dev) {
-      markImport(ctx, 'isRef')
-      const locInfo = node.loc ? ` at ${ctx.filename}:${node.loc.start.line}:${node.loc.start.column + 1}` : ''
-      updateBody.push(
-        t.ifStatement(
-          t.unaryExpression('!', t.callExpression(t.identifier(isRefAlias), [value])),
-          t.blockStatement([
-            t.throwStatement(
-              t.newExpression(t.identifier('Error'), [
-                t.stringLiteral(
-                  `[v-model] Identifier must be a ref. Invalid usage${locInfo}`
-                )
-              ])
+      const updateParam = t.identifier('v')
+      props.push(
+        t.objectProperty(
+          t.stringLiteral('onUpdate:modelValue'),
+          t.arrowFunctionExpression(
+            [updateParam],
+            t.assignmentExpression(
+              '=',
+              t.memberExpression(value, t.identifier('value')),
+              updateParam
             )
-          ])
+          )
+        )
+      )
+    } else {
+      markImport(ctx, 'unref')
+
+      props.push(
+        t.objectMethod(
+          'get',
+          t.identifier('modelValue'),
+          [],
+          t.blockStatement([t.returnStatement(t.callExpression(t.identifier(unrefAlias), [value]))])
+        )
+      )
+
+      const updateParam = t.identifier('v')
+      const updateBody: t.Statement[] = []
+
+      if (ctx.options.dev) {
+        markImport(ctx, 'isRef')
+        const locInfo = node.loc
+          ? ` at ${ctx.filename}:${node.loc.start.line}:${node.loc.start.column + 1}`
+          : ''
+        updateBody.push(
+          t.ifStatement(
+            t.unaryExpression('!', t.callExpression(t.identifier(isRefAlias), [value])),
+            t.blockStatement([
+              t.throwStatement(
+                t.newExpression(t.identifier('Error'), [
+                  t.stringLiteral(`[v-model] Identifier must be a ref. Invalid usage${locInfo}`)
+                ])
+              )
+            ])
+          )
+        )
+      }
+
+      updateBody.push(
+        t.expressionStatement(
+          t.assignmentExpression('=', t.memberExpression(value, t.identifier('value')), updateParam)
+        )
+      )
+
+      props.push(
+        t.objectProperty(
+          t.stringLiteral('onUpdate:modelValue'),
+          t.arrowFunctionExpression([updateParam], t.blockStatement(updateBody))
         )
       )
     }
-
-    updateBody.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          '=',
-          t.memberExpression(value, t.identifier('value')),
-          updateParam
-        )
+  } else {
+    props.push(
+      t.objectMethod(
+        'get',
+        t.identifier('modelValue'),
+        [],
+        t.blockStatement([t.returnStatement(value)])
       )
     )
 
-    props.push(t.objectProperty(
-      t.stringLiteral('onUpdate:modelValue'),
-      t.arrowFunctionExpression([updateParam], t.blockStatement(updateBody))
-    ))
-  } else {
-    props.push(t.objectMethod(
-      'get',
-      t.identifier('modelValue'),
-      [],
-      t.blockStatement([
-        t.returnStatement(value)
-      ])
-    ))
-
     const updateParam = t.identifier('v')
-    props.push(t.objectProperty(
-      t.stringLiteral('onUpdate:modelValue'),
-      t.arrowFunctionExpression(
-        [updateParam],
-        t.assignmentExpression('=', value, updateParam)
+    props.push(
+      t.objectProperty(
+        t.stringLiteral('onUpdate:modelValue'),
+        t.arrowFunctionExpression([updateParam], t.assignmentExpression('=', value, updateParam))
       )
-    ))
+    )
   }
 
   return props
