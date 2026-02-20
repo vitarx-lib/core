@@ -101,6 +101,60 @@ describe('v-model 指令', () => {
   })
 })
 
+describe('v-model ref 变量优化', () => {
+  it('已知 ref 变量直接使用 .value', async () => {
+    const code = `import { ref } from 'vitarx'; const value = ref(''); const App = () => <Input v-model={value} />`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { ref } from 'vitarx';
+      import { createView } from "vitarx";
+      const value = ref('');
+      const App = () => /* @__PURE__ */createView(Input, {
+        get modelValue() {
+          return value.value;
+        },
+        "onUpdate:modelValue": v => value.value = v
+      });"
+    `)
+  })
+
+  it('已知 ref 变量 dev 模式不添加 isRef 检查', async () => {
+    const code = `import { ref } from 'vitarx'; const value = ref(''); const App = () => <Input v-model={value} />`
+    const result = await compile(code, devOptions)
+    expect(result).toMatchInlineSnapshot(`
+      "import { ref } from 'vitarx';
+      import { createView } from "vitarx";
+      const value = ref('');
+      const App = () => /* @__PURE__ */createView(Input, {
+        get modelValue() {
+          return value.value;
+        },
+        "onUpdate:modelValue": v => value.value = v
+      }, {
+        fileName: "/test.tsx",
+        lineNumber: 1,
+        columnNumber: 72
+      });"
+    `)
+  })
+
+  it('使用别名的 ref 变量正确识别', async () => {
+    const code = `import { ref as r } from 'vitarx'; const value = r(''); const App = () => <Input v-model={value} />`
+    const result = await compile(code)
+    expect(result).toMatchInlineSnapshot(`
+      "import { ref as r } from 'vitarx';
+      import { createView } from "vitarx";
+      const value = r('');
+      const App = () => /* @__PURE__ */createView(Input, {
+        get modelValue() {
+          return value.value;
+        },
+        "onUpdate:modelValue": v => value.value = v
+      });"
+    `)
+  })
+})
+
 describe('v-model 错误处理', () => {
   it('v-model 与 modelValue 同时使用报错', async () => {
     const code = `const App = () => <Input v-model={value} modelValue={value} />`
