@@ -8,7 +8,6 @@ import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import * as t from '@babel/types'
 import { createContext } from './context'
-import type { CompileOptions } from './index'
 import {
   collectExistingImports,
   collectLocalBindings,
@@ -27,7 +26,13 @@ export interface TransformResult {
   code: string
   map: any
 }
-
+export interface CompileOptions {
+  hmr: boolean
+  dev: boolean
+  ssr: boolean
+  runtimeModule: string
+  sourceMap: boolean | 'inline' | 'both'
+}
 /** 用于追踪已处理的节点 */
 const processedNodes = new WeakSet<t.Node>()
 

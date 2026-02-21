@@ -1,5 +1,5 @@
 import type { File } from '@babel/types'
-import type { CompileOptions } from './index'
+import type { CompileOptions } from './transform.js'
 
 export interface ImportInfo {
   createView: boolean

@@ -1,13 +1,5 @@
 import type { Plugin } from 'vite'
-import { transform } from './transform.js'
-
-export interface CompileOptions {
-  hmr: boolean
-  dev: boolean
-  ssr: boolean
-  runtimeModule: string
-  sourceMap: boolean | 'inline' | 'both'
-}
+import { type CompileOptions, transform } from './transform.js'
 
 /**
  * vite-plugin-vitarx
