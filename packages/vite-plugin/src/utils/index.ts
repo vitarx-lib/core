@@ -54,3 +54,22 @@ export {
   collectPatternBindings,
   collectObjectPatternBindings
 } from './pattern-helpers'
+
+// Branch 工厂
+export {
+  createBranch,
+  createBranchFromNodes,
+  createBinaryBranch,
+  buildNestedCondition,
+  type BranchConfig
+} from './branch-factory'
+
+// v-if 链处理工具
+export {
+  validateVIfChain,
+  collectVIfChainInfo,
+  filterNonWhitespaceChildren,
+  isValidVIfChainElement,
+  collectFragmentVIfChains,
+  type VIfChainInfo
+} from './vif-helpers'

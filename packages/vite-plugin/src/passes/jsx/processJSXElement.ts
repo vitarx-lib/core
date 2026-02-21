@@ -24,7 +24,8 @@ import {
   isVElse,
   isVIf,
   isVIfChain,
-  removeVDirectives
+  removeVDirectives,
+  createBranch
 } from '../../utils/index.js'
 import { processDirectives } from '../directives'
 import { processProps } from '../props'
@@ -142,31 +143,17 @@ function transformSingleVIf(node: t.JSXElement, ctx: TransformContext): t.CallEx
   const condition = getDirectiveValue(node, 'v-if')
   if (!condition) return null
 
-  const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
-  const branchAlias = getAlias(ctx.vitarxAliases, 'branch')
-
-  // 构建条件表达式
-  const conditionExpr = isIdentifier(condition) ? createUnrefCall(condition, unrefAlias) : condition
-
   // 移除 v- 指令
   removeVDirectives(node)
-
-  markImport(ctx, 'branch')
-  markImport(ctx, 'unref')
 
   // 转换元素
   const transformedNode = transformJSXElement(node, ctx, false)
   if (!transformedNode) return null
 
   // 生成 branch 调用
-  const branchCall = addPureComment(
-    createBranchCall(
-      createArrowFunction(
-        t.conditionalExpression(conditionExpr, t.numericLiteral(0), t.nullLiteral())
-      ),
-      [createArrowFunction(transformedNode)],
-      branchAlias
-    )
+  const branchCall = createBranch(
+    { conditions: [condition], branches: [createArrowFunction(transformedNode)] },
+    ctx
   )
 
   if (node.loc) {

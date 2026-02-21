@@ -9,7 +9,6 @@ import {
   addPureComment,
   createAccessCall,
   createArrowFunction,
-  createBranchCall,
   createDynamicCall,
   getAlias,
   isBooleanLiteral,
@@ -22,7 +21,8 @@ import {
   isLogicalExpression,
   isMemberExpression,
   isNumericLiteral,
-  isStringLiteral
+  isStringLiteral,
+  createBinaryBranch
 } from '../../utils/index.js'
 
 /**
@@ -145,33 +145,10 @@ function processConditionalExpression(
 ): t.CallExpression {
   const { test, consequent, alternate } = node
 
-  // 构建条件表达式
-  let conditionExpr: t.Expression
-  if (isIdentifier(test)) {
-    markImport(ctx, 'unref')
-    const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
-    conditionExpr = t.callExpression(t.identifier(unrefAlias), [test])
-  } else {
-    conditionExpr = test
-  }
-
   // 处理分支
-  const processedConsequent = processChildNode(consequent, ctx)
-  const processedAlternate = processChildNode(alternate, ctx)
+  const processedConsequent = processChildNode(consequent, ctx) || t.nullLiteral()
+  const processedAlternate = processChildNode(alternate, ctx) || t.nullLiteral()
 
-  // 生成 branch 调用
-  markImport(ctx, 'branch')
-  const branchAlias = getAlias(ctx.vitarxAliases, 'branch')
-  return addPureComment(
-    createBranchCall(
-      createArrowFunction(
-        t.conditionalExpression(conditionExpr, t.numericLiteral(0), t.numericLiteral(1))
-      ),
-      [
-        createArrowFunction(processedConsequent || t.nullLiteral()),
-        createArrowFunction(processedAlternate || t.nullLiteral())
-      ],
-      branchAlias
-    )
-  )
+  // 使用公共的 createBinaryBranch
+  return createBinaryBranch(test, processedConsequent, processedAlternate, ctx)
 }

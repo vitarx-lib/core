@@ -5,13 +5,11 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
-import { markImport, TransformContext } from '../../context'
+import { TransformContext } from '../../context'
 import { createError } from '../../error'
 import {
-  addPureComment,
   createArrowFunction,
-  createBranchCall,
-  getAlias,
+  createBranch,
   getJSXAttributeByName,
   getJSXElementName,
   isJSXElement,
@@ -25,13 +23,51 @@ import {
  */
 export function processSwitch(path: NodePath<t.JSXElement>, ctx: TransformContext): void {
   const children = path.node.children
-  const matchNodes: t.JSXElement[] = []
 
   // 获取 fallback 属性
-  const fallbackAttr = getJSXAttributeByName(path.node, 'fallback')
-  const fallbackValue = extractAttributeValue(fallbackAttr)
+  const fallbackValue = extractFallbackValue(path.node)
 
   // 收集 Match 子节点
+  const matchNodes = collectMatchNodes(children)
+
+  // 构建条件和分支
+  const { conditions, branches } = buildConditionsAndBranches(matchNodes)
+
+  // 添加 fallback 分支
+  if (fallbackValue) {
+    conditions.push(t.booleanLiteral(true))
+    branches.push(createArrowFunction(fallbackValue))
+  }
+
+  // 生成 branch 调用
+  const branchCall = createBranch({ conditions, branches, useRef: false }, ctx)
+
+  if (path.node.loc) {
+    branchCall.loc = path.node.loc
+  }
+
+  path.replaceWith(branchCall)
+}
+
+/**
+ * 提取 fallback 属性值
+ */
+function extractFallbackValue(node: t.JSXElement): t.Expression | null {
+  const fallbackAttr = getJSXAttributeByName(node, 'fallback')
+  if (!fallbackAttr?.value) return null
+
+  if (fallbackAttr.value.type === 'JSXExpressionContainer') {
+    return fallbackAttr.value.expression as t.Expression
+  }
+  return fallbackAttr.value
+}
+
+/**
+ * 收集 Match 子节点
+ */
+function collectMatchNodes(children: t.Node[]): t.JSXElement[] {
+  const matchNodes: t.JSXElement[] = []
+
   for (const child of children) {
     if (isJSXText(child)) continue
 
@@ -48,44 +84,10 @@ export function processSwitch(path: NodePath<t.JSXElement>, ctx: TransformContex
   }
 
   if (matchNodes.length === 0) {
-    throw createError('E006', path.node, 'Switch must have at least one Match child')
+    throw createError('E006', undefined, 'Switch must have at least one Match child')
   }
 
-  // 构建条件和分支
-  const { conditions, branches } = buildConditionsAndBranches(matchNodes)
-
-  // 构建条件表达式
-  const conditionExpr = buildConditionExpression(conditions, fallbackValue !== null)
-
-  // 添加 fallback 分支
-  if (fallbackValue) {
-    branches.push(createArrowFunction(fallbackValue))
-  }
-
-  // 生成 branch 调用
-  markImport(ctx, 'branch')
-  const branchAlias = getAlias(ctx.vitarxAliases, 'branch')
-  const branchCall = addPureComment(
-    createBranchCall(createArrowFunction(conditionExpr), branches, branchAlias)
-  )
-
-  if (path.node.loc) {
-    branchCall.loc = path.node.loc
-  }
-
-  path.replaceWith(branchCall)
-}
-
-/**
- * 提取属性值
- */
-function extractAttributeValue(attr: t.JSXAttribute | undefined): t.Expression | null {
-  if (!attr || !attr.value) return null
-
-  if (attr.value.type === 'JSXExpressionContainer') {
-    return attr.value.expression as t.Expression
-  }
-  return attr.value
+  return matchNodes
 }
 
 /**
@@ -100,7 +102,7 @@ function buildConditionsAndBranches(matchNodes: t.JSXElement[]): {
 
   for (const matchNode of matchNodes) {
     const whenAttr = getJSXAttributeByName(matchNode, 'when')
-    if (!whenAttr || !whenAttr.value) {
+    if (!whenAttr?.value) {
       throw createError('E007', matchNode)
     }
 
@@ -129,32 +131,4 @@ function buildConditionsAndBranches(matchNodes: t.JSXElement[]): {
   }
 
   return { conditions, branches }
-}
-
-/**
- * 构建条件表达式
- * 从后向前构建嵌套的三元表达式
- */
-function buildConditionExpression(conditions: t.Expression[], hasFallback: boolean): t.Expression {
-  let conditionExpr: t.Expression | null = null
-  const lastIndex = conditions.length - 1
-
-  for (let i = lastIndex; i >= 0; i--) {
-    if (conditionExpr === null) {
-      // 最后一个条件
-      if (hasFallback) {
-        conditionExpr = t.conditionalExpression(
-          conditions[i],
-          t.numericLiteral(i),
-          t.numericLiteral(lastIndex + 1)
-        )
-      } else {
-        conditionExpr = t.conditionalExpression(conditions[i], t.numericLiteral(i), t.nullLiteral())
-      }
-    } else {
-      conditionExpr = t.conditionalExpression(conditions[i], t.numericLiteral(i), conditionExpr)
-    }
-  }
-
-  return conditionExpr || t.nullLiteral()
 }
