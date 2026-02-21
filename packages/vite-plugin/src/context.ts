@@ -1,4 +1,4 @@
-import type { Node, File } from '@babel/types'
+import type { File } from '@babel/types'
 import type { CompileOptions } from './index'
 
 export interface ImportInfo {
@@ -65,7 +65,7 @@ export function createContext(
       access: false,
       withDirectives: false,
       unref: false,
-      isRef: false,
+      isRef: false
     },
     existingImports: new Set(),
     vitarxAliases: {
@@ -76,37 +76,19 @@ export function createContext(
       access: null,
       withDirectives: null,
       unref: null,
-      isRef: null,
+      isRef: null
     },
     refApiAliases: {
       ref: null,
       toRef: null,
       toRefs: null,
       shallowRef: null,
-      computed: null,
+      computed: null
     },
-    refVariables: new Set(),
+    refVariables: new Set()
   }
 }
 
 export function markImport(ctx: TransformContext, name: keyof ImportInfo): void {
   ctx.imports[name] = true
-}
-
-export function getLocation(node: Node): { line: number; column: number } | null {
-  if (node.loc) {
-    return {
-      line: node.loc.start.line,
-      column: node.loc.start.column + 1,
-    }
-  }
-  return null
-}
-
-export function getIdentifierName(ctx: TransformContext, apiName: keyof VitarxImportAliases): string {
-  const alias = ctx.vitarxAliases[apiName]
-  if (alias) {
-    return alias
-  }
-  return apiName
 }
