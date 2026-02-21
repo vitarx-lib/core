@@ -6,6 +6,7 @@
 import * as t from '@babel/types'
 import { REF_APIS, RESPONSIVE_MODULES } from '../../constants/index.js'
 import type { RefApiAliases } from '../../context.js'
+import { collectPatternBindings, collectObjectPatternBindings } from '../../utils/index.js'
 
 /**
  * 收集 ref API 的别名
@@ -51,10 +52,7 @@ export function collectRefApiAliases(program: t.Program): RefApiAliases {
  * @param refApiAliases - ref API 别名映射
  * @returns ref 变量名集合
  */
-export function collectRefVariables(
-  program: t.Program,
-  refApiAliases: RefApiAliases
-): Set<string> {
+export function collectRefVariables(program: t.Program, refApiAliases: RefApiAliases): Set<string> {
   const refVariables = new Set<string>()
   const { refApiLocalNames, toRefsLocalNames } = buildApiNameSets(refApiAliases)
 
@@ -111,42 +109,4 @@ function buildApiNameSets(refApiAliases: RefApiAliases): {
   }
 
   return { refApiLocalNames, toRefsLocalNames }
-}
-
-/**
- * 从模式中收集变量名
- */
-function collectPatternBindings(pattern: t.LVal, variables: Set<string>): void {
-  if (pattern.type === 'Identifier') {
-    variables.add(pattern.name)
-  } else if (pattern.type === 'ObjectPattern') {
-    for (const prop of pattern.properties) {
-      if (prop.type === 'RestElement') {
-        collectPatternBindings(prop.argument, variables)
-      } else {
-        collectPatternBindings(prop.value as t.LVal, variables)
-      }
-    }
-  } else if (pattern.type === 'ArrayPattern') {
-    for (const elem of pattern.elements) {
-      if (elem) {
-        collectPatternBindings(elem as t.LVal, variables)
-      }
-    }
-  }
-}
-
-/**
- * 从对象解构模式中收集变量名（用于 toRefs）
- */
-function collectObjectPatternBindings(pattern: t.ObjectPattern, variables: Set<string>): void {
-  for (const prop of pattern.properties) {
-    if (prop.type === 'RestElement') {
-      collectPatternBindings(prop.argument, variables)
-    } else if (prop.value.type === 'Identifier') {
-      variables.add(prop.value.name)
-    } else if (prop.value.type === 'ObjectPattern') {
-      collectObjectPatternBindings(prop.value, variables)
-    }
-  }
 }

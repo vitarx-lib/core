@@ -48,3 +48,9 @@ export {
   addPureComment,
   getAlias
 } from './ast-builders'
+
+// 模式处理辅助函数
+export {
+  collectPatternBindings,
+  collectObjectPatternBindings
+} from './pattern-helpers'

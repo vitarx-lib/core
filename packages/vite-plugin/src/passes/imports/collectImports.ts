@@ -5,6 +5,7 @@
  */
 import * as t from '@babel/types'
 import { VITARX_MODULE } from '../../constants/index.js'
+import { collectPatternBindings } from '../../utils/index.js'
 
 /**
  * 收集现有导入信息
@@ -72,27 +73,4 @@ export function collectLocalBindings(program: t.Program): Set<string> {
   }
 
   return bindings
-}
-
-/**
- * 从模式中收集变量名
- */
-function collectPatternBindings(pattern: t.LVal, variables: Set<string>): void {
-  if (pattern.type === 'Identifier') {
-    variables.add(pattern.name)
-  } else if (pattern.type === 'ObjectPattern') {
-    for (const prop of pattern.properties) {
-      if (prop.type === 'RestElement') {
-        collectPatternBindings(prop.argument, variables)
-      } else {
-        collectPatternBindings(prop.value as t.LVal, variables)
-      }
-    }
-  } else if (pattern.type === 'ArrayPattern') {
-    for (const elem of pattern.elements) {
-      if (elem) {
-        collectPatternBindings(elem as t.LVal, variables)
-      }
-    }
-  }
 }
