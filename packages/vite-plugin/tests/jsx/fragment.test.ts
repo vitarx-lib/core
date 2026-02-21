@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile } from './utils'
+import { compile } from '../utils'
 
 describe('Fragment', () => {
   it('空 Fragment', async () => {

@@ -1,4 +1,5 @@
-import { CompileOptions } from '../src/index'
+import { CompileOptions } from '../../src/index'
+import { transform } from '../../src/transform.js'
 
 export const defaultOptions: CompileOptions = {
   hmr: false,
@@ -16,8 +17,10 @@ export const devOptions: CompileOptions = {
   sourceMap: false
 }
 
-export async function compile(code: string, options: CompileOptions = defaultOptions): Promise<string> {
-  const { transform } = await import('../src/index')
+export async function compile(
+  code: string,
+  options: CompileOptions = defaultOptions
+): Promise<string> {
   const result = await transform(code, '/test.tsx', options)
   return result?.code ?? ''
 }

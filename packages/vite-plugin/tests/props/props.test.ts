@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile } from './utils'
+import { compile } from '../utils'
 
 describe('Props getter 行为', () => {
   it('静态字符串属性', async () => {
@@ -102,8 +102,7 @@ describe('ref 变量优化', () => {
     const code = `import { ref } from 'vitarx'; const count = ref(0); const App = () => <div count={count}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { ref } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { ref, createView } from 'vitarx';
       const count = ref(0);
       const App = () => /* @__PURE__ */createView("div", {
         get count() {
@@ -117,8 +116,7 @@ describe('ref 变量优化', () => {
     const code = `import { toRef } from 'vitarx'; const count = toRef(props, 'count'); const App = () => <div count={count}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { toRef } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { toRef, createView } from 'vitarx';
       const count = toRef(props, 'count');
       const App = () => /* @__PURE__ */createView("div", {
         get count() {
@@ -132,8 +130,7 @@ describe('ref 变量优化', () => {
     const code = `import { shallowRef } from 'vitarx'; const count = shallowRef(0); const App = () => <div count={count}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { shallowRef } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { shallowRef, createView } from 'vitarx';
       const count = shallowRef(0);
       const App = () => /* @__PURE__ */createView("div", {
         get count() {
@@ -147,8 +144,7 @@ describe('ref 变量优化', () => {
     const code = `import { computed } from 'vitarx'; const double = computed(() => count.value * 2); const App = () => <div double={double}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { computed } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { computed, createView } from 'vitarx';
       const double = computed(() => count.value * 2);
       const App = () => /* @__PURE__ */createView("div", {
         get double() {
@@ -162,8 +158,7 @@ describe('ref 变量优化', () => {
     const code = `import { ref as r } from 'vitarx'; const count = r(0); const App = () => <div count={count}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { ref as r } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { ref as r, createView } from 'vitarx';
       const count = r(0);
       const App = () => /* @__PURE__ */createView("div", {
         get count() {
@@ -177,8 +172,8 @@ describe('ref 变量优化', () => {
     const code = `import { ref } from '@vitarx/responsive'; const count = ref(0); const App = () => <div count={count}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { ref } from '@vitarx/responsive';
-      import { createView } from "vitarx";
+      "import { createView } from "vitarx";
+      import { ref } from '@vitarx/responsive';
       const count = ref(0);
       const App = () => /* @__PURE__ */createView("div", {
         get count() {
@@ -206,8 +201,7 @@ describe('ref 变量优化', () => {
     const code = `import { toRefs } from 'vitarx'; const { a, b } = toRefs(props); const App = () => <div a={a} b={b}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { toRefs } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { toRefs, createView } from 'vitarx';
       const {
         a,
         b
@@ -227,8 +221,7 @@ describe('ref 变量优化', () => {
     const code = `import { toRefs as t } from 'vitarx'; const { a } = t(props); const App = () => <div a={a}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { toRefs as t } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { toRefs as t, createView } from 'vitarx';
       const {
         a
       } = t(props);
@@ -244,8 +237,7 @@ describe('ref 变量优化', () => {
     const code = `import { ref } from 'vitarx'; const { a, b } = { a: ref(1), b: ref(2) }; const App = () => <div a={a} b={b}></div>`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { ref } from 'vitarx';
-      import { createView, unref } from "vitarx";
+      "import { ref, createView, unref } from 'vitarx';
       const {
         a,
         b

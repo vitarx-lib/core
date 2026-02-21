@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile, devOptions } from './utils'
+import { compile, devOptions } from '../utils'
 
 describe('Dev 位置信息', () => {
   it('dev 模式注入位置信息', async () => {

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { compile, devOptions } from './utils'
+import { describe, expect, it } from 'vitest'
+import { compile, devOptions } from '../utils/index.js'
 
 describe('v-model 指令', () => {
   it('v-model 绑定 Identifier (ref)', async () => {
@@ -106,8 +106,7 @@ describe('v-model ref 变量优化', () => {
     const code = `import { ref } from 'vitarx'; const value = ref(''); const App = () => <Input v-model={value} />`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { ref } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { ref, createView } from 'vitarx';
       const value = ref('');
       const App = () => /* @__PURE__ */createView(Input, {
         get modelValue() {
@@ -122,8 +121,7 @@ describe('v-model ref 变量优化', () => {
     const code = `import { ref } from 'vitarx'; const value = ref(''); const App = () => <Input v-model={value} />`
     const result = await compile(code, devOptions)
     expect(result).toMatchInlineSnapshot(`
-      "import { ref } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { ref, createView } from 'vitarx';
       const value = ref('');
       const App = () => /* @__PURE__ */createView(Input, {
         get modelValue() {
@@ -142,8 +140,7 @@ describe('v-model ref 变量优化', () => {
     const code = `import { ref as r } from 'vitarx'; const value = r(''); const App = () => <Input v-model={value} />`
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
-      "import { ref as r } from 'vitarx';
-      import { createView } from "vitarx";
+      "import { ref as r, createView } from 'vitarx';
       const value = r('');
       const App = () => /* @__PURE__ */createView(Input, {
         get modelValue() {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { CompileOptions } from '../src/index.js'
-import { compile } from './utils'
+import type { CompileOptions } from '../../src/index.js'
+import { compile } from '../utils'
 
 describe('HMR 协议结构', () => {
   it('HMR 模式下不生成 HMR 代码（当前版本暂不实现）', async () => {

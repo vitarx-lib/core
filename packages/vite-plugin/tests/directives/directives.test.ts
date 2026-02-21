@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile } from './utils'
+import { compile } from '../utils'
 
 describe('指令转换', () => {
   it('v-show 指令', async () => {

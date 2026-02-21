@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile } from './utils'
+import { compile } from '../utils'
 
 describe('Children 处理', () => {
   it('Identifier 子元素保持原样（不使用 unref）', async () => {

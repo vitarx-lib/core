@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { compile } from './utils'
+import { describe, expect, it } from 'vitest'
+import { compile } from '../utils'
 
 describe('v-if 连续链', () => {
   it('单独 v-if 生成 branch', async () => {
@@ -50,5 +50,17 @@ describe('v-if 连续链', () => {
         })])
       });"
     `)
+  })
+
+  it('v-else 无前置 v-if 抛出错误', async () => {
+    const code = `const App = () => <div v-else>text</div>`
+    await expect(compile(code)).rejects.toThrow('[E003]')
+  })
+
+  it('v-else-if 无前置 v-if 抛出错误', async () => {
+    const code = `const App = () => <>
+      <div v-else-if={b}>text</div>
+    </>`
+    await expect(compile(code)).rejects.toThrow('[E004]')
   })
 })

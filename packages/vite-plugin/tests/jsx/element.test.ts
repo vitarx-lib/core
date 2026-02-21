@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile } from './utils'
+import { compile } from '../utils'
 
 describe('基础元素转换', () => {
   it('转换简单的原生元素', async () => {

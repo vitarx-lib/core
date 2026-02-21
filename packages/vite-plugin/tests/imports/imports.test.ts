@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { compile } from './utils'
+import { compile } from '../utils'
 
 describe('Import 自动注入', () => {
   it('不使用任何 API 时不注入 import', async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile } from './utils'
+import { compile } from '../utils'
 
 describe('TSX 支持', () => {
   it('支持 TypeScript 类型注解', async () => {
