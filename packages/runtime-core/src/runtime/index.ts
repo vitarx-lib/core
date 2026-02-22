@@ -1,5 +1,5 @@
-export { getInstance, getApp, getComponentView, getRenderContext } from './context.js'
 export { withDirectives, defineDirective, resolveDirective } from './directive.js'
+export * from './context.js'
 export * from './hook.js'
 export * from './provide.js'
 export * from './renderer.js'
