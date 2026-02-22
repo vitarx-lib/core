@@ -7,18 +7,6 @@ import * as t from '@babel/types'
 import { HMR } from '../../constants/index.js'
 
 /**
- * HMR 注入配置
- */
-export interface HMRInjectConfig {
-  /** 模块 ID */
-  moduleId: string
-  /** 组件函数名 */
-  componentName: string
-  /** 组件内部变量名列表 */
-  variableNames: string[]
-}
-
-/**
  * 注入 HMR 客户端导入
  */
 export function injectHMRImport(program: t.Program): void {
@@ -68,7 +56,6 @@ export function injectGetInstanceImport(program: t.Program): void {
 export function createHMRRegistrationStatements(variableNames: string[]): t.Statement[] {
   const statements: t.Statement[] = []
 
-  // __$VITARX_HMR_VIEW_NODE$__ = getInstance()
   statements.push(
     t.expressionStatement(
       t.assignmentExpression(
@@ -79,7 +66,6 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     )
   )
 
-  // __$VITARX_HMR$__.instance.register(__$VITARX_HMR_VIEW_NODE$__)
   statements.push(
     t.expressionStatement(
       t.callExpression(
@@ -92,7 +78,6 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     )
   )
 
-  // 异步保存状态
   const stateProperties = variableNames.map(name =>
     t.objectMethod(
       'get',
@@ -102,9 +87,6 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     )
   )
 
-  const stateObject = t.objectExpression(stateProperties)
-
-  // __$VITARX_HMR_VIEW_NODE$__ && Promise.resolve().then(() => { ... })
   statements.push(
     t.expressionStatement(
       t.logicalExpression(
@@ -112,10 +94,7 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
         t.identifier(HMR.view),
         t.callExpression(
           t.memberExpression(
-            t.callExpression(
-              t.memberExpression(t.identifier('Promise'), t.identifier('resolve')),
-              []
-            ),
+            t.callExpression(t.memberExpression(t.identifier('Promise'), t.identifier('resolve')), []),
             t.identifier('then')
           ),
           [
@@ -126,66 +105,13 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
                   t.assignmentExpression(
                     '=',
                     t.memberExpression(t.identifier(HMR.view), t.identifier(HMR.state)),
-                    stateObject
+                    t.objectExpression(stateProperties)
                   )
                 )
               ])
             )
           ]
         )
-      )
-    )
-  )
-
-  return statements
-}
-
-/**
- * 创建模块级别的 HMR 绑定代码
- */
-export function createHMRBindingStatements(config: HMRInjectConfig): t.Statement[] {
-  const statements: t.Statement[] = []
-
-  // __$VITARX_HMR$__.instance.bindId(App, "moduleId")
-  statements.push(
-    t.expressionStatement(
-      t.callExpression(
-        t.memberExpression(
-          t.memberExpression(t.identifier(HMR.manager), t.identifier('instance')),
-          t.identifier('bindId')
-        ),
-        [t.identifier(config.componentName), t.stringLiteral(config.moduleId)]
-      )
-    )
-  )
-
-  // import.meta.hot.accept(mod => { __$VITARX_HMR$__.instance.update(mod); })
-  statements.push(
-    t.expressionStatement(
-      t.callExpression(
-        t.memberExpression(
-          t.memberExpression(
-            t.memberExpression(t.identifier('import'), t.identifier('meta')),
-            t.identifier('hot')
-          ),
-          t.identifier('accept')
-        ),
-        [
-          t.arrowFunctionExpression(
-            [t.identifier('mod')],
-            t.blockStatement([
-              t.expressionStatement(
-                t.callExpression(
-                  t.memberExpression(
-                    t.memberExpression(t.identifier(HMR.manager), t.identifier('instance')),
-                    t.identifier('update')
-                  ),
-                  [t.identifier('mod')]
-                )
-              )
-            ])
-          )
-        ]
       )
     )
   )

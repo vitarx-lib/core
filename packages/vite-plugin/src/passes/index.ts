@@ -40,10 +40,8 @@ export { processProps, type PropsResult } from './props/index.js'
 export {
   injectHMRImport,
   injectGetInstanceImport,
-  createHMRRegistrationStatements,
   collectLocalVariableNames,
-  injectHMRIntoFunction,
-  type HMRInjectConfig
+  injectHMRIntoFunction
 } from './hmr/index.js'
 
 // 转换工具

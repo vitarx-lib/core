@@ -4,7 +4,6 @@ export {
   isJSXFragment,
   isJSXText,
   isJSXExpressionContainer,
-  isJSXEmptyExpression,
   isIdentifier,
   isMemberExpression,
   isConditionalExpression,
@@ -21,7 +20,6 @@ export {
   isPureCompileComponent,
   isComponent,
   isNativeElement,
-  getJSXAttributes,
   getJSXAttributeByName,
   hasDirective,
   getDirectiveValue,
@@ -31,7 +29,7 @@ export {
   isVElse,
   removeVDirectives,
   removeAttribute,
-  getNonWhitespaceChildren
+  filterWhitespaceChildren
 } from './jsx-helpers'
 
 // AST 构建函数
@@ -42,7 +40,6 @@ export {
   createBranchCall,
   createCreateViewCall,
   createWithDirectivesCall,
-  createGetterProperty,
   createArrowFunction,
   createLocationObject,
   addPureComment,
@@ -58,7 +55,6 @@ export {
 // Branch 工厂
 export {
   createBranch,
-  createBranchFromNodes,
   createBinaryBranch,
   buildNestedCondition,
   type BranchConfig
@@ -68,8 +64,6 @@ export {
 export {
   validateVIfChain,
   collectVIfChainInfo,
-  filterNonWhitespaceChildren,
-  isValidVIfChainElement,
   collectFragmentVIfChains,
   type VIfChainInfo
 } from './vif-helpers'

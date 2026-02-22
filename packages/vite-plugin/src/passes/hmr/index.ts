@@ -1,5 +1,5 @@
 /**
- * HMR 模块入口
+ * HMR 注入模块入口
  * @module passes/hmr
  */
 
@@ -7,8 +7,6 @@ export {
   injectHMRImport,
   injectGetInstanceImport,
   createHMRRegistrationStatements,
-  createHMRBindingStatements,
   collectLocalVariableNames,
-  injectHMRIntoFunction,
-  type HMRInjectConfig
+  injectHMRIntoFunction
 } from './inject.js'

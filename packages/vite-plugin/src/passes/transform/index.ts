@@ -6,10 +6,7 @@
 export {
   collectExportedNames,
   collectComponentFunctions,
-  isValidComponentName,
-  isComponentFunction,
   generateComponentId,
-  PURE_COMPILE_COMPONENTS,
   type ComponentInfo
 } from './collect.js'
 

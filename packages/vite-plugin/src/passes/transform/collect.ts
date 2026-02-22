@@ -4,9 +4,10 @@
  * @module passes/transform/collect
  */
 import * as t from '@babel/types'
+import { PURE_COMPILE_COMPONENTS } from '../../constants/index.js'
 
 /** 纯编译组件名称集合 */
-export const PURE_COMPILE_COMPONENTS = new Set(['Switch', 'IfBlock'])
+const PURE_COMPILE_COMPONENT_SET: Set<string> = new Set(PURE_COMPILE_COMPONENTS)
 
 /**
  * 收集所有导出的标识符名称
@@ -49,13 +50,6 @@ export function collectExportedNames(program: t.Program): Set<string> {
 }
 
 /**
- * 检查是否是有效的组件名称（大写字母开头且被导出）
- */
-export function isValidComponentName(name: string, exportedNames: Set<string>): boolean {
-  return /^[A-Z]/.test(name) && exportedNames.has(name)
-}
-
-/**
  * 生成组件唯一 ID（文件路径 + 组件名称）
  */
 export function generateComponentId(filename: string, componentName: string): string {
@@ -70,7 +64,7 @@ export function generateComponentId(filename: string, componentName: string): st
 /**
  * 检查函数是否为组件函数
  */
-export function isComponentFunction(
+function isComponentFunction(
   node: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
 ): boolean {
   let result = false
@@ -85,7 +79,7 @@ export function isComponentFunction(
 
     if (n.type === 'ReturnStatement' && n.argument?.type === 'JSXElement') {
       const opening = n.argument.openingElement
-      if (opening.name.type === 'JSXIdentifier' && PURE_COMPILE_COMPONENTS.has(opening.name.name)) {
+      if (opening.name.type === 'JSXIdentifier' && PURE_COMPILE_COMPONENT_SET.has(opening.name.name)) {
         result = true
         return
       }
@@ -125,7 +119,7 @@ export function collectComponentFunctions(program: t.Program, exportedNames: Set
 
   for (const node of program.body) {
     if (node.type === 'FunctionDeclaration' && node.id) {
-      if (isValidComponentName(node.id.name, exportedNames) && isComponentFunction(node)) {
+      if (/^[A-Z]/.test(node.id.name) && exportedNames.has(node.id.name) && isComponentFunction(node)) {
         components.push({ name: node.id.name, node })
       }
     }
@@ -135,7 +129,8 @@ export function collectComponentFunctions(program: t.Program, exportedNames: Set
         if (decl.id.type === 'Identifier') {
           const name = decl.id.name
           if (
-            isValidComponentName(name, exportedNames) &&
+            /^[A-Z]/.test(name) &&
+            exportedNames.has(name) &&
             (decl.init?.type === 'ArrowFunctionExpression' || decl.init?.type === 'FunctionExpression')
           ) {
             if (isComponentFunction(decl.init)) {
@@ -149,7 +144,7 @@ export function collectComponentFunctions(program: t.Program, exportedNames: Set
     if (node.type === 'ExportNamedDeclaration' && node.declaration) {
       if (node.declaration.type === 'FunctionDeclaration' && node.declaration.id) {
         const name = node.declaration.id.name
-        if (isValidComponentName(name, exportedNames) && isComponentFunction(node.declaration)) {
+        if (/^[A-Z]/.test(name) && exportedNames.has(name) && isComponentFunction(node.declaration)) {
           components.push({ name, node: node.declaration })
         }
       }
@@ -158,7 +153,8 @@ export function collectComponentFunctions(program: t.Program, exportedNames: Set
           if (decl.id.type === 'Identifier') {
             const name = decl.id.name
             if (
-              isValidComponentName(name, exportedNames) &&
+              /^[A-Z]/.test(name) &&
+              exportedNames.has(name) &&
               (decl.init?.type === 'ArrowFunctionExpression' || decl.init?.type === 'FunctionExpression')
             ) {
               if (isComponentFunction(decl.init)) {
@@ -173,7 +169,7 @@ export function collectComponentFunctions(program: t.Program, exportedNames: Set
     if (node.type === 'ExportDefaultDeclaration') {
       if (node.declaration.type === 'FunctionDeclaration' && node.declaration.id) {
         const name = node.declaration.id.name
-        if (isValidComponentName(name, exportedNames) && isComponentFunction(node.declaration)) {
+        if (/^[A-Z]/.test(name) && exportedNames.has(name) && isComponentFunction(node.declaration)) {
           components.push({ name, node: node.declaration })
         }
       }
