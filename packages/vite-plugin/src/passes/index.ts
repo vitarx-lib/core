@@ -35,3 +35,20 @@ export {
 
 // Props 处理
 export { processProps, type PropsResult } from './props/index.js'
+
+// HMR 注入
+export {
+  injectHMRImport,
+  injectGetInstanceImport,
+  createHMRRegistrationStatements,
+  collectLocalVariableNames,
+  injectHMRIntoFunction,
+  type HMRInjectConfig
+} from './hmr/index.js'
+
+// 转换工具
+export {
+  collectExportedNames,
+  collectComponentFunctions,
+  injectHMRSupport
+} from './transform/index.js'

@@ -43,9 +43,12 @@
     "@babel/parser": "^7.29.0",
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
+    "acorn": "^8.16.0",
+    "acorn-walk": "^8.3.5",
     "vitarx": "workspace:*"
   },
   "devDependencies": {
+    "@types/acorn": "^6.0.4",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.27.0",
     "@types/babel__traverse": "^7.28.0",

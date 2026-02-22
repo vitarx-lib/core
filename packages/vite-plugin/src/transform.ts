@@ -7,12 +7,15 @@ import generate from '@babel/generator'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import * as t from '@babel/types'
-import { createContext } from './context'
+import { createContext, type TransformContext } from './context'
 import {
+  collectComponentFunctions,
   collectExistingImports,
+  collectExportedNames,
   collectLocalBindings,
   collectRefApiAliases,
   collectRefVariables,
+  injectHMRSupport,
   injectImports,
   processJSXElement,
   processJSXFragment,
@@ -26,6 +29,7 @@ export interface TransformResult {
   code: string
   map: any
 }
+
 export interface CompileOptions {
   hmr: boolean
   dev: boolean
@@ -33,34 +37,24 @@ export interface CompileOptions {
   runtimeModule: string
   sourceMap: boolean | 'inline' | 'both'
 }
+
 /** 用于追踪已处理的节点 */
 const processedNodes = new WeakSet<t.Node>()
 
 /**
- * 转换 JSX/TSX 代码
- * @param code - 源代码
- * @param id - 文件路径
- * @param options - 编译选项
- * @returns 转换结果
+ * 检查文件是否需要转换
  */
-export async function transform(
-  code: string,
-  id: string,
-  options: CompileOptions
-): Promise<TransformResult | null> {
-  // 跳过 node_modules
-  if (id.includes('node_modules')) {
-    return null
-  }
-
-  // 只处理 jsx/tsx 文件
+function shouldTransform(id: string): boolean {
+  if (id.includes('node_modules')) return false
   const ext = id.split('?')[0].split('.').pop()?.toLowerCase()
-  if (ext !== 'jsx' && ext !== 'tsx') {
-    return null
-  }
+  return ext === 'jsx' || ext === 'tsx'
+}
 
-  // 解析 AST
-  const ast = parse(code, {
+/**
+ * 创建解析器选项
+ */
+function createParserOptions(): any {
+  return {
     sourceType: 'module',
     plugins: [
       'jsx',
@@ -71,17 +65,17 @@ export async function transform(
       'optionalChaining',
       'nullishCoalescingOperator'
     ]
-  })
+  }
+}
 
-  // 创建转换上下文
-  const ctx = createContext(code, id, options, ast)
-
-  // 收集现有导入信息
-  const { vitarxImports } = collectExistingImports(ast.program)
-  const localBindings = collectLocalBindings(ast.program)
+/**
+ * 设置 API 别名
+ */
+function setupAliases(ctx: TransformContext, program: t.Program): void {
+  const { vitarxImports } = collectExistingImports(program)
+  const localBindings = collectLocalBindings(program)
   const allNames = new Set([...localBindings])
 
-  // 设置 API 别名
   const apiNames: Array<keyof typeof ctx.vitarxAliases> = [
     'createView',
     'Fragment',
@@ -92,6 +86,7 @@ export async function transform(
     'unref',
     'isRef'
   ]
+
   for (const apiName of apiNames) {
     if (vitarxImports.has(apiName)) {
       ctx.vitarxAliases[apiName] = vitarxImports.get(apiName)!
@@ -100,17 +95,28 @@ export async function transform(
     }
   }
 
-  // 收集 ref API 别名和 ref 变量
-  const refApiAliases = collectRefApiAliases(ast.program)
-  ctx.refApiAliases = refApiAliases
-  ctx.refVariables = collectRefVariables(ast.program, refApiAliases)
+  if (ctx.options.hmr) {
+    ctx.vitarxAliases.createView = 'jsxDEV'
+  }
+}
 
-  // 遍历 AST 进行转换
+/**
+ * 收集 ref 相关信息
+ */
+function collectRefInfo(ctx: TransformContext, program: t.Program): void {
+  const refApiAliases = collectRefApiAliases(program)
+  ctx.refApiAliases = refApiAliases
+  ctx.refVariables = collectRefVariables(program, refApiAliases)
+}
+
+/**
+ * 转换 AST
+ */
+function transformAST(ast: t.File, ctx: TransformContext): void {
   traverse(ast, {
     JSXElement: {
       enter(path) {
         if (processedNodes.has(path.node)) return
-
         const name = getJSXElementName(path.node)
         if (name && isPureCompileComponent(name)) {
           processedNodes.add(path.node)
@@ -119,11 +125,8 @@ export async function transform(
       },
       exit(path) {
         if (processedNodes.has(path.node)) return
-
         const name = getJSXElementName(path.node)
-        if (name && isPureCompileComponent(name)) {
-          return
-        }
+        if (name && isPureCompileComponent(name)) return
         processedNodes.add(path.node)
         processJSXElement(path, ctx)
       }
@@ -139,22 +142,48 @@ export async function transform(
       }
     }
   })
+}
 
-  // 注入导入语句
+/**
+ * 生成代码
+ */
+function generateCode(
+  ast: t.File,
+  code: string,
+  id: string,
+  sourceMap: boolean | 'inline' | 'both'
+): TransformResult {
+  const output = generate(ast, { sourceMaps: sourceMap !== false, filename: id }, code)
+  return { code: output.code, map: output.map }
+}
+
+/**
+ * 转换 JSX/TSX 代码
+ */
+export async function transform(
+  code: string,
+  id: string,
+  options: CompileOptions
+): Promise<TransformResult | null> {
+  if (!shouldTransform(id)) return null
+
+  const ast = parse(code, createParserOptions())
+  const ctx = createContext(code, id, options, ast)
+
+  setupAliases(ctx, ast.program)
+
+  collectRefInfo(ctx, ast.program)
+
+  const exportedNames = collectExportedNames(ast.program)
+  const components = collectComponentFunctions(ast.program, exportedNames)
+
+  transformAST(ast, ctx)
+
   injectImports(ast.program, ctx)
 
-  // 生成代码
-  const output = generate(
-    ast,
-    {
-      sourceMaps: options.sourceMap !== false,
-      filename: id
-    },
-    code
-  )
-
-  return {
-    code: output.code,
-    map: output.map
+  if (options.hmr && components.length > 0) {
+    injectHMRSupport(ast.program, components, id)
   }
+
+  return generateCode(ast, code, id, options.sourceMap)
 }
