@@ -10,7 +10,7 @@ export const VITARX_APIS = {
   ACCESS: 'access',
   WITH_DIRECTIVES: 'withDirectives',
   UNREF: 'unref',
-  IS_REF: 'isRef',
+  IS_REF: 'isRef'
 } as const
 
 /**
@@ -22,7 +22,7 @@ export const REF_APIS = {
   TO_REF: 'toRef',
   TO_REFS: 'toRefs',
   SHALLOW_REF: 'shallowRef',
-  COMPUTED: 'computed',
+  COMPUTED: 'computed'
 } as const
 
 /**
@@ -51,3 +51,13 @@ export const PURE_COMMENT = '@__PURE__'
  * vitarx 模块名称
  */
 export const VITARX_MODULE = 'vitarx'
+
+/**
+ * 标识符
+ */
+export enum HMR {
+  manager = '__$VITARX_HMR$__',
+  id = '__$VITARX_HMR_COMPONENT_ID$__',
+  view = '__$VITARX_HMR_VIEW_NODE$__',
+  state = '__$VITARX_HMR_VIEW_STATE$__'
+}

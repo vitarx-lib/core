@@ -1,6 +1,8 @@
+import path from 'node:path'
 import type { Plugin } from 'vite'
 import { type CompileOptions, transform } from './transform.js'
 
+const __dirname = path.dirname(new URL(import.meta.url).pathname)
 /**
  * vite-plugin-vitarx
  *
@@ -31,6 +33,11 @@ export default function vitarx(_options?: {}): Plugin {
         define: {
           __DEV__: JSON.stringify(isDEV),
           __SSR__: JSON.stringify(isSSR)
+        },
+        resolve: {
+          alias: {
+            '@vitarx/vite-plugin/hmr-client': path.join(__dirname, 'hmr-client/index.js')
+          }
         }
       }
     },
