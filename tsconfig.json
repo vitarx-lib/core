@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     // 不生成js文件
     "noEmit": false,
     // 不生成类型声明文件
@@ -37,11 +33,7 @@
     "forceConsistentCasingInFileNames": true,
     // 允许使用类字段
     "useDefineForClassFields": true,
-    "types": [
-      "vitest/globals",
-      "vite/client",
-      "node"
-    ],
+    "types": ["vitest/globals", "vite/client", "node"],
     "outDir": "dist"
   },
   "include": [
@@ -52,8 +44,5 @@
     "vite-env.d.ts",
     "packages/**/*.ts"
   ],
-  "exclude": [
-    "**/node_modules",
-    "**/dist"
-  ]
+  "exclude": ["**/node_modules", "**/dist"]
 }

@@ -17,11 +17,7 @@ export default defineConfig({
 
     // 指定需要包含的测试文件的匹配模式
     // 这里会匹配所有__tests__目录下的.test或.spec结尾的各种JavaScript/TypeScript文件
-    include: [
-      '**/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      '**/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
-    ],
-
+    include: ['**/*.{test,spec}.{js,ts,jsx,tsx}'],
     // 指定需要排除的文件或目录
     // 这里排除了node_modules和dist目录，避免测试这些构建和依赖文件
     exclude: ['**/node_modules/**', '**/dist/**'],
