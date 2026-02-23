@@ -89,7 +89,7 @@ const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
  */
 export class App {
   /** @readonly - 版本号 */
-  static readonly version: string = '0.0.0'
+  static readonly version: string = __VITARX_VERSION__
   readonly [IS_RAW] = true
   /** 配置选项 */
   public readonly config: Required<AppConfig>

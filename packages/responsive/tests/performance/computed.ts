@@ -1,4 +1,4 @@
-;(globalThis as any).__DEV__ = true
+;(globalThis as any).__VITARX_DEV__ = true
 import { computed, ref, watch } from '../../src'
 
 const { memoryUsage } = process

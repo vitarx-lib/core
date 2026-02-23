@@ -128,7 +128,7 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   const resolvedProps = isObject(binding) ? (bindProps(props, binding) as T) : props
   // 构建返回结果对象
   const result: ResolvePropsResult<T> = {
-    props: __DEV__ ? Object.freeze(resolvedProps) : resolvedProps
+    props: __VITARX_DEV__ ? Object.freeze(resolvedProps) : resolvedProps
   }
   // 如果存在ref，则将其添加到结果中
   if (isRef(ref) || isFunction(ref)) result.ref = ref
@@ -215,7 +215,7 @@ export function resolveChildren(children: ValidChildren): ResolvedChildren {
     if (view) childList.push(view)
   }
 
-  return __DEV__ ? Object.freeze(childList) : childList
+  return __VITARX_DEV__ ? Object.freeze(childList) : childList
 }
 
 /**

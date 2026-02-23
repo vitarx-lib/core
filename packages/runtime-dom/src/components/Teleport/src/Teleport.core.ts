@@ -76,7 +76,7 @@ interface TeleportProps {
  * ```
  */
 function Teleport({ children, to, defer, disabled }: TeleportProps): View {
-  if (__SSR__) return new CommentView(`teleport to ${to}`)
+  if (__VITARX_SSR__) return new CommentView(`teleport to ${to}`)
   if (disabled) return children
   const instance = getInstance()!
   let teleported = false

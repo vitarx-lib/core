@@ -53,7 +53,7 @@ describe('depend/trigger', () => {
       triggerSignal(signal, 'set', { key: 'test' })
 
       // In dev mode, triggerOnTrigger should be called
-      if ((globalThis as any).__DEV__) {
+      if ((globalThis as any).__VITARX_DEV__) {
         expect(triggerOnTriggerSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             effect,

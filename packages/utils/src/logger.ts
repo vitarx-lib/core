@@ -39,8 +39,8 @@ export interface LoggerConfig {
  * 默认日志配置
  */
 const DEFAULT_CONFIG: LoggerConfig = {
-  level: __DEV__ ? LogLevel.DEBUG : LogLevel.ERROR,
-  includeSourceInfo: __DEV__,
+  level: __VITARX_DEV__ ? LogLevel.DEBUG : LogLevel.ERROR,
+  includeSourceInfo: __VITARX_DEV__,
   prefix: ''
 }
 

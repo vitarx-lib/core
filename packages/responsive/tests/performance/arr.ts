@@ -1,4 +1,4 @@
-;(globalThis as any).__DEV__ = false
+;(globalThis as any).__VITARX_DEV__ = false
 import { ref, watch } from '../../src/index.js'
 
 const arr = ref([1, 2, 3])

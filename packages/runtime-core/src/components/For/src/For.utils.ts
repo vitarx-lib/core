@@ -141,7 +141,7 @@ export function normalizeKeyResolver<T>(
       try {
         return key(item)
       } catch (e) {
-        if (__DEV__) {
+        if (__VITARX_DEV__) {
           logger.warn(`[${name}] key function throw error in ${index}: ${e}`, location)
         }
         return Symbol()
@@ -181,7 +181,7 @@ export function normalizeKeyResolver<T>(
  */
 export function checkKey(key: unknown, index: number, map: ListItemMap, name: string): unknown {
   if (map.has(key)) {
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       const existingRecord = map.get(key)!
       const errorMsg =
         `[${name}] Duplicate key "${String(key)}" detected\n` +

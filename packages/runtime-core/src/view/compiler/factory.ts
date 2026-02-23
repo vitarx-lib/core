@@ -241,7 +241,7 @@ export function h<T extends ViewTag>(
     resolvedProps.children = resolvedChildren
   }
 
-  const source = __DEV__ ? getCallSource() : undefined
+  const source = __VITARX_DEV__ ? getCallSource() : undefined
 
   return createView(type, resolvedProps as ValidProps<T>, source) as ViewOf<T>
 }

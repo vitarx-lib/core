@@ -241,12 +241,12 @@ describe('Teleport 组件', () => {
     let originalSSR: boolean
 
     beforeEach(() => {
-      originalSSR = (globalThis as any).__SSR__
-      ;(globalThis as any).__SSR__ = true
+      originalSSR = (globalThis as any).__VITARX_SSR__
+      ;(globalThis as any).__VITARX_SSR__ = true
     })
 
     afterEach(() => {
-      ;(globalThis as any).__SSR__ = originalSSR
+      ;(globalThis as any).__VITARX_SSR__ = originalSSR
     })
 
     it('应该在 SSR 模式下返回注释节点', () => {

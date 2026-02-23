@@ -35,7 +35,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
 
   constructor(location?: CodeLocation) {
     this.location = location
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       this.#state = shallowRef(ViewState.DETACHED)
       this.#active = shallowRef(false)
     } else {
@@ -45,7 +45,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   }
 
   get state(): ViewState {
-    return __DEV__ && isRef(this.#state) ? this.#state.value : (this.#state as ViewState)
+    return __VITARX_DEV__ && isRef(this.#state) ? this.#state.value : (this.#state as ViewState)
   }
   get owner(): ComponentInstance | null {
     return this.ctx?.owner ?? null
@@ -55,7 +55,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   }
 
   get active(): boolean {
-    return __DEV__ && isRef(this.#active) ? this.#active.value : (this.#active as boolean)
+    return __VITARX_DEV__ && isRef(this.#active) ? this.#active.value : (this.#active as boolean)
   }
   /**
    * 检查视图状态是否已初始化
@@ -135,7 +135,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   }
   /** 挂载到宿主（创建 / 插入 DOM） */
   mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
-    if (__SSR__) {
+    if (__VITARX_SSR__) {
       throw new Error('[View.mount]: is not supported in SSR mode')
     }
     if (this.isDetached) {
@@ -231,14 +231,14 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   protected doDispose?(): void
 
   #setState(state: ViewState): void {
-    if (__DEV__ && isRef(this.#state)) {
+    if (__VITARX_DEV__ && isRef(this.#state)) {
       this.#state.value = state
     } else {
       this.#state = state
     }
   }
   #setActive(active: boolean): void {
-    if (__DEV__ && isRef(this.#active)) {
+    if (__VITARX_DEV__ && isRef(this.#active)) {
       this.#active.value = active
     } else {
       this.#active = active

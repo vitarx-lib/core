@@ -99,7 +99,7 @@ export async function renderToNodeStream(
   root: SSRApp | View,
   context: SSRContext = {}
 ): Promise<NodeJS.ReadableStream> {
-  if (__SSR__) {
+  if (__VITARX_SSR__) {
     const { Readable } = await import('node:stream')
     const chunks: string[] = []
     let resolveStream: (stream: NodeJS.ReadableStream) => void

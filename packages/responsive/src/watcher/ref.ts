@@ -31,7 +31,7 @@ export class RefSignalWatcher<T> extends ValueWatcher<T> {
     super(cb, options)
     this._value = this.sig.value
     createDepLink(this.effectHandle, sig)
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       triggerOnTrack({
         effect: this.effectHandle,
         signal: sig,

@@ -153,7 +153,7 @@ export class EffectScope {
    * @returns {Effect[]} 包含所有效果的数组
    */
   get effects(): DisposableEffect[] {
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       // 初始化一个空数组用于存放效果
       const list: DisposableEffect[] = []
       // 从链表头部开始遍历

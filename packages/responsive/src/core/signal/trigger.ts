@@ -20,7 +20,7 @@ export function triggerSignal(
     const effect = link.effect // 获取当前链接的effect
 
     // 在开发环境下，触发调试回调
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       triggerOnTrigger({ ...debugData, effect, signal, type })
     }
     effect() // 调度effect的执行

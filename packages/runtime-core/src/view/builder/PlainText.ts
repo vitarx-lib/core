@@ -18,7 +18,7 @@ export interface TextProps {
 export const PlainText = builder(
   (props: TextProps, location): TextView | DynamicView<string> | CommentView => {
     const { value, isTrack } = hasPropTrack(props, 'text')
-    if (__DEV__ && !isString(value) && typeof value !== 'number') {
+    if (__VITARX_DEV__ && !isString(value) && typeof value !== 'number') {
       logger.warn(
         `[PlainText]: expected text needs to be given a string, given ${typeof value}`,
         location

@@ -15,7 +15,7 @@ import { getInstance } from './context.js'
  */
 function createHookRegistrar<T extends Lifecycle>(hook: T): (cb: HookCallback<T>) => void {
   return (cb: HookCallback<T>): void => {
-    if (__DEV__ && !isFunction(cb)) {
+    if (__VITARX_DEV__ && !isFunction(cb)) {
       throw new TypeError(
         `on${toCapitalize(hook)}(): callback must be a callback function, given ${typeof cb}`
       )
@@ -139,7 +139,7 @@ export const onDispose = createHookRegistrar(Lifecycle.dispose)
  * ```
  */
 export const onError = (handler: ErrorHandler): void => {
-  if (__DEV__ && !isFunction(handler)) {
+  if (__VITARX_DEV__ && !isFunction(handler)) {
     throw new TypeError(`onError handler must be a function`)
   }
   const ctx = getInstance()
@@ -189,12 +189,12 @@ export const onError = (handler: ErrorHandler): void => {
  * ```
  */
 export const onViewSwitch = (handler: ViewSwitchHandler): void => {
-  if (__DEV__ && !isFunction(handler)) {
+  if (__VITARX_DEV__ && !isFunction(handler)) {
     throw new TypeError(`onSwitch handler must be a function`)
   }
   const ctx = getInstance()
   if (ctx) {
-    if (__DEV__ && ctx.onViewSwitch) {
+    if (__VITARX_DEV__ && ctx.onViewSwitch) {
       logger.warn(`onSwitch has already been called`, getStackTrace())
     }
     ctx.onViewSwitch = handler
@@ -249,7 +249,7 @@ export function defineValidate<P extends AnyProps>(
   component: Component<P>,
   validator: ValidateProps
 ): void {
-  if (__DEV__ && !isFunction(validator)) {
+  if (__VITARX_DEV__ && !isFunction(validator)) {
     throw new TypeError(`[defineValidate]: validator must be a function`)
   }
   // 函数无返回值

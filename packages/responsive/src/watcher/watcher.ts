@@ -119,7 +119,7 @@ export abstract class Watcher extends Effect {
       }
     }
     // 判断是否为开发环境
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       bindDebuggerOptions(this.effectHandle, options)
     }
   }

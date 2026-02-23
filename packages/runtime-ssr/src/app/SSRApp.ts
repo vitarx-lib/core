@@ -61,7 +61,7 @@ export class SSRApp extends WebApp {
  * ```
  */
 export function createSSRApp(root: View | Component, config?: AppConfig): SSRApp {
-  if (__SSR__) {
+  if (__VITARX_SSR__) {
     setRenderer(
       new Proxy({} as ViewRenderer, {
         get(_target: ViewRenderer, p: string | symbol, _receiver: any): any {

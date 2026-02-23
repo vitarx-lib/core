@@ -1,4 +1,4 @@
-;(globalThis as any).__DEV__ = false
+;(globalThis as any).__VITARX_DEV__ = false
 import * as process from 'node:process'
 import { ref, ValueRef, watch } from '../../src/index.js'
 

@@ -31,8 +31,8 @@ export default function vitarx(_options?: {}): Plugin {
           jsx: 'preserve'
         },
         define: {
-          __DEV__: JSON.stringify(isDEV),
-          __SSR__: JSON.stringify(isSSR)
+          __VITARX_DEV__: JSON.stringify(isDEV),
+          __VITARX_SSR__: JSON.stringify(isSSR)
         },
         resolve: {
           alias: {

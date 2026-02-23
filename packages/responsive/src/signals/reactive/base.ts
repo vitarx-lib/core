@@ -53,7 +53,7 @@ export abstract class ReactiveSource<T extends object> implements ProxyHandler<T
    */
   protected triggerSignal(type: SignalOpType, devInfo?: ExtraDebugData) {
     // 判断是否为开发环境
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       // 在开发环境下，传递 devInfo 参数
       triggerSignal(this, type, devInfo)
     } else {

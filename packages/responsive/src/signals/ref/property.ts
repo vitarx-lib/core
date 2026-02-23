@@ -39,7 +39,7 @@ export class PropertyRef<T extends object, K extends keyof T> implements Ref<T[K
     private readonly key: K,
     private readonly defaultValue?: T[K]
   ) {
-    if (__DEV__ && !isObject(target)) throw new TypeError('target must be an object')
+    if (__VITARX_DEV__ && !isObject(target)) throw new TypeError('target must be an object')
   }
   get value(): T[K] {
     const v = this.target[this.key]

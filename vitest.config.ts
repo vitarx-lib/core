@@ -3,9 +3,9 @@ import { entries } from './scripts/alias'
 
 export default defineConfig({
   define: {
-    __DEV__: true,
-    __SSR__: false,
-    __VERSION__: JSON.stringify('0.0.0')
+    __VITARX_DEV__: true,
+    __VITARX_SSR__: false,
+    __VITARX_VERSION__: JSON.stringify('0.0.0')
   },
   resolve: {
     alias: entries

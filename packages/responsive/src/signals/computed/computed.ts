@@ -102,7 +102,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
         triggerSignal(this, 'dirty')
       }
     }
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       if (debuggerOptions) bindDebuggerOptions(this._effect, debuggerOptions)
     }
   }

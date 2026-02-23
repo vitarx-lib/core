@@ -25,7 +25,7 @@ interface PackageJson {
  * 构建环境配置接口
  */
 interface BuildOptions {
-  format?: 'es' | 'iife'
+  format?: 'es' | 'cjs' | 'umd' | 'iife'
   define?: Record<string, string | boolean>
   dts?: boolean
   fileName?: string
@@ -43,7 +43,15 @@ const NODE_EXTERNALS = ['stream', 'node:stream']
 /**
  * 需要构建的包列表（按依赖顺序排列）
  */
-const PACKAGES = ['utils', 'responsive', 'runtime-core', 'runtime-dom', 'runtime-ssr', 'vitarx']
+const PACKAGES = [
+  'utils',
+  'responsive',
+  'runtime-core',
+  'runtime-dom',
+  'runtime-ssr',
+  'vitarx',
+  'vite-plugin'
+]
 
 /**
  * 获取需要排除的外部模块列表
@@ -70,7 +78,7 @@ async function viteBuild(
 ): Promise<void> {
   console.log('')
   const {
-    dts = true,
+    dts = false,
     format = 'es',
     define = {},
     external,
@@ -101,15 +109,15 @@ async function viteBuild(
         name: libName,
         entry: resolve(packagePath, 'src/index.ts'),
         formats: [format],
-        fileName
+        fileName: _ => {
+          return `${fileName}.js`
+        }
       },
       rollupOptions: { external },
-      emptyOutDir: false
+      emptyOutDir: false,
+      minify: define.__VITARX_DEV__ || dts ? false : 'oxc'
     },
-    define: {
-      __VERSION__: JSON.stringify(pkg.version),
-      ...define
-    },
+    define,
     plugins
   }
   await build(mergeConfig(config, pkg.vite || {}))
@@ -135,41 +143,55 @@ async function buildPackage(
   // 创建临时 tsconfig.json
   const tsconfigPath = createTsConfig(packagePath)
   const dist = resolve(packagePath, 'dist')
-
-  // 类型检查
-  await runTypeCheck(tsconfigPath)
-  // 检测循环依赖
-  await runMadgeCheck(dist)
-  // 清理输出目录
-  runClean(dist)
-
   // 运行测试（如果需要）
   if (runTest) {
     await runVitestTest(packagePath, false, false)
   }
+  // 类型检查
+  await runTypeCheck(tsconfigPath)
+  // 检测循环依赖
+  await runMadgeCheck(dist)
 
+  if (packageDirName === 'vite-plugin') {
+    log.info(separator + '\n')
+    return void 0
+  }
+
+  // 清理输出目录
+  runClean(dist)
   // 加载 package.json
   const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
   log.warn(`\n📦 Vite Building ${pkg.name}...`)
-
+  const external =
+    packageDirName === 'vitarx' ? NODE_EXTERNALS : getExternalModules(pkg.dependencies)
+  const define = { __VITARX_VERSION__: JSON.stringify(pkg.version) }
   // 根据包类型选择构建方式
-  if (packageDirName === 'vitarx') {
-    await viteBuild(packagePath, pkg, dist, { external: NODE_EXTERNALS })
-    await viteBuild(packagePath, pkg, dist, {
-      dts: false,
-      format: 'iife',
-      define: { __DEV__: false, __SSR__: false },
-      fileName: 'index.iife'
-    })
-    await viteBuild(packagePath, pkg, dist, {
-      dts: false,
-      format: 'iife',
-      define: { __DEV__: false, __SSR__: false },
-      fileName: 'index.iife.prod'
-    })
-  } else {
-    await viteBuild(packagePath, pkg, dist, { external: getExternalModules(pkg.dependencies) })
-  }
+  await viteBuild(packagePath, pkg, dist, {
+    dts: true,
+    external,
+    define,
+    fileName: 'index.esm-bundler'
+  })
+  await viteBuild(packagePath, pkg, dist, {
+    external,
+    define: {
+      ...define,
+      __VITARX_DEV__: true,
+      __VITARX_SSR__: true
+    },
+    format: 'cjs',
+    fileName: 'index.cjs-dev'
+  })
+  await viteBuild(packagePath, pkg, dist, {
+    external,
+    define: {
+      ...define,
+      __VITARX_DEV__: false,
+      __VITARX_SSR__: true
+    },
+    format: 'cjs',
+    fileName: 'index.cjs-prod'
+  })
 
   log.success(`\n✓ Bundle ${pkg.name} compilation completed`)
   log.info(separator + '\n')

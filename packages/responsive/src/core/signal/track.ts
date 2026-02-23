@@ -139,7 +139,7 @@ export function trackSignal(
   // 如果没有活动的副作用函数，则直接返回
   if (!activeEffect) return
   // 在开发环境下，触发跟踪回调
-  if (__DEV__) {
+  if (__VITARX_DEV__) {
     triggerOnTrack({ ...debugData, effect: activeEffect, signal, type })
   }
   // 执行实际的跟踪处理逻辑

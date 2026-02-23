@@ -107,7 +107,7 @@ export class DOMRenderer implements ViewRenderer {
     // 获取锚点元素的父级元素
     const parent = anchor.parentNode
     if (!parent) {
-      if (__DEV__) {
+      if (__VITARX_DEV__) {
         logger.warn(
           'DOMRenderer.insert(): The anchor node does not have a parent node',
           child,
@@ -138,7 +138,7 @@ export class DOMRenderer implements ViewRenderer {
     // 获取父节点，片段元素使用 startAnchor 的父节点
     const parent = isFragment ? oldNode.$startAnchor.parentNode : oldNode.parentNode
     if (!parent) {
-      if (__DEV__) {
+      if (__VITARX_DEV__) {
         logger.warn(
           '[DOMRenderer.replace]: The old node does not have a parent node',
           newNode,

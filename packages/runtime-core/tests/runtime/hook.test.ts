@@ -69,8 +69,8 @@ describe('runtime/hook', () => {
 
         it(`当回调不是函数时在 DEV 模式下应该抛出错误`, () => {
           // 模拟 DEV 环境
-          const originalDev = (global as any).__DEV__
-          ;(global as any).__DEV__ = true
+          const originalDev = (global as any).__VITARX_DEV__
+          ;(global as any).__VITARX_DEV__ = true
 
           try {
             runComponent(mockInstance, () => {
@@ -79,7 +79,7 @@ describe('runtime/hook', () => {
               }).toThrow(TypeError)
             })
           } finally {
-            ;(global as any).__DEV__ = originalDev
+            ;(global as any).__VITARX_DEV__ = originalDev
           }
         })
 
@@ -113,8 +113,8 @@ describe('runtime/hook', () => {
 
     it(`当处理器不是函数时在 DEV 模式下应该抛出错误`, () => {
       // 模拟 DEV 环境
-      const originalDev = (global as any).__DEV__
-      ;(global as any).__DEV__ = true
+      const originalDev = (global as any).__VITARX_DEV__
+      ;(global as any).__VITARX_DEV__ = true
 
       try {
         runComponent(mockInstance, () => {
@@ -123,7 +123,7 @@ describe('runtime/hook', () => {
           }).toThrow(TypeError)
         })
       } finally {
-        ;(global as any).__DEV__ = originalDev
+        ;(global as any).__VITARX_DEV__ = originalDev
       }
     })
 
@@ -150,8 +150,8 @@ describe('runtime/hook', () => {
 
     it(`当处理器不是函数时在 DEV 模式下应该抛出错误`, () => {
       // 模拟 DEV 环境
-      const originalDev = (global as any).__DEV__
-      ;(global as any).__DEV__ = true
+      const originalDev = (global as any).__VITARX_DEV__
+      ;(global as any).__VITARX_DEV__ = true
 
       try {
         runComponent(mockInstance, () => {
@@ -160,14 +160,14 @@ describe('runtime/hook', () => {
           }).toThrow(TypeError)
         })
       } finally {
-        ;(global as any).__DEV__ = originalDev
+        ;(global as any).__VITARX_DEV__ = originalDev
       }
     })
 
     it(`在 DEV 模式下多次调用时应该记录警告`, () => {
       // 模拟 DEV 环境
-      const originalDev = (global as any).__DEV__
-      ;(global as any).__DEV__ = true
+      const originalDev = (global as any).__VITARX_DEV__
+      ;(global as any).__VITARX_DEV__ = true
 
       try {
         const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -182,7 +182,7 @@ describe('runtime/hook', () => {
 
         consoleWarn.mockRestore()
       } finally {
-        ;(global as any).__DEV__ = originalDev
+        ;(global as any).__VITARX_DEV__ = originalDev
       }
     })
 
@@ -235,8 +235,8 @@ describe('runtime/hook', () => {
 
     it(`当验证器不是函数时在 DEV 模式下应该抛出错误`, () => {
       // 模拟 DEV 环境
-      const originalDev = (global as any).__DEV__
-      ;(global as any).__DEV__ = true
+      const originalDev = (global as any).__VITARX_DEV__
+      ;(global as any).__VITARX_DEV__ = true
 
       try {
         const component = vi.fn() as Component
@@ -244,7 +244,7 @@ describe('runtime/hook', () => {
           defineValidate(component, 'not a function' as any)
         }).toThrow(TypeError)
       } finally {
-        ;(global as any).__DEV__ = originalDev
+        ;(global as any).__VITARX_DEV__ = originalDev
       }
     })
   })

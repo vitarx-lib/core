@@ -14,19 +14,20 @@
     "directory": "packages/runtime-dom"
   },
   "type": "module",
-  "main": "dist/index.es.js",
-  "types": "dist/index.es.d.ts",
   "files": [
     "dist",
+    "index.cjs",
     "LICENSE",
     "README.md"
   ],
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": {
-        "types": "./dist/index.es.d.ts",
-        "default": "./dist/index.es.js"
-      }
+        "node": "./index.cjs",
+        "default": "./dist/index.esm-bundler.js"
+      },
+      "require": "./index.cjs"
     }
   },
   "dependencies": {

@@ -30,7 +30,7 @@ export class ValueRef<T = any> implements RefSignal<ToRefValue<T>, T> {
    * @throws {Error} 当尝试将一个信号转换为 ref 时抛出错误
    */
   constructor(initialValue: T) {
-    if (__DEV__) {
+    if (__VITARX_DEV__) {
       if (isRef(initialValue)) {
         logger.warn(
           '[Ref] Creating a ref from another ref is not recommended as it creates unnecessary nesting. Consider using the original ref directly.'

@@ -35,15 +35,15 @@ const packageJson = {
     directory: `packages/${packageName}`
   },
   type: 'module',
-  module: 'dist/index.es.js',
-  types: 'dist/index.es.d.ts',
-  files: ['dist', 'LICENSE', 'README.md'],
+  files: ['dist', 'index.cjs', 'LICENSE', 'README.md'],
   exports: {
     '.': {
+      types: './dist/index.d.ts',
       import: {
-        types: './dist/index.es.d.ts',
-        default: './dist/index.es.js'
-      }
+        node: './index.cjs',
+        default: './dist/index.esm-bundler.js'
+      },
+      require: './index.js'
     }
   },
   dependencies: {
@@ -57,6 +57,16 @@ writeFileSync(resolve(packagePath, 'package.json'), JSON.stringify(packageJson, 
 createTsConfig(packagePath)
 // 创建 src/index.ts
 writeFileSync(resolve(packagePath, 'src', 'index.ts'), '// Add exports here\n')
+writeFileSync(
+  resolve(packagePath, 'index.cjs'),
+  `'use strict'
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = require('./dist/index.cjs-prod.js')
+} else {
+  module.exports = require('./dist/index.cjs-dev.js')
+}`
+)
 // 创建 README.md
 writeFileSync(resolve(packagePath, 'README.md'), '')
 // 复制 LICENSE

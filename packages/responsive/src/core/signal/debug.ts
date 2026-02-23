@@ -87,7 +87,7 @@ export function triggerOnTrigger(event: DebuggerEvent) {
  */
 export function bindDebuggerOptions(effect: EffectRunner, debuggerOptions: DebuggerOptions): void {
   // 仅在开发环境下执行调试钩子的绑定
-  if (__DEV__) {
+  if (__VITARX_DEV__) {
     // 当追踪依赖时调用调试钩子的onTrack方法
     effect.onTrack = debuggerOptions.onTrack
     // 当触发依赖时调用调试钩子的onTrigger方法
