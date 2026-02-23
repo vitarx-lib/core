@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
-import { IS_REF, IS_SIGNAL, ValueRef } from '../../../src/index.js'
+import { IS_REF, IS_SIGNAL, ValueRef, watch } from '../../../src/index.js'
 
 describe('signals/ref/value', () => {
   describe('constructor', () => {
@@ -57,14 +57,10 @@ describe('signals/ref/value', () => {
 
     it('should not trigger updates when setting same value', async () => {
       const ref = new ValueRef(42)
-      const triggerSignalSpy = vi.spyOn(
-        await import('../../../src/core/signal/index.js'),
-        'triggerSignal'
-      )
-
+      const cb = vi.fn()
+      watch(ref, cb, { flush: 'sync' })
       ref.value = 42
-
-      expect(triggerSignalSpy).not.toHaveBeenCalled()
+      expect(cb).not.toHaveBeenCalled()
     })
   })
 })

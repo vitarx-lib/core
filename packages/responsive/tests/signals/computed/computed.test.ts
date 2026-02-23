@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
-import { Computed, ref } from '../../../src/index.js'
+import { Computed, ref, watch } from '../../../src/index.js'
 
 describe('signal/computed/computed', () => {
   describe('constructor', () => {
@@ -91,16 +91,11 @@ describe('signal/computed/computed', () => {
       const source = ref(0)
       const computed = new Computed(() => source.value * 2)
       expect(computed.dirty).toBe(true)
-
-      const triggerSignalSpy = vi.spyOn(
-        await import('../../../src/core/signal/index.js'),
-        'triggerSignal'
-      )
-
+      const cb = vi.fn()
+      watch(computed, cb, { flush: 'sync' })
+      expect(computed.dirty).toBe(false)
       computed['_effect']()
-
-      expect(computed.dirty).toBe(true)
-      expect(triggerSignalSpy).not.toHaveBeenCalled()
+      expect(cb).not.toHaveBeenCalled()
     })
   })
 
