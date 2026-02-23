@@ -4,17 +4,17 @@
  * @module passes/props
  */
 import * as t from '@babel/types'
-import { markImport, TransformContext } from '../../context'
-import { createError } from '../../error'
 import {
-  getAlias,
   isBooleanLiteral,
   isIdentifier,
   isJSXExpressionContainer,
   isMemberExpression,
   isNumericLiteral,
   isStringLiteral
-} from '../../utils/index.js'
+} from '@babel/types'
+import { markImport, TransformContext } from '../../context'
+import { createError } from '../../error'
+import { getAlias } from '../../utils/index.js'
 
 /**
  * Props 处理结果
@@ -162,30 +162,30 @@ function processAttribute(
 
     // v-bind 指令
     if (name === 'v-bind') {
-      const value = getAttributeValue(attr.value, ctx)
+      const value = getAttributeValue(attr.value)
       return { type: 'directive', name: 'v-bind', value, isVBind: true, isVModel: false }
     }
 
     // v-model 指令
     if (name === 'v-model') {
-      const value = getAttributeValue(attr.value, ctx)
+      const value = getAttributeValue(attr.value)
       return { type: 'directive', name: 'v-model', value, isVBind: false, isVModel: true }
     }
 
     // 其他 v- 指令（排除 v-if 系列）
     if (name.startsWith('v-') && !['v-if', 'v-else-if', 'v-else'].includes(name)) {
-      const value = getAttributeValue(attr.value, ctx)
+      const value = getAttributeValue(attr.value)
       return { type: 'directive', name, value, isVBind: false, isVModel: false }
     }
 
     // 普通属性
     existingPropNames.add(name)
-    const value = getAttributeValue(attr.value, ctx)
+    const value = getAttributeValue(attr.value)
     const property = createProperty(name, value, ctx)
     return { type: 'property', property }
   }
 
-  const value = getAttributeValue(attr.value, ctx)
+  const value = getAttributeValue(attr.value)
   return { type: 'property', property: t.objectProperty(t.identifier('unknown'), value) }
 }
 
@@ -205,14 +205,13 @@ function processNamespacedAttribute(
   // v:xxx 指令
   if (namespace === 'v') {
     const directiveName = `v-${name}`
-    const value = getAttributeValue(attr.value, ctx)
+    const value = getAttributeValue(attr.value)
 
     // v-bind
     if (directiveName === 'v-bind') {
       return { type: 'directive', name: 'v-bind', value, isVBind: true, isVModel: false }
     }
 
-    // v-model 不支持 v:model 语法
     // 其他指令
     if (!['v-if', 'v-else-if', 'v-else', 'v-model'].includes(directiveName)) {
       return { type: 'directive', name: directiveName, value, isVBind: false, isVModel: false }
@@ -221,7 +220,7 @@ function processNamespacedAttribute(
 
   // 其他命名空间属性作为普通属性
   existingPropNames.add(fullName)
-  const value = getAttributeValue(attr.value, ctx)
+  const value = getAttributeValue(attr.value)
   const property = createProperty(fullName, value, ctx)
   return { type: 'property', property }
 }
@@ -229,7 +228,7 @@ function processNamespacedAttribute(
 /**
  * 获取属性值
  */
-function getAttributeValue(value: t.JSXAttribute['value'], ctx: TransformContext): t.Expression {
+function getAttributeValue(value: t.JSXAttribute['value']): t.Expression {
   if (!value) {
     return t.booleanLiteral(true)
   }

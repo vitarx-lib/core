@@ -4,13 +4,7 @@
  * @module passes/jsx/processChildren
  */
 import * as t from '@babel/types'
-import { markImport, TransformContext } from '../../context'
 import {
-  addPureComment,
-  createAccessCall,
-  createArrowFunction,
-  createDynamicCall,
-  getAlias,
   isBooleanLiteral,
   isConditionalExpression,
   isIdentifier,
@@ -21,8 +15,15 @@ import {
   isLogicalExpression,
   isMemberExpression,
   isNumericLiteral,
-  isStringLiteral,
-  createBinaryBranch
+  isStringLiteral
+} from '@babel/types'
+import { markImport, TransformContext } from '../../context'
+import {
+  addPureComment,
+  createAccessCall,
+  createBinaryBranch,
+  createDynamicCall,
+  getAlias
 } from '../../utils/index.js'
 
 /**

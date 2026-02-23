@@ -5,16 +5,13 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
+import { isJSXElement, isJSXExpressionContainer, isJSXFragment, isJSXText } from '@babel/types'
 import { markImport, TransformContext } from '../../context'
 import {
   addPureComment,
   createCreateViewCall,
   createLocationObject,
-  getAlias,
-  isJSXElement,
-  isJSXExpressionContainer,
-  isJSXFragment,
-  isJSXText
+  getAlias
 } from '../../utils/index.js'
 
 /**

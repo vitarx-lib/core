@@ -5,17 +5,17 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
+import { isJSXElement } from '@babel/types'
 import { TransformContext } from '../../context'
 import { createError } from '../../error'
 import {
-  isJSXElement,
+  collectVIfChainInfo,
+  createArrowFunction,
+  createBranch,
+  filterWhitespaceChildren,
   hasDirective,
   removeVDirectives,
-  createArrowFunction,
-  validateVIfChain,
-  collectVIfChainInfo,
-  createBranch,
-  filterWhitespaceChildren
+  validateVIfChain
 } from '../../utils/index.js'
 
 /**
@@ -53,7 +53,11 @@ function validateChildrenType(children: t.Node[]): void {
     }
 
     if (!hasVIfChainDirective(child)) {
-      throw createError('E008', child, 'IfBlock children must have v-if/v-else-if/v-else directives')
+      throw createError(
+        'E008',
+        child,
+        'IfBlock children must have v-if/v-else-if/v-else directives'
+      )
     }
   }
 }
@@ -62,5 +66,7 @@ function validateChildrenType(children: t.Node[]): void {
  * 检查元素是否有 v-if 链指令
  */
 function hasVIfChainDirective(node: t.JSXElement): boolean {
-  return hasDirective(node, 'v-if') || hasDirective(node, 'v-else-if') || hasDirective(node, 'v-else')
+  return (
+    hasDirective(node, 'v-if') || hasDirective(node, 'v-else-if') || hasDirective(node, 'v-else')
+  )
 }

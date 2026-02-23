@@ -5,15 +5,14 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
+import { isJSXElement, isJSXText } from '@babel/types'
 import { TransformContext } from '../../context'
 import { createError } from '../../error'
 import {
   createArrowFunction,
   createBranch,
   getJSXAttributeByName,
-  getJSXElementName,
-  isJSXElement,
-  isJSXText
+  getJSXElementName
 } from '../../utils/index.js'
 
 /**

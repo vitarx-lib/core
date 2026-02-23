@@ -5,27 +5,23 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
+import { isJSXExpressionContainer, isJSXText } from '@babel/types'
 import { markImport, TransformContext } from '../../context'
 import { createError } from '../../error'
 import {
   addPureComment,
   createArrowFunction,
-  createBranchCall,
+  createBranch,
   createCreateViewCall,
   createLocationObject,
-  createUnrefCall,
   getAlias,
   getDirectiveValue,
   getJSXElementName,
-  isIdentifier,
-  isJSXExpressionContainer,
-  isJSXText,
   isNativeElement,
   isVElse,
   isVIf,
   isVIfChain,
-  removeVDirectives,
-  createBranch
+  removeVDirectives
 } from '../../utils/index.js'
 import { processDirectives } from '../directives'
 import { processProps } from '../props'

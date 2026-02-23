@@ -2,18 +2,18 @@
  * AST 节点构建函数
  * @module utils/ast-builders
  */
-import type {
-  Expression,
-  ObjectExpression,
-  ObjectProperty,
-  CallExpression,
-  ArrowFunctionExpression,
-  SourceLocation,
-} from '@babel/types'
 import * as t from '@babel/types'
-import type { VitarxImportAliases } from '../context'
+import {
+  type ArrowFunctionExpression,
+  type CallExpression,
+  type Expression,
+  isIdentifier,
+  isStringLiteral,
+  type ObjectExpression,
+  type SourceLocation
+} from '@babel/types'
 import { PURE_COMMENT } from '../constants'
-import { isIdentifier, isStringLiteral } from './ast-guards'
+import type { VitarxImportAliases } from '../context'
 
 /** 用于追踪已添加 PURE 注释的节点 */
 const pureCommentedNodes = new WeakSet<CallExpression>()
@@ -35,7 +35,11 @@ export function createUnrefCall(argument: Expression, alias?: string): CallExpre
  * @param alias - access 别名
  * @returns CallExpression
  */
-export function createAccessCall(object: Expression, key: Expression, alias?: string): CallExpression {
+export function createAccessCall(
+  object: Expression,
+  key: Expression,
+  alias?: string
+): CallExpression {
   let keyArg: Expression
   if (isIdentifier(key)) {
     keyArg = t.stringLiteral(key.name)
@@ -55,10 +59,9 @@ export function createAccessCall(object: Expression, key: Expression, alias?: st
  * @returns CallExpression
  */
 export function createDynamicCall(argument: Expression, alias?: string): CallExpression {
-  return t.callExpression(
-    t.identifier(alias || 'dynamic'),
-    [t.arrowFunctionExpression([], argument)]
-  )
+  return t.callExpression(t.identifier(alias || 'dynamic'), [
+    t.arrowFunctionExpression([], argument)
+  ])
 }
 
 /**
@@ -73,10 +76,7 @@ export function createBranchCall(
   branches: ArrowFunctionExpression[],
   alias?: string
 ): CallExpression {
-  return t.callExpression(
-    t.identifier(alias || 'branch'),
-    [condition, t.arrayExpression(branches)]
-  )
+  return t.callExpression(t.identifier(alias || 'branch'), [condition, t.arrayExpression(branches)])
 }
 
 /**
@@ -94,7 +94,7 @@ export function createCreateViewCall(
   alias?: string
 ): CallExpression {
   const args: Expression[] = [type]
-  
+
   // props 参数
   if (props) {
     args.push(props)
@@ -102,7 +102,7 @@ export function createCreateViewCall(
     // 如果有 locInfo 但没有 props，需要传 null
     args.push(t.nullLiteral())
   }
-  
+
   // locInfo 参数
   if (locInfo) {
     args.push(locInfo)
@@ -127,20 +127,10 @@ export function createWithDirectivesCall(
     return t.arrayExpression([t.stringLiteral(name), value])
   })
 
-  return t.callExpression(
-    t.identifier(alias || 'withDirectives'),
-    [view, t.arrayExpression(directiveArray)]
-  )
-}
-
-/**
- * 创建 getter 属性
- * @param key - 属性名
- * @param value - 属性值（箭头函数）
- * @returns ObjectProperty
- */
-export function createGetterProperty(key: string, value: Expression): ObjectProperty {
-  return t.objectProperty(t.identifier(key), t.arrowFunctionExpression([], value))
+  return t.callExpression(t.identifier(alias || 'withDirectives'), [
+    view,
+    t.arrayExpression(directiveArray)
+  ])
 }
 
 /**
@@ -158,14 +148,11 @@ export function createArrowFunction(body: Expression): ArrowFunctionExpression {
  * @param loc - 源码位置
  * @returns ObjectExpression
  */
-export function createLocationObject(
-  filename: string,
-  loc: SourceLocation
-): ObjectExpression {
+export function createLocationObject(filename: string, loc: SourceLocation): ObjectExpression {
   return t.objectExpression([
     t.objectProperty(t.identifier('fileName'), t.stringLiteral(filename)),
     t.objectProperty(t.identifier('lineNumber'), t.numericLiteral(loc.start.line)),
-    t.objectProperty(t.identifier('columnNumber'), t.numericLiteral(loc.start.column + 1)),
+    t.objectProperty(t.identifier('columnNumber'), t.numericLiteral(loc.start.column + 1))
   ])
 }
 

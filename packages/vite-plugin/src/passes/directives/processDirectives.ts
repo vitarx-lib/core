@@ -4,13 +4,9 @@
  * @module passes/directives/processDirectives
  */
 import * as t from '@babel/types'
+import { isIdentifier } from '@babel/types'
 import { markImport, TransformContext } from '../../context'
-import {
-  addPureComment,
-  createWithDirectivesCall,
-  getAlias,
-  isIdentifier
-} from '../../utils/index.js'
+import { addPureComment, createWithDirectivesCall, getAlias } from '../../utils/index.js'
 
 /**
  * 处理指令

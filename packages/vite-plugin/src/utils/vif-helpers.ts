@@ -4,19 +4,17 @@
  * @module utils/vif-helpers
  */
 import * as t from '@babel/types'
+import { isJSXElement, isJSXText } from '@babel/types'
 import { createError } from '../error'
+import { isWhitespaceJSXText } from './ast-guards.js'
 import {
-  isJSXElement,
-  isJSXText,
-  isWhitespaceJSXText,
-  isVIf,
-  isVElseIf,
-  isVElse,
-  isVIfChain,
   getDirectiveValue,
   hasDirective,
-  filterWhitespaceChildren
-} from './index'
+  isVElse,
+  isVElseIf,
+  isVIf,
+  isVIfChain
+} from './jsx-helpers.js'
 
 /**
  * v-if 链信息
@@ -48,7 +46,11 @@ export function validateVIfChain(children: t.JSXElement[]): void {
     const hasVElse = hasDirective(child, 'v-else')
 
     if (!hasVElseIf && !hasVElse) {
-      throw createError('E008', child, 'Elements after v-if must have v-else-if or v-else directive')
+      throw createError(
+        'E008',
+        child,
+        'Elements after v-if must have v-else-if or v-else directive'
+      )
     }
 
     if (hasVElse && i !== children.length - 1) {
@@ -94,7 +96,9 @@ export function collectVIfChainInfo(nodes: t.JSXElement[]): VIfChainInfo {
 /**
  * 收集 Fragment 中的 v-if 链
  */
-export function collectFragmentVIfChains(children: t.Node[]): Array<VIfChainInfo & { endIndex: number }> {
+export function collectFragmentVIfChains(
+  children: t.Node[]
+): Array<VIfChainInfo & { endIndex: number }> {
   const chains: Array<VIfChainInfo & { endIndex: number }> = []
   let i = 0
 
@@ -133,7 +137,10 @@ export function collectFragmentVIfChains(children: t.Node[]): Array<VIfChainInfo
 /**
  * 从 Fragment 收集单个 v-if 链
  */
-function collectSingleChainFromFragment(children: t.Node[], startIndex: number): VIfChainInfo & { endIndex: number } {
+function collectSingleChainFromFragment(
+  children: t.Node[],
+  startIndex: number
+): VIfChainInfo & { endIndex: number } {
   const nodes: t.JSXElement[] = [children[startIndex] as t.JSXElement]
   const conditions: t.Expression[] = [getDirectiveValue(nodes[0], 'v-if')!]
 

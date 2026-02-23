@@ -5,15 +5,14 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
+import { isJSXElement, isJSXText } from '@babel/types'
 import { TransformContext } from '../../context'
 import {
-  isJSXElement,
-  isJSXText,
-  isWhitespaceJSXText,
-  removeVDirectives,
   collectFragmentVIfChains,
+  createArrowFunction,
   createBranch,
-  createArrowFunction
+  isWhitespaceJSXText,
+  removeVDirectives
 } from '../../utils/index.js'
 
 /**

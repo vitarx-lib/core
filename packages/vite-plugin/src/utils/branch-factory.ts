@@ -4,6 +4,7 @@
  * @module utils/branch-factory
  */
 import * as t from '@babel/types'
+import { isBooleanLiteral, isIdentifier } from '@babel/types'
 import type { TransformContext } from '../context'
 import { markImport } from '../context'
 import {
@@ -11,10 +12,8 @@ import {
   createArrowFunction,
   createBranchCall,
   createUnrefCall,
-  getAlias,
-  isBooleanLiteral,
-  isIdentifier
-} from './index'
+  getAlias
+} from './ast-builders.js'
 
 /**
  * 条件分支配置

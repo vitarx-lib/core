@@ -2,10 +2,10 @@
  * JSX 相关工具函数
  * @module utils/jsx-helpers
  */
-import type { Expression, JSXAttribute, JSXElement } from '@babel/types'
 import * as t from '@babel/types'
+import { type Expression, isJSXText, type JSXAttribute, type JSXElement } from '@babel/types'
 import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS } from '../constants'
-import { isJSXText, isWhitespaceJSXText } from './ast-guards'
+import { isWhitespaceJSXText } from './ast-guards'
 
 /**
  * 获取 JSX 元素的名称
@@ -41,7 +41,11 @@ export function isNativeElement(name: string): boolean {
  */
 export function getJSXAttributeByName(node: JSXElement, name: string): JSXAttribute | undefined {
   for (const attr of node.openingElement.attributes) {
-    if (attr.type === 'JSXAttribute' && attr.name.type === 'JSXIdentifier' && attr.name.name === name) {
+    if (
+      attr.type === 'JSXAttribute' &&
+      attr.name.type === 'JSXIdentifier' &&
+      attr.name.name === name
+    ) {
       return attr
     }
   }
@@ -99,7 +103,9 @@ export function getDirectiveValue(node: JSXElement, directiveName: string): Expr
  * 检查元素是否为 v-if 链的一部分
  */
 export function isVIfChain(node: JSXElement): boolean {
-  return hasDirective(node, 'v-if') || hasDirective(node, 'v-else-if') || hasDirective(node, 'v-else')
+  return (
+    hasDirective(node, 'v-if') || hasDirective(node, 'v-else-if') || hasDirective(node, 'v-else')
+  )
 }
 
 /**
