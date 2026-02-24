@@ -5,9 +5,11 @@
  */
 import * as t from '@babel/types'
 import { HMR } from '../../constants/index.js'
+import { collectPatternBindings } from '../../utils/index.js'
 
 /**
  * 注入 HMR 客户端导入
+ * @param program - AST Program 节点
  */
 export function injectHMRImport(program: t.Program): void {
   const importDecl = t.importDeclaration(
@@ -19,6 +21,7 @@ export function injectHMRImport(program: t.Program): void {
 
 /**
  * 注入 getInstance 导入
+ * @param program - AST Program 节点
  */
 export function injectGetInstanceImport(program: t.Program): void {
   let vitarxImport: t.ImportDeclaration | null = null
@@ -52,10 +55,13 @@ export function injectGetInstanceImport(program: t.Program): void {
 
 /**
  * 创建组件函数体内的 HMR 注册代码
+ * @param variableNames - 需要追踪的变量名列表
+ * @returns HMR 注册语句数组
  */
 export function createHMRRegistrationStatements(variableNames: string[]): t.Statement[] {
   const statements: t.Statement[] = []
 
+  // 获取当前视图实例
   statements.push(
     t.expressionStatement(
       t.assignmentExpression(
@@ -66,6 +72,7 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     )
   )
 
+  // 注册到 HMR 管理器
   statements.push(
     t.expressionStatement(
       t.callExpression(
@@ -78,6 +85,7 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     )
   )
 
+  // 创建状态追踪对象
   const stateProperties = variableNames.map(name =>
     t.objectMethod(
       'get',
@@ -87,6 +95,7 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
     )
   )
 
+  // 异步设置状态
   statements.push(
     t.expressionStatement(
       t.logicalExpression(
@@ -121,66 +130,29 @@ export function createHMRRegistrationStatements(variableNames: string[]): t.Stat
 
 /**
  * 从函数体中收集局部变量名
+ * @param functionBody - 函数体语句块
+ * @returns 变量名数组
  */
 export function collectLocalVariableNames(functionBody: t.BlockStatement): string[] {
-  const variableNames: string[] = []
+  const variableNames = new Set<string>()
 
   for (const stmt of functionBody.body) {
     if (stmt.type === 'VariableDeclaration') {
       for (const decl of stmt.declarations) {
-        if (decl.id.type === 'Identifier') {
-          variableNames.push(decl.id.name)
-        } else if (decl.id.type === 'ObjectPattern') {
-          collectPatternNames(decl.id, variableNames)
-        } else if (decl.id.type === 'ArrayPattern') {
-          collectArrayPatternNames(decl.id, variableNames)
+        if (decl.id.type !== 'VoidPattern') {
+          collectPatternBindings(decl.id, variableNames)
         }
       }
     }
   }
 
-  return variableNames
-}
-
-/**
- * 从对象模式中收集变量名
- */
-function collectPatternNames(pattern: t.ObjectPattern, names: string[]): void {
-  for (const prop of pattern.properties) {
-    if (prop.type === 'RestElement') {
-      if (prop.argument.type === 'Identifier') {
-        names.push(prop.argument.name)
-      }
-    } else if (prop.value.type === 'Identifier') {
-      names.push(prop.value.name)
-    } else if (prop.value.type === 'ObjectPattern') {
-      collectPatternNames(prop.value, names)
-    } else if (prop.value.type === 'ArrayPattern') {
-      collectArrayPatternNames(prop.value, names)
-    }
-  }
-}
-
-/**
- * 从数组模式中收集变量名
- */
-function collectArrayPatternNames(pattern: t.ArrayPattern, names: string[]): void {
-  for (const elem of pattern.elements) {
-    if (!elem) continue
-    if (elem.type === 'Identifier') {
-      names.push(elem.name)
-    } else if (elem.type === 'ObjectPattern') {
-      collectPatternNames(elem, names)
-    } else if (elem.type === 'ArrayPattern') {
-      collectArrayPatternNames(elem, names)
-    } else if (elem.type === 'RestElement' && elem.argument.type === 'Identifier') {
-      names.push(elem.argument.name)
-    }
-  }
+  return Array.from(variableNames)
 }
 
 /**
  * 为组件函数注入 HMR 注册代码
+ * @param func - 函数声明/表达式/箭头函数
+ * @param variableNames - 需要追踪的变量名列表
  */
 export function injectHMRIntoFunction(
   func: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression,
