@@ -61,3 +61,6 @@ export enum HMR {
   view = '__$VITARX_HMR_VIEW_NODE$__',
   state = '__$VITARX_HMR_VIEW_STATE$__'
 }
+
+/** 默认导出组件基础名称 */
+export const DEFAULT_EXPORT_BASE_NAME = '_defaultExport'

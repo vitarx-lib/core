@@ -4,7 +4,7 @@
  * @module passes/transform/collect
  */
 import * as t from '@babel/types'
-import { PURE_COMPILE_COMPONENTS } from '../constants/index.js'
+import { DEFAULT_EXPORT_BASE_NAME, PURE_COMPILE_COMPONENTS } from '../constants/index.js'
 import { generateUniqueAlias } from './generate.js'
 
 /**
@@ -16,9 +16,6 @@ export interface ComponentInfo {
 }
 /** 纯编译组件名称集合 */
 const PURE_COMPILE_COMPONENT_SET: Set<string> = new Set(PURE_COMPILE_COMPONENTS)
-
-/** 默认导出组件基础名称 */
-const DEFAULT_EXPORT_BASE_NAME = 'DefaultExport'
 
 /**
  * 生成唯一的默认导出组件名称

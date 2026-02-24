@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_EXPORT_BASE_NAME } from '../../src/constants/index.js'
 import type { CompileOptions } from '../../src/transform.js'
 import { compile } from '../utils'
 
@@ -72,28 +73,28 @@ describe('HMR 协议结构', () => {
     it('识别默认导出的匿名函数声明组件', async () => {
       const code = `export default function() { return <div></div> }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
-      expect(result).toContain('export default function DefaultExport()')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}`)
+      expect(result).toContain(`export default function ${DEFAULT_EXPORT_BASE_NAME}()`)
     })
 
     it('识别默认导出的匿名函数表达式组件', async () => {
       const code = `export default function() { return <div></div> }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}`)
     })
 
     it('识别默认导出的箭头函数组件', async () => {
       const code = `export default () => <div></div>`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
-      expect(result).toContain('function DefaultExport(')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}`)
+      expect(result).toContain(`function ${DEFAULT_EXPORT_BASE_NAME}(`)
     })
 
     it('识别默认导出的箭头函数组件（带函数体）', async () => {
       const code = `export default () => { return <div></div> }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
-      expect(result).toContain('function DefaultExport(')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}`)
+      expect(result).toContain(`function ${DEFAULT_EXPORT_BASE_NAME}(`)
     })
 
     it('默认导出匿名函数组件也注入状态恢复', async () => {
@@ -102,7 +103,7 @@ describe('HMR 协议结构', () => {
         return <div>{count}</div>
       }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}`)
       expect(result).toContain('__$VITARX_HMR$__.instance.memo')
       expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
     })
@@ -113,7 +114,7 @@ describe('HMR 协议结构', () => {
         return <div>{count}</div>
       }`
       const result = await compile(code, hmrOptions)
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}`)
       expect(result).toContain('__$VITARX_HMR$__.instance.memo')
     })
 
@@ -134,27 +135,27 @@ describe('HMR 协议结构', () => {
 
     it('默认导出匿名函数名称冲突时自动生成唯一名称', async () => {
       const code = `
-        export const DefaultExport = () => <div>A</div>
+        export const ${DEFAULT_EXPORT_BASE_NAME} = () => <div>A</div>
         export default function() { return <div>B</div> }
       `
       const result = await compile(code, hmrOptions)
       // 原有的 DefaultExport 组件
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}`)
       // 匿名默认导出应该使用 DefaultExport1
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport$1')
-      expect(result).toContain('function DefaultExport$1()')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}$1`)
+      expect(result).toContain(`function ${DEFAULT_EXPORT_BASE_NAME}$1()`)
     })
 
     it('多个默认导出匿名函数名称冲突时递增编号', async () => {
       // 注意：实际代码中只有一个 export default，这里测试的是名称生成逻辑
       const code = `
-        export const DefaultExport = () => <div>A</div>
-        export const DefaultExport$0 = () => <div>B</div>
+        export const ${DEFAULT_EXPORT_BASE_NAME} = () => <div>A</div>
+        export const ${DEFAULT_EXPORT_BASE_NAME}$0 = () => <div>B</div>
         export default function() { return <div>C</div> }
       `
       const result = await compile(code, hmrOptions)
       // 匿名默认导出应该使用 DefaultExport$1
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport$1')
+      expect(result).toContain(`__$VITARX_HMR$__.instance.bindId(${DEFAULT_EXPORT_BASE_NAME}$1`)
     })
 
     it('识别 export { } 导出的组件', async () => {
