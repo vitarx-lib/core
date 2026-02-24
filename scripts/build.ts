@@ -139,10 +139,11 @@ async function buildPackage(
   const separator = '='.repeat(50)
   log.info(`\n📦 Building package(${index + 1}): ${packageDirName}`)
   log.info(separator)
-
   // 创建临时 tsconfig.json
   const tsconfigPath = createTsConfig(packagePath)
   const dist = resolve(packagePath, 'dist')
+  // 清理 dist 目录
+  runClean(dist)
   // 运行测试（如果需要）
   if (runTest) {
     await runVitestTest(packagePath, false, false)
