@@ -3,6 +3,13 @@ import type { Plugin } from 'vite'
 import { type CompileOptions, transform } from './transform.js'
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
+
+/**
+ * vite-plugin-vitarx 配置选项
+ *
+ * 暂无配置选项
+ */
+export interface VitePluginVitarxOptions {}
 /**
  * vite-plugin-vitarx
  *
@@ -15,7 +22,7 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname)
  * @param _options - 暂无可选配置。
  * @returns - vite插件对象。
  */
-export default function vitarx(_options?: {}): Plugin {
+export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
   let compileOptions: CompileOptions
   let isDEV = false
   let isSSR = false

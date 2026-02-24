@@ -248,12 +248,12 @@ import.meta.hot.accept(mod => {
 ### 插件选项
 
 ```typescript
-interface VitePluginOptions {
+interface VitePluginVitarxOptions {
   // 暂无配置选项
 }
 ```
 
-### 编译选项
+### 编译选项（内部）
 
 ```typescript
 interface CompileOptions {
@@ -274,36 +274,38 @@ interface CompileOptions {
 
 ```
 src/
-├── constants/          # 常量定义
-├── hmr-client/         # HMR 客户端代码
-├── passes/             # 编译转换处理
-│   ├── components/     # 编译宏组件处理
-│   ├── directives/     # 指令处理
-│   ├── hmr/            # HMR 代码注入
-│   ├── imports/        # 导入处理
-│   ├── jsx/            # JSX 处理
-│   ├── props/          # Props 处理
-│   └── transform/      # 转换工具
-├── utils/              # 工具函数
-├── context.ts          # 转换上下文
-├── error.ts            # 错误处理
-└── index.ts            # 插件入口
+├── constants/      # 常量定义
+├── hmr-client/     # HMR 客户端运行时
+├── passes/         # 编译转换处理
+│   ├── components/ # 编译宏组件
+│   ├── directives/ # 指令处理
+│   ├── hmr/        # HMR 注入
+│   ├── imports/    # 导入处理
+│   ├── jsx/        # JSX 转换
+│   ├── props/      # 属性处理
+│   └── transform/  # 转换工具
+├── utils/          # 公共工具函数
+├── context.ts      # 转换上下文
+├── error.ts        # 错误处理
+├── transform.ts    # 主转换入口
+└── index.ts        # 插件入口
 ```
 
 ## 错误码
 
-| 错误码  | 描述                      |
-|------|-------------------------|
-| E001 | 无效的 JSX 属性值             |
-| E002 | 无效的 v-model 值           |
-| E003 | v-else 没有前置的 v-if       |
-| E004 | v-else-if 没有前置的 v-if    |
-| E005 | 无效的 v-if 值              |
-| E006 | Switch 子元素必须是 Match 组件  |
-| E007 | Match 组件缺少 when 属性      |
-| E008 | IfBlock 子元素必须包含 v-if 指令 |
-| E009 | v-model 与 modelValue 冲突 |
-| E010 | v-model 值必须是标识符或成员表达式   |
+| 错误码  | 描述                         |
+|------|----------------------------|
+| E001 | 无效的 JSX 属性值                |
+| E002 | 无效的 v-model 值              |
+| E003 | v-else 没有前置的 v-if          |
+| E004 | v-else-if 没有前置的 v-if       |
+| E005 | 无效的 v-if 值                 |
+| E006 | Switch 子元素必须是 Match 组件     |
+| E007 | Match 组件缺少 when 属性         |
+| E008 | IfBlock 子元素必须包含 v-if 指令    |
+| E009 | v-model 与 modelValue 冲突    |
+| E010 | v-model 值必须是标识符或成员表达式      |
+| E011 | v-model Identifier 必须是 ref |
 
 ## License
 
