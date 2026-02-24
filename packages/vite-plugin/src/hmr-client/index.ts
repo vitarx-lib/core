@@ -63,6 +63,7 @@ export default class HMRManager {
    * const state = __$VITARX_HMR$__.instance.memo(__$VITARX_HMR_VIEW_NODE$__, 'state') ?? ref(0)
    */
   memo(view: ComponentView, name: string): any {
+    if (!view) return undefined
     const state = view[HMR.state]?.[name]
     // 如果是副作用，则丢弃。
     if (!isRef(state) && !isReactive(state)) return undefined

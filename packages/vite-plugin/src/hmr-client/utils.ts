@@ -1,76 +1,56 @@
+/**
+ * HMR 代码变更检测工具
+ * 用于判断组件代码中 UI 描述部分和非 UI 部分的变更
+ * @module hmr-client/utils
+ */
 import { type Node, parse } from 'acorn'
 import { simple as walkSimple } from 'acorn-walk'
 
+/**
+ * 代码变更类型
+ */
 export interface ChangeCode {
+  /** UI 描述代码是否变化（需要重新构建视图） */
   build: boolean
+  /** 非 UI 代码是否变化（需要完全重新挂载） */
   logic: boolean
 }
 
+/**
+ * 代码分离结果
+ */
 interface SeparationResult {
+  /** 非 UI 代码（逻辑代码） */
   logicCode: string
+  /** UI 描述代码 */
   renderCode: string
 }
 
 /**
- * 从代码中提取导入别名映射
- * @param code 源代码
- * @returns 别名映射 Map<本地名称, 原始名称>
+ * UI 相关的运行时 API 名称
+ * 这些 API 调用代表 UI 描述代码
  */
-function extractImportAliases(code: string): Map<string, string> {
-  const aliasMap = new Map<string, string>()
+const UI_APIS = new Set(['createView', 'branch', 'dynamic', 'access', 'withDirectives', 'jsxDEV'])
 
-  try {
-    const ast = parse(code, {
-      ecmaVersion: 'latest',
-      sourceType: 'module'
-    })
-
-    for (const node of (ast as any).body) {
-      if (node.type === 'ImportDeclaration') {
-        const source = node.source.value
-        // 只处理 vitarx 相关的导入
-        if (typeof source === 'string' && (source === 'vitarx' || source.startsWith('@vitarx/'))) {
-          for (const specifier of node.specifiers) {
-            if (specifier.type === 'ImportSpecifier') {
-              const imported =
-                specifier.imported.type === 'Identifier'
-                  ? specifier.imported.name
-                  : specifier.imported.value
-              const local = specifier.local.name
-              // 如果本地名称与导入名称不同，记录别名
-              if (imported !== local) {
-                aliasMap.set(local, imported)
-              }
-              // 同时记录原始名称，用于检测
-              aliasMap.set(local, imported)
-            } else if (specifier.type === 'ImportDefaultSpecifier') {
-              // 默认导入，可能是 h 函数
-              aliasMap.set(specifier.local.name, 'h')
-            } else if (specifier.type === 'ImportNamespaceSpecifier') {
-              // 命名空间导入，如 import * as V from 'vitarx'
-              // V.createView 形式的调用需要特殊处理
-              aliasMap.set(specifier.local.name, '*')
-            }
-          }
-        }
-      }
-    }
-  } catch {
-    // 解析失败时忽略
-  }
-
-  return aliasMap
+/**
+ * 判断标识符名称是否为 UI API
+ * 支持原始名称和带后缀的名称（如 jsxDEV$1）
+ */
+function isUIApi(name: string): boolean {
+  if (UI_APIS.has(name)) return true
+  // 支持带数字后缀的 createView
+  return /^jsxDEV\$\d+$/.test(name) || /^createView\$\d+$/.test(name)
 }
 
 /**
- * 分离逻辑代码和渲染代码
+ * 从函数代码中分离 UI 代码和非 UI 代码
  * @param functionCode 完整函数代码
  * @returns 包含逻辑代码和渲染代码的对象
  */
 function separateLogicAndRender(functionCode: string): SeparationResult {
-  const uiNodes: Array<{ start: number; end: number; code: string }> = []
+  const uiNodes: Array<{ start: number; end: number }> = []
 
-  // 添加括号，兼容匿名函数解析
+  // 包装代码以便解析
   const wrappedCode = `(${functionCode})`
 
   try {
@@ -84,15 +64,24 @@ function separateLogicAndRender(functionCode: string): SeparationResult {
       allowReserved: true
     })
 
-    // 使用 acorn-walk 遍历 AST
+    // 遍历 AST 收集所有 UI API 调用节点
     walkSimple(ast as Node, {
-      CallExpression(node) {
-        if (node.callee.type === 'Identifier' && /^jsx(DEV\$\d+)$/.test(node.callee.name)) {
-          uiNodes.push({
-            start: node.start,
-            end: node.end,
-            code: wrappedCode.slice(node.start, node.end)
-          })
+      CallExpression(node: any) {
+        const callee = node.callee
+
+        // 直接调用：createView(...)
+        if (callee.type === 'Identifier' && isUIApi(callee.name)) {
+          uiNodes.push({ start: node.start, end: node.end })
+          return
+        }
+
+        // 成员调用：exports.createView(...)
+        if (
+          callee.type === 'MemberExpression' &&
+          callee.property.type === 'Identifier' &&
+          isUIApi(callee.property.name)
+        ) {
+          uiNodes.push({ start: node.start, end: node.end })
         }
       }
     })
@@ -109,7 +98,7 @@ function separateLogicAndRender(functionCode: string): SeparationResult {
 
   // 提取 UI 代码
   const renderCode = uiNodes
-    .map(n => n.code)
+    .map(n => wrappedCode.slice(n.start, n.end))
     .reverse()
     .join('\n')
 
@@ -126,18 +115,48 @@ function separateLogicAndRender(functionCode: string): SeparationResult {
 }
 
 /**
- * 判断两个函数组件的差异
+ * 规范化代码字符串
+ * 移除多余空白、注释等，用于比较
+ */
+function normalizeCode(code: string): string {
+  // 移除多行注释
+  let result = code.replace(/\/\*[\s\S]*?\*\//g, '')
+  // 移除单行注释
+  result = result.replace(/\/\/.*$/gm, '')
+  // 移除多余空白
+  result = result.replace(/\s+/g, ' ')
+  // 移除首尾空白
+  return result.trim()
+}
+
+/**
+ * 判断两个函数组件的代码差异
+ *
+ * 分析策略：
+ * 1. 解析函数代码，提取所有 createView/branch/dynamic 等 UI API 调用
+ * 2. 将这些调用识别为 UI 描述代码
+ * 3. 其余代码识别为非 UI 代码（逻辑代码）
+ * 4. 分别比较 UI 代码和非 UI 代码是否变化
+ *
  * @param newCode 新函数代码
  * @param oldCode 旧函数代码
- * @returns {ChangeCode}
+ * @returns {ChangeCode} 变更检测结果
  */
 export function diffComponentChange(newCode: string, oldCode: string): ChangeCode {
   const { renderCode: newRenderCode, logicCode: newLogicCode } = separateLogicAndRender(newCode)
 
   const { renderCode: oldRenderCode, logicCode: oldLogicCode } = separateLogicAndRender(oldCode)
 
+  // 规范化后比较，避免格式差异导致误判
+  const normalizedNewLogic = normalizeCode(newLogicCode)
+  const normalizedOldLogic = normalizeCode(oldLogicCode)
+  const normalizedNewRender = normalizeCode(newRenderCode)
+  const normalizedOldRender = normalizeCode(oldRenderCode)
+
   return {
-    build: newRenderCode !== oldRenderCode,
-    logic: newLogicCode !== oldLogicCode
+    // UI 代码变化：需要重新构建视图
+    build: normalizedNewRender !== normalizedOldRender,
+    // 非 UI 代码变化：需要完全重新挂载组件
+    logic: normalizedNewLogic !== normalizedOldLogic
   }
 }

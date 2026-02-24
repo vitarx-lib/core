@@ -3,10 +3,4 @@
  * @module passes/hmr
  */
 
-export {
-  injectHMRImport,
-  injectGetInstanceImport,
-  createHMRRegistrationStatements,
-  collectLocalVariableNames,
-  injectHMRIntoFunction
-} from './inject.js'
+export { injectHMRSupport } from './inject.js'

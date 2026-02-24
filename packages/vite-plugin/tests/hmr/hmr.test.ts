@@ -69,6 +69,94 @@ describe('HMR 协议结构', () => {
       expect(result).toContain('__$VITARX_HMR$__.instance.bindId(App')
     })
 
+    it('识别默认导出的匿名函数声明组件', async () => {
+      const code = `export default function() { return <div></div> }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain('export default function DefaultExport()')
+    })
+
+    it('识别默认导出的匿名函数表达式组件', async () => {
+      const code = `export default function() { return <div></div> }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+    })
+
+    it('识别默认导出的箭头函数组件', async () => {
+      const code = `export default () => <div></div>`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain('function DefaultExport(')
+    })
+
+    it('识别默认导出的箭头函数组件（带函数体）', async () => {
+      const code = `export default () => { return <div></div> }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain('function DefaultExport(')
+    })
+
+    it('默认导出匿名函数组件也注入状态恢复', async () => {
+      const code = `export default function() {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain('__$VITARX_HMR$__.instance.memo')
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+    })
+
+    it('默认导出箭头函数组件也注入状态恢复', async () => {
+      const code = `export default () => {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      expect(result).toContain('__$VITARX_HMR$__.instance.memo')
+    })
+
+    it('默认导出非组件函数不处理', async () => {
+      const code = `export default function() { return 1 }`
+      const result = await compile(code, hmrOptions)
+      expect(result).not.toContain('__$VITARX_HMR$__.instance.bindId')
+      expect(result).not.toContain('import.meta.hot.accept')
+    })
+
+    it('默认导出小写字母开头的匿名函数不处理', async () => {
+      // 注意：匿名函数没有名称，所以检查的是组件特征（是否有 JSX）
+      // 这个测试验证非 JSX 返回的匿名函数不会被处理
+      const code = `export default function() { return 'not a component' }`
+      const result = await compile(code, hmrOptions)
+      expect(result).not.toContain('__$VITARX_HMR$__.instance.bindId')
+    })
+
+    it('默认导出匿名函数名称冲突时自动生成唯一名称', async () => {
+      const code = `
+        export const DefaultExport = () => <div>A</div>
+        export default function() { return <div>B</div> }
+      `
+      const result = await compile(code, hmrOptions)
+      // 原有的 DefaultExport 组件
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
+      // 匿名默认导出应该使用 DefaultExport1
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport$0')
+      expect(result).toContain('function DefaultExport$0()')
+    })
+
+    it('多个默认导出匿名函数名称冲突时递增编号', async () => {
+      // 注意：实际代码中只有一个 export default，这里测试的是名称生成逻辑
+      const code = `
+        export const DefaultExport = () => <div>A</div>
+        export const DefaultExport$0 = () => <div>B</div>
+        export default function() { return <div>C</div> }
+      `
+      const result = await compile(code, hmrOptions)
+      // 匿名默认导出应该使用 DefaultExport$1
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport$1')
+    })
+
     it('识别 export { } 导出的组件', async () => {
       const code = `
         const App = () => <div></div>
@@ -146,6 +234,175 @@ describe('HMR 协议结构', () => {
       }`
       const result = await compile(code, hmrOptions)
       expect(result).toContain('__$VITARX_HMR_VIEW_STATE$__')
+    })
+  })
+
+  describe('状态恢复注入', () => {
+    it('为 ref 变量注入状态恢复代码', async () => {
+      const code = `export const App = () => {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.memo')
+      expect(result).toContain('__$VITARX_HMR_VIEW_NODE$__')
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+    })
+
+    it('为普通变量注入状态恢复代码', async () => {
+      const code = `export const App = () => {
+        const name = 'test'
+        return <div>{name}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.memo')
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"name"\)/)
+    })
+
+    it('为多个变量注入状态恢复代码', async () => {
+      const code = `export const App = () => {
+        const count = ref(0)
+        const name = 'test'
+        const active = true
+        return <div>{count}{name}{active}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"name"\)/)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"active"\)/)
+    })
+
+    it('使用 ?? 运算符保留原始初始值', async () => {
+      const code = `export const App = () => {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('?? ref(0)')
+    })
+
+    it('箭头函数初始值不注入状态恢复', async () => {
+      const code = `export const App = () => {
+        const handler = () => console.log('click')
+        return <div onClick={handler}>test</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).not.toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"handler"\)/)
+      expect(result).toContain("const handler = () => console.log('click')")
+    })
+
+    it('函数表达式初始值不注入状态恢复', async () => {
+      const code = `export const App = () => {
+        const handler = function() { console.log('click') }
+        return <div onClick={handler}>test</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).not.toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"handler"\)/)
+    })
+
+    it('类表达式初始值不注入状态恢复', async () => {
+      const code = `export const App = () => {
+        const MyClass = class {}
+        return <div>{MyClass}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).not.toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"MyClass"\)/)
+    })
+
+    it('无初始值变量不注入状态恢复', async () => {
+      const code = `export const App = () => {
+        let count
+        count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('let count')
+      expect(result).not.toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+    })
+
+    it('混合声明时正确处理', async () => {
+      const code = `export const App = () => {
+        const count = ref(0)
+        const handler = () => {}
+        const name = 'test'
+        return <div>{count}{name}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"name"\)/)
+      expect(result).not.toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"handler"\)/)
+    })
+
+    it('函数声明组件也注入状态恢复', async () => {
+      const code = `export function App() {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.memo')
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+    })
+
+    it('函数表达式组件也注入状态恢复', async () => {
+      const code = `export const App = function() {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toContain('__$VITARX_HMR$__.instance.memo')
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"count"\)/)
+    })
+
+    it('计算属性初始值注入状态恢复', async () => {
+      const code = `export const App = () => {
+        const doubled = computed(() => count.value * 2)
+        return <div>{doubled}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"doubled"\)/)
+    })
+
+    it('对象初始值注入状态恢复', async () => {
+      const code = `export const App = () => {
+        const config = { a: 1, b: 2 }
+        return <div>{config.a}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"config"\)/)
+    })
+
+    it('数组初始值注入状态恢复', async () => {
+      const code = `export const App = () => {
+        const items = [1, 2, 3]
+        return <div>{items}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"items"\)/)
+    })
+
+    it('调用表达式初始值注入状态恢复', async () => {
+      const code = `export const App = () => {
+        const data = fetchData()
+        return <div>{data}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      expect(result).toMatch(/memo\(__\$VITARX_HMR_VIEW_NODE\$__,\s*"data"\)/)
+    })
+
+    it('非 HMR 模式不注入状态恢复', async () => {
+      const nonHmrOptions: CompileOptions = {
+        hmr: false,
+        dev: true,
+        ssr: false,
+        runtimeModule: 'vitarx',
+        sourceMap: false
+      }
+      const code = `export const App = () => {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, nonHmrOptions)
+      expect(result).not.toContain('__$VITARX_HMR$__.instance.memo')
     })
   })
 

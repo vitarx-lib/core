@@ -9,9 +9,7 @@ import traverse from '@babel/traverse'
 import * as t from '@babel/types'
 import { createContext, type TransformContext } from './context'
 import {
-  collectComponentFunctions,
   collectExistingImports,
-  collectExportedNames,
   collectLocalBindings,
   collectRefApiAliases,
   collectRefVariables,
@@ -22,8 +20,12 @@ import {
   processPureCompileComponent,
   processVIfChain,
   transformJSXElement
-} from './passes'
-import { getJSXElementName, isPureCompileComponent } from './utils/index.js'
+} from './passes/index.js'
+import {
+  collectComponentFunctions,
+  getJSXElementName,
+  isPureCompileComponent
+} from './utils/index.js'
 
 export interface TransformResult {
   code: string
@@ -174,8 +176,7 @@ export async function transform(
 
   collectRefInfo(ctx, ast.program)
 
-  const exportedNames = collectExportedNames(ast.program)
-  const components = collectComponentFunctions(ast.program, exportedNames)
+  const components = collectComponentFunctions(ast.program)
 
   transformAST(ast, ctx)
 

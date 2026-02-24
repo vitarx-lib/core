@@ -51,3 +51,6 @@ export {
   collectFragmentVIfChains,
   type VIfChainInfo
 } from './vif-helpers'
+
+// 组件收集
+export { collectComponentFunctions, type ComponentInfo } from './component-collect.js'
