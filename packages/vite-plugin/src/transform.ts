@@ -23,6 +23,7 @@ import {
 } from './passes/index.js'
 import {
   collectComponentFunctions,
+  generateUniqueAlias,
   getJSXElementName,
   isPureCompileComponent
 } from './utils/index.js'
@@ -93,12 +94,12 @@ function setupAliases(ctx: TransformContext, program: t.Program): void {
     if (vitarxImports.has(apiName)) {
       ctx.vitarxAliases[apiName] = vitarxImports.get(apiName)!
     } else if (allNames.has(apiName)) {
-      ctx.vitarxAliases[apiName] = `${apiName}$1`
+      ctx.vitarxAliases[apiName] = generateUniqueAlias(apiName, allNames)
     }
   }
 
   if (ctx.options.hmr) {
-    ctx.vitarxAliases.createView = 'jsxDEV'
+    ctx.vitarxAliases.createView = generateUniqueAlias('jsxDEV', allNames)
   }
 }
 
