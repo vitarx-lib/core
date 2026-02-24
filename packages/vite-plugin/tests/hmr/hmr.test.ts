@@ -141,8 +141,8 @@ describe('HMR 协议结构', () => {
       // 原有的 DefaultExport 组件
       expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport')
       // 匿名默认导出应该使用 DefaultExport1
-      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport$0')
-      expect(result).toContain('function DefaultExport$0()')
+      expect(result).toContain('__$VITARX_HMR$__.instance.bindId(DefaultExport$1')
+      expect(result).toContain('function DefaultExport$1()')
     })
 
     it('多个默认导出匿名函数名称冲突时递增编号', async () => {

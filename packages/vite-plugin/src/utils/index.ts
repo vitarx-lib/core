@@ -54,3 +54,6 @@ export {
 
 // 组件收集
 export { collectComponentFunctions, type ComponentInfo } from './component-collect.js'
+
+// 生成器
+export { generateUniqueAlias } from './generate.js'

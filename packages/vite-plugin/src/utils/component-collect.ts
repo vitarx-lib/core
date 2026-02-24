@@ -5,6 +5,7 @@
  */
 import * as t from '@babel/types'
 import { PURE_COMPILE_COMPONENTS } from '../constants/index.js'
+import { generateUniqueAlias } from './generate.js'
 
 /**
  * 组件信息
@@ -27,11 +28,7 @@ function generateUniqueDefaultName(exportedNames: Set<string>): string {
   if (!exportedNames.has(DEFAULT_EXPORT_BASE_NAME)) {
     return DEFAULT_EXPORT_BASE_NAME
   }
-  let index = 0
-  while (exportedNames.has(`${DEFAULT_EXPORT_BASE_NAME}$${index}`)) {
-    index++
-  }
-  return `${DEFAULT_EXPORT_BASE_NAME}$${index}`
+  return generateUniqueAlias(DEFAULT_EXPORT_BASE_NAME, exportedNames)
 }
 
 /**
