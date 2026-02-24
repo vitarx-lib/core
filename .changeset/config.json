@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "vitarx",
+      "@vitarx/utils",
+      "@vitarx/responsive",
+      "@vitarx/runtime-core",
+      "@vitarx/runtime-dom",
+      "@vitarx/runtime-ssr",
+      "@vitarx/vite-plugin"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "updateInternalDependencies": "always"
+  }
+}
