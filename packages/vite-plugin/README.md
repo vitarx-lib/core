@@ -282,8 +282,7 @@ src/
 │   ├── hmr/        # HMR 注入
 │   ├── imports/    # 导入处理
 │   ├── jsx/        # JSX 转换
-│   ├── props/      # 属性处理
-│   └── transform/  # 转换工具
+│   └── props/  # 属性处理
 ├── utils/          # 公共工具函数
 ├── context.ts      # 转换上下文
 ├── error.ts        # 错误处理
