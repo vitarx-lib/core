@@ -10,8 +10,6 @@ lerna-debug.log*
 node_modules
 dist
 *.local
-package-lock.json
-pnpm-lock.yaml
 coverage
 .qoder/*
 !.qoder/repowiki
