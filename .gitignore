@@ -13,6 +13,7 @@ dist
 coverage
 .qoder/*
 !.qoder/repowiki
+pnpm-lock.yaml
 
 # Test
 test.ts
