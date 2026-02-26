@@ -1,6 +1,7 @@
 import chalk from 'chalk'
-import { exec } from 'child_process'
+import { exec, execSync } from 'child_process'
 import { existsSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import readline from 'node:readline'
 import { join } from 'path'
 import { promisify } from 'util'
 
@@ -159,4 +160,37 @@ export function runClean(dist: string): void {
     // 输出清理成功的日志信息
     log.success(`✓ Cleaned dist directory: ${dist}`)
   }
+}
+
+/**
+ * 判断一个包是否有变化
+ */
+export function hasPackageChanged(pkgName: string) {
+  const pkgPath = `packages/${pkgName}`
+  if (!existsSync(pkgPath)) return false
+  // 获取相对于 baseBranch 的变化文件列表
+  const diff = execSync(`git diff --name-only origin/main -- ${pkgPath}`).toString().trim()
+
+  return diff.length > 0
+}
+
+/**
+ * 创建一个命令行提示函数，用于向用户提问并获取用户输入
+ * @param question - 要向用户显示的问题字符串
+ * @returns {Promise<string>} 返回一个Promise，解析为用户输入的答案（去除首尾空格）
+ */
+export function prompt(question: string): Promise<string> {
+  // 使用readline模块创建一个接口，用于处理用户输入和输出
+  const rl = readline.createInterface({
+    input: process.stdin, // 设置输入流为标准输入
+    output: process.stdout // 设置输出流为标准输出
+  })
+  // 返回一个新的Promise，用于异步处理用户输入
+  return new Promise(resolve =>
+    // 使用rl.question方法向用户提问，并在收到答案后执行回调
+    rl.question(question, ans => {
+      rl.close() // 关闭readline接口
+      resolve(ans.trim()) // 解析Promise，返回去除首尾空格的答案
+    })
+  )
 }
