@@ -22,22 +22,14 @@ import readline from 'node:readline/promises'
 import { resolve } from 'path'
 import process from 'process'
 import semver from 'semver'
+import { PACKAGES } from './common.js'
+import { hasPackageChanged, prompt } from './utils.js'
 
 /* -------------------------------------------------- */
 /* Config */
 /* -------------------------------------------------- */
 
 const REQUIRED_BRANCH = 'main'
-
-const PACKAGES = [
-  'utils',
-  'responsive',
-  'runtime-core',
-  'runtime-dom',
-  'runtime-ssr',
-  'vitarx',
-  'vite-plugin'
-]
 
 const RELEASE_TYPES = [
   'major',
@@ -54,6 +46,7 @@ const NPM_LINK = 'https://registry.npmjs.org/'
 
 const ROOT = process.cwd()
 const DRY_RUN = process.argv.includes('--dry-run') || process.argv.includes('--d')
+const FORCED = process.argv.includes('--force') || process.argv.includes('--f')
 const SKIP_CONFIRM = process.argv.includes('--yes')
 
 let committed = false
@@ -539,7 +532,28 @@ async function main() {
   updateAllVersions(nextVersion)
 
   section('Build')
-  run('pnpm build')
+  if (FORCED) {
+    run('pnpm build')
+  } else {
+    const changes = PACKAGES.filter(hasPackageChanged)
+      .map(pkg => `--filter ${pkg}`)
+      .join(' ')
+    if (changes.length) {
+      const result = await prompt(`Build (${changes}) changed packages?(y/N):`)
+      if (result.toLowerCase() === 'y') {
+        run(`pnpm build ${changes}`)
+      } else {
+        throw new Error('Build canceled')
+      }
+    } else {
+      const result = await prompt(`Build all packages?(y/N):`)
+      if (result.toLowerCase() === 'y') {
+        run(`pnpm build ${changes}`)
+      } else {
+        throw new Error('Build canceled')
+      }
+    }
+  }
 
   section('Test')
   run('pnpm test')
