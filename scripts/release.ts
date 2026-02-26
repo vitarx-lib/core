@@ -542,10 +542,11 @@ async function main() {
       throw new Error('Build canceled')
     }
   } else {
-    const result = await prompt(`Build all packages?(y/N):`)
-    if (result.toLowerCase() === 'y') {
+    const result = (await prompt(`Build all packages?(y/N/skip):`)).toLowerCase()
+
+    if (result === 'y') {
       run(`pnpm build ${changes}`)
-    } else {
+    } else if (result !== 'skip') {
       throw new Error('Build canceled')
     }
   }
