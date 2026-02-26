@@ -1,6 +1,6 @@
 {
   "name": "vitarx",
-  "version": "4.0.0-alpha.2",
+  "version": "4.0.0-alpha.3",
   "description": "Vitarx is an advanced UI framework that provides engine-level control over the View runtime.",
   "author": "ZhuChongLin <8210856@qq.com>",
   "license": "MIT",
