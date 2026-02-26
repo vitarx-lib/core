@@ -6,7 +6,7 @@ export default {
     'type-enum': [
       RuleConfigSeverity.Error,
       'always',
-      ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'ci']
+      ['feat', 'fix', 'docs', 'style', 'refactor', 'test', 'chore', 'release']
     ],
     'subject-empty': [RuleConfigSeverity.Error, 'never'],
     'scope-empty': [0],

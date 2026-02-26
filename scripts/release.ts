@@ -49,7 +49,7 @@ const RELEASE_TYPES = [
   'prerelease',
   'release'
 ] as const
-
+const NPM_LINK = 'https://registry.npmjs.org/'
 /* -------------------------------------------------- */
 
 const ROOT = process.cwd()
@@ -240,7 +240,7 @@ function ensureCorrectBranch() {
  */
 function ensureNpmLogin() {
   try {
-    const user = runSilent('npm whoami')
+    const user = runSilent(`npm whoami --registry ${NPM_LINK}`)
     success(`npm logged in as ${user}`)
   } catch {
     throw new Error('npm not logged in')
@@ -549,7 +549,7 @@ async function main() {
 
   section('Commit')
   run('git add .')
-  run(`git commit -m "ci(release): ${versionTag}"`)
+  run(`git commit -m "release: ${versionTag}"`)
   committed = true
 
   section('Publish')
@@ -567,7 +567,7 @@ async function main() {
   for (const name of PACKAGES) {
     try {
       const pkgDir = resolve(ROOT, `packages/${name}`)
-      run(`npm publish --access public --tag ${tag}`, pkgDir)
+      run(`npm publish --access public --tag ${tag} --registry ${NPM_LINK}`, pkgDir)
 
       publishResults.push({ name, success: true })
     } catch (err) {
