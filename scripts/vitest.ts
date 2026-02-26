@@ -1,8 +1,9 @@
 #!/usr/bin/env tsx
 import chalk from 'chalk'
-import { existsSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { join, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { PACKAGES } from './common.js'
 import { runVitestTest } from './utils.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -69,12 +70,7 @@ function resolvePackages(packages: string[], packagesDir: string): string[] {
   } else {
     // 没有指定包名，测试所有包
     // 读取packages目录下的所有条目，并过滤出符合条件的目录
-    return readdirSync(packagesDir).filter(dir => {
-      // 获取目录状态
-      const stats = statSync(join(packagesDir, dir))
-      // 返回条件：是目录且不以点或下划线开头
-      return stats.isDirectory() && !dir.startsWith('.') && !dir.startsWith('_')
-    })
+    return PACKAGES
   }
 }
 /**

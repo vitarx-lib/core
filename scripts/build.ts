@@ -2,6 +2,7 @@ import { join, resolve } from 'path'
 import dtsPlugin from 'unplugin-dts/vite'
 import { fileURLToPath } from 'url'
 import { build, type InlineConfig, mergeConfig, PluginOption } from 'vite'
+import { PACKAGES } from './common.js'
 import {
   createTsConfig,
   log,
@@ -39,19 +40,6 @@ const packagesDir = resolve(__dirname, '../packages')
  * Node.js 内置模块，构建时需要排除
  */
 const NODE_EXTERNALS = ['stream', 'node:stream']
-
-/**
- * 需要构建的包列表（按依赖顺序排列）
- */
-const PACKAGES = [
-  'utils',
-  'responsive',
-  'runtime-core',
-  'runtime-dom',
-  'runtime-ssr',
-  'vitarx',
-  'vite-plugin'
-]
 
 /**
  * 获取需要排除的外部模块列表
