@@ -3,6 +3,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "version": "4.0.0-alpha.2",
   "workspaces": [
     "packages/*"
   ],
@@ -13,7 +14,8 @@
   "scripts": {
     "create": "tsx scripts/create.ts",
     "build": "tsx scripts/build.ts",
-    "test": "tsx scripts/vitest.ts"
+    "test": "tsx scripts/vitest.ts",
+    "release": "tsx scripts/release.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
