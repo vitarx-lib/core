@@ -53,7 +53,7 @@ const RELEASE_TYPES = [
 /* -------------------------------------------------- */
 
 const ROOT = process.cwd()
-const DRY_RUN = process.argv.includes('--dry-run')
+const DRY_RUN = process.argv.includes('--dry-run') || process.argv.includes('--d')
 const SKIP_CONFIRM = process.argv.includes('--yes')
 
 let committed = false
@@ -261,14 +261,21 @@ function ensureNpmLogin() {
  * @remarks
  * 通过 `npm view` 命令检查，如果返回相同版本号则说明已存在
  */
-function ensureVersionNotPublished(pkgName: string, version: string) {
+function ensureVersionNotPublished(pkgName: string, version: string): void {
+  const label = `${pkgName}@${version}`
   try {
-    const result = runSilent(`npm view ${pkgName}@${version} version`)
-    if (result === version) {
-      throw new Error(`${pkgName}@${version} already exists on npm`)
-    }
-  } catch {
-    // 如果 npm view 报错说明不存在
+    execSync(`npm view ${label} version`, {
+      stdio: 'pipe',
+      encoding: 'utf-8'
+    }).trim()
+    // 如果上一步成功，说明版本已经存在
+    console.log(chalk.red(`✖ ${label} already published`))
+    throw new Error(`${label} already exists in npm`)
+  } catch (err: any) {
+    // 如果是 404（包还未发布过），直接允许
+    if (err?.message?.includes('E404')) return
+    // 其他错误直接抛出
+    throw err
   }
 }
 
@@ -549,10 +556,16 @@ async function main() {
 
   const tag = getDistTag(nextVersion)
 
+  console.log(chalk.cyan.bold('\n━━━ Verify npm versions ━━━\n'))
+  for (const name of PACKAGES) {
+    const pkgDir = resolve(ROOT, `packages/${name}/package.json`)
+    const pkgName = JSON.parse(readFileSync(pkgDir, 'utf-8')).name
+    ensureVersionNotPublished(pkgName, nextVersion)
+  }
+  console.log(chalk.green.bold('\n✔ All package versions are available\n'))
+
   for (const name of PACKAGES) {
     try {
-      ensureVersionNotPublished(name, nextVersion)
-
       const pkgDir = resolve(ROOT, `packages/${name}`)
       run(`npm publish --access public --tag ${tag}`, pkgDir)
 
