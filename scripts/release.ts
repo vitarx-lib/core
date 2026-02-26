@@ -528,30 +528,25 @@ async function main() {
 
   await confirmRelease(nextVersion)
 
+  const changes = FORCED ? PACKAGES : PACKAGES.filter(hasPackageChanged).join(' ')
+
   section('Update Version')
   updateAllVersions(nextVersion)
 
   section('Build')
-  if (FORCED) {
-    run('pnpm build')
-  } else {
-    const changes = PACKAGES.filter(hasPackageChanged)
-      .map(pkg => `--filter ${pkg}`)
-      .join(' ')
-    if (changes.length) {
-      const result = await prompt(`Build (${changes}) changed packages?(y/N):`)
-      if (result.toLowerCase() === 'y') {
-        run(`pnpm build ${changes}`)
-      } else {
-        throw new Error('Build canceled')
-      }
+  if (changes.length) {
+    const result = await prompt(`Build (${changes}) changed packages?(y/N):`)
+    if (result.toLowerCase() === 'y') {
+      run(`pnpm build ${changes}`)
     } else {
-      const result = await prompt(`Build all packages?(y/N):`)
-      if (result.toLowerCase() === 'y') {
-        run(`pnpm build ${changes}`)
-      } else {
-        throw new Error('Build canceled')
-      }
+      throw new Error('Build canceled')
+    }
+  } else {
+    const result = await prompt(`Build all packages?(y/N):`)
+    if (result.toLowerCase() === 'y') {
+      run(`pnpm build ${changes}`)
+    } else {
+      throw new Error('Build canceled')
     }
   }
 
