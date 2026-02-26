@@ -577,8 +577,7 @@ async function main() {
   for (const name of PACKAGES) {
     try {
       const pkgDir = resolve(ROOT, `packages/${name}`)
-      run(`npm publish --access public --tag ${tag} --registry ${NPM_LINK}`, pkgDir)
-
+      run(`pnpm publish --access public --tag ${tag} --registry ${NPM_LINK}`, pkgDir)
       publishResults.push({ name, success: true })
     } catch (err) {
       publishResults.push({ name, success: false, error: err })
