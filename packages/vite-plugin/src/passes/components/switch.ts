@@ -39,7 +39,8 @@ export function processSwitch(path: NodePath<t.JSXElement>, ctx: TransformContex
   }
 
   // 生成 branch 调用
-  const branchCall = createBranch({ conditions, branches, useRef: false }, ctx)
+  // Switch 的 when 条件如果是标识符，需要 unref
+  const branchCall = createBranch({ conditions, branches, useRef: true }, ctx)
 
   if (path.node.loc) {
     branchCall.loc = path.node.loc
