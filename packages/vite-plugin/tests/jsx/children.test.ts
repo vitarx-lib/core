@@ -191,7 +191,7 @@ describe('边界情况', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, dynamic } from "vitarx";
       const App = () => /* @__PURE__ */createView("div", {
-        children: /* @__PURE__ */branch(() => a && b ? 0 : 1, [() => /* @__PURE__ */createView("span", {
+        children: /* @__PURE__ */branch(() => (a && b) ? 0 : 1, [() => /* @__PURE__ */createView("span", {
           children: "x"
         }), () => /* @__PURE__ */dynamic(() => c || d)])
       });"

@@ -49,6 +49,32 @@ export function createBranch(config: BranchConfig, ctx: TransformContext): t.Cal
 }
 
 /**
+ * 判断表达式是否需要括号包裹
+ * 复杂表达式（逻辑运算、三元运算等）在三元条件中需要括号
+ */
+function needsParentheses(expr: t.Expression): boolean {
+  const type = expr.type
+  // 逻辑表达式、三元表达式、赋值表达式需要括号
+  return (
+    type === 'LogicalExpression' ||
+    type === 'ConditionalExpression' ||
+    type === 'AssignmentExpression' ||
+    type === 'SequenceExpression' ||
+    type === 'ArrowFunctionExpression'
+  )
+}
+
+/**
+ * 包装表达式（如需要则添加括号）
+ */
+function wrapExpression(expr: t.Expression): t.Expression {
+  if (needsParentheses(expr)) {
+    return t.parenthesizedExpression(expr)
+  }
+  return expr
+}
+
+/**
  * 构建嵌套条件表达式
  * 从后向前构建三元表达式链
  */
@@ -78,10 +104,15 @@ export function buildNestedCondition(
     const conditionExpr =
       useRef && isIdentifier(condition) ? createUnrefCall(condition, unrefAlias) : condition
 
+    // 对复杂条件表达式添加括号
+    const wrappedCondition = wrapExpression(conditionExpr)
+
     if (result === null) {
-      result = t.conditionalExpression(conditionExpr, t.numericLiteral(i), t.nullLiteral())
+      result = t.conditionalExpression(wrappedCondition, t.numericLiteral(i), t.nullLiteral())
     } else {
-      result = t.conditionalExpression(conditionExpr, t.numericLiteral(i), result)
+      // 嵌套的三元表达式也需要括号
+      const wrappedResult = wrapExpression(result)
+      result = t.conditionalExpression(wrappedCondition, t.numericLiteral(i), wrappedResult)
     }
   }
 

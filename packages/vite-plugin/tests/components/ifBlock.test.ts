@@ -31,7 +31,7 @@ describe('IfBlock 组件', () => {
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : unref(b) ? 1 : 2, [() => /* @__PURE__ */createView("div", {
+      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : 2), [() => /* @__PURE__ */createView("div", {
         children: "A"
       }), () => /* @__PURE__ */createView("span", {
         children: "B"
@@ -68,7 +68,7 @@ describe('IfBlock 组件', () => {
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { createView, branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : unref(b) ? 1 : unref(c) ? 2 : 3, [() => /* @__PURE__ */createView("div", {
+      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : (unref(c) ? 2 : 3)), [() => /* @__PURE__ */createView("div", {
         children: "A"
       }), () => /* @__PURE__ */createView("span", {
         children: "B"

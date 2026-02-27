@@ -12,7 +12,7 @@ describe('Switch + Match', () => {
     const result = await compile(code)
     expect(result).toMatchInlineSnapshot(`
       "import { branch, unref } from "vitarx";
-      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : unref(b) ? 1 : null, [() => "A", () => "B"]);"
+      const App = () => /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : null), [() => "A", () => "B"]);"
     `)
   })
 

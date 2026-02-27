@@ -41,7 +41,7 @@ describe('v-if 连续链', () => {
     expect(result).toMatchInlineSnapshot(`
       "import { createView, Fragment, branch, unref } from "vitarx";
       const App = () => /* @__PURE__ */createView(Fragment, {
-        children: /* @__PURE__ */branch(() => unref(a) ? 0 : unref(b) ? 1 : 2, [() => /* @__PURE__ */createView("div", {
+        children: /* @__PURE__ */branch(() => unref(a) ? 0 : (unref(b) ? 1 : 2), [() => /* @__PURE__ */createView("div", {
           children: "A"
         }), () => /* @__PURE__ */createView("span", {
           children: "B"
