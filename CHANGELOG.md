@@ -1,3 +1,19 @@
+# [4.0.0-alpha.5](https://github.com/vitarx-lib/core/compare/v4.0.0-alpha.4...v4.0.0-alpha.5) (2026-02-27)
+
+
+### Bug Fixes
+
+* **runtime-dom:** 修复 mount 方法中 container 参数类型校验 ([2908ba5](https://github.com/vitarx-lib/core/commit/2908ba544d7fce5abef157ee3c84bafb0a422758))
+* **vite-plugin:** 修正 Switch 组件中 when 条件的引用处理 ([63b15a4](https://github.com/vitarx-lib/core/commit/63b15a4ce57ed53fc133442a760c05e4aeac282a))
+
+
+### Features
+
+* **vite-plugin:** 优化 children 属性与子元素冲突处理逻辑 ([4e41b30](https://github.com/vitarx-lib/core/commit/4e41b30208c755355ab2d85ef1416d3355424ef2))
+* **vite-plugin:** 添加编译宏组件的全局类型声明 ([1b9f424](https://github.com/vitarx-lib/core/commit/1b9f424c26453340fb90796c901bc00022f3ce07))
+
+
+
 # [4.0.0-alpha.4](https://github.com/vitarx-lib/core/compare/v4.0.0-alpha.3...v4.0.0-alpha.4) (2026-02-26)
 
 
