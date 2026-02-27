@@ -79,6 +79,14 @@ export const ErrorCodes = {
 } as const
 
 /**
+ * 警告代码枚举
+ */
+export const WarningCodes = {
+  /** children 属性和子元素同时存在 */
+  W001: 'W001',
+} as const
+
+/**
  * 错误消息映射
  */
 export const ErrorMessages: Record<string, string> = {
@@ -96,6 +104,13 @@ export const ErrorMessages: Record<string, string> = {
 }
 
 /**
+ * 警告消息映射
+ */
+export const WarningMessages: Record<string, string> = {
+  W001: 'Both "children" attribute and child elements are present. Child elements will take precedence.',
+}
+
+/**
  * 创建编译错误
  * @param code - 错误代码
  * @param node - 相关 AST 节点
@@ -105,4 +120,41 @@ export const ErrorMessages: Record<string, string> = {
 export function createError(code: keyof typeof ErrorCodes, node?: Node, additionalMessage?: string): CompilerError {
   const message = ErrorMessages[code] + (additionalMessage ? `: ${additionalMessage}` : '')
   return new CompilerError({ code, message, node })
+}
+
+/**
+ * 编译警告类
+ */
+export class CompilerWarning {
+  /** 警告代码 */
+  code: string
+  /** 警告消息 */
+  message: string
+  /** 警告位置 */
+  loc?: ErrorLocation
+
+  constructor(code: string, message: string, loc?: ErrorLocation) {
+    this.code = code
+    this.message = message
+    this.loc = loc
+  }
+
+  toString(): string {
+    return `[${this.code}] ${this.message}${this.loc ? ` at line ${this.loc.line}:${this.loc.column}` : ''}`
+  }
+}
+
+/**
+ * 创建编译警告
+ * @param code - 警告代码
+ * @param node - 相关 AST 节点
+ * @returns 编译警告实例
+ */
+export function createWarning(code: keyof typeof WarningCodes, node?: Node): CompilerWarning {
+  const message = WarningMessages[code]
+  const loc = node?.loc ? {
+    line: node.loc.start.line,
+    column: node.loc.start.column
+  } : undefined
+  return new CompilerWarning(code, message, loc)
 }

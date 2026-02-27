@@ -6,8 +6,8 @@
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 import { isJSXExpressionContainer, isJSXText } from '@babel/types'
-import { markImport, TransformContext } from '../../context.js'
-import { createError } from '../../error.js'
+import { addWarning, markImport, TransformContext } from '../../context.js'
+import { createError, createWarning } from '../../error.js'
 import {
   addPureComment,
   createArrowFunction,
@@ -16,6 +16,7 @@ import {
   createLocationObject,
   getAlias,
   getDirectiveValue,
+  getJSXAttributeByName,
   getJSXElementName,
   isNativeElement,
   isVElse,
@@ -66,8 +67,19 @@ export function transformJSXElement(
   // 确定元素类型
   const type = isNativeElement(name) ? t.stringLiteral(name) : t.identifier(name)
 
-  // 处理属性
-  const { props, directives } = processProps(node, ctx)
+  // 检测是否有有效子元素
+  const hasChildren = node.children.some(child => {
+    if (isJSXText(child)) {
+      return child.value.trim().length > 0
+    }
+    if (isJSXExpressionContainer(child)) {
+      return child.expression.type !== 'JSXEmptyExpression'
+    }
+    return true
+  })
+
+  // 处理属性（有子元素时跳过 children 属性）
+  const { props, directives } = processProps(node, ctx, hasChildren)
 
   // 处理子元素
   const finalProps = processElementChildren(node, props, ctx)
@@ -95,6 +107,7 @@ export function transformJSXElement(
 
 /**
  * 处理元素的子元素
+ * 子元素优先于 children 属性，同时发出警告
  */
 function processElementChildren(
   node: t.JSXElement,
@@ -114,6 +127,13 @@ function processElementChildren(
 
   if (children.length === 0) {
     return props
+  }
+
+  // 检查是否存在 children 属性
+  const childrenAttr = getJSXAttributeByName(node, 'children')
+  if (childrenAttr) {
+    // 发出警告：children 属性和子元素同时存在
+    addWarning(ctx, createWarning('W001', childrenAttr))
   }
 
   // 处理子元素

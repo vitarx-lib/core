@@ -56,7 +56,9 @@ describe('Switch + Match', () => {
       </Switch>
     )`
     const result = await compile(code)
+    // 布尔字面量 true 被优化，条件永远为真
     expect(result).not.toContain('unref')
-    expect(result).toContain('true')
+    // true ? 0 : null 被优化为 0
+    expect(result).toContain('branch(() => 0')
   })
 })

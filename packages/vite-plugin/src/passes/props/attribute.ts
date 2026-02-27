@@ -168,6 +168,11 @@ function getAttributeValue(value: t.JSXAttribute['value']): t.Expression {
 /**
  * 创建对象属性节点
  * 静态值直接赋值，动态值生成 getter 方法
+ * 
+ * 特殊处理：
+ * - children 属性不使用 unref，因为 ref 作为 children 是合法的可变渲染源
+ * - 其他标识符属性使用 unref 解包
+ * 
  * @param key - 属性名
  * @param value - 属性值表达式
  * @param ctx - 转换上下文
@@ -195,7 +200,13 @@ function createProperty(
       )
     }
 
-    // 未知变量：使用 unref 进行解包
+    // children 属性：直接引用，不使用 unref
+    // 原因：children 中的 ref 是合法的可变渲染源
+    if (key === 'children') {
+      return t.objectProperty(t.identifier(key), value)
+    }
+
+    // 其他未知变量：使用 unref 进行解包
     markImport(ctx, 'unref')
     const unrefAlias = getAlias(ctx.vitarxAliases, 'unref')
     return t.objectMethod(

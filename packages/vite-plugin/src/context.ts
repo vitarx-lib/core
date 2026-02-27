@@ -5,6 +5,14 @@
  */
 import type { File } from '@babel/types'
 import type { CompileOptions } from './transform.js'
+import type { CompilerWarning } from './error.js'
+
+/**
+ * UI 相关的 API 名称列表
+ * 这些 API 用于创建视图，在 HMR 时需要识别
+ */
+export const UI_API_NAMES = ['createView', 'branch', 'dynamic', 'access', 'withDirectives'] as const
+export type UIApiName = (typeof UI_API_NAMES)[number]
 
 /**
  * 导入信息
@@ -81,6 +89,10 @@ export interface TransformContext {
   refApiAliases: RefApiAliases
   /** ref 变量名集合 */
   refVariables: Set<string>
+  /** UI API 别名集合（用于 HMR 代码分离识别） */
+  uiApiAliases: Set<string>
+  /** 编译警告列表 */
+  warnings: CompilerWarning[]
 }
 
 /**
@@ -132,7 +144,9 @@ export function createContext(
       shallowRef: null,
       computed: null
     },
-    refVariables: new Set()
+    refVariables: new Set(),
+    uiApiAliases: new Set(),
+    warnings: []
   }
 }
 
@@ -143,4 +157,22 @@ export function createContext(
  */
 export function markImport(ctx: TransformContext, name: keyof ImportInfo): void {
   ctx.imports[name] = true
+}
+
+/**
+ * 记录 UI API 别名
+ * @param ctx - 转换上下文
+ * @param alias - API 别名
+ */
+export function markUiApiAlias(ctx: TransformContext, alias: string): void {
+  ctx.uiApiAliases.add(alias)
+}
+
+/**
+ * 添加编译警告
+ * @param ctx - 转换上下文
+ * @param warning - 编译警告
+ */
+export function addWarning(ctx: TransformContext, warning: CompilerWarning): void {
+  ctx.warnings.push(warning)
 }

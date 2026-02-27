@@ -25,6 +25,7 @@ export type { PropsResult, VModelState, AttributeResult } from './types.js'
  *
  * @param node - JSX 元素节点
  * @param ctx - 转换上下文
+ * @param hasChildren - 是否有子元素（有子元素时跳过 children 属性）
  * @returns 处理结果，包含 props 对象、指令映射和 v-bind 标记
  *
  * @example
@@ -41,7 +42,11 @@ export type { PropsResult, VModelState, AttributeResult } from './types.js'
  * }
  * ```
  */
-export function processProps(node: t.JSXElement, ctx: TransformContext): PropsResult {
+export function processProps(
+  node: t.JSXElement,
+  ctx: TransformContext,
+  hasChildren: boolean = false
+): PropsResult {
   const attributes = node.openingElement.attributes
   const properties: (t.ObjectProperty | t.ObjectMethod | t.SpreadElement)[] = []
   const directives = new Map<string, t.Expression>()
@@ -66,6 +71,11 @@ export function processProps(node: t.JSXElement, ctx: TransformContext): PropsRe
 
     // 处理普通属性
     if (attr.type === 'JSXAttribute') {
+      // 如果有子元素，跳过 children 属性
+      if (hasChildren && attr.name.type === 'JSXIdentifier' && attr.name.name === 'children') {
+        continue
+      }
+
       const result = processAttribute(attr, existingPropNames, ctx)
       if (result.type === 'directive') {
         // v-model 指令：更新状态

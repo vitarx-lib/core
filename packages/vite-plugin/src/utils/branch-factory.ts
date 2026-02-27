@@ -37,7 +37,8 @@ export function createBranch(config: BranchConfig, ctx: TransformContext): t.Cal
   const { conditions, branches, useRef = true } = config
 
   markImport(ctx, 'branch')
-  if (useRef) {
+  // 只有在需要 unref 且条件中有标识符时才标记导入
+  if (useRef && conditions.some(c => isIdentifier(c))) {
     markImport(ctx, 'unref')
   }
 
