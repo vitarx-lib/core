@@ -7,6 +7,9 @@ import * as t from '@babel/types'
 import { HMR } from '../../constants/index.js'
 import { collectPatternBindings, type ComponentInfo } from '../../utils/index.js'
 
+/** getComponentView 的内部别名，避免与用户代码冲突 */
+const GET_COMPONENT_VIEW_ALIAS = '__$VITARX_GET_COMPONENT_VIEW$__'
+
 /**
  * 注入 HMR 客户端导入
  * @param program - AST Program 节点
@@ -20,37 +23,17 @@ function injectHMRImport(program: t.Program): void {
 }
 
 /**
- * 注入 getInstance 导入
+ * 注入 getComponentView 导入
+ * 使用唯一的别名避免与用户代码冲突
  * @param program - AST Program 节点
  */
-function injectGetInstanceImport(program: t.Program): void {
-  let vitarxImport: t.ImportDeclaration | null = null
-  for (const node of program.body) {
-    if (node.type === 'ImportDeclaration' && node.source.value === 'vitarx') {
-      vitarxImport = node
-      break
-    }
-  }
-
-  if (vitarxImport) {
-    const hasGetInstance = vitarxImport.specifiers.some(
-      spec =>
-        spec.type === 'ImportSpecifier' &&
-        spec.imported.type === 'Identifier' &&
-        spec.imported.name === 'getInstance'
-    )
-    if (!hasGetInstance) {
-      vitarxImport.specifiers.push(
-        t.importSpecifier(t.identifier('getInstance'), t.identifier('getInstance'))
-      )
-    }
-  } else {
-    const importDecl = t.importDeclaration(
-      [t.importSpecifier(t.identifier('getInstance'), t.identifier('getInstance'))],
-      t.stringLiteral('vitarx')
-    )
-    program.body.unshift(importDecl)
-  }
+function injectGetComponentViewImport(program: t.Program): void {
+  // 创建独立的 import 语句，使用不会冲突的别名
+  const importDecl = t.importDeclaration(
+    [t.importSpecifier(t.identifier(GET_COMPONENT_VIEW_ALIAS), t.identifier('getComponentView'))],
+    t.stringLiteral('vitarx')
+  )
+  program.body.unshift(importDecl)
 }
 
 /**
@@ -66,7 +49,7 @@ function createHMRRegistrationStatements(variableNames: string[]): t.Statement[]
     t.variableDeclaration('const', [
       t.variableDeclarator(
         t.identifier(HMR.view),
-        t.callExpression(t.identifier('getInstance'), [])
+        t.callExpression(t.identifier(GET_COMPONENT_VIEW_ALIAS), [])
       )
     ])
   )
@@ -222,6 +205,13 @@ function injectHMRIntoFunction(
   func: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression,
   variableNames: string[]
 ): void {
+  // 处理箭头函数没有函数体的情况（表达式体）
+  if (func.type === 'ArrowFunctionExpression' && func.body.type !== 'BlockStatement') {
+    // 将表达式体转换为块语句
+    const returnStmt = t.returnStatement(func.body)
+    func.body = t.blockStatement([returnStmt])
+  }
+
   if (!func.body || func.body.type !== 'BlockStatement') return
 
   // 注入状态恢复代码
@@ -308,13 +298,14 @@ export function injectHMRSupport(
 
   // 注入必要的导入
   injectHMRImport(program)
-  injectGetInstanceImport(program)
+  injectGetComponentViewImport(program)
 
   // 为每个组件函数注入 HMR 代码
   for (const { node } of components) {
-    if (node.body?.type === 'BlockStatement') {
-      injectHMRIntoFunction(node, collectLocalVariableNames(node.body))
-    }
+    // 收集局部变量名（如果有函数体）
+    const variableNames =
+      node.body?.type === 'BlockStatement' ? collectLocalVariableNames(node.body) : []
+    injectHMRIntoFunction(node, variableNames)
   }
 
   // 为每个组件绑定 ID

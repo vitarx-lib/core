@@ -19,8 +19,8 @@ describe('HMR 协议结构', () => {
       // 验证 HMR 客户端导入
       expect(result).toContain('import __$VITARX_HMR$__ from "@vitarx/vite-plugin/hmr-client"')
 
-      // 验证 getInstance 导入
-      expect(result).toContain('getInstance')
+      // 验证 getComponentView 导入
+      expect(result).toContain('getComponentView')
 
       // 验证使用 jsxDEV 代替 createView
       expect(result).toContain('jsxDEV')
@@ -39,9 +39,47 @@ describe('HMR 协议结构', () => {
       }`
       const result = await compile(code, hmrOptions)
       // 验证 __$VITARX_HMR_VIEW_NODE$__ 定义（使用 const 声明）
-      expect(result).toContain('const __$VITARX_HMR_VIEW_NODE$__ = getInstance()')
+      expect(result).toContain(
+        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__()'
+      )
       // 验证注册调用
       expect(result).toContain('__$VITARX_HMR$__.instance.register')
+    })
+
+    it('简单箭头函数组件也注入 HMR 注册代码', async () => {
+      const code = `export const App = () => <div></div>`
+      const result = await compile(code, hmrOptions)
+      // 验证 __$VITARX_HMR_VIEW_NODE$__ 定义（使用 const 声明）
+      expect(result).toContain(
+        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__()'
+      )
+      // 验证注册调用
+      expect(result).toContain('__$VITARX_HMR$__.instance.register')
+      // 验证表达式体被转换为块语句
+      expect(result).toContain('return /* @__PURE__ */')
+    })
+
+    it('简单箭头函数组件带 JSX 内容', async () => {
+      const code = `export const App = () => <div>Hello World</div>`
+      const result = await compile(code, hmrOptions)
+      // 验证 HMR 注册代码注入
+      expect(result).toContain(
+        'const __$VITARX_HMR_VIEW_NODE$__ = __$VITARX_GET_COMPONENT_VIEW$__()'
+      )
+      expect(result).toContain('__$VITARX_HMR$__.instance.register')
+      // 验证 children 正确传递
+      expect(result).toContain('children: "Hello World"')
+    })
+
+    it('getComponentView 使用唯一别名避免冲突', async () => {
+      const code = `export const App = () => <div></div>`
+      const result = await compile(code, hmrOptions)
+      // 验证使用唯一别名
+      expect(result).toContain(
+        'import { getComponentView as __$VITARX_GET_COMPONENT_VIEW$__ } from "vitarx"'
+      )
+      // 验证使用别名调用
+      expect(result).toContain('__$VITARX_GET_COMPONENT_VIEW$__()')
     })
 
     it('import.meta.hot.accept 只注入一次', async () => {
@@ -441,6 +479,27 @@ describe('HMR 协议结构', () => {
       expect(result).toContain('__$VITARX_HMR$__.instance.bindId(B')
       expect(result).toContain('__$VITARX_HMR$__.instance.bindId(C')
     })
+
+    it('多组件不会产生重复的 getComponentView 导入', async () => {
+      const code = `
+        export const App = () => <div>A</div>
+        export const Other = () => <span>B</span>
+        export const Third = () => <p>C</p>
+      `
+      const result = await compile(code, hmrOptions)
+      // 验证 getComponentView 导入只出现一次
+      const importCount = (
+        result.match(
+          /import \{ getComponentView as __\$VITARX_GET_COMPONENT_VIEW\$__ \} from "vitarx"/g
+        ) || []
+      ).length
+      expect(importCount).toBe(1)
+      // 验证 HMR 客户端导入只出现一次
+      const hmrImportCount = (
+        result.match(/import __\$VITARX_HMR\$__ from "@vitarx\/vite-plugin\/hmr-client"/g) || []
+      ).length
+      expect(hmrImportCount).toBe(1)
+    })
   })
 
   describe('组件 ID 唯一性', () => {
@@ -522,14 +581,14 @@ describe('HMR 协议结构', () => {
       expect(result).toContain('jsxDEV')
     })
 
-    it('已有 getInstance 导入时不重复添加', async () => {
+    it('已有 getComponentView 导入时不重复添加', async () => {
       const code = `
-        import { getInstance } from 'vitarx'
+        import { getComponentView } from 'vitarx'
         export const App = () => <div></div>
       `
       const result = await compile(code, hmrOptions)
-      const getInstanceCount = (result.match(/getInstance/g) || []).length
-      expect(getInstanceCount).toBeGreaterThanOrEqual(1)
+      const getComponentViewCount = (result.match(/getComponentView/g) || []).length
+      expect(getComponentViewCount).toBeGreaterThanOrEqual(1)
     })
 
     it('HMR 模式下也支持 dev 模式的位置信息', async () => {
