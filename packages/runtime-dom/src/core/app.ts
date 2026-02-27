@@ -37,7 +37,7 @@ import { DOMRenderer } from './renderer.js'
  * - 当选择器无效时会中断程序执行
  */
 export class WebApp extends App {
-  override mount(container: HostContainer | string): this {
+  override mount(container: HostContainer | Element | string): this {
     // 如果传入的是字符串，则通过querySelector获取对应的DOM元素
     if (typeof container === 'string') {
       container = document.querySelector(container)!
@@ -48,7 +48,12 @@ export class WebApp extends App {
         )
       }
     }
-    return super.mount(container)
+    if (container instanceof Element) {
+      return super.mount(container)
+    }
+    throw new Error(
+      `[WebApp.mount][ERROR]: container parameter must be an Element instance or selector`
+    )
   }
 }
 
@@ -59,7 +64,7 @@ export class WebApp extends App {
  * @param config - 可选的应用配置参数，用于定制应用的行为
  * @returns {App} 返回一个新的App实例
  */
-export function createApp(root: View | Component, config?: AppConfig): App {
+export function createApp(root: View | Component, config?: AppConfig): WebApp {
   setRenderer(new DOMRenderer())
   return new WebApp(root, config)
 }
