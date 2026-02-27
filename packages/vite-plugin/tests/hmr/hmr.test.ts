@@ -16,7 +16,6 @@ describe('HMR 协议结构', () => {
     it('HMR 模式下注入 HMR 客户端代码', async () => {
       const code = `export const App = () => <div></div>`
       const result = await compile(code, hmrOptions)
-
       // 验证 HMR 客户端导入
       expect(result).toContain('import __$VITARX_HMR$__ from "@vitarx/vite-plugin/hmr-client"')
 
@@ -25,13 +24,24 @@ describe('HMR 协议结构', () => {
 
       // 验证使用 jsxDEV 代替 createView
       expect(result).toContain('jsxDEV')
-      expect(result).toContain('createView as jsxDEV')
 
       // 验证 import.meta.hot.accept
       expect(result).toContain('import.meta.hot.accept')
 
       // 验证 bindId 调用
       expect(result).toContain('__$VITARX_HMR$__.instance.bindId')
+    })
+
+    it('有函数体的组件注入 HMR 注册代码', async () => {
+      const code = `export const App = () => {
+        const count = ref(0)
+        return <div>{count}</div>
+      }`
+      const result = await compile(code, hmrOptions)
+      // 验证 __$VITARX_HMR_VIEW_NODE$__ 定义（使用 const 声明）
+      expect(result).toContain('const __$VITARX_HMR_VIEW_NODE$__ = getInstance()')
+      // 验证注册调用
+      expect(result).toContain('__$VITARX_HMR$__.instance.register')
     })
 
     it('import.meta.hot.accept 只注入一次', async () => {

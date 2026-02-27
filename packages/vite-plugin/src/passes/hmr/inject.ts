@@ -61,15 +61,14 @@ function injectGetInstanceImport(program: t.Program): void {
 function createHMRRegistrationStatements(variableNames: string[]): t.Statement[] {
   const statements: t.Statement[] = []
 
-  // 获取当前视图实例
+  // 声明并获取当前视图实例
   statements.push(
-    t.expressionStatement(
-      t.assignmentExpression(
-        '=',
+    t.variableDeclaration('const', [
+      t.variableDeclarator(
         t.identifier(HMR.view),
         t.callExpression(t.identifier('getInstance'), [])
       )
-    )
+    ])
   )
 
   // 注册到 HMR 管理器
