@@ -111,12 +111,13 @@ function collectRefInfo(ctx: TransformContext, program: t.Program): void {
   ctx.refApiAliases = refApiAliases
   ctx.refVariables = collectRefVariables(program, refApiAliases)
 }
-
 /**
  * 转换 AST
  */
 function transformAST(ast: t.File, ctx: TransformContext): void {
-  traverse(ast, {
+  const babelTraverse: typeof traverse =
+    typeof traverse === 'object' ? (traverse as any).default : traverse
+  babelTraverse(ast, {
     JSXElement: {
       enter(path) {
         if (processedNodes.has(path.node)) return
@@ -156,7 +157,9 @@ function generateCode(
   id: string,
   sourceMap: boolean | 'inline' | 'both'
 ): TransformResult {
-  const output = generate(ast, { sourceMaps: sourceMap !== false, filename: id }, code)
+  const babelGenerate: typeof generate =
+    typeof generate === 'object' ? (generate as any).default : generate
+  const output = babelGenerate(ast, { sourceMaps: sourceMap !== false, filename: id }, code)
   return { code: output.code, map: output.map }
 }
 
