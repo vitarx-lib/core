@@ -13,13 +13,6 @@ import { getInstance } from './context.js'
  *
  * @example
  * ```ts
- * // 类组件中使用
- * class MyWidget extends Widget {
- *   constructor(props){
- *    super(props)
- *    provide('theme', 'dark');
- *   }
- * }
  * // 函数组件中使用
  * function Foo() {
  *   provide('theme', 'dark');
