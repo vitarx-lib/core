@@ -116,7 +116,6 @@ export default function vitarx(_options?: VitePluginVitarxOptions): Plugin {
   let isSSR = false
   return {
     name: 'vite-plugin-vitarx',
-    enforce: 'pre',
     config(config, env) {
       isDEV = env.command === 'serve' && !env.isPreview
       const configSSR = !!config.build?.ssr
