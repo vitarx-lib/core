@@ -4,13 +4,13 @@
  * @module passes/props
  */
 import * as t from '@babel/types'
-import { TransformContext } from '../../context'
-import { processAttribute, processSpreadAttribute } from './attribute'
-import type { PropsResult, VModelState } from './types'
-import { createVModelProps, extractVModelState } from './vmodel'
+import { TransformContext } from '../../context.js'
+import { processAttribute, processSpreadAttribute } from './attribute.js'
+import type { PropsResult, VModelState } from './types.js'
+import { createVModelProps, extractVModelState } from './vmodel.js'
 
 // 导出类型定义
-export type { PropsResult, VModelState, AttributeResult } from './types'
+export type { PropsResult, VModelState, AttributeResult } from './types.js'
 
 /**
  * 处理 JSX 元素的属性

@@ -5,7 +5,7 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
-import { TransformContext } from '../../context'
+import { TransformContext } from '../../context.js'
 import {
   addPureComment,
   createCreateViewCall,
@@ -13,7 +13,7 @@ import {
   filterWhitespaceChildren,
   getAlias
 } from '../../utils/index.js'
-import { processChildren } from './processChildren'
+import { processChildren } from './processChildren.js'
 
 /**
  * 处理 JSX Fragment

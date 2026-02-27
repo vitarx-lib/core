@@ -5,10 +5,10 @@
  */
 import * as t from '@babel/types'
 import { isIdentifier, isMemberExpression } from '@babel/types'
-import { markImport, TransformContext } from '../../context'
-import { createError } from '../../error'
+import { markImport, TransformContext } from '../../context.js'
+import { createError } from '../../error.js'
 import { getAlias } from '../../utils/index.js'
-import type { VModelState } from './types'
+import type { VModelState } from './types.js'
 
 /**
  * 从属性列表中提取 v-model 状态

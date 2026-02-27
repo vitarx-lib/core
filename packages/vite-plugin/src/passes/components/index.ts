@@ -5,10 +5,10 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
-import { TransformContext } from '../../context'
+import { TransformContext } from '../../context.js'
 import { getJSXElementName, isPureCompileComponent } from '../../utils/index.js'
-import { processIfBlock } from './ifBlock'
-import { processSwitch } from './switch'
+import { processIfBlock } from './ifBlock.js'
+import { processSwitch } from './switch.js'
 
 /**
  * 处理纯编译组件
@@ -33,5 +33,5 @@ export function processPureCompileComponent(
   }
 }
 
-export { processSwitch } from './switch'
-export { processIfBlock } from './ifBlock'
+export { processSwitch } from './switch.js'
+export { processIfBlock } from './ifBlock.js'

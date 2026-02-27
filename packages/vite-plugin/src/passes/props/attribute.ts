@@ -11,10 +11,10 @@ import {
   isNumericLiteral,
   isStringLiteral
 } from '@babel/types'
-import { markImport, TransformContext } from '../../context'
-import { createError } from '../../error'
+import { markImport, TransformContext } from '../../context.js'
+import { createError } from '../../error.js'
 import { getAlias } from '../../utils/index.js'
-import type { AttributeResult } from './types'
+import type { AttributeResult } from './types.js'
 
 /**
  * 处理展开属性 {...props}

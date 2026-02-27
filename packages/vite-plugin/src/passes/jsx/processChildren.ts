@@ -17,7 +17,7 @@ import {
   isNumericLiteral,
   isStringLiteral
 } from '@babel/types'
-import { markImport, TransformContext } from '../../context'
+import { markImport, TransformContext } from '../../context.js'
 import {
   addPureComment,
   createAccessCall,

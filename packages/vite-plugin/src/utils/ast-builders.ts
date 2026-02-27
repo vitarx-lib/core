@@ -12,8 +12,8 @@ import {
   type ObjectExpression,
   type SourceLocation
 } from '@babel/types'
-import { PURE_COMMENT } from '../constants'
-import type { VitarxImportAliases } from '../context'
+import { PURE_COMMENT } from '../constants/index.js'
+import type { VitarxImportAliases } from '../context.js'
 
 /** 用于追踪已添加 PURE 注释的节点 */
 const pureCommentedNodes = new WeakSet<CallExpression>()

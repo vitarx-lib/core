@@ -1,5 +1,5 @@
 // 类型守卫
-export { isWhitespaceJSXText } from './ast-guards'
+export { isWhitespaceJSXText } from './ast-guards.js'
 
 // JSX 辅助函数
 export {
@@ -17,7 +17,7 @@ export {
   removeVDirectives,
   removeAttribute,
   filterWhitespaceChildren
-} from './jsx-helpers'
+} from './jsx-helpers.js'
 
 // AST 构建函数
 export {
@@ -31,10 +31,10 @@ export {
   createLocationObject,
   addPureComment,
   getAlias
-} from './ast-builders'
+} from './ast-builders.js'
 
 // 模式处理辅助函数
-export { collectPatternBindings, collectObjectPatternBindings } from './pattern-helpers'
+export { collectPatternBindings, collectObjectPatternBindings } from './pattern-helpers.js'
 
 // Branch 工厂
 export {
@@ -42,7 +42,7 @@ export {
   createBinaryBranch,
   buildNestedCondition,
   type BranchConfig
-} from './branch-factory'
+} from './branch-factory.js'
 
 // v-if 链处理工具
 export {
@@ -50,7 +50,7 @@ export {
   collectVIfChainInfo,
   collectFragmentVIfChains,
   type VIfChainInfo
-} from './vif-helpers'
+} from './vif-helpers.js'
 
 // 组件收集
 export { collectComponentFunctions, type ComponentInfo } from './component-collect.js'

@@ -5,7 +5,7 @@
  */
 import * as t from '@babel/types'
 import { isIdentifier } from '@babel/types'
-import { markImport, TransformContext } from '../../context'
+import { markImport, TransformContext } from '../../context.js'
 import { addPureComment, createWithDirectivesCall, getAlias } from '../../utils/index.js'
 
 /**

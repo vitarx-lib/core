@@ -6,8 +6,8 @@
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 import { isJSXElement, isJSXText } from '@babel/types'
-import { TransformContext } from '../../context'
-import { createError } from '../../error'
+import { TransformContext } from '../../context.js'
+import { createError } from '../../error.js'
 import {
   createArrowFunction,
   createBranch,

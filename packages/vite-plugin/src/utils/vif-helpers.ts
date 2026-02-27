@@ -5,7 +5,7 @@
  */
 import * as t from '@babel/types'
 import { isJSXElement, isJSXText } from '@babel/types'
-import { createError } from '../error'
+import { createError } from '../error.js'
 import { isWhitespaceJSXText } from './ast-guards.js'
 import {
   getDirectiveValue,

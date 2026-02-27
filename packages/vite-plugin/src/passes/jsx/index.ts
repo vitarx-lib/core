@@ -3,6 +3,6 @@
  * @module passes/jsx
  */
 
-export { processChildren } from './processChildren'
-export { processJSXElement, transformJSXElement } from './processJSXElement'
-export { processJSXFragment } from './processJSXFragment'
+export { processChildren } from './processChildren.js'
+export { processJSXElement, transformJSXElement } from './processJSXElement.js'
+export { processJSXFragment } from './processJSXFragment.js'

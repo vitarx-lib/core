@@ -6,8 +6,8 @@
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 import { isJSXExpressionContainer, isJSXText } from '@babel/types'
-import { markImport, TransformContext } from '../../context'
-import { createError } from '../../error'
+import { markImport, TransformContext } from '../../context.js'
+import { createError } from '../../error.js'
 import {
   addPureComment,
   createArrowFunction,
@@ -23,9 +23,9 @@ import {
   isVIfChain,
   removeVDirectives
 } from '../../utils/index.js'
-import { processDirectives } from '../directives'
-import { processProps } from '../props'
-import { processChildren } from './processChildren'
+import { processDirectives } from '../directives/index.js'
+import { processProps } from '../props/index.js'
+import { processChildren } from './processChildren.js'
 
 /**
  * 处理 JSX 元素

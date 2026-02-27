@@ -7,7 +7,7 @@ import generate from '@babel/generator'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import * as t from '@babel/types'
-import { createContext, type TransformContext } from './context'
+import { createContext, type TransformContext } from './context.js'
 import {
   collectExistingImports,
   collectLocalBindings,

@@ -4,8 +4,8 @@
  */
 import * as t from '@babel/types'
 import { type Expression, isJSXText, type JSXAttribute, type JSXElement } from '@babel/types'
-import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS } from '../constants'
-import { isWhitespaceJSXText } from './ast-guards'
+import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS } from '../constants/index.js'
+import { isWhitespaceJSXText } from './ast-guards.js'
 
 /**
  * 获取 JSX 元素的名称

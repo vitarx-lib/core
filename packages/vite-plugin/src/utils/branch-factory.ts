@@ -5,8 +5,8 @@
  */
 import * as t from '@babel/types'
 import { isBooleanLiteral, isIdentifier } from '@babel/types'
-import type { TransformContext } from '../context'
-import { markImport } from '../context'
+import type { TransformContext } from '../context.js'
+import { markImport } from '../context.js'
 import {
   addPureComment,
   createArrowFunction,
