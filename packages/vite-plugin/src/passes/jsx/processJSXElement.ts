@@ -5,7 +5,7 @@
  */
 import type { NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
-import { isJSXExpressionContainer, isJSXText } from '@babel/types'
+import { isJSXElement, isJSXExpressionContainer, isJSXText } from '@babel/types'
 import { addWarning, markImport, TransformContext } from '../../context.js'
 import { createError, createWarning } from '../../error.js'
 import {
@@ -34,10 +34,48 @@ import { processChildren } from './processChildren.js'
  * @param ctx - 转换上下文
  */
 export function processJSXElement(path: NodePath<t.JSXElement>, ctx: TransformContext): void {
+  const name = getJSXElementName(path.node)
+
+  // 校验 Match 必须在 Switch 内使用
+  if (name === 'Match') {
+    validateMatchInSwitch(path)
+  }
+
   const result = transformJSXElement(path.node, ctx, true)
   if (result) {
     path.replaceWith(result)
   }
+}
+
+/**
+ * 校验 Match 组件必须在 Switch 内使用
+ */
+function validateMatchInSwitch(path: NodePath<t.JSXElement>): void {
+  const parent = path.parentPath
+  if (!parent) {
+    throw createError('E012', path.node)
+  }
+
+  // 检查父元素是否是 Switch
+  if (parent.node.type === 'JSXElement') {
+    const parentName = getJSXElementName(parent.node)
+    if (parentName === 'Switch') {
+      return
+    }
+  }
+
+  // 检查是否在 Fragment 内且 Fragment 的父元素是 Switch
+  if (parent.node.type === 'JSXFragment' || parent.node.type === 'JSXElement') {
+    const grandParent = parent.parentPath
+    if (grandParent?.node.type === 'JSXElement') {
+      const grandParentName = getJSXElementName(grandParent.node)
+      if (grandParentName === 'Switch') {
+        return
+      }
+    }
+  }
+
+  throw createError('E012', path.node)
 }
 
 /**
@@ -134,6 +172,20 @@ function processElementChildren(
   if (childrenAttr) {
     // 发出警告：children 属性和子元素同时存在
     addWarning(ctx, createWarning('W001', childrenAttr))
+  }
+
+  // 校验 Match 组件必须在 Switch 内使用
+  // 当前元素不是 Switch 时，检查子元素中是否有 Match
+  const currentName = getJSXElementName(node)
+  if (currentName !== 'Switch') {
+    for (const child of children) {
+      if (isJSXElement(child)) {
+        const childName = getJSXElementName(child as t.JSXElement)
+        if (childName === 'Match') {
+          throw createError('E012', child as t.JSXElement)
+        }
+      }
+    }
   }
 
   // 处理子元素

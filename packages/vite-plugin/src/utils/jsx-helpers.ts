@@ -3,9 +3,10 @@
  * @module utils/jsx-helpers
  */
 import * as t from '@babel/types'
-import { type Expression, isJSXText, type JSXAttribute, type JSXElement } from '@babel/types'
+import { type Expression, isJSXElement, isJSXText, type JSXAttribute, type JSXElement } from '@babel/types'
 import { DIRECTIVE_PREFIX, PURE_COMPILE_COMPONENTS } from '../constants/index.js'
 import { isWhitespaceJSXText } from './ast-guards.js'
+import { createError } from '../error.js'
 
 /**
  * 获取 JSX 元素的名称
@@ -165,4 +166,19 @@ export function removeAttribute(node: JSXElement, attrName: string): void {
  */
 export function filterWhitespaceChildren(children: t.Node[]): t.Node[] {
   return children.filter(child => !isJSXText(child) || !isWhitespaceJSXText(child))
+}
+
+/**
+ * 校验 Match 组件必须在 Switch 内使用
+ * @param children - 子节点数组
+ */
+export function validateMatchInSwitch(children: t.Node[]): void {
+  for (const child of children) {
+    if (isJSXElement(child)) {
+      const childName = getJSXElementName(child)
+      if (childName === 'Match') {
+        throw createError('E012', child)
+      }
+    }
+  }
 }

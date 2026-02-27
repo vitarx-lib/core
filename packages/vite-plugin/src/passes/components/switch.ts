@@ -84,7 +84,7 @@ function collectMatchNodes(children: t.Node[]): t.JSXElement[] {
   }
 
   if (matchNodes.length === 0) {
-    throw createError('E006', undefined, 'Switch must have at least one Match child')
+    throw createError('E015', undefined)
   }
 
   return matchNodes
@@ -116,6 +116,10 @@ function buildConditionsAndBranches(matchNodes: t.JSXElement[]): {
     // 提取分支内容
     const matchChildren = matchNode.children.filter(c => !isJSXText(c) || c.value.trim())
 
+    if (matchChildren.length === 0) {
+      throw createError('E013', matchNode)
+    }
+
     if (matchChildren.length === 1) {
       const child = matchChildren[0]
       if (isJSXText(child)) {
@@ -123,10 +127,8 @@ function buildConditionsAndBranches(matchNodes: t.JSXElement[]): {
       } else {
         branches.push(createArrowFunction(child as t.Expression))
       }
-    } else if (matchChildren.length > 1) {
-      branches.push(createArrowFunction(t.arrayExpression(matchChildren as t.Expression[])))
     } else {
-      branches.push(createArrowFunction(t.nullLiteral()))
+      branches.push(createArrowFunction(t.arrayExpression(matchChildren as t.Expression[])))
     }
   }
 

@@ -76,6 +76,14 @@ export const ErrorCodes = {
   E010: 'E010',
   /** v-model Identifier 必须是 ref */
   E011: 'E011',
+  /** Match 组件必须在 Switch 内使用 */
+  E012: 'E012',
+  /** Match 组件必须有子元素 */
+  E013: 'E013',
+  /** IfBlock 组件必须有子元素 */
+  E014: 'E014',
+  /** Switch 组件必须有 Match 子元素 */
+  E015: 'E015',
 } as const
 
 /**
@@ -101,6 +109,10 @@ export const ErrorMessages: Record<string, string> = {
   E009: 'v-model cannot be used with modelValue or onUpdate:modelValue',
   E010: 'v-model value must be an Identifier or MemberExpression',
   E011: 'v-model Identifier must be a ref',
+  E012: 'Match component must be used inside Switch',
+  E013: 'Match component must have children',
+  E014: 'IfBlock component must have children',
+  E015: 'Switch component must have at least one Match child',
 }
 
 /**

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { compile } from '../utils'
 
 describe('IfBlock 组件', () => {
@@ -166,5 +166,23 @@ describe('IfBlock 错误处理', () => {
       </IfBlock>
     )`
     await expect(compile(code)).rejects.toThrow('[E008]')
+  })
+
+  describe('错误处理', () => {
+    it('IfBlock 没有子元素时报错', async () => {
+      const code = `const App = () => (
+        <IfBlock></IfBlock>
+      )`
+      await expect(compile(code)).rejects.toThrow('[E014]')
+    })
+
+    it('IfBlock 子元素缺少 v-if 指令时报错', async () => {
+      const code = `const App = () => (
+        <IfBlock>
+          <div>no directive</div>
+        </IfBlock>
+      )`
+      await expect(compile(code)).rejects.toThrow('[E008]')
+    })
   })
 })

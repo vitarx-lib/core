@@ -11,7 +11,8 @@ import {
   createCreateViewCall,
   createLocationObject,
   filterWhitespaceChildren,
-  getAlias
+  getAlias,
+  validateMatchInSwitch
 } from '../../utils/index.js'
 import { processChildren } from './processChildren.js'
 
@@ -25,6 +26,9 @@ export function processJSXFragment(path: NodePath<t.JSXFragment>, ctx: Transform
 
   // 过滤空白子节点
   const children = filterWhitespaceChildren(node.children)
+
+  // 校验 Match 组件
+  validateMatchInSwitch(children)
 
   // 标记需要的导入
   ctx.imports.Fragment = true

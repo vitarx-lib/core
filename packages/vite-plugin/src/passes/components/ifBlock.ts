@@ -24,6 +24,10 @@ import {
 export function processIfBlock(path: NodePath<t.JSXElement>, ctx: TransformContext): void {
   const children = filterWhitespaceChildren(path.node.children)
 
+  if (children.length === 0) {
+    throw createError('E014', path.node)
+  }
+
   validateChildrenType(children)
 
   const jsxChildren = children as t.JSXElement[]

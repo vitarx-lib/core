@@ -61,4 +61,54 @@ describe('Switch + Match', () => {
     // true ? 0 : null 被优化为 0
     expect(result).toContain('branch(() => 0')
   })
+
+  describe('错误处理', () => {
+    it('Match 不允许单独使用', async () => {
+      const code = `const App = () => {
+        return <><Match when={b}>B</Match></>
+      }`
+      await expect(compile(code)).rejects.toThrow('[E012]')
+    })
+
+    it('Match 在非 Switch 父元素中使用时报错', async () => {
+      const code = `const App = () => {
+        return <div><Match when={b}>B</Match></div>
+      }`
+      await expect(compile(code)).rejects.toThrow('[E012]')
+    })
+
+    it('Match 没有子元素时报错', async () => {
+      const code = `const App = () => (
+        <Switch>
+          <Match when={a}></Match>
+        </Switch>
+      )`
+      await expect(compile(code)).rejects.toThrow('[E013]')
+    })
+
+    it('Switch 没有 Match 子元素时报错', async () => {
+      const code = `const App = () => (
+        <Switch></Switch>
+      )`
+      await expect(compile(code)).rejects.toThrow('[E015]')
+    })
+
+    it('Switch 有非 Match 子元素时报错', async () => {
+      const code = `const App = () => (
+        <Switch>
+          <div>invalid</div>
+        </Switch>
+      )`
+      await expect(compile(code)).rejects.toThrow('[E006]')
+    })
+
+    it('Match 缺少 when 属性时报错', async () => {
+      const code = `const App = () => (
+        <Switch>
+          <Match>A</Match>
+        </Switch>
+      )`
+      await expect(compile(code)).rejects.toThrow('[E007]')
+    })
+  })
 })

@@ -16,7 +16,8 @@ export {
   isVElse,
   removeVDirectives,
   removeAttribute,
-  filterWhitespaceChildren
+  filterWhitespaceChildren,
+  validateMatchInSwitch
 } from './jsx-helpers.js'
 
 // AST 构建函数
