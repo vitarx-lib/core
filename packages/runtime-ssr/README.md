@@ -207,7 +207,7 @@ flowchart LR
 
 ### 应用创建
 
-#### `createSSRApp(Widget)`
+#### `createSSRApp(Component)`
 
 创建一个 SSR 应用实例。
 
@@ -219,9 +219,9 @@ export declare function createSSRApp(root: View | WidgetType, config?: AppConfig
 
 **参数：**
 
-| 参数     | 类型               | 必填 | 说明      |
-|--------|------------------|----|---------|
-| `root` | `View \| Widget` | 是  | 根组件或根节点 |
+| 参数     | 类型                  | 必填 | 说明      |
+|--------|---------------------|----|---------|
+| `root` | `View \| Component` | 是  | 根组件或根节点 |
 
 **返回值：** `SSRApp` - SSR 应用实例
 
