@@ -7,6 +7,5 @@ export const PACKAGES = [
   'runtime-core',
   'runtime-dom',
   'runtime-ssr',
-  'vitarx',
-  'vite-plugin'
+  'vitarx'
 ]
