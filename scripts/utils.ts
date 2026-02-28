@@ -165,7 +165,8 @@ export function runClean(dist: string): void {
 /**
  * 判断一个包是否有变化
  */
-export function hasPackageChanged(pkgName: string) {
+export function hasPackageChanged(pkgName: string): boolean {
+  if (pkgName === 'vitarx') return true
   const pkgPath = `packages/${pkgName}`
   if (!existsSync(pkgPath)) return false
   // 获取相对于 baseBranch 的变化文件列表

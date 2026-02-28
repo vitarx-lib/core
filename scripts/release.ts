@@ -540,15 +540,14 @@ async function main() {
 
   section('Build')
   if (changes.length) {
-    const result = await prompt(`Build (${changes}) changed packages?(y/N):`)
+    const result = await prompt(`Build (${changes}) changed packages? (y/N/skip):`)
     if (result.toLowerCase() === 'y') {
       run(`pnpm build ${changes}`)
-    } else {
+    } else if (result !== 'skip') {
       throw new Error('Build canceled')
     }
   } else {
-    const result = (await prompt(`Build all packages?(y/N/skip):`)).toLowerCase()
-
+    const result = (await prompt(`Build all packages? (y/N/skip):`)).toLowerCase()
     if (result === 'y') {
       run(`pnpm build ${changes}`)
     } else if (result !== 'skip') {
