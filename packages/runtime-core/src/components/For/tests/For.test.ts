@@ -341,17 +341,10 @@ describe('For Component', () => {
 
       // 验证警告信息包含优化后的内容
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[For]: key prop is not provided'),
-        expect.any(Object)
+        expect.stringContaining('[For]: key prop is not provided')
       )
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('While not mandatory'),
-        expect.any(Object)
-      )
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Consider adding a unique key'),
-        expect.any(Object)
-      )
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('While not mandatory'))
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Consider adding a unique key'))
 
       warnSpy.mockRestore()
     })
