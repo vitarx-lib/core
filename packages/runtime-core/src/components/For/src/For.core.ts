@@ -407,7 +407,7 @@ export function For<T>(props: ForProps<T>): ListView {
   return listView
 }
 
-defineValidate(For, (props): void => {
+defineValidate(For, (props, location): void => {
   if (!Array.isArray(props.each)) {
     throw new TypeError(`[For]: each expects an array, received ${typeof props.each}`)
   }
