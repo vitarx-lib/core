@@ -31,12 +31,14 @@ describe('Suspense Component', () => {
   describe('属性验证', () => {
     it('应该验证 children 必须为 View', () => {
       expect(() => {
+        // @ts-ignore
         Suspense.validateProps({ children: 'not a view' as any })
       }).toThrowError()
     })
 
     it('应该接受 fallback 为 View 或 undefined', () => {
       expect(() => {
+        // @ts-ignore
         Suspense.validateProps({
           children: createView(testTag),
           fallback: createView(testTag, { children: 'loading' })
@@ -44,6 +46,7 @@ describe('Suspense Component', () => {
       }).not.toThrow()
 
       expect(() => {
+        // @ts-ignore
         Suspense.validateProps({
           children: createView(testTag),
           fallback: undefined
@@ -53,6 +56,7 @@ describe('Suspense Component', () => {
 
     it('应该验证 fallback 必须为 View 或 undefined', () => {
       expect(() => {
+        // @ts-ignore
         Suspense.validateProps({
           children: createView(testTag),
           fallback: 'not a view' as any

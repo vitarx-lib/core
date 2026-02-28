@@ -1,6 +1,6 @@
 import { shallowRef } from '@vitarx/responsive'
 import { isFunction, logger, withDelayTimeout } from '@vitarx/utils'
-import { getInstance, onDispose, onInit } from '../../../runtime/index.js'
+import { defineValidate, getInstance, onDispose, onInit } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type {
   AnyProps,
@@ -131,7 +131,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   return createDynamicView(showView)
 }
 
-Lazy.validateProps = (props: AnyProps): void => {
+defineValidate(Lazy, (props: AnyProps): void => {
   if (!isFunction(props.loader)) {
     throw new TypeError(`[Lazy]: loader expects an async function, got ${typeof props.loader}`)
   }
@@ -141,6 +141,6 @@ Lazy.validateProps = (props: AnyProps): void => {
   if (props.onError && !isFunction(props.onError)) {
     throw new TypeError(`[Lazy]: onError expects a callback function, got ${typeof props.onError}`)
   }
-}
+})
 
 export { Lazy, type LazyProps, type LazyLoadOptions }

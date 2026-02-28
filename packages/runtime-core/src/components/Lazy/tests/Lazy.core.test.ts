@@ -40,12 +40,14 @@ describe('Lazy Component', () => {
   describe('属性验证', () => {
     it('应该验证 loader 必须为函数', () => {
       expect(() => {
+        // @ts-ignore
         Lazy.validateProps({ loader: 'not a function' as any })
       }).toThrowError()
     })
 
     it('应该验证 loading 必须为 View 或 undefined', () => {
       expect(() => {
+        // @ts-ignore
         Lazy.validateProps({
           loader: createLoader(),
           loading: 'not a view' as any
@@ -55,6 +57,7 @@ describe('Lazy Component', () => {
 
     it('应该接受有效的 loading 属性', () => {
       expect(() => {
+        // @ts-ignore
         Lazy.validateProps({
           loader: createLoader(),
           loading: () => createView(testTag, { children: 'Loading...' })
@@ -64,6 +67,7 @@ describe('Lazy Component', () => {
 
     it('应该验证 onError 必须为函数或 undefined', () => {
       expect(() => {
+        // @ts-ignore
         Lazy.validateProps({
           loader: createLoader(),
           onError: 'not a function' as any
@@ -73,6 +77,7 @@ describe('Lazy Component', () => {
 
     it('应该接受有效的 onError 属性', () => {
       expect(() => {
+        // @ts-ignore
         Lazy.validateProps({
           loader: createLoader(),
           onError: (e: unknown) => createView(testTag, { children: 'Error occurred' })
