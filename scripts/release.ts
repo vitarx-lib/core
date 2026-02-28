@@ -18,6 +18,7 @@
 import chalk from 'chalk'
 import { execSync } from 'child_process'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
+import console from 'node:console'
 import readline from 'node:readline/promises'
 import { resolve } from 'path'
 import process from 'process'
@@ -451,8 +452,9 @@ async function selectVersion(current: string) {
 
   RELEASE_TYPES.forEach((type, i) => {
     const next = semver.inc(current, type as any, 'alpha')
-    console.log(`${i + 1}. ${type} → ${chalk.cyan(next)}`)
+    console.log(`${chalk.yellow(i + 1 + '.')} ${type} → ${chalk.cyan(next)}`)
   })
+  console.log(`${chalk.yellow('&.')}${chalk.green('custom')}：输入一个自定义版本号`)
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -463,14 +465,17 @@ async function selectVersion(current: string) {
   rl.close()
 
   const type = RELEASE_TYPES[Number(answer) - 1]
-  if (!type) throw new Error('Invalid selection')
+  let nextVersion: string | null
+  if (type) {
+    nextVersion =
+      type === 'prerelease' ? semver.inc(current, type, 'alpha') : semver.inc(current, type)
+    if (!nextVersion) throw new Error('Version calculation failed')
+  } else {
+    nextVersion = answer
+    if (!semver.valid(nextVersion)) throw new Error('Invalid version')
+  }
 
-  const next =
-    type === 'prerelease' ? semver.inc(current, type, 'alpha') : semver.inc(current, type)
-
-  if (!next) throw new Error('Version calculation failed')
-
-  return next
+  return nextVersion!
 }
 
 /* -------------------------------------------------- */
