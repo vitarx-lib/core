@@ -150,8 +150,7 @@ export class Logger {
     // 添加源代码位置信息
     if (source && this.config.includeSourceInfo) {
       const { fileName, lineNumber, columnNumber } = source
-      const shortFileName = fileName.split('/').pop() || fileName
-      return `${prefix}${formattedMessage}\n    at (${shortFileName}:${lineNumber}:${columnNumber})`
+      return `${prefix}${formattedMessage}\n    at ${fileName}:${lineNumber}:${columnNumber}`
     }
     return prefix + formattedMessage
   }
