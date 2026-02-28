@@ -1,3 +1,23 @@
+# [4.0.0-beta.0](https://github.com/vitarx-lib/core/compare/v4.0.0-alpha.5...v4.0.0-beta.0) (2026-02-28)
+
+
+### Bug Fixes
+
+* **hmr:** 修复当前视图实例声明方式并完善测试用例 ([a2c0aec](https://github.com/vitarx-lib/core/commit/a2c0aecddc1d9e82c45539caa161105d5d31ad78))
+* **release:** 改进版本选择交互体验 ([3c85ad8](https://github.com/vitarx-lib/core/commit/3c85ad8ae8a8cd0986badcd3c085c385929f25b0))
+* **release:** 改进版本选择交互体验 ([b0a7e40](https://github.com/vitarx-lib/core/commit/b0a7e40354ba534f3962bab668bc93118f3587f0))
+* **runtime-core:** 修复 For 组件 props 验证参数 ([6a7fdb4](https://github.com/vitarx-lib/core/commit/6a7fdb47fc94f9082ef33d92f72a325696c179ed))
+* **scripts:** 优化发布脚本的构建交互和包变化判断 ([12b164d](https://github.com/vitarx-lib/core/commit/12b164d534f48a30206c6905ab5f4303bbc8af1a))
+* **vite-plugin:** 修复AST转换中babel模块兼容性问题 ([53ba449](https://github.com/vitarx-lib/core/commit/53ba44930e806c7527e73ca19b6ed45752efa3a9))
+* **vite-plugin:** 处理箭头函数表达式体的 HMR 注入问题 ([0aabb7d](https://github.com/vitarx-lib/core/commit/0aabb7db29435c648ae26e87c7fa1fa563bdccc3))
+
+
+### Features
+
+* **vite-plugin:** 添加 IfBlock、Switch 和 Match 编译宏组件类型支持 ([cc06fb3](https://github.com/vitarx-lib/core/commit/cc06fb38c6d584c232a14cb4b7608a8cd66ed42b))
+
+
+
 # [4.0.0-alpha.5](https://github.com/vitarx-lib/core/compare/v4.0.0-alpha.4...v4.0.0-alpha.5) (2026-02-27)
 
 
