@@ -4,7 +4,7 @@
  * @module transform
  */
 import generate from '@babel/generator'
-import { parse } from '@babel/parser'
+import { parse, type ParserOptions } from '@babel/parser'
 import traverse from '@babel/traverse'
 import * as t from '@babel/types'
 import { createContext, type TransformContext } from './context.js'
@@ -56,7 +56,7 @@ function shouldTransform(id: string): boolean {
 /**
  * 创建解析器选项
  */
-function createParserOptions(): any {
+function createParserOptions(): ParserOptions {
   return {
     sourceType: 'module',
     plugins: [
@@ -67,7 +67,10 @@ function createParserOptions(): any {
       'objectRestSpread',
       'optionalChaining',
       'nullishCoalescingOperator'
-    ]
+    ],
+    // 确保保留位置信息
+    ranges: true,
+    tokens: false
   }
 }
 

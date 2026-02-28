@@ -599,6 +599,28 @@ describe('HMR 协议结构', () => {
       expect(result).toContain('columnNumber')
     })
 
+    it('HMR 模式下多行代码位置信息正确', async () => {
+      const code = `import { For, ref, View } from 'vitarx'
+
+export default function DynamicList(): View {
+  const items = ref([1, 2, 3])
+  return (
+    <div>
+      <ul>
+        <For each={items}>{(item) => <li>{item}</li>}</For>
+      </ul>
+    </div>
+  )
+}`
+      const result = await compile(code, hmrOptions)
+      // div 应该在第 6 行
+      expect(result).toContain('lineNumber: 6')
+      // ul 应该在第 7 行
+      expect(result).toContain('lineNumber: 7')
+      // For 应该在第 8 行
+      expect(result).toContain('lineNumber: 8')
+    })
+
     it('HMR 模式下支持 v-if 指令', async () => {
       const code = `export const App = () => <div v-if={show}>visible</div>`
       const result = await compile(code, hmrOptions)
