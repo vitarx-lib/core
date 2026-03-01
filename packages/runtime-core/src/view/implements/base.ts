@@ -102,7 +102,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   get node(): Node {
     if (!this.hostNode) {
       throw new Error(
-        `[View.node]: Host Node access failed. Current view state is '${this.#state}', ` +
+        `[View.node]: Host Node access failed. Current view state is '${this.state}', ` +
           `\nbut the host node has not been created or has been destroyed. ` +
           `\nEnsure the view is properly initialized and mounted before accessing the node.`
       )
@@ -130,7 +130,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     this.ctx = ctx
     this.doInit?.()
     this.#setState(ViewState.INITIALIZED)
-    this.#active = true
+    this.#setActive(true)
     return this
   }
   /** 挂载到宿主（创建 / 插入 DOM） */
@@ -143,7 +143,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     } else if (!this.isInitialized) {
       throw new Error(
         `[View.mount]: Mount operation can only be executed when view is in '${ViewState.INITIALIZED}' state. ` +
-          `\nCurrent view state is '${this.#state}', which does not meet the pre-condition for mount operation. ` +
+          `\nCurrent view state is '${this.state}', which does not meet the pre-condition for mount operation. ` +
           `\nEnsure the view has completed initialization phase (init() method called) before attempting to mount.`
       )
     }
@@ -156,7 +156,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     if (!this.isRuntime) return this
     this.doDispose?.()
     delete this.ctx
-    this.#active = false
+    this.#setActive(false)
     this.#setState(ViewState.DETACHED)
     return this
   }
@@ -172,7 +172,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
           `Ensure the view has been initialized (init() method called) before attempting to activate.`
       )
     }
-    if (this.#active) {
+    if (this.active) {
       throw new Error(
         `[View.activate]: View is already activate. ` +
           `Ensure the view has been deactivate (deactivate by calling deactivate() method) before attempting to activate.`
