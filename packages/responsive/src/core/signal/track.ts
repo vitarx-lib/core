@@ -5,6 +5,7 @@ import { DEP_INDEX_MAP, DEP_VERSION, EFFECT_DEP_HEAD } from './symbol.js'
 let currentActiveEffect: EffectRunner | null = null
 let currentActiveSignal: Signal | null = null
 let isPauseTracking: boolean = false
+let isHasTracking: boolean = false
 
 /**
  * 获取当前活动的副作用函数
@@ -140,7 +141,7 @@ export function trackSignal(
 ): void {
   // 跳过跟踪
   if (isPauseTracking) return
-  if (currentActiveSignal === null) {
+  if (isHasTracking) {
     currentActiveSignal = signal
   }
   // 获取当前活动的副作用函数
@@ -187,22 +188,22 @@ export function untrack<T>(fn: () => T): T {
  * @returns {boolean} 如果getter函数执行过程中有信号则返回true，否则返回false
  */
 export function hasTrack<V>(fn: () => V): { isTrack: boolean; value: V } {
-  const pre = currentActiveSignal
-  currentActiveSignal = null
+  const pre = isHasTracking
+  isHasTracking = true
   try {
     const value = fn()
-    // noinspection PointlessBooleanExpressionJS
     const isTrack = currentActiveSignal !== null
     return { isTrack, value }
   } finally {
-    currentActiveSignal = pre
+    isHasTracking = pre
+    if (!pre) currentActiveSignal = null
   }
 }
 
 /**
  * 检查对象的属性上是否有信号跟踪
  *
- * 该 api 可以高效的判断一个对象属性是否具有响应性。
+ * `hasTrack(() => obj[key])` 的封装
  *
  * @param obj - 要检查的对象
  * @param key - 要检查的属性键
@@ -212,14 +213,5 @@ export function hasPropTrack<T extends object, K extends keyof T>(
   obj: T,
   key: K
 ): { isTrack: boolean; value: T[K] } {
-  const pre = currentActiveSignal
-  currentActiveSignal = null
-  try {
-    const value = obj[key]
-    // noinspection PointlessBooleanExpressionJS
-    const isTrack = currentActiveSignal !== null
-    return { isTrack, value }
-  } finally {
-    currentActiveSignal = pre
-  }
+  return hasTrack(() => obj[key])
 }
