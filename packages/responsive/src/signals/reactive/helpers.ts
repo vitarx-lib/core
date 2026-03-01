@@ -1,11 +1,14 @@
 import { isObject } from '@vitarx/utils'
-import { isRef } from '../shared/index.js'
+import { isReactive, isRef } from '../shared/index.js'
 import type { Reactive, ShallowReactive } from './base.js'
 import { createReactive } from './object.js'
 
 const validateReactiveTarget = (target: any, operation: string): void => {
   if (!isObject(target)) {
     throw new Error(`Cannot ${operation} a non-object`)
+  }
+  if (isReactive(target)) {
+    throw new Error(`Cannot ${operation} a reactive object`)
   }
   if (isRef(target)) {
     throw new Error(`Cannot ${operation} a ref`)
@@ -19,7 +22,7 @@ const validateReactiveTarget = (target: any, operation: string): void => {
  * @returns {T} 返回一个响应式代理对象
  */
 export function reactive<T extends object>(target: T): Reactive<T> {
-  validateReactiveTarget(target, 'reactive')
+  if (__VITARX_DEV__) validateReactiveTarget(target, 'reactive')
   return createReactive(target, true) as Reactive<T>
 }
 
@@ -33,6 +36,6 @@ export function reactive<T extends object>(target: T): Reactive<T> {
  * @returns {Reactive<T,false>} 浅层响应式对象
  */
 export function shallowReactive<T extends object>(target: T): ShallowReactive<T> {
-  validateReactiveTarget(target, 'shallowReactive')
+  if (__VITARX_DEV__) validateReactiveTarget(target, 'shallowReactive')
   return createReactive(target, false) as ShallowReactive<T>
 }
