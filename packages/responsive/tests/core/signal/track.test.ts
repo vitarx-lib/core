@@ -8,7 +8,8 @@ import {
   reactive,
   ref,
   trackEffect,
-  trackSignal
+  trackSignal,
+  untrack
 } from '../../../src/index.js'
 
 describe('depend/track', () => {
@@ -100,6 +101,39 @@ describe('depend/track', () => {
     it('should return false if there is no get reactive prop', () => {
       const obj = { a: 1 }
       expect(hasPropTrack(obj, 'a').isTrack).toBe(false)
+    })
+  })
+  describe('untrack', () => {
+    it('应该正确执行函数并返回结果', () => {
+      const result = untrack(() => 42)
+      expect(result).toBe(42)
+    })
+    it('应该在执行函数期间暂停跟踪', () => {
+      const test = ref('test')
+
+      const effect = () => {
+        untrack(() => {
+          return test.value
+        })
+      }
+      trackEffect(effect)
+      expect(hasLinkedSignal(effect)).toBeFalsy()
+    })
+    it('应该只影响当前副作用', () => {
+      const test = ref('test')
+
+      const effect2 = () => {
+        return test.value
+      }
+      const effect = () => {
+        untrack(() => {
+          trackEffect(effect2)
+          return test.value
+        })
+      }
+      trackEffect(effect)
+      expect(hasLinkedSignal(effect)).toBeFalsy()
+      expect(hasLinkedSignal(effect2)).toBeTruthy()
     })
   })
 })

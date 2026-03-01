@@ -4,6 +4,7 @@ import { DEP_INDEX_MAP, DEP_VERSION, EFFECT_DEP_HEAD } from './symbol.js'
 
 let currentActiveEffect: EffectRunner | null = null
 let currentActiveSignal: Signal | null = null
+let isPauseTracking: boolean = false
 
 /**
  * 获取当前活动的副作用函数
@@ -72,17 +73,21 @@ const finalizeDeps = (effect: EffectRunner): void => {
  * @returns {T} 返回执行 collector 函数的结果
  */
 export function trackEffect<T>(collector: () => T, reactor: EffectRunner = collector): T {
+  // 设置跳过跟踪标志为 false，表示需要收集依赖
+  const prevPauseTracking = isPauseTracking
+  isPauseTracking = false
+  // 设置当前活动的效果为传入的 effect
   const preEffect = currentActiveEffect
+  currentActiveEffect = reactor
   // 获取并更新效果对象的版本号
   const oldVersion = reactor[DEP_VERSION]
   reactor[DEP_VERSION] = (oldVersion ?? 0) + 1
   try {
-    // 设置当前活动的效果为传入的 effect
-    currentActiveEffect = reactor
     // 执行传入的函数并返回其结果
     return collector()
   } finally {
-    // 无论执行成功与否，最终都会执行以下代码
+    // 恢复跳过状态
+    isPauseTracking = prevPauseTracking
     // 重置当前活动的效果为 null
     currentActiveEffect = preEffect
     // 完成上一次跟踪运行中的依赖链路，
@@ -121,6 +126,9 @@ const trackHandler = (effect: EffectRunner, signal: Signal): void => {
 /**
  * 跟踪信号变化的函数
  *
+ * `trackSignal` 主要用途是跟踪一个“信号”，使其被活跃的副作用捕获，
+ * 通常开发者无需调用它，访问响应式数据时内部会自动调用此 api。
+ *
  * @param signal - 需要跟踪的信号对象
  * @param type - 信号操作类型，默认为`get`
  * @param debugData - 可选的调试数据，用于开发环境
@@ -130,7 +138,8 @@ export function trackSignal(
   type: SignalOpType = 'get',
   debugData?: ExtraDebugData
 ): void {
-  // ✅ 无论有没有 effect，都允许标记 signal 被访问
+  // 跳过跟踪
+  if (isPauseTracking) return
   if (currentActiveSignal === null) {
     currentActiveSignal = signal
   }
@@ -144,6 +153,29 @@ export function trackSignal(
   }
   // 执行实际的跟踪处理逻辑
   trackHandler(activeEffect, signal)
+}
+
+/**
+ * 执行一个函数并临时停止跟踪依赖关系
+ *
+ * @param fn - 需要执行的函数，其内部的依赖关系不会被跟踪
+ * @returns - 函数执行的结果
+ *
+ * 该函数通过设置 isPauseTracking 标志来临时停止依赖跟踪，
+ * 执行完函数后无论成功与否都会恢复原来的跟踪状态
+ */
+export function untrack<T>(fn: () => T): T {
+  // 保存当前的跟踪状态
+  const pre = isPauseTracking
+  // 暂停跟踪
+  isPauseTracking = true
+  try {
+    // 执行传入的函数
+    return fn()
+  } finally {
+    // 恢复之前的跟踪状态
+    isPauseTracking = pre
+  }
 }
 
 /**
