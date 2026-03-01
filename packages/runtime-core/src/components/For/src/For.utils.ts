@@ -114,20 +114,6 @@ export function ensureMounted(
 }
 
 /**
- * 将视图节点移动到指定位置
- *
- * @param renderer - 渲染器实例，用于执行DOM操作
- * @param listView - 列表视图实例，作为父容器
- * @param view - 需要移动的视图实例
- * @param anchor - 锚点视图实例，如果提供则插入到该节点之前，否则追加到父容器末尾
- */
-export function moveDOM(renderer: any, listView: ListView, view: View, anchor: View | null): void {
-  if (view.isMounted) {
-    if (anchor) renderer.insert(view.node, anchor.node)
-    else renderer.append(listView.node, view.node)
-  }
-}
-/**
  * normalize key resolver
  */
 export function normalizeKeyResolver<T>(

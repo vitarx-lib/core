@@ -1,10 +1,10 @@
-import { type Ref, ShallowRef, shallowRef, watch } from '@vitarx/responsive'
+import { type Ref, ShallowRef, shallowRef, untrack } from '@vitarx/responsive'
 import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
-import { defineValidate, getInstance, getRenderer } from '../../../runtime/index.js'
+import { defineValidate, getInstance, getRenderer, viewEffect } from '../../../runtime/index.js'
 import type { ValidChild, View } from '../../../types/index.js'
 import { resolveChild } from '../../../view/compiler/resolve.js'
 import { CommentView, ListView } from '../../../view/index.js'
-import { checkKey, ensureMounted, getLIS, moveDOM, normalizeKeyResolver } from './For.utils.js'
+import { checkKey, ensureMounted, getLIS, normalizeKeyResolver } from './For.utils.js'
 
 /**
  * 列表项渲染工厂函数类型
@@ -155,7 +155,7 @@ export interface ListLifecycleHook {
    *
    * @param children - 当前的所有子视图实例数组
    */
-  onBeforeUpdate?: (children: View[]) => void
+  onBeforeUpdate?: (children: IterableIterator<View>) => void
 
   /**
    * 列表更新后触发的回调函数
@@ -165,7 +165,7 @@ export interface ListLifecycleHook {
    *
    * @param children - 更新后的所有子视图实例数组
    */
-  onAfterUpdate?: (children: View[]) => void
+  onAfterUpdate?: (children: IterableIterator<View>) => void
 }
 
 /**
@@ -268,29 +268,46 @@ export function For<T>(props: ForProps<T>): ListView {
   const onAfterUpdateCb = props.onAfterUpdate
 
   const listView = new ListView()
-  let itemMap: ListItemMap = new Map()
   const pendingRemoved: ListItemMap = new Map()
-  let render: () => void | DiffResult
-  // 初始化
-  render = (): void => {
-    const each = props.each
-    for (let i = 0; i < each.length; i++) {
-      const item = each[i]
-      const rawKey = keyOf(item, i)
-      const key = checkKey(rawKey, i, itemMap, componentName)
+  let itemMap: ListItemMap = new Map()
+  const clear = (skip?: ListItemMap) => {
+    for (const [key, record] of itemMap) {
+      if (skip?.has(key)) continue
+      const view = record.view
+      listView.remove(view)
+      if (!onLeaveCb) {
+        // 直接销毁视图
+        view.dispose()
+        continue
+      }
+      pendingRemoved.set(key, record)
 
-      const indexRef = shallowRef(i)
-      const view = buildView(item, indexRef)
+      let isDone = false
+      const done = () => {
+        if (isDone) return
+        isDone = true
+        if (pendingRemoved.get(key)?.view === view) {
+          pendingRemoved.delete(key)
+          view.dispose()
+        }
+      }
 
-      itemMap.set(key, { view, indexRef })
-      listView.append(view)
+      try {
+        onLeaveCb(view, done)
+      } catch (e) {
+        logger.warn(`[${componentName}] onLeave callback throw error: ${e}`, location)
+        done()
+      }
     }
-    render = diff
   }
-  // diff 更新
-  const diff = (): DiffResult => {
-    const each = props.each
-    const length = each.length
+  const appendView = (item: T, i: number, key: unknown) => {
+    const indexRef = shallowRef(i)
+    const view = buildView(item, indexRef)
+    itemMap.set(key, { view, indexRef })
+    listView.append(view)
+    ensureMounted(view, listView, null, onEnterCb)
+  }
+  const diff = (each: readonly T[], length: number): DiffResult => {
     const newItemMap: ListItemMap = new Map()
     const newChildren = new Array<View>(length)
     const sourceIndex = new Array<number>(length).fill(-1)
@@ -330,80 +347,73 @@ export function For<T>(props: ForProps<T>): ListView {
     }
     return { newChildren, sourceIndex, newItemMap }
   }
-  // 启动观察器
-  watch(
-    () => render(),
-    diffResult => {
-      if (!diffResult) return
-      // 前置钩子
-      onBeforeUpdateCb?.(Array.from(listView.children))
-      const renderer = getRenderer()
-      const { newChildren, sourceIndex, newItemMap } = diffResult
-      const length = newChildren.length
-      // LIS
-      const lis = getLIS(sourceIndex)
-      let lisCursor = lis.length - 1
-
-      // apply move/insert
-      let anchor: View | null = null
-      for (let i = length - 1; i >= 0; i--) {
-        const view = newChildren[i]
-        const oldIndex = sourceIndex[i]
-
-        if (oldIndex !== -1 && lisCursor >= 0 && lis[lisCursor] === i) {
-          lisCursor--
-          anchor = view
-          continue
-        }
-
-        if (oldIndex === -1) {
-          listView.insert(view, anchor)
-          ensureMounted(view, listView, anchor, onEnterCb)
-        } else {
-          listView.move(view, anchor)
-          moveDOM(renderer, listView, view, anchor)
-        }
-
-        anchor = view
+  const effect = viewEffect(() => {
+    const list = props.each
+    const listLength = list.length
+    if (!listView.length && !listLength) return
+    // 前置钩子
+    if (onBeforeUpdateCb) {
+      untrack(() => onBeforeUpdateCb(listView.children))
+    }
+    // 全量卸载
+    if (listView.length && !listLength) {
+      untrack(clear)
+      itemMap.clear()
+    }
+    // 全量新增
+    else if (!listView.length && listLength) {
+      for (let i = 0; i < listLength; i++) {
+        const item = list[i]
+        const rawKey = keyOf(item, i)
+        const key = checkKey(rawKey, i, itemMap, componentName)
+        untrack(() => {
+          appendView(item, i, key)
+        })
       }
-
-      // remove stale
-      for (const [key, record] of itemMap) {
-        if (newItemMap.has(key)) continue
-        const view = record.view
-        listView.remove(view)
-        if (!onLeaveCb) {
-          // 直接销毁视图
-          view.dispose()
-          continue
-        }
-        pendingRemoved.set(key, record)
-
-        let isDone = false
-        const done = () => {
-          if (isDone) return
-          isDone = true
-          if (pendingRemoved.get(key)?.view === view) {
-            pendingRemoved.delete(key)
-            view.dispose()
+    }
+    // 部分更新
+    else {
+      const { newChildren, sourceIndex, newItemMap } = diff(list, listLength)
+      untrack(() => {
+        const newLength = newChildren.length
+        const renderer = getRenderer()
+        // LIS
+        const lis = getLIS(sourceIndex)
+        let lisCursor = lis.length - 1
+        // apply move/insert
+        let anchor: View | null = null
+        for (let i = newLength - 1; i >= 0; i--) {
+          const view = newChildren[i]
+          const oldIndex = sourceIndex[i]
+          if (oldIndex !== -1 && lisCursor >= 0 && lis[lisCursor] === i) {
+            lisCursor--
+            anchor = view
+            continue
           }
+          if (oldIndex === -1) {
+            listView.insert(view, anchor)
+            ensureMounted(view, listView, anchor, onEnterCb)
+          } else {
+            listView.move(view, anchor)
+            if (view.isMounted) {
+              if (anchor) renderer.insert(view.node, anchor.node)
+              else renderer.append(listView.node, view.node)
+            }
+          }
+          anchor = view
         }
-
-        try {
-          onLeaveCb(view, done)
-        } catch (e) {
-          logger.warn(`[${componentName}] onLeave callback throw error: ${e}`, location)
-          done()
-        }
-      }
-
-      // update map
-      itemMap = newItemMap
-      // 后置钩子
-      onAfterUpdateCb?.(Array.from(listView.children))
-    },
-    { flush: 'main', immediate: true }
-  )
+        // 清除未被使用的
+        clear(newItemMap)
+        // update map
+        itemMap = newItemMap
+      })
+    }
+    // 后置更新钩子
+    if (onAfterUpdateCb) {
+      untrack(() => onAfterUpdateCb(listView.children))
+    }
+  })
+  if (effect) instance.scope.add(effect)
   return listView
 }
 
