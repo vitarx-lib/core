@@ -188,7 +188,7 @@ export function checkKey(key: unknown, index: number, map: ListItemMap, name: st
         `  Key "${String(key)}" was already used at index ${existingRecord.indexRef.value}, now encountered at index ${index}.\n` +
         `  This can cause rendering issues and unexpected behavior.\n` +
         `  Please ensure your key function returns unique values for each item.\n` +
-        `  Example: key={(item, index) => item.id}`
+        `  Example: key={item => item.id}`
       logger.warn(errorMsg, location)
     }
     return Symbol()
