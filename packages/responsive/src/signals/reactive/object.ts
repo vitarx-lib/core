@@ -1,7 +1,7 @@
 import type { AnyRecord } from '@vitarx/utils'
 import { hasOwnProperty, isObject } from '@vitarx/utils'
 import { clearSignalLinks, trackSignal, triggerSignal } from '../../core/index.js'
-import { IS_RAW, isRef } from '../shared/index.js'
+import { IS_RAW, IS_REACTIVE, isRef } from '../shared/index.js'
 import { ReactiveSource } from './base.js'
 import { MapReactive, WeakMapReactive } from './map.js'
 import { SetReactive, WeakSetReactive } from './set.js'
@@ -15,7 +15,7 @@ import { SetReactive, WeakSetReactive } from './set.js'
  *          使用类型谓词(value is object)来确保返回true时value的类型为object
  */
 const isNestingObject = (value: any): value is object => {
-  return isObject(value) && !value[IS_RAW]
+  return isObject(value) && !value[IS_RAW] && !value[IS_REACTIVE]
 }
 /**
  * 设置对象属性的值
