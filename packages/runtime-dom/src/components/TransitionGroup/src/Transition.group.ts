@@ -16,8 +16,7 @@ import { getDuration, isElement, runTransition } from '../../Transition/src/Tran
 
 type ContainerTag = Exclude<HostElementTag, VoidElementTag>
 interface TransitionGroupProps<T, Tag extends ContainerTag>
-  extends BaseTransitionProps,
-    ListProps<T> {
+  extends BaseTransitionProps, ListProps<T> {
   /** 包裹子节点的标签名 */
   tag?: Tag
   /** 元素移动时使用的类名，默认为 `${name}-move` */
@@ -94,7 +93,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
       return props.key
     },
     // 更新前回调：记录元素当前位置
-    onBeforeUpdate: (children: View[]): void => {
+    onBeforeUpdate: (children: Iterable<View>): void => {
       // 如果视图未挂载，则直接返回
       if (!instance.isMounted) return void 0
       // 遍历子元素，记录它们的位置信息
@@ -106,7 +105,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
       }
     },
     // 更新后回调：处理元素移动动画
-    onAfterUpdate: (children: View[]): void => {
+    onAfterUpdate: (children: Iterable<View>): void => {
       // 如果视图未挂载，则直接返回
       if (!instance.isMounted) return void 0
       // 获取过渡类名前缀
@@ -187,7 +186,11 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
     },
     // 离开动画回调
     onLeave: (view, done): void => {
-      if (view.isMounted) runTransition(view.node, 'leave', props, done)
+      if (view.isMounted) {
+        runTransition(view.node, 'leave', props, done)
+      } else {
+        done()
+      }
     }
   })
   // 根据是否指定 tag 决定返回结构
