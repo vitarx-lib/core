@@ -39,6 +39,7 @@ yarn add @vitarx/responsive
 |-----------------|----------------------|----|-----------------------------|
 | signal          | getActiveEffect      | 函数 | 获取当前活动的副作用函数                |
 | signal          | trackSignal          | 函数 | 跟踪信号变化的函数                   |
+| signal          | untrack              | 函数 | 执行一个函数，临时停止跟踪依赖关系           |
 | signal          | hasTrack             | 函数 | 检查给定的函数中是否有跟踪信号             |
 | signal          | hasPropTrack         | 函数 | 检查对象的属性上是否有信号跟踪             |
 | signal          | triggerSignal        | 函数 | 触发信号的处理函数                   |
