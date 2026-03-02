@@ -49,6 +49,7 @@ const ROOT = process.cwd()
 const DRY_RUN = process.argv.includes('--dry-run') || process.argv.includes('--d')
 const FORCED = process.argv.includes('--force') || process.argv.includes('--f')
 const SKIP_CONFIRM = process.argv.includes('--yes')
+const LAST = process.argv.includes('--last')
 
 let committed = false
 let published = false
@@ -568,7 +569,7 @@ async function main() {
 
   section('Publish')
 
-  const tag = getDistTag(nextVersion)
+  const tag = LAST ? 'latest' : getDistTag(nextVersion)
 
   console.log(chalk.cyan.bold('\n━━━ Verify npm versions ━━━\n'))
   for (const name of PACKAGES) {
