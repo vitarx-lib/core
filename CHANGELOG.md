@@ -1,3 +1,24 @@
+# [4.0.0-beta.1](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.0...v4.0.0-beta.1) (2026-03-02)
+
+
+### Bug Fixes
+
+* **reactive:** 修复isNestingObject判断逻辑 ([db84a1b](https://github.com/vitarx-lib/core/commit/db84a1b4aadce8798ec452154369386d12b0edeb))
+* **reactive:** 在开发环境中增加响应式目标校验 ([798fb4b](https://github.com/vitarx-lib/core/commit/798fb4b44c22e55ea88bf9f7319140c106da86bc))
+* **runtime-core:** 修复 For 组件中节点复用逻辑 ([ac8b4f7](https://github.com/vitarx-lib/core/commit/ac8b4f7de7cd9bd8089d5a011d78337dc2178b47))
+* **runtime-core:** 修复视图状态管理和错误信息问题 ([c8a97f4](https://github.com/vitarx-lib/core/commit/c8a97f43306dba59e4a3de78a0318858f74eacbf))
+* **runtime-core:** 修正 key 函数示例中的参数用法错误 ([aa19851](https://github.com/vitarx-lib/core/commit/aa198517ae25e23cd22bd9988d78fd5ae9de5e23))
+* **runtime-dom:** 修复 TransitionGroup 组件的动画处理 ([2d0f53d](https://github.com/vitarx-lib/core/commit/2d0f53d7b2743aa29fea638a933e40c62a3686a7))
+* **signal:** 修复信号跟踪状态判断逻辑 ([14c6420](https://github.com/vitarx-lib/core/commit/14c6420c2e51ace589b26c9b792fc90f775762b1))
+* **utils:** 修正日志源代码位置信息格式 ([df459bd](https://github.com/vitarx-lib/core/commit/df459bd1b992fc5496956e4498c79490c4a7afdf))
+
+
+### Features
+
+* **singal:** 新增 `untrack` api，允许在执行函数时临时停止依赖跟踪 ([8401bba](https://github.com/vitarx-lib/core/commit/8401bbac08c1b76023a0b8284453ed9fd07623ed))
+
+
+
 # [4.0.0-beta.0](https://github.com/vitarx-lib/core/compare/v4.0.0-alpha.5...v4.0.0-beta.0) (2026-02-28)
 
 
