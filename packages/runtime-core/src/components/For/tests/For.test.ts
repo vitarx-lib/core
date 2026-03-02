@@ -1,4 +1,4 @@
-import { nextTick, ref } from '@vitarx/responsive'
+import { nextTick, ref, shallowRef } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { HostElementTag } from '../../../types/index.js'
 import { createView } from '../../../view/index.js'
@@ -223,6 +223,39 @@ describe('For Component', () => {
       items.value.length = 1
       await nextTick()
       expect(container.textContent).toBe('a')
+    })
+
+    it('应该正确处理交换行', async () => {
+      const items = shallowRef(Array.from({ length: 10 }, (_, i) => i + 1))
+      const view = createView(For<number>, {
+        get each() {
+          return items.value
+        },
+        key: (item: number) => item,
+        children: (item: number) =>
+          createView(testTag, {
+            children: item
+          })
+      })
+
+      view.mount(container)
+
+      expect(container.textContent).toBe(items.value.join(''))
+      // 交换
+      const _rows = items.value
+      const d1 = _rows[1]
+      _rows[1] = _rows[8]
+      _rows[8] = d1
+      items.value = items.value.slice()
+      await nextTick()
+      expect(container.textContent).toBe(items.value.join(''))
+      // 复位
+      const d2 = items.value[1]
+      items.value[1] = items.value[8]
+      items.value[8] = d2
+      items.value = items.value.slice()
+      await nextTick()
+      expect(container.textContent).toBe(items.value.join(''))
     })
   })
 
