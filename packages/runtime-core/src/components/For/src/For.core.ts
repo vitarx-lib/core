@@ -407,10 +407,18 @@ export function For<T>(props: ForProps<T>): ListView {
             sourceIndex[i] = oldIndex
             keyToOldIndex.delete(key) // 从映射中移除，剩余的即为需要删除的节点
           } else {
-            // 元素不存在：创建新节点
-            const indexRef = shallowRef(newIndex)
-            const view = buildView(list[newIndex], indexRef)
-            newMap.set(key, { view, indexRef })
+            // try revive pending removed
+            const reused = pendingRemoved.get(key)
+            if (reused) {
+              pendingRemoved.delete(key)
+              reused.indexRef.value = i
+              newMap.set(key, { view: reused.view, indexRef: reused.indexRef })
+            } else {
+              // 元素不存在：创建新节点
+              const indexRef = shallowRef(newIndex)
+              const view = buildView(list[newIndex], indexRef)
+              newMap.set(key, { view, indexRef })
+            }
           }
         }
 
