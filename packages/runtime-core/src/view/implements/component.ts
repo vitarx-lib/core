@@ -143,10 +143,10 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     // 子 -> 父
     this.instance!.show()
   }
-  protected override doDispose(): void {
+  protected override doDispose(root: boolean): void {
     // 父 -> 子
     this.instance!.dispose()
-    this.subView!.dispose()
+    this.subView!.dispose(root)
     this.instance = null
   }
 }
@@ -231,6 +231,9 @@ export class ComponentInstance<T extends Component = Component> {
   get isMounted(): boolean {
     return this.#isMounted
   }
+  /**
+   * @internal
+   */
   public init(): void {
     const hooks = this.hooks[Lifecycle.init]
     if (!hooks) return void 0
@@ -264,21 +267,36 @@ export class ComponentInstance<T extends Component = Component> {
         delete this.initPromise
       })
   }
+  /**
+   * @internal
+   */
   public beforeMount(): void {
     this.invokeVoidHook(Lifecycle.beforeMount)
     delete this.hooks[Lifecycle.beforeMount]
   }
+  /**
+   * @internal
+   */
   public mounted(): void {
     this.#isMounted = true
     this.invokeVoidHook(Lifecycle.mounted)
     delete this.hooks[Lifecycle.mounted]
   }
+  /**
+   * @internal
+   */
   public show(): void {
     this.invokeVoidHook(Lifecycle.show)
   }
+  /**
+   * @internal
+   */
   public hide(): void {
     this.invokeVoidHook(Lifecycle.hide)
   }
+  /**
+   * @internal
+   */
   public dispose(): void {
     this.hide()
     this.invokeVoidHook(Lifecycle.dispose)
@@ -322,6 +340,13 @@ export class ComponentInstance<T extends Component = Component> {
       logger.error(`Unhandled exception in ${this.view.name} - `, error, errorInfo)
     }
   }
+
+  /**
+   * 调用无返回值的钩子
+   *
+   * @param stage - 钩子阶段
+   * @private
+   */
   private invokeVoidHook(stage: Exclude<Lifecycle, Lifecycle.init>): void {
     const hooks = this.hooks[stage]
     if (!hooks) return void 0
@@ -362,6 +387,11 @@ export class ComponentInstance<T extends Component = Component> {
     }
     return view
   }
+  /**
+   * 获取暂停计数器
+   *
+   * @private
+   */
   private useSuspenseCounter(): Ref<number> | undefined {
     let parent = this.parent
     while (parent) {

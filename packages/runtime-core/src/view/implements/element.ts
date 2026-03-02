@@ -109,14 +109,14 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     for (const child of this.children) child.mount(this.hostNode, 'append')
     applyDirective(this, this.hostNode, 'mounted')
   }
-  protected override doDispose(): void {
+  protected override doDispose(root: boolean): void {
     if (this.effects) {
       for (const effect of this.effects) effect.dispose()
       this.effects = null
     }
     if (this.hostNode) applyDirective(this, this.hostNode, 'dispose')
-    for (const child of this.children) child.dispose()
-    if (this.hostNode) {
+    for (const child of this.children) child.dispose(false)
+    if (root && this.hostNode) {
       getRenderer().remove(this.hostNode)
       this.hostNode = null
     }

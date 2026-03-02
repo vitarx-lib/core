@@ -151,10 +151,16 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     this.#setState(ViewState.MOUNTED)
     return this
   }
-  /** 彻底销毁（不可再次使用，或需重新 init） */
-  dispose(): this {
+
+  /**
+   * 彻底销毁（可重新 init）
+   *
+   * @param [root=true] - 是否为根，此参数为内部递归时自动传递，外部无需传入，
+   * 如传入`false`不会自动移除`hostNode`
+   */
+  dispose(root: boolean = true): this {
     if (!this.isRuntime) return this
-    this.doDispose?.()
+    this.doDispose?.(root)
     delete this.ctx
     this.#setActive(false)
     this.#setState(ViewState.DETACHED)
@@ -228,7 +234,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * 卸载视图
    * @protected
    */
-  protected doDispose?(): void
+  protected doDispose?(root: boolean): void
 
   #setState(state: ViewState): void {
     if (__VITARX_DEV__ && isRef(this.#state)) {

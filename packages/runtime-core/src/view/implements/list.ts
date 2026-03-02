@@ -170,12 +170,12 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
   protected override doDeactivate() {
     for (const safeChild of this.safeChildren()) safeChild.deactivate()
   }
-  protected override doDispose() {
+  protected override doDispose(root: boolean) {
     for (const safeChild of this.safeChildren()) {
       this.remove(safeChild)
-      safeChild.dispose()
+      safeChild.dispose(false)
     }
-    if (this.hostNode) getRenderer().remove(this.hostNode)
+    if (root && this.hostNode) getRenderer().remove(this.hostNode)
   }
 
   /**

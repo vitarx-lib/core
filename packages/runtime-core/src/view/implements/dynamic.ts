@@ -148,9 +148,9 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
   /**
    * 释放资源
    */
-  protected override doDispose(): void {
+  protected override doDispose(root: boolean): void {
     this.effect?.dispose()
-    this.cachedView?.dispose()
+    this.cachedView?.dispose(root)
     this.#dirty = false
     this.#switching = false
     this.cachedView = null

@@ -41,8 +41,8 @@ abstract class BaseAtomicView<
     renderer[type](this.hostNode, containerOrAnchor)
   }
 
-  protected override doDispose(): void {
-    if (this.hostNode) {
+  protected override doDispose(root: boolean): void {
+    if (root && this.hostNode) {
       getRenderer().remove(this.hostNode)
       this.hostNode = null
     }
