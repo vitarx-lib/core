@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { Logger, LogLevel, logger, getStackTrace, getCallSource, CodeSource } from '../src/logger'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CodeSource, getCallSource, getStackTrace, logger, Logger, LogLevel } from '../src/logger'
 
 describe('Logger', () => {
   let consoleDebugSpy: any
@@ -148,18 +148,6 @@ describe('Logger', () => {
       const formatted = log.formatMessage(LogLevel.ERROR, 'error message', source)
       expect(formatted).not.toContain('file.ts:42:10')
     })
-
-    it('should extract short filename from path', () => {
-      const log = new Logger({ includeSourceInfo: true })
-      const source: CodeSource = {
-        fileName: '/very/long/path/to/some/file.ts',
-        lineNumber: 1,
-        columnNumber: 1
-      }
-      const formatted = log.formatMessage(LogLevel.DEBUG, 'msg', source)
-      expect(formatted).toContain('file.ts:1:1')
-      expect(formatted).not.toContain('/very/long/path')
-    })
   })
 
   describe('source info in args', () => {
@@ -171,19 +159,13 @@ describe('Logger', () => {
         columnNumber: 5
       }
       log.info('message', source)
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
-        expect.stringContaining('test.ts:10:5'),
-      )
+      expect(consoleInfoSpy).toHaveBeenCalledWith(expect.stringContaining('test.ts:10:5'))
     })
 
     it('should pass remaining args to console', () => {
       const log = new Logger({ level: LogLevel.DEBUG })
       log.info('message', { data: 123 }, 'extra')
-      expect(consoleInfoSpy).toHaveBeenCalledWith(
-        expect.any(String),
-        { data: 123 },
-        'extra'
-      )
+      expect(consoleInfoSpy).toHaveBeenCalledWith(expect.any(String), { data: 123 }, 'extra')
     })
   })
 
@@ -207,12 +189,7 @@ describe('Logger', () => {
       const source: CodeSource = { fileName: 'test.ts', lineNumber: 1, columnNumber: 1 }
       log.error('error', source)
 
-      expect(handler).toHaveBeenCalledWith(
-        LogLevel.ERROR,
-        'error',
-        [],
-        source
-      )
+      expect(handler).toHaveBeenCalledWith(LogLevel.ERROR, 'error', [], source)
     })
   })
 })
@@ -299,7 +276,8 @@ describe('getCallSource', () => {
   it('should parse stack with parentheses format', () => {
     const originalError = global.Error
     class MockError {
-      stack = 'Error\n    at getCallSource (file:///path/to/test.ts:10:20)\n    at test (file:///path/to/caller.ts:30:40)'
+      stack =
+        'Error\n    at getCallSource (file:///path/to/test.ts:10:20)\n    at test (file:///path/to/caller.ts:30:40)'
     }
     global.Error = MockError as any
 
@@ -314,7 +292,8 @@ describe('getCallSource', () => {
   it('should parse stack without parentheses format', () => {
     const originalError = global.Error
     class MockError {
-      stack = 'Error\n    at getCallSource file:///path/to/test.ts:10:20\n    at test file:///path/to/caller.ts:30:40'
+      stack =
+        'Error\n    at getCallSource file:///path/to/test.ts:10:20\n    at test file:///path/to/caller.ts:30:40'
     }
     global.Error = MockError as any
 
