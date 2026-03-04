@@ -1,5 +1,5 @@
 import { type Ref, watch, Watcher } from '@vitarx/responsive'
-import { logger } from '@vitarx/utils'
+import { isArray, logger } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { withDirectives } from '../../runtime/index.js'
 import { isView } from '../../shared/index.js'
@@ -124,26 +124,22 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
    * 初始化视图
    */
   protected override doInit(): void {
-    let handler: (value: T) => void = this.#initView.bind(this)
+    this.#initView(this.source.value)
     this.effect = watch(
       this.source,
       newValue => {
         try {
-          handler(newValue)
+          this.#updateView(newValue)
         } catch (err) {
-          if (!this.cachedView) {
-            this.cachedView = new CommentView(`DynamicView Error: init failed`)
-          }
           if (this.owner) {
             this.owner.reportError(err, 'view:switch')
           } else {
-            logger.error(`Unhandled exception in DynamicView - `, err, this.location)
+            throw err
           }
         }
       },
-      { immediate: true, scope: false, flush: 'main' }
+      { scope: false, flush: 'main' }
     )
-    handler = this.#updateView.bind(this)
   }
   /**
    * 释放资源
@@ -336,6 +332,27 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
         if (input.length === 0) return 'empty'
         return 'text'
       default:
+        if (__VITARX_DEV__) {
+          if (input != null && typeof input !== 'boolean') {
+            if (isArray(input)) {
+              logger.warn(
+                `[DynamicView]: Array type is not supported for dynamic rendering. ` +
+                  `The value type must be Primitive (string, number, boolean) or View instance. ` +
+                  `Received: Array[${input.length} items]. ` +
+                  `If you need to render a list, consider using map() in your template expression, ` +
+                  `e.g., "{cond && list.map(item => <ListItem data={item} />)}".`,
+                this.location
+              )
+            } else {
+              logger.warn(
+                `[DynamicView]: Invalid value type "${typeof input}" for dynamic rendering. ` +
+                  `This value will be treated as an empty element (null/undefined). ` +
+                  `Supported types: Primitive (string, number, boolean) or View instance.`,
+                this.location
+              )
+            }
+          }
+        }
         return 'empty'
     }
   }
