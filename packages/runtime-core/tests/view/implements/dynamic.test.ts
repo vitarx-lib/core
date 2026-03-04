@@ -1,7 +1,6 @@
 import { nextTick, ref } from '@vitarx/responsive'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { ViewKind } from '../../../src/index.js'
-import { DynamicView } from '../../../src/index.js'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { DynamicView, ViewKind } from '../../../src/index.js'
 
 describe('DynamicView', () => {
   let container: HTMLElement
@@ -130,6 +129,8 @@ describe('DynamicView', () => {
   })
 
   it('应该处理不同类型的值', async () => {
+    // 拦截 console.warn 以抑制不支持类型的警告信息
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const source = ref<any>('test')
     const dynamicView = new DynamicView(source)
     dynamicView.init()
@@ -147,6 +148,7 @@ describe('DynamicView', () => {
     source.value = { toString: () => 'object' }
     await nextTick()
     expect(container.innerHTML).toBe('<!--v-if-->')
+    warnSpy.mockRestore()
   })
 
   it('当数据相同时应该跳过更新', async () => {
