@@ -13,6 +13,8 @@
     "directory": "packages/vitarx"
   },
   "type": "module",
+  "module": "./dist/index.esm-bundler.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "index.cjs",
