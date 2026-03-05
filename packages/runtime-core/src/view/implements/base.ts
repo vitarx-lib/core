@@ -34,8 +34,8 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   public directives?: DirectiveMap
 
   constructor(location?: CodeLocation) {
-    this.location = location
     if (__VITARX_DEV__) {
+      this.location = location
       this.#state = shallowRef(ViewState.DETACHED)
       this.#active = shallowRef(false)
     } else {
