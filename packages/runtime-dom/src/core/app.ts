@@ -2,6 +2,7 @@ import {
   App,
   type AppConfig,
   type Component,
+  getRenderer,
   type HostContainer,
   setRenderer,
   type View
@@ -65,6 +66,6 @@ export class WebApp extends App {
  * @returns {App} 返回一个新的App实例
  */
 export function createApp(root: View | Component, config?: AppConfig): WebApp {
-  setRenderer(new DOMRenderer())
+  if (!getRenderer(true)) setRenderer(new DOMRenderer())
   return new WebApp(root, config)
 }

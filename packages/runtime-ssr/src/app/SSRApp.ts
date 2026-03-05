@@ -1,6 +1,7 @@
 import {
   type AppConfig,
   type Component,
+  getRenderer,
   type HostContainer,
   setRenderer,
   type View,
@@ -71,7 +72,7 @@ export function createSSRApp(root: View | Component, config?: AppConfig): SSRApp
         }
       })
     )
-  } else {
+  } else if (!getRenderer(true)) {
     setRenderer(new DOMRenderer())
   }
   return new SSRApp(root, config)
