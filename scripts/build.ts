@@ -43,15 +43,6 @@ const packagesDir = resolve(__dirname, '../packages')
 const NODE_EXTERNALS = ['stream', 'node:stream']
 
 /**
- * 获取需要排除的外部模块列表
- * @param dependencies - 包的依赖对象
- * @returns - 外部模块列表
- */
-function getExternalModules(dependencies?: Record<string, string>): string[] {
-  return dependencies ? [...NODE_EXTERNALS, ...Object.keys(dependencies)] : [...NODE_EXTERNALS]
-}
-
-/**
  * vite 构建
  *
  * @param packagePath - 包路径
@@ -154,7 +145,9 @@ async function buildPackage(
   const pkg: PackageJson = (await import(`${packagePath}/package.json`)).default
   log.warn(`\n📦 Vite Building ${pkg.name}...`)
   const external =
-    packageDirName === 'vitarx' ? NODE_EXTERNALS : getExternalModules(pkg.dependencies)
+    packageDirName === 'vitarx'
+      ? NODE_EXTERNALS
+      : [...NODE_EXTERNALS, ...Object.keys(pkg.dependencies || {})]
   const define = { __VITARX_VERSION__: JSON.stringify(pkg.version) }
   // 根据包类型选择构建方式
   await viteBuild(packagePath, pkg, dist, {
@@ -168,7 +161,7 @@ async function buildPackage(
     define: {
       ...define,
       __VITARX_DEV__: true,
-      __VITARX_SSR__: true
+      __VITARX_SSR__: false
     },
     format: 'cjs',
     fileName: 'index.cjs-dev',
@@ -179,7 +172,7 @@ async function buildPackage(
     define: {
       ...define,
       __VITARX_DEV__: false,
-      __VITARX_SSR__: true
+      __VITARX_SSR__: false
     },
     format: 'cjs',
     fileName: 'index.cjs-prod',
