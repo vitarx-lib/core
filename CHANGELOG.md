@@ -1,3 +1,14 @@
+# [4.0.0-beta.2](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2026-03-05)
+
+
+### Bug Fixes
+
+* **build:** 统一 CommonJS 文件扩展名为 .cjs ([446eeb3](https://github.com/vitarx-lib/core/commit/446eeb32327c946b1c3328b95f289fa0ab7ff440))
+* **dynamic:** 优化视图初始化与更新逻辑并增强类型警告 ([8ba372c](https://github.com/vitarx-lib/core/commit/8ba372c6d21106e972b8342b34db3dc9e1902aaf))
+* **runtime:** 修复创建App时渲染器初始化逻辑 ([b39dc5a](https://github.com/vitarx-lib/core/commit/b39dc5a9375d7602bf7fdb38542488719354e908))
+
+
+
 # [4.0.0-beta.1](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.0...v4.0.0-beta.1) (2026-03-02)
 
 
