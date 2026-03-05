@@ -1,3 +1,12 @@
+# [4.0.0-beta.3](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.2...v4.0.0-beta.3) (2026-03-05)
+
+
+### Bug Fixes
+
+* **build:** 修复测试环境下被误判为SSR环境 ([831f224](https://github.com/vitarx-lib/core/commit/831f22482b4f3a7b714343bd68b8b8f9ebbd5960))
+
+
+
 # [4.0.0-beta.2](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.1...v4.0.0-beta.2) (2026-03-05)
 
 
