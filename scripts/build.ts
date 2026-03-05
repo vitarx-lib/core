@@ -31,6 +31,7 @@ interface BuildOptions {
   dts?: boolean
   fileName?: string
   external?: string[]
+  ext?: 'js' | 'cjs'
 }
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -70,7 +71,8 @@ async function viteBuild(
     format = 'es',
     define = {},
     external,
-    fileName = `index.${format}`
+    fileName = `index.${format}`,
+    ext = 'js'
   } = options || {}
   const tsconfigPath = resolve(packagePath, 'tsconfig.json')
   const plugins: PluginOption[] = []
@@ -98,7 +100,7 @@ async function viteBuild(
         entry: resolve(packagePath, 'src/index.ts'),
         formats: [format],
         fileName: _ => {
-          return `${fileName}.js`
+          return `${fileName}.${ext}`
         }
       },
       rollupOptions: { external },
@@ -169,7 +171,8 @@ async function buildPackage(
       __VITARX_SSR__: true
     },
     format: 'cjs',
-    fileName: 'index.cjs-dev'
+    fileName: 'index.cjs-dev',
+    ext: 'cjs'
   })
   await viteBuild(packagePath, pkg, dist, {
     external,
@@ -179,7 +182,8 @@ async function buildPackage(
       __VITARX_SSR__: true
     },
     format: 'cjs',
-    fileName: 'index.cjs-prod'
+    fileName: 'index.cjs-prod',
+    ext: 'cjs'
   })
 
   log.success(`\n✓ Bundle ${pkg.name} compilation completed`)
