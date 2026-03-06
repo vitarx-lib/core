@@ -42,7 +42,7 @@ export interface DynamicProps {
  *
  * @param props - 动态组件的属性对象
  * @param props.is - 动态组件要加载的组件类型
- * * @param [props.memo] - 是否记住组件
+ * @param [props.memo] - 是否记住组件
  * @param [props.children] - 动态组件的子节点
  * @param [props.otherProps] - 其他透传的属性
  * @returns {View} - 返回动态组件的视图对象
