@@ -75,9 +75,10 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     this.component = component
     const { props: inputProps, ref } = resolveProps(props)
     this.ref = ref
-    const resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
-    // 开发时直接冻结
+    let resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
     if (__VITARX_DEV__) {
+      // 开发时冻结属性对象
+      resolvedProps = Object.freeze(resolvedProps)
       if (isFunction(component.validateProps)) {
         const result = component.validateProps(resolvedProps, location)
         // 校验失败处理
