@@ -1,5 +1,5 @@
 import { isRef, unref } from '@vitarx/responsive'
-import { hasOwnProperty, isFunction, isObject, isPlainObject, popProperty } from '@vitarx/utils'
+import { hasOwnProperty, isFunction, isPlainObject, popProperty } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/attributes.js'
 import { StyleUtils } from '../../shared/index.js'
 import { isView } from '../../shared/utils/is.js'
@@ -125,10 +125,10 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   // 从props中提取v-bind属性
   const binding = popProperty(props, 'v-bind')
   // 如果存在v-bind绑定，则进行props绑定处理
-  const resolvedProps = isObject(binding) ? (bindProps(props, binding) as T) : props
+  const resolvedProps = isPlainObject(binding) ? (bindProps(props, binding) as T) : props
   // 构建返回结果对象
   const result: ResolvePropsResult<T> = {
-    props: __VITARX_DEV__ ? Object.freeze(resolvedProps) : resolvedProps
+    props: resolvedProps
   }
   // 如果存在ref，则将其添加到结果中
   if (isRef(ref) || isFunction(ref)) result.ref = ref

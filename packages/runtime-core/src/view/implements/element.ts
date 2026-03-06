@@ -77,7 +77,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     }
     this.children = resolvedChildren
     const { props: resolvedProps, ref } = resolveProps(props)
-    this.props = resolvedProps
+    this.props = __VITARX_DEV__ ? Object.freeze(resolvedProps) : resolvedProps
     if (ref) this.ref = ref
   }
   protected override doInit(): void {
