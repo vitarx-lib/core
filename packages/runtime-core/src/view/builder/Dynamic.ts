@@ -58,7 +58,8 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
       get() {
         return props[key]
       },
-      enumerable: true
+      enumerable: true,
+      configurable: true
     })
   }
   const viewSource = new DynamicViewSource(() => {
