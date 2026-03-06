@@ -1,6 +1,5 @@
 import { isObject } from '@vitarx/utils'
-import { isReactive, isRef } from '../shared/index.js'
-import type { Reactive, ShallowReactive } from './base.js'
+import { isReactive, isRef, type Reactive, type ShallowReactive } from '../shared/index.js'
 import { createReactive } from './object.js'
 
 const validateReactiveTarget = (target: any, operation: string): void => {

@@ -1,42 +1,5 @@
-import type { DeepReadonly } from '@vitarx/utils'
 import { isObject, logger } from '@vitarx/utils'
-import {
-  type DeepUnwrapRefs,
-  IS_RAW,
-  IS_READONLY,
-  isRef,
-  RAW_VALUE,
-  type RawValue,
-  type UnwrapRefs
-} from '../shared/index.js'
-
-/**
- * 只读代理类型工具
- *
- * 根据 IsDeep 参数决定使用浅层还是深层只读代理：
- * - 当 IsDeep 为 true 时，使用 DeepReadonly 进行深度只读处理
- * - 当 IsDeep 为 false 时，使用 Readonly 进行浅层只读处理
- *
- * @template T - 对象类型
- * @template IsDeep - 是否进行深度处理
- *
- * @example
- * ```typescript
- * type User = { name: RefWrapper<string>; profile: { age: RefWrapper<number> } }
- *
- * // 深层只读
- * type DeepReadOnlyUser = ReadonlyProxy<User, true>
- * // 等价于 DeepReadonly<{ name: string; profile: { age: number } }>
- *
- * // 浅层只读
- * type ShallowReadOnlyUser = ReadonlyProxy<User, false>
- * // 等价于 Readonly<{ name: string; profile: { age: RefWrapper<number> } }>
- * ```
- */
-export type ReadonlyObject<T extends object, IsDeep extends boolean> = (IsDeep extends true
-  ? DeepReadonly<DeepUnwrapRefs<T>>
-  : Readonly<UnwrapRefs<T>>) &
-  RawValue<T>
+import { IS_RAW, IS_READONLY, isRef, RAW_VALUE, type ReadonlyObject } from '../shared/index.js'
 
 /**
  * 只读代理处理器类

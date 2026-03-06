@@ -1,8 +1,15 @@
 import { type AnyFunction, type AnyObject, isFunction, isObject, logger } from '@vitarx/utils'
 import { trackSignal, triggerSignal } from '../../core/index.js'
-import type { Reactive } from '../reactive/base.js'
 import { reactive } from '../reactive/index.js'
-import { IS_RAW, IS_REACTIVE, IS_REF, IS_SIGNAL, isRef, type RefSignal } from '../shared/index.js'
+import {
+  IS_RAW,
+  IS_REACTIVE,
+  IS_REF,
+  IS_SIGNAL,
+  isRef,
+  type Reactive,
+  type RefSignal
+} from '../shared/index.js'
 
 export type ToRefValue<T> = T extends AnyFunction ? T : T extends AnyObject ? Reactive<T> : T
 

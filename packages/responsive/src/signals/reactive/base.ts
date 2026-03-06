@@ -1,25 +1,7 @@
 import type { ExtraDebugData, SignalOpType } from '../../core/index.js'
 import { trackSignal, triggerSignal } from '../../core/index.js'
-import { type DeepUnwrapRefs, IS_REACTIVE, RAW_VALUE, type UnwrapRefs } from '../shared/index.js'
+import { IS_REACTIVE, RAW_VALUE } from '../shared/index.js'
 
-/**
- * 响应式类型定义
- *
- * @template T 目标对象类型
- */
-export type Reactive<T extends object = object> = DeepUnwrapRefs<T> & {
-  readonly [RAW_VALUE]: T
-  readonly [IS_REACTIVE]: ReactiveSource<T>
-}
-/**
- * 浅层响应式类型定义
- *
- * @template T 目标对象类型
- */
-export type ShallowReactive<T extends object = object> = UnwrapRefs<T> & {
-  readonly [RAW_VALUE]: T
-  readonly [IS_REACTIVE]: ReactiveSource<T>
-}
 /**
  * ReactiveSource 是一个抽象类，用于创建响应式对象代理。
  *

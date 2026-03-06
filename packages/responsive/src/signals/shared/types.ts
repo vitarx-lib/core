@@ -1,9 +1,10 @@
-import type { AnyCollection, AnyFunction, AnyObject } from '@vitarx/utils'
-import { type IS_RAW, IS_REF, IS_SIGNAL, type RAW_VALUE } from './symbol.js'
+import type { AnyCollection, AnyFunction, AnyObject, DeepReadonly } from '@vitarx/utils'
+import type { ReactiveSource } from '../reactive/base.js'
+import type { IS_RAW, IS_REACTIVE, IS_REF, IS_SIGNAL, RAW_VALUE } from './symbol.js'
 
 /**
  * 表示包含原始值的接口
- * 
+ *
  * @template T - 原始值的类型
  */
 export interface RawValue<T> {
@@ -12,7 +13,7 @@ export interface RawValue<T> {
 
 /**
  * 表示原始对象类型，用于标识不应被包装的对象
- * 
+ *
  * @template T - 原始对象的类型，默认为任意对象
  */
 export type RawObject<T extends AnyObject = AnyObject> = T & {
@@ -21,7 +22,7 @@ export type RawObject<T extends AnyObject = AnyObject> = T & {
 
 /**
  * Ref 接口，用于创建响应式引用
- * 
+ *
  * @template T - 读取值的类型
  * @template S - 设置值的类型，默认与 T 相同
  */
@@ -33,7 +34,7 @@ export interface Ref<T = any, S = T> {
 
 /**
  * RefSignal 接口，扩展自 Ref，增加了可追踪标识
- * 
+ *
  * @template T - 读取值的类型
  * @template S - 设置值的类型，默认与 T 相同
  */
@@ -48,7 +49,7 @@ type NonWrapped = AnyCollection | AnyFunction | RawObject
 
 /**
  * 解包 Ref 类型，获取其内部值
- * 
+ *
  * @template T - 要解包的类型
  * @returns 如果 T 是 Ref 类型，则返回其内部值类型；否则返回 T
  */
@@ -56,7 +57,7 @@ export type UnwrapRef<T> = T extends Ref<infer V, any> ? V : T
 
 /**
  * 递归解包对象中的所有 Ref 类型
- * 
+ *
  * @template T - 要解包的对象类型
  * @returns 如果 T 是 NonWrapped 类型，则直接返回 T；否则返回一个新类型，其中所有属性都被解包
  */
@@ -64,10 +65,57 @@ export type UnwrapRefs<T> = T extends NonWrapped ? T : { [K in keyof T]: UnwrapR
 
 /**
  * 深度递归解包对象中的所有 Ref 类型
- * 
+ *
  * @template T - 要解包的对象类型
  * @returns 如果 T 是 NonWrapped 类型，则直接返回 T；否则返回一个新类型，其中所有属性都被深度解包
  */
 export type DeepUnwrapRefs<T> = T extends NonWrapped
   ? T
   : { [K in keyof T]: T[K] extends Ref<infer V, any> ? V : DeepUnwrapRefs<T[K]> }
+
+/**
+ * 响应式类型定义
+ *
+ * @template T 目标对象类型
+ */
+export type Reactive<T extends object = object> = DeepUnwrapRefs<T> & {
+  readonly [RAW_VALUE]: T
+  readonly [IS_REACTIVE]: ReactiveSource<T>
+}
+/**
+ * 浅层响应式类型定义
+ *
+ * @template T 目标对象类型
+ */
+export type ShallowReactive<T extends object = object> = UnwrapRefs<T> & {
+  readonly [RAW_VALUE]: T
+  readonly [IS_REACTIVE]: ReactiveSource<T>
+}
+
+/**
+ * 只读代理类型工具
+ *
+ * 根据 IsDeep 参数决定使用浅层还是深层只读代理：
+ * - 当 IsDeep 为 true 时，使用 DeepReadonly 进行深度只读处理
+ * - 当 IsDeep 为 false 时，使用 Readonly 进行浅层只读处理
+ *
+ * @template T - 对象类型
+ * @template IsDeep - 是否进行深度处理
+ *
+ * @example
+ * ```typescript
+ * type User = { name: RefWrapper<string>; profile: { age: RefWrapper<number> } }
+ *
+ * // 深层只读
+ * type DeepReadOnlyUser = ReadonlyProxy<User, true>
+ * // 等价于 DeepReadonly<{ name: string; profile: { age: number } }>
+ *
+ * // 浅层只读
+ * type ShallowReadOnlyUser = ReadonlyProxy<User, false>
+ * // 等价于 Readonly<{ name: string; profile: { age: RefWrapper<number> } }>
+ * ```
+ */
+export type ReadonlyObject<T extends object, IsDeep extends boolean> = (IsDeep extends true
+  ? DeepReadonly<DeepUnwrapRefs<T>>
+  : Readonly<UnwrapRefs<T>>) &
+  RawValue<T>

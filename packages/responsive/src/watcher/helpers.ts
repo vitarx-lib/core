@@ -6,9 +6,10 @@ import {
   isRef,
   isRefSignal,
   type RAW_VALUE,
-  type Ref
+  type Reactive,
+  type Ref,
+  type ShallowReactive
 } from '../signals/index.js'
-import type { Reactive, ShallowReactive } from '../signals/reactive/base.js'
 import { EffectWatcher } from './effect.js'
 import { GetterWatcher } from './getter.js'
 import { RefSignalWatcher } from './ref.js'
@@ -60,8 +61,8 @@ const traverse = <T>(
   seen.set(reactiveObject, depth)
 
   // 判断是否允许深度遍历子响应式对象（由响应式对象自身的 deep 配置决定）
-  const allowDeepReactive = signal.deep
-  const nextDepth = allowDeepReactive ? depth - 1 : -1
+
+  const nextDepth = signal.deep ? depth - 1 : -1
 
   // 处理数组类型：遍历数组元素
   if (isArray(value)) {

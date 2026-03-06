@@ -1,6 +1,5 @@
-import type { Reactive, ShallowReactive } from '../reactive/base.js'
 import { IS_REACTIVE, IS_READONLY, IS_REF, IS_SIGNAL } from './symbol.js'
-import type { Ref, RefSignal } from './types.js'
+import type { Reactive, Ref, RefSignal, ShallowReactive } from './types.js'
 
 /**
  * 判断值是否实现Ref接口

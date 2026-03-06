@@ -1,5 +1,6 @@
 import { AnyRecord } from '@vitarx/utils'
-import { createReadonlyProxy, type ReadonlyObject } from './readonly.js'
+import type { ReadonlyObject } from '../shared/index.js'
+import { createReadonlyProxy } from './readonly.js'
 
 /**
  * 只读对象
