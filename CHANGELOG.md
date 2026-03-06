@@ -1,3 +1,12 @@
+# [4.0.0-beta.4](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.3...v4.0.0-beta.4) (2026-03-06)
+
+
+### Bug Fixes
+
+* **types:** 修复 Reactive、ShallowReactive 等核心类型未导出问题 ([113096b](https://github.com/vitarx-lib/core/commit/113096b7b88696dfa6eec86db1d284fe6200da8d))
+
+
+
 # [4.0.0-beta.3](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.2...v4.0.0-beta.3) (2026-03-05)
 
 
