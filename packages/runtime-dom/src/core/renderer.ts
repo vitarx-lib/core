@@ -214,7 +214,7 @@ export class DOMRenderer implements ViewRenderer {
         return
       }
       // 使用 setAttribute 作为后备方案
-      el.setAttribute(name, String(nextValue))
+      el.setAttribute(name, nextValue === true ? '' : String(nextValue))
     } catch (error) {
       console.error(
         `[DOMRenderer.setAttribute][ERROR]：an error occurred when setting the attribute ${name}`,
