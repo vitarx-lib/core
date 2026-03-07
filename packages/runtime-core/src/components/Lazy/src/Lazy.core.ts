@@ -110,9 +110,9 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
     try {
       const module = await task
       if (module && isFunction(module.default)) {
-        const p = bindProps ? bindProps : ({} as AnyProps)
-        if (children && !p.children) p.children = children
-        showView.value = createView(module.default, p as ExtractProps<T>)
+        const resolveProps: AnyProps = bindProps ? bindProps : {}
+        if (children) resolveProps.children = children
+        showView.value = createView(module.default, resolveProps as ExtractProps<T>)
       }
     } catch (e) {
       if (isFunction(onError)) {

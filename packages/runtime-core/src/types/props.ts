@@ -186,13 +186,10 @@ export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttribute
 /**
  * 根据视图标签类型推断其对应的属性类型
  *
- * 去除了 children 属性，主要是为了编写组件Props接口时方便继承或使用其他元素/组件可透传绑定的属性。
- *
  * @example
  * ```ts
  * // 通过继承 WithProps<div> 可以让组件支持所有div元素的属性，
  * interface Props extends WithProps<'div'> {
- *   children: View
  *   // ... 其他自定义属性
  * }
  * const MyComponent = (props: Props) => {
@@ -202,12 +199,8 @@ export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttribute
  * ```
  *
  * @template T - 节点类型，必须继承自 ViewTag
- * @template K - 忽略的属性名称，默认为 'children'
  */
-export type WithProps<T extends ViewTag, K extends keyof any = 'children'> = Omit<
-  ExtractProps<T>,
-  K
->
+export type WithProps<T extends ViewTag> = ExtractProps<T>
 
 export type JSXElementAttributes<C, P> = P extends object
   ? WithVModel<WithRefProps<WithVModelUpdate<P>>>
