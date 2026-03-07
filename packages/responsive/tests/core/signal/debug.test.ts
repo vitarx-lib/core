@@ -34,7 +34,7 @@ describe('depend/debug', () => {
     })
 
     it('should log error when onTrack handler throws', () => {
-      const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
       const error = new Error('Test error')
       const event = {
         effect: {
@@ -45,9 +45,9 @@ describe('depend/debug', () => {
       }
 
       triggerOnTrack(event as any)
-      expect(debugSpy).toHaveBeenCalledWith('[triggerOnTrack] Error in onTrack:', error)
+      expect(errorSpy).toHaveBeenCalledWith('[Signal] Error in onTrack callback', error)
 
-      debugSpy.mockRestore()
+      errorSpy.mockRestore()
     })
   })
 
@@ -82,7 +82,7 @@ describe('depend/debug', () => {
     })
 
     it('should log error when onTrigger handler throws', () => {
-      const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {})
+      const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
       const error = new Error('Test error')
       const event = {
         effect: {
@@ -93,9 +93,9 @@ describe('depend/debug', () => {
       }
 
       triggerOnTrigger(event as any)
-      expect(debugSpy).toHaveBeenCalledWith('[triggerOnTrigger] Error in onTrigger:', error)
+      expect(errorSpy).toHaveBeenCalledWith('[Signal] Error in onTrigger callback', error)
 
-      debugSpy.mockRestore()
+      errorSpy.mockRestore()
     })
   })
 })

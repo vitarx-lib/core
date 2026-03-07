@@ -254,7 +254,7 @@ export class ArrayReactive<T extends any[]> extends ObjectReactive<T> {
   protected override set(target: T, p: string | symbol, newValue: any, receiver: any): boolean {
     if (p === 'length') {
       if (typeof newValue !== 'number' || newValue < 0 || !Number.isInteger(newValue)) {
-        throw new TypeError(`Invalid array length: ${newValue}`)
+        throw new RangeError(`[reactive] Invalid array length: ${newValue}`)
       }
       const oldValue = this.oldLength
       if (newValue === oldValue) return true

@@ -125,7 +125,7 @@ export async function renderToNodeStream(
 
     return promise
   } else {
-    throw new Error('renderToNodeStream only works in SSR mode')
+    throw new Error('[renderToNodeStream] only works in SSR mode')
   }
 }
 

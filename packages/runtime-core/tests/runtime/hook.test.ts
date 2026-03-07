@@ -92,7 +92,7 @@ describe('runtime/hook', () => {
           expect(consoleError).toHaveBeenCalledWith(
             logger.formatMessage(
               LogLevel.ERROR,
-              `on${toCapitalize(lifecycle)}(): must be called in a component`
+              `[Hook] on${toCapitalize(lifecycle)}() must be called in a component context`
             )
           )
           consoleError.mockRestore()
@@ -218,7 +218,7 @@ describe('runtime/hook', () => {
       defineExpose(exposed)
 
       expect(consoleError).toHaveBeenCalledWith(
-        logger.formatMessage(LogLevel.ERROR, `defineExpose(): must be called in a component`)
+        logger.formatMessage(LogLevel.ERROR, `[defineExpose] must be called in a component context`)
       )
       consoleError.mockRestore()
     })

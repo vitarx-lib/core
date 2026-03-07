@@ -363,7 +363,6 @@ describe('For Component', () => {
 
       const view = createView(For<string>, {
         each: items,
-        // 故意不提供 key prop
         children: (item: string) =>
           createView(testTag, {
             children: item
@@ -372,12 +371,9 @@ describe('For Component', () => {
 
       view.mount(container)
 
-      // 验证警告信息包含优化后的内容
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[For]: key prop is not provided')
+        expect.stringContaining('[For] key prop is not provided')
       )
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('While not mandatory'))
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Consider adding a unique key'))
 
       warnSpy.mockRestore()
     })

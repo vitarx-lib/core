@@ -62,7 +62,7 @@ describe('signal/computed/computed', () => {
       computed.value = 10
 
       expect(warnSpy).toHaveBeenCalledWith(
-        'Computed properties should not be modified directly unless a setter function is defined.'
+        '[computed] properties should not be modified directly unless a setter function is defined'
       )
       warnSpy.mockRestore()
     })

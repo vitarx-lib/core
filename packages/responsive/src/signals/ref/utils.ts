@@ -190,7 +190,7 @@ export function toRefs<T extends object>(
   skipWarn = false
 ): { [K in keyof T]: ToRef<T[K]> } {
   if (!isPlainObject(obj)) {
-    throw new TypeError(`toRefs() called on a non-object`)
+    throw new TypeError('[toRefs] argument must be an object')
   }
   if (!skipWarn && !isReactive(obj)) {
     console.warn(`toRefs() called on a non-reactive object`)

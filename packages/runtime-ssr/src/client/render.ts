@@ -44,7 +44,7 @@ export function renderViewNode(
       ;(view as FragmentView)['hostNode'] = fragment
       break
     default:
-      throw new Error('Unknown node kind')
+      throw new Error('[renderViewNode] unknown node kind')
   }
   return view.node
 }

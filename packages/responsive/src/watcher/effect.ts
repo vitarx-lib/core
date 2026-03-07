@@ -26,7 +26,7 @@ export class EffectWatcher<T = any> extends Watcher {
   constructor(effect: (onCleanup: WatcherOnCleanup) => T, options?: WatcherOptions) {
     super(options)
     if (!isFunction(effect)) {
-      throw new Error('[EffectWatcher] effect must be a function')
+      throw new TypeError('[EffectWatcher] effect must be a function')
     }
     this.effect = effect
     this.runEffect()

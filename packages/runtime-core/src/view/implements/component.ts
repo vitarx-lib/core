@@ -83,11 +83,9 @@ export class ComponentView<T extends Component = Component> extends BaseView<
         const result = component.validateProps(resolvedProps, location)
         // 校验失败处理
         if (result === false) {
-          // 记录错误日志，包含源信息
-          logger.error(`[${this.name}] props validation failed.`, this.location)
+          logger.error(`[${this.name}] Props validation failed`, this.location)
         } else if (typeof result === 'string') {
-          // 如果返回的是字符串，则记录警告日志
-          logger.warn(`[${this.name}]: ${result}`, this.location)
+          logger.warn(`[${this.name}] ${result}`, this.location)
         }
       }
     }
@@ -325,11 +323,7 @@ export class ComponentInstance<T extends Component = Component> {
         // 如果处理器返回false，则终止错误处理流程
         if (result === false) return
       } catch (e) {
-        // 如果错误处理器本身抛出错误，记录无限循环错误
-        logger.error(
-          `[${this.view.name}] Infinite loop detected: error thrown in onError hook`,
-          error
-        )
+        logger.error(`[${this.view.name}] Error in onError hook caused infinite loop`, error)
       }
     }
     // 如果存在父组件，将错误上报给父组件
@@ -338,7 +332,7 @@ export class ComponentInstance<T extends Component = Component> {
     } else if (this.app?.config.errorHandler) {
       this.app.config.errorHandler(error, errorInfo)
     } else {
-      logger.error(`Unhandled exception in ${this.view.name} - `, error, errorInfo)
+      logger.error(`[${this.view.name}] Unhandled exception`, error, errorInfo)
     }
   }
 

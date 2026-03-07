@@ -487,41 +487,37 @@ export function For<T>(props: ForProps<T>): ListView {
 
 defineValidate(For, (props, location): void => {
   if (!Array.isArray(props.each)) {
-    throw new TypeError(`[For]: each expects an array, received ${typeof props.each}`)
+    throw new TypeError(`[For] each expects an array, received ${typeof props.each}`)
   }
   if (!isFunction(props.children)) {
-    throw new TypeError(`[For]: children expects a function, received ${typeof props.children}`)
+    throw new TypeError(`[For] children expects a function, received ${typeof props.children}`)
   }
   if (props.key !== undefined) {
-    // 验证 key 类型：必须是函数或字符串（对象属性名）
     if (typeof props.key !== 'function' && typeof props.key !== 'string') {
       throw new TypeError(
-        `[For]: key expects a function or string (property name), received ${typeof props.key}`
+        `[For] key expects a function or string, received ${typeof props.key}`
       )
     }
   } else {
     logger.warn(
-      `[For]: key prop is not provided. ` +
-        `While not mandatory, providing a key helps optimize list rendering performance ` +
-        `and ensures proper component state preservation during list updates. ` +
-        `Consider adding a unique key for each item.`,
+      '[For] key prop is not provided, consider adding a unique key for each item to optimize rendering',
       location
     )
   }
   if (props.onLeave && !isFunction(props.onLeave)) {
-    throw new TypeError(`[For]: onLeave expects a function, received ${typeof props.onLeave}`)
+    throw new TypeError(`[For] onLeave expects a function, received ${typeof props.onLeave}`)
   }
   if (props.onEnter && !isFunction(props.onEnter)) {
-    throw new TypeError(`[For]: onEnter expects a function, received ${typeof props.onEnter}`)
+    throw new TypeError(`[For] onEnter expects a function, received ${typeof props.onEnter}`)
   }
   if (props.onAfterUpdate && !isFunction(props.onAfterUpdate)) {
     throw new TypeError(
-      `[For]: onAfterUpdate expects a function, received ${typeof props.onAfterUpdate}`
+      `[For] onAfterUpdate expects a function, received ${typeof props.onAfterUpdate}`
     )
   }
   if (props.onBeforeUpdate && !isFunction(props.onBeforeUpdate)) {
     throw new TypeError(
-      `[For]: onBeforeUpdate expects a function, received ${typeof props.onBeforeUpdate}`
+      `[For] onBeforeUpdate expects a function, received ${typeof props.onBeforeUpdate}`
     )
   }
 })

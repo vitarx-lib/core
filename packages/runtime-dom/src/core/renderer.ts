@@ -108,11 +108,7 @@ export class DOMRenderer implements ViewRenderer {
     const parent = anchor.parentNode
     if (!parent) {
       if (__VITARX_DEV__) {
-        logger.warn(
-          'DOMRenderer.insert(): The anchor node does not have a parent node',
-          child,
-          anchor
-        )
+        logger.warn('[DOMRenderer.insert] anchor node has no parent', child, anchor)
       }
       return
     }
@@ -139,11 +135,7 @@ export class DOMRenderer implements ViewRenderer {
     const parent = isFragment ? oldNode.$startAnchor.parentNode : oldNode.parentNode
     if (!parent) {
       if (__VITARX_DEV__) {
-        logger.warn(
-          '[DOMRenderer.replace]: The old node does not have a parent node',
-          newNode,
-          oldNode
-        )
+        logger.warn('[DOMRenderer.replace] old node has no parent', newNode, oldNode)
       }
       return
     }
@@ -217,7 +209,7 @@ export class DOMRenderer implements ViewRenderer {
       el.setAttribute(name, nextValue === true ? '' : String(nextValue))
     } catch (error) {
       console.error(
-        `[DOMRenderer.setAttribute][ERROR]：an error occurred when setting the attribute ${name}`,
+        `[DOMRenderer.setAttribute] error setting attribute "${name}"`,
         error,
         el
       )

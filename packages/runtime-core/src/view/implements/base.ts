@@ -101,11 +101,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    */
   get node(): Node {
     if (!this.hostNode) {
-      throw new Error(
-        `[View.node]: Host Node access failed. Current view state is '${this.state}', ` +
-          `\nbut the host node has not been created or has been destroyed. ` +
-          `\nEnsure the view is properly initialized and mounted before accessing the node.`
-      )
+      throw new Error(`[View.node] Host node not available, current state is '${this.state}'`)
     }
     return this.hostNode
   }
@@ -122,10 +118,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   /** 初始化运行时（不创建 DOM，不可见） */
   init(ctx?: ViewContext): this {
     if (this.isRuntime) {
-      throw new Error(
-        `[View.init]: The view has already been initialized. ` +
-          `\nEnsure the view is not initialized multiple times.`
-      )
+      throw new Error('[View.init] View has already been initialized')
     }
     this.ctx = ctx
     this.doInit?.()
@@ -136,16 +129,12 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
   /** 挂载到宿主（创建 / 插入 DOM） */
   mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
     if (__VITARX_SSR__) {
-      throw new Error('[View.mount]: is not supported in SSR mode')
+      throw new Error('[View.mount] Not supported in SSR mode')
     }
     if (this.isDetached) {
       this.init()
     } else if (!this.isInitialized) {
-      throw new Error(
-        `[View.mount]: Mount operation can only be executed when view is in '${ViewState.INITIALIZED}' state. ` +
-          `\nCurrent view state is '${this.state}', which does not meet the pre-condition for mount operation. ` +
-          `\nEnsure the view has completed initialization phase (init() method called) before attempting to mount.`
-      )
+      throw new Error('[View.mount] View must be initialized before mounting')
     }
     this.doMount?.(target, type)
     this.#setState(ViewState.MOUNTED)
@@ -173,38 +162,21 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    */
   activate(): this {
     if (!this.isRuntime) {
-      throw new Error(
-        `[View.activate]: View is already dispose or nonused. ` +
-          `Ensure the view has been initialized (init() method called) before attempting to activate.`
-      )
+      throw new Error('[View.activate] View is not in runtime state')
     }
     if (this.active) {
-      throw new Error(
-        `[View.activate]: View is already activate. ` +
-          `Ensure the view has been deactivate (deactivate by calling deactivate() method) before attempting to activate.`
-      )
+      throw new Error('[View.activate] View is already active')
     }
     this.doActivate?.()
     this.#setActive(true)
     return this
   }
-  /**
-   * 停用视图响应式
-   *
-   * 停用视图树响应式，必须与 `activate` 搭配使用
-   */
   deactivate(): this {
     if (!this.isRuntime) {
-      throw new Error(
-        `[View.deactivate]: View is already dispose or nonused. ` +
-          `Ensure the view has been initialized (init() method called) before attempting to deactivate.`
-      )
+      throw new Error('[View.deactivate] View is not in runtime state')
     }
     if (!this.active) {
-      throw new Error(
-        `[View.deactivate]: View is already deactivate. ` +
-          `If you want to activate the view, use the activate() method instead.`
-      )
+      throw new Error('[View.deactivate] View is already inactive')
     }
     this.doDeactivate?.()
     this.#setActive(false)

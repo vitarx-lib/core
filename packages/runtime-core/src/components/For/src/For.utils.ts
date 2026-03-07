@@ -128,7 +128,7 @@ export function normalizeKeyResolver<T>(
         return key(item)
       } catch (e) {
         if (__VITARX_DEV__) {
-          logger.warn(`[${name}] key function throw error in ${index}: ${e}`, location)
+          logger.warn(`[${name}] key function error at index ${index}`, e, location)
         }
         return Symbol()
       }
@@ -138,7 +138,7 @@ export function normalizeKeyResolver<T>(
     if (key in item) {
       return item[key]
     } else {
-      logger.warn(`[${name}] key '${String(key)}' not found in each["${index}"]`, location)
+      logger.warn(`[${name}] key "${String(key)}" not found at index ${index}`, location)
       return Symbol()
     }
   }

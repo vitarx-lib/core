@@ -76,7 +76,7 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
    */
   append(child: ListItemView): void {
     if (__VITARX_DEV__ && !isView(child)) {
-      throw new TypeError('child must be a view')
+      throw new TypeError('[ListView.append] child must be a View')
     }
     child.__parent = this
     if (!this.head) {
@@ -100,10 +100,10 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
   insert(child: ListItemView, anchor: ListItemView | null): void {
     if (!anchor) return this.append(child)
     if (__VITARX_DEV__ && !isView(child)) {
-      throw new TypeError('child must be a view')
+      throw new TypeError('[ListView.insert] child must be a View')
     }
     if (anchor.__parent !== this) {
-      throw new Error('anchor must be a child of this list')
+      throw new Error('[ListView.insert] anchor must be a child of this list')
     }
     child.__parent = this
     const prev = anchor.__prev
@@ -139,7 +139,7 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
    */
   remove(child: ListItemView): void {
     if (__VITARX_DEV__ && !isView(child)) {
-      throw new TypeError('child must be a view')
+      throw new TypeError('[ListView.remove] child must be a View')
     }
     const prev = child.__prev
     const next = child.__next

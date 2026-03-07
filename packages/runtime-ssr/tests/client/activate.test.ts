@@ -118,7 +118,7 @@ describe('hydrateNode', () => {
   })
 
   it('当找不到DOM时应该回退到正常渲染', async () => {
-    const container = createContainer('') // 空容器
+    const container = createContainer('')
 
     const view = h('div', { id: 'new' }, 'New Content')
 
@@ -127,7 +127,7 @@ describe('hydrateNode', () => {
     await hydrateNode(view, container)
 
     expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringContaining('Cannot find dom node for <div>')
+      expect.stringContaining('cannot find DOM node for <div>')
     )
     expect(view.node).toBeTruthy()
     view.mount(container)

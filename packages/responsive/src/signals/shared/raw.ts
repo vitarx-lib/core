@@ -23,7 +23,7 @@ import type { RawObject, RawValue } from './types.js'
  */
 export function markRaw<T extends object>(obj: T): RawObject<T> {
   if (!isObject(obj)) {
-    throw new TypeError('[markRaw]: The argument must be an object type')
+    throw new TypeError('[markRaw] argument must be an object')
   }
   Object.defineProperty(obj, IS_RAW, {
     value: true

@@ -4,13 +4,13 @@ import { createReactive } from './object.js'
 
 const validateReactiveTarget = (target: any, operation: string): void => {
   if (!isObject(target)) {
-    throw new Error(`Cannot ${operation} a non-object`)
+    throw new TypeError(`[reactive] Cannot ${operation} a non-object`)
   }
   if (isReactive(target)) {
-    throw new Error(`Cannot ${operation} a reactive object`)
+    throw new Error(`[reactive] Cannot ${operation} an already reactive object`)
   }
   if (isRef(target)) {
-    throw new Error(`Cannot ${operation} a ref`)
+    throw new Error(`[reactive] Cannot ${operation} a ref`)
   }
 }
 /**

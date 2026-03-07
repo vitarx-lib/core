@@ -98,7 +98,7 @@ export abstract class Watcher extends Effect {
     super(scope)
     const scheduler = Watcher.schedulerMap[flush]
     if (!scheduler) {
-      logger.warn(`[Watcher] Invalid flush option: ${flush}`)
+      logger.warn(`[Watcher] Invalid flush option "${flush}", using "pre" as default`)
       this.scheduler = queuePreFlushJob
     } else {
       this.scheduler = scheduler

@@ -70,7 +70,7 @@ describe('runtime/provide', () => {
 
       provide(name, value)
       expect(consoleError).toHaveBeenCalledWith(
-        logger.formatMessage(LogLevel.ERROR, `provide(): must be called in a component context`)
+        logger.formatMessage(LogLevel.ERROR, `[provide] must be called in a component context`)
       )
       consoleError.mockRestore()
     })
@@ -152,7 +152,7 @@ describe('runtime/provide', () => {
 
       expect(() => {
         inject(name)
-      }).toThrow('inject must be called in component')
+      }).toThrow('[inject] must be called in a component context')
     })
 
     it('应该在所有祖先中查找提供的值', () => {

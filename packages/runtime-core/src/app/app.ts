@@ -51,7 +51,7 @@ export type AppPlugin<T extends {} = {}> = AppObjectPlugin<T> | AppPluginInstall
  * @param info
  */
 const defaultErrorHandler = (error: unknown, info: ErrorInfo) =>
-  logger.error('there are unhandled exceptions', error, info)
+  logger.error('[App] Unhandled exception occurred', error, info)
 /**
  * 应用程序主类，负责管理整个应用的生命周期和核心功能
  *
@@ -244,7 +244,7 @@ export class App {
     name = name.trim()
     if (directive) {
       // 如果没有提供指令名称，抛出类型错误
-      if (!name) throw new TypeError('The directive name cannot be empty')
+      if (!name) throw new TypeError('[App.directive] name cannot be empty')
       this.#directives.set(name, directive)
       return this
     } else {
@@ -321,7 +321,7 @@ export class App {
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
   use<T extends {}>(plugin: AppPlugin<T>, options?: T): this {
-    if (!plugin) throw new Error('[Vitarx.App.use][ERROR]: The plugin cannot be empty.')
+    if (!plugin) throw new TypeError('[App.use] plugin cannot be empty')
     const pluginType = typeof plugin
     let install: AppPluginInstall<T>
     if (pluginType === 'object') {
@@ -330,8 +330,8 @@ export class App {
       install = plugin as AppPluginInstall<T>
     }
     if (typeof install !== 'function') {
-      throw new Error(
-        `[Vitarx.App.use][ERROR]: The plugin must be a function or an object with an install method.`
+      throw new TypeError(
+        '[App.use] plugin must be a function or an object with an install method'
       )
     }
     install(this, options!)

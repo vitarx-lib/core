@@ -119,7 +119,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
         const fallback = onError(e)
         if (isView(fallback)) showView.value = fallback
       } else {
-        logger.error('lazy loading component module fail - ', e, location)
+        logger.error('[Lazy] Failed to load component module', e, location)
       }
     } finally {
       cancelTask = undefined
@@ -133,13 +133,13 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
 
 defineValidate(Lazy, (props: AnyProps): void => {
   if (!isFunction(props.loader)) {
-    throw new TypeError(`[Lazy]: loader expects an async function, got ${typeof props.loader}`)
+    throw new TypeError(`[Lazy] loader expects a function, received ${typeof props.loader}`)
   }
   if (props.loading && !isFunction(props.loading)) {
-    throw new TypeError(`[Lazy]: loading expects a node object, got ${typeof props.loading}`)
+    throw new TypeError(`[Lazy] loading expects a function, received ${typeof props.loading}`)
   }
   if (props.onError && !isFunction(props.onError)) {
-    throw new TypeError(`[Lazy]: onError expects a callback function, got ${typeof props.onError}`)
+    throw new TypeError(`[Lazy] onError expects a function, received ${typeof props.onError}`)
   }
 })
 

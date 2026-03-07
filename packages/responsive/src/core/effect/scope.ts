@@ -118,10 +118,10 @@ export class EffectScope {
    * @param options - 可选配置对象，包含名称和错误处理器
    */
   constructor(options?: EffectScopeOptions) {
-    this.name = options?.name || 'anonymous' // 如果没有提供名称，则使用默认名称 'anonymous'
-    this.errorHandler = options?.errorHandler // 设置错误处理器
+    this.name = options?.name || 'anonymous'
+    this.errorHandler = options?.errorHandler
     if (this.errorHandler && typeof this.errorHandler !== 'function') {
-      throw new TypeError('errorHandler must be a function') // 验证错误处理器是否为函数
+      throw new TypeError('[EffectScope] errorHandler must be a function')
     }
   }
 
@@ -204,19 +204,12 @@ export class EffectScope {
    * @param effect - 要添加的效果对象
    */
   add(effect: DisposableEffect) {
-    // 如果 effect 已经属于当前 scope，直接返回
     if (effect[OWNER_SCOPE] === this) return
-    // 如果 effect 当前属于其他 scope，抛出错误而不是静默切换
     if (effect[OWNER_SCOPE]) {
-      throw new Error(
-        '[Vitarx.EffectScope]: Cannot add effect to scope. Effect already belongs to another scope. Please remove it from the current scope first.'
-      )
+      throw new Error('[EffectScope] Cannot add effect that already belongs to another scope')
     }
-    // 将当前效果的_scope指针指向当前作用域
     effect[OWNER_SCOPE] = this
-    // 将当前效果的_prev指针指向链表的尾部
     effect[PREV_EFFECT] = this._tail
-    // 初始化当前效果的_next指针为undefined，因为它是最后一个效果
     effect[NEXT_EFFECT] = undefined
     if (!this._head) this._head = this._tail = effect
     else {
@@ -273,12 +266,9 @@ export class EffectScope {
    */
   public handleError(error: unknown, source: string): void {
     if (this.errorHandler) {
-      // 用户自定义处理器
       this.errorHandler(error, source)
     } else {
-      throw error instanceof Error
-        ? error
-        : new Error(`[EffectScope][${String(this.name)}] ${source}: ${String(error)}`)
+      throw error instanceof Error ? error : new Error(`[EffectScope] ${source}: ${String(error)}`)
     }
   }
 
@@ -361,13 +351,13 @@ export class EffectScope {
    */
   private addCallback(cb: VoidCallback, type: 'dispose' | 'pause' | 'resume') {
     if (this.state === 'disposed') {
-      throw new Error(`[EffectScope][${String(this.name)}] EffectScope is already disposed.`)
+      throw new Error('[EffectScope] Cannot add callback to a disposed scope')
     }
-    if (!this._callbacks) this._callbacks = new Map() // 如果回调映射不存在，则创建一个新的
-    const set = this._callbacks.get(type) || new Set() // 获取或创建回调集合
-    set.add(cb) // 将回调添加到集合中
-    this._callbacks.set(type, set) // 更新回调映射
-    return this // 返回当前实例
+    if (!this._callbacks) this._callbacks = new Map()
+    const set = this._callbacks.get(type) || new Set()
+    set.add(cb)
+    this._callbacks.set(type, set)
+    return this
   }
   /**
    * 触发指定类型的所有回调函数。

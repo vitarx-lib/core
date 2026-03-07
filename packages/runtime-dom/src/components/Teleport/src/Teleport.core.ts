@@ -112,12 +112,12 @@ Teleport.defaultProps = { defer: false, disabled: false } as const
 Teleport.validateProps = (props: Record<string, any>): void => {
   if (!isView(props.children)) {
     throw new TypeError(
-      `Teleport.children expects a View object but received ${typeof props.children}: ${props.children}. Ensure the child is created with createView().`
+      `[Teleport] children expects a View, received ${typeof props.children}`
     )
   }
   if (!props.disabled && !isString(props.to)) {
     throw new TypeError(
-      `Teleport.to expects a string selector but received ${typeof props.to}: ${props.to}. When disabled=false, a valid CSS selector string is required.`
+      `[Teleport] to expects a string selector, received ${typeof props.to}`
     )
   }
 }

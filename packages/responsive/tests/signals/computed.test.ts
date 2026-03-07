@@ -79,7 +79,7 @@ describe('signal/computed', () => {
 
       // Verify warning was called
       expect(warnSpy).toHaveBeenCalledWith(
-        'Computed properties should not be modified directly unless a setter function is defined.'
+        '[computed] properties should not be modified directly unless a setter function is defined'
       )
 
       // Restore logger

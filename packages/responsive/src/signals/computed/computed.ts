@@ -94,7 +94,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
       this._getter = getter.get
       this._setter = getter.set
     } else {
-      throw new Error('[Computed] getter must be a function or an object with get/set methods')
+      throw new TypeError('[computed] getter must be a function or an object with get/set methods')
     }
     this._effect = () => {
       if (!this.dirty) {
@@ -148,7 +148,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
       }
     } else {
       logger.warn(
-        'Computed properties should not be modified directly unless a setter function is defined.'
+        '[computed] properties should not be modified directly unless a setter function is defined'
       )
     }
   }

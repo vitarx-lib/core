@@ -248,11 +248,11 @@ describe('App 类', () => {
 
       expect(() => {
         app.use(undefined!)
-      }).toThrowError(/The plugin cannot be empty/)
+      }).toThrowError(/plugin cannot be empty/)
 
       expect(() => {
         app.use(null!)
-      }).toThrowError(/The plugin cannot be empty/)
+      }).toThrowError(/plugin cannot be empty/)
     })
 
     it('应该在插件没有 install 方法时抛出错误', () => {

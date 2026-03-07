@@ -121,7 +121,7 @@ export function getHostViewTag(view: ListView | HostView): NodeDescTag {
     case ViewKind.LIST:
       return 'list-node'
     default:
-      throw new Error(`Unknown view kind: ${String(kind)}`)
+      throw new Error(`[hydrate] Unknown view kind: ${String(kind)}`)
   }
 }
 
@@ -231,10 +231,10 @@ export function cleanupFragmentRange(view: FragmentView | ListView): void {
  * @throws {TypeError} 当container无法解析为有效DOM元素时抛出错误
  */
 export function resolveContainer(container: HostContainer | string): Element {
-  const el = typeof container === 'string' ? document.body.querySelector(container) : container // 如果是字符串则查询DOM，否则直接使用原参数
+  const el = typeof container === 'string' ? document.body.querySelector(container) : container
   if (el instanceof Element) {
-    return el // 如果是有效的DOM元素则直接返回
+    return el
   } else {
-    throw new TypeError('[resolveContainer]: container must be a selector string or Element') // 否则抛出错误
+    throw new TypeError('[resolveContainer] container must be a selector string or Element')
   }
 }

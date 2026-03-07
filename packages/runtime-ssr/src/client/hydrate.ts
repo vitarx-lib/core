@@ -48,13 +48,12 @@ export function hydrate(
   // 容器解析
   const containerEl = resolveContainer(container)
   if (!containerEl) {
-    throw new Error(`[hydrate] Container not found: ${container}`)
+    throw new Error(`[hydrate] container not found: ${container}`)
   }
   const isApp = !isView(root)
-  // 获取根节点
   const rootView: View = isApp ? root.rootView : root
   if (!rootView) {
-    throw new TypeError('[hydrate] root is not a valid virtual node or App instance')
+    throw new TypeError('[hydrate] root is not a valid View or App instance')
   }
   if (isApp) {
     // 状态恢复 - 合并服务端注入的状态

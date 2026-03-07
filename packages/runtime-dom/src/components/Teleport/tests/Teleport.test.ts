@@ -256,10 +256,9 @@ describe('Teleport 组件', () => {
         children: childView
       })
 
-      // 在SSR模式下，mount操作不能执行，但我们仍可以验证组件返回值
       expect(() => {
         teleportView.mount(container)
-      }).toThrowError('[View.mount]: is not supported in SSR mode')
+      }).toThrowError('[View.mount] Not supported in SSR mode')
     })
   })
 

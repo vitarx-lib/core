@@ -67,7 +67,7 @@ export function createSSRApp(root: View | Component, config?: AppConfig): SSRApp
       new Proxy({} as ViewRenderer, {
         get(_target: ViewRenderer, p: string | symbol, _receiver: any): any {
           return () => {
-            throw new Error(`ViewRenderer.${p.toString()} is not supported in server side`)
+            throw new Error(`[SSR] ViewRenderer.${p.toString()} is not supported on server side`)
           }
         }
       })

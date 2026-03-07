@@ -23,7 +23,7 @@ import { getInstance } from './context.js'
 export function provide(name: string | symbol, value: any): void {
   const ctx = getInstance()
   if (!ctx) {
-    logger.error('provide(): must be called in a component context')
+    logger.error('[provide] must be called in a component context')
     return void 0
   }
   if (ctx.provide) {
@@ -99,7 +99,7 @@ export function inject<T>(
 ): T {
   const ctx = getInstance()
   if (!ctx) {
-    throw new Error('inject must be called in component')
+    throw new Error('[inject] must be called in a component context')
   }
 
   // 向上查找祖先节点

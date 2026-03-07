@@ -55,9 +55,8 @@ export async function hydrateNode(
   const reuseNode = getFirstNode(container, nodeIndex)
   const kind = view.kind
   const tagName = getHostViewTag(view)
-  // 未找到可复用 DOM → 跳过当前激活
   if (!reuseNode) {
-    logger.warn(`[Hydration] Cannot find dom node for <${tagName}>`, view.location)
+    logger.warn(`[Hydration] cannot find DOM node for <${tagName}>`, view.location)
     // 渲染出元素/节点，避免最终
     const el = renderViewNode(view, container)
     // 追加到容器中
@@ -67,12 +66,9 @@ export async function hydrateNode(
     if (renderer.isFragment(el)) nodeIndex++
     return nodeIndex
   }
-  // 标签 / 类型 不匹配 → fallback 渲染替换
   if (reuseNode.kind !== kind || reuseNode.tag !== tagName) {
     logger.warn(
-      `[Hydration] element mismatch: expected <${tagName}> but found ` +
-        `<${reuseNode.tag}> at index ${nodeIndex}. ` +
-        `This may happen if the server-rendered HTML doesn't match the client-side View structure.`,
+      `[Hydration] element mismatch: expected <${tagName}> but found <${reuseNode.tag}> at index ${nodeIndex}`,
       view.location
     )
     const el = renderViewNode(view, container)

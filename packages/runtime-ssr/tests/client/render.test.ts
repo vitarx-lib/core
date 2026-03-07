@@ -90,6 +90,6 @@ describe('renderViewNode', () => {
       el: null
     } as any
 
-    expect(() => renderViewNode(view, container)).toThrow('Unknown node kind')
+    expect(() => renderViewNode(view, container)).toThrow('[renderViewNode] unknown node kind')
   })
 })

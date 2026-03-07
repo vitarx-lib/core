@@ -44,7 +44,7 @@ describe('runtime/directive', () => {
     it('当指令名称为空时应该抛出错误', () => {
       expect(() => {
         defineDirective('', {} as Directive)
-      }).toThrow('Directive name cannot be empty.')
+      }).toThrow('[defineDirective] name cannot be empty')
     })
 
     it('当没有组件上下文时应该定义全局指令', () => {

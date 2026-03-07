@@ -119,7 +119,7 @@ describe('signal/ref/utils', () => {
     it('should throw error when called on non-object', () => {
       expect(() => {
         toRefs(42 as any)
-      }).toThrow('toRefs() called on a non-object')
+      }).toThrow('[toRefs] argument must be an object')
     })
   })
 })

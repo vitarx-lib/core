@@ -25,7 +25,7 @@ describe('watcher/Watcher', () => {
       const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
       const watcher = new TestWatcher({ flush: 'invalid' as any })
       expect(watcher).toBeInstanceOf(Watcher)
-      expect(warnSpy).toHaveBeenCalledWith('[Watcher] Invalid flush option: invalid')
+      expect(warnSpy).toHaveBeenCalledWith('[Watcher] Invalid flush option "invalid", using "pre" as default')
       warnSpy.mockRestore()
     })
   })

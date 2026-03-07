@@ -43,7 +43,7 @@ export function resolveDirectiveProps(view: ElementView, props: AnyProps): AnyPr
           if (ssrProps) props = deepMergeObject(props, ssrProps)
         } catch (e) {
           logger.error(
-            `[applyDirective] Error in directive<v-${directive.name}>.getSSRProps: ${e}`,
+            `[applyDirective] error in v-${directive.name}.getSSRProps`,
             view.location
           )
         }

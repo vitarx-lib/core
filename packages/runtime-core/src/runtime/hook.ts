@@ -17,12 +17,12 @@ function createHookRegistrar<T extends Lifecycle>(hook: T): (cb: HookCallback<T>
   return (cb: HookCallback<T>): void => {
     if (__VITARX_DEV__ && !isFunction(cb)) {
       throw new TypeError(
-        `on${toCapitalize(hook)}(): callback must be a callback function, given ${typeof cb}`
+        `[Hook] on${toCapitalize(hook)}() callback must be a function, received ${typeof cb}`
       )
     }
     const ctx = getInstance()
     if (!ctx) {
-      logger.error(`on${toCapitalize(hook)}(): must be called in a component`)
+      logger.error(`[Hook] on${toCapitalize(hook)}() must be called in a component context`)
       return void 0
     }
     if (ctx.hooks[hook]) {
@@ -140,13 +140,13 @@ export const onDispose = createHookRegistrar(Lifecycle.dispose)
  */
 export const onError = (handler: ErrorHandler): void => {
   if (__VITARX_DEV__ && !isFunction(handler)) {
-    throw new TypeError(`onError handler must be a function`)
+    throw new TypeError('[Hook] onError handler must be a function')
   }
   const ctx = getInstance()
   if (ctx) {
     ctx.errorHandler = handler
   } else {
-    logger.warn(`onError must be called in a widget`, getStackTrace())
+    logger.warn('[Hook] onError must be called in a component context')
   }
 }
 
@@ -190,16 +190,16 @@ export const onError = (handler: ErrorHandler): void => {
  */
 export const onViewSwitch = (handler: ViewSwitchHandler): void => {
   if (__VITARX_DEV__ && !isFunction(handler)) {
-    throw new TypeError(`onSwitch handler must be a function`)
+    throw new TypeError('[Hook] onViewSwitch handler must be a function')
   }
   const ctx = getInstance()
   if (ctx) {
     if (__VITARX_DEV__ && ctx.onViewSwitch) {
-      logger.warn(`onSwitch has already been called`, getStackTrace())
+      logger.warn('[Hook] onViewSwitch has already been registered')
     }
     ctx.onViewSwitch = handler
   } else {
-    logger.warn(`onViewSwitch must be called in a component`, getStackTrace())
+    logger.warn('[Hook] onViewSwitch must be called in a component context')
   }
 }
 
@@ -224,7 +224,7 @@ export const onViewSwitch = (handler: ViewSwitchHandler): void => {
 export function defineExpose<T extends { [key: string]: any }>(exposed: T): void {
   const ctx = getInstance()
   if (!ctx) {
-    logger.error('defineExpose(): must be called in a component')
+    logger.error('[defineExpose] must be called in a component context')
     return void 0
   }
   const publicInstance = ctx.publicInstance
@@ -250,7 +250,7 @@ export function defineValidate<P extends AnyProps>(
   validator: ValidateProps
 ): void {
   if (__VITARX_DEV__ && !isFunction(validator)) {
-    throw new TypeError(`[defineValidate]: validator must be a function`)
+    throw new TypeError('[defineValidate] validator must be a function')
   }
   // 函数无返回值
   component.validateProps = validator

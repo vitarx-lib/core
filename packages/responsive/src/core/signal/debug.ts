@@ -62,21 +62,16 @@ export function triggerOnTrack(event: DebuggerEvent) {
     const debugHandler = event.effect.onTrack
     if (typeof debugHandler === 'function') debugHandler(event)
   } catch (e) {
-    logger.debug(`[triggerOnTrack] Error in onTrack:`, e)
+    logger.error('[Signal] Error in onTrack callback', e)
   }
 }
 
-/**
- * 调试触发器
- *
- * @param event
- */
 export function triggerOnTrigger(event: DebuggerEvent) {
   try {
     const debugHandler = event.effect.onTrigger
     if (typeof debugHandler === 'function') debugHandler(event)
   } catch (e) {
-    logger.debug(`[triggerOnTrigger] Error in onTrigger:`, e)
+    logger.error('[Signal] Error in onTrigger callback', e)
   }
 }
 

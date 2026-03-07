@@ -45,5 +45,5 @@ export function getRenderer(allowEmpty: true): ViewRenderer | null
 export function getRenderer(allowEmpty: boolean = false): ViewRenderer | null {
   if (globalRenderer) return globalRenderer
   if (allowEmpty) return null
-  throw new Error('[vitarx][ERROR] Renderer has not been registered.')
+  throw new Error('[getRenderer] Renderer has not been registered')
 }

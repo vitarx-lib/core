@@ -19,7 +19,7 @@ export function defineDirective(name: string, directive: Directive): void {
   // 验证并规范化指令名称
   const normalizedName = name.trim()
 
-  if (!normalizedName) throw new Error('Directive name cannot be empty.')
+  if (!normalizedName) throw new TypeError('[defineDirective] name cannot be empty')
   directive.name = normalizedName
   // 获取当前组件上下文
   const ctx = getInstance()
@@ -125,7 +125,7 @@ export function withDirectives<T extends View>(
       )
       continue
     }
-    logger.warn(`[withDirectives] Invalid directive: `, item, view.location)
+    logger.warn(`[withDirectives] invalid directive item`, item, view.location)
   }
   return view
 }
@@ -147,7 +147,7 @@ export function applyDirective(
     try {
       directive[hook]?.(element, binding, view)
     } catch (e) {
-      logger.error(`Error in directive<v-${directive.name}>.${hook}: ${e}`, e, view.location)
+      logger.error(`[Directive] Error in v-${directive.name}.${hook} hook`, e, view.location)
     }
   }
 }
