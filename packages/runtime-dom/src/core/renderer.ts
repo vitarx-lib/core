@@ -168,7 +168,7 @@ export class DOMRenderer implements ViewRenderer {
     }
 
     try {
-      if (nextValue == null) {
+      if (nextValue == null || nextValue === false) {
         this.removeAttribute(el, name, prevValue)
         return
       }
@@ -254,6 +254,7 @@ export class DOMRenderer implements ViewRenderer {
     }
     if (key === 'style') {
       el.removeAttribute('style')
+      return
     }
     // --- 2. 事件属性 ---
     if (typeof prevValue === 'function' && key.startsWith('on')) {
