@@ -1,3 +1,17 @@
+# [4.0.0-beta.5](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.4...v4.0.0-beta.5) (2026-03-10)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复Dynamic.ts中属性描述符配置 ([5b1ca84](https://github.com/vitarx-lib/core/commit/5b1ca844717bd8979314e2d8ad4962190325ad13))
+* **runtime-core:** 修复开发环境中组件属性冻结逻辑 ([58d0cd9](https://github.com/vitarx-lib/core/commit/58d0cd966db4e67ee9915478dc8815ca7122cbeb))
+* **runtime-core:** 修正v-bind属性处理和props冻结逻辑 ([91ca0b0](https://github.com/vitarx-lib/core/commit/91ca0b0fe74f34d4ba4ba9d8288341ca7649e00b))
+* **runtime-core:** 绑定插件对象的install方法 ([88ba96d](https://github.com/vitarx-lib/core/commit/88ba96d712e60045a7e0dbbdc136c25267536711))
+* **runtime-dom:** 修复属性移除逻辑处理 ([e686d40](https://github.com/vitarx-lib/core/commit/e686d40036e7b58ba5626e58d03b98bda37af485))
+* **runtime-dom:** 修复布尔属性赋值逻辑 ([014a6cb](https://github.com/vitarx-lib/core/commit/014a6cbf9fd734713d5958f191e4cf5da96f02cc))
+
+
+
 # [4.0.0-beta.4](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.3...v4.0.0-beta.4) (2026-03-06)
 
 
