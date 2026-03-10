@@ -95,9 +95,14 @@ describe('Compiler Resolve', () => {
     it('应该处理 v-bind 属性', () => {
       const props = { className: 'base', 'v-bind': { id: 'test' } }
       const result = resolveProps(props)
-
       expect(result.props).toHaveProperty('className')
       expect(result.props).toHaveProperty('id')
+      // 数组类型v-bind
+      const props2 = { className: 'base', 'v-bind': [{ id: 'test', test: 'test' }, ['test']] }
+      const result2 = resolveProps(props2)
+      expect(result2.props).toHaveProperty('className')
+      expect(result2.props).toHaveProperty('id')
+      expect(result2.props).not.toHaveProperty('test')
     })
 
     it('当 ref 不是函数或 ref 时不应该包含在结果中', () => {
