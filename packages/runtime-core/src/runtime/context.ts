@@ -15,7 +15,7 @@ let activeComponentInstance: ComponentInstance | null = null
  * @returns {T} 返回执行函数的结果
  */
 export function runComponent<T>(instance: ComponentInstance, fn: () => T): T {
-  // 保存当前活动的小部件实例
+  // 保存当前活跃的小部件实例
   const preActiveWidgetRuntime = activeComponentInstance
   // 设置新的活动小部件实例
   activeComponentInstance = instance
@@ -29,20 +29,77 @@ export function runComponent<T>(instance: ComponentInstance, fn: () => T): T {
 }
 
 /**
- * 获取当前活动的小部件实例
- * 该函数返回当前激活的小部件实例，如果没有激活的小部件实例则返回null
+ * 获取当前组件的运行时实例
  *
- * @returns {ComponentInstance | null} 返回当前活动的小部件实例，如果没有则返回null
+ * @returns {ComponentInstance} 返回当前活跃的小部件实例
+ * @throws {Error} 如果没有活跃的组件实例则抛出错误
  */
-export function getInstance(): ComponentInstance | null {
+export function getInstance(): ComponentInstance
+/**
+ * 获取当前组件的运行时实例
+ *
+ * @param allowEmpty - 是否允许返回空值
+ * @returns {ComponentInstance} 返回当前活跃的组件实例
+ * @throws {Error} 如果没有活跃的组件实例则抛出错误
+ */
+export function getInstance(allowEmpty: false): ComponentInstance
+/**
+ * 获取当前组件的运行时实例
+ *
+ * @param allowEmpty - 是否允许返回空值
+ * @returns {ComponentInstance | null} 返回当前活跃的组件件实例，如果没有则返回null
+ */
+export function getInstance(allowEmpty: true): ComponentInstance | null
+/**
+ * 获取当前组件的运行时实例
+ *
+ * @param [allowEmpty=false] - 是否允许返回空值
+ * @returns {ComponentInstance | null} 返回当前活跃的组件实例，如果没有则返回null
+ * @throws {Error} 如果没有活跃的组件实例
+ */
+export function getInstance(allowEmpty: boolean = false): ComponentInstance | null {
+  if (!allowEmpty && !activeComponentInstance) {
+    throw new Error('[getInstance()] No active component instance found.')
+  }
   return activeComponentInstance
 }
+
 /**
  * 获取当前组件对应的视图
+ *
+ * @returns {ComponentView} 返回当前活跃的组件视图
+ * @throws {Error} 如果没有活跃的组件实例则抛出错误
  */
-export function getComponentView(): ComponentView | null {
+export function getComponentView(): ComponentView
+/**
+ * 获取当前组件对应的视图
+ *
+ * @param allowEmpty - 是否允许返回空值
+ * @returns {ComponentView} 返回当前活跃的组件视图
+ * @throws {Error} 如果没有活跃的组件实例则抛出错误
+ */
+export function getComponentView(allowEmpty: false): ComponentView
+/**
+ * 获取当前组件对应的视图
+ *
+ * @param [allowEmpty=false] - 是否允许返回空值
+ * @returns {ComponentView | null} 返回当前活跃的组件视图，如果没有返回null
+ */
+export function getComponentView(allowEmpty: true): ComponentView | null
+/**
+ * 获取当前组件对应的视图
+ *
+ * @param [allowEmpty=false] - 是否允许返回空值
+ * @returns {ComponentView | null} 返回当前活跃的组件视图，如果没有返回null
+ * @throws {Error} 如果没有活跃的组件实例且不允许返回空则抛出错误
+ */
+export function getComponentView(allowEmpty: boolean = false): ComponentView | null {
+  if (!allowEmpty && !activeComponentInstance) {
+    throw new Error('[getComponentView()] No active component instance found.')
+  }
   return activeComponentInstance?.view ?? null
 }
+
 /**
  * 获取应用程序上下文的函数
  * 该函数用于从全局上下文中获取App类型的实例
@@ -53,6 +110,7 @@ export function getComponentView(): ComponentView | null {
 export function getApp<T extends App = App>(): T | null {
   return activeComponentInstance ? (activeComponentInstance.app as T) : null
 }
+
 /**
  * 获取渲染上下文
  *
@@ -64,3 +122,5 @@ export function getRenderContext<T extends RenderContext = RenderContext>(): T |
   const app = getApp()
   return app?.inject<T>(RENDER_CONTEXT) || null
 }
+
+export { getInstance as useInstance, getComponentView as useView }
