@@ -41,29 +41,29 @@ describe('runtime/context', () => {
     })
 
     it('应该在执行后恢复之前的实例', () => {
-      const previousInstance = getInstance()
+      const previousInstance = getInstance(true)
       runComponent(mockInstance, () => {
         expect(getInstance()).toBe(mockInstance)
       })
 
-      expect(getInstance()).toBe(previousInstance)
+      expect(getInstance(true)).toBe(previousInstance)
     })
 
     it('即使函数抛出异常也应该恢复之前的实例', () => {
-      const previousInstance = getInstance()
+      const previousInstance = getInstance(true)
       expect(() => {
         runComponent(mockInstance, () => {
           throw new Error('Test error')
         })
       }).toThrow('Test error')
 
-      expect(getInstance()).toBe(previousInstance)
+      expect(getInstance(true)).toBe(previousInstance)
     })
   })
 
   describe('getInstance', () => {
     it('当没有活动实例时应该返回 null', () => {
-      expect(getInstance()).toBeNull()
+      expect(getInstance(true)).toBeNull()
     })
 
     it('在 runComponent 内部应该返回活动实例', () => {
@@ -75,7 +75,7 @@ describe('runtime/context', () => {
 
   describe('getComponentView', () => {
     it('当没有活动实例时应该返回 null', () => {
-      expect(getComponentView()).toBeNull()
+      expect(getComponentView(true)).toBeNull()
     })
 
     it('当实例活动时应该返回组件视图', () => {
