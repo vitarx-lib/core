@@ -125,7 +125,8 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   // 从props中提取v-bind属性
   const binding = popProperty(props, 'v-bind')
   // 如果存在v-bind绑定，则进行props绑定处理
-  const resolvedProps = isPlainObject(binding) ? (bindProps(props, binding) as T) : props
+  const resolvedProps =
+    isPlainObject(binding) || Array.isArray(binding) ? (bindProps(props, binding) as T) : props
   // 构建返回结果对象
   const result: ResolvePropsResult<T> = {
     props: resolvedProps
