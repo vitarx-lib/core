@@ -1,5 +1,5 @@
 import { IS_RAW } from '@vitarx/responsive'
-import { logger } from '@vitarx/utils'
+import { isFunction, logger } from '@vitarx/utils'
 import type { Component, Directive, ErrorInfo, HostContainer, View } from '../types/index.js'
 import { ComponentView } from '../view/index.js'
 
@@ -321,20 +321,23 @@ export class App {
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
   use<T extends {}>(plugin: AppPlugin<T>, options?: T): this {
-    if (!plugin) throw new TypeError('[App.use] plugin cannot be empty')
-    const pluginType = typeof plugin
-    let install: AppPluginInstall<T>
-    if (pluginType === 'object') {
-      install = (plugin as AppObjectPlugin<T>).install
-    } else {
-      install = plugin as AppPluginInstall<T>
+    if (!plugin) {
+      throw new TypeError('[App.use] plugin cannot be empty')
     }
-    if (typeof install !== 'function') {
+
+    const isObjectPlugin = typeof plugin === 'object'
+    const install = isObjectPlugin 
+      ? (plugin as AppObjectPlugin<T>).install 
+      : plugin as AppPluginInstall<T>
+
+    if (!isFunction(install)) {
       throw new TypeError(
         '[App.use] plugin must be a function or an object with an install method'
       )
     }
-    install(this, options!)
+
+    const boundInstall = isObjectPlugin ? install.bind(plugin) : install
+    boundInstall(this, options!)
     return this
   }
 }
