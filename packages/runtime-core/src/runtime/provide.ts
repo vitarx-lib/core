@@ -21,7 +21,7 @@ import { getInstance } from './context.js'
  * ```
  */
 export function provide(name: string | symbol, value: any): void {
-  const ctx = getInstance()
+  const ctx = getInstance(true)
   if (!ctx) {
     logger.error('[provide] must be called in a component context')
     return void 0
@@ -97,7 +97,7 @@ export function inject<T>(
   defaultValue?: T,
   treatDefaultAsFactory?: boolean
 ): T {
-  const ctx = getInstance()
+  const ctx = getInstance(true)
   if (!ctx) {
     throw new Error('[inject] must be called in a component context')
   }

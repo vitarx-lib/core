@@ -22,7 +22,7 @@ export function defineDirective(name: string, directive: Directive): void {
   if (!normalizedName) throw new TypeError('[defineDirective] name cannot be empty')
   directive.name = normalizedName
   // 获取当前组件上下文
-  const ctx = getInstance()
+  const ctx = getInstance(true)
 
   // 存储指令到适当的缓存中
   if (ctx) {
@@ -46,7 +46,7 @@ export function defineDirective(name: string, directive: Directive): void {
  */
 export function resolveDirective(name: string): Directive | undefined {
   if (name.startsWith('v-')) name = name.slice(2)
-  const ctx = getInstance()
+  const ctx = getInstance(true)
   if (ctx) {
     if (ctx.directiveStore?.has(name)) {
       // 获取组件局部指令

@@ -20,7 +20,7 @@ function createHookRegistrar<T extends Lifecycle>(hook: T): (cb: HookCallback<T>
         `[Hook] on${toCapitalize(hook)}() callback must be a function, received ${typeof cb}`
       )
     }
-    const ctx = getInstance()
+    const ctx = getInstance(true)
     if (!ctx) {
       logger.error(`[Hook] on${toCapitalize(hook)}() must be called in a component context`)
       return void 0
@@ -142,7 +142,7 @@ export const onError = (handler: ErrorHandler): void => {
   if (__VITARX_DEV__ && !isFunction(handler)) {
     throw new TypeError('[Hook] onError handler must be a function')
   }
-  const ctx = getInstance()
+  const ctx = getInstance(true)
   if (ctx) {
     ctx.errorHandler = handler
   } else {
@@ -192,7 +192,7 @@ export const onViewSwitch = (handler: ViewSwitchHandler): void => {
   if (__VITARX_DEV__ && !isFunction(handler)) {
     throw new TypeError('[Hook] onViewSwitch handler must be a function')
   }
-  const ctx = getInstance()
+  const ctx = getInstance(true)
   if (ctx) {
     if (__VITARX_DEV__ && ctx.onViewSwitch) {
       logger.warn('[Hook] onViewSwitch has already been registered')
@@ -222,7 +222,7 @@ export const onViewSwitch = (handler: ViewSwitchHandler): void => {
  * @param {Record<string, any>} exposed - 键值对对象。
  */
 export function defineExpose<T extends { [key: string]: any }>(exposed: T): void {
-  const ctx = getInstance()
+  const ctx = getInstance(true)
   if (!ctx) {
     logger.error('[defineExpose] must be called in a component context')
     return void 0
