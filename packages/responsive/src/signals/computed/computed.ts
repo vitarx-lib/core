@@ -116,7 +116,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
   /**
    * 获取计算结果
    *
-   * 采用Vue的懒计算策略：
+   * 采用懒计算策略：
    * 1. 首次访问时设置副作用并计算
    * 2. 后续访问时，仅当dirty为true时才重新计算
    * 3. 追踪对value的访问，建立依赖关系
