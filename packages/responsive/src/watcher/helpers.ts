@@ -437,3 +437,31 @@ export function watchEffect(
   // 返回一个观察器实例
   return new EffectWatcher(effect, options)
 }
+
+/**
+ * 创建一个在下一次 DOM 更新后执行副作用效果观察器
+ *
+ * @param effect - 一个回调函数，接收一个 onCleanup 函数作为参数，用于清理副作用
+ * @param [options] - 可选配置项，用于控制观察器的行为
+ * @returns {EffectWatcher} 返回一个 EffectWatcher 实例，可以用于手动停止观察
+ */
+export function watchPostEffect(
+  effect: (onCleanup: WatcherOnCleanup) => void,
+  options?: Omit<WatcherOptions, 'flush'>
+): EffectWatcher {
+  return new EffectWatcher(effect, { ...options, flush: 'post' })
+}
+
+/**
+ * 创建一个在同步操作后执行副作用效果观察器
+ *
+ * @param effect - 一个回调函数，接收一个 onCleanup 函数作为参数，用于清理副作用
+ * @param [options] - 可选配置项，用于控制观察器的行为
+ * @returns {EffectWatcher} 返回一个 EffectWatcher 实例，可以用于手动停止观察
+ */
+export function watchSyncEffect(
+  effect: (onCleanup: WatcherOnCleanup) => void,
+  options?: Omit<WatcherOptions, 'flush'>
+): EffectWatcher {
+  return new EffectWatcher(effect, { ...options, flush: 'sync' })
+}
