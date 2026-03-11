@@ -1,3 +1,21 @@
+# [4.0.0-beta.6](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.5...v4.0.0-beta.6) (2026-03-11)
+
+
+### Bug Fixes
+
+* **responsive:** 修复只读代理中 get 方法的 receiver 使用 ([caf734e](https://github.com/vitarx-lib/core/commit/caf734e2ed59f66ea4a3187a4d8ebe8bed848566))
+* **runtime-core:** 修复v-bind处理不支持数组类型的问题 ([ae5294d](https://github.com/vitarx-lib/core/commit/ae5294dfa4e6f85a072691fc7967dd69a4e8d2ee))
+* **runtime-core:** 将开发环境中的对象冻结改为只读处理，修复冻结原始对象BUG ([8c6da5e](https://github.com/vitarx-lib/core/commit/8c6da5e43bd35fc9122c5e48e29f1d7da2dba829))
+
+
+### Features
+
+* **runtime-core:** 支持热模块替换时组件自动解析 ([723fa6d](https://github.com/vitarx-lib/core/commit/723fa6d4eb999e3d39b562808f41f9ed2d9d6bb4))
+* **runtime-core:** 新增useInstance，useView别名，支持allowEmpty参数，优化开发体验 ([570fcee](https://github.com/vitarx-lib/core/commit/570fcee666215cc80df5ae1ba71ffc304627e05c))
+* **watcher:** 添加 watchPostEffect 和 watchSyncEffect 函数 ([c40f70c](https://github.com/vitarx-lib/core/commit/c40f70c33e4375ade74998a67570c8fe8a20e780))
+
+
+
 # [4.0.0-beta.5](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.4...v4.0.0-beta.5) (2026-03-10)
 
 
