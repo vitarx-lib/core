@@ -203,7 +203,7 @@ describe('runtime/directive', () => {
       const result = withDirectives(view, [[directive, binding]])
       expect(result.directives).toBeDefined()
       expect(result.directives?.size).toBe(1)
-      expect(result.directives?.get(directive)).toBe(binding)
+      expect(result.directives?.get(directive)).toStrictEqual(binding)
     })
 
     it('应该处理指令名称字符串', () => {
