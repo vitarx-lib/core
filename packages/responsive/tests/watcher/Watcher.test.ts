@@ -1,10 +1,27 @@
 import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
-import { Watcher } from '../../src/index.js'
+import { flushSync, ref, trackEffect, Watcher } from '../../src/index.js'
 
 class TestWatcher extends Watcher {
+  public runEffectCount = 0
   protected runEffect(): void {
-    // Implementation for testing
+    this.runEffectCount++
+  }
+}
+
+class ReactiveTestWatcher extends Watcher {
+  public runEffectCount: number
+  constructor(
+    private readonly signal: { value: number },
+    options?: ConstructorParameters<typeof Watcher>[0]
+  ) {
+    super(options)
+    this.runEffectCount = 0
+    this.runEffect()
+  }
+  protected runEffect(): void {
+    trackEffect(() => this.signal.value, this.effectHandle)
+    this.runEffectCount++
   }
 }
 
@@ -25,25 +42,59 @@ describe('watcher/Watcher', () => {
       const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
       const watcher = new TestWatcher({ flush: 'invalid' as any })
       expect(watcher).toBeInstanceOf(Watcher)
-      expect(warnSpy).toHaveBeenCalledWith('[Watcher] Invalid flush option "invalid", using "pre" as default')
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[Watcher] Invalid flush option "invalid", using "pre" as default'
+      )
       warnSpy.mockRestore()
     })
   })
 
   describe('scheduler', () => {
-    it('should have correct scheduler for pre flush', () => {
-      const watcher = new TestWatcher({ flush: 'pre' })
-      // We can't easily test the actual scheduler function without accessing private members
+    it('should execute sync flush immediately when dependency changes', () => {
+      const signal = ref(0)
+      const watcher = new ReactiveTestWatcher(signal, { flush: 'sync' })
+
+      expect(watcher.runEffectCount).toBe(1)
+
+      signal.value = 1
+
+      expect(watcher.runEffectCount).toBe(2)
+
+      watcher.dispose()
     })
 
-    it('should have correct scheduler for post flush', () => {
-      const watcher = new TestWatcher({ flush: 'post' })
-      // We can't easily test the actual scheduler function without accessing private members
+    it('should defer pre flush execution until flushSync', () => {
+      const signal = ref(0)
+      const watcher = new ReactiveTestWatcher(signal, { flush: 'pre' })
+
+      expect(watcher.runEffectCount).toBe(1)
+
+      signal.value = 1
+
+      expect(watcher.runEffectCount).toBe(1)
+
+      flushSync()
+
+      expect(watcher.runEffectCount).toBe(2)
+
+      watcher.dispose()
     })
 
-    it('should have correct scheduler for sync flush', () => {
-      const watcher = new TestWatcher({ flush: 'sync' })
-      // We can't easily test the actual scheduler function without accessing private members
+    it('should defer post flush execution until flushSync', () => {
+      const signal = ref(0)
+      const watcher = new ReactiveTestWatcher(signal, { flush: 'post' })
+
+      expect(watcher.runEffectCount).toBe(1)
+
+      signal.value = 1
+
+      expect(watcher.runEffectCount).toBe(1)
+
+      flushSync()
+
+      expect(watcher.runEffectCount).toBe(2)
+
+      watcher.dispose()
     })
   })
 
@@ -122,14 +173,18 @@ describe('watcher/Watcher', () => {
       expect(reportErrorSpy).toHaveBeenCalledWith(error, 'cleanup')
     })
 
-    it('should clear cleanups array after execution', () => {
+    it('should not re-execute cleanups after array is cleared', () => {
       const watcher = new TestWatcher()
       const cleanup = vi.fn()
 
       watcher.onCleanup(cleanup)
       watcher['runCleanup']()
 
-      // We can't easily verify the array is cleared without accessing private members
+      expect(cleanup).toHaveBeenCalledTimes(1)
+
+      watcher['runCleanup']()
+
+      expect(cleanup).toHaveBeenCalledTimes(1)
     })
   })
 })
