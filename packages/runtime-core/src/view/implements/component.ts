@@ -1,4 +1,4 @@
-import { EffectScope, isRef, markRaw, type Ref } from '@vitarx/responsive'
+import { EffectScope, isRef, markRaw, readonly, type Ref } from '@vitarx/responsive'
 import { isFunction, isPromise, logger } from '@vitarx/utils'
 import { App } from '../../app/index.js'
 import { SUSPENSE_COUNTER, ViewKind } from '../../constants/index.js'
@@ -77,8 +77,9 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     this.ref = ref
     let resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
     if (__VITARX_DEV__) {
-      // 开发时冻结属性对象
-      resolvedProps = Object.freeze(resolvedProps)
+      // 开发环境让属性对象只读
+      resolvedProps = readonly(resolvedProps, false)
+      // 开发环境进行属性校验
       if (isFunction(component.validateProps)) {
         const result = component.validateProps(resolvedProps, location)
         // 校验失败处理
@@ -193,8 +194,11 @@ export class ComponentInstance<T extends Component = Component> {
   public initPromise?: Promise<unknown>
   /** 给子视图继承的上下文 */
   public readonly subViewContext: ViewContext
-  /** 是否已挂载 */
-  #isMounted = false
+  /**
+   * @internal
+   * 是否已挂载
+   */
+  private _isMounted = false
   constructor(public readonly view: ComponentView<T>) {
     this.parent = view.owner
     this.app = view.app
@@ -228,7 +232,7 @@ export class ComponentInstance<T extends Component = Component> {
    * @returns {boolean} 返回组件是否已挂载，true表示已挂载，false表示未挂载
    */
   get isMounted(): boolean {
-    return this.#isMounted
+    return this._isMounted
   }
   /**
    * @internal
@@ -277,7 +281,7 @@ export class ComponentInstance<T extends Component = Component> {
    * @internal
    */
   public mounted(): void {
-    this.#isMounted = true
+    this._isMounted = true
     this.invokeVoidHook(Lifecycle.mounted)
     delete this.hooks[Lifecycle.mounted]
   }
@@ -301,7 +305,7 @@ export class ComponentInstance<T extends Component = Component> {
     this.invokeVoidHook(Lifecycle.dispose)
     delete this.hooks[Lifecycle.dispose]
     this.scope.dispose()
-    this.#isMounted = false
+    this._isMounted = false
   }
   /**
    * 报告错误的方法

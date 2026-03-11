@@ -1,3 +1,4 @@
+import { readonly } from '@vitarx/responsive'
 import { popProperty } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { applyDirective } from '../../runtime/directive.js'
@@ -77,7 +78,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     }
     this.children = resolvedChildren
     const { props: resolvedProps, ref } = resolveProps(props)
-    this.props = __VITARX_DEV__ ? Object.freeze(resolvedProps) : resolvedProps
+    this.props = __VITARX_DEV__ && resolvedProps ? readonly(resolvedProps, false) : resolvedProps
     if (ref) this.ref = ref
   }
   protected override doInit(): void {

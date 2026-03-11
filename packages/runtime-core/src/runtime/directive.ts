@@ -1,3 +1,4 @@
+import { readonly } from '@vitarx/responsive'
 import { isArray, isPlainObject, logger } from '@vitarx/utils'
 import { ViewKind } from '../constants/index.js'
 import type { Directive, DirectiveBinding, HostElement, View } from '../types/index.js'
@@ -107,7 +108,7 @@ export function withDirectives<T extends View>(
     if (isArray(item)) {
       const [name, binding] = item
       if (isPlainObject(name)) {
-        view.directives.set(name, __VITARX_DEV__ ? Object.freeze(binding) : binding)
+        view.directives.set(name, __VITARX_DEV__ ? readonly(binding) : binding)
         continue
       }
       const directive = resolveDirective(name)
@@ -115,13 +116,13 @@ export function withDirectives<T extends View>(
         logger.warn(`[withDirectives] Unknown directive: ${name}`, view.location)
         continue
       }
-      view.directives.set(directive, __VITARX_DEV__ ? Object.freeze(binding) : binding)
+      view.directives.set(directive, __VITARX_DEV__ ? readonly(binding) : binding)
       continue
     }
     if (isPlainObject(item)) {
       view.directives.set(
         item as Directive,
-        __VITARX_DEV__ ? Object.freeze({ value: undefined }) : { value: undefined }
+        __VITARX_DEV__ ? readonly({ value: undefined }) : { value: undefined }
       )
       continue
     }
