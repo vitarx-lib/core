@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
-import { computed, flushSync, reactive, ref, watch, watchEffect } from '../../src/index.js'
+import {
+  computed,
+  flushSync,
+  reactive,
+  ref,
+  watch,
+  watchEffect,
+  watchPostEffect,
+  watchSyncEffect
+} from '../../src/index.js'
 import { EffectWatcher } from '../../src/watcher/effect.js'
 
 describe('watcher/factory', () => {
@@ -152,6 +161,141 @@ describe('watcher/factory', () => {
 
       expect(watcher).toBeInstanceOf(EffectWatcher)
       expect(effect).toHaveBeenCalled()
+    })
+  })
+
+  describe('watchPostEffect', () => {
+    it('should create an EffectWatcher instance', () => {
+      const effect = vi.fn()
+      const watcher = watchPostEffect(effect)
+
+      expect(watcher).toBeInstanceOf(EffectWatcher)
+      expect(effect).toHaveBeenCalled()
+    })
+
+    it('should accept options except flush', () => {
+      const onTrigger = vi.fn()
+      const effect = vi.fn()
+      const watcher = watchPostEffect(effect, { onTrigger })
+
+      expect(watcher).toBeInstanceOf(EffectWatcher)
+      expect(effect).toHaveBeenCalled()
+    })
+
+    it('should execute effect after DOM update (post flush)', async () => {
+      const signal = ref(0)
+      const effect = vi.fn(() => {
+        return signal.value
+      })
+      const watcher = watchPostEffect(effect)
+
+      expect(effect).toHaveBeenCalledTimes(1)
+
+      signal.value = 1
+      flushSync()
+
+      expect(effect).toHaveBeenCalledTimes(2)
+
+      watcher.dispose()
+    })
+
+    it('should support cleanup function', async () => {
+      const signal = ref(0)
+      const cleanup = vi.fn()
+      const effect = vi.fn(onCleanup => {
+        onCleanup(cleanup)
+        return signal.value
+      })
+      const watcher = watchPostEffect(effect)
+
+      expect(effect).toHaveBeenCalledTimes(1)
+
+      signal.value = 1
+      flushSync()
+
+      expect(cleanup).toHaveBeenCalledTimes(1)
+      expect(effect).toHaveBeenCalledTimes(2)
+
+      watcher.dispose()
+    })
+  })
+
+  describe('watchSyncEffect', () => {
+    it('should create an EffectWatcher instance', () => {
+      const effect = vi.fn()
+      const watcher = watchSyncEffect(effect)
+
+      expect(watcher).toBeInstanceOf(EffectWatcher)
+      expect(effect).toHaveBeenCalled()
+    })
+
+    it('should accept options except flush', () => {
+      const onTrigger = vi.fn()
+      const effect = vi.fn()
+      const watcher = watchSyncEffect(effect, { onTrigger })
+
+      expect(watcher).toBeInstanceOf(EffectWatcher)
+      expect(effect).toHaveBeenCalled()
+    })
+
+    it('should execute effect synchronously when dependency changes', () => {
+      const signal = ref(0)
+      const effect = vi.fn(() => {
+        return signal.value
+      })
+      const watcher = watchSyncEffect(effect)
+
+      expect(effect).toHaveBeenCalledTimes(1)
+
+      signal.value = 1
+
+      expect(effect).toHaveBeenCalledTimes(2)
+
+      watcher.dispose()
+    })
+
+    it('should support cleanup function', () => {
+      const signal = ref(0)
+      const cleanup = vi.fn()
+      const effect = vi.fn(onCleanup => {
+        onCleanup(cleanup)
+        return signal.value
+      })
+      const watcher = watchSyncEffect(effect)
+
+      expect(effect).toHaveBeenCalledTimes(1)
+
+      signal.value = 1
+
+      expect(cleanup).toHaveBeenCalledTimes(1)
+      expect(effect).toHaveBeenCalledTimes(2)
+
+      watcher.dispose()
+    })
+
+    it('should execute immediately on creation', () => {
+      const effect = vi.fn()
+      const watcher = watchSyncEffect(effect)
+
+      expect(effect).toHaveBeenCalledTimes(1)
+
+      watcher.dispose()
+    })
+
+    it('should track reactive dependencies', () => {
+      const state = reactive({ count: 0 })
+      const effect = vi.fn(() => {
+        return state.count
+      })
+      const watcher = watchSyncEffect(effect)
+
+      expect(effect).toHaveBeenCalledTimes(1)
+
+      state.count = 1
+
+      expect(effect).toHaveBeenCalledTimes(2)
+
+      watcher.dispose()
     })
   })
 })
