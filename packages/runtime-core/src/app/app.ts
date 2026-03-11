@@ -123,6 +123,7 @@ export class App {
     // 使用展开运算符合并配置，提供默认错误处理
     this.config = this.initConfig(config)
   }
+
   /**
    * 获取当前应用的根节点
    *
@@ -252,23 +253,23 @@ export class App {
     }
   }
   /**
-   * 应用级数据提供
+   * 应用依赖提供
    *
-   * @param {string | symbol} name - 注入名称
-   * @param {any} value - 注入值
+   * @param {string | symbol} name - 名称
+   * @param {unknown} value - 要向下提供的依赖资源，可以是任意类型的值
    */
-  provide(name: string | symbol, value: any): this {
+  provide(name: string | symbol, value: unknown): this {
     this.#provide.set(name, value)
     return this
   }
   /**
-   * 检查提供者是否存在
+   * 检查依赖是否存在
    *
-   * @param name - 要检查的提供者名称，可以是字符串或Symbol类型
-   * @returns {boolean} 如果存在对应的提供者则返回true，否则返回false
+   * @param name - 要检查的依赖名称，可以是字符串或Symbol类型
+   * @returns {boolean} 如果存在对应的依赖则返回true，否则返回false
    */
   hasProvide(name: string | symbol): boolean {
-    return this.#provide.has(name) // 使用Set的has方法检查是否存在对应的提供者
+    return this.#provide.has(name)
   }
   /**
    * 获取注入值的方法
@@ -282,14 +283,14 @@ export class App {
     return this.#provide.get(name) ?? defaultValue
   }
   /**
-   * ## 安装插件
+   * 安装插件
    *
    * @param {Function|Object} plugin - 无配置选项的插件
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
   use(plugin: NonConfigurationPlugins | { install: NonConfigurationPlugins }): this
   /**
-   * ## 安装插件
+   * 安装插件
    *
    * @template T - 插件选项类型
    * @param {Function|Object} plugin - 有必填选项的插件
@@ -301,7 +302,7 @@ export class App {
     options: T
   ): this
   /**
-   * ## 安装插件
+   * 安装插件
    *
    * @template T - 插件选项类型
    * @param {Function|Object} plugin - 有可选选项的插件
@@ -313,7 +314,7 @@ export class App {
     options?: T
   ): this
   /**
-   * ## 安装插件
+   * 安装插件
    *
    * @template T - 插件选项类型
    * @param {AppPlugin<T>} plugin - 可选选项的插件函数
@@ -326,14 +327,12 @@ export class App {
     }
 
     const isObjectPlugin = typeof plugin === 'object'
-    const install = isObjectPlugin 
-      ? (plugin as AppObjectPlugin<T>).install 
-      : plugin as AppPluginInstall<T>
+    const install = isObjectPlugin
+      ? (plugin as AppObjectPlugin<T>).install
+      : (plugin as AppPluginInstall<T>)
 
     if (!isFunction(install)) {
-      throw new TypeError(
-        '[App.use] plugin must be a function or an object with an install method'
-      )
+      throw new TypeError('[App.use] plugin must be a function or an object with an install method')
     }
 
     const boundInstall = isObjectPlugin ? install.bind(plugin) : install
