@@ -9,16 +9,15 @@ import { IS_RAW, IS_READONLY, isRef, RAW_VALUE, type ReadonlyObject } from '../s
 class ReadonlyProxyHandler<T extends object> implements ProxyHandler<T> {
   constructor(private readonly deep: boolean) {}
 
-  get(target: T, prop: any, receiver: any): any {
+  get(target: T, prop: any, _receiver: any): any {
     if (prop === IS_RAW) return true
     if (prop === IS_READONLY) return true
     if (prop === RAW_VALUE) return target
-    let value = Reflect.get(target, prop, receiver)
+    let value = Reflect.get(target, prop, target)
     if (isRef(value)) return value.value
     if (this.deep && isObject(value) && !value[IS_READONLY]) {
       return createReadonlyProxy(value, true)
     }
-    if (typeof value === 'function') return value.bind(target)
     return value
   }
 
