@@ -146,6 +146,14 @@ export function createComponentView<T extends Component>(
   props: ValidProps<T> | null = null,
   location?: CodeLocation
 ): ComponentView<T> {
+  if (__VITARX_DEV__ && import.meta.hot) {
+    if (typeof window !== 'undefined' && (window as any).__$VITARX_HMR$__) {
+      const resolveComponent: (c: T) => T = (window as any).__$VITARX_HMR$__.resolveComponent
+      if (typeof resolveComponent === 'function') {
+        component = resolveComponent(component)
+      }
+    }
+  }
   return new ComponentView(component, props, location)
 }
 
