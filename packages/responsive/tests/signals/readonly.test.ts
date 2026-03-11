@@ -1,6 +1,6 @@
 import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
-import { isReadonly, readonly, ref, shallowReadonly } from '../../src/index.js'
+import { isReadonly, reactive, readonly, ref, shallowReadonly, watch } from '../../src/index.js'
 
 describe('signal/readonly', () => {
   describe('readonly', () => {
@@ -113,6 +113,17 @@ describe('signal/readonly', () => {
       // Modify nested object - should be allowed
       shallowReadonlyObj.nested.value = 42
       expect(shallowReadonlyObj.nested.value).toBe(42)
+    })
+  })
+
+  describe('搭配响应式不破坏可追踪性', () => {
+    it('should work with reactive objects', () => {
+      const reactiveObj = reactive({ count: 0 })
+      const readonlyObj = readonly(reactiveObj)
+      const cb = vi.fn()
+      watch(() => readonlyObj.count, cb, { flush: 'sync' })
+      reactiveObj.count++
+      expect(cb).toHaveBeenCalled()
     })
   })
 })
