@@ -1,3 +1,12 @@
+# [4.0.0-beta.7](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.6...v4.0.0-beta.7) (2026-03-12)
+
+
+### Features
+
+* **Lazy:** 增加懒加载组件缓存支持和预加载功能 ([1fa0546](https://github.com/vitarx-lib/core/commit/1fa05466145a7637e7dc6f81a9fbcd9dde66657b))
+
+
+
 # [4.0.0-beta.6](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.5...v4.0.0-beta.6) (2026-03-11)
 
 
