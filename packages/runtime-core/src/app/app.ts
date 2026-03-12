@@ -285,40 +285,9 @@ export class App {
   /**
    * 安装插件
    *
-   * @param {Function|Object} plugin - 无配置选项的插件
-   * @returns {this} - 返回应用实例本身，支持链式调用
-   */
-  use(plugin: NonConfigurationPlugins | { install: NonConfigurationPlugins }): this
-  /**
-   * 安装插件
-   *
-   * @template T - 插件选项类型
-   * @param {Function|Object} plugin - 有必填选项的插件
-   * @param {T} options - 插件选项
-   * @returns {this} - 返回应用实例本身，支持链式调用
-   */
-  use<T extends {}>(
-    plugin: RequiredConfigurationPlugIn<T> | { install: RequiredConfigurationPlugIn<T> },
-    options: T
-  ): this
-  /**
-   * 安装插件
-   *
-   * @template T - 插件选项类型
-   * @param {Function|Object} plugin - 有可选选项的插件
-   * @param {Object} options - 插件选项
-   * @returns {this} - 返回应用实例本身，支持链式调用
-   */
-  use<T extends {}>(
-    plugin: OptionallyConfigurablePlugIns<T> | { install: OptionallyConfigurablePlugIns<T> },
-    options?: T
-  ): this
-  /**
-   * 安装插件
-   *
    * @template T - 插件选项类型
    * @param {AppPlugin<T>} plugin - 可选选项的插件函数
-   * @param {T} options - 插件选项
+   * @param {T} options - 插件选项，如果插件要求传入配置则必须提供！
    * @returns {this} - 返回应用实例本身，支持链式调用
    */
   use<T extends {}>(plugin: AppPlugin<T>, options?: T): this {
