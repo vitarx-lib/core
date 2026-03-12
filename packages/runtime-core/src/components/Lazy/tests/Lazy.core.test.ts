@@ -3,7 +3,7 @@ import { sleep } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HostElementTag, View } from '../../../types/index.js'
 import { createView } from '../../../view/index.js'
-import { Lazy } from '../src/index.js'
+import { clearComponentCache, getCachedComponent, Lazy } from '../src/index.js'
 
 describe('Lazy Component', () => {
   let container: HTMLElement
@@ -169,7 +169,7 @@ describe('Lazy Component', () => {
       const view = createView(Lazy, {
         loader: createLoader(),
         loading: () => loadingView,
-        delay: 0 // 使用较短的延迟时间进行测试
+        delay: 0
       })
       view.mount(container)
 
@@ -188,7 +188,7 @@ describe('Lazy Component', () => {
       })
       view.mount(container)
 
-      await sleep(20) // 等待加载完成
+      await sleep(20)
 
       expect(container.textContent).toContain('Loaded Content')
       expect(container.textContent).not.toContain('Loading...')
@@ -234,7 +234,7 @@ describe('Lazy Component', () => {
     it('应该在指定超时时间内完成加载', async () => {
       const view = createView(Lazy, {
         loader: createLoader(),
-        timeout: 100 // 设置合理的超时时间
+        timeout: 100
       })
       view.mount(container)
 
@@ -250,16 +250,13 @@ describe('Lazy Component', () => {
         loader: createLoader()
       })
 
-      // 初始化
       view.mount(container)
       expect(container.innerHTML).toContain('Lazy')
 
-      // 加载完成
       await sleep(20)
 
       expect(container.textContent).toContain('Loaded Content')
 
-      // 销毁
       view.dispose()
       expect(container.innerHTML).toBe('')
     })
@@ -281,6 +278,129 @@ describe('Lazy Component', () => {
       expect((view.node as Comment).parentElement).toBe(container)
       await sleep(0)
       expect(container.textContent).toContain('Immediate Content')
+    })
+  })
+
+  describe('缓存机制', () => {
+    it('应该在首次加载后将组件缓存', async () => {
+      const loader = createLoader()
+
+      const view = createView(Lazy, { loader })
+      view.mount(container)
+
+      expect(getCachedComponent(loader)).toBeUndefined()
+
+      await sleep(20)
+
+      expect(getCachedComponent(loader)).toBeDefined()
+
+      view.dispose()
+    })
+
+    it('应该使用缓存的组件避免重复加载', async () => {
+      const loader = vi.fn(createLoader())
+
+      const view1 = createView(Lazy, { loader })
+      view1.mount(container)
+      await sleep(20)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Loaded Content')
+      view1.dispose()
+
+      container.innerHTML = ''
+
+      const view2 = createView(Lazy, { loader })
+      view2.mount(container)
+
+      await sleep(0)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Loaded Content')
+
+      view2.dispose()
+    })
+
+    it('应该在多个 Lazy 实例同时使用同一个 loader 时共享加载 Promise', async () => {
+      const loader = vi.fn(createLoader())
+
+      const view1 = createView(Lazy, { loader })
+      const view2 = createView(Lazy, { loader })
+
+      view1.mount(container)
+
+      const container2 = document.createElement('div')
+      document.body.appendChild(container2)
+      view2.mount(container2)
+
+      await sleep(20)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Loaded Content')
+      expect(container2.textContent).toContain('Loaded Content')
+
+      view1.dispose()
+      view2.dispose()
+      document.body.removeChild(container2)
+    })
+
+    it('应该在加载失败后允许重新加载', async () => {
+      let shouldFail = true
+      const loader = vi.fn(() => {
+        if (shouldFail) {
+          return Promise.reject(new Error('Load failed'))
+        }
+        return Promise.resolve({
+          default: () => createView(testTag, { children: 'Success' })
+        })
+      })
+
+      const view1 = createView(Lazy, {
+        loader,
+        onError: () => createView(testTag, { children: 'Error' })
+      })
+      view1.mount(container)
+
+      await sleep(10)
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Error')
+      view1.dispose()
+
+      shouldFail = false
+      container.innerHTML = ''
+
+      const view2 = createView(Lazy, { loader })
+      view2.mount(container)
+
+      await sleep(10)
+      expect(loader).toHaveBeenCalledTimes(2)
+      expect(container.textContent).toContain('Success')
+
+      view2.dispose()
+    })
+
+    it('应该支持通过 clearComponentCache 清除缓存', async () => {
+      const loader = vi.fn(createLoader())
+
+      const view = createView(Lazy, { loader })
+      view.mount(container)
+      await sleep(20)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(getCachedComponent(loader)).toBeDefined()
+      view.dispose()
+
+      clearComponentCache(loader)
+      expect(getCachedComponent(loader)).toBeUndefined()
+
+      container.innerHTML = ''
+
+      const view2 = createView(Lazy, { loader })
+      view2.mount(container)
+      await sleep(20)
+
+      expect(loader).toHaveBeenCalledTimes(2)
+      view2.dispose()
     })
   })
 })

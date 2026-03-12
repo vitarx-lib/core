@@ -3,7 +3,7 @@ import { builder, ComponentView, type ViewBuilder } from '../../../view/index.js
 import { Lazy, type LazyLoadOptions } from './Lazy.core.js'
 
 /**
- * 辅助定义一个懒加载组件
+ * 定义一个懒加载组件
  *
  * @example
  * ```ts
@@ -41,7 +41,20 @@ export function lazy<T extends Component>(
   loader: () => Promise<{ default: T }>,
   options?: LazyLoadOptions
 ): ViewBuilder<ComponentProps<T>, ComponentView<typeof Lazy<T>>> {
-  return builder((props: ComponentProps<T>): ComponentView<typeof Lazy<T>> => {
+  const lazyBuilder = (props: ComponentProps<T>): ComponentView<typeof Lazy<T>> => {
     return new ComponentView(Lazy<T>, { loader, ...options, bindProps: props })
-  })
+  }
+  lazyBuilder._v_lazy = true
+  return builder(lazyBuilder)
+}
+
+/**
+ * 检查给定的组件是否为懒加载组件
+ *
+ * @param component - 要检查的组件
+ * @returns {boolean} 如果组件是懒加载组件则返回true，否则返回false
+ */
+export function isLazy(component: any): boolean {
+  // 检查组件对象是否存在，并且其_v_lazy属性是否为true
+  return component?._v_lazy === true
 }

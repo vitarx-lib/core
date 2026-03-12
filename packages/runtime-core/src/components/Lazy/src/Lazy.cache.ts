@@ -1,0 +1,98 @@
+import type { Component } from '../../../types/index.js'
+
+export type LazyLoader<T extends Component> = () => Promise<{ default: T }>
+
+export const LAZY_LOADED_CACHE = new WeakMap<LazyLoader<Component>, Component>()
+export const LAZY_LOADING_CACHE = new WeakMap<LazyLoader<Component>, Promise<Component>>()
+
+/**
+ * 预加载组件并存入缓存
+ *
+ * 此函数用于提前加载懒加载组件，避免在实际使用时的延迟。
+ * 加载成功后组件会被缓存，后续使用时直接从缓存获取。
+ *
+ * @template T - 组件类型
+ * @param loader - 懒加载器函数
+ * @returns {Promise<T>} 返回加载成功的组件
+ * @throws {Error} 如果加载失败或模块格式无效
+ *
+ * @example
+ * ```ts
+ * // 在路由切换前预加载组件
+ * const loader = () => import('./MyComponent.js')
+ *
+ * // 预加载
+ * preloadComponent(loader)
+ *   .then(() => console.log('组件预加载成功'))
+ *   .catch(err => console.error('预加载失败', err))
+ * ```
+ */
+export async function preloadComponent<T extends Component>(loader: LazyLoader<T>): Promise<T> {
+  const cachedLoader = loader as LazyLoader<Component>
+
+  const cached = LAZY_LOADED_CACHE.get(cachedLoader)
+  if (cached) return cached as T
+
+  const loadingPromise = LAZY_LOADING_CACHE.get(cachedLoader)
+  if (loadingPromise) return loadingPromise as Promise<T>
+
+  const promise = loader()
+    .then(module => {
+      if (module && typeof module.default === 'function') {
+        LAZY_LOADED_CACHE.set(cachedLoader, module.default)
+        LAZY_LOADING_CACHE.delete(cachedLoader)
+        return module.default
+      }
+      throw new Error('Invalid component module: missing default export')
+    })
+    .catch(e => {
+      LAZY_LOADING_CACHE.delete(cachedLoader)
+      throw e
+    })
+
+  LAZY_LOADING_CACHE.set(cachedLoader, promise as Promise<Component>)
+
+  return promise as Promise<T>
+}
+
+/**
+ * 获取已缓存的组件
+ *
+ * @template T - 组件类型
+ * @param loader - 懒加载器函数
+ * @returns {T | undefined} 返回缓存的组件，如果未缓存则返回 undefined
+ *
+ * @example
+ * ```ts
+ * const loader = () => import('./MyComponent.js')
+ *
+ * const cached = getCachedComponent(loader)
+ * if (cached) {
+ *   // 直接使用缓存的组件
+ *   const view = createView(cached, { children: 'Hello' })
+ * }
+ * ```
+ */
+export function getCachedComponent<T extends Component>(loader: LazyLoader<T>): T | undefined {
+  return LAZY_LOADED_CACHE.get(loader as LazyLoader<Component>) as T | undefined
+}
+
+/**
+ * 清除指定 loader 的所有缓存
+ *
+ * 同时清除已加载缓存和加载中缓存
+ *
+ * @param loader - 懒加载器函数
+ *
+ * @example
+ * ```ts
+ * const loader = () => import('./MyComponent.js')
+ *
+ * // 清除缓存，下次使用时会重新加载
+ * clearComponentCache(loader)
+ * ```
+ */
+export function clearComponentCache(loader: LazyLoader<Component>): void {
+  LAZY_LOADED_CACHE.delete(loader)
+  LAZY_LOADING_CACHE.delete(loader)
+}

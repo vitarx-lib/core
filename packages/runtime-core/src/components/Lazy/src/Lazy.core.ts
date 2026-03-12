@@ -11,6 +11,7 @@ import type {
   WithProps
 } from '../../../types/index.js'
 import { createCommentView, createDynamicView, createView } from '../../../view/index.js'
+import { LAZY_LOADED_CACHE, LAZY_LOADING_CACHE, type LazyLoader } from './Lazy.cache.js'
 
 /**
  * 惰性加载配置选项
@@ -44,6 +45,7 @@ interface LazyLoadOptions {
    */
   onError?: (e: unknown) => View
 }
+
 /**
  * Lazy 支持的属性
  */
@@ -57,7 +59,7 @@ interface LazyProps<T extends Component> extends LazyLoadOptions {
    * () => import('./YourWidget.js')
    * ```
    */
-  loader: () => Promise<{ default: T }>
+  loader: LazyLoader<T>
   /**
    * 绑定给加载组件的属性
    */
@@ -91,29 +93,62 @@ interface LazyProps<T extends Component> extends LazyLoadOptions {
  * ```
  */
 function Lazy<T extends Component>(props: LazyProps<T>): View {
-  const { delay = 200, timeout = 0, loading, loader, children, bindProps, onError } = props
-  const location = getInstance()!.view.location
-  let cancelTask: (() => void) | undefined = undefined // 用于取消异步任务的函数
-  const showView = shallowRef<View>(createCommentView('Lazy:loading')) // 当前显示的视图
-  onInit(async (): Promise<void> => {
-    const task = withDelayTimeout(loader, {
-      delay,
-      timeout,
-      onDelay: () => {
-        if (isFunction(loading)) {
-          const loadingView = loading()
-          if (isView(loadingView)) showView.value = loadingView
-        }
+  const { delay = 200, timeout = 0, loading, loader, bindProps, onError } = props
+  const resolvedProps: AnyProps = bindProps ? bindProps : {}
+
+  if ('children' in props) {
+    Object.defineProperty(resolvedProps, 'children', {
+      enumerable: true,
+      configurable: true,
+      get() {
+        return props.children
       }
     })
-    cancelTask = task.cancel
+  }
+
+  const cached = LAZY_LOADED_CACHE.get(loader as LazyLoader<Component>)
+  if (cached) return createView(cached, resolvedProps)
+
+  const location = getInstance()!.view.location
+  let cancelTask: (() => void) | undefined = undefined
+  const showView = shallowRef<View>(createCommentView('Lazy:loading'))
+
+  onInit(async (): Promise<void> => {
+    let loadingPromise = LAZY_LOADING_CACHE.get(loader)
+
+    if (!loadingPromise) {
+      const task = withDelayTimeout(loader, {
+        delay,
+        timeout,
+        onDelay: () => {
+          if (isFunction(loading)) {
+            const loadingView = loading()
+            if (isView(loadingView)) showView.value = loadingView
+          }
+        }
+      })
+      cancelTask = task.cancel
+
+      loadingPromise = task
+        .then(module => {
+          if (module && isFunction(module.default)) {
+            LAZY_LOADED_CACHE.set(loader, module.default)
+            LAZY_LOADING_CACHE.delete(loader as LazyLoader<Component>)
+            return module.default
+          }
+          throw new Error('Invalid component module')
+        })
+        .catch(e => {
+          LAZY_LOADING_CACHE.delete(loader as LazyLoader<Component>)
+          throw e
+        })
+
+      LAZY_LOADING_CACHE.set(loader as LazyLoader<Component>, loadingPromise)
+    }
+
     try {
-      const module = await task
-      if (module && isFunction(module.default)) {
-        const resolveProps: AnyProps = bindProps ? bindProps : {}
-        if (children) resolveProps.children = children
-        showView.value = createView(module.default, resolveProps as ExtractProps<T>)
-      }
+      const component = await loadingPromise
+      showView.value = createView(component, resolvedProps as ExtractProps<T>)
     } catch (e) {
       if (isFunction(onError)) {
         const fallback = onError(e)
@@ -125,6 +160,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
       cancelTask = undefined
     }
   })
+
   onDispose(() => {
     cancelTask?.()
   })
@@ -143,4 +179,4 @@ defineValidate(Lazy, (props: AnyProps): void => {
   }
 })
 
-export { Lazy, type LazyProps, type LazyLoadOptions }
+export { Lazy, type LazyLoadOptions, type LazyProps }

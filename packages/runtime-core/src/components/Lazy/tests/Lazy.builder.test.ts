@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { sleep } from '@vitarx/utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HostElementTag, View } from '../../../types/index.js'
 import { createView } from '../../../view/index.js'
-import { lazy, Lazy } from '../src/index.js'
+import { lazy, Lazy, getCachedComponent } from '../src/index.js'
 
 describe('Lazy Builder', () => {
   const testTag = 'div' as HostElementTag
@@ -18,7 +19,6 @@ describe('Lazy Builder', () => {
       const LazyComponent = lazy(createLoader())
 
       expect(typeof LazyComponent).toBe('function')
-      // 验证返回的是一个视图构建器
       const viewInstance = LazyComponent({})
       expect(viewInstance).toBeDefined()
       expect(viewInstance.constructor.name).toBe('ComponentView')
@@ -30,7 +30,6 @@ describe('Lazy Builder', () => {
 
       const viewInstance = LazyComponent(props)
 
-      // 验证视图实例是否包含正确的属性
       expect(viewInstance.component).toBe(Lazy)
       expect(viewInstance.props).toBeDefined()
     })
@@ -91,10 +90,8 @@ describe('Lazy Builder', () => {
     it('should create a view that uses Lazy component internally', () => {
       const LazyComponent = lazy(createLoader())
 
-      // 创建视图实例
       const view = LazyComponent({})
 
-      // 验证视图类型是 ComponentView
       expect(view.constructor.name).toBe('ComponentView')
       expect(view.component.name).toBe('Lazy')
     })
@@ -110,7 +107,6 @@ describe('Lazy Builder', () => {
 
       const view = LazyComponent({ children: 'Children Content' })
 
-      // 验证传递给 Lazy 组件的属性
       expect(view.props.loader).toBe(loader)
       expect(view.props.delay).toBe(300)
       expect(view.props.loading).toBe(loadingView)
@@ -123,10 +119,109 @@ describe('Lazy Builder', () => {
 
       const view = LazyComponent({ className: 'test-class' })
 
-      // 验证视图构建器模式正确包装了 Lazy 组件
       expect(view.component.name).toBe('Lazy')
       expect(view.props.bindProps).toEqual({ className: 'test-class' })
       expect(typeof view.props.loader).toBe('function')
+    })
+  })
+
+  describe('Cache Integration', () => {
+    let container: HTMLElement
+
+    beforeEach(() => {
+      container = document.createElement('div')
+      document.body.appendChild(container)
+    })
+
+    afterEach(() => {
+      document.body.removeChild(container)
+      container.innerHTML = ''
+    })
+
+    it('should use cached component when lazy builder is called multiple times', async () => {
+      const loader = vi.fn(createLoader())
+      const LazyComponent = lazy(loader)
+
+      const view1 = LazyComponent({})
+      view1.mount(container)
+      await sleep(20)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Loaded Content')
+      view1.dispose()
+
+      container.innerHTML = ''
+
+      const view2 = LazyComponent({ children: 'New Children' })
+      view2.mount(container)
+      await sleep(0)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Loaded Content')
+
+      view2.dispose()
+    })
+
+    it('should share cache between lazy builder and direct Lazy usage', async () => {
+      const loader = vi.fn(createLoader())
+
+      const LazyComponent = lazy(loader)
+      const view1 = LazyComponent({})
+      view1.mount(container)
+      await sleep(20)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      view1.dispose()
+
+      container.innerHTML = ''
+
+      const view2 = createView(Lazy, { loader })
+      view2.mount(container)
+      await sleep(0)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Loaded Content')
+
+      view2.dispose()
+    })
+
+    it('should cache the loaded component', async () => {
+      const loader = createLoader()
+      const LazyComponent = lazy(loader)
+
+      expect(getCachedComponent(loader)).toBeUndefined()
+
+      const view = LazyComponent({})
+      view.mount(container)
+      await sleep(20)
+
+      expect(getCachedComponent(loader)).toBeDefined()
+
+      view.dispose()
+    })
+
+    it('should handle concurrent lazy component instances with same loader', async () => {
+      const loader = vi.fn(createLoader())
+      const LazyComponent = lazy(loader)
+
+      const view1 = LazyComponent({})
+      const view2 = LazyComponent({})
+
+      const container2 = document.createElement('div')
+      document.body.appendChild(container2)
+
+      view1.mount(container)
+      view2.mount(container2)
+
+      await sleep(20)
+
+      expect(loader).toHaveBeenCalledTimes(1)
+      expect(container.textContent).toContain('Loaded Content')
+      expect(container2.textContent).toContain('Loaded Content')
+
+      view1.dispose()
+      view2.dispose()
+      document.body.removeChild(container2)
     })
   })
 })
