@@ -84,7 +84,7 @@ function Freeze(props: FreezeProps): View {
    * 监听视图切换事件
    * 在视图切换时拦截，实现视图的缓存和复用
    */
-  onViewSwitch((tx): false | void => {
+  onViewSwitch((tx): false => {
     const renderer = getRenderer()
     let reuse: View | undefined = undefined
     const { next, prev } = tx
@@ -114,10 +114,10 @@ function Freeze(props: FreezeProps): View {
     // 2️⃣  处理 prev（即将离开的视图）：冻结并缓存
     if (shouldCache(prev, include, exclude)) {
       const type = prev.component
-      // 移除DOM节点
-      renderer.remove(prev.node)
       // 冻结视图
       prev.deactivate()
+      // 移除DOM节点
+      renderer.remove(prev.node)
       // 存入缓存
       cache.set(type, prev)
       // 检查并清理超出限制的缓存
