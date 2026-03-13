@@ -44,17 +44,44 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     }
   }
 
+  /**
+   * 获取视图状态的getter方法
+   * 根据环境返回不同的状态值
+   *
+   * @returns {ViewState} 返回视图状态
+   */
   get state(): ViewState {
     return __VITARX_DEV__ && isRef(this.#state) ? this.#state.value : (this.#state as ViewState)
   }
+  /**
+   * 获取当前组件的拥有者（父级）组件实例
+   * 这是一个 getter 属性，用于访问当前组件的上下文中的拥有者
+   * 如果上下文中不存在拥有者，则返回 null
+   *
+   * @returns {ComponentInstance | null} 返回拥有者组件实例，如果不存在则返回 null
+   */
   get owner(): ComponentInstance | null {
     return this.ctx?.owner ?? null
   }
+
+  /**
+   * 获取当前上下文关联的应用实例
+   *
+   * @returns {App | null} 返回应用实例，如果不存在则返回 null
+   */
   get app(): App | null {
     return this.ctx?.app ?? null
   }
 
+  /**
+   * 获取活动状态的属性访问器
+   *
+   * @returns {boolean} 返回当前的活动状态
+   */
   get active(): boolean {
+    // 检查是否处于开发环境且 this.#active 是否为响应式引用
+    // 如果是，则返回响应式引用的值
+    // 否则，直接将 this.#active 作为布尔值返回
     return __VITARX_DEV__ && isRef(this.#active) ? this.#active.value : (this.#active as boolean)
   }
   /**
