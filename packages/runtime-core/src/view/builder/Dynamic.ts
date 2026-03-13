@@ -1,4 +1,4 @@
-import { isFunction, logger, popProperty } from '@vitarx/utils'
+import { logger } from '@vitarx/utils'
 import type { AnyProps, ValidChildren, View, ViewTag } from '../../types/index.js'
 import { createView } from '../compiler/factory.js'
 import { DynamicViewSource } from '../compiler/source.js'
@@ -14,44 +14,62 @@ export interface DynamicProps {
    */
   is: ViewTag
   /**
-   * 是否根据标签记住视图
-   *
-   * @default false
+   * 透传子视图
    */
-  memo?: boolean
   children?: ValidChildren
-  [key: string]: any
+  /**
+   * 其他透传的属性
+   */
+  [key: string]: unknown
 }
 
 /**
  * 动态视图构建器
  *
- * 它接受一个名为 "is" 的属性，该属性指定要动态渲染/元素。
+ * 它接受一个名为 "is" 的属性，该属性指定要动态渲染的元素/组件。
  * 运行时会根据 "is" 属性值动态加载并渲染相应的组件/元素。
  *
  * @example
  * ```tsx
- * // 使用动态组件
+ * // 动态切换组件
+ * const ComponentA = () => <div>Component A</div>
+ * const ComponentB = () => <span>Component B</span>
+ *
  * const App = () => {
- *   const SomeWidgetOrSomeElementTag = shallowRef(SomeWidget)
+ *   const current = shallowRef(ComponentA)
  *   return (
- *     <Dynamic is={SomeWidgetOrSomeElementTag} />
+ *     <>
+ *       <Dynamic is={current.value} />
+ *       <button onClick={() => current.value = ComponentB}>Switch</button>
+ *     </>
  *   )
  * }
  * ```
  *
+ * @example
+ * ```tsx
+ * // 动态切换元素标签
+ * const App = () => {
+ *   const tag = ref<'div' | 'span'>('div')
+ *   return <Dynamic is={tag.value} className="container">Content</Dynamic>
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // 配合 Freeze 实现组件缓存
+ * <Freeze>
+ *   <Dynamic is={currentComponent} />
+ * </Freeze>
+ * ```
+ *
  * @param props - 动态组件的属性对象
  * @param props.is - 动态组件要加载的组件类型
- * @param [props.memo] - 是否记住组件
- * @param [props.children] - 动态组件的子节点
- * @param [props.otherProps] - 其他透传的属性
+ * @param [props.children] - 要透传子视图
  * @returns {View} - 返回动态组件的视图对象
  */
 export const Dynamic = builder((props: DynamicProps, location): View => {
   const resolvedProps: AnyProps = {}
-  const memo = popProperty(props, 'memo') ?? false
-  const cache: WeakMap<Function, View> | null = memo ? new WeakMap() : null
-  // 动态 props 代理
   for (const key in props) {
     if (key === 'is') continue
     Object.defineProperty(resolvedProps, key, {
@@ -68,10 +86,6 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
       const message = `Dynamic "is" prop is mandatory and cannot be empty.`
       logger.warn(message, location)
       return new CommentView(message)
-    }
-    if (cache && isFunction(is)) {
-      const cached = cache.get(is)
-      if (cached) return cached
     }
     return createView(is, resolvedProps, location)
   })
