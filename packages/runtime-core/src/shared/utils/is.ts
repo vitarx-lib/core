@@ -1,6 +1,6 @@
 import { ViewKind } from '../../constants/index.js'
 import { IS_VIEW, IS_VIEW_BUILDER } from '../../constants/symbol.js'
-import type { View } from '../../types/index.js'
+import type { Component, View } from '../../types/index.js'
 import type {
   CommentView,
   ComponentView,
@@ -100,4 +100,16 @@ export const isListView = (val: any): val is ListView => {
  */
 export const isViewBuilder = (val: any): val is ViewBuilder => {
   return val?.[IS_VIEW_BUILDER] === true
+}
+
+/**
+ * 检查给定值是否为Component组件类型
+ *
+ * 主要检查值是否为函数类型，函数即可作为组件使用。
+ *
+ * @param val - 需要检查的任意值
+ * @returns {boolean} 如果值是Component组件类型则返回true，否则返回false
+ */
+export const isComponent = (val: any): val is Component => {
+  return typeof val === 'function'
 }
