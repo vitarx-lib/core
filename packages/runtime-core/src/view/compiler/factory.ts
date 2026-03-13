@@ -18,7 +18,7 @@ import { DynamicView } from '../implements/dynamic.js'
 import { ElementView } from '../implements/element.js'
 import { FragmentView } from '../implements/fragment.js'
 import { ComponentView, ListView } from '../implements/index.js'
-import { isValidChild } from './resolve.js'
+import { isValidChild, resolveBind } from './resolve.js'
 
 /**
  * 创建视图的工厂函数
@@ -97,12 +97,18 @@ export function createView<T extends ViewTag>(
   props: ValidProps<T> | null = null,
   location?: CodeLocation
 ): View {
+  if (__VITARX_DEV__) {
+    if (props !== null && !isPlainObject(props)) {
+      throw new TypeError('createView(): props must be an object or null')
+    }
+  }
   let view: View
-
   if (typeof type === 'string') {
     view = new ElementView(type, props, location)
   } else if (typeof type === 'function') {
-    view = isViewBuilder(type) ? type(props, location) : new ComponentView(type, props, location)
+    view = isViewBuilder(type)
+      ? type(props ? resolveBind(props) : {}, location)
+      : new ComponentView(type, props, location)
   } else {
     throw new TypeError(
       `createView(): invalid type - expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}: ${String(type)}`
