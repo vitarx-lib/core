@@ -37,7 +37,7 @@ export const SPECIAL_PROP_MERGERS = {
  * @param bind 绑定属性源，可以是对象或数组形式
  * @returns {AnyProps} - 融合后的新 props 对象
  */
-export function bindProps(props: AnyProps, bind: BindAttributes): AnyProps {
+export function bindProps(props: AnyProps, bind: BindAttributes): Omit<AnyProps, 'v-bind'> {
   let binding: AnyProps
   let exclude: Set<string> | null = null
 
@@ -111,6 +111,19 @@ export function bindProps(props: AnyProps, bind: BindAttributes): AnyProps {
 }
 
 /**
+ * 解析并处理v-bind属性
+ *
+ * @param props - 输入的属性对象
+ * @returns {AnyProps} 返回处理后的属性对象
+ */
+export function resolveBind<T extends AnyProps>(props: T): T {
+  // 从props中提取v-bind属性
+  const binding = popProperty(props, 'v-bind')
+  // 判断binding是否为普通对象或数组，如果是则调用bindProps进行处理，否则直接返回原始props
+  return isPlainObject(binding) || Array.isArray(binding) ? (bindProps(props, binding) as T) : props
+}
+
+/**
  * 解析组件的props属性
  *
  * @template T - 泛型参数，继承自AnyProps类型
@@ -123,10 +136,7 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   // 从props中提取ref属性
   const ref = popProperty(props, 'ref')
   // 从props中提取v-bind属性
-  const binding = popProperty(props, 'v-bind')
-  // 如果存在v-bind绑定，则进行props绑定处理
-  const resolvedProps =
-    isPlainObject(binding) || Array.isArray(binding) ? (bindProps(props, binding) as T) : props
+  const resolvedProps = resolveBind(props)
   // 构建返回结果对象
   const result: ResolvePropsResult<T> = {
     props: resolvedProps
