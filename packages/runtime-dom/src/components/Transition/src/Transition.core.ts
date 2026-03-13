@@ -1,6 +1,7 @@
 import { watch } from '@vitarx/responsive'
 import {
   getInstance,
+  isDynamicView,
   onMounted,
   onViewSwitch,
   resolveDirective,
@@ -68,12 +69,16 @@ interface TransitionProps extends BaseTransitionProps {
  * ```
  */
 function Transition(props: TransitionProps): View {
-  const instance = getInstance()!
+  if (__VITARX_SSR__) return props.children
+
+  const instance = getInstance()
+
   if (props.appear) {
     onMounted(() => {
       runTransition(instance.view.node, 'appear', props)
     })
   }
+
   // 兼容 v-show 指令切换
   const dirs = props.children.directives
   if (dirs) {
@@ -94,43 +99,46 @@ function Transition(props: TransitionProps): View {
       )
     }
   }
+
   // 兼容条件渲染
-  onViewSwitch(tx => {
-    const { prev, next } = tx
-    // 非挂载状态直接返回，不进行任何处理
-    if (!prev.isMounted) return void 0
-    if (next.isDetached) next.init(prev.ctx)
-    // 根据不同的过渡模式执行动画
-    switch (props.mode) {
-      case 'out-in':
-        // 取消上一次未完成的任务
-        if (isElement(prev.node)) cancelTransition(prev.node)
-        // 先执行离开动画，完成后再执行进入动画
-        runTransition(prev.node, 'leave', props, () => {
-          tx.commit()
-          if (next.isMounted) runTransition(next.node, 'enter', props)
-        })
-        return false
-      case 'in-out':
-        if (next.isInitialized) next.mount(createAnchor(prev.node), 'replace')
-        // 先执行进入动画，完成后再执行离开动画
-        if (next.isMounted) {
-          runTransition(next.node, 'enter', props, () => {
-            runTransition(prev.node, 'leave', props, prev.dispose.bind(prev))
+  if (isDynamicView(props.children)) {
+    onViewSwitch(tx => {
+      const { prev, next } = tx
+      // 非挂载状态直接返回，不进行任何处理
+      if (!prev.isMounted) return void 0
+      if (next.isDetached) next.init(prev.ctx)
+      // 根据不同的过渡模式执行动画
+      switch (props.mode) {
+        case 'out-in':
+          // 取消上一次未完成的任务
+          if (isElement(prev.node)) cancelTransition(prev.node)
+          // 先执行离开动画，完成后再执行进入动画
+          runTransition(prev.node, 'leave', props, () => {
+            tx.commit()
+            if (next.isMounted) runTransition(next.node, 'enter', props)
           })
-        } else {
+          return false
+        case 'in-out':
+          if (next.isInitialized) next.mount(createAnchor(prev.node), 'replace')
+          // 先执行进入动画，完成后再执行离开动画
+          if (next.isMounted) {
+            runTransition(next.node, 'enter', props, () => {
+              runTransition(prev.node, 'leave', props, prev.dispose.bind(prev))
+            })
+          } else {
+            runTransition(prev.node, 'leave', props, prev.dispose.bind(prev))
+          }
+          break
+        default:
+          if (next.isInitialized) next.mount(createAnchor(prev.node), 'replace')
+          if (next.isMounted) runTransition(next.node, 'enter', props)
           runTransition(prev.node, 'leave', props, prev.dispose.bind(prev))
-        }
-        break
-      default:
-        if (next.isInitialized) next.mount(createAnchor(prev.node), 'replace')
-        if (next.isMounted) runTransition(next.node, 'enter', props)
-        runTransition(prev.node, 'leave', props, prev.dispose.bind(prev))
-        break
-    }
-    tx.commit({ mode: 'pointer-only' })
-    return false
-  })
+          break
+      }
+      tx.commit({ mode: 'pointer-only' })
+      return false
+    })
+  }
 
   return props.children
 }
