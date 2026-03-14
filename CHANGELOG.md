@@ -1,3 +1,27 @@
+# [4.0.0-beta.8](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.7...v4.0.0-beta.8) (2026-03-14)
+
+
+### Bug Fixes
+
+* **logger:** 将日志级别由字符串改为数字枚举，修复日志输出级别限制无效问题 ([9087fdb](https://github.com/vitarx-lib/core/commit/9087fdb5337fcfd55b5b8417c90e2afbc5447fce))
+* **renderer:** 优化节点插入和替换逻辑避免无父节点错误 ([5d13214](https://github.com/vitarx-lib/core/commit/5d13214a2c768a40aa5210b2adf37f19eacc8d30))
+* **runtime-core:** 修复createView函数的类型检查和props处理 ([b26ea55](https://github.com/vitarx-lib/core/commit/b26ea55bd5f3840a3fa9422d492529bba3a67ee7))
+* **runtime-core:** 修复Freeze组件中缓存视图的DOM移除顺序问题 ([cb8c971](https://github.com/vitarx-lib/core/commit/cb8c971566240787988383946cd064361f3601c1))
+* **runtime-core:** 修复动态视图切换事件重复提交问题 ([173854a](https://github.com/vitarx-lib/core/commit/173854a85e249ee5fe924bac6a48d4f1e2ac57f7))
+* **runtime-dom:** 修复 Teleport 组件的激活状态判断和错误提示格式 ([c79cdb4](https://github.com/vitarx-lib/core/commit/c79cdb4008aeb76d099716b773b1062f9d6f5824))
+* **transition:** 兼容服务端渲染 ([1741f89](https://github.com/vitarx-lib/core/commit/1741f892cdb6c440963e1e818e6320b2daa3991e))
+
+
+### Features
+
+* **Freeze:** 重构 Freeze 组件为动态组件缓存方案 ([3f7e269](https://github.com/vitarx-lib/core/commit/3f7e269e62f178bc7b079f7a1cc4911d702acf48))
+* **runtime-core:** 增强 Dynamic 组件支持及添加视图缓存功能 ([d8c5a59](https://github.com/vitarx-lib/core/commit/d8c5a59ddca0051d82bf0a0a0909474c849e61cb))
+* **runtime-core:** 支持 Dynamic 组件的视图缓存策略 ([1ff3fd7](https://github.com/vitarx-lib/core/commit/1ff3fd767c4c8ca02abcd71568ba9074f58ba4bf))
+* **runtime-core:** 改进视图切换事务处理器注册逻辑 ([96568b8](https://github.com/vitarx-lib/core/commit/96568b81d3a0bca96089715a3b1bbc7228b20754))
+* **runtime-core:** 添加isComponent类型检查函数 ([0de4f4f](https://github.com/vitarx-lib/core/commit/0de4f4ff2a63f575afd7865c7530e9ffa2e7933f))
+
+
+
 # [4.0.0-beta.7](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.6...v4.0.0-beta.7) (2026-03-12)
 
 
