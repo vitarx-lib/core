@@ -14,7 +14,6 @@ import {
   StyleUtils,
   type ViewRenderer
 } from '@vitarx/runtime-core'
-import { logger } from '@vitarx/utils'
 import type { HTMLEventOptions } from '../types/index.js'
 
 const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
@@ -106,12 +105,7 @@ export class DOMRenderer implements ViewRenderer {
     }
     // 获取锚点元素的父级元素
     const parent = anchor.parentNode
-    if (!parent) {
-      if (__VITARX_DEV__) {
-        logger.warn('[DOMRenderer.insert] anchor node has no parent', child, anchor)
-      }
-      return
-    }
+    if (!parent) return
     child = this.recoveryFragmentChildren(child)
     parent.insertBefore(child, anchor)
   }
@@ -133,12 +127,7 @@ export class DOMRenderer implements ViewRenderer {
     const isFragment = this.isFragment(oldNode)
     // 获取父节点，片段元素使用 startAnchor 的父节点
     const parent = isFragment ? oldNode.$startAnchor.parentNode : oldNode.parentNode
-    if (!parent) {
-      if (__VITARX_DEV__) {
-        logger.warn('[DOMRenderer.replace] old node has no parent', newNode, oldNode)
-      }
-      return
-    }
+    if (!parent) return
     newNode = this.recoveryFragmentChildren(newNode)
     // 片段元素需要在 startAnchor 之前插入，然后删除旧元素
     if (isFragment) {
@@ -208,11 +197,7 @@ export class DOMRenderer implements ViewRenderer {
       // 使用 setAttribute 作为后备方案
       el.setAttribute(name, nextValue === true ? '' : String(nextValue))
     } catch (error) {
-      console.error(
-        `[DOMRenderer.setAttribute] error setting attribute "${name}"`,
-        error,
-        el
-      )
+      console.error(`[DOMRenderer.setAttribute] error setting attribute "${name}"`, error, el)
     }
   }
   /** @inheritDoc */

@@ -71,12 +71,16 @@ export interface ViewRenderer {
   /**
    * 插入节点
    *
+   * 如果旧节点不存在于文档中时不执行任何操作
+   *
    * @param child - 节点
    * @param anchor - 锚点
    */
   insert(child: HostNode, anchor: HostNode): void
   /**
    * 替换节点
+   *
+   * 如果旧节点不存在于文档中时则不执行任何操作
    *
    * @param newNode - 新节点
    * @param oldNode - 旧节点
