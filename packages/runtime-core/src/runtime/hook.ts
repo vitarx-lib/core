@@ -1,4 +1,4 @@
-import { getStackTrace, isFunction, logger, toCapitalize } from '@vitarx/utils'
+import { isFunction, logger, toCapitalize } from '@vitarx/utils'
 import { Lifecycle } from '../constants/lifecycle.js'
 import type {
   AnyProps,
@@ -151,40 +151,61 @@ export const onError = (handler: ErrorHandler): void => {
 }
 
 /**
- * 视图切换处理器
+ * 注册视图切换事务处理器
  *
- * 仅在组件根视图是 `DynamicView` 时生效。
+ * 当组件的根视图（直接或间接）是 `DynamicView` 时，视图切换会触发此钩子。
+ * 支持冒泡机制：从内层 DynamicView 向外层组件传播。
  *
- * 如果执行了自定义的切换逻辑，需返回切换后的视图对象阻止默认视图切换行为！
+ * 事务会在冒泡完成后自动提交，如需自定义切换时机，可调用 `tx.stopPropagation()` 后手动提交。
  *
- * @param handler - 视图切换处理器函数
+ * @param handler - 视图切换事务处理器函数
  *
  * @example
- * ```ts
- * // 基本用法
+ * ```tsx
+ * // 基本用法：监听视图切换
  * function MyComponent(props) {
  *   onViewSwitch((tx) => {
- *     console.log('视图即将切换:', tx.prev, '->', tx.next);
- *     tx.commit() // 立即切换
- *     return false; // 阻止默认事件
+ *     console.log('视图切换:', tx.prev, '->', tx.next);
  *   });
  *
- *   return props.children; // 假设是 DynamicView
+ *   return <Dynamic is={props.component} />
  * }
+ * ```
  *
- * // 高级用法：延迟切换
- * function ConditionalComponent() {
+ * @example
+ * ```tsx
+ * // 缓存视图：配置 cachePrev 属性
+ * function CacheView(props) {
+ *   const cache = new Map()
+ *
  *   onViewSwitch((tx) => {
- *      // 自定义一些过渡动画，在动画完成后才提交切换
- *      setTimeout(() => {
- *          // 添加过渡效果
- *          // ...
- *         tx.commit() // 执行切换
- *      }, 300);
- *      return false;
+ *     // 配置 prev 视图缓存
+ *     tx.cachePrev = true
+ *     cache.set(tx.prev.component, tx.prev)
  *   });
  *
- *   return build(()=>condition ? <A/> : <B/>)
+ *   return <Dynamic is={props.component} memo={true}/>
+ * }
+ * ```
+ *
+ * @example
+ * ```tsx
+ * // 自定义切换：停止冒泡并手动控制
+ * function Transition(props) {
+ *   onViewSwitch((tx) => {
+ *     // 停止冒泡，阻止自动提交
+ *     tx.stopPropagation()
+ *
+ *     // 先挂载新视图
+ *     tx.commitNext()
+ *
+ *     // 执行过渡动画后提交旧视图
+ *     runAnimation(tx.prev.node, () => {
+ *       tx.commitPrev()
+ *     })
+ *   });
+ *
+ *   return <Dynamic is={props.component} memo={true}/>
  * }
  * ```
  */
@@ -195,11 +216,13 @@ export const onViewSwitch = (handler: ViewSwitchHandler): void => {
   const ctx = getInstance(true)
   if (ctx) {
     if (__VITARX_DEV__ && ctx.onViewSwitch) {
-      logger.warn('[Hook] onViewSwitch has already been registered')
+      logger.warn(
+        '[Hook] onViewSwitch handler has already been registered in this component, the previous handler will be overwritten'
+      )
     }
     ctx.onViewSwitch = handler
   } else {
-    logger.warn('[Hook] onViewSwitch must be called in a component context')
+    logger.warn('[Hook] onViewSwitch must be called within a component setup function')
   }
 }
 
