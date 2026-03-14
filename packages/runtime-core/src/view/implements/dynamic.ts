@@ -37,7 +37,7 @@ export interface ViewSwitchTransaction {
   cachePrev?: boolean
 
   /**
-   * 停止冒泡传播
+   * 停止冒泡传播，并阻止自动提交
    */
   stopPropagation(): void
   /**
@@ -378,7 +378,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     // 冒泡触发 onViewSwitch
     this.#bubbleViewSwitch(tx)
     // 冒泡完成后，自动提交
-    tx.commit()
+    if (!tx.propagationStopped && !tx.committed) tx.commit()
   }
   /**
    * 冒泡触发 onViewSwitch
