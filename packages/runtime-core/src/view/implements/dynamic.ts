@@ -42,10 +42,22 @@ export interface ViewSwitchTransaction {
   stopPropagation(): void
   /**
    * 提交下一个视图
+   *
+   * 如果将 `forceFlush` 设置为 `true`，则会强制刷新事务，
+   * 跳过检查 `prev` 是否已提交，强制将当前事务置为完成状态。
+   *
+   * 如果在 `commitPrev()` 之前调用 `commitNext(true)` ，
+   * 需在适当时机调用 `commitPrev()` 或自行接管 `prev` 的卸载逻辑，否则可能会造成内存泄露或其他非预期影响。
+   *
+   * 注意：此方法在 `committed=true` 时调用无效。
+   *
+   * @param [forceFlush=false] - 是否强制刷新事务
    */
-  commitNext(): void
+  commitNext(forceFlush?: boolean): void
   /**
    * 提交上一个视图
+   *
+   * 注意：在 `commitNext(true)` 后此方法还可以被调用，仅处理 `prev` 的卸载逻辑。
    */
   commitPrev(): void
   /**
@@ -203,20 +215,13 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
 
     // 完成事务
     const finish = () => {
+      state.committed = true
       this.cachedView = next
       this.cachedType = type
       this.#cancelTx = null
       if (this.#dirty) {
         this.#dirty = false
         this.#updateView(this.source.value)
-      }
-    }
-
-    // 标记事务完成
-    const markCommitted = () => {
-      if (state.nextCommitted && state.prevCommitted) {
-        state.committed = true
-        finish()
       }
     }
 
@@ -244,21 +249,24 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       stopPropagation: () => {
         state.propagationStopped = true
       },
-      commitNext: () => {
+      commitNext: (forceFlush: boolean = false) => {
         if (state.committed || state.nextCommitted) return
         state.nextCommitted = true
         this.#commitNext(tx, state.anchor, renderer)
-        markCommitted()
+        if (forceFlush || state.prevCommitted) {
+          finish()
+        }
       },
       commitPrev: () => {
-        if (state.committed || state.prevCommitted) return
+        if (state.prevCommitted) return
         state.prevCommitted = true
         this.#commitPrev(tx, renderer)
-        markCommitted()
+        if (!state.committed && state.nextCommitted) {
+          finish()
+        }
       },
       commit: () => {
         if (state.committed) return
-        state.committed = true
         if (!state.prevCommitted) {
           state.prevCommitted = true
           this.#commitPrev(tx, renderer)
