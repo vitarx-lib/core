@@ -1,4 +1,4 @@
-import { logger } from '@vitarx/utils'
+import { isFunction, logger, popProperty } from '@vitarx/utils'
 import type { AnyProps, ValidChildren, View, ViewTag } from '../../types/index.js'
 import { createView } from '../compiler/factory.js'
 import { DynamicViewSource } from '../compiler/source.js'
@@ -8,68 +8,113 @@ import { builder, type ViewBuilder } from './factory.js'
 
 export interface DynamicProps {
   /**
-   * 动态视图
+   * 动态渲染的目标
    *
-   * 支持组件、元素标签
+   * 支持以下类型：
+   * - **组件函数**：`() => View` 或 `Component` 函数
+   * - **元素标签**：如 `'div'`、`'span'`、`'button'` 等
+   * - **响应式引用**：`Ref<Component>` 或 `Ref<string>`
+   *
+   * @example
+   * ```tsx
+   * // 渲染组件
+   * <Dynamic is={MyComponent} />
+   *
+   * // 渲染元素标签
+   * <Dynamic is="div">Content</Dynamic>
+   *
+   * // 响应式切换
+   * const current = ref(ComponentA)
+   * <Dynamic is={current.value} />
+   * ```
    */
   is: ViewTag
   /**
-   * 透传子视图
+   * 是否缓存组件视图实例
+   *
+   * 当 `memo` 为 `true` 时，会为每个组件函数缓存其创建的视图实例。
+   * 这在配合 `onViewSwitch` 实现自定义缓存逻辑时非常有用，
+   * 可以避免每次切换都重新创建视图实例。
+   *
+   * **注意**：
+   * - 仅对组件函数有效，元素标签不会被缓存
+   * - 缓存基于组件函数的引用，相同函数会复用同一视图
+   * - 如需完整的组件缓存功能，请使用 `Freeze` 组件
+   *
+   * @default false
+   *
+   * @example
+   * ```tsx
+   * // 配合 onViewSwitch 实现视图缓存
+   * function MyComponent() {
+   *   const cache = new Map()
+   *
+   *   onViewSwitch((tx) => {
+   *     tx.cachePrev = true
+   *     cache.set(tx.prev.component, tx.prev)
+   *   })
+   *
+   *   return <Dynamic is={current.value} memo />
+   * }
+   * ```
+   */
+  memo?: boolean
+  /**
+   * 子元素插槽内容
+   *
+   * 会原样传递给渲染的元素/组件
    */
   children?: ValidChildren
   /**
-   * 其他透传的属性
+   * 其他自定义属性
+   *
+   * 会原样传递给渲染的元素/组件
    */
-  [key: string]: unknown
+  [key: string]: any
 }
 
 /**
  * 动态视图构建器
  *
- * 它接受一个名为 "is" 的属性，该属性指定要动态渲染的元素/组件。
- * 运行时会根据 "is" 属性值动态加载并渲染相应的组件/元素。
+ * 根据传入的 `is` 属性动态渲染组件或元素。
+ * 支持响应式切换，当 `is` 值变化时自动更新渲染内容。
  *
  * @example
  * ```tsx
- * // 动态切换组件
- * const ComponentA = () => <div>Component A</div>
- * const ComponentB = () => <span>Component B</span>
- *
+ * // 基础用法：动态组件
  * const App = () => {
  *   const current = shallowRef(ComponentA)
- *   return (
- *     <>
- *       <Dynamic is={current.value} />
- *       <button onClick={() => current.value = ComponentB}>Switch</button>
- *     </>
- *   )
+ *   return <Dynamic is={current.value} />
  * }
  * ```
  *
  * @example
  * ```tsx
- * // 动态切换元素标签
+ * // 动态元素标签
  * const App = () => {
  *   const tag = ref<'div' | 'span'>('div')
- *   return <Dynamic is={tag.value} className="container">Content</Dynamic>
+ *   return <Dynamic is={tag.value}>Content</Dynamic>
  * }
  * ```
  *
  * @example
  * ```tsx
- * // 配合 Freeze 实现组件缓存
- * <Freeze>
- *   <Dynamic is={currentComponent} />
- * </Freeze>
+ * // 传递属性
+ * <Dynamic is={MyComponent} title="Hello" data-id={123} />
  * ```
  *
- * @param props - 动态组件的属性对象
- * @param props.is - 动态组件要加载的组件类型
- * @param [props.children] - 要透传子视图
- * @returns {View} - 返回动态组件的视图对象
+ * @param props - 属性对象
+ * @param props.is - 动态渲染的目标（组件/元素标签）
+ * @param [props.memo=false] - 是否缓存组件视图实例
+ * @param [props.children] - 子元素插槽
+ * @returns {View} 动态视图对象
  */
 export const Dynamic = builder((props: DynamicProps, location): View => {
   const resolvedProps: AnyProps = {}
+  const memo = popProperty(props, 'memo') ?? false
+  const cache: WeakMap<Function, View> | null = memo ? new WeakMap() : null
+
+  // 动态 props 代理
   for (const key in props) {
     if (key === 'is') continue
     Object.defineProperty(resolvedProps, key, {
@@ -80,12 +125,20 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
       configurable: true
     })
   }
+
   const viewSource = new DynamicViewSource(() => {
     const is = props['is']
     if (!is) {
       const message = `Dynamic "is" prop is mandatory and cannot be empty.`
       logger.warn(message, location)
       return new CommentView(message)
+    }
+    if (cache && isFunction(is)) {
+      const cached = cache.get(is)
+      if (cached) return cached
+      const view = createView(is, resolvedProps, location)
+      cache.set(is, view)
+      return view
     }
     return createView(is, resolvedProps, location)
   })
