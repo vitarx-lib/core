@@ -91,7 +91,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * @returns {boolean} 如果当前视图状态为INITIALIZED则返回true，否则返回false
    */
   get isInitialized(): boolean {
-    return this.isState(ViewState.INITIALIZED) // 调用isState方法检查当前状态是否等于ViewState.INITIALIZED
+    return this.hasState(ViewState.INITIALIZED)
   }
   /**
    * 获取当前视图是否已挂载的状态
@@ -100,7 +100,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * @returns {boolean} 如果组件已挂载则返回true，否则返回false
    */
   get isMounted(): boolean {
-    return this.isState(ViewState.MOUNTED) // 调用isState方法检查当前状态是否为MOUNTED
+    return this.hasState(ViewState.MOUNTED)
   }
   /**
    * 检查当前视图状态是否为已分离(DETACHED)状态
@@ -109,7 +109,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * @returns {boolean} 如果当前视图状态为DETACHED则返回true，否则返回false
    */
   get isDetached(): boolean {
-    return this.isState(ViewState.DETACHED)
+    return this.hasState(ViewState.DETACHED)
   }
   /**
    * 获取当前是否处于运行时状态的属性
@@ -117,7 +117,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * @returns {boolean} 如果当前状态不是ViewState.DETACHED则返回true，表示处于运行时状态；否则返回false
    */
   get isRuntime(): boolean {
-    return !this.isState(ViewState.DETACHED)
+    return !this.hasState(ViewState.DETACHED)
   }
 
   /**
@@ -138,7 +138,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * @param state - 要比较的视图状态
    * @returns {boolean} 如果当前状态与给定状态匹配则返回true，否则返回false
    */
-  isState(state: ViewState): boolean {
+  private hasState(state: ViewState): boolean {
     return this.state === state // 使用严格等于操作符比较当前状态和给定状态
   }
 
