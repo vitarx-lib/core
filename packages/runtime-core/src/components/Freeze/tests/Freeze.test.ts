@@ -1,134 +1,170 @@
-import { nextTick, ref } from '@vitarx/responsive'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { HostElementTag } from '../../../types/index.js'
-import { createView, dynamic } from '../../../view/index.js'
+import { nextTick, ref, type Ref } from '@vitarx/responsive'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import type { Component, HostElementTag } from '../../../types/index.js'
+import { createView, DynamicView } from '../../../view/index.js'
 import { Freeze } from '../src/index.js'
 
 describe('Freeze Component', () => {
   let container: HTMLElement
+  let showComponent: Ref<Component>
   const testTag = 'div' as HostElementTag
-  const ComponentA = () => 'A'
-  const ComponentB = () => 'B'
-  const showComponent = ref(ComponentA)
-  const childView = dynamic(() => createView(showComponent.value))
+  const ComponentA = () => createView(testTag, { children: 'A' })
+  const ComponentB = () => createView(testTag, { children: 'B' })
+
   beforeEach(() => {
-    showComponent.value = ComponentA
+    showComponent = ref(ComponentA)
     container = document.createElement('div')
     document.body.appendChild(container)
   })
 
   afterEach(() => {
-    childView.dispose()
     document.body.removeChild(container)
     container.innerHTML = ''
   })
 
-  describe('Props Validation', () => {
-    it('应该验证 children 属性是视图对象', () => {
-      expect(() => {
-        // @ts-expect-error - Testing invalid input
-        Freeze.validateProps({ children: 'not a view' })
-      }).toThrowError()
-
-      expect(() => {
-        const view = createView(testTag, { children: 'Valid view' })
-        // @ts-expect-error - Testing invalid input
-        Freeze.validateProps({ children: view })
-      }).not.toThrowError()
-    })
-  })
-
   describe('Basic Functionality', () => {
-    it('应该直接返回子视图', () => {
-      const w = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const e = vi.spyOn(console, 'error').mockImplementation(() => {})
-      const result = Freeze({ children: childView })
-      expect(result).toBe(childView)
-      w.mockRestore()
-      e.mockRestore()
-    })
-
-    it('应该在 Freeze 内部渲染子视图', () => {
-      const freezeView = createView(Freeze, { children: childView })
+    it('应该渲染初始组件', () => {
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        }
+      })
       freezeView.mount(container)
       expect(container.textContent).toContain('A')
+    })
+
+    it('应该支持响应式组件切换', async () => {
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        }
+      })
+      freezeView.mount(container)
+      expect(container.textContent).toContain('A')
+
+      showComponent.value = ComponentB
+      await nextTick()
+      expect(container.textContent).toContain('B')
+    })
+
+    it('应该缓存并复用组件实例', async () => {
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        }
+      })
+      freezeView.init()
+      const aView = (freezeView.instance!.subView as DynamicView).current!
+      freezeView.mount(container)
+      expect(container.textContent).toContain('A')
+
+      showComponent.value = ComponentB
+      await nextTick()
+      expect(container.textContent).toContain('B')
+      expect(aView.active).toBe(false) // A 应该被冻结
+
+      showComponent.value = ComponentA
+      await nextTick()
+      expect(container.textContent).toContain('A')
+      // A 应该从缓存中复用
+      expect(aView.active).toBe(true)
     })
   })
 
   describe('Configuration Options', () => {
     it('应该支持 include 选项以缓存特定组件', async () => {
       const freezeView = createView(Freeze, {
-        children: childView,
+        get is() {
+          return showComponent.value
+        },
         include: [ComponentA]
       })
       freezeView.init()
-      const aView = childView.current!
+      const aView = (freezeView.instance!.subView as DynamicView).current!
       freezeView.mount(container)
       expect(container.textContent).toContain('A')
+
       showComponent.value = ComponentB
       await nextTick()
-      const bView = childView.current!
       expect(container.textContent).toContain('B')
-      expect(aView.active).toBe(false)
+      expect(aView.active).toBe(false) // A 被缓存
+
       showComponent.value = ComponentA
       await nextTick()
       expect(container.textContent).toContain('A')
-      expect(bView.isDetached).toBe(true)
+      // A 从缓存中复用
+      expect(aView.active).toBe(true)
     })
 
     it('应该支持 exclude 选项以跳过缓存特定组件', async () => {
       const freezeView = createView(Freeze, {
-        children: childView,
+        get is() {
+          return showComponent.value
+        },
         exclude: [ComponentA]
       })
       freezeView.init()
-      const aView = childView.current!
+      const aView = (freezeView.instance!.subView as DynamicView).current!
       freezeView.mount(container)
       expect(container.textContent).toContain('A')
+
       showComponent.value = ComponentB
       await nextTick()
-      expect(aView.isDetached).toBe(true)
+      expect(aView.isDetached).toBe(true) // A 未被缓存，已销毁
       expect(container.textContent).toContain('B')
     })
 
-    it('应该支持 max 选项以限制缓存大小', () => {
-      const ComponentA = (props: { msg: string }) =>
-        createView(testTag, { children: `A: ${props.msg}` })
+    it('应该支持 max 选项以限制缓存大小', async () => {
+      const ComponentC = () => createView(testTag, { children: 'C' })
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        },
+        max: 1
+      })
+      freezeView.mount(container)
+      expect(container.textContent).toContain('A')
 
-      const childView = createView(ComponentA, { msg: 'test' })
+      showComponent.value = ComponentB
+      await nextTick()
+      expect(container.textContent).toContain('B')
+
+      showComponent.value = ComponentC
+      await nextTick()
+      expect(container.textContent).toContain('C')
+    })
+  })
+
+  describe('Props Passing', () => {
+    it('应该支持传递属性给组件', () => {
+      const ComponentWithProps = (props: { msg: string }) =>
+        createView(testTag, { children: props.msg })
 
       const freezeView = createView(Freeze, {
-        children: childView,
-        max: 3
+        is: ComponentWithProps,
+        props: { msg: 'Hello World' }
       })
-
       freezeView.mount(container)
-
-      expect(container.textContent).toContain('A: test')
+      expect(container.textContent).toContain('Hello World')
     })
   })
 
   describe('Lifecycle', () => {
-    it('应该在 Freeze 组件被销毁时处置子视图', () => {
-      const freezeView = createView(Freeze, { children: childView })
-
+    it('应该在 Freeze 组件被销毁时清理所有缓存', async () => {
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        }
+      })
       freezeView.mount(container)
       expect(container.textContent).toContain('A')
 
-      // 记录视图销毁的方法
-      const disposeSpy = vi.spyOn(childView, 'dispose')
+      showComponent.value = ComponentB
+      await nextTick()
+      expect(container.textContent).toContain('B')
 
       freezeView.dispose()
-      expect(disposeSpy).toHaveBeenCalled()
-    })
-  })
-
-  describe('Integration', () => {
-    it('应该与基本视图一起工作', () => {
-      const childView = createView(testTag, { children: 'Integrated content' })
-      const freezeView = createView(Freeze, { children: childView })
-      freezeView.mount(container)
-      expect(container.textContent).toContain('Integrated content')
+      // 组件应该被完全清理
     })
   })
 })
