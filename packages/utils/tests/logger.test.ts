@@ -86,12 +86,14 @@ describe('Logger', () => {
       expect(consoleErrorSpy).toHaveBeenCalled()
     })
 
-    it('should compare log levels using string comparison', () => {
+    it('should compare log levels using numeric comparison', () => {
       const log = new Logger({ level: LogLevel.ERROR })
       log.debug('debug message')
       log.warn('warn message')
       expect(consoleDebugSpy).not.toHaveBeenCalled()
-      expect(consoleWarnSpy).toHaveBeenCalled()
+      expect(consoleWarnSpy).not.toHaveBeenCalled()
+      log.error('error message')
+      expect(consoleErrorSpy).toHaveBeenCalled()
     })
 
     it('should log error regardless of level', () => {

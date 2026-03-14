@@ -10,10 +10,10 @@ export type CodeSource = {
  * 日志级别枚举
  */
 export enum LogLevel {
-  DEBUG = 'Debug',
-  INFO = 'Info',
-  WARN = 'Warn',
-  ERROR = 'Error'
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3
 }
 /**
  * 日志配置接口
@@ -143,7 +143,9 @@ export class Logger {
    * @returns 格式化后的消息
    */
   public formatMessage(level: LogLevel, message: string, source?: CodeSource): string {
-    let prefix = this.config.prefix ? `[${this.config.prefix} ${level}]` : `[${level}]`
+    // 将数字级别转换为首字母大写的字符串
+    const levelName = LogLevel[level].charAt(0) + LogLevel[level].slice(1).toLowerCase()
+    let prefix = this.config.prefix ? `[${this.config.prefix} ${levelName}]` : `[${levelName}]`
     // 如果message开头没有空格，则添加一个空格
     const formattedMessage =
       message.startsWith(' ') || message.startsWith('[') ? message : ` ${message}`
