@@ -1,5 +1,7 @@
-import { isFunction, logger, popProperty } from '@vitarx/utils'
-import type { AnyProps, ValidChildren, View, ViewTag } from '../../types/index.js'
+import { logger, popProperty } from '@vitarx/utils'
+import { pruneCache } from '../../components/Freeze/src/Freeze.utils.js'
+import { isComponent } from '../../shared/index.js'
+import type { AnyProps, Component, ValidChildren, View, ViewTag } from '../../types/index.js'
 import { createView } from '../compiler/factory.js'
 import { DynamicViewSource } from '../compiler/source.js'
 import { CommentView } from '../implements/atomic.js'
@@ -30,35 +32,30 @@ export interface DynamicProps {
    */
   is: ViewTag
   /**
-   * 是否缓存组件视图实例
+   * 组件视图缓存策略
    *
-   * 当 `memo` 为 `true` 时，会为每个组件函数缓存其创建的视图实例。
-   * 这在配合 `onViewSwitch` 实现自定义缓存逻辑时非常有用，
-   * 可以避免每次切换都重新创建视图实例。
+   * - `false`（默认）：不缓存
+   * - `true`：缓存所有组件视图，不限制数量
+   * - `number > 0`：缓存指定数量的组件视图，采用 LRU 策略
+   * - `number <= 0`：等同于 `true`，不限制数量
    *
    * **注意**：
    * - 仅对组件函数有效，元素标签不会被缓存
    * - 缓存基于组件函数的引用，相同函数会复用同一视图
-   * - 如需完整的组件缓存功能，请使用 `Freeze` 组件
+   * - 如需完整的组件缓存功能（include/exclude），请使用 `Freeze` 组件
    *
    * @default false
    *
    * @example
    * ```tsx
-   * // 配合 onViewSwitch 实现视图缓存
-   * function MyComponent() {
-   *   const cache = new Map()
+   * // 缓存所有组件视图
+   * <Dynamic is={current.value} memo />
    *
-   *   onViewSwitch((tx) => {
-   *     tx.cachePrev = true
-   *     cache.set(tx.prev.component, tx.prev)
-   *   })
-   *
-   *   return <Dynamic is={current.value} memo />
-   * }
+   * // 最多缓存 3 个组件视图（LRU 策略）
+   * <Dynamic is={current.value} memo={3} />
    * ```
    */
-  memo?: boolean
+  memo?: boolean | number
   /**
    * 子元素插槽内容
    *
@@ -112,9 +109,10 @@ export interface DynamicProps {
 export const Dynamic = builder((props: DynamicProps, location): View => {
   const resolvedProps: AnyProps = {}
   const memo = popProperty(props, 'memo') ?? false
-  const cache: WeakMap<Function, View> | null = memo ? new WeakMap() : null
+  const maxCache = typeof memo === 'number' && memo > 0 ? memo : 0
+  const useCache = memo !== false
+  const cache: Map<Component, View> | null = useCache ? new Map() : null
 
-  // 动态 props 代理
   for (const key in props) {
     if (key === 'is') continue
     Object.defineProperty(resolvedProps, key, {
@@ -133,11 +131,12 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
       logger.warn(message, location)
       return new CommentView(message)
     }
-    if (cache && isFunction(is)) {
+    if (cache && isComponent(is)) {
       const cached = cache.get(is)
       if (cached) return cached
       const view = createView(is, resolvedProps, location)
       cache.set(is, view)
+      pruneCache(cache, maxCache)
       return view
     }
     return createView(is, resolvedProps, location)
