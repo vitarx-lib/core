@@ -98,7 +98,7 @@ function Teleport({ children, to, defer, disabled }: TeleportProps): View {
   if (teleported) {
     // 兼容停用/恢复
     onShow(() => {
-      if (!children.active) children.activate()
+      if (!children.isActive) children.activate()
     })
     onHide(() => {
       children.deactivate()
@@ -111,14 +111,10 @@ function Teleport({ children, to, defer, disabled }: TeleportProps): View {
 Teleport.defaultProps = { defer: false, disabled: false } as const
 Teleport.validateProps = (props: Record<string, any>): void => {
   if (!isView(props.children)) {
-    throw new TypeError(
-      `[Teleport] children expects a View, received ${typeof props.children}`
-    )
+    throw new TypeError(`[Teleport] children expects a View, received ${typeof props.children}`)
   }
   if (!props.disabled && !isString(props.to)) {
-    throw new TypeError(
-      `[Teleport] to expects a string selector, received ${typeof props.to}`
-    )
+    throw new TypeError(`[Teleport] to expects a string selector, received ${typeof props.to}`)
   }
 }
 
