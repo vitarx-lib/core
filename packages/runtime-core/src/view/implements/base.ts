@@ -78,10 +78,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    *
    * @returns {boolean} 返回当前的活动状态
    */
-  get active(): boolean {
-    // 检查是否处于开发环境且 this.#active 是否为响应式引用
-    // 如果是，则返回响应式引用的值
-    // 否则，直接将 this.#active 作为布尔值返回
+  get isActive(): boolean {
     return __VITARX_DEV__ && isRef(this.#active) ? this.#active.value : (this.#active as boolean)
   }
   /**
@@ -191,7 +188,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     if (!this.isRuntime) {
       throw new Error('[View.activate] View is not in runtime state')
     }
-    if (this.active) {
+    if (this.isActive) {
       throw new Error('[View.activate] View is already active')
     }
     this.doActivate?.()
@@ -202,7 +199,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     if (!this.isRuntime) {
       throw new Error('[View.deactivate] View is not in runtime state')
     }
-    if (!this.active) {
+    if (!this.isActive) {
       throw new Error('[View.deactivate] View is already inactive')
     }
     this.doDeactivate?.()

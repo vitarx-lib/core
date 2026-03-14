@@ -306,7 +306,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       if (this.isMounted) {
         next.mount(anchor ?? prev.node, 'insert')
       }
-    } else if (!next.active && this.isMounted) {
+    } else if (!next.isActive && this.isMounted) {
       // 缓存视图复用：插入 DOM（状态已在 commitPrev 后对齐）
       renderer.replace(next.node, anchor ?? prev.node)
     }
@@ -315,8 +315,8 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     if (anchor) renderer.remove(anchor)
 
     // 同步 active 状态
-    if (this.isRuntime && this.active !== next.active) {
-      next[this.active ? 'activate' : 'deactivate']()
+    if (this.isRuntime && this.isActive !== next.isActive) {
+      next[this.isActive ? 'activate' : 'deactivate']()
     }
   }
 

@@ -107,8 +107,8 @@ export function ensureMounted(
     }
   }
   // 同步 active 状态
-  if (listView.active !== view.active) {
-    view[listView.active ? 'activate' : 'deactivate']()
+  if (listView.isActive !== view.isActive) {
+    view[listView.isActive ? 'activate' : 'deactivate']()
   }
   cb?.(view)
 }

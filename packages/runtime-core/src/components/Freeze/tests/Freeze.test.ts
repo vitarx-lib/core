@@ -65,10 +65,10 @@ describe('Freeze Component', () => {
       mountAndExpect(freezeView, 'A')
 
       await switchTo(ComponentB, 'B')
-      expect(aView.active).toBe(false)
+      expect(aView.isActive).toBe(false)
 
       await switchTo(ComponentA, 'A')
-      expect(aView.active).toBe(true)
+      expect(aView.isActive).toBe(true)
     })
   })
 

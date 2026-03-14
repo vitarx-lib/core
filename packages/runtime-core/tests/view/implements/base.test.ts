@@ -77,7 +77,7 @@ describe('BaseView', () => {
       view.init()
 
       expect(view.state).toBe(ViewState.INITIALIZED)
-      expect(view.active).toBe(true)
+      expect(view.isActive).toBe(true)
     })
 
     it('挂载后状态应该是 MOUNTED', () => {
@@ -91,14 +91,14 @@ describe('BaseView', () => {
       view.dispose()
 
       expect(view.state).toBe(ViewState.DETACHED)
-      expect(view.active).toBe(false)
+      expect(view.isActive).toBe(false)
     })
 
     it('停用时状态应该是 DEACTIVATED', () => {
       view.mount(container)
       view.deactivate()
       expect(view.state).toBe(ViewState.MOUNTED)
-      expect(view.active).toBe(false)
+      expect(view.isActive).toBe(false)
     })
 
     it('激活后状态应该是 ACTIVATED', () => {
@@ -106,7 +106,7 @@ describe('BaseView', () => {
       view.deactivate()
       view.activate()
       expect(view.state).toBe(ViewState.MOUNTED)
-      expect(view.active).toBe(true)
+      expect(view.isActive).toBe(true)
     })
   })
 
@@ -138,7 +138,7 @@ describe('BaseView', () => {
       expect(() => {
         view.deactivate()
       }).not.toThrow()
-      expect(view.active).toBe(false)
+      expect(view.isActive).toBe(false)
     })
 
     it('应该能够激活', () => {
