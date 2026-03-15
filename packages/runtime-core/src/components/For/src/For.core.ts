@@ -81,22 +81,7 @@ export interface ListItemRecord {
  * @internal
  */
 export type ListItemMap = Map<unknown, ListItemRecord>
-/**
- * 列表差异更新结果接口
- *
- * 用于存储列表diff算法的计算结果，
- * 包含新的子元素、源索引映射和新的项映射表。
- *
- * @internal
- */
-interface DiffResult {
-  /** 新的子视图数组 */
-  newChildren: View[]
-  /** 源索引映射数组，用于LIS算法 */
-  sourceIndex: number[]
-  /** 新的列表项映射表 */
-  newItemMap: ListItemMap
-}
+
 /**
  * 列表组件生命周期钩子接口
  *
@@ -494,9 +479,7 @@ defineValidate(For, (props, location): void => {
   }
   if (props.key !== undefined) {
     if (typeof props.key !== 'function' && typeof props.key !== 'string') {
-      throw new TypeError(
-        `[For] key expects a function or string, received ${typeof props.key}`
-      )
+      throw new TypeError(`[For] key expects a function or string, received ${typeof props.key}`)
     }
   } else {
     logger.warn(
