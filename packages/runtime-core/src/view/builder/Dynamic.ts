@@ -1,4 +1,4 @@
-import { logger, popProperty } from '@vitarx/utils'
+import { popProperty } from '@vitarx/utils'
 import { pruneCache } from '../../components/Freeze/src/Freeze.utils.js'
 import { isComponent } from '../../shared/index.js'
 import type { AnyProps, Component, ValidChildren, View, ViewTag } from '../../types/index.js'
@@ -30,7 +30,7 @@ export interface DynamicProps {
    * <Dynamic is={current.value} />
    * ```
    */
-  is: ViewTag
+  is: ViewTag | undefined | null | false
   /**
    * 组件视图缓存策略
    *
@@ -126,11 +126,7 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
 
   const viewSource = new DynamicViewSource(() => {
     const is = props['is']
-    if (!is) {
-      const message = `Dynamic "is" prop is mandatory and cannot be empty.`
-      logger.warn(message, location)
-      return new CommentView(message)
-    }
+    if (!is) return new CommentView(`<Dynamic is=${is}>`)
     if (cache && isComponent(is)) {
       const cached = cache.get(is)
       if (cached) return cached
