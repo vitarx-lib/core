@@ -545,7 +545,7 @@ describe('TransitionGroup 组件', () => {
         tag: 'div',
         each: items.value,
         key: item => item,
-        bindProps: {
+        props: {
           id: 'container',
           className: 'custom-container'
         },
@@ -572,7 +572,7 @@ describe('TransitionGroup 组件', () => {
         tag: 'ul',
         each: items.value,
         key: item => item,
-        bindProps: {
+        props: {
           className: 'list-container'
         },
         children: (item: number) =>

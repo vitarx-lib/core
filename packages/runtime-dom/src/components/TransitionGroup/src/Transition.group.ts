@@ -22,7 +22,7 @@ interface TransitionGroupProps<T, Tag extends ContainerTag>
   /** 元素移动时使用的类名，默认为 `${name}-move` */
   moveClass?: string
   /** 传递给包裹元素的属性 */
-  bindProps?: WithProps<Tag>
+  props?: WithProps<Tag>
 }
 
 /**
@@ -35,7 +35,7 @@ interface TransitionGroupProps<T, Tag extends ContainerTag>
  * @param props.tag - 包裹子节点的标签名
  * @param props.name - 过渡名称前缀
  * @param props.moveClass - 移动动画类名
- * @param props.bindProps - 传递给包裹元素的属性
+ * @param props.props - 传递给包裹元素的属性
  * @param props.css - 是否使用 CSS 过渡类
  * @param props.type - 过渡类型
  * @param props.duration - 过渡持续时间
@@ -195,7 +195,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
   })
   // 根据是否指定 tag 决定返回结构
   return typeof tag === 'string'
-    ? createElementView(tag as ContainerTag, { children: listView, 'v-bind': props.bindProps })
+    ? createElementView(tag as ContainerTag, { children: listView, 'v-bind': props.props })
     : listView
 }
 defineValidate(TransitionGroup, (props: AnyProps) => {
