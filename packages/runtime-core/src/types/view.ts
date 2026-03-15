@@ -1,6 +1,7 @@
 import type { Ref } from '@vitarx/responsive'
 import type { AnyPrimitive, CodeSource } from '@vitarx/utils'
 import type { App } from '../app/index.js'
+import type { ViewBuilder } from '../view/index.js'
 import {
   CommentView,
   ComponentInstance,
@@ -11,7 +12,6 @@ import {
   ListView,
   TextView
 } from '../view/index.js'
-import type { ViewBuilder } from '../view/index.js'
 import type { Component } from './component.js'
 import type { HostElementTag } from './element.js'
 
@@ -70,10 +70,10 @@ export type ValidChildren = ValidChild | Iterable<ValidChildren>
 export type ResolvedChildren = readonly View[]
 
 /**
- * 可创建类型
+ * 可创建视图类型
  *
  * 可以被创建为视图的类型，包括：
- * - JSX 元素名称（如 'div'、'span' 等）
+ * - 元素名称（如 'div'、'span' 等）
  * - 组件
  * - 视图构建器
  */
