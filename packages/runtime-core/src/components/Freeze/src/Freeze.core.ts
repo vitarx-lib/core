@@ -15,7 +15,7 @@ interface FreezeProps {
    *
    * 可以是组件函数或响应式引用
    */
-  is: Component
+  is: Component | null | undefined | false
   /**
    * 传递给组件的属性对象
    *
@@ -101,6 +101,9 @@ function Freeze(props: FreezeProps): View {
    */
   const switchTo = new DynamicViewSource((): View => {
     const component = props.is
+    if (!component) {
+      return createCommentView(`<Freeze is={${component}} />`)
+    }
     if (!isComponent(component)) {
       if (__VITARX_DEV__) {
         logger.warn('[Freeze] props.is is not a valid component.')
