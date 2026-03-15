@@ -3,7 +3,6 @@ import type { ErrorHandler } from './hook.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
   JSXElementAttributes,
-  MaybeRef,
   WithRefProps
 } from './props.js'
 import type { View } from './view.js'
@@ -86,24 +85,7 @@ declare global {
     /**
      * Vitarx 框架内置固有属性
      */
-    interface IntrinsicAttributes extends GlobalIntrinsicAttributes {
-      /**
-       * 显示/隐藏节点
-       *
-       * 此属性会给元素添加上 `display: none` 样式，
-       * 它可能会和元素原有的样式冲突，请自行处理。
-       *
-       * @example
-       * ```tsx
-       * const show = ref(false)
-       * // v-show 语法的使用 可以忽略.value
-       * <div v-show={show}></div>
-       * // 渲染结果
-       * <div style="display: none;"></div>
-       * ```
-       */
-      'v-show'?: MaybeRef<boolean>
-    }
+    interface IntrinsicAttributes extends GlobalIntrinsicAttributes {}
     /**
      * App配置项
      */
