@@ -29,7 +29,7 @@ interface FreezeProps {
    * <Freeze is={showComponent} props={someProps} />
    * ```
    */
-  props?: AnyProps
+  props?: AnyProps | null | undefined
   /**
    * 需要缓存的组件类型列表，如果指定则只缓存列表中的组件
    */
