@@ -104,7 +104,7 @@ export interface DynamicProps {
  * @param props.is - 动态渲染的目标（组件/元素标签）
  * @param [props.memo=false] - 是否缓存组件视图实例
  * @param [props.children] - 子元素插槽
- * @returns {View} 动态视图对象
+ * @returns {View} 动态/静态视图对象（取决于传入的is是否具有响应性）
  */
 export const Dynamic = builder((props: DynamicProps, location): View => {
   const resolvedProps: AnyProps = {}
