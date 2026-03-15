@@ -1,3 +1,23 @@
+# [4.0.0-beta.9](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.8...v4.0.0-beta.9) (2026-03-15)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复 Dynamic 组件处理 falsy is 值的逻辑 ([6d53c5d](https://github.com/vitarx-lib/core/commit/6d53c5d51d08b1a12c1b6d07ed73e20c23ee4ed5))
+* **runtime-core:** 修复 Freeze 组件中 props.is 类型处理 ([5347442](https://github.com/vitarx-lib/core/commit/5347442d1d7486e669f03b4518e2d8865ce7aca9))
+* **runtime-core:** 处理onViewSwitch回调中的异常 ([ae65252](https://github.com/vitarx-lib/core/commit/ae65252f4f49b2f6d9e45a45e13a3dc05adb3083))
+* **runtime-core:** 规范v-bind属性类型并优化绑定处理 ([706a70e](https://github.com/vitarx-lib/core/commit/706a70e37d37d0b895ac8d96020d2cf736553fb9))
+
+
+### Features
+
+* **lazy:** 优化懒加载组件实现，添加获取加载器的辅助函数 ([51129de](https://github.com/vitarx-lib/core/commit/51129deaa46565c54c64989aa62f58745240ffbd))
+* **lazy:** 添加获取加载中组件的功能 ([f962a0c](https://github.com/vitarx-lib/core/commit/f962a0c7b319c2e876f11439be83394623037762))
+* **runtime-dom:** 在 runtime-dom 中添加 v-show 属性支持 ([4fafa9b](https://github.com/vitarx-lib/core/commit/4fafa9b59a3975925f259e3a7f4816958674db74))
+* **runtime-dom:** 新增 v-html 和 v-text 指令类型支持 ([6fea116](https://github.com/vitarx-lib/core/commit/6fea116da44f8a01c6923bbc40245d5d568a15fa))
+
+
+
 # [4.0.0-beta.8](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.7...v4.0.0-beta.8) (2026-03-14)
 
 
