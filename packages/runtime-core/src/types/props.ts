@@ -73,8 +73,8 @@ export type WithRefProps<T extends AnyProps> = { [K in keyof T]: MaybeRef<T[K]> 
  *   - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，第二个元素可以指定哪些属性不需要绑定。
  */
 export type BindAttributes =
-  | { [key: string]: unknown }
-  | [props: { [key: string]: unknown }, exclude?: string[]]
+  | { [key: string]: any }
+  | [props: { [key: string]: any }, exclude?: string[]]
 
 /**
  * 实例引用
