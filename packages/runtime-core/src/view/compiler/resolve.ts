@@ -119,6 +119,8 @@ export function bindProps(props: AnyProps, bind: BindAttributes): Omit<AnyProps,
 export function resolveBind<T extends AnyProps>(props: T): T {
   // 从props中提取v-bind属性
   const binding = popProperty(props, 'v-bind')
+  // 如果没有v-bind属性，则直接返回原始props
+  if (!binding) return props
   // 判断binding是否为普通对象或数组，如果是则调用bindProps进行处理，否则直接返回原始props
   return isPlainObject(binding) || Array.isArray(binding) ? (bindProps(props, binding) as T) : props
 }

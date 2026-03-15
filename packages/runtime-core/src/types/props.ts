@@ -72,7 +72,9 @@ export type WithRefProps<T extends AnyProps> = { [K in keyof T]: MaybeRef<T[K]> 
  *   - 对象Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
  *   - 数组[props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，第二个元素可以指定哪些属性不需要绑定。
  */
-export type BindAttributes = Record<string, any> | [props: Record<string, any>, exclude?: string[]]
+export type BindAttributes =
+  | { [key: string]: unknown }
+  | [props: { [key: string]: unknown }, exclude?: string[]]
 
 /**
  * 实例引用
@@ -89,18 +91,18 @@ export interface IntrinsicAttributes {
   /**
    * 绑定属性
    *
-   * 注意：不能通过 `v-bind` 指令绑定全局属性(ref、key、children...)，简单组件除外。
+   * 注意：不能通过 `v-bind` 指令绑定全局属性(ref、children...)。
    *
    * 可选值：
-   *  - Record<string, any>：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
-   *  - [props: Record<string, any>, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
+   *  - { [key: string]: unknown }：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
+   *  - [props: { [key: string]: unknown }, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
    *  第二个元素可以指定哪些属性不需要绑定。
    */
-  'v-bind'?: BindAttributes
+  'v-bind'?: BindAttributes | null | undefined
   /**
    * 支持传入未知属性
    */
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**
