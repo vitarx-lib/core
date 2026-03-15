@@ -1,15 +1,16 @@
 import { nextTick, ref } from '@vitarx/responsive'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  CommentView,
   type Component,
   createView,
   Dynamic,
+  DynamicView,
   type HostElementTag,
   IS_VIEW_BUILDER,
   isDynamicView,
   ViewKind
 } from '../../../src/index.js'
-import { CommentView, DynamicView } from '../../../src/index.js'
 
 describe('Dynamic Builder', () => {
   describe('构建器功能', () => {
@@ -168,37 +169,27 @@ describe('Dynamic Builder', () => {
 
   describe('错误处理', () => {
     it('当 is 为空时应该返回 CommentView', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const view = Dynamic({ is: null as any })
 
       expect(view).toBeInstanceOf(CommentView)
-      warnSpy.mockRestore()
     })
 
     it('当 is 为 undefined 时应该返回 CommentView', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const view = Dynamic({ is: undefined as any })
 
       expect(view).toBeInstanceOf(CommentView)
-      warnSpy.mockRestore()
     })
 
     it('当 is 为空字符串时应该返回 CommentView', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const view = Dynamic({ is: '' as any })
 
       expect(view).toBeInstanceOf(CommentView)
-      warnSpy.mockRestore()
     })
 
-    it('应该在 is 为空时发出警告', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const location = { fileName: 'test.ts', lineNumber: 1, columnNumber: 1 }
+    it('当 is 为false时应该返回 CommentView', () => {
+      const view = Dynamic({ is: false })
 
-      Dynamic({ is: null as any }, location)
-
-      expect(warnSpy).toHaveBeenCalled()
-      warnSpy.mockRestore()
+      expect(view).toBeInstanceOf(CommentView)
     })
   })
 
