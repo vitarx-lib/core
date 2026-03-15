@@ -48,7 +48,6 @@ import type { ViewSwitchHandler } from './dynamic.js'
  *
  * @param component - 组件实体函数，定义组件的实现
  * @param props - 传递给组件的属性对象，可以为 null
- * @param key - 可选的唯一标识符，用于视图追踪
  * @param location - 可选的代码位置信息，用于调试
  *
  * @remarks
