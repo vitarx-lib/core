@@ -406,7 +406,11 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       if (currentOwner.subView === currentView) {
         // 触发 onViewSwitch
         if (currentOwner.onViewSwitch) {
-          currentOwner.onViewSwitch(tx)
+          try {
+            currentOwner.onViewSwitch(tx)
+          } catch (e) {
+            currentOwner.reportError(e, 'view:switch')
+          }
         }
         // 继续向上冒泡
         currentView = currentOwner.view
