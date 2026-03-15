@@ -63,7 +63,7 @@ interface LazyProps<T extends Component> extends LazyLoadOptions {
   /**
    * 绑定给加载组件的属性
    */
-  bindProps?: WithProps<T>
+  props?: WithProps<T>
   /**
    * 原样透传给加载完成后的组件
    */
@@ -93,8 +93,8 @@ interface LazyProps<T extends Component> extends LazyLoadOptions {
  * ```
  */
 function Lazy<T extends Component>(props: LazyProps<T>): View {
-  const { delay = 200, timeout = 0, loading, loader, bindProps, onError } = props
-  const resolvedProps: AnyProps = bindProps ? bindProps : {}
+  const { delay = 200, timeout = 0, loading, loader, props: _props, onError } = props
+  const resolvedProps: AnyProps = _props ? _props : {}
 
   if ('children' in props) {
     Object.defineProperty(resolvedProps, 'children', {
