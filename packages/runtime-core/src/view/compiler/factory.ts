@@ -111,7 +111,7 @@ export function createView<T extends ViewTag>(
       : new ComponentView(type, props, location)
   } else {
     throw new TypeError(
-      `createView(): invalid type - expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}: ${String(type)}`
+      `createView(type) expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}}`
     )
   }
   return view
