@@ -98,7 +98,7 @@ export function createView<T extends ViewTag>(
   location?: CodeLocation
 ): View {
   if (__VITARX_DEV__) {
-    if (props !== null && !isPlainObject(props)) {
+    if (props && !isPlainObject(props)) {
       throw new TypeError('createView(): props must be an object or null')
     }
   }
