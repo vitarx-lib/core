@@ -1,5 +1,8 @@
 import type { Component } from '../../../types/index.js'
 
+/**
+ * ES组件模块懒加载器类型
+ */
 export type LazyLoader<T extends Component> = () => Promise<{ default: T }>
 
 export const LAZY_LOADED_CACHE = new WeakMap<LazyLoader<Component>, Component>()
