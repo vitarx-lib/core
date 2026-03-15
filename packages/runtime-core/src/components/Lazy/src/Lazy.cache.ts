@@ -81,9 +81,39 @@ export function getCachedComponent<T extends Component>(loader: LazyLoader<T>): 
 }
 
 /**
+ * 获取正在加载中的组件 Promise
+ *
+ * 用于路由等外部模块等待异步组件加载完成。
+ * 如果组件正在加载中，返回该 Promise；
+ * 如果已经加载完成或未开始加载，返回 void。
+ *
+ * @param loader - 懒加载器函数
+ * @returns {Promise<Component> | void} 返回加载中的 Promise 或 void
+ *
+ * @example
+ * ```js
+ * const loader = () => import('./MyComponent.js')
+ *
+ * // 在路由跳转后尝试等待
+ * const loading = getLoadingComponent(loader)
+ * if (loading) {
+ *   await loading
+ *   // 此时组件 JS 已加载完毕，且已存入 LAZY_LOADED_CACHE
+ *   await nextTick()
+ *   // 如果不是预加载，此时可以安全的获取布局信息
+ * }
+ * ```
+ */
+export function getLoadingComponent(loader: LazyLoader<Component>): Promise<Component> | void {
+  return LAZY_LOADING_CACHE.get(loader)
+}
+
+/**
  * 清除指定 loader 的所有缓存
  *
  * 同时清除已加载缓存和加载中缓存
+ *
+ * 注意：谨慎使用，仅应用于测试环境。
  *
  * @param loader - 懒加载器函数
  *
