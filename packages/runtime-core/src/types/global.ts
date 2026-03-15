@@ -103,46 +103,6 @@ declare global {
        * ```
        */
       'v-show'?: MaybeRef<boolean>
-      /**
-       * 条件渲染指令 - v-if
-       *
-       * 用于条件性地渲染元素。
-       * 当表达式的值为真时，元素将被渲染；否则，元素不会被渲染到DOM中。
-       *
-       * ```tsx
-       * const show = ref(true)
-       * // v-if指令不支持 ref 自动解包，必须使用.value
-       * <div v-if={show.value}></div>
-       * ```
-       */
-      'v-if'?: unknown
-      /**
-       * 条件渲染指令 - v-else
-       *
-       * 用于表示else块。
-       * 必须紧跟在v-if或v-else-if元素后面。
-       *
-       * ```tsx
-       * const show = ref(false)
-       * <div v-if={show.value}></div>
-       * <div v-else></div>
-       * ```
-       */
-      'v-else'?: unknown
-      /**
-       * 条件渲染指令 - v-else-if
-       *
-       * 用于表示else-if块。
-       * 必须紧跟在v-if或v-else-if元素后面。
-       *
-       * ```tsx
-       * const show = ref(1)
-       * <div v-if={show.value === 0}></div>
-       * <div v-else-if={show.value === 1}></div>
-       * <div v-else></div>
-       * ```
-       */
-      'v-else-if'?: unknown
     }
     /**
      * App配置项
