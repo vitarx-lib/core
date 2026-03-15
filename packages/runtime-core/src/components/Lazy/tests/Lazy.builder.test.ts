@@ -2,7 +2,7 @@ import { sleep } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HostElementTag, View } from '../../../types/index.js'
 import { createView } from '../../../view/index.js'
-import { lazy, Lazy, getCachedComponent } from '../src/index.js'
+import { getCachedComponent, getLazyLoader, Lazy, lazy } from '../src/index.js'
 
 describe('Lazy Builder', () => {
   const testTag = 'div' as HostElementTag
@@ -110,7 +110,7 @@ describe('Lazy Builder', () => {
       expect(view.props.loader).toBe(loader)
       expect(view.props.delay).toBe(300)
       expect(view.props.loading).toBe(loadingView)
-      expect(view.props.bindProps).toEqual({ children: 'Children Content' })
+      expect(view.props.props).toEqual({ children: 'Children Content' })
     })
 
     it('should properly wrap the component with builder pattern', () => {
@@ -120,7 +120,7 @@ describe('Lazy Builder', () => {
       const view = LazyComponent({ className: 'test-class' })
 
       expect(view.component.name).toBe('Lazy')
-      expect(view.props.bindProps).toEqual({ className: 'test-class' })
+      expect(view.props.props).toEqual({ className: 'test-class' })
       expect(typeof view.props.loader).toBe('function')
     })
   })
@@ -222,6 +222,78 @@ describe('Lazy Builder', () => {
       view1.dispose()
       view2.dispose()
       document.body.removeChild(container2)
+    })
+  })
+
+  describe('getLazyLoader', () => {
+    it('should return loader for lazy component builder', () => {
+      const loader = createLoader()
+      const LazyComponent = lazy(loader)
+
+      const result = getLazyLoader(LazyComponent)
+
+      expect(result).toBe(loader)
+    })
+
+    it('should return null for non-lazy component', () => {
+      const regularComponent = () => createView(testTag, {})
+
+      const result = getLazyLoader(regularComponent)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null for null input', () => {
+      const result = getLazyLoader(null)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null for undefined input', () => {
+      const result = getLazyLoader(undefined)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null for object without loader symbol', () => {
+      const obj = { foo: 'bar' }
+
+      const result = getLazyLoader(obj)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null when LAZY_LOADER property is not a function', () => {
+      const obj = { [Symbol.for('__v_lazy_loader')]: 'not a function' }
+
+      const result = getLazyLoader(obj)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return the same loader instance for multiple calls', () => {
+      const loader = createLoader()
+      const LazyComponent = lazy(loader)
+
+      const result1 = getLazyLoader(LazyComponent)
+      const result2 = getLazyLoader(LazyComponent)
+
+      expect(result1).toBe(result2)
+      expect(result1).toBe(loader)
+    })
+
+    it('should return correct loader for lazy component with options', () => {
+      const loader = createLoader()
+      const loadingView = () => createView(testTag, { children: 'Loading...' })
+      const LazyComponent = lazy(loader, {
+        delay: 300,
+        timeout: 5000,
+        loading: loadingView
+      })
+
+      const result = getLazyLoader(LazyComponent)
+
+      expect(result).toBe(loader)
     })
   })
 })
