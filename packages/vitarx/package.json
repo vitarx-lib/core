@@ -15,7 +15,6 @@
   "type": "module",
   "module": "./dist/index.esm-bundler.js",
   "types": "./dist/index.d.ts",
-  "sideEffects": false,
   "files": [
     "dist",
     "index.cjs",
