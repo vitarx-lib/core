@@ -1,4 +1,3 @@
-import { flushSync } from '@vitarx/responsive'
 import {
   FragmentView,
   getRenderer,
@@ -14,6 +13,7 @@ import {
 } from '@vitarx/runtime-core'
 import { isArray, logger } from '@vitarx/utils'
 import type { DOMElement, DOMNodeList } from '../shared/types.js'
+import { waitAsyncInit } from '../shared/utils.js'
 import { renderViewNode } from './render.js'
 import {
   appendChild,
@@ -38,12 +38,8 @@ export async function hydrateNode(
 ): Promise<number> {
   // 组件（包含异步逻辑）
   if (isComponentView(view)) {
-    const pendingTask = view.instance!.initPromise
-    if (pendingTask) {
-      await pendingTask
-      // 清空队列任务，确保子视图更新完成。
-      flushSync()
-    }
+    // 清空队列任务，确保子视图更新完成。
+    await waitAsyncInit(view)
     const subView = view.instance!.subView
     return await hydrateNode(subView, container, nodeIndex)
   }

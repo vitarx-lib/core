@@ -1,4 +1,3 @@
-import { flushSync } from '@vitarx/responsive'
 import {
   type AnyProps,
   ComponentView,
@@ -11,6 +10,7 @@ import {
 import { deepMergeObject, logger } from '@vitarx/utils'
 import { escapeHTML, tagClose, tagOpen, tagSelfClosing } from './html.js'
 import type { Sink } from './sink.js'
+import { waitAsyncInit } from './utils.js'
 
 /**
  * Void 元素集合(不支持子元素的自闭合标签)
@@ -42,10 +42,7 @@ export function resolveDirectiveProps(view: ElementView, props: AnyProps): AnyPr
           const ssrProps = method(binding, view)
           if (ssrProps) props = deepMergeObject(props, ssrProps)
         } catch (e) {
-          logger.error(
-            `[applyDirective] error in v-${directive.name}.getSSRProps`,
-            view.location
-          )
+          logger.error(`[applyDirective] error in v-${directive.name}.getSSRProps`, view.location)
         }
       }
     }
@@ -172,28 +169,4 @@ export async function serializeViewToSink(view: View, sink: Sink): Promise<void>
   }
 
   view.dispose()
-}
-
-/**
- * 异步等待组件视图初始化完成。
- *
- * @param view - 组件视图对象，包含需要等待初始化的实例。
- * @returns Promise<void> - 返回一个 Promise，在初始化完成后解析。
- *
- * @remarks
- * 该函数会检查视图实例的 initPromise 属性，如果存在则等待其完成。
- * 完成后会调用 flushSync() 确保所有同步更新被刷新。
- *
- * @example
- * ```typescript
- * const myView: ComponentView = { ... };
- * await waitAsyncInit(myView);
- * ```
- */
-async function waitAsyncInit(view: ComponentView): Promise<void> {
-  const initPromise = view.instance!.initPromise
-  if (initPromise) {
-    await initPromise
-    flushSync()
-  }
 }
