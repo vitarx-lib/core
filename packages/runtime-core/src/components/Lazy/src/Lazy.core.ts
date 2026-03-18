@@ -1,6 +1,6 @@
 import { shallowRef } from '@vitarx/responsive'
 import { isFunction, logger, withDelayTimeout } from '@vitarx/utils'
-import { defineValidate, getInstance, onDispose, onInit } from '../../../runtime/index.js'
+import { defineValidate, onDispose, onInit } from '../../../runtime/index.js'
 import { isView } from '../../../shared/index.js'
 import type {
   AnyProps,
@@ -109,7 +109,6 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   const cached = LAZY_LOADED_CACHE.get(loader as LazyLoader<Component>)
   if (cached) return createView(cached, resolvedProps)
 
-  const location = getInstance()!.view.location
   let cancelTask: (() => void) | undefined = undefined
   const showView = shallowRef<View>(createCommentView('Lazy:loading'))
 
@@ -154,7 +153,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
         const fallback = onError(e)
         if (isView(fallback)) showView.value = fallback
       } else {
-        logger.error('[Lazy] Failed to load component module', e, location)
+        logger.error('[Lazy] Failed to load component module:', e)
       }
     } finally {
       cancelTask = undefined
