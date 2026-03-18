@@ -114,7 +114,9 @@ export function withDelayTimeout<T>(
     if (typeof task === 'function') {
       task = task()
     }
-
+    if (!(task instanceof Promise)) {
+      throw new TypeError('task must be a Promise or a function that returns a Promise')
+    }
     // 处理原始Promise的成功和失败
     task
       .then(value => {
