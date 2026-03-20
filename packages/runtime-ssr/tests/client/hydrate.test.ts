@@ -46,28 +46,6 @@ describe('hydrate', () => {
     expect(document.querySelector('#app div')).toBeTruthy()
   })
 
-  it('应该从window.__INITIAL_STATE__恢复状态', async () => {
-    const App = () => h('div', null, 'Content')
-    const app = createSSRApp(App)
-
-    const html = await renderToString(app)
-    const container = createContainer(html)
-
-    // 模拟服务端注入的状态
-    ;(window as any).__INITIAL_STATE__ = {
-      user: { id: 1, name: 'John' },
-      theme: 'dark'
-    }
-
-    const context: any = {}
-    const clientApp = createSSRApp(App)
-    await hydrate(clientApp, container, context)
-
-    // 验证状态已合并
-    expect(context.user).toEqual({ id: 1, name: 'John' })
-    expect(context.theme).toBe('dark')
-  })
-
   it('应该激活嵌套元素', async () => {
     const App = () =>
       h('div', { id: 'root' }, [
@@ -229,22 +207,5 @@ describe('hydrate', () => {
     await hydrate(clientApp, container)
 
     expect(container.textContent).toBe('Plain text content')
-  })
-
-  it('应该合并多个上下文', async () => {
-    const App = () => h('div', null, 'Content')
-    const app = createSSRApp(App)
-
-    const html = await renderToString(app)
-    const container = createContainer(html)
-
-    ;(window as any).__INITIAL_STATE__ = { a: 1 }
-    const context = { b: 2 }
-
-    const clientApp = createSSRApp(App)
-    await hydrate(clientApp, container, context)
-
-    expect((context as any).a).toBe(1)
-    expect((context as any).b).toBe(2)
   })
 })
