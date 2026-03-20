@@ -1,7 +1,7 @@
-import { type HostContainer, isView, RENDER_CONTEXT, type View } from '@vitarx/runtime-core'
+import { type HostContainer, isView, type View } from '@vitarx/runtime-core'
 import { isPlainObject } from '@vitarx/utils'
 import type { SSRApp } from '../app/index.js'
-import type { SSRContext } from '../shared/context.js'
+import { __SSR_CONTEXT__, type SSRContext } from '../shared/context.js'
 import { hydrateNode } from './activate.js'
 import { resolveContainer } from './utils.js'
 
@@ -51,7 +51,7 @@ export function hydrate(
     // 设置客户端水合标识
     context.$isHydrating = true
     // 提供客户端渲染上下文
-    root.provide(RENDER_CONTEXT, context)
+    root.provide(__SSR_CONTEXT__, context)
   }
 
   return new Promise(async resolve => {

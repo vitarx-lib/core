@@ -1,4 +1,4 @@
-import { getRenderContext } from '@vitarx/runtime-core'
+import { getApp } from '@vitarx/runtime-core'
 
 /**
  * SSR 内部上下文（框架内部使用）
@@ -9,23 +9,12 @@ export interface SSRInternalContext {
    */
   $isHydrating?: boolean
 }
-
+export const __SSR_CONTEXT__ = Symbol.for('__v_ssr:context')
 /**
  * SSR 用户上下文类型
  *
- * 开发者可在服务端渲染时写入任意状态，客户端通过 runInRenderContext 恢复。
- * 与 Vue 的 SSRContext 设计一致，用于在服务端记录状态、客户端水合恢复。
- *
- * @example
- * ```ts
- * // 服务端
- * const context: SSRContext = {}
- * const html = await renderToString(app, context)
- * // context 中会包含渲染过程中写入的状态
- *
- * // 客户端
- * runInRenderContext(() => hydrate(...), serverContext)
- * ```
+ * 开发者可在服务端渲染时写入任意状态。
+ * 用于在服务端记录状态、客户端水合恢复。
  */
 export type SSRContext<T = Record<string, any>> = T & SSRInternalContext
 
@@ -35,7 +24,7 @@ export type SSRContext<T = Record<string, any>> = T & SSRInternalContext
  * 在组件中调用此函数可以访问服务端渲染时的上下文数据，
  * 可用于在服务端写入状态，客户端恢复状态。
  *
- * @returns SSR上下文对象，如果不在SSR环境中则返回undefined
+ * @returns -  SSR上下文对象，如果不在SSR环境中则返回undefined
  *
  * @example
  * ```ts
@@ -50,7 +39,8 @@ export type SSRContext<T = Record<string, any>> = T & SSRInternalContext
  * ```
  */
 export function useSSRContext<T = Record<string, any>>(): SSRContext<T> | null {
-  return getRenderContext<SSRContext<T>>()
+  const app = getApp()
+  return app?.inject<T>(__SSR_CONTEXT__) || null
 }
 
 /**
