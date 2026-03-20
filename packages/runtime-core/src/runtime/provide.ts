@@ -1,5 +1,4 @@
 import type { AnyFunction } from '@vitarx/utils'
-import { logger } from '@vitarx/utils'
 import { ComponentInstance } from '../view/index.js'
 import { getInstance } from './context.js'
 
@@ -20,11 +19,10 @@ import { getInstance } from './context.js'
  * }
  * ```
  */
-export function provide(name: string | symbol, value: any): void {
+export function provide(name: string | symbol, value: unknown): void {
   const ctx = getInstance(true)
   if (!ctx) {
-    logger.error('[provide] must be called in a component context')
-    return void 0
+    throw new Error('[provide] must be called in a component context')
   }
   if (ctx.provide) {
     ctx.provide.set(name, value)

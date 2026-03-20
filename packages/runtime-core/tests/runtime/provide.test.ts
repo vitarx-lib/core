@@ -1,4 +1,3 @@
-import { logger, LogLevel } from '@vitarx/utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { inject, provide } from '../../src/index.js'
 import { runComponent } from '../../src/runtime/context.js'
@@ -64,15 +63,12 @@ describe('runtime/provide', () => {
     })
 
     it('在组件上下文外调用时应该记录错误', () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
       const name = 'test'
       const value = 'test value'
 
-      provide(name, value)
-      expect(consoleError).toHaveBeenCalledWith(
-        logger.formatMessage(LogLevel.ERROR, `[provide] must be called in a component context`)
-      )
-      consoleError.mockRestore()
+      expect(() => {
+        provide(name, value)
+      }).toThrow('[provide] must be called in a component context')
     })
   })
 
