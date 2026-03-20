@@ -1,6 +1,4 @@
 import type { App } from '../app/index.js'
-import { RENDER_CONTEXT } from '../constants/index.js'
-import type { RenderContext } from '../types/index.js'
 import type { ComponentInstance, ComponentView } from '../view/index.js'
 
 let activeComponentInstance: ComponentInstance | null = null
@@ -109,18 +107,6 @@ export function getComponentView(allowEmpty: boolean = false): ComponentView | n
  */
 export function getApp<T extends App = App>(): T | null {
   return activeComponentInstance ? (activeComponentInstance.app as T) : null
-}
-
-/**
- * 获取渲染上下文
- *
- * 渲染上下文是由 ssr 渲染注入的，用于存储渲染过程中的一些状态信息。
- *
- * @returns {object | null} 当前渲染上下文对象，如果不存在则返回 null
- */
-export function getRenderContext<T extends RenderContext = RenderContext>(): T | null {
-  const app = getApp()
-  return app?.inject<T>(RENDER_CONTEXT) || null
 }
 
 export { getInstance as useInstance, getComponentView as useView }

@@ -34,12 +34,6 @@ declare global {
       [K: string]: GlobalIntrinsicAttributes
     }
     /**
-     * 渲染上下文
-     */
-    interface RenderContext {
-      [K: string]: any
-    }
-    /**
      * 宿主平台片段节点
      */
     interface HostFragmentNode {}

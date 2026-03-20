@@ -111,5 +111,3 @@ export interface ViewRenderer {
    */
   setAttribute(el: HostElement, key: string, nextValue: any, prevValue: any): void
 }
-
-export type RenderContext = Vitarx.RenderContext
