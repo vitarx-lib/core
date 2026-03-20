@@ -1,5 +1,6 @@
-import { isView, RENDER_CONTEXT, type View } from '@vitarx/runtime-core'
+import { isView, type View } from '@vitarx/runtime-core'
 import { SSRApp } from '../app/index.js'
+import { __SSR_CONTEXT__ } from '../shared/context.js'
 import { type SSRContext } from '../shared/index.js'
 import { serializeViewToSink } from '../shared/serialize.js'
 import { StringSink } from '../shared/sink.js'
@@ -26,7 +27,7 @@ export async function renderToString(
   context: SSRContext = {}
 ): Promise<string> {
   const isApp = !isView(root)
-  if (isApp) root.inject(RENDER_CONTEXT, context)
+  if (isApp) root.inject(__SSR_CONTEXT__, context)
   const rootView: View = isApp ? root.rootView : root
   // 渲染根节点（构建虚拟节点树，异步任务绑定到节点）
   rootView.init(isApp ? { app: root } : undefined)
