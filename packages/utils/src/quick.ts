@@ -33,7 +33,7 @@ export function sleep(time: number): Promise<unknown> {
 
 type DeepMergeObjectOptions = {
   /**
-   * 是否允许将`undefined'值合并到目标对象中
+   * 是否允许将 `undefined` 值合并到目标对象中
    *
    * @default false
    */
@@ -55,7 +55,7 @@ type DeepMergeObjectOptions = {
  * @param {object} target 目标对象，将被源对象的属性合并
  * @param {object} source 源对象，其属性将合并到目标对象中
  * @param {object} [options] 可选配置对象，用于控制合并行为
- * @param {boolean} [options.allowMergeUndefined=false] - 是否允许将`undefined'值合并到目标对象中
+ * @param {boolean} [options.allowMergeUndefined=false] - 是否允许将`undefined`值合并到目标对象中
  * @param {boolean} [options.mergeArray=true] - 是否合并数组
  * @returns - 返回一个新的对象，包含目标对象和源对象合并后的属性
  *
