@@ -1,4 +1,5 @@
 import {
+  App,
   type AppConfig,
   type Component,
   getRenderer,
@@ -7,7 +8,7 @@ import {
   type View,
   type ViewRenderer
 } from '@vitarx/runtime-core'
-import { DOMRenderer, WebApp } from '@vitarx/runtime-dom'
+import { DOMRenderer } from '@vitarx/runtime-dom'
 import { hydrate } from '../client/hydrate.js'
 
 /**
@@ -30,7 +31,7 @@ import { hydrate } from '../client/hydrate.js'
  * app.mount('#root')
  * ```
  */
-export class SSRApp extends WebApp {
+export class SSRApp extends App {
   /**
    * 挂载应用到容器
    *
@@ -39,10 +40,21 @@ export class SSRApp extends WebApp {
    * - 如果没有 SSR 内容，则进行正常的客户端渲染
    *
    * @param container - 挂载容器，可以是 DOM 元素或选择器字符串
-   * @param SSRContext - SSR上下文
+   * @param [SSRContext] - 服务端渲染存储的上下文，默认为空对象
    * @returns {this} 返回当前应用实例，支持链式调用
+   *
+   * @example
+   * ```ts
+   * const app = createSSRApp(App)
+   * app.mount('#root', window.__INITIAL_STATE__)
+   * // 如需等待水合完成可以忽略mount方法，直接使用 hydrate
+   * await hydrate(app, '#root', window.__INITIAL_STATE__)
+   * ```
    */
-  override mount(container: HostContainer | string, SSRContext?: Record<string, any>): this {
+  override mount(
+    container: HostContainer | Element | string,
+    SSRContext?: Record<string, any>
+  ): this {
     hydrate(this, container, SSRContext)
     return this
   }
