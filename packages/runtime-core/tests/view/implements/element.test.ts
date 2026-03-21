@@ -87,7 +87,7 @@ describe('ElementView', () => {
   it('应该在 DOM 中创建元素节点', () => {
     const elementView = new ElementView('div', {
       id: 'test',
-      className: 'container',
+      class: 'container',
       children: 'test text'
     })
     elementView.init()

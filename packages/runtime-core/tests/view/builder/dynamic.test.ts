@@ -149,7 +149,7 @@ describe('Dynamic Builder', () => {
         get is() {
           return isRef.value
         },
-        get className() {
+        get class() {
           return classNameRef.value
         }
       })
