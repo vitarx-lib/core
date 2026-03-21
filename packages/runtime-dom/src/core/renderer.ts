@@ -20,7 +20,13 @@ const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
 const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
 
-const EXCLUDE_PROP_NAMES = ['className', 'children', 'innerHTML', 'textContent', 'nodeValue']
+export const __EXCLUDE_PROP_NAMES__ = [
+  'className',
+  'children',
+  'innerHTML',
+  'textContent',
+  'nodeValue'
+]
 
 /**
  * 属性默认值缓存
@@ -322,7 +328,7 @@ export class DOMRenderer implements ViewRenderer {
   }
   /** @inheritDoc */
   setAttribute(el: HostElement, name: string, nextValue: any, prevValue: any): void {
-    if (EXCLUDE_PROP_NAMES.includes(name)) {
+    if (__EXCLUDE_PROP_NAMES__.includes(name)) {
       return
     }
     try {
