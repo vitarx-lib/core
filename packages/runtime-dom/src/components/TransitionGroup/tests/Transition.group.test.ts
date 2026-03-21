@@ -547,7 +547,7 @@ describe('TransitionGroup 组件', () => {
         key: item => item,
         props: {
           id: 'container',
-          className: 'custom-container'
+          class: 'custom-container'
         },
         children: (item: number) =>
           createView('div', {
@@ -573,7 +573,7 @@ describe('TransitionGroup 组件', () => {
         each: items.value,
         key: item => item,
         props: {
-          className: 'list-container'
+          class: 'list-container'
         },
         children: (item: number) =>
           createView('li', {

@@ -113,7 +113,7 @@ describe('Teleport 组件', () => {
 
     it('应该正确处理传送后的DOM结构', () => {
       const childView = createView(testTag, {
-        className: 'child-class',
+        class: 'child-class',
         children: 'Child Content'
       })
 
