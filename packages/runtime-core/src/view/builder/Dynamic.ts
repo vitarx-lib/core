@@ -32,6 +32,19 @@ export interface DynamicProps {
    */
   is: ViewTag | undefined | null | false
   /**
+   * 唯一标识
+   *
+   * 如需使同一个组件缓存不同的实例，可以传入一个`key`标识，它需和`is`传入的组件保持关联。
+   * 仅在 `memo` 启用时有效。
+   *
+   * @example
+   * ```tsx
+   * // 缓存同一组件的不同实例
+   * <Dynamic is={current.value} memo key={itemId} />
+   * ```
+   */
+  key?: unknown
+  /**
    * 组件视图缓存策略
    *
    * - `false`（默认）：不缓存
@@ -111,10 +124,11 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
   const memo = popProperty(props, 'memo') ?? false
   const maxCache = typeof memo === 'number' && memo > 0 ? memo : 0
   const useCache = memo !== false
-  const cache: Map<Component, View> | null = useCache ? new Map() : null
+  const cache: Map<Component, Map<unknown, View>> | null = useCache ? new Map() : null
+  const viewKeyMap: WeakMap<View, unknown> | null = useCache ? new WeakMap() : null
 
   for (const key in props) {
-    if (key === 'is') continue
+    if (key === 'is' || key === 'key') continue
     Object.defineProperty(resolvedProps, key, {
       get() {
         return props[key]
@@ -126,12 +140,21 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
 
   const viewSource = new DynamicViewSource(() => {
     const is = props['is']
-    if (!is) return new CommentView(`<Dynamic is=${is}>`)
+    const key = props['key']
+    if (!is) return new CommentView(`<Dynamic is=${String(is)} />`)
     if (cache && isComponent(is)) {
-      const cached = cache.get(is)
-      if (cached) return cached
+      let keyMap = cache.get(is)
+      if (keyMap) {
+        const cached = keyMap.get(key)
+        if (cached) return cached
+      }
       const view = createView(is, resolvedProps, location)
-      cache.set(is, view)
+      if (!keyMap) {
+        keyMap = new Map()
+        cache.set(is, keyMap)
+      }
+      keyMap.set(key, view)
+      viewKeyMap!.set(view, key)
       pruneCache(cache, maxCache)
       return view
     }

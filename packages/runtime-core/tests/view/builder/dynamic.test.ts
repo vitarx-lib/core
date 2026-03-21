@@ -272,4 +272,232 @@ describe('Dynamic Builder', () => {
       view.dispose()
     })
   })
+
+  describe('Key Support with Memo', () => {
+    let container: HTMLElement
+
+    beforeEach(() => {
+      container = document.createElement('div')
+      document.body.appendChild(container)
+    })
+
+    afterEach(() => {
+      document.body.removeChild(container)
+    })
+
+    it('同一组件不同 key 应该创建不同的实例', async () => {
+      const Component = () => createView('div', { children: 'Test' })
+      const isRef = ref<Component>(Component)
+      const keyRef = ref('key1')
+
+      const view = Dynamic({
+        get is() {
+          return isRef.value
+        },
+        get key() {
+          return keyRef.value
+        },
+        memo: true
+      })
+      view.init()
+      view.mount(container)
+
+      const view1 = (view as DynamicView).current
+
+      keyRef.value = 'key2'
+      await nextTick()
+      const view2 = (view as DynamicView).current
+
+      expect(view1).not.toBe(view2)
+      expect(view1!.isActive).toBe(false)
+
+      view.dispose()
+    })
+
+    it('相同组件相同 key 应该复用实例', async () => {
+      const Component = () => createView('div', { children: 'Test' })
+      const isRef = ref<Component>(Component)
+      const keyRef = ref('key1')
+
+      const view = Dynamic({
+        get is() {
+          return isRef.value
+        },
+        get key() {
+          return keyRef.value
+        },
+        memo: true
+      })
+      view.init()
+      view.mount(container)
+
+      const view1 = (view as DynamicView).current
+
+      isRef.value = () => createView('span', { children: 'Component B' })
+      await nextTick()
+
+      isRef.value = Component
+      await nextTick()
+      const view2 = (view as DynamicView).current
+
+      expect(view1).toBe(view2)
+      expect(view1!.isActive).toBe(true)
+
+      view.dispose()
+    })
+
+    it('切换 key 后再切回应该复用对应的缓存实例', async () => {
+      const Component = () => createView('div', { children: 'Test' })
+      const isRef = ref<Component>(Component)
+      const keyRef = ref('key1')
+
+      const view = Dynamic({
+        get is() {
+          return isRef.value
+        },
+        get key() {
+          return keyRef.value
+        },
+        memo: true
+      })
+      view.init()
+      view.mount(container)
+
+      const view1 = (view as DynamicView).current
+
+      keyRef.value = 'key2'
+      await nextTick()
+      const view2 = (view as DynamicView).current
+      expect(view1).not.toBe(view2)
+
+      keyRef.value = 'key1'
+      await nextTick()
+      const view3 = (view as DynamicView).current
+      expect(view3).toBe(view1)
+      expect(view3!.isActive).toBe(true)
+
+      view.dispose()
+    })
+
+    it('key 为 undefined 时应该正常工作', async () => {
+      const Component = () => createView('div', { children: 'Test' })
+      const isRef = ref<Component>(Component)
+
+      const view = Dynamic({
+        get is() {
+          return isRef.value
+        },
+        memo: true
+      })
+      view.init()
+      view.mount(container)
+
+      const view1 = (view as DynamicView).current
+
+      isRef.value = () => createView('span', { children: 'Component B' })
+      await nextTick()
+
+      isRef.value = Component
+      await nextTick()
+      const view2 = (view as DynamicView).current
+
+      expect(view1).toBe(view2)
+
+      view.dispose()
+    })
+
+    it('max 限制应该正确计算所有 key 的缓存总数', async () => {
+      const Component = () => createView('div', { children: 'Test' })
+      const isRef = ref<Component>(Component)
+      const keyRef = ref('key1')
+
+      const view = Dynamic({
+        get is() {
+          return isRef.value
+        },
+        get key() {
+          return keyRef.value
+        },
+        memo: 2
+      })
+      view.init()
+      view.mount(container)
+
+      const view1 = (view as DynamicView).current
+
+      keyRef.value = 'key2'
+      await nextTick()
+
+      keyRef.value = 'key3'
+      await nextTick()
+
+      keyRef.value = 'key1'
+      await nextTick()
+      const viewAfter = (view as DynamicView).current
+
+      expect(viewAfter).not.toBe(view1)
+
+      view.dispose()
+    })
+
+    it('不同组件使用相同 key 应该独立缓存', async () => {
+      const ComponentA = () => createView('div', { children: 'A' })
+      const ComponentB = () => createView('span', { children: 'B' })
+      const isRef = ref<Component>(ComponentA)
+      const keyRef = ref('shared-key')
+
+      const view = Dynamic({
+        get is() {
+          return isRef.value
+        },
+        get key() {
+          return keyRef.value
+        },
+        memo: true
+      })
+      view.init()
+      view.mount(container)
+
+      const viewA = (view as DynamicView).current
+
+      isRef.value = ComponentB
+      await nextTick()
+      const viewB = (view as DynamicView).current
+      expect(viewA).not.toBe(viewB)
+
+      isRef.value = ComponentA
+      await nextTick()
+      const viewA2 = (view as DynamicView).current
+      expect(viewA2).toBe(viewA)
+
+      view.dispose()
+    })
+
+    it('不启用 memo 时 key 应该无效', async () => {
+      const Component = () => createView('div', { children: 'Test' })
+      const isRef = ref<Component>(Component)
+      const keyRef = ref('key1')
+
+      const view = Dynamic({
+        get is() {
+          return isRef.value
+        },
+        get key() {
+          return keyRef.value
+        }
+      })
+      view.init()
+      view.mount(container)
+
+      const view1 = (view as DynamicView).current
+
+      keyRef.value = 'key2'
+      await nextTick()
+      const view2 = (view as DynamicView).current
+
+      expect(view1).not.toBe(view2)
+
+      view.dispose()
+    })
+  })
 })
