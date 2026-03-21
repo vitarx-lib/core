@@ -4,21 +4,38 @@ import type { Component, View } from '../../../types/index.js'
  * 清理超出最大缓存数量的视图
  * 采用 LRU (Least Recently Used) 策略，移除最早缓存的视图
  *
- * @param cache - 缓存映射表，key 为组件类型，value 为视图实例
+ * @param cache - 缓存映射表，key 为组件类型，value 为 Map<key, View>
  * @param max - 最大缓存数量
  */
-export const pruneCache = (cache: Map<Component, View>, max: number): void => {
+export const pruneCache = (cache: Map<Component, Map<unknown, View>>, max: number): void => {
   if (max < 1) return
-  if (cache.size <= max) return
+  
+  // 计算总缓存数量
+  let totalSize = 0
+  for (const keyMap of cache.values()) {
+    totalSize += keyMap.size
+  }
+  
+  if (totalSize <= max) return
 
+  // 移除最早缓存的视图
   const firstType = cache.keys().next().value
   if (!firstType) return
 
-  const firstView = cache.get(firstType)
+  const keyMap = cache.get(firstType)
+  if (!keyMap) return
 
+  const firstKey = keyMap.keys().next().value
+  if (!firstKey) return
+
+  const firstView = keyMap.get(firstKey)
   if (firstView) {
     firstView.dispose()
-    cache.delete(firstType)
+    keyMap.delete(firstKey)
+    // 如果该组件的所有 key 都被清理，则移除组件条目
+    if (keyMap.size === 0) {
+      cache.delete(firstType)
+    }
   }
 }
 

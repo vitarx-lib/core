@@ -119,4 +119,145 @@ describe('Freeze Component', () => {
       freezeView.dispose()
     })
   })
+
+  describe('Key Support', () => {
+    it('同一组件不同 key 应该创建不同的实例', async () => {
+      const keyRef = ref('key1')
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        },
+        get key() {
+          return keyRef.value
+        }
+      })
+      freezeView.init()
+      const view1 = getSubView(freezeView)
+      mountAndExpect(freezeView, 'A')
+
+      keyRef.value = 'key2'
+      await nextTick()
+      const view2 = getSubView(freezeView)
+      expect(view1).not.toBe(view2)
+      expect(view1.isActive).toBe(false)
+    })
+
+    it('相同组件相同 key 应该复用实例', async () => {
+      const keyRef = ref('key1')
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        },
+        get key() {
+          return keyRef.value
+        }
+      })
+      freezeView.init()
+      const view1 = getSubView(freezeView)
+      mountAndExpect(freezeView, 'A')
+
+      await switchTo(ComponentB, 'B')
+
+      showComponent.value = ComponentA
+      await nextTick()
+      const view2 = getSubView(freezeView)
+      expect(view1).toBe(view2)
+      expect(view1.isActive).toBe(true)
+    })
+
+    it('切换 key 后再切回应该复用对应的缓存实例', async () => {
+      const keyRef = ref('key1')
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        },
+        get key() {
+          return keyRef.value
+        }
+      })
+      freezeView.init()
+      const view1 = getSubView(freezeView)
+      mountAndExpect(freezeView, 'A')
+
+      keyRef.value = 'key2'
+      await nextTick()
+      const view2 = getSubView(freezeView)
+      expect(view1).not.toBe(view2)
+
+      keyRef.value = 'key1'
+      await nextTick()
+      const view3 = getSubView(freezeView)
+      expect(view3).toBe(view1)
+      expect(view3.isActive).toBe(true)
+    })
+
+    it('key 为 undefined 时应该正常工作', async () => {
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        }
+      })
+      freezeView.init()
+      const view1 = getSubView(freezeView)
+      mountAndExpect(freezeView, 'A')
+
+      await switchTo(ComponentB, 'B')
+
+      showComponent.value = ComponentA
+      await nextTick()
+      const view2 = getSubView(freezeView)
+      expect(view1).toBe(view2)
+    })
+
+    it('max 限制应该正确计算所有 key 的缓存总数', async () => {
+      const keyRef = ref('key1')
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        },
+        get key() {
+          return keyRef.value
+        },
+        max: 2
+      })
+      mountAndExpect(freezeView, 'A')
+
+      keyRef.value = 'key2'
+      await nextTick()
+      expect(container.textContent).toContain('A')
+
+      keyRef.value = 'key3'
+      await nextTick()
+      expect(container.textContent).toContain('A')
+
+      showComponent.value = ComponentB
+      keyRef.value = 'key1'
+      await nextTick()
+      expect(container.textContent).toContain('B')
+    })
+
+    it('不同组件使用相同 key 应该独立缓存', async () => {
+      const keyRef = ref('shared-key')
+      const freezeView = createView(Freeze, {
+        get is() {
+          return showComponent.value
+        },
+        get key() {
+          return keyRef.value
+        }
+      })
+      freezeView.init()
+      const viewA = getSubView(freezeView)
+      mountAndExpect(freezeView, 'A')
+
+      await switchTo(ComponentB, 'B')
+      const viewB = getSubView(freezeView)
+      expect(viewA).not.toBe(viewB)
+
+      showComponent.value = ComponentA
+      await nextTick()
+      const viewA2 = getSubView(freezeView)
+      expect(viewA2).toBe(viewA)
+    })
+  })
 })

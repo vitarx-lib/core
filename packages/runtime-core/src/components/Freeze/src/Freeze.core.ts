@@ -17,6 +17,12 @@ interface FreezeProps {
    */
   is: Component | null | undefined | false
   /**
+   * 唯一标识
+   *
+   * 如需使同一个组件永远不同的实例，可以传入一个`key`标识，它需和`is`传入的组件保持关联。
+   */
+  key?: unknown
+  /**
    * 传递给组件的属性对象
    *
    * @example
@@ -92,15 +98,22 @@ function Freeze(props: FreezeProps): View {
   /**
    * 缓存映射表
    * key: 组件类型
-   * value: 组件视图实例
+   * value: Map<key, View> 组件的 key 到视图实例的映射
    */
-  const cache = new Map<Component, View>()
+  const cache = new Map<Component, Map<unknown, View>>()
+
+  /**
+   * 视图到 key 的映射
+   * 用于在视图切换时获取正确的 key
+   */
+  const viewKeyMap = new WeakMap<View, unknown>()
 
   /**
    * 切换到指定组件
    */
   const switchTo = new DynamicViewSource((): View => {
     const component = props.is
+    const key = props.key
     if (!component) {
       return createCommentView(`<Freeze is={${String(component)}} />`)
     }
@@ -112,16 +125,24 @@ function Freeze(props: FreezeProps): View {
     }
     // 尝试从缓存获取
     if (shouldCache(component, include, exclude)) {
-      const cached = cache.get(component)
-      if (cached) {
-        // 从缓存中删除，避免在卸载Freeze时超前卸载子视图
-        cache.delete(component)
-        return cached
+      const keyMap = cache.get(component)
+      if (keyMap) {
+        const cached = keyMap.get(key)
+        if (cached) {
+          // 从缓存中删除，避免在卸载Freeze时超前卸载子视图
+          keyMap.delete(key)
+          if (keyMap.size === 0) {
+            cache.delete(component)
+          }
+          return cached
+        }
       }
     }
-    return createView(component, props.props)
+    // 创建新视图并记录 key
+    const view = createView(component, props.props)
+    viewKeyMap.set(view, key)
+    return view
   })
-
   // 如果是静态视图，则直接返回，减少钩子注册开销
   if (switchTo.isStatic) {
     if (__VITARX_DEV__) {
@@ -139,7 +160,15 @@ function Freeze(props: FreezeProps): View {
       const prevComponent = tx.prev.component
       if (shouldCache(prevComponent, include, exclude)) {
         tx.cachePrev = true
-        cache.set(prevComponent, tx.prev)
+        // 获取或创建该组件的 key 映射
+        let keyMap = cache.get(prevComponent)
+        if (!keyMap) {
+          keyMap = new Map<unknown, View>()
+          cache.set(prevComponent, keyMap)
+        }
+        // 从映射中获取 prev 视图关联的 key
+        const prevKey = viewKeyMap.get(tx.prev)
+        keyMap.set(prevKey, tx.prev)
         pruneCache(cache, max)
       }
     }
@@ -151,8 +180,11 @@ function Freeze(props: FreezeProps): View {
   onDispose(() => {
     // 清理所有缓存的视图
     if (cache.size > 0) {
-      for (const view of cache.values()) {
-        view.dispose()
+      for (const keyMap of cache.values()) {
+        for (const view of keyMap.values()) {
+          view.dispose()
+        }
+        keyMap.clear()
       }
       cache.clear()
     }
