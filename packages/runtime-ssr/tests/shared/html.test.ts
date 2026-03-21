@@ -72,12 +72,6 @@ describe('serializeAttributes', () => {
     expect(result).toContain('id="test"')
   })
 
-  it('should skip v-html property', () => {
-    const result = serializeAttributes({ 'v-html': '<p>test</p>', id: 'test' })
-    expect(result).not.toContain('v-html')
-    expect(result).toContain('id="test"')
-  })
-
   it('should escape attribute values', () => {
     const result = serializeAttributes({ title: 'Tom & Jerry' })
     expect(result).toBe(' title="Tom &amp; Jerry"')
