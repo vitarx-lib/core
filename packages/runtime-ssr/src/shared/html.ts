@@ -30,7 +30,7 @@ export function serializeAttributes(props: Record<string, any>): string {
     if (typeof value === 'function' || value == null || key === 'children') continue
 
     // 处理 class 属性
-    if (key === 'class' || key === 'className' || key === 'classname') {
+    if (key === 'class') {
       const className = StyleUtils.cssClassValueToString(value)
       if (className) {
         attrs.push(`class="${escapeHTML(className)}"`)

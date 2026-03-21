@@ -39,7 +39,6 @@ describe('serializeAttributes', () => {
 
   it('should handle class attribute', () => {
     expect(serializeAttributes({ class: 'foo bar' })).toBe(' class="foo bar"')
-    expect(serializeAttributes({ className: 'foo' })).toBe(' class="foo"')
   })
 
   it('should handle style attribute', () => {
