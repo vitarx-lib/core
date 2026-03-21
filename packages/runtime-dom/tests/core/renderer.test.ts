@@ -16,6 +16,51 @@ describe('DOMRenderer', () => {
     document.body.removeChild(container)
   })
 
+  describe('性能测试', () => {
+    it('创建大量元素的性能', () => {
+      const startTime = performance.now()
+      const elements = []
+      for (let i = 0; i < 1000; i++) {
+        elements.push(renderer.createElement('div', false))
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(100)
+      expect(elements.length).toBe(1000)
+    })
+
+    it('批量设置属性的性能', () => {
+      const el = renderer.createElement('div', false)
+      const startTime = performance.now()
+      for (let i = 0; i < 1000; i++) {
+        renderer.setAttribute(el, `data-test-${i}`, `value-${i}`, null)
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(200)
+    })
+
+    it('批量插入节点的性能', () => {
+      const startTime = performance.now()
+      for (let i = 0; i < 100; i++) {
+        const child = renderer.createElement('div', false)
+        renderer.append(child, container)
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(50)
+      expect(container.children.length).toBe(100)
+    })
+
+    it('创建Fragment的性能', () => {
+      const startTime = performance.now()
+      const fragments = []
+      for (let i = 0; i < 100; i++) {
+        fragments.push(renderer.createFragment({ kind: ViewKind.FRAGMENT, children: [] } as any))
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(50)
+      expect(fragments.length).toBe(100)
+    })
+  })
+
   describe('isSVGElement', () => {
     it('应该正确识别SVG元素', () => {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -229,6 +274,64 @@ describe('DOMRenderer', () => {
     it('应该正确识别非Fragment节点', () => {
       const el = renderer.createElement('div', false)
       expect(renderer.isFragment(el)).toBe(false)
+    })
+  })
+
+  describe('属性操作性能优化验证', () => {
+    it('预定义默认值应避免创建元素', () => {
+      const input = renderer.createElement('input', false)
+      renderer.setAttribute(input, 'checked', true, null)
+      expect(input.checked).toBe(true)
+      renderer.setAttribute(input, 'checked', null, true)
+      expect(input.checked).toBe(false)
+    })
+
+    it('按需重置策略：未设置过的属性不应触发默认值查询', () => {
+      const el = renderer.createElement('input', false)
+      const startTime = performance.now()
+      for (let i = 0; i < 1000; i++) {
+        renderer.setAttribute(el, `custom-attr-${i}`, null, undefined)
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(50)
+    })
+
+    it('批量设置和移除属性性能', () => {
+      const el = renderer.createElement('input', false)
+      const iterations = 500
+      const startTime = performance.now()
+      for (let i = 0; i < iterations; i++) {
+        renderer.setAttribute(el, 'checked', true, null)
+        renderer.setAttribute(el, 'checked', null, true)
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(100)
+    })
+
+    it('常见属性设置性能', () => {
+      const el = renderer.createElement('input', false)
+      const attrs = ['disabled', 'readOnly', 'required', 'autofocus', 'hidden']
+      const startTime = performance.now()
+      for (let i = 0; i < 1000; i++) {
+        for (const attr of attrs) {
+          renderer.setAttribute(el, attr, true, null)
+          renderer.setAttribute(el, attr, false, true)
+        }
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(200)
+    })
+
+    it('value属性重置性能', () => {
+      const el = renderer.createElement('input', false) as HTMLInputElement
+      const startTime = performance.now()
+      for (let i = 0; i < 500; i++) {
+        renderer.setAttribute(el, 'value', `test-${i}`, null)
+        renderer.setAttribute(el, 'value', null, `test-${i}`)
+      }
+      const endTime = performance.now()
+      expect(endTime - startTime).toBeLessThan(100)
+      expect(el.value).toBe('')
     })
   })
 })
