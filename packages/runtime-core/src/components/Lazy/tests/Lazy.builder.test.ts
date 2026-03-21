@@ -117,10 +117,10 @@ describe('Lazy Builder', () => {
       const loader = createLoader()
       const LazyComponent = lazy(loader)
 
-      const view = LazyComponent({ className: 'test-class' })
+      const view = LazyComponent({ class: 'test-class' })
 
       expect(view.component.name).toBe('Lazy')
-      expect(view.props.props).toEqual({ className: 'test-class' })
+      expect(view.props.props).toEqual({ class: 'test-class' })
       expect(typeof view.props.loader).toBe('function')
     })
   })

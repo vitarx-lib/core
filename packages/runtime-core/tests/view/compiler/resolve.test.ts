@@ -16,8 +16,6 @@ describe('Compiler Resolve', () => {
     it('应该包含特殊属性的合并函数', () => {
       expect(SPECIAL_PROP_MERGERS).toHaveProperty('style')
       expect(SPECIAL_PROP_MERGERS).toHaveProperty('class')
-      expect(SPECIAL_PROP_MERGERS).toHaveProperty('className')
-      expect(SPECIAL_PROP_MERGERS).toHaveProperty('classname')
     })
 
     it('合并函数应该是函数类型', () => {
@@ -47,25 +45,25 @@ describe('Compiler Resolve', () => {
     })
 
     it('应该支持数组形式的绑定，排除指定属性', () => {
-      const props = { className: 'base' }
+      const props = { class: 'base' }
       const bind = [{ id: 'test', title: 'Test Title' }, ['title']]
       const result = bindProps(props, bind)
 
-      expect(result).toHaveProperty('className')
+      expect(result).toHaveProperty('class')
       expect(result).toHaveProperty('id')
       expect(result).not.toHaveProperty('title')
     })
 
     it('应该正确处理特殊属性的合并', () => {
-      const props = { className: 'base' }
-      const bind = { className: 'bind' }
+      const props = { class: 'base' }
+      const bind = { class: 'bind' }
       const result = bindProps(props, bind)
 
-      expect(result.className.join(' ')).toBe('base bind')
+      expect(result.class.join(' ')).toBe('base bind')
     })
 
     it('当绑定对象不是有效对象时应该返回原始 props', () => {
-      const props = { className: 'base' }
+      const props = { class: 'base' }
       const invalidBindings = [null, undefined, 123, 'string', true]
 
       invalidBindings.forEach(bind => {
