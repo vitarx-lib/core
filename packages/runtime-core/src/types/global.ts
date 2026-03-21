@@ -73,7 +73,7 @@ declare global {
     /**
      * 元素支持的样式规则
      *
-     * 运行时支持的样式规则映射，base 包中未定义任何规则，需要在各平台渲染包中扩展此类型。
+     * 运行时支持的样式规则映射，runtime-core包中未定义任何规则，需要在各平台渲染包中扩展此类型。
      */
     interface HostCSSProperties {}
     /**
@@ -89,9 +89,6 @@ declare global {
        *
        * @param error - 捕获到的异常
        * @param info - 具体的错误信息
-       * @default (error, info) => {
-       *   logger.error('uncaught exceptions',error,info)
-       * }
        */
       errorHandler?: ErrorHandler
       /**
