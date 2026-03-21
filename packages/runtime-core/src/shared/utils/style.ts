@@ -1,4 +1,4 @@
-import { toRaw } from '@vitarx/responsive'
+import { unref } from '@vitarx/responsive'
 import { isPlainObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
 import type { StyleRules } from '../../types/index.js'
 
@@ -105,7 +105,7 @@ export class StyleUtils {
     if (typeof styleObj !== 'object') return ''
     const styles: Array<string> = []
     for (const k in styleObj) {
-      const value = toRaw((styleObj as any)[k])
+      const value = unref((styleObj as any)[k])
       const type = typeof value
       if (type === 'number' || type === 'string') {
         styles.push(`${toKebabCase(k)}: ${value}`)
@@ -154,7 +154,7 @@ export class StyleUtils {
     if (Array.isArray(classInput)) {
       const classArray: string[] = []
       for (let i = 0; i < classInput.length; i++) {
-        const item = toRaw(classInput[i])
+        const item = unref(classInput[i])
         if (typeof item === 'string') {
           const text = item.trim()
           if (text) classArray.push(text)
@@ -185,7 +185,7 @@ export class StyleUtils {
     if (Array.isArray(classInput)) {
       let classText = ''
       for (let i = 0; i < classInput.length; i++) {
-        const item = toRaw(classInput[i])
+        const item = unref(classInput[i])
         if (typeof item === 'string') {
           const text = item.trim()
           if (text) classText += item.trim() + ' '
