@@ -34,12 +34,12 @@ export interface HTMLVoidElementMap {
  */
 export type VoidElementTag = keyof HTMLVoidElementMap
 /**
- * ## 固有元素节点映射，用于 jsx ide 提示
+ * 固有元素节点映射，用于 jsx ide 提示
  *
  * Vitarx 在解析元素属性时遵循`W3C`标准语法，元素的属性和在html中编写是一致的，但有以下不同之处。
  *
  * 1. style 属性接受 `string | Record<string,string|0>`，最终都会转换为键值对对象。
- * 2. class|className 属性接受 `string | Array<string> | Record<string,boolean>`，最终都会转换成字符串数组。
+ * 2. class 属性接受 `string | Array<string> | Record<string,boolean>`，最终都会转换成字符串数组。
  * 3. 绑定事件支持多种语法，事件名称不区分大小写，示例如下：
  *    - 小驼峰式语法，如onClick。（推荐）
  *    - `W3C`标准语法，如onclick。

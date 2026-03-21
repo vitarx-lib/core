@@ -12,7 +12,6 @@ import { type HTMLElementEvents } from './event.js'
  * @see https://www.w3schools.com/tags/ref_standardattributes.asp
  */
 type AttributeNames =
-  | 'classname'
   | 'accept'
   | 'acceptcharset'
   | 'accesskey'
@@ -401,12 +400,6 @@ interface GlobalAttributes {
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/style 完整文档
    */
   style?: string | CSSProperties
-  /**
-   * 全局HTML属性`className`接受字符串、数组和`Record<string, boolean>`类型的对象。
-   *
-   * 和`class`作用相同
-   */
-  className?: string | any[] | Record<string, boolean>
   /**
    * 定义元素宽度。
    */
