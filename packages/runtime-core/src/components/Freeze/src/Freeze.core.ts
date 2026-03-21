@@ -102,7 +102,7 @@ function Freeze(props: FreezeProps): View {
   const switchTo = new DynamicViewSource((): View => {
     const component = props.is
     if (!component) {
-      return createCommentView(`<Freeze is={${component}} />`)
+      return createCommentView(`<Freeze is={${String(component)}} />`)
     }
     if (!isComponent(component)) {
       if (__VITARX_DEV__) {
