@@ -1,4 +1,5 @@
 import { StyleUtils } from '@vitarx/runtime-core'
+import { __EXCLUDE_PROP_NAMES__ } from '@vitarx/runtime-dom'
 
 /**
  * 转义HTML特殊字符以防止XSS攻击
@@ -47,8 +48,8 @@ export function serializeAttributes(props: Record<string, any>): string {
       continue
     }
 
-    // 跳过 v-html（在元素渲染中单独处理）
-    if (key === 'v-html') {
+    // 跳过排除的属性
+    if (__EXCLUDE_PROP_NAMES__.includes(key)) {
       continue
     }
 
