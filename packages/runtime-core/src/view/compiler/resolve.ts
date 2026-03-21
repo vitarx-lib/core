@@ -1,5 +1,5 @@
 import { isRef, unref } from '@vitarx/responsive'
-import { hasOwnProperty, isFunction, isPlainObject, popProperty } from '@vitarx/utils'
+import { isFunction, isPlainObject, popProperty } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/attributes.js'
 import { StyleUtils } from '../../shared/index.js'
 import { isView } from '../../shared/utils/is.js'
@@ -25,6 +25,9 @@ export const SPECIAL_PROP_MERGERS = {
   className: StyleUtils.mergeCssClass,
   classname: StyleUtils.mergeCssClass
 } as const
+
+const hasValidProp = (obj: AnyProps, key: string) =>
+  key in obj && obj[key] !== undefined && obj[key] !== null
 
 /**
  * 处理 v-bind 属性绑定，将绑定对象的属性合并到目标 props 中
@@ -70,8 +73,8 @@ export function bindProps(props: AnyProps, bind: BindAttributes): Omit<AnyProps,
 
   // ---------- 定义 getter ----------
   for (const key of keys) {
-    const inProps = hasOwnProperty(props, key)
-    const inBinding = hasOwnProperty(binding, key)
+    const inProps = hasValidProp(props, key)
+    const inBinding = hasValidProp(binding, key)
 
     // ---- class / style 合并 ----
     if (key in SPECIAL_PROP_MERGERS && inProps && inBinding) {
@@ -282,7 +285,7 @@ export function mergeDefaultProps(
       get() {
         // 使用getter函数实现属性值的获取逻辑
         // 如果props中存在该属性，返回props的值
-        if (key in props && props[key] !== undefined && props[key] !== null) {
+        if (hasValidProp(props, key)) {
           return props[key]
         }
         // 否则返回defaultProps中的值
