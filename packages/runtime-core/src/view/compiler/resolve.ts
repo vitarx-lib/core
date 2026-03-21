@@ -21,9 +21,7 @@ type ResolvePropsResult<T extends AnyProps> = {
 
 export const SPECIAL_PROP_MERGERS = {
   style: StyleUtils.mergeCssStyle,
-  class: StyleUtils.mergeCssClass,
-  className: StyleUtils.mergeCssClass,
-  classname: StyleUtils.mergeCssClass
+  class: StyleUtils.mergeCssClass
 } as const
 
 const hasValidProp = (obj: AnyProps, key: string) =>
