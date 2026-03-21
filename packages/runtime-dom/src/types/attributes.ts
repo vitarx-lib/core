@@ -406,7 +406,7 @@ interface GlobalAttributes {
    *
    * 和`class`作用相同
    */
-  className?: string | string[] | Record<string, boolean>
+  className?: string | any[] | Record<string, boolean>
   /**
    * 定义元素宽度。
    */
