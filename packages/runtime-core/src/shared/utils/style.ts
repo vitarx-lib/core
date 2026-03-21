@@ -125,15 +125,16 @@ export class StyleUtils {
   static cssStyleValueToObject(style: StyleProperties): StyleRules {
     if (!style) return {}
     if (isString(style)) {
-      const styleObj: Record<string, any> = {}
-      style.split(';').forEach(styleRule => {
+      const styleObj: Record<string, string> = {}
+      for (const styleRule of style.split(';')) {
         const [key, value] = styleRule.split(':').map(s => s?.trim())
         if (key && value) {
           styleObj[toCamelCase(key)] = value // 转为驼峰命名
         }
-      })
+      }
       return styleObj as StyleRules
-    } else if (isPlainObject(style)) {
+    }
+    if (isPlainObject(style)) {
       return style
     }
     return {}
