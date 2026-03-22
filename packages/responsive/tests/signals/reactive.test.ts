@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { reactive, watch } from '../../src/index.js'
+import { reactive, shallowReactive, watch } from '../../src/index.js'
 
 describe('signal/reactive', () => {
   it('should create a reactive object', () => {
@@ -82,9 +82,110 @@ describe('signal/reactive', () => {
     expect(reactiveObj.toDelete).toBeUndefined()
   })
 
-  it('should nest collections', () => {
-    const obj = { set: new Set([1, 2, 3]) }
-    const reactiveObj = reactive(obj)
-    expect(reactiveObj.set.size).toBe(3)
+  describe('edge cases: nested collections', () => {
+    it('should handle Set methods with correct this binding', () => {
+      const obj = { set: new Set([1, 2, 3]) }
+      const reactiveObj = reactive(obj)
+
+      expect(reactiveObj.set.has(1)).toBe(true)
+      expect(reactiveObj.set.has(4)).toBe(false)
+      expect(reactiveObj.set.size).toBe(3)
+
+      const values = [...reactiveObj.set.values()]
+      expect(values).toEqual([1, 2, 3])
+
+      const keys = [...reactiveObj.set.keys()]
+      expect(keys).toEqual([1, 2, 3])
+
+      const entries = [...reactiveObj.set.entries()]
+      expect(entries).toEqual([
+        [1, 1],
+        [2, 2],
+        [3, 3]
+      ])
+
+      reactiveObj.set.forEach(value => {
+        expect([1, 2, 3]).toContain(value)
+      })
+    })
+
+    it('should handle Map methods with correct this binding', () => {
+      const obj = {
+        map: new Map([
+          ['a', 1],
+          ['b', 2]
+        ])
+      }
+      const reactiveObj = reactive(obj)
+
+      expect(reactiveObj.map.size).toBe(2)
+      expect(reactiveObj.map.has('a')).toBe(true)
+      expect(reactiveObj.map.get('a')).toBe(1)
+      expect(reactiveObj.map.get('c')).toBeUndefined()
+
+      const keys = [...reactiveObj.map.keys()]
+      expect(keys).toEqual(['a', 'b'])
+
+      const values = [...reactiveObj.map.values()]
+      expect(values).toEqual([1, 2])
+
+      const entries = [...reactiveObj.map.entries()]
+      expect(entries).toEqual([
+        ['a', 1],
+        ['b', 2]
+      ])
+    })
+
+    it('should handle WeakSet methods with correct this binding', () => {
+      const item1 = { id: 1 }
+      const item2 = { id: 2 }
+      const obj = { weakSet: new WeakSet([item1, item2]) }
+      const reactiveObj = reactive(obj)
+
+      expect(reactiveObj.weakSet.has(item1)).toBe(true)
+      expect(reactiveObj.weakSet.has(item2)).toBe(true)
+      expect(reactiveObj.weakSet.has({ id: 3 })).toBe(false)
+    })
+
+    it('should handle WeakMap methods with correct this binding', () => {
+      const key1 = { id: 1 }
+      const key2 = { id: 2 }
+      const obj = {
+        weakMap: new WeakMap([
+          [key1, 'value1'],
+          [key2, 'value2']
+        ])
+      }
+      const reactiveObj = reactive(obj)
+
+      expect(reactiveObj.weakMap.has(key1)).toBe(true)
+      expect(reactiveObj.weakMap.get(key1)).toBe('value1')
+      expect(reactiveObj.weakMap.get(key2)).toBe('value2')
+      expect(reactiveObj.weakMap.get({ id: 3 })).toBeUndefined()
+    })
+
+    it('should handle nested Set in shallowReactive', () => {
+      const obj = { set: new Set([1, 2, 3]), nested: { value: 1 } }
+      const shallowReactiveObj = shallowReactive(obj)
+
+      expect(shallowReactiveObj.set.size).toBe(3)
+      expect(shallowReactiveObj.set.has(1)).toBe(true)
+
+      expect(shallowReactiveObj.nested.value).toBe(1)
+      shallowReactiveObj.nested.value = 42
+      expect(shallowReactiveObj.nested.value).toBe(42)
+    })
+
+    it('should handle nested Map in shallowReactive', () => {
+      const obj = { map: new Map([['a', 1]]), nested: { value: 1 } }
+      const shallowReactiveObj = shallowReactive(obj)
+
+      expect(shallowReactiveObj.map.size).toBe(1)
+      expect(shallowReactiveObj.map.get('a')).toBe(1)
+
+      expect(shallowReactiveObj.nested.value).toBe(1)
+      shallowReactiveObj.nested.value = 42
+      expect(shallowReactiveObj.nested.value).toBe(42)
+    })
   })
 })
