@@ -1,3 +1,30 @@
+# [4.0.0-beta.10](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.9...v4.0.0-beta.10) (2026-03-22)
+
+
+### Bug Fixes
+
+* **lazy:** 移除未使用变量并优化错误日志输出 ([7484c9c](https://github.com/vitarx-lib/core/commit/7484c9ce24595ba6a2428515b05f82df04bd04ef))
+* **responsive:** 修复reactive嵌套集合不兼容BUG ([362fb09](https://github.com/vitarx-lib/core/commit/362fb094ec0ea76f972190cc43c35f48cb3da44f))
+* **runtime-core:** 优化 provide 函数错误处理逻辑 ([9f4f0c1](https://github.com/vitarx-lib/core/commit/9f4f0c121c513fddf37e183208bf7abb4ef64c6d))
+* **runtime-core:** 修复 Freeze 组件中注释视图的字符串转换问题 ([09bc14d](https://github.com/vitarx-lib/core/commit/09bc14db83881997a71909f6c934c226e1753596))
+* **runtime-core:** 修复 props 属性有效性检查逻辑 ([bbb79ac](https://github.com/vitarx-lib/core/commit/bbb79ac5e902f459341cae8b8236038ebf6a80f4))
+* **runtime-core:** 修复合并特殊属性错误 ([6b8b0e3](https://github.com/vitarx-lib/core/commit/6b8b0e3b0c71329ce6c6989bdde4c0e5221f0e51))
+* **runtime-core:** 修复属性值获取逻辑中的空值判断 ([3dee7fd](https://github.com/vitarx-lib/core/commit/3dee7fd6d841546a8b3b64f5cde350ca18e8f01e))
+* **runtime-core:** 修改 BindAttributes 类型定义，避免类型校验不通过 ([6361112](https://github.com/vitarx-lib/core/commit/6361112ba9c2edf7e408fb968506bd487fd7b2e0))
+* **runtime-dom:** 修复Teleport、Transition等组件未导出问题 ([c6e8c84](https://github.com/vitarx-lib/core/commit/c6e8c846fed57e7e59cef2770914e62f76536804))
+* **runtime-dom:** 修正className类型定义 ([2977b6c](https://github.com/vitarx-lib/core/commit/2977b6cb5f8a53f193fe41b1e9034007deaa5141))
+* **runtime-ssr:** 修复 class 属性序列化逻辑 ([5743c9b](https://github.com/vitarx-lib/core/commit/5743c9b1bdf55a413623264787fc034210a96048))
+* **runtime-ssr:** 修正HTML属性排除逻辑 ([399cff3](https://github.com/vitarx-lib/core/commit/399cff353b020a6fa93ab88cf0599c606131f733))
+* **utils:** 修复 delay 函数中任务类型检查 ([5b0b4d5](https://github.com/vitarx-lib/core/commit/5b0b4d5d21576bbfaca549c03fb1608c2c02821e))
+
+
+### Features
+
+* **Freeze:** 支持通过key使同组件缓存不同实例 ([30c40f2](https://github.com/vitarx-lib/core/commit/30c40f268074b6e69ab67c311b157630a1f601d0))
+* **runtime-core:** 支持 Dynamic 组件基于 key 缓存多个实例 ([7a4fd86](https://github.com/vitarx-lib/core/commit/7a4fd860d69ca0e16b84cb9caaf5f23a417a694a))
+
+
+
 # [4.0.0-beta.9](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.8...v4.0.0-beta.9) (2026-03-15)
 
 
