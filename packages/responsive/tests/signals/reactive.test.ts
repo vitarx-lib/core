@@ -81,4 +81,10 @@ describe('signal/reactive', () => {
     delete reactiveObj.toDelete
     expect(reactiveObj.toDelete).toBeUndefined()
   })
+
+  it('should nest collections', () => {
+    const obj = { set: new Set([1, 2, 3]) }
+    const reactiveObj = reactive(obj)
+    expect(reactiveObj.set.size).toBe(3)
+  })
 })

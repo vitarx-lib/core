@@ -37,14 +37,12 @@ export abstract class ReactiveCollection<
    * 获取目标对象的属性值
    * @param target 目标对象
    * @param p 属性键，可以是字符串或Symbol
-   * @param receiver 接收器，通常是代理对象本身
+   * @param _receiver 接收器，通常是代理对象本身
    * @return 返回获取的属性值
    */
-  protected doGet(target: T, p: string | symbol, receiver: any): any {
-    // 执行依赖追踪，记录当前属性与响应式系统之间的依赖关系
+  protected doGet(target: T, p: string | symbol, _receiver: any): any {
     this.triggerSignal('get', { key: p })
-    const value = Reflect.get(target, p, receiver)
-    // 使用 Reflect.get 获取目标对象的属性值
+    const value = Reflect.get(target, p)
     return typeof value === 'function' ? value.bind(target) : value
   }
   /**
