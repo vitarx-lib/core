@@ -128,9 +128,7 @@ describe('effect/scope', () => {
 
       onScopeDispose(() => {})
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        '[Vitarx.EffectScope] onScopeDispose() no active scope found'
-      )
+      expect(warnSpy).toHaveBeenCalledWith('onScopeDispose() no active scope found')
 
       warnSpy.mockRestore()
     })

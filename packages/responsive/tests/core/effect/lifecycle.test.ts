@@ -18,9 +18,7 @@ describe('effect/lifecycle', () => {
       const callback = vi.fn()
 
       onScopeDispose(callback, false)
-      expect(warnSpy).toHaveBeenCalledWith(
-        '[Vitarx.EffectScope] onScopeDispose() no active scope found'
-      )
+      expect(warnSpy).toHaveBeenCalledWith('onScopeDispose() no active scope found')
 
       warnSpy.mockRestore()
     })
@@ -53,9 +51,7 @@ describe('effect/lifecycle', () => {
       const callback = vi.fn()
 
       onScopePause(callback, false)
-      expect(warnSpy).toHaveBeenCalledWith(
-        '[Vitarx.EffectScope] onScopePause() no active scope found'
-      )
+      expect(warnSpy).toHaveBeenCalledWith('onScopePause() no active scope found')
 
       warnSpy.mockRestore()
     })
@@ -88,9 +84,7 @@ describe('effect/lifecycle', () => {
       const callback = vi.fn()
 
       onScopeResume(callback, false)
-      expect(warnSpy).toHaveBeenCalledWith(
-        '[Vitarx.EffectScope] onScopeResume() no active scope found'
-      )
+      expect(warnSpy).toHaveBeenCalledWith('onScopeResume() no active scope found')
 
       warnSpy.mockRestore()
     })

@@ -16,7 +16,7 @@ function onScopeAction(
   if (scope) {
     scope[`on${action}`](fn)
   } else if (!failSilently) {
-    console.warn(`[Vitarx.EffectScope] onScope${action}() no active scope found`)
+    console.warn(`onScope${action}() no active scope found`)
   }
 }
 
