@@ -28,8 +28,6 @@ export function reactive<T extends object>(target: T): Reactive<T> {
 /**
  * 创建浅层响应式对象
  *
- * 与 `reactive({},false)` 的效果是一致的。
- *
  * @template T - 目标对象类型
  * @param { T } target - 目标对象
  * @returns {Reactive<T,false>} 浅层响应式对象
