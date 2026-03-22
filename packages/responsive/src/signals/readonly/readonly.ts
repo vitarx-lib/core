@@ -15,6 +15,7 @@ class ReadonlyProxyHandler<T extends object> implements ProxyHandler<T> {
     if (prop === RAW_VALUE) return target
     let value = Reflect.get(target, prop, target)
     if (isRef(value)) return value.value
+    if (typeof value === 'function') return value.bind(target)
     if (this.deep && isObject(value) && !value[IS_READONLY]) {
       return createReadonlyProxy(value, true)
     }
