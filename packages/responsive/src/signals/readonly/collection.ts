@@ -23,6 +23,11 @@ import { IS_RAW, IS_READONLY, RAW_VALUE } from '../shared/index.js'
 export abstract class ReadonlyCollectionHandler<
   T extends AnyWeakMap | AnyMap | AnySet | AnyWeakSet
 > implements ProxyHandler<T> {
+  /**
+   * 代理对象引用，用于在只读方法中返回代理对象
+   */
+  protected proxy!: T
+
   constructor(public readonly target: T) {}
 
   /**
@@ -30,13 +35,14 @@ export abstract class ReadonlyCollectionHandler<
    * 处理内部标识符（IS_RAW、IS_READONLY、RAW_VALUE）并委托给子类实现
    * @param target - 目标集合对象
    * @param p - 属性键
-   * @param _receiver - 代理对象
+   * @param receiver - 代理对象
    * @returns 返回属性值或标识符对应的值
    */
-  get(target: T, p: string | symbol, _receiver: unknown): unknown {
+  get(target: T, p: string | symbol, receiver: T): unknown {
     if (p === IS_RAW) return true
     if (p === IS_READONLY) return true
     if (p === RAW_VALUE) return target
+    this.proxy = receiver
     return this.doGet(target, p)
   }
 

@@ -16,7 +16,7 @@ import { ReadonlyCollectionHandler } from './collection.js'
  * const handler = new WeakSetReadonlyHandler(set)
  * const proxy = new Proxy(set, handler)
  *
- * proxy.add(4) // 输出警告，返回原 Set
+ * proxy.add(4) // 输出警告，返回代理对象
  * proxy.delete(1) // 输出警告，返回 false
  * proxy.has(1) // 正常返回 true
  * ```
@@ -44,13 +44,13 @@ export class WeakSetReadonlyHandler<
 
   /**
    * 创建只读的 add 方法
-   * 调用时输出警告并返回原 Set 对象
+   * 调用时输出警告并返回代理对象
    * @returns 返回一个空的 add 方法包装
    */
   private readonlyAdd(): (value: unknown) => T {
     return (_value: unknown) => {
       logger.warn(`[Readonly] The Set is read-only, and the add method cannot be called!`)
-      return this.target
+      return this.proxy
     }
   }
 

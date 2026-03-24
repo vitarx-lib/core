@@ -16,7 +16,7 @@ import { ReadonlyCollectionHandler } from './collection.js'
  * const handler = new WeakMapReadonlyHandler(map)
  * const proxy = new Proxy(map, handler)
  *
- * proxy.set('newKey', 'newValue') // 输出警告，返回原 Map
+ * proxy.set('newKey', 'newValue') // 输出警告，返回代理对象
  * proxy.delete('key') // 输出警告，返回 false
  * proxy.get('key') // 正常返回 'value'
  * ```
@@ -42,13 +42,13 @@ export class WeakMapReadonlyHandler<T extends AnyWeakMap | AnyMap> extends Reado
 
   /**
    * 创建只读的 set 方法
-   * 调用时输出警告并返回原 Map 对象
+   * 调用时输出警告并返回代理对象
    * @returns 返回一个空的 set 方法包装
    */
   private readonlySet(): (key: unknown, value: unknown) => T {
     return (_key: unknown, _value: unknown) => {
       logger.warn(`[Readonly] The Map is read-only, and the set method cannot be called!`)
-      return this.target
+      return this.proxy
     }
   }
 
