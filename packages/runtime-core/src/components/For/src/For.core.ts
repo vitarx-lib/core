@@ -232,13 +232,6 @@ export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
  * }
  * ```
  */
-/**
- * For 组件实现
- *
- * @template T - 列表项数据类型
- * @param props - 组件属性
- * @returns ListView 实例
- */
 export function For<T>(props: ForProps<T>): ListView {
   const instance = getInstance()!
   const location = instance.view.location
