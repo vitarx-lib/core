@@ -43,14 +43,12 @@ export async function preloadComponent<T extends Component>(loader: LazyLoader<T
     .then(module => {
       if (module && typeof module.default === 'function') {
         LAZY_LOADED_CACHE.set(cachedLoader, module.default)
-        LAZY_LOADING_CACHE.delete(cachedLoader)
         return module.default
       }
       throw new Error('Invalid component module: missing default export')
     })
-    .catch(e => {
+    .finally(() => {
       LAZY_LOADING_CACHE.delete(cachedLoader)
-      throw e
     })
 
   LAZY_LOADING_CACHE.set(cachedLoader, promise as Promise<Component>)
