@@ -2,7 +2,7 @@ import { popProperty } from '@vitarx/utils'
 import { pruneCache } from '../../components/Freeze/src/Freeze.utils.js'
 import { isComponent } from '../../shared/index.js'
 import type { AnyProps, Component, ValidChildren, View, ViewTag } from '../../types/index.js'
-import { createView } from '../compiler/factory.js'
+import { createComponentView, createView } from '../compiler/factory.js'
 import { DynamicViewSource } from '../compiler/source.js'
 import { CommentView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
@@ -148,7 +148,7 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
         const cached = keyMap.get(key)
         if (cached) return cached
       }
-      const view = createView(is, resolvedProps, location)
+      const view = createComponentView(is, resolvedProps, location)
       if (!keyMap) {
         keyMap = new Map()
         cache.set(is, keyMap)

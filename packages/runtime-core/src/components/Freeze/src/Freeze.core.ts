@@ -3,7 +3,7 @@ import { onDispose, onViewSwitch } from '../../../runtime/index.js'
 import { isComponent, isComponentView } from '../../../shared/index.js'
 import type { AnyProps, Component, View } from '../../../types/index.js'
 import { DynamicViewSource } from '../../../view/compiler/source.js'
-import { createCommentView, createView, DynamicView } from '../../../view/index.js'
+import { createCommentView, createComponentView, DynamicView } from '../../../view/index.js'
 import { pruneCache, shouldCache } from './Freeze.utils.js'
 
 /**
@@ -139,7 +139,7 @@ function Freeze(props: FreezeProps): View {
       }
     }
     // 创建新视图并记录 key
-    const view = createView(component, props.props)
+    const view = createComponentView(component, props.props)
     viewKeyMap.set(view, key)
     return view
   })
