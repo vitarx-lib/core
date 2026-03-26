@@ -109,7 +109,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
 
   private cachedView: View | null = null
   private cachedType: SourceValueType | null = null
-  private effect?: Watcher
+  private effect: Watcher | null = null
 
   /**
    * 标记当前事务是否为脏
@@ -170,7 +170,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     this.cachedView?.dispose(root)
     this.#dirty = false
     if (this.#cancelTx) this.#cancelTx()
-    this.cachedView = this.cachedType = null
+    this.effect = this.cachedView = this.cachedType = null
   }
   /**
    * 激活视图
