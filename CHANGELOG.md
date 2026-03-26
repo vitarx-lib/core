@@ -1,3 +1,21 @@
+# [4.0.0-beta.11](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.10...v4.0.0-beta.11) (2026-03-26)
+
+
+### Bug Fixes
+
+* **responsive:** 修复只读代理中函数绑定错误 ([e6d9f95](https://github.com/vitarx-lib/core/commit/e6d9f95f3e13c85aa47c134347d36e4b8176d245))
+* **responsive:** 修复只读集合方法返回值为代理对象 ([ffa8eee](https://github.com/vitarx-lib/core/commit/ffa8eee7e5629d657e2d2dead5d81d7df239f26c))
+* **runtime-core:** 修复 dynamic 视图中的 effect 重置问题 ([594711b](https://github.com/vitarx-lib/core/commit/594711be010370d3a559d3b33cb3defef0761255))
+* **runtime-core:** 修复 ViewBuilder 类型参数允许为 null 的问题 ([01bc985](https://github.com/vitarx-lib/core/commit/01bc985c6b4d95ffcf751e565f97f88d6fe5755c))
+* **runtime-core:** 修正 Lazy 组件缓存中加载状态的删除时机 ([9a9450a](https://github.com/vitarx-lib/core/commit/9a9450ab9341755ef2053d807b7586d6532cd6aa))
+
+
+### Features
+
+* **readonly:** 实现集合类型的只读代理及缓存机制 ([517186e](https://github.com/vitarx-lib/core/commit/517186ee655eebbdbd0e5026926363a01ae59a0a))
+
+
+
 # [4.0.0-beta.10](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.9...v4.0.0-beta.10) (2026-03-22)
 
 
