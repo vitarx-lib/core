@@ -68,7 +68,7 @@ describe('runtime/provide', () => {
 
       expect(() => {
         provide(name, value)
-      }).toThrow('[provide] must be called in a component context')
+      }).toThrow('provide() must be called in a component context')
     })
   })
 
@@ -148,7 +148,7 @@ describe('runtime/provide', () => {
 
       expect(() => {
         inject(name)
-      }).toThrow('[inject] must be called in a component context')
+      }).toThrow('inject() must be called in a component context')
     })
 
     it('应该在所有祖先中查找提供的值', () => {
