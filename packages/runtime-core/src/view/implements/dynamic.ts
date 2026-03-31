@@ -207,12 +207,6 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       anchor: null as HostComment | null
     }
 
-    // 创建占位符锚点
-    if (prev.isMounted) {
-      state.anchor = renderer.createComment('')
-      renderer.insert(state.anchor, prev.node)
-    }
-
     // 完成事务
     const finish = () => {
       state.committed = true
@@ -228,7 +222,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
     this.#cancelTx = () => {
       if (state.committed) return
       // 移除占位符锚点
-      if (state.anchor) renderer.remove(state.anchor)
+      if (!state.nextCommitted && state.anchor) renderer.remove(state.anchor)
       state.committed = true
       this.#cancelTx = null
     }
@@ -260,6 +254,11 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       commitPrev: () => {
         if (state.prevCommitted) return
         state.prevCommitted = true
+        if (!state.nextCommitted && prev.isMounted) {
+          // 创建占位符锚点，确保 next 视图插入时有正确的锚点
+          state.anchor = renderer.createComment('')
+          renderer.insert(state.anchor, prev.node)
+        }
         this.#commitPrev(tx, renderer)
         if (!state.committed && state.nextCommitted) {
           finish()
@@ -267,13 +266,13 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       },
       commit: () => {
         if (state.committed) return
-        if (!state.prevCommitted) {
-          state.prevCommitted = true
-          this.#commitPrev(tx, renderer)
-        }
         if (!state.nextCommitted) {
           state.nextCommitted = true
           this.#commitNext(tx, state.anchor, renderer)
+        }
+        if (!state.prevCommitted) {
+          state.prevCommitted = true
+          this.#commitPrev(tx, renderer)
         }
         finish()
       }
