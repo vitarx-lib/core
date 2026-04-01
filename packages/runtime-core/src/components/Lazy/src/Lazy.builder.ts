@@ -5,6 +5,12 @@ import type { LazyLoader } from './Lazy.cache.js'
 import { Lazy, type LazyLoadOptions } from './Lazy.core.js'
 
 const LAZY_LOADER = Symbol.for('__v_lazy_loader')
+
+export type LazyWrapper<T extends Component> = ViewBuilder<
+  ComponentProps<T>,
+  ComponentView<typeof Lazy<T>>
+>
+
 /**
  * 定义一个懒加载组件
  *
@@ -43,10 +49,11 @@ const LAZY_LOADER = Symbol.for('__v_lazy_loader')
 export function lazy<T extends Component>(
   loader: () => Promise<{ default: T }>,
   options?: LazyLoadOptions
-): ViewBuilder<ComponentProps<T>, ComponentView<typeof Lazy<T>>> {
+): LazyWrapper<T> {
   const lazyBuilder = (props: ComponentProps<T>): ComponentView<typeof Lazy<T>> => {
     return new ComponentView(Lazy<T>, { loader, ...options, props: props })
   }
+  lazyBuilder.displayName = 'LazyWrapper'
   lazyBuilder[LAZY_LOADER] = loader
   return builder(lazyBuilder)
 }
