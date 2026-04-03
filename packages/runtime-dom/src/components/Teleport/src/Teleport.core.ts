@@ -118,4 +118,4 @@ Teleport.validateProps = (props: Record<string, any>): void => {
   }
 }
 
-export { Teleport, TeleportProps }
+export { Teleport, type TeleportProps }
