@@ -265,7 +265,7 @@ export function defineExpose<T extends { [key: string]: any }>(exposed: T): void
  * 定义组件属性验证函数
  *
  * @param component - 要验证的组件
- * @param validator - 验证函数，接收组件属性作为参数
+ * @param validator - 验证函数，接收组件属性作为参数，返回值说明：false表示验证失败，字符串表示验证失败的提示信息，返回值视为验证成功
  * @returns {void} 无返回值
  */
 export function defineValidate<P extends AnyProps>(
