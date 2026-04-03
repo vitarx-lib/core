@@ -12,9 +12,31 @@ export type ComponentPublicInstance = {
   readonly [key: string]: any
 }
 /**
- * 属性验证函数
+ * 属性验证函数。
+ *
+ * 用于校验传入的 props 是否符合预期
+ *
+ * 校验时机：仅开发模式下节点创建之前进行校验
+ *
+ * 校验结果说明：
+ * - `string`：打印警告日志信息。
+ * - `false`：打印默认的校验失败信息。
+ * - throw new Error('自定义异常')：如果不希望继续渲染组件，则可以抛出异常。
+ * - 其他值/void：校验通过。
+ *
+ * 仅在开发模式下进行校验，生产模式下不会进行校验。
+ *
+ * @example
+ * ```ts
+ * defineValidate(MyComponent, (props) => {
+ *   if (props.age < 0) {
+ *     return 'age cannot be less than 0';
+ *   }
+ * });
+ * ```
  */
 export type ValidateProps = (props: AnyProps, location?: CodeLocation) => string | false | unknown
+
 export type Component<P extends AnyProps = any> = {
   (props: P): ValidChild
   /**
@@ -45,12 +67,12 @@ export type Component<P extends AnyProps = any> = {
    * 校验时机：仅开发模式下节点创建之前进行校验
    *
    * 校验结果说明：
-   * - `string`：校验失败但不影响节点运行，打印该自定义异常提示。
-   * - `false`：打印默认的参数错误信息。
-   * - throw new Error('自定义异常')：如果不希望继续渲染组件，则可以抛出异常，异常将会由父级捕获并处理。
+   * - `string`：打印警告日志信息。
+   * - `false`：打印默认的校验失败信息。
+   * - throw new Error('自定义异常')：如果不希望继续渲染组件，则可以抛出异常。
    * - 其他值/void：校验通过。
    *
-   * 框架在开发模式下会自动捕获异常并将其转换为校验错误。
+   * 仅在开发模式下进行校验，生产模式下不会进行校验。
    *
    * @example
    * ```ts
