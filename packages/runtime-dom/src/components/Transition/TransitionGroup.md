@@ -106,5 +106,5 @@ const App = () => (
 
 ## 相关组件
 
-- [Transition](../Transition/README.md) - 单个元素的过渡组件
+- [Transition](./Transition.md) - 单个元素的过渡组件
 - [For](../../../../runtime-core/src/components/For/README.md) - 列表渲染组件

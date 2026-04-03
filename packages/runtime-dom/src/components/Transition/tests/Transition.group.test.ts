@@ -2,7 +2,7 @@ import { nextTick, ref } from '@vitarx/responsive'
 import { createView, ElementView, ListView, ViewKind } from '@vitarx/runtime-core'
 import { sleep } from '@vitarx/utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { TransitionGroup } from '../src/index.js'
+import { TransitionGroup } from '../src/Transition.group'
 
 describe('TransitionGroup 组件', () => {
   let container: HTMLElement
