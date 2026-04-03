@@ -349,7 +349,7 @@ export class DOMRenderer implements ViewRenderer {
       }
       // 处理 data 属性
       if (name.startsWith('data-')) {
-        el.dataset[name.slice(5)] = nextValue
+        el.setAttribute(name, nextValue)
         return
       }
       // 处理 xlink 属性
