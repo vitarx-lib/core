@@ -1,3 +1,19 @@
+# [4.0.0-beta.12](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.11...v4.0.0-beta.12) (2026-04-09)
+
+
+### Bug Fixes
+
+* **runtime-core:** 调整动态视图占位符锚点管理逻辑 ([6fef436](https://github.com/vitarx-lib/core/commit/6fef43692605e37e844873f6b2de61bc7c4c01f4))
+* **runtime-dom:** 修复 data 属性赋值方式 ([c807f2c](https://github.com/vitarx-lib/core/commit/c807f2c66e0eebffa13f3d914ddb843b7aeffb3f))
+* **runtime-dom:** 修正 Teleport 组件注释内容格式 ([5eb32f4](https://github.com/vitarx-lib/core/commit/5eb32f41263093605911f26d7df141033dcf27c6))
+
+
+### Features
+
+* **runtime-dom:** 添加 Head 组件用于管理文档头部元素 ([402be6b](https://github.com/vitarx-lib/core/commit/402be6b965b1124212bbdada4850c88470beab04))
+
+
+
 # [4.0.0-beta.11](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.10...v4.0.0-beta.11) (2026-03-26)
 
 
