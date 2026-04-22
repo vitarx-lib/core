@@ -6,15 +6,6 @@ import { hydrateNode } from './activate.js'
 import { resolveContainer } from './utils.js'
 
 /**
- * 全局状态注入类型（由服务端注入到客户端的状态）
- */
-declare global {
-  interface Window {
-    __INITIAL_STATE__?: Record<string, any>
-  }
-}
-
-/**
  * 客户端水合函数
  *
  * 将服务端渲染的 HTML 激活为可交互的应用，复用已有 DOM 结构。
