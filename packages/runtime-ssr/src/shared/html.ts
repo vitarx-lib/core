@@ -28,7 +28,8 @@ export function serializeAttributes(props: Record<string, any>): string {
   for (const key in props) {
     const value = props[key]
     // 跳过事件处理程序和特殊值
-    if (typeof value === 'function' || value == null || key === 'children') continue
+    if (typeof value === 'function' || value == null || __EXCLUDE_PROP_NAMES__.includes(key))
+      continue
 
     // 处理 class 属性
     if (key === 'class') {
@@ -45,11 +46,6 @@ export function serializeAttributes(props: Record<string, any>): string {
       if (styleText) {
         attrs.push(`style="${escapeHTML(styleText)}"`)
       }
-      continue
-    }
-
-    // 跳过排除的属性
-    if (__EXCLUDE_PROP_NAMES__.includes(key)) {
       continue
     }
 

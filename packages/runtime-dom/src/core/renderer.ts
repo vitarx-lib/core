@@ -25,7 +25,9 @@ export const __EXCLUDE_PROP_NAMES__ = [
   'children',
   'innerHTML',
   'textContent',
-  'nodeValue'
+  'nodeValue',
+  'v-html',
+  'v-text'
 ]
 
 /**

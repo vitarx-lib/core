@@ -126,9 +126,23 @@ describe('serializeViewToSink', () => {
     await serializeViewToSink(node, sink)
 
     const html = sink.toString()
-    expect(html).toContain('<div')
+    expect(html).toContain('<div>')
     expect(html).toContain('<span>Raw HTML</span>')
     expect(html).toContain('</div>')
+    expect(html).not.toContain('v-html=')
+  })
+
+  it('应该处理v-text指令', async () => {
+    const node = h('div', { 'v-text': 'Plain Text' })
+    const sink = new StringSink()
+
+    await serializeViewToSink(node, sink)
+
+    const html = sink.toString()
+    expect(html).toContain('<div>')
+    expect(html).toContain('Plain Text')
+    expect(html).toContain('</div>')
+    expect(html).not.toContain('v-text=')
   })
 
   it('应该应用v-show指令', () => {
