@@ -1,3 +1,12 @@
+# [4.0.0-beta.13](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.12...v4.0.0-beta.13) (2026-04-23)
+
+
+### Bug Fixes
+
+* **ssr:** 修复 v-html 和 v-text 指令的 SSR 渲染属性残留BUG ([8e8dc9c](https://github.com/vitarx-lib/core/commit/8e8dc9cd8d37d9822a8c49d363c3643f29ed265e))
+
+
+
 # [4.0.0-beta.12](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.11...v4.0.0-beta.12) (2026-04-09)
 
 
