@@ -29,7 +29,8 @@
         "default": "./dist/index.esm-bundler.js"
       },
       "require": "./index.cjs"
-    }
+    },
+    "./dist/*": "./dist/*"
   },
   "dependencies": {
     "@vitarx/utils": "workspace:*",
