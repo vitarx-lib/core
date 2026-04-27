@@ -57,7 +57,7 @@ export function getInstance(allowEmpty: true): ComponentInstance | null
  */
 export function getInstance(allowEmpty: boolean = false): ComponentInstance | null {
   if (!allowEmpty && !activeComponentInstance) {
-    throw new Error('[getInstance()] No active component instance found.')
+    throw new Error('getInstance() No active component instance found.')
   }
   return activeComponentInstance
 }
@@ -93,7 +93,7 @@ export function getComponentView(allowEmpty: true): ComponentView | null
  */
 export function getComponentView(allowEmpty: boolean = false): ComponentView | null {
   if (!allowEmpty && !activeComponentInstance) {
-    throw new Error('[getComponentView()] No active component instance found.')
+    throw new Error('getComponentView() No active component instance found.')
   }
   return activeComponentInstance?.view ?? null
 }
@@ -107,6 +107,23 @@ export function getComponentView(allowEmpty: boolean = false): ComponentView | n
  */
 export function getApp<T extends App = App>(): T | null {
   return activeComponentInstance ? (activeComponentInstance.app as T) : null
+}
+
+/**
+ * 获取当前App实例
+ *
+ * @template T - 应用程序实例的类型，默认为App
+ * @returns {T} 返回当前活动的App实例
+ * @throws {Error} 如果没有活跃实例则抛出错误
+ */
+export function useApp<T extends App = App>(): T {
+  if (!activeComponentInstance) {
+    throw new Error('useApp() No active component instance found.')
+  }
+  if (!activeComponentInstance.app) {
+    throw new Error('useApp() No app instance found.')
+  }
+  return activeComponentInstance.app as unknown as T
 }
 
 export { getInstance as useInstance, getComponentView as useView }

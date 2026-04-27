@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { App } from '../../src/app'
 import { getApp, getComponentView, getInstance } from '../../src/index.js'
-import { runComponent } from '../../src/runtime/context.js'
+import { runComponent, useApp, useInstance, useView } from '../../src/runtime/context.js'
 import type { ComponentInstance } from '../../src/view'
 
 describe('runtime/context', () => {
@@ -114,6 +114,74 @@ describe('runtime/context', () => {
       runComponent(typedInstance, () => {
         expect(getApp<TestApp>()).toBe(typedApp)
         expect(getApp<TestApp>()?.test).toBe('test')
+      })
+    })
+  })
+
+  describe('useApp', () => {
+    it('当没有活动实例时应该抛出错误', () => {
+      expect(() => useApp()).toThrow('useApp() No active component instance found.')
+    })
+
+    it('当实例没有 app 时应该抛出错误', () => {
+      const instanceWithoutApp = {
+        view: { type: 'component' } as any,
+        scope: { run: vi.fn((fn: () => any) => fn()) }
+      } as any
+
+      expect(() => {
+        runComponent(instanceWithoutApp, () => useApp())
+      }).toThrow('useApp() No app instance found.')
+    })
+
+    it('当组件活动时应该返回应用实例', () => {
+      runComponent(mockInstance, () => {
+        expect(useApp()).toBe(mockApp)
+      })
+    })
+
+    it('应该返回类型化的应用实例', () => {
+      interface TestApp extends App {
+        customProp: string
+      }
+
+      const customApp = {
+        ...mockApp,
+        customProp: 'custom-value'
+      } as TestApp
+
+      const customInstance = {
+        ...mockInstance,
+        app: customApp
+      } as unknown as ComponentInstance
+
+      runComponent(customInstance, () => {
+        expect(useApp<TestApp>()).toBe(customApp)
+        expect(useApp<TestApp>().customProp).toBe('custom-value')
+      })
+    })
+  })
+
+  describe('useInstance', () => {
+    it('当没有活动实例时应该抛出错误', () => {
+      expect(() => useInstance()).toThrow('getInstance() No active component instance found.')
+    })
+
+    it('在 runComponent 内部应该返回活动实例', () => {
+      runComponent(mockInstance, () => {
+        expect(useInstance()).toBe(mockInstance)
+      })
+    })
+  })
+
+  describe('useView', () => {
+    it('当没有活动实例时应该抛出错误', () => {
+      expect(() => useView()).toThrow('getComponentView() No active component instance found.')
+    })
+
+    it('当实例活动时应该返回组件视图', () => {
+      runComponent(mockInstance, () => {
+        expect(useView()).toBe(mockInstance.view)
       })
     })
   })
