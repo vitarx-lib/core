@@ -39,8 +39,8 @@ interface SuspenseProps {
  * 用于处理异步组件加载时的占位显示
  *
  * @param {SuspenseProps} props - 组件属性
- * @param {View} props.fallback - 加载中显示的占位视图
  * @param {View} props.children - 实际要渲染的内容
+ * @param {View} [props.fallback] - 加载中显示的占位视图
  * @param {Function} [props.onResolved] - 异步加载完成时的回调函数
  * @returns {View} 返回渲染的视图
  *
