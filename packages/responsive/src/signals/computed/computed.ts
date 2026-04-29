@@ -21,7 +21,7 @@ import { IS_REF, IS_SIGNAL, type RefSignal } from '../shared/index.js'
  * @param {T} oldValue - 上一次的计算结果，第一次计算时为 undefined
  * @returns {T} - 计算结果
  */
-export type ComputedGetter<T> = (oldValue: T) => T
+export type ComputedGetter<T> = (oldValue: T | undefined) => T
 /**
  * 计算属性的setter处理函数
  *
