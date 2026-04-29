@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { debounce, deepMergeObject, popProperty, throttle } from '../src/quick.js'
+import { debounce, deepMergeObject, popProperty, throttle, toArray } from '../src/quick.js'
 
 describe('quick', () => {
   it('should pop property correctly', () => {
@@ -40,5 +40,17 @@ describe('quick', () => {
     setTimeout(() => {
       expect(callCount).toBe(2)
     }, 200)
+  })
+  it('should toArray function calls', () => {
+    expect(toArray(1)).toEqual([1])
+    expect(toArray('hello')).toEqual(['hello'])
+    expect(toArray([1, 2, 3])).toEqual([1, 2, 3])
+    expect(toArray(['a', 'b'])).toEqual(['a', 'b'])
+    expect(toArray(null)).toEqual([null])
+    expect(toArray(undefined)).toEqual([undefined])
+    const obj = { x: 1 }
+    expect(toArray(obj)).toEqual([obj])
+    const arr = [obj]
+    expect(toArray(arr)).toBe(arr)
   })
 })

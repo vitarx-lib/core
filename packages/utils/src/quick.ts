@@ -172,3 +172,13 @@ export function throttle<T extends AnyCallback>(
     }, delay)
   }
 }
+
+/**
+ * 将值转换为数组
+ *
+ * @param val - 要转换的值
+ * @returns 转换后的数组
+ */
+export function toArray<T>(val: T | T[]): T[] {
+  return Array.isArray(val) ? val : [val]
+}
