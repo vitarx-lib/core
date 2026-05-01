@@ -300,7 +300,7 @@ export class ComponentInstance<T extends Component = Component> {
    * @internal
    */
   public dispose(): void {
-    this.hide()
+    if (!__VITARX_SSR__) this.hide()
     this.invokeVoidHook(Lifecycle.dispose)
     delete this.hooks[Lifecycle.dispose]
     this.scope.dispose()
