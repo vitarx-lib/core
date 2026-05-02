@@ -1,3 +1,20 @@
+# [4.0.0-beta.14](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.13...v4.0.0-beta.14) (2026-05-02)
+
+
+### Bug Fixes
+
+* **runtime-core:** 优化 For 组件的 key 计算与重复检测 ([c35d39f](https://github.com/vitarx-lib/core/commit/c35d39f12fe4077db00e2a6f201e419d9494c9c2))
+* **runtime-core:** 修正服务端渲染时组件隐藏逻辑 ([4c06815](https://github.com/vitarx-lib/core/commit/4c0681556cc2faac27481b39470ca7d8ab8be8f6))
+* **signals:** 修正 ComputedGetter 的参数类型 ([e64fed4](https://github.com/vitarx-lib/core/commit/e64fed4a18fd3807d03efbe13cbaa6f9690e1f9d))
+
+
+### Features
+
+* **runtime-core:** 新增 useApp API 及相关测试覆盖 ([905fd8c](https://github.com/vitarx-lib/core/commit/905fd8ce4c17ac479cd734eba1b9b197a7064397))
+* **utils:** 添加 toArray 工具函数及其测试用例 ([3130fa4](https://github.com/vitarx-lib/core/commit/3130fa42b31c05bf051a3cace9875977617b9394))
+
+
+
 # [4.0.0-beta.13](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.12...v4.0.0-beta.13) (2026-04-23)
 
 
