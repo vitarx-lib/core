@@ -38,7 +38,13 @@ export type ComponentPublicInstance = {
 export type ValidateProps = (props: AnyProps, location?: CodeLocation) => string | false | unknown
 
 export type Component<P extends AnyProps = any> = {
-  (props: P): ValidChild
+  /**
+   * 组件函数。
+   *
+   * @param props - 组件属性对象
+   * @param [location] - 组件位置信息，仅开发模式下存在
+   */
+  (props: P, location?: CodeLocation): ValidChild
   /**
    * 定义组件的默认属性。
    *

@@ -210,7 +210,7 @@ export class ComponentInstance<T extends Component = Component> {
     this.publicInstance = markRaw({})
     const result = runComponent(this, () => {
       try {
-        return view.component(view.props)
+        return view.component(view.props, view.location)
       } catch (e) {
         this.reportError(e, 'component:run')
         return new CommentView(`Component<${view.name}>:failed`)
