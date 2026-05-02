@@ -27,7 +27,7 @@ describe('For Component', () => {
           children: (item: any) => createView(testTag),
           key: (item: any, index: number) => index
         })
-      }).toThrowError()
+      }).toThrow()
     })
 
     it('应该验证 children 必须为函数', () => {
@@ -38,7 +38,7 @@ describe('For Component', () => {
           children: 'not a function' as any,
           key: (item: any, index: number) => index
         })
-      }).toThrowError()
+      }).toThrow()
     })
 
     it('应该验证 key 类型正确性', () => {
@@ -181,7 +181,29 @@ describe('For Component', () => {
       await nextTick()
       expect(container.textContent).toBe('xyz')
     })
+    it('应该响应数据变化并更新列表 (无key)', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const items = ref(['a', 'b'])
 
+      const view = createView(For<string>, {
+        get each() {
+          return items.value
+        },
+        children: (item: string) =>
+          createView(testTag, {
+            children: item
+          })
+      })
+
+      view.mount(container)
+
+      expect(container.textContent).toBe('ab')
+      // 重新排序
+      items.value.reverse()
+      await nextTick()
+      expect(container.textContent).toBe('ba')
+      warnSpy.mockRestore()
+    })
     it('应该正确处理列表项的添加', async () => {
       const items = ref(['a'])
 
@@ -202,7 +224,27 @@ describe('For Component', () => {
       await nextTick()
       expect(container.textContent).toBe('abc')
     })
+    it('应该正确处理列表项的添加（无key）', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const items = ref(['a'])
 
+      const view = createView(For<string>, {
+        get each() {
+          return items.value
+        },
+        children: (item: string) =>
+          createView(testTag, {
+            children: item
+          })
+      })
+
+      view.mount(container)
+      expect(container.textContent).toBe('a')
+      items.value.push('b', 'a')
+      await nextTick()
+      expect(container.textContent).toBe('aba')
+      warnSpy.mockRestore()
+    })
     it('应该正确处理列表项的删除', async () => {
       const items = ref(['a', 'b', 'c'])
 

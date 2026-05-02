@@ -237,12 +237,11 @@ export function For<T>(props: ForProps<T>): ListView {
   const location = instance.view.location
   const componentName = instance.view.name
 
-  // key 解析函数
   const keyOf = normalizeKeyResolver(props.key, location, componentName)
 
   const listView = new ListView()
-  const pendingRemoved: ListItemMap = new Map() // 离开动画待处理
-  let itemMap: ListItemMap = new Map() // 当前有效项
+  const pendingRemoved: ListItemMap = new Map()
+  let itemMap: ListItemMap = new Map()
 
   /** 构建单个 View */
   const buildView = (item: T, indexRef: ShallowRef<number>): View => {
@@ -256,7 +255,7 @@ export function For<T>(props: ForProps<T>): ListView {
   }
 
   /** 删除单条记录 */
-  const removeRecord = (key: any, record: ListItemRecord) => {
+  const removeRecord = (key: unknown, record: ListItemRecord) => {
     const view = record.view
     listView.remove(view)
 
@@ -285,20 +284,36 @@ export function For<T>(props: ForProps<T>): ListView {
     }
   }
 
+  /**
+   * 预计算新列表的所有 key 值，并进行重复检测
+   *
+   * 确保同一更新周期内 key 值一致，避免多次调用 keyOf 产生不同结果。
+   * 同时在更新阶段也执行重复 key 检测（之前只在初次挂载时检测）。
+   *
+   * @param list - 新列表数据
+   * @param len - 列表长度
+   * @returns 预计算的 key 数组，索引与列表索引一一对应
+   */
+  const computeNewKeys = (list: readonly T[], len: number): unknown[] => {
+    const keys: unknown[] = new Array(len)
+    const usedKeys = new Map<unknown, number>()
+    for (let i = 0; i < len; i++) {
+      keys[i] = checkKey(keyOf(list[i], i), i, usedKeys, componentName, location)
+    }
+    return keys
+  }
+
   /** 核心副作用 */
   const effect = viewEffect(() => {
     // ===== 1️⃣ 依赖收集阶段 =====
     const list = props.each
     const len = list.length
-
-    // 遍历每个元素，确保 effect 只收集 list 本身的依赖
     for (let i = 0; i < len; i++) {
       void list[i]
     }
 
     // ===== 2️⃣ 非依赖执行阶段 =====
     untrack(() => {
-      // 前置更新钩子
       props.onBeforeUpdate && props.onBeforeUpdate(listView.children)
 
       // 全量卸载
@@ -310,10 +325,13 @@ export function For<T>(props: ForProps<T>): ListView {
         return
       }
 
+      // 预计算所有 key，确保同一更新周期内 key 值一致
+      const newKeys = computeNewKeys(list, len)
+
       // 全量/初次挂载
       if (!itemMap.size) {
         for (let i = 0; i < len; i++) {
-          const key = checkKey(keyOf(list[i], i), i, itemMap, componentName)
+          const key = newKeys[i]
           const indexRef = shallowRef(i)
           const view = buildView(list[i], indexRef)
           itemMap.set(key, { view, indexRef })
@@ -337,8 +355,7 @@ export function For<T>(props: ForProps<T>): ListView {
       // 头部对比
       while (oldStart <= oldEnd && newStart <= newEnd) {
         const [oldKey, oldRec] = oldRecords[oldStart]
-        const newKey = keyOf(list[newStart], newStart)
-        if (oldKey !== newKey) break
+        if (oldKey !== newKeys[newStart]) break
         oldRec.indexRef.value = newStart
         newMap.set(oldKey, oldRec)
         oldStart++
@@ -348,8 +365,7 @@ export function For<T>(props: ForProps<T>): ListView {
       // 尾部对比
       while (oldStart <= oldEnd && newStart <= newEnd) {
         const [oldKey, oldRec] = oldRecords[oldEnd]
-        const newKey = keyOf(list[newEnd], newEnd)
-        if (oldKey !== newKey) break
+        if (oldKey !== newKeys[newEnd]) break
         oldRec.indexRef.value = newEnd
         newMap.set(oldKey, oldRec)
         oldEnd--
@@ -361,38 +377,32 @@ export function For<T>(props: ForProps<T>): ListView {
 
       if (middleNewCount > 0) {
         // ===== 第一步：构建旧节点 key -> index 映射表 =====
-        // 用于快速查找新列表中的元素在旧列表中的位置
         const keyToOldIndex = new Map<any, number>()
         for (let i = oldStart; i <= oldEnd; i++) {
           keyToOldIndex.set(oldRecords[i][0], i)
         }
 
         // ===== 第二步：遍历新列表中段，建立新旧节点对应关系 =====
-        // sourceIndex[i] 记录新列表第 i 个元素对应的旧列表索引
-        // -1 表示该位置是新增元素
         const sourceIndex = new Array(middleNewCount).fill(-1)
 
         for (let i = 0; i < middleNewCount; i++) {
           const newIndex = newStart + i
-          const key = keyOf(list[newIndex], newIndex)
+          const key = newKeys[newIndex]
 
           const oldIndex = keyToOldIndex.get(key)
           if (oldIndex != null) {
-            // 元素已存在：复用旧节点，更新索引引用
             const record = oldRecords[oldIndex][1]
             record.indexRef.value = newIndex
             newMap.set(key, record)
             sourceIndex[i] = oldIndex
-            keyToOldIndex.delete(key) // 从映射中移除，剩余的即为需要删除的节点
+            keyToOldIndex.delete(key)
           } else {
-            // try revive pending removed
             const reused = pendingRemoved.get(key)
             if (reused) {
               pendingRemoved.delete(key)
-              reused.indexRef.value = i
+              reused.indexRef.value = newIndex
               newMap.set(key, { view: reused.view, indexRef: reused.indexRef })
             } else {
-              // 元素不存在：创建新节点
               const indexRef = shallowRef(newIndex)
               const view = buildView(list[newIndex], indexRef)
               newMap.set(key, { view, indexRef })
@@ -409,41 +419,32 @@ export function For<T>(props: ForProps<T>): ListView {
         const lis = getLIS(sourceIndex)
         let lisIdx = lis.length - 1
         const renderer = getRenderer()
-        // anchor 初始化为尾部对比后的元素（即 newEnd + 1 位置，如果存在）
         let anchor: View | null = null
         if (newEnd + 1 < len) {
-          // 尾部对比结束后，newEnd 指向最后一个未处理的元素
-          // newEnd + 1 是已经处理过的尾部元素的起始位置
-          const tailKey = keyOf(list[newEnd + 1], newEnd + 1)
-          anchor = newMap.get(tailKey)?.view ?? null
+          anchor = newMap.get(newKeys[newEnd + 1])?.view ?? null
         }
 
         for (let i = middleNewCount - 1; i >= 0; i--) {
           const newIndex = newStart + i
-          const key = keyOf(list[newIndex], newIndex)
+          const key = newKeys[newIndex]
           const record = newMap.get(key)!
           const view = record.view
 
           if (sourceIndex[i] === -1) {
-            // 新元素：插入到 anchor 前面
             listView.insert(view, anchor)
             ensureMounted(view, listView, anchor, props.onEnter)
           } else if (lisIdx >= 0 && lis[lisIdx] === i) {
-            // 元素在 LIS 中：位置稳定，不移动 DOM
             lisIdx--
           } else {
-            // 元素不在 LIS 中：需要移动到 anchor 前面
             listView.move(view, anchor)
             if (view.isMounted) {
               if (anchor) renderer.insert(view.node, anchor.node)
               else renderer.append(view.node, listView.node)
             }
           }
-          // anchor 始终更新为当前元素，作为后续元素的定位参考
           anchor = view
         }
       } else if (oldStart <= oldEnd) {
-        // 新列表已处理完，但旧列表还有剩余节点，需要删除
         for (let i = oldStart; i <= oldEnd; i++) {
           const [key, record] = oldRecords[i]
           removeRecord(key, record)
@@ -453,7 +454,6 @@ export function For<T>(props: ForProps<T>): ListView {
       // 更新 itemMap
       itemMap = newMap
 
-      // 后置更新钩子
       props.onAfterUpdate && props.onAfterUpdate(listView.children)
     })
   })
