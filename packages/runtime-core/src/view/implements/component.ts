@@ -1,5 +1,5 @@
 import { EffectScope, isRef, markRaw, readonly, type Ref } from '@vitarx/responsive'
-import { isFunction, isPromise, logger } from '@vitarx/utils'
+import { isFunction, isPlainObject, isPromise, logger } from '@vitarx/utils'
 import { App } from '../../app/index.js'
 import { SUSPENSE_COUNTER, ViewKind } from '../../constants/index.js'
 import { Lifecycle } from '../../constants/lifecycle.js'
@@ -22,7 +22,7 @@ import type {
   View,
   ViewContext
 } from '../../types/index.js'
-import { applyRef, mergeDefaultProps, resolveChild, resolveProps } from '../compiler/resolve.js'
+import { applyRef, mergeProps, resolveChild, resolveProps } from '../compiler/resolve.js'
 import { CommentView } from './atomic.js'
 import { BaseView } from './base.js'
 import type { ViewSwitchHandler } from './dynamic.js'
@@ -74,7 +74,12 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     this.component = component
     const { props: inputProps, ref } = resolveProps(props)
     this.ref = ref
-    let resolvedProps: AnyProps = mergeDefaultProps(inputProps, component.defaultProps)
+    let resolvedProps: AnyProps
+    if (!inputProps || !isPlainObject(component.defaultProps)) {
+      resolvedProps = props || component.defaultProps || {}
+    } else {
+      resolvedProps = mergeProps(component.defaultProps, inputProps)
+    }
     if (__VITARX_DEV__) {
       // 开发环境让属性对象只读
       resolvedProps = readonly(resolvedProps, false)

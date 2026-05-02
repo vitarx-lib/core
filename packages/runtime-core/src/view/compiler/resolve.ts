@@ -251,29 +251,28 @@ export function applyRef(ref: InstanceRef, el: unknown) {
 }
 
 /**
- * 合并默认属性和传入属性，创建一个新的属性对象
- * 当传入属性不存在时使用默认属性，当默认属性不存在时返回空对象
+ * 合并Props对象
  *
- * @param props 传入的属性对象，可能为null
- * @param defaultProps 默认属性对象，可能为undefined
+ * 合并两个Props对象，如果对象2中存在与对象1相同的属性，则对象2的属性值优先。
+ *
+ * @param p1 - 对象1
+ * @param p2 - 对象2
  * @returns {AnyProps} 合并后的新属性对象
  */
-export function mergeDefaultProps(
-  props: AnyProps | null,
-  defaultProps: AnyProps | undefined
-): AnyProps {
-  // 如果没有传入props，返回defaultProps（如果存在）或空对象
-  if (!props) return defaultProps ?? defaultProps ?? {}
-  // 如果defaultProps不是对象类型，直接返回props
-  if (!isPlainObject(defaultProps)) return props
+export function mergeProps(p1: AnyProps, p2: AnyProps): AnyProps {
+  if (__VITARX_DEV__) {
+    if (!isPlainObject(p1) || !isPlainObject(p2)) {
+      throw new Error('[vitarx] mergeProps() Invalid props or defaultProps')
+    }
+  }
   // 创建一个结果对象
   const result: Record<string, any> = {}
   // 创建一个Set来收集所有属性键
   const keys = new Set<string>()
   // 将defaultProps的所有键添加到Set中
-  for (const key in defaultProps) keys.add(key)
+  for (const key in p2) keys.add(key)
   // 将props的所有键添加到Set中
-  for (const key in props) keys.add(key)
+  for (const key in p1) keys.add(key)
   // 遍历所有唯一的键
   for (const key of keys) {
     // 使用属性描述符定义每个属性
@@ -281,13 +280,12 @@ export function mergeDefaultProps(
       enumerable: true, // 属性可枚举
       configurable: true, // 属性可配置
       get() {
-        // 使用getter函数实现属性值的获取逻辑
         // 如果props中存在该属性，返回props的值
-        if (hasValidProp(props, key)) {
-          return props[key]
+        if (hasValidProp(p2, key) && p2[key] !== undefined) {
+          return p2[key]
         }
         // 否则返回defaultProps中的值
-        return defaultProps[key]
+        return p1[key]
       }
     })
   }

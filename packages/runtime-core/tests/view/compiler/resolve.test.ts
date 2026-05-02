@@ -4,7 +4,7 @@ import { createTextView, isDynamicView, isTextView, isView, ViewKind } from '../
 import {
   applyRef,
   bindProps,
-  mergeDefaultProps,
+  mergeProps,
   resolveChild,
   resolveChildren,
   resolveProps,
@@ -218,35 +218,11 @@ describe('Compiler Resolve', () => {
     })
   })
 
-  describe('mergeDefaultProps', () => {
-    it('当 props 为 null 且 defaultProps 不存在时应该返回空对象', () => {
-      const result = mergeDefaultProps(null, undefined)
-
-      expect(Array.isArray(result)).toBe(false)
-      expect(Object.keys(result).length).toBe(0)
-    })
-
-    it('当 props 为 null 且 defaultProps 存在时应该返回 defaultProps', () => {
-      const defaultProps = { className: 'default', id: 'default-id' }
-      const result = mergeDefaultProps(null, defaultProps)
-
-      expect(result).toEqual(defaultProps)
-    })
-
-    it('当 defaultProps 不是对象类型时应该直接返回 props', () => {
-      const props = { className: 'base' }
-      const invalidDefaultProps = [null, undefined, 123, 'string', true]
-
-      invalidDefaultProps.forEach(defaultProps => {
-        const result = mergeDefaultProps(props, defaultProps as any)
-        expect(result).toBe(props)
-      })
-    })
-
+  describe('mergeProps', () => {
     it('应该合并默认属性和传入属性，传入属性优先', () => {
       const props = { className: 'base', id: 'props-id' }
       const defaultProps = { id: 'default-id', title: 'Default Title' }
-      const result = mergeDefaultProps(props, defaultProps)
+      const result = mergeProps(defaultProps, props)
 
       expect(result.className).toBe('base')
       expect(result.id).toBe('props-id')
