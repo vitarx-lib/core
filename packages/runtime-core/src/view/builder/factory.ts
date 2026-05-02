@@ -27,21 +27,31 @@ export type ViewBuilder<P extends AnyProps = AnyProps, R extends View = View> = 
  * })
  * // 使用
  * function App() {
+ *  // 实际创建出的节点为 <button>按钮</button>
  *  return <Button>按钮</Button>
  * }
  * ```
  *
  * @template T - 构建的节点type
  * @param builder - 视图构建函数
+ * @param displayName - 要展示的名称，当构建器被当做组件使用时，会作为组件的 displayName
  * @returns {ViewBuilder<T>} - 返回视图构建函数
  */
 export function builder<P extends AnyProps, R extends View>(
-  builder: (props: P, location?: CodeLocation) => R
+  builder: (props: P, location?: CodeLocation) => R,
+  displayName?: string
 ): ViewBuilder<P, R> {
   Object.defineProperty(builder, IS_VIEW_BUILDER, {
     value: true,
     configurable: false,
     enumerable: false
   })
+  if (displayName) {
+    Object.defineProperty(builder, 'displayName', {
+      value: displayName,
+      configurable: true,
+      enumerable: true
+    })
+  }
   return builder as ViewBuilder<P, R>
 }
