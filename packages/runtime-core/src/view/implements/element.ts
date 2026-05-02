@@ -15,6 +15,7 @@ import type {
   IntrinsicElements,
   MountType,
   ResolvedChildren,
+  ValidChildren,
   ViewRenderer
 } from '../../types/index.js'
 import { applyRef, resolveChildren, resolveProps } from '../compiler/resolve.js'
@@ -72,7 +73,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     // 检查props是否存在且包含children属性
     if (props && 'children' in props) {
       const propChildren = popProperty(props, 'children') // 从props中移除并获取children属性
-      resolvedChildren = resolveChildren(propChildren as any) // 解析子元素
+      resolvedChildren = resolveChildren(propChildren as ValidChildren) // 解析子元素
     } else {
       resolvedChildren = [] // 如果没有子元素，设置为空数组
     }
