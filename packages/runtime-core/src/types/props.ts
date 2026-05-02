@@ -1,7 +1,7 @@
 import type { Ref } from '@vitarx/responsive'
 import type { PickRequired } from '@vitarx/utils'
-import type { Dynamic, DynamicProps, Fragment, FragmentProps, ViewBuilder } from '../view/index.js'
-import type { AnyProps, Component, ComponentProps } from './component.js'
+import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../view/index.js'
+import type { AnyProps, Component, ComponentProps, WithDefaultProps } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
 import type { ViewTag } from './view.js'
 
@@ -204,8 +204,6 @@ export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttribute
  */
 export type WithProps<T extends ViewTag> = ExtractProps<T>
 
-export type JSXElementAttributes<C, P> = P extends object
-  ? WithVModel<WithRefProps<WithVModelUpdate<P>>>
-  : C extends ViewBuilder<infer U>
-    ? WithVModel<WithRefProps<WithVModelUpdate<U>>>
-    : {}
+export type JSXElementAttributes<C extends Component, P extends AnyProps> = WithVModel<
+  WithRefProps<WithVModelUpdate<WithDefaultProps<P, C['defaultProps']>>>
+>

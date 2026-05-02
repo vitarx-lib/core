@@ -129,11 +129,15 @@ export type Component<P extends AnyProps = any> = {
  * // }
  * ```
  */
-type WithDefaultProps<P extends AnyProps, D extends AnyProps | undefined> = D extends undefined
+export type WithDefaultProps<
+  P extends AnyProps,
+  D extends AnyProps | undefined | never
+> = D extends undefined | never
   ? P
   : Omit<P, keyof D> & {
       [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
     }
+
 /**
  * 组件props类型重载
  */

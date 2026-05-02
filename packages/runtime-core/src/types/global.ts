@@ -1,4 +1,4 @@
-import type { Component } from './component.js'
+import type { AnyProps, Component } from './component.js'
 import type { ErrorHandler } from './hook.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
@@ -128,7 +128,10 @@ declare global {
      * 用于处理组件属性的类型转换和验证
      * C: 组件类型，P: 属性类型
      */
-    type LibraryManagedAttributes<C, P> = JSXElementAttributes<C, P>
+    type LibraryManagedAttributes<C extends Component, P extends AnyProps> = JSXElementAttributes<
+      C,
+      P
+    >
     interface ElementAttributesProperty {
       props: {}
     }
