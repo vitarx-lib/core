@@ -302,11 +302,11 @@ describe('Dynamic Builder', () => {
       view.init()
       view.mount(container)
 
-      const view1 = (view as DynamicView).current
+      const view1 = (view as DynamicView).currentView
 
       keyRef.value = 'key2'
       await nextTick()
-      const view2 = (view as DynamicView).current
+      const view2 = (view as DynamicView).currentView
 
       expect(view1).not.toBe(view2)
       expect(view1!.isActive).toBe(false)
@@ -331,14 +331,14 @@ describe('Dynamic Builder', () => {
       view.init()
       view.mount(container)
 
-      const view1 = (view as DynamicView).current
+      const view1 = (view as DynamicView).currentView
 
       isRef.value = () => createView('span', { children: 'Component B' })
       await nextTick()
 
       isRef.value = Component
       await nextTick()
-      const view2 = (view as DynamicView).current
+      const view2 = (view as DynamicView).currentView
 
       expect(view1).toBe(view2)
       expect(view1!.isActive).toBe(true)
@@ -363,16 +363,16 @@ describe('Dynamic Builder', () => {
       view.init()
       view.mount(container)
 
-      const view1 = (view as DynamicView).current
+      const view1 = (view as DynamicView).currentView
 
       keyRef.value = 'key2'
       await nextTick()
-      const view2 = (view as DynamicView).current
+      const view2 = (view as DynamicView).currentView
       expect(view1).not.toBe(view2)
 
       keyRef.value = 'key1'
       await nextTick()
-      const view3 = (view as DynamicView).current
+      const view3 = (view as DynamicView).currentView
       expect(view3).toBe(view1)
       expect(view3!.isActive).toBe(true)
 
@@ -392,14 +392,14 @@ describe('Dynamic Builder', () => {
       view.init()
       view.mount(container)
 
-      const view1 = (view as DynamicView).current
+      const view1 = (view as DynamicView).currentView
 
       isRef.value = () => createView('span', { children: 'Component B' })
       await nextTick()
 
       isRef.value = Component
       await nextTick()
-      const view2 = (view as DynamicView).current
+      const view2 = (view as DynamicView).currentView
 
       expect(view1).toBe(view2)
 
@@ -423,7 +423,7 @@ describe('Dynamic Builder', () => {
       view.init()
       view.mount(container)
 
-      const view1 = (view as DynamicView).current
+      const view1 = (view as DynamicView).currentView
 
       keyRef.value = 'key2'
       await nextTick()
@@ -433,7 +433,7 @@ describe('Dynamic Builder', () => {
 
       keyRef.value = 'key1'
       await nextTick()
-      const viewAfter = (view as DynamicView).current
+      const viewAfter = (view as DynamicView).currentView
 
       expect(viewAfter).not.toBe(view1)
 
@@ -458,16 +458,16 @@ describe('Dynamic Builder', () => {
       view.init()
       view.mount(container)
 
-      const viewA = (view as DynamicView).current
+      const viewA = (view as DynamicView).currentView
 
       isRef.value = ComponentB
       await nextTick()
-      const viewB = (view as DynamicView).current
+      const viewB = (view as DynamicView).currentView
       expect(viewA).not.toBe(viewB)
 
       isRef.value = ComponentA
       await nextTick()
-      const viewA2 = (view as DynamicView).current
+      const viewA2 = (view as DynamicView).currentView
       expect(viewA2).toBe(viewA)
 
       view.dispose()
@@ -489,11 +489,11 @@ describe('Dynamic Builder', () => {
       view.init()
       view.mount(container)
 
-      const view1 = (view as DynamicView).current
+      const view1 = (view as DynamicView).currentView
 
       keyRef.value = 'key2'
       await nextTick()
-      const view2 = (view as DynamicView).current
+      const view2 = (view as DynamicView).currentView
 
       expect(view1).not.toBe(view2)
 

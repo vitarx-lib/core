@@ -4,26 +4,31 @@ import { accessor, branch, dynamic, expr, isDynamicView, ViewKind } from '../../
 
 describe('Compiler Helpers', () => {
   describe('branch', () => {
-    it('应该创建 DynamicView 实例', () => {
+    it('应该创建 BranchRef（Ref）实例', () => {
       const select = () => 0
       const branches = [() => 'branch 0', () => 'branch 1']
-      const view = branch(select, branches)
+      const source = branch(select, branches)
 
-      expect(view.kind).toBe(ViewKind.DYNAMIC)
+      expect(isRef(source)).toBeTruthy()
+      expect(source.value).toBe('branch 0')
     })
 
-    it('应该接受 location 参数', () => {
-      const select = () => 0
-      const branches = [() => 'branch 0']
-      const location = { fileName: 'test.ts', lineNumber: 1, columnNumber: 1 }
-      const view = branch(select, branches, location)
+    it('应该根据选择器切换分支结果', () => {
+      const idx = ref(0)
+      const source = branch(
+        () => (idx.value === 0 ? 0 : idx.value === 1 ? 1 : null),
+        [() => 'A', () => 'B']
+      )
 
-      expect(isDynamicView(view)).toBeTruthy()
-      expect(view.location).toBe(location)
+      expect(source.value).toBe('A')
+      idx.value = 1
+      expect(source.value).toBe('B')
+      idx.value = 2
+      expect(source.value).toBe(null)
     })
   })
 
-  describe('access', () => {
+  describe('accessor', () => {
     it('当属性不是响应式时应该直接返回值', () => {
       const obj = { name: 'test' }
       const result = accessor(obj, 'name')
@@ -80,7 +85,7 @@ describe('Compiler Helpers', () => {
       const obj = { name: 'test', count: 1 }
       expect(expr(() => obj.name)).toBe('test')
       expect(expr(() => obj.count + 10)).toBe(11)
-      expect(isDynamicView(expr(() => obj.name))).toBeFalsy()
+      expect(isRef(expr(() => obj.name))).toBeFalsy()
     })
 
     it('当函数调用返回静态值时应该直接返回结果', () => {
@@ -88,23 +93,23 @@ describe('Compiler Helpers', () => {
       expect(expr(fn)).toBe('hello')
     })
 
-    it('当表达式包含 ref 访问时应该返回 DynamicView', () => {
+    it('当表达式包含 ref 访问时应该返回 Ref', () => {
       const count = ref(1)
       const result = expr(() => count.value)
 
-      expect(isDynamicView(result)).toBeTruthy()
-      expect(result.kind).toBe(ViewKind.DYNAMIC)
+      expect(isRef(result)).toBeTruthy()
+      expect((result as any).value).toBe(1)
     })
 
-    it('当表达式包含 ref 运算时应该返回 DynamicView', () => {
+    it('当表达式包含 ref 运算时应该返回 Ref', () => {
       const count = ref(1)
       const result = expr(() => count.value + 1)
 
-      expect(isDynamicView(result)).toBeTruthy()
-      expect(result.kind).toBe(ViewKind.DYNAMIC)
+      expect(isRef(result)).toBeTruthy()
+      expect((result as any).value).toBe(2)
     })
 
-    it('当属性访问涉及响应式依赖时应该返回 DynamicView', () => {
+    it('当属性访问涉及响应式依赖时应该返回 Ref', () => {
       const r = ref('Alice')
       const obj = {
         get name() {
@@ -113,23 +118,16 @@ describe('Compiler Helpers', () => {
       }
       const result = expr(() => obj.name)
 
-      expect(isDynamicView(result)).toBeTruthy()
+      expect(isRef(result)).toBeTruthy()
+      expect((result as any).value).toBe('Alice')
     })
 
-    it('逻辑表达式包含响应式依赖时应该返回 DynamicView', () => {
+    it('逻辑表达式包含响应式依赖时应该返回 Ref', () => {
       const show = ref(true)
       const result = expr(() => (show.value ? 'yes' : 'no'))
 
-      expect(isDynamicView(result)).toBeTruthy()
-    })
-
-    it('应该接受 location 参数', () => {
-      const count = ref(1)
-      const location = { fileName: 'test.ts', lineNumber: 10, columnNumber: 5 }
-      const result = expr(() => count.value, location)
-
-      expect(isDynamicView(result)).toBeTruthy()
-      expect(result.location).toBe(location)
+      expect(isRef(result)).toBeTruthy()
+      expect((result as any).value).toBe('yes')
     })
   })
 })

@@ -44,7 +44,7 @@ describe('runtime/useChildren', () => {
       expect(useChildren(null).length).toBe(0)
     })
 
-    it('应该处理 branch 返回的 SwitchViewSource', () => {
+    it('应该处理 branch 返回的 BranchRef', () => {
       const cond = ref(true)
       const source = branch(
         () => (cond.value ? 0 : 1),
@@ -111,7 +111,7 @@ describe('runtime/useChildren', () => {
       expect(useFastChild({} as any)).toBeNull()
     })
 
-    it('应该处理 branch 返回的 SwitchViewSource', () => {
+    it('应该处理 branch 返回的 BranchRef', () => {
       const cond = ref(true)
       const source = branch(
         () => (cond.value ? 0 : 1),
