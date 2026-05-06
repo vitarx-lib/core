@@ -1,12 +1,12 @@
 import { popProperty } from '@vitarx/utils'
 import { pruneCache } from '../../components/Freeze/src/Freeze.utils.js'
-import { isComponent } from '../../shared/index.js'
 import type { AnyProps, Component, ValidChildren, View, ViewTag } from '../../types/index.js'
 import { createComponentView, createView } from '../compiler/factory.js'
-import { DynamicViewSource } from '../compiler/source.js'
+import { ExprRef } from '../compiler/source.js'
 import { CommentView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
+import { isComponent } from '../../utils/is.js'
 
 export interface DynamicProps {
   /**
@@ -138,7 +138,8 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
     })
   }
 
-  const viewSource = new DynamicViewSource(() => {
+  const viewSource = new ExprRef(() => {
+    // TODO 待优化缓存逻辑
     const is = props['is']
     const key = props['key']
     if (!is) return new CommentView(`<Dynamic is=${String(is)} />`)

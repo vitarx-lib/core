@@ -1,6 +1,5 @@
 import { ViewKind } from '../../constants/index.js'
 import { getRenderer } from '../../runtime/index.js'
-import { isView } from '../../shared/index.js'
 import type {
   CodeLocation,
   HostContainer,
@@ -9,6 +8,7 @@ import type {
   MountType,
   View
 } from '../../types/index.js'
+import { isView } from '../../utils/index.js'
 import { BaseView } from './base.js'
 
 type ListItemView = View & {
