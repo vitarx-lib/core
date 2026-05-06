@@ -1,4 +1,4 @@
-import { type Ref, watch, Watcher } from '@vitarx/responsive'
+import { IS_REF, type Ref, watch, Watcher } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { getRenderer, withDirectives } from '../../runtime/index.js'
@@ -102,7 +102,11 @@ export type ViewSwitchHandler = (tx: ViewSwitchTransaction) => void
  * - 在视图切换期间，新的更新请求会被标记为脏(dirty)并在当前切换完成后处理
  * - 如果视图初始化失败，会自动创建一个错误注释视图
  */
-export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
+export class DynamicView<T = any>
+  extends BaseView<ViewKind.DYNAMIC, HostNode>
+  implements Ref<T, never>
+{
+  public readonly [IS_REF] = true
   public readonly kind = ViewKind.DYNAMIC
 
   public readonly source: Ref<T>
