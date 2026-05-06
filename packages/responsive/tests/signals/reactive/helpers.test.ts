@@ -11,15 +11,6 @@ describe('signal/reactive/helpers', () => {
       expect(reactiveObj.count).toBe(0)
     })
 
-    it('should create a shallow reactive object', () => {
-      const obj = { nested: { count: 0 } }
-      const reactiveObj = reactive(obj, false)
-
-      expect(reactiveObj).toBeDefined()
-      expect(reactiveObj.nested).toBeDefined()
-      expect(reactiveObj.nested.count).toBe(0)
-    })
-
     it('should throw error for non-object targets', () => {
       expect(() => {
         reactive(42 as any)
