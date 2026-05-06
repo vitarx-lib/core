@@ -102,7 +102,7 @@ export async function runTypeCheck(tsconfigPath: string): Promise<string> {
   // ts 原生校验
   log.warn('\n🧪 Running TypeCheck...') // 输出提示信息，表示正在运行 TypeScript 编译器
   // 使用 tsc 编译 TypeScript
-  await runCommand(`tsc -p ${tsconfigPath} --noEmit`) // 执行 TypeScript 编译命令，使用指定的配置文件
+  await runCommand(`tsc -p ${tsconfigPath}`) // 执行 TypeScript 编译命令，使用指定的配置文件
   // 类型校验成功
   log.success('✓ TypeCheck successfully')
   return tsconfigPath
