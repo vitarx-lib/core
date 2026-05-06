@@ -4,43 +4,31 @@ import { DynamicView } from '../implements/index.js'
 import { DynamicViewSource, SwitchViewSource } from './source.js'
 
 /**
- * 创建一个表达式级动态视图（Expression-level Dynamic View）。
+ * 声明式动态视图，始终创建 DynamicView 实例。
  *
- * `dynamic` 用于声明一个依赖响应式数据的动态子树。当构建函数内部
- * 访问的响应式依赖发生变化时，当前动态视图会自动重新执行构建函数，
- * 并根据新的返回结果更新对应的子视图。
+ * 用于在 JSX 或非编译上下文中声明一个依赖响应式数据的动态子树。
+ * 无论构建函数是否包含响应式依赖，都会创建 DynamicView 以保证行为一致。
  *
- * 它主要用于在 **非 JSX 编译上下文** 或 **普通函数体表达式**
- * 中创建可自动更新的视图区域。
+ * 与 `Dynamic` 组件的区别：`Dynamic` 是结构级动态（根据 is 切换组件类型），
+ * `dynamic` 是表达式级动态（根据表达式结果重建子树）。
  *
- * 与 `Dynamic` 组件不同：
+ * 与 `expr` 的区别：`dynamic` 始终创建 DynamicView（语义明确），
+ * `expr` 在无依赖时直接返回原值（性能优化）。
  *
- * - `Dynamic` 适用于根据 `is` 属性切换组件或标签类型（结构级动态）
- * - `dynamic` 适用于根据响应式表达式结果重建子树（表达式级动态）
- *
- * ---
- *
- * ## 工作机制
- *
- * - 在首次执行时运行 `build` 构建初始子视图
- * - 自动追踪 `build` 内部访问的响应式依赖
- * - 当依赖变更时重新执行 `build`
- * - 执行更新（仅原始类型的值）或替换视图操作
- *
- * @template T - 构建函数返回值类型，必须符合 `RenderUnit`
- * @param build 用于构建子视图的函数。函数内部可访问响应式数据。
- * @param [location] - 代码位置信息，用于调试
- * @returns 返回一个 `DynamicView<T>` 实例
+ * @template T - 构建函数返回值类型
+ * @param build 构建子视图的函数，内部访问的响应式数据变化时会重新执行
+ * @param [location] 代码位置信息，用于调试
+ * @returns 始终返回 `DynamicView<T>` 实例
  * @example
  * ```jsx
  * function App() {
  *   const show = ref(true)
  *
- *   return dynamic(() =>
- *     show.value ? <A /> : <B />
- *   )
- *   // 也可以返回原始类型
- *   // dynamic(() => count.value)
+ *   // 条件渲染：show 变化时自动切换子视图
+ *   return dynamic(() => (show.value ? <A /> : <B />))
+ *
+ *   // 派生文本：count 变化时更新文本内容
+ *   // dynamic(() => count.value + 1)
  * }
  * ```
  */
@@ -52,29 +40,30 @@ export function dynamic<T extends RenderUnit>(
 }
 
 /**
- * 创建一个switch分支表达式级别的动态视图
+ * 分支动态视图，基于选择器结果执行对应分支函数。
  *
- * ## 工作机制
+ * 与 `dynamic(() => cond ? <A /> : <B />)` 的区别：
+ * 当 select 返回的索引不变时，不会重新执行对应分支函数，
+ * 避免了依赖变化时重建未变更的分支视图，适合多条件场景。
  *
- * - 在首次执行时运行 `select` 选择器函数，决定执行哪个分支
- * - 运行对应的分支函数，构建子视图
- * - 当依赖变更时重新执行 `select`，并重新运行对应的分支函数
- * - 执行更新（仅原始类型的值）或替换视图操作
- *
- * @param select - 选择器函数，用于决定执行哪个分支
- * @param branches - 分支函数数组，每个函数返回一个 `RenderUnit`
- * @param [location] - 代码位置信息，用于调试
- * @returns {DynamicView} - 动态视图
+ * @param select 选择器函数，返回当前应执行的分支索引，无匹配时返回 null
+ * @param branches 分支函数数组，每个函数返回对应的渲染结果
+ * @param [location] 代码位置信息，用于调试
+ * @returns 返回 `DynamicView` 实例
  * @example
- * ```
+ * ```jsx
+ * // 编译插件将以下三元表达式转换为 branch 调用：
+ * // {cond === 'a' ? <A /> : cond === 'b' ? <B /> : null}
+ *
  * const cond = ref('a')
- * const select = () => {
- *  if(cond.value === 'a') return 0
- *  if(cond.value === 'b') return 1
- *  return null
- * }
- * const branches = [() => 'branch a', () => 'branch b']
- * const view = branch(select, branches)
+ * const view = branch(
+ *   () => {
+ *     if (cond.value === 'a') return 0
+ *     if (cond.value === 'b') return 1
+ *     return null
+ *   },
+ *   [() => <A />, () => <B />]
+ * )
  * ```
  */
 export function branch(
@@ -86,40 +75,81 @@ export function branch(
 }
 
 /**
- * 属性访问器，如果属性是响应式则返回 Ref
+ * 属性访问器，用于在编译时包装对象属性访问以保持响应性。
  *
- * 主要用途是使传递的 `reactive[key]` child 保持响应式。
+ * 由编译插件将 `obj.key` 形式的属性访问转换为此调用。
+ * 如果属性是响应式的则返回 DynamicView（同时实现了 Ref 接口），
+ * 否则直接返回属性值。
  *
- * ## 工作机制
- * - 访问对象成员属性
- * - 如果支持跟踪则返回 Ref
- * - 否则返回属性值
+ * 与 `expr` 的区别：`accessor(obj, key)` 精确匹配属性访问，
+ * 同一属性的多次引用可共享同一个响应式引用；
+ * `expr(getter)` 包装任意表达式，每次调用独立追踪。
  *
- * @param obj - 要处理的对象，必须是 object 类型
- * @param key - 对象的属性键，必须是 obj 的键之一
- * @returns {unknown} - 返回属性值 或 Ref
+ * @template T 目标对象类型
+ * @template K 对象属性键类型
+ * @param obj 要访问的对象
+ * @param key 要访问的属性键
+ * @param [location] 代码位置信息，用于调试
+ * @returns 非响应式属性返回原始值，响应式属性返回 `DynamicView`
  * @example
  * ```jsx
- * const data = reactive({ a: 1 })
+ * // JSX: <div>{data.name}</div>
+ * // 编译为: createView('div', null, accessor(data, 'name'))
  *
- * createElementView('div', {children: accessor(data, 'a') // children: Ref<1>})
- * createElementView('div', {children: accessor({a:1}, 'a') // children: 1})
+ * const data = reactive({ name: 'Alice' })
+ * accessor(data, 'name')        // → DynamicView（响应式）
+ * accessor({ name: 'Bob' }, 'name') // → 'Bob'（静态值）
  * ```
  */
 export function accessor<T extends object, K extends keyof T>(
   obj: T,
-  key: K
+  key: K,
+  location?: CodeLocation
 ): T[K] | Ref<T[K], never> {
-  if (isRef(obj) && key === 'value') return obj
-  // 检查对象是否有属性跟踪
+  if (key === 'value' && isRef(obj)) return new DynamicView(obj, location)
   const { value, isTrack } = hasPropTrack(obj, key)
-  // 不需要跟踪直接返回
   if (!isTrack) return value
-  if (isRef(value)) return value
-  return {
-    [IS_REF]: true,
-    get value(): T[K] {
-      return obj[key]
-    }
-  }
+  if (isRef(value)) return new DynamicView(value, location)
+  return new DynamicView(
+    {
+      [IS_REF]: true,
+      get value(): T[K] {
+        return obj[key]
+      }
+    },
+    location
+  )
+}
+
+/**
+ * 表达式包装器，运行时判断是否需要动态追踪。
+ *
+ * 由编译插件将无法静态确定是否包含响应式依赖的表达式
+ * （函数调用、方法调用、逻辑运算等）转换为此调用。
+ *
+ * 核心优化：通过 `DynamicViewSource.isStatic` 在运行时判断 getter
+ * 是否包含响应式依赖。无依赖时直接返回计算值（零开销），
+ * 有依赖时返回 DynamicView 自动追踪更新。
+ *
+ * @template T getter 返回值类型
+ * @param getter 包装表达式的求值函数
+ * @param [location] 代码位置信息，用于调试
+ * @returns 静态表达式返回原值，动态表达式返回 `DynamicView`
+ * @example
+ * ```jsx
+ * // JSX: <div>{count.value + 1}</div>
+ * // 编译为: createView('div', null, expr(() => count.value + 1))
+
+ * // JSX: <span>{foo()}</span>
+ * // 编译为: createView('span', null, expr(() => foo()))
+
+ * // 静态表达式零开销
+ * expr(() => 'hello')  // → 'hello'
+ * expr(() => 42)       // → 42
+ * expr(() => count.value)  // → DynamicView（包含响应式依赖）
+ * ```
+ */
+export function expr<T>(getter: () => T, location?: CodeLocation): T | DynamicView {
+  const source = new DynamicViewSource(getter)
+  return source.isStatic ? source.value : new DynamicView(source, location)
 }
