@@ -5,8 +5,10 @@ import { build, type InlineConfig, mergeConfig, PluginOption } from 'vite'
 import { PACKAGES } from './common.js'
 import {
   createTsConfig,
+  execAsync,
   log,
   runClean,
+  runCommand,
   runMadgeCheck,
   runTypeCheck,
   runVitestTest
@@ -131,13 +133,10 @@ async function buildPackage(
   }
   // 类型检查
   await runTypeCheck(tsconfigPath)
+  // 运行tsc打包命令
+  await execAsync(`tsc -p ${join(packagePath, 'tsconfig.build.json')}`)
   // 检测循环依赖
   await runMadgeCheck(dist)
-
-  if (packageDirName === 'vite-plugin') {
-    log.info(separator + '\n')
-    return void 0
-  }
 
   // 清理输出目录
   runClean(dist)

@@ -94,16 +94,16 @@ export async function runVitestTest(
 }
 
 /**
- * 执行 TypeScript 类型检查
+ * 执行 TypeScript 类型检查（不输出产物）
+ *
+ * 使用 --noEmit 仅做类型校验，tsconfig.json 的 include 覆盖 src + tests，
+ * 确保两个目录的类型都正确。产物由后续 vite 构建生成。
+ *
  * @param tsconfigPath - ts配置路径
- * @returns 返回临时 tsconfig.json 文件的路径
  */
 export async function runTypeCheck(tsconfigPath: string): Promise<string> {
-  // ts 原生校验
-  log.warn('\n🧪 Running TypeCheck...') // 输出提示信息，表示正在运行 TypeScript 编译器
-  // 使用 tsc 编译 TypeScript
-  await runCommand(`tsc -p ${tsconfigPath}`) // 执行 TypeScript 编译命令，使用指定的配置文件
-  // 类型校验成功
+  log.warn('\n🧪 Running TypeCheck...')
+  await runCommand(`tsc --noEmit -p ${tsconfigPath}`)
   log.success('✓ TypeCheck successfully')
   return tsconfigPath
 }
