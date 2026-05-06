@@ -11,14 +11,11 @@ import {
   triggerSignal
 } from '@vitarx/responsive'
 
-/* ----------------------------------------
- * BaseViewComputed（内部使用，不暴露）
- * ------------------------------------- */
-abstract class BaseViewComputed<T> implements RefSignal<T> {
+abstract class ComputedRef<T> implements RefSignal<T, never> {
   readonly [IS_SIGNAL]: true = true
   readonly [IS_REF]: true = true
   readonly [IS_READONLY]: true = true
-  public isStatic!: boolean
+  public readonly isStatic!: boolean
   protected dirty = false
   protected cached!: T
   protected constructor() {}
@@ -36,39 +33,39 @@ abstract class BaseViewComputed<T> implements RefSignal<T> {
     triggerSignal(this)
   }
 
+  /**
+   * 初始化依赖追踪，必须在子类构造器中参数属性赋值后调用。
+   *
+   * 不能在基类构造器中调用，因为 TypeScript 参数属性
+   * （如 `private readonly getter`）在 super() 返回后才赋值，
+   * 此时 recompute() 依赖的子类属性尚未初始化。
+   */
   protected initTracking(): void {
+    this.cached = this.recompute()
     if (hasLinkedSignal(this.effectHandle)) {
       onScopeDispose(() => clearEffectLinks(this.effectHandle), true)
-      this.isStatic = false
+      ;(this as { isStatic: boolean }).isStatic = false
     } else {
-      this.isStatic = true
+      ;(this as { isStatic: boolean }).isStatic = true
     }
   }
   protected abstract recompute(): T
 }
 
 /**
- * DynamicViewSource 是一个带有依赖追踪功能的计算类。
- * 它通过追踪 getter 函数的依赖关系，在依赖项变化时自动重新计算值。
+ * 表达式计算 Ref
  *
- * 核心功能：
- * - 初始化依赖追踪
- * - 在依赖项变化时自动重新计算值
+ * 通过追踪 getter 函数的依赖关系，在依赖项变化时自动重新计算值。
+ * 无依赖时 isStatic 为 true，读取 value 零开销。
  *
- * 使用示例：
- * ```typescript
- * const expr = new DynamicViewSource(() => {
- *   return cond ? <A/> : <B/>;
- * });
- * ```
- *
- * 构造函数参数：
- * - getter: 用于计算值的函数，该函数的依赖会被自动追踪
+ * @template T getter 返回值类型
+ * @param getter 计算函数，其依赖会被自动追踪
  */
-export class DynamicViewSource<T = any> extends BaseViewComputed<T> {
-  constructor(private readonly getter: () => T) {
+export class ExprRef<T> extends ComputedRef<T> {
+  private readonly getter: () => T
+  constructor(getter: () => T) {
     super()
-    this.cached = this.recompute()
+    this.getter = getter
     this.initTracking()
   }
   protected override recompute(): T {
@@ -77,39 +74,25 @@ export class DynamicViewSource<T = any> extends BaseViewComputed<T> {
 }
 
 /**
- * SwitchViewSource 用于根据选择函数的结果动态执行不同的分支函数并返回结果。
- * 该类实现了基于条件选择的多分支计算逻辑，并支持依赖追踪和缓存优化。
+ * 分支计算 Ref
  *
- * 核心功能：
- * - 根据选择函数(select)返回的索引值动态执行对应的分支函数(branches)
- * - 自动追踪选择函数的依赖项，当依赖变化时自动重新计算
- * - 缓存最后一次计算的分支索引，避免重复计算相同分支
+ * 根据 select 返回的索引执行对应分支函数，索引不变时跳过分支重新执行。
+ * 适用于条件渲染等"多路分支、仅一路生效"的场景。
  *
- * @example
- * ```typescript
- * const branch = new SwitchViewSource(
- *   () => Math.random() > 0.5 ? 0 : 1, // 选择函数
- *   [() => '结果A', () => '结果B']     // 分支函数数组
- * )
- * console.log(branch.value) // 会根据选择函数返回不同的结果
- * ```
- *
- * @param select - 返回索引值的选择函数，用于决定执行哪个分支
- * @param branches - 只读的分支函数数组，每个函数对应一个可能的计算结果
- *
- * 注意事项：
- * - 选择函数返回的索引值必须在branches数组的有效范围内，否则会导致运行时错误
- * - branches数组是只读的，构造后不能修改
- * - 分支函数的执行结果会被缓存，直到选择函数返回不同的索引值
+ * @template T 分支函数返回值类型
+ * @param select 返回当前应执行的分支索引，无匹配时返回 null
+ * @param branches 分支函数数组，每个函数返回对应的计算结果
  */
-export class SwitchViewSource<T = any> extends BaseViewComputed<T | null> {
+export class BranchRef<T> extends ComputedRef<T | null> {
+  // 使用 -1 作为哨兵值，确保首次 recompute() 一定走分支执行路径。
+  // 不能使用 null 作为哨兵，因为 select() 合法返回 null 时
+  // 会命中 cachedIndex === null 的缓存判断，返回未初始化的 cached。
   private cachedIndex: number | null = -1
   constructor(
     private readonly select: () => number | null,
     private readonly branches: readonly (() => T)[]
   ) {
     super()
-    this.cached = this.recompute()
     this.initTracking()
   }
 
@@ -118,6 +101,11 @@ export class SwitchViewSource<T = any> extends BaseViewComputed<T | null> {
     if (index === this.cachedIndex) return this.cached
     this.cachedIndex = index
     if (index === null) return null
+    if (__VITARX_DEV__ && (index < 0 || index >= this.branches.length)) {
+      throw new RangeError(
+        `[BranchRef] select() returned index ${index}, but branches length is ${this.branches.length}`
+      )
+    }
     return this.branches[index]()
   }
 }
