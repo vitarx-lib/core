@@ -1,6 +1,5 @@
 import { type Ref } from '@vitarx/responsive'
 import { getCallSource, isPlainObject } from '@vitarx/utils'
-import { isViewBuilder } from '../../utils/index.js'
 import type {
   AnyProps,
   CodeLocation,
@@ -12,6 +11,7 @@ import type {
   ViewOf,
   ViewTag
 } from '../../types/index.js'
+import { isViewBuilder } from '../../utils/index.js'
 import type { ViewBuilder } from '../builder/index.js'
 import { CommentView, TextView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
@@ -216,7 +216,7 @@ export function createElementView<T extends HostElementTag>(
  * @param location - 可选参数，用于指定代码位置信息
  * @returns - 返回一个新的ListView实例
  */
-export function createListView(items?: View[], location?: CodeLocation): ListView {
+export function createListView(items?: Iterable<View>, location?: CodeLocation): ListView {
   return new ListView(items, location) // 实例化并返回ListView对象
 }
 
