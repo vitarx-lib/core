@@ -16,7 +16,7 @@ Vitarx 共享工具库，提供常用工具函数和类型定义。
 提供多种类型检测函数：
 
 - **isObject**: 判断是否为对象(null值不会被识别为对象)
-- **isPlainObject/isRecordObject**: 判断变量是否为记录对象
+- **isPlainObject**: 判断变量是否为记录对象
 - **isArray**: 判断是否为数组对象
 - **isString**: 判断是否为字符串
 - **isNumber**: 判断是否为number类型
@@ -24,9 +24,6 @@ Vitarx 共享工具库，提供常用工具函数和类型定义。
 - **isEmpty**: 判断变量是否为空
 - **isAsyncFunction**: 判断函数是否使用了async关键字声明
 - **isFunction**: 判断是否为函数
-- **isPureFunction**: 判断是否为纯函数，非类构造函数
-- **isConstructor**: 判断是否为类构造函数
-- **isSimpleGetterFunction**: 判断是否为一个简单的getter函数
 - **isNumString**: 判断是否为纯数字字符串
 - **isMap**: 判断是否为Map对象
 - **isSet**: 判断是否为Set对象
@@ -44,6 +41,7 @@ Vitarx 共享工具库，提供常用工具函数和类型定义。
 - **deepMergeObject**: 深度合并两个对象
 - **debounce**: 防抖函数，使用setTimeout实现，在指定延迟后执行回调函数
 - **throttle**: 节流函数，根据时间间隔来执行回调函数
+- **toArray**: 转换为数组
 
 ### 4. 字符串处理 (str.ts)
 - **toCamelCase**: 将字符串转换为驼峰命名格式
