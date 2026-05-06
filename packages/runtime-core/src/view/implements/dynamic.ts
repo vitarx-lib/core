@@ -128,12 +128,18 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
 
   /**
    * 获取当前视图
+   *
    * @returns 当前缓存的视图实例，如果没有则为 null
    */
   get current(): View | null {
     return this.cachedView
   }
-
+  /**
+   * 获取数据源的值
+   */
+  get value(): T {
+    return this.source.value
+  }
   /**
    * 获取宿主节点
    * @returns 当前视图的宿主节点，如果没有则为 null
