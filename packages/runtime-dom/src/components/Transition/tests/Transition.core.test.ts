@@ -160,12 +160,12 @@ describe('Transition 组件', () => {
           id: 'hook-child',
           children: 'Hook Content'
         })
-
       const transitionView = createView(Transition, {
         onBeforeEnter,
-        children: dynamic(() => (show.value ? createView(ComponentA) : null))
+        children: dynamic(() => {
+          return show.value ? createView(ComponentA) : null
+        })
       })
-
       transitionView.mount(container)
       await nextTick()
 

@@ -1,8 +1,7 @@
-import { IS_REF, type Ref, watch, Watcher } from '@vitarx/responsive'
+import { type Ref, unref, watch, Watcher } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { getRenderer, withDirectives } from '../../runtime/index.js'
-import { isView } from '../../shared/index.js'
 import type {
   CodeLocation,
   HostComment,
@@ -12,6 +11,7 @@ import type {
   View,
   ViewRenderer
 } from '../../types/index.js'
+import { isView } from '../../utils/index.js'
 import { CommentView, TextView } from './atomic.js'
 import { BaseView } from './base.js'
 
@@ -102,11 +102,7 @@ export type ViewSwitchHandler = (tx: ViewSwitchTransaction) => void
  * - 在视图切换期间，新的更新请求会被标记为脏(dirty)并在当前切换完成后处理
  * - 如果视图初始化失败，会自动创建一个错误注释视图
  */
-export class DynamicView<T = any>
-  extends BaseView<ViewKind.DYNAMIC, HostNode>
-  implements Ref<T, never>
-{
-  public readonly [IS_REF] = true
+export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
   public readonly kind = ViewKind.DYNAMIC
 
   public readonly source: Ref<T>
@@ -131,18 +127,12 @@ export class DynamicView<T = any>
   }
 
   /**
-   * 获取当前视图
+   * 获取当前渲染的子视图
    *
    * @returns 当前缓存的视图实例，如果没有则为 null
    */
-  get current(): View | null {
+  get currentView(): View | null {
     return this.cachedView
-  }
-  /**
-   * 获取数据源的值
-   */
-  get value(): T {
-    return this.source.value
   }
   /**
    * 获取宿主节点
@@ -155,9 +145,9 @@ export class DynamicView<T = any>
    * 初始化视图
    */
   protected override doInit(): void {
-    this.#initView(this.source.value)
+    this.#initView(unref(this.source.value))
     this.effect = watch(
-      this.source,
+      () => unref(this.source.value), // 解包数据源，兼容嵌套ref
       newValue => {
         try {
           this.#updateView(newValue)
@@ -289,7 +279,6 @@ export class DynamicView<T = any>
     }
     return tx
   }
-
   /**
    * 提交上一个视图
    *
@@ -306,7 +295,6 @@ export class DynamicView<T = any>
       prev.dispose()
     }
   }
-
   /**
    * 提交下一个视图
    *
@@ -336,7 +324,6 @@ export class DynamicView<T = any>
       next[this.isActive ? 'activate' : 'deactivate']()
     }
   }
-
   /**
    * 初始化视图方法
    * @param value - 需要渲染的值

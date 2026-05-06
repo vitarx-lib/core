@@ -160,7 +160,7 @@ export async function serializeViewToSink(view: View, sink: Sink): Promise<void>
       break
 
     case ViewKind.DYNAMIC:
-      await serializeViewToSink(view.current!, sink)
+      await serializeViewToSink(view.currentView!, sink)
       break
 
     case ViewKind.COMPONENT:

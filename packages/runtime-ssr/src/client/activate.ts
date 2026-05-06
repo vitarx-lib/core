@@ -45,7 +45,7 @@ export async function hydrateNode(
   }
   // 动态节点
   if (isDynamicView(view)) {
-    return await hydrateNode(view.current!, container, nodeIndex)
+    return await hydrateNode(view.currentView!, container, nodeIndex)
   }
   const renderer = getRenderer()
   const reuseNode = getFirstNode(container, nodeIndex)

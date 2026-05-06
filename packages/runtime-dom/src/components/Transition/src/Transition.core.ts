@@ -78,6 +78,7 @@ interface TransitionProps extends BaseTransitionProps {
  *
  * @example Dynamic 组件
  * ```tsx
+ * // TODO 注释待优化
  * <Transition><Dynamic is={show.value ? A : B} memo /></Transition>
  * ```
  *
