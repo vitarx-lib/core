@@ -1,5 +1,5 @@
-import { isView } from '../../shared/index.js'
 import type { Component, HostContainer, View, ViewContext } from '../../types/index.js'
+import { isView } from '../../utils/index.js'
 import { createComponentView } from '../compiler/index.js'
 import { ComponentView } from '../implements/index.js'
 
