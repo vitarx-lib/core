@@ -34,8 +34,6 @@ export function isObject(val: any): val is { [key: PropertyKey]: any } {
  * isPlainObject(new Map()); // false
  * isPlainObject(null); // false
  * isPlainObject(42); // false
- * // 别名
- * isRecordObject({}); // true
  * ```
  */
 export function isPlainObject(val: any): val is AnyRecord {
