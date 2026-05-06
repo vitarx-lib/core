@@ -35,14 +35,5 @@
     "useDefineForClassFields": true,
     "types": ["vitest/globals", "vite/client", "node"],
     "outDir": "dist"
-  },
-  "include": [
-    "**/src/**/*.ts",
-    "**/tests/**/*.ts",
-    "**/__tests__/**/*.ts",
-    "./scripts/*.ts",
-    "vite-env.d.ts",
-    "packages/**/*.ts"
-  ],
-  "exclude": ["**/node_modules", "**/dist"]
+  }
 }

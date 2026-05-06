@@ -65,7 +65,7 @@ async function viteBuild(
     fileName = `index.${format}`,
     ext = 'js'
   } = options || {}
-  const tsconfigPath = resolve(packagePath, 'tsconfig.json')
+  const tsconfigPath = resolve(packagePath, 'tsconfig.build.json')
   const plugins: PluginOption[] = []
 
   // 如果需要生成类型声明文件

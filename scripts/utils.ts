@@ -24,9 +24,7 @@ export function createTsConfig(packagePath: string): string {
   // 定义临时配置文件的内容结构
   const tsconfigJson = {
     extends: '../../tsconfig.json', // 继承项目根目录的tsconfig配置
-    compilerOptions: { outDir: 'dist' },
-    include: ['src', '../../vite-env.d.ts'], // 包含的文件和目录
-    exclude: ['dist', 'node_modules'] // 排除的文件和目录
+    include: ['src', 'tests', '../../vite-env.d.ts'] // 包含的文件和目录
   }
   // 将配置对象写入JSON文件，使用2个空格进行格式化
   writeFileSync(tsconfigPath, JSON.stringify(tsconfigJson, null, 2))
@@ -104,7 +102,7 @@ export async function runTypeCheck(tsconfigPath: string): Promise<string> {
   // ts 原生校验
   log.warn('\n🧪 Running TypeCheck...') // 输出提示信息，表示正在运行 TypeScript 编译器
   // 使用 tsc 编译 TypeScript
-  await runCommand(`tsc -p ${tsconfigPath}`) // 执行 TypeScript 编译命令，使用指定的配置文件
+  await runCommand(`tsc -p ${tsconfigPath} --noEmit`) // 执行 TypeScript 编译命令，使用指定的配置文件
   // 类型校验成功
   log.success('✓ TypeCheck successfully')
   return tsconfigPath
