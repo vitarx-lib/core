@@ -16,7 +16,7 @@ abstract class ComputedRef<T> implements RefSignal<T, never> {
   readonly [IS_REF]: true = true
   readonly [IS_READONLY]: true = true
   public readonly isStatic!: boolean
-  protected dirty = false
+  protected dirty: boolean = false
   protected cached!: T
   protected constructor() {}
   get value(): T {
