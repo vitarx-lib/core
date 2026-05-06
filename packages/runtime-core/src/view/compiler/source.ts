@@ -12,7 +12,7 @@ import {
 } from '@vitarx/responsive'
 
 /* ----------------------------------------
- * BaseViewSource（内部使用，不暴露）
+ * BaseViewComputed（内部使用，不暴露）
  * ------------------------------------- */
 abstract class BaseViewComputed<T> implements RefSignal<T> {
   readonly [IS_SIGNAL]: true = true
@@ -57,7 +57,7 @@ abstract class BaseViewComputed<T> implements RefSignal<T> {
  *
  * 使用示例：
  * ```typescript
- * const expr = new ComputeViewSource(() => {
+ * const expr = new DynamicViewSource(() => {
  *   return cond ? <A/> : <B/>;
  * });
  * ```
