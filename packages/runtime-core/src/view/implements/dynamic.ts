@@ -8,14 +8,17 @@ import type {
   HostContainer,
   HostNode,
   MountType,
+  ValidChildren,
   View,
   ViewRenderer
 } from '../../types/index.js'
 import { isView } from '../../utils/index.js'
+import { resolveChildren } from '../compiler/resolve.js'
 import { CommentView, TextView } from './atomic.js'
 import { BaseView } from './base.js'
+import { ListView } from './list.js'
 
-type SourceValueType = 'view' | 'text' | 'empty'
+type SourceValueType = 'view' | 'text' | 'empty' | 'array'
 /**
  * 视图切换事务接口
  * 负责协调 prev/next 视图、commit 逻辑
@@ -346,7 +349,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
    * 更新视图的方法，根据传入的值来决定如何更新或切换视图
    * @param value - 任意类型的值，用于决定视图的更新方式
    */
-  #updateView(value: unknown): void {
+  #updateView(value: T): void {
     if (this.#cancelTx) {
       this.#dirty = true
       return
@@ -419,6 +422,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
   }
   #resolveType(input: unknown): SourceValueType {
     if (isView(input)) return 'view'
+    if (isArray(input)) return 'array'
     switch (typeof input) {
       case 'number':
         return 'text'
@@ -428,23 +432,12 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       default:
         if (__VITARX_DEV__) {
           if (input != null && typeof input !== 'boolean') {
-            if (isArray(input)) {
-              logger.warn(
-                `[DynamicView]: Array type is not supported for dynamic rendering. ` +
-                  `The value type must be Primitive (string, number, boolean) or View instance. ` +
-                  `Received: Array[${input.length} items]. ` +
-                  `If you need to render a list, consider using map() in your template expression, ` +
-                  `e.g., "{cond && list.map(item => <ListItem data={item} />)}".`,
-                this.location
-              )
-            } else {
-              logger.warn(
-                `[DynamicView]: Invalid value type "${typeof input}" for dynamic rendering. ` +
-                  `This value will be treated as an empty element (null/undefined). ` +
-                  `Supported types: Primitive (string, number, boolean) or View instance.`,
-                this.location
-              )
-            }
+            logger.warn(
+              `[DynamicView]: Invalid value type "${typeof input}" for dynamic rendering. ` +
+                `This value will be treated as an empty element (null/undefined). ` +
+                `Supported types: Primitive (string, number, boolean), View instance or Array.`,
+              this.location
+            )
           }
         }
         return 'empty'
@@ -458,6 +451,8 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
         return new TextView(String(value))
       case 'empty':
         return new CommentView('v-if')
+      case 'array':
+        return new ListView(resolveChildren(value as ValidChildren), this.location)
     }
   }
 }
