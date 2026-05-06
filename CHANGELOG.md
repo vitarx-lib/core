@@ -1,3 +1,24 @@
+# [4.0.0-beta.15](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.14...v4.0.0-beta.15) (2026-05-06)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复 helpers.ts 中的 isRef 判断逻辑 ([a07d5aa](https://github.com/vitarx-lib/core/commit/a07d5aaa2e851c2a9e90ae30a54b270074fff6b1))
+* **runtime-core:** 修复 InstanceRef 类型声明不明确 ([92d6426](https://github.com/vitarx-lib/core/commit/92d6426d48aed17df32ad71dd0c60e93cbf56e89))
+* **runtime-core:** 修正子元素解析时的类型断言 ([a2cb822](https://github.com/vitarx-lib/core/commit/a2cb822b39ec4f6fef62500aed616bb9778ae9ee))
+* **runtime-dom:** 修复 v-show 指令的 display 样式恢复逻辑 ([79198b8](https://github.com/vitarx-lib/core/commit/79198b891bd0540f12fcf5629567de8d2dea7ffb))
+* **scripts:** 修复 TypeScript 校验命令配置 ([7f88f70](https://github.com/vitarx-lib/core/commit/7f88f70f06a7dce3055df4db2b8626cbd7102789))
+* **transition:** 优化注释内容 ([b72eb0f](https://github.com/vitarx-lib/core/commit/b72eb0f167b76a94ce890ab54fba81b6f3cad004))
+* **types:** 修正组件属性类型声明和泛型约束 ([007fe8f](https://github.com/vitarx-lib/core/commit/007fe8ffbd78f29acbabf11cadb19fbacfc78071))
+
+
+### Features
+
+* **runtime-core:** 实现 useChildren 和 useFastChild 组件子视图归一化功能 ([afaf0a1](https://github.com/vitarx-lib/core/commit/afaf0a1835fff17186de81aaa435395552e77ad9))
+* **runtime-core:** 支持 builder 函数设置 displayName 属性 ([51c2b97](https://github.com/vitarx-lib/core/commit/51c2b979e28649b9ef305c668260b3913d44b36f))
+* **runtime-core:** 新增组件函数位置信息参数 ([b1a8404](https://github.com/vitarx-lib/core/commit/b1a84043146c99a9fba841b19dbddcf11adf9665))
+* **runtime-core:** 添加动态视图的 value 访问器 ([e232d9b](https://github.com/vitarx-lib/core/commit/e232d9bcaa76e2c4e223da99b8c0d5d472fb0d05))
+
 # [4.0.0-beta.14](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.13...v4.0.0-beta.14) (2026-05-02)
 
 
