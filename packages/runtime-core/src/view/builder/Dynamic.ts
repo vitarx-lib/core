@@ -139,10 +139,9 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
   }
 
   const viewSource = new ExprRef(() => {
-    // TODO 待优化缓存逻辑
     const is = props['is']
-    const key = props['key']
     if (!is) return new CommentView(`<Dynamic is=${String(is)} />`)
+    const key = props['key']
     if (cache && isComponent(is)) {
       let keyMap = cache.get(is)
       if (keyMap) {
