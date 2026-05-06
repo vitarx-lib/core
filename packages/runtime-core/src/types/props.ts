@@ -87,7 +87,7 @@ export interface IntrinsicAttributes {
   /**
    * 引用组件/元素实例
    */
-  ref?: InstanceRef
+  ref?: InstanceRef<any>
   /**
    * 绑定属性
    *
