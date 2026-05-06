@@ -51,7 +51,7 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
   private head?: ListItemView | null = null
   private tail?: ListItemView | null = null
   private size = 0
-  constructor(items?: View[], location?: CodeLocation) {
+  constructor(items?: Iterable<View>, location?: CodeLocation) {
     super(location)
     if (Array.isArray(items)) for (const item of items) this.append(item)
   }
