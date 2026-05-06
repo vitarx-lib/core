@@ -1,7 +1,7 @@
 import { shallowRef } from '@vitarx/responsive'
 import { isFunction, logger, withDelayTimeout } from '@vitarx/utils'
 import { defineValidate, onDispose, onInit } from '../../../runtime/index.js'
-import { isView } from '../../../shared/index.js'
+import { isView } from '../../../utils/index.js'
 import type {
   AnyProps,
   Component,

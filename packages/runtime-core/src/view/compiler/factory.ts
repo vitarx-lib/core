@@ -1,6 +1,6 @@
 import { type Ref } from '@vitarx/responsive'
 import { getCallSource, isPlainObject } from '@vitarx/utils'
-import { isViewBuilder } from '../../shared/index.js'
+import { isViewBuilder } from '../../utils/index.js'
 import type {
   AnyProps,
   CodeLocation,

@@ -2,7 +2,7 @@ import { queuePostFlushJob, shallowRef, watch } from '@vitarx/responsive'
 import { isFunction } from '@vitarx/utils'
 import { SUSPENSE_COUNTER } from '../../../constants/index.js'
 import { defineValidate, getInstance, onInit, provide } from '../../../runtime/index.js'
-import { isView } from '../../../shared/index.js'
+import { isView } from '../../../utils/index.js'
 import type { AnyProps, View } from '../../../types/index.js'
 import { CommentView, DynamicView } from '../../../view/index.js'
 

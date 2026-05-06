@@ -32,7 +32,7 @@ describe('Freeze Component', () => {
   }
 
   function getSubView(freezeView: ReturnType<typeof createFreezeView>) {
-    return (freezeView.instance!.subView as DynamicView).current!
+    return (freezeView.instance!.subView as DynamicView).currentView!
   }
 
   beforeEach(() => {

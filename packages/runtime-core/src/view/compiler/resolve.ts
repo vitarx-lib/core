@@ -1,8 +1,6 @@
 import { isRef, unref } from '@vitarx/responsive'
 import { isFunction, isPlainObject, popProperty } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/attributes.js'
-import { StyleUtils } from '../../shared/index.js'
-import { isView } from '../../shared/utils/is.js'
 import type {
   AnyProps,
   BindAttributes,
@@ -11,6 +9,8 @@ import type {
   ValidChildren,
   View
 } from '../../types/index.js'
+import { isView } from '../../utils/is.js'
+import { StyleUtils } from '../../utils/style.js'
 import { CommentView, TextView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
 
