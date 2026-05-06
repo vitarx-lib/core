@@ -110,17 +110,16 @@ export function access<T extends object, K extends keyof T>(
   obj: T,
   key: K
 ): T[K] | Ref<T[K], never> {
+  if (isRef(obj) && key === 'value') return obj
   // 检查对象是否有属性跟踪
   const { value, isTrack } = hasPropTrack(obj, key)
   // 不需要跟踪直接返回
   if (!isTrack) return value
   if (isRef(value)) return value
-  return key === 'value' && isRef(obj)
-    ? obj
-    : {
-        [IS_REF]: true,
-        get value(): T[K] {
-          return obj[key]
-        }
-      }
+  return {
+    [IS_REF]: true,
+    get value(): T[K] {
+      return obj[key]
+    }
+  }
 }
