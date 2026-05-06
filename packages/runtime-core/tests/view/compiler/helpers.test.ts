@@ -1,6 +1,6 @@
 import { isRef, ref } from '@vitarx/responsive'
 import { describe, expect, it } from 'vitest'
-import { access, branch, dynamic, isDynamicView, ViewKind } from '../../../src/index.js'
+import { accessor, branch, dynamic, isDynamicView, ViewKind } from '../../../src/index.js'
 
 describe('Compiler Helpers', () => {
   describe('branch', () => {
@@ -26,7 +26,7 @@ describe('Compiler Helpers', () => {
   describe('access', () => {
     it('当属性不是响应式时应该直接返回值', () => {
       const obj = { name: 'test' }
-      const result = access(obj, 'name')
+      const result = accessor(obj, 'name')
 
       expect(result).toBe('test')
       expect(isRef(result)).toBeFalsy()
@@ -39,7 +39,7 @@ describe('Compiler Helpers', () => {
           return r.value ? 'test' : 'updated'
         }
       }
-      const result = access(obj, 'name')
+      const result = accessor(obj, 'name')
 
       expect(isRef(result)).toBe(true)
     })

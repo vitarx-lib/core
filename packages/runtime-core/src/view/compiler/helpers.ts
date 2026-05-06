@@ -86,7 +86,7 @@ export function branch(
 }
 
 /**
- * 访问对象的属性，如果属性是响应式则返回 Ref
+ * 属性访问器，如果属性是响应式则返回 Ref
  *
  * 主要用途是使传递的 `reactive[key]` child 保持响应式。
  *
@@ -102,11 +102,11 @@ export function branch(
  * ```jsx
  * const data = reactive({ a: 1 })
  *
- * createElement('div', {children: access(data, 'a') // children: Ref<1>})
- * createElement('div', {children: access({a:1}, 'a') // children: 1})
+ * createElementView('div', {children: accessor(data, 'a') // children: Ref<1>})
+ * createElementView('div', {children: accessor({a:1}, 'a') // children: 1})
  * ```
  */
-export function access<T extends object, K extends keyof T>(
+export function accessor<T extends object, K extends keyof T>(
   obj: T,
   key: K
 ): T[K] | Ref<T[K], never> {
