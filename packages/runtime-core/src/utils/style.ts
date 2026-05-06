@@ -1,6 +1,6 @@
 import { unref } from '@vitarx/responsive'
 import { isPlainObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
-import type { StyleRules } from '../../types/index.js'
+import type { StyleRules } from '../types/index.js'
 
 /**
  * style属性值

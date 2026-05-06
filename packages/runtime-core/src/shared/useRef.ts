@@ -4,7 +4,7 @@ import type {
   ComponentPublicInstance,
   HostElement,
   HostElementTag
-} from '../../types/index.js'
+} from '../types/index.js'
 
 /**
  * 辅助计算出元素类型

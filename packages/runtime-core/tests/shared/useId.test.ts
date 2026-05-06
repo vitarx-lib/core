@@ -1,5 +1,5 @@
 import { afterEach } from 'vitest'
-import { useId } from '../../../src/index.js'
+import { useId } from '../../src/index.js'
 
 describe('Runtime Core Shared Helpers - useId', () => {
   beforeEach(() => {

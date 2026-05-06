@@ -1,6 +1,6 @@
-import { ViewKind } from '../../constants/index.js'
-import { IS_VIEW, IS_VIEW_BUILDER } from '../../constants/symbol.js'
-import type { Component, View } from '../../types/index.js'
+import { ViewKind } from '../constants/index.js'
+import { IS_VIEW, IS_VIEW_BUILDER } from '../constants/symbol.js'
+import type { Component, View } from '../types/index.js'
 import type {
   CommentView,
   ComponentView,
@@ -9,8 +9,8 @@ import type {
   FragmentView,
   ListView,
   TextView
-} from '../../view/index.js'
-import { type ViewBuilder } from '../../view/index.js'
+} from '../view/index.js'
+import { type ViewBuilder } from '../view/index.js'
 
 /**
  * 检查给定值是否为View对象类型

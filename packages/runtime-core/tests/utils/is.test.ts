@@ -20,7 +20,7 @@ import {
   isViewBuilder,
   ListView,
   ViewKind
-} from '../../../src/index.js'
+} from '../../src/index.js'
 
 describe('Runtime Core Shared Utils - is', () => {
   describe('isView', () => {

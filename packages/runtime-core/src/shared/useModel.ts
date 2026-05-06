@@ -6,7 +6,7 @@ import {
   shallowRef,
   watch
 } from '@vitarx/responsive'
-import type { AnyProps } from '../../types/index.js'
+import type { AnyProps } from '../types/index.js'
 
 /**
  * ModelRef 类实现了一个双向绑定的属性代理，用于在组件Prop和响应式系统之间建立双向数据绑定。

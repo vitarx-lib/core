@@ -1,4 +1,4 @@
-import { StyleUtils } from '../../../src/index.js'
+import { StyleUtils } from '../../src/index.js'
 
 describe('Runtime Core Shared Utils - StyleUtils', () => {
   describe('mergeCssClass', () => {

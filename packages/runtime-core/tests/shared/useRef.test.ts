@@ -1,4 +1,4 @@
-import { useRef } from '../../../src/index.js'
+import { useRef } from '../../src/index.js'
 
 describe('Runtime Core Shared Helpers - useRef', () => {
   it('应该创建一个初始值为 null 的 ShallowRef', () => {

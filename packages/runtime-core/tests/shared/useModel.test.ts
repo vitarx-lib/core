@@ -1,5 +1,5 @@
 import { ref } from '@vitarx/responsive'
-import { ModelRef, useModel } from '../../../src/index.js'
+import { ModelRef, useModel } from '../../src/index.js'
 
 describe('Runtime Core Shared Helpers - useModel', () => {
   describe('ModelRef', () => {

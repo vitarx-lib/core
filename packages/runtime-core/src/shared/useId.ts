@@ -1,5 +1,5 @@
 import { logger } from '@vitarx/utils'
-import { getApp } from '../../runtime/index.js'
+import { getApp } from '../runtime/index.js'
 
 let globalId = 0
 
