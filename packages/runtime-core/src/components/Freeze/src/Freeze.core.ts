@@ -2,7 +2,7 @@ import { logger } from '@vitarx/utils'
 import { onDispose, onViewSwitch } from '../../../runtime/index.js'
 import type { AnyProps, Component, View } from '../../../types/index.js'
 import { isComponent, isComponentView } from '../../../utils/index.js'
-import { DynamicViewSource } from '../../../view/compiler/source.js'
+import { ExprRef } from '../../../view/compiler/source.js'
 import { createCommentView, createComponentView, DynamicView } from '../../../view/index.js'
 import { pruneCache, shouldCache } from './Freeze.utils.js'
 
@@ -111,7 +111,7 @@ function Freeze(props: FreezeProps): View {
   /**
    * 切换到指定组件
    */
-  const switchTo = new DynamicViewSource((): View => {
+  const switchTo = new ExprRef((): View => {
     const component = props.is
     const key = props.key
     if (!component) {
