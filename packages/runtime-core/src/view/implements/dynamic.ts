@@ -13,7 +13,7 @@ import type {
   ViewRenderer
 } from '../../types/index.js'
 import { isView } from '../../utils/index.js'
-import { resolveChildren } from '../compiler/resolve.js'
+import { resolveChildrenBase } from '../compiler/children.js'
 import { CommentView, TextView } from './atomic.js'
 import { BaseView } from './base.js'
 import { ListView } from './list.js'
@@ -452,7 +452,10 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       case 'empty':
         return new CommentView('v-if')
       case 'array':
-        return new ListView(resolveChildren(value as ValidChildren), this.location)
+        return new ListView(
+          resolveChildrenBase(value as ValidChildren, (source: Ref) => new DynamicView(source)),
+          this.location
+        )
     }
   }
 }
