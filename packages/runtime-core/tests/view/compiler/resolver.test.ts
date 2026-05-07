@@ -1,6 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import { createTextView, isDynamicView, isTextView, isView, ViewKind } from '../../../src/index.js'
+import { createTextView, isDynamicView, isTextView, ViewKind } from '../../../src/index.js'
 import {
   applyRef,
   bindProps,
@@ -9,7 +9,7 @@ import {
   resolveChildren,
   resolveProps,
   SPECIAL_PROP_MERGERS
-} from '../../../src/view/compiler/resolve.js'
+} from '../../../src/view/compiler/resolver.js'
 
 describe('Compiler Resolve', () => {
   describe('SPECIAL_PROP_MERGERS', () => {
@@ -128,11 +128,9 @@ describe('Compiler Resolve', () => {
       expect(result!.kind).toBe(ViewKind.DYNAMIC)
     })
 
-    it('当输入是空字符串时应该返回 CommentView', () => {
+    it('当输入是空字符串时应该返回 Null', () => {
       const result = resolveChild('')
-
-      expect(isView(result)).toBeTruthy()
-      expect(result!.kind).toBe(ViewKind.COMMENT)
+      expect(result).toBeNull()
     })
 
     it('当输入是其他类型时应该转换为 null', () => {

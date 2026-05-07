@@ -1,6 +1,6 @@
 import { useView } from '../runtime/context.js'
 import type { ResolvedChildren, ValidChildren, View } from '../types/index.js'
-import { resolveChild, resolveChildren } from '../view/compiler/resolve.js'
+import { resolveChild, resolveChildren } from '../view/compiler/resolver.js'
 
 /**
  * 格式化组件的 props.children 为类型安全的 View 数组

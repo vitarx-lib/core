@@ -18,7 +18,7 @@ import type {
   ValidChildren,
   ViewRenderer
 } from '../../types/index.js'
-import { applyRef, resolveChildren, resolveProps } from '../compiler/resolve.js'
+import { applyRef, resolveChildren, resolveProps } from '../compiler/resolver.js'
 import { BaseView } from './base.js'
 
 /**

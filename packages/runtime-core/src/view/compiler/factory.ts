@@ -18,7 +18,7 @@ import { DynamicView } from '../implements/dynamic.js'
 import { ElementView } from '../implements/element.js'
 import { FragmentView } from '../implements/fragment.js'
 import { ComponentView, ListView } from '../implements/index.js'
-import { isValidChild, resolveBind } from './resolve.js'
+import { isValidChild, resolveBind } from './resolver.js'
 
 /**
  * 创建视图的工厂函数

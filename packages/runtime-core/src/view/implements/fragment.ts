@@ -9,7 +9,7 @@ import type {
   ResolvedChildren,
   ValidChildren
 } from '../../types/index.js'
-import { resolveChildren } from '../compiler/resolve.js'
+import { resolveChildren } from '../compiler/resolver.js'
 import { BaseView } from './base.js'
 
 /**
