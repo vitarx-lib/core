@@ -1,3 +1,15 @@
+# [4.0.0-beta.16](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.15...v4.0.0-beta.16) (2026-05-07)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修正动态视图子元素解析方式 ([74b5f90](https://github.com/vitarx-lib/core/commit/74b5f9007ef3ddc2889401b9af4a9c7d3c7fcf4a))
+
+
+### Features
+
+* **view:** 支持 DynamicView 渲染数组类型数据 ([901313b](https://github.com/vitarx-lib/core/commit/901313b3030a0f4bd83592c90d8b531467436b24))
+
 # [4.0.0-beta.15](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.14...v4.0.0-beta.15) (2026-05-06)
 
 
