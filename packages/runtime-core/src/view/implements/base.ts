@@ -8,6 +8,7 @@ import type {
   DirectiveMap,
   HostContainer,
   HostNode,
+  InstanceRef,
   MountType,
   ViewContext
 } from '../../types/index.js'
@@ -245,5 +246,20 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     } else {
       this.#active = active
     }
+  }
+}
+
+/**
+ * 应用引用（ref）到指定元素
+ *
+ * @param ref - 引用对象，可以是函数或对象
+ * @param el - 要应用引用的元素
+ */
+export function applyRef(ref: InstanceRef, el: unknown) {
+  if (!ref) return
+  if (typeof ref === 'function') {
+    ref(el)
+  } else {
+    ref.value = el
   }
 }

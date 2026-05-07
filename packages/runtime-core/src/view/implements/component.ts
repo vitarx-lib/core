@@ -22,9 +22,10 @@ import type {
   View,
   ViewContext
 } from '../../types/index.js'
-import { applyRef, mergeProps, resolveChild, resolveProps } from '../compiler/resolver.js'
+import { mergeProps, resolveProps } from '../compiler/props.js'
+import { resolveChild } from '../compiler/utils.js'
 import { CommentView } from './atomic.js'
-import { BaseView } from './base.js'
+import { applyRef, BaseView } from './base.js'
 import type { ViewSwitchHandler } from './dynamic.js'
 
 /**

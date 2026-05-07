@@ -1,7 +1,7 @@
 import { hasPropTrack, IS_REF, isRef, type Ref } from '@vitarx/responsive'
 import type { CodeLocation } from '../../types/index.js'
 import { DynamicView } from '../implements/index.js'
-import { BranchRef, ExprRef } from './source.js'
+import { BranchRef, ExprRef } from './ref.js'
 
 /**
  * 声明式动态视图，始终创建 DynamicView 实例。

@@ -18,8 +18,9 @@ import type {
   ValidChildren,
   ViewRenderer
 } from '../../types/index.js'
-import { applyRef, resolveChildren, resolveProps } from '../compiler/resolver.js'
-import { BaseView } from './base.js'
+import { resolveProps } from '../compiler/props.js'
+import { resolveChildren } from '../compiler/utils.js'
+import { applyRef, BaseView } from './base.js'
 
 /**
  * ElementView 类用于表示和管理 DOM 元素视图，支持属性、子元素、指令和引用等功能。

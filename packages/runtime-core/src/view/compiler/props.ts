@@ -1,25 +1,15 @@
 import { isRef, unref } from '@vitarx/responsive'
 import { isFunction, isPlainObject, popProperty } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/attributes.js'
-import type {
-  AnyProps,
-  BindAttributes,
-  InstanceRef,
-  ResolvedChildren,
-  ValidChildren,
-  View
-} from '../../types/index.js'
-import { isView } from '../../utils/is.js'
+import type { AnyProps, BindAttributes, InstanceRef } from '../../types/index.js'
 import { StyleUtils } from '../../utils/style.js'
-import { resolveChildBase, resolveChildrenBase } from './children.js'
-import { createDynamicView } from './factory.js'
 
 type ResolvePropsResult<T extends AnyProps> = {
   ref?: InstanceRef
   props: T | null
 }
 
-export const SPECIAL_PROP_MERGERS = {
+const SPECIAL_PROP_MERGERS = {
   style: StyleUtils.mergeCssStyle,
   class: StyleUtils.mergeCssClass
 } as const
@@ -133,59 +123,6 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   }
   if (isRef(ref) || isFunction(ref)) result.ref = ref
   return result
-}
-/**
- * 检查给定的值是否是有效的子元素
- * @param value - 需要检查的值，可以是任何类型
- * @returns {boolean} 返回一个布尔值，表示值是否是有效的子元素
- *          如果值是字符串、数字、视图、数组或引用，则返回true
- */
-export function isValidChild(value: any): value is ValidChildren {
-  const type = typeof value
-  return (
-    type === 'string' || type === 'number' || isView(value) || Array.isArray(value) || isRef(value)
-  )
-}
-/**
- * 解析子元素并转换为适当的视图类型
- *
- * @param child - 需要解析的子元素，可以是任意类型
- * @returns 返回对应的视图对象，如果无法处理则返回 null
- */
-export function resolveChild(child: unknown): null | View {
-  return resolveChildBase(child, createDynamicView)
-}
-
-/**
- * 解析并扁平化子节点数组
- *
- * 该函数使用迭代而非递归的方式处理嵌套的子节点数组，
- * 避免了深度嵌套时可能导致的栈溢出问题。
- *
- * 主要处理流程：
- * 1. 使用栈结构进行迭代处理，扁平化嵌套数组
- * 2. 非View的child转换为动态/文本视图
- * 3. 建立子节点与父节点的关联
- *
- * @param children 子节点或子节点列表，可以是单个值、数组或嵌套数组
- * @returns {ResolvedChildren} 解析后的子节点数组
- */
-export function resolveChildren(children: ValidChildren): ResolvedChildren {
-  return resolveChildrenBase(children, createDynamicView)
-}
-
-/**
- * 应用引用（ref）到指定元素
- * @param ref - 引用对象，可以是函数或对象
- * @param el - 要应用引用的元素
- */
-export function applyRef(ref: InstanceRef, el: unknown) {
-  if (!ref) return
-  if (typeof ref === 'function') {
-    ref(el)
-  } else {
-    ref.value = el
-  }
 }
 
 /**

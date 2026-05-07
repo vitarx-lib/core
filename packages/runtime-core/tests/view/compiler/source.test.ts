@@ -1,6 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { describe, expect, it, vi } from 'vitest'
-import { BranchRef, ExprRef } from '../../../src/view/compiler/source.js'
+import { BranchRef, ExprRef } from '../../../src/view/compiler/ref.js'
 
 describe('Compiler Source', () => {
   describe('ExprRef', () => {

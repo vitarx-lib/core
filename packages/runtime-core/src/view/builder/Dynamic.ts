@@ -1,12 +1,12 @@
 import { popProperty } from '@vitarx/utils'
 import { pruneCache } from '../../components/Freeze/src/Freeze.utils.js'
 import type { AnyProps, Component, ValidChildren, View, ViewTag } from '../../types/index.js'
+import { isComponent } from '../../utils/is.js'
 import { createComponentView, createView } from '../compiler/factory.js'
-import { ExprRef } from '../compiler/source.js'
+import { ExprRef } from '../compiler/ref.js'
 import { CommentView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
-import { isComponent } from '../../utils/is.js'
 
 export interface DynamicProps {
   /**

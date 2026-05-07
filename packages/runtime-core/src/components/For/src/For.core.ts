@@ -2,7 +2,7 @@ import { type Ref, ShallowRef, shallowRef, untrack } from '@vitarx/responsive'
 import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
 import { defineValidate, getInstance, getRenderer, viewEffect } from '../../../runtime/index.js'
 import type { ValidChild, View } from '../../../types/index.js'
-import { resolveChild } from '../../../view/compiler/resolver.js'
+import { resolveChild } from '../../../view/compiler/utils.js'
 import { CommentView, ListView } from '../../../view/index.js'
 import { checkKey, ensureMounted, getLIS, normalizeKeyResolver } from './For.utils.js'
 

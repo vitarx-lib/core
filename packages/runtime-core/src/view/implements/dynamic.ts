@@ -452,10 +452,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       case 'empty':
         return new CommentView('v-if')
       case 'array':
-        return new ListView(
-          resolveChildrenBase(value as ValidChildren, (source: Ref) => new DynamicView(source)),
-          this.location
-        )
+        return new ListView(resolveChildrenBase(value as ValidChildren), this.location)
     }
   }
 }
