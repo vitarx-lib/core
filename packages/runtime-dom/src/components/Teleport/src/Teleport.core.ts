@@ -25,7 +25,22 @@ interface TeleportProps {
    * ```
    */
   children: View
-  /** 传送的目标 */
+  /**
+   * 传送的目标
+   *
+   * @example
+   * ```tsx
+   * <Teleport to="#container">
+   *   <div>传送到id为container的元素中...</div>
+   * </Teleport>
+   * <Teleport to="body">
+   *   <div>传送到body中...</div>
+   * </Teleport>
+   * <Teleport to="head">
+   *   <div>传送到head中...</div>
+   * </Teleport>
+   * ```
+   */
   to: string
   /**
    * 是否延迟渲染
