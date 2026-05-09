@@ -65,13 +65,15 @@ export function dynamic<T>(build: () => T, location?: CodeLocation): DynamicView
  *   [() => <A />, () => <B />]
  * )
  * // source.value → 当前分支的渲染结果
+ * // 注意：如果条件不具有响应式依赖，则 source 返回的是分支执行后的值！而非BranchRef对象
  * ```
  */
 export function branch<T>(
   select: () => number | null,
   branches: readonly (() => T)[]
-): Ref<T | null, never> {
-  return new BranchRef(select, branches)
+): T | null | Ref<T | null, never> {
+  const source = new BranchRef(select, branches)
+  return source.isStatic ? source.value : source
 }
 
 /**

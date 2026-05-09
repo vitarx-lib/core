@@ -4,27 +4,42 @@ import { accessor, branch, dynamic, expr, isDynamicView, ViewKind } from '../../
 
 describe('Compiler Helpers', () => {
   describe('branch', () => {
-    it('应该创建 BranchRef（Ref）实例', () => {
-      const select = () => 0
-      const branches = [() => 'branch 0', () => 'branch 1']
-      const source = branch(select, branches)
+    it('当条件不含响应式依赖时应该直接返回分支值', () => {
+      const result = branch(() => 0, [() => 'branch 0', () => 'branch 1'])
 
-      expect(isRef(source)).toBeTruthy()
-      expect(source.value).toBe('branch 0')
+      expect(result).toBe('branch 0')
+      expect(isRef(result)).toBeFalsy()
     })
 
-    it('应该根据选择器切换分支结果', () => {
+    it('当条件不含响应式依赖且返回 null 时应该返回 null', () => {
+      const result = branch(() => null, [() => 'branch 0'])
+
+      expect(result).toBe(null)
+    })
+
+    it('当条件包含响应式依赖时应该返回 Ref', () => {
       const idx = ref(0)
-      const source = branch(
+      const result = branch(
         () => (idx.value === 0 ? 0 : idx.value === 1 ? 1 : null),
         [() => 'A', () => 'B']
       )
 
-      expect(source.value).toBe('A')
+      expect(isRef(result)).toBeTruthy()
+      expect((result as any).value).toBe('A')
+    })
+
+    it('应该根据响应式条件切换分支结果', () => {
+      const idx = ref(0)
+      const result = branch(
+        () => (idx.value === 0 ? 0 : idx.value === 1 ? 1 : null),
+        [() => 'A', () => 'B']
+      )
+
+      expect((result as any).value).toBe('A')
       idx.value = 1
-      expect(source.value).toBe('B')
+      expect((result as any).value).toBe('B')
       idx.value = 2
-      expect(source.value).toBe(null)
+      expect((result as any).value).toBe(null)
     })
   })
 
