@@ -196,6 +196,11 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     this.#setActive(true)
     return this
   }
+  /**
+   * 停用视图响应式
+   *
+   * 停用当前视图树的响应式，必须与 `activate` 搭配使用
+   */
   deactivate(): this {
     if (!this.isRuntime) {
       throw new Error('[View.deactivate] View is not in runtime state')
