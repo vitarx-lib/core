@@ -1,3 +1,18 @@
+# [4.0.0-beta.18](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.17...v4.0.0-beta.18) (2026-05-10)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复开发环境中组件 props 的只读处理 ([c0402ca](https://github.com/vitarx-lib/core/commit/c0402cab10854d43a5ba426061946806c7bb1531))
+* **runtime-core:** 移除只读包装避免冗余处理 ([53857e0](https://github.com/vitarx-lib/core/commit/53857e05c8b761ef5cd38ff76dbf6a35c5753955))
+* **types:** 修正 class 属性类型并添加类型测试 ([441a548](https://github.com/vitarx-lib/core/commit/441a5487fbfd528836905e29e7ac09e540792c34))
+
+
+### Features
+
+* **runtime-core:** 优化 useModel 双向绑定的错误处理与类型支持 ([bcc9d2f](https://github.com/vitarx-lib/core/commit/bcc9d2f0dc22f198195eee9d6633f12eaf44516a))
+* **runtime-core:** 添加视图响应式停用方法 ([0edeccb](https://github.com/vitarx-lib/core/commit/0edeccbd19e770705fc7e195f1bde1575633db9d))
+
 # [4.0.0-beta.17](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.16...v4.0.0-beta.17) (2026-05-10)
 
 
