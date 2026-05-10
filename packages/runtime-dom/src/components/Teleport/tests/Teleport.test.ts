@@ -29,18 +29,9 @@ describe('Teleport 组件', () => {
   })
 
   describe('属性验证', () => {
-    it('应该验证 children 必须为 View 对象', () => {
-      expect(() => {
-        Teleport.validateProps({
-          children: 'not a view',
-          to: '#target'
-        })
-      }).toThrowError(TypeError)
-    })
-
     it('应该验证 to 必须为字符串（当 disabled 为 false 时）', () => {
       expect(() => {
-        Teleport.validateProps({
+        ;(Teleport as any).validateProps({
           children: createView(testTag, { children: 'child' }),
           to: 123
         })
@@ -49,7 +40,7 @@ describe('Teleport 组件', () => {
 
     it('应该接受有效的 children 和 to 属性', () => {
       expect(() => {
-        Teleport.validateProps({
+        ;(Teleport as any).validateProps({
           children: createView(testTag, { children: 'child' }),
           to: '#target'
         })
@@ -58,7 +49,7 @@ describe('Teleport 组件', () => {
 
     it('应该允许 to 不是字符串当 disabled 为 true 时', () => {
       expect(() => {
-        Teleport.validateProps({
+        ;(Teleport as any).validateProps({
           children: createView(testTag, { children: 'child' }),
           to: 123,
           disabled: true

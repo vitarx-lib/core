@@ -1,13 +1,14 @@
 import {
-  CommentView,
+  createCommentView,
+  defineValidate,
   getInstance,
-  isView,
   onBeforeMount,
   onDispose,
   onHide,
   onInit,
   onMounted,
   onShow,
+  useFastChild,
   type View
 } from '@vitarx/runtime-core'
 import { isString } from '@vitarx/utils'
@@ -68,7 +69,7 @@ interface TeleportProps {
  *
  * @example
  * ```jsx
- * // 基本用法
+ * // 基本用法 to 支持 id class tag
  * <Teleport to="#modal">
  *   <ModalContent />
  * </Teleport>
@@ -91,46 +92,50 @@ interface TeleportProps {
  * ```
  */
 function Teleport({ children, to, defer, disabled }: TeleportProps): View {
-  if (__VITARX_SSR__) return new CommentView(`teleport to ${to}`)
-  if (disabled) return children
+  const child = useFastChild(children)
+  // If there's no child, return a placeholder comment
+  if (!child) return createCommentView('teleport:empty')
+  // 禁用时返回子组件
+  if (disabled) return child
+  // Create a placeholder comment
+  const placeholder = createCommentView(`teleport -> ${to}`)
+  // 服务端渲染时提前返回占位符
+  if (__VITARX_SSR__) return placeholder
   const instance = getInstance()!
-  let teleported = false
   onInit(() => {
-    children.init(instance.subViewContext)
+    child.init(instance.subViewContext)
   })
   const mount = () => {
     const target = getTarget(to, instance.view.location)
-    if (target) {
-      children.mount(target)
-      teleported = true
-    }
+    if (target) child.mount(target)
   }
   if (defer) {
     onMounted(mount)
   } else {
     onBeforeMount(mount)
   }
-  if (teleported) {
-    // 兼容停用/恢复
-    onShow(() => {
-      if (!children.isActive) children.activate()
-    })
-    onHide(() => {
-      children.deactivate()
-    })
-  }
-  onDispose(() => children.dispose())
-  return new CommentView(`teleport:${to}`)
+  // 兼容停用/恢复
+  onShow(() => {
+    if (child.isRuntime && !child.isActive) {
+      child.activate()
+    }
+  })
+  onHide(() => {
+    if (child.isRuntime && child.isActive) {
+      child.deactivate()
+    }
+  })
+  // 销毁时销毁子组件
+  onDispose(() => child.dispose())
+  return placeholder
 }
 
 Teleport.defaultProps = { defer: false, disabled: false } as const
-Teleport.validateProps = (props: Record<string, any>): void => {
-  if (!isView(props.children)) {
-    throw new TypeError(`[Teleport] children expects a View, received ${typeof props.children}`)
-  }
+
+defineValidate(Teleport, (props: Record<string, any>): void => {
   if (!props.disabled && !isString(props.to)) {
     throw new TypeError(`[Teleport] to expects a string selector, received ${typeof props.to}`)
   }
-}
+})
 
 export { Teleport, type TeleportProps }
