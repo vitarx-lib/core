@@ -1,3 +1,10 @@
+# [4.0.0-beta.17](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.16...v4.0.0-beta.17) (2026-05-10)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复元素属性类型推导异常 ([3c90498](https://github.com/vitarx-lib/core/commit/3c904980fdd3c731dcf09e892be1cb1074872613))
+
 # [4.0.0-beta.16](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.15...v4.0.0-beta.16) (2026-05-07)
 
 
