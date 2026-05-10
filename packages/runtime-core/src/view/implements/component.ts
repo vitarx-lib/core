@@ -18,7 +18,7 @@ import type {
   HostContainer,
   HostNode,
   InstanceRef,
-  MountType,
+  MountMode,
   View,
   ViewContext
 } from '../../types/index.js'
@@ -123,7 +123,7 @@ export class ComponentView<T extends Component = Component> extends BaseView<
   /**
    * @inheritDoc
    */
-  public override mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
+  public override mount(target: HostContainer | HostNode, type: MountMode = 'append'): this {
     super.mount(target, type)
     // 子 -> 父
     this.instance!.mounted()
@@ -147,7 +147,7 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     this.instance.init()
     this.instance.subView.init(this.instance.subViewContext)
   }
-  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType) {
+  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode) {
     // 父 -> 子
     this.instance!.beforeMount()
     if (this.ref) applyRef(this.ref, this.instance!.publicInstance)

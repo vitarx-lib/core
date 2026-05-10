@@ -87,7 +87,7 @@ export type ViewTag = HostElementTag | Component | ViewBuilder
  * - 'insert': 插入到指定位置
  * - 'replace': 替换已有节点
  */
-export type MountType = 'append' | 'insert' | 'replace'
+export type MountMode = 'append' | 'insert' | 'replace'
 
 /**
  * ViewTag 转 View 类型

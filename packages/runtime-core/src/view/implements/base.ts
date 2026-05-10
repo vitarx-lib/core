@@ -9,7 +9,7 @@ import type {
   HostContainer,
   HostNode,
   InstanceRef,
-  MountType,
+  MountMode,
   ViewContext
 } from '../../types/index.js'
 import type { ComponentInstance } from './component.js'
@@ -152,7 +152,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
     return this
   }
   /** 挂载到宿主（创建 / 插入 DOM） */
-  mount(target: HostContainer | HostNode, type: MountType = 'append'): this {
+  mount(target: HostContainer | HostNode, type: MountMode = 'append'): this {
     if (__VITARX_SSR__) {
       throw new Error('[View.mount] Not supported in SSR mode')
     }
@@ -231,7 +231,7 @@ export abstract class BaseView<K extends ViewKind, Node extends HostNode> {
    * 挂载视图
    * @protected
    */
-  protected doMount?(target: HostContainer | HostNode, type: MountType): void
+  protected doMount?(target: HostContainer | HostNode, type: MountMode): void
   /**
    * 卸载视图
    * @protected

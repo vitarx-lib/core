@@ -5,7 +5,7 @@ import type {
   HostContainer,
   HostFragment,
   HostNode,
-  MountType,
+  MountMode,
   ResolvedChildren,
   ValidChildren
 } from '../../types/index.js'
@@ -60,7 +60,7 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   protected override doDeactivate(): void {
     for (const child of this.children) child.deactivate()
   }
-  protected override doMount(target: HostContainer | HostNode, type: MountType): void {
+  protected override doMount(target: HostContainer | HostNode, type: MountMode): void {
     const renderer = getRenderer()
     if (!this.hostNode) {
       // 判断是否为svg命名空间

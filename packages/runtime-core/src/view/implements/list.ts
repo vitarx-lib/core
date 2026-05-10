@@ -5,7 +5,7 @@ import type {
   HostContainer,
   HostFragment,
   HostNode,
-  MountType,
+  MountMode,
   View
 } from '../../types/index.js'
 import { isView } from '../../utils/index.js'
@@ -156,7 +156,7 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
   protected override doInit(): void {
     for (const safeChild of this.safeChildren()) safeChild.init(this.ctx)
   }
-  protected override doMount(target: HostContainer | HostNode, type: MountType): void {
+  protected override doMount(target: HostContainer | HostNode, type: MountMode): void {
     const renderer = getRenderer()
     if (!this.hostNode) {
       this.hostNode = renderer.createFragment(this)

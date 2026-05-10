@@ -6,7 +6,7 @@ import type {
   HostContainer,
   HostNode,
   HostText,
-  MountType,
+  MountMode,
   ViewRenderer
 } from '../../types/index.js'
 import { BaseView } from './base.js'
@@ -35,7 +35,7 @@ abstract class BaseAtomicView<
     }
   }
 
-  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
+  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode): void {
     const renderer = getRenderer()
     if (!this.hostNode) this.hostNode = this.createNode(renderer, this._text)
     renderer[type](this.hostNode, containerOrAnchor)

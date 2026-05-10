@@ -12,7 +12,7 @@ import type {
   HostNode,
   InstanceRef,
   IntrinsicElements,
-  MountType,
+  MountMode,
   ResolvedChildren,
   ValidChildren,
   ViewRenderer
@@ -97,7 +97,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     }
     for (const child of this.children) child.deactivate()
   }
-  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
+  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode): void {
     const renderer = getRenderer()
     if (!this.hostNode) {
       // 判断是否为svg命名空间

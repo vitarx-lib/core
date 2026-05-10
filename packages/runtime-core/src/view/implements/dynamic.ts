@@ -7,7 +7,7 @@ import type {
   HostComment,
   HostContainer,
   HostNode,
-  MountType,
+  MountMode,
   ValidChildren,
   View,
   ViewRenderer
@@ -194,7 +194,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
    * @param containerOrAnchor - 宿主容器或锚点节点
    * @param type - 挂载类型
    */
-  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountType): void {
+  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode): void {
     this.cachedView!.mount(containerOrAnchor, type)
   }
   /** 创建切换事务 */
