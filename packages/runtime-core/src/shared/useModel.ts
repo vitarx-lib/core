@@ -6,7 +6,12 @@ import {
   shallowRef,
   watch
 } from '@vitarx/responsive'
+import { logger } from '@vitarx/utils'
 import type { AnyProps } from '../types/index.js'
+
+export type WithModelEvent<T extends AnyProps, K extends keyof T> = T & {
+  [key in K extends string ? `onUpdate:${K}` : never]?: (value: T[K]) => void
+}
 
 /**
  * ModelRef 类实现了一个双向绑定的属性代理，用于在组件Prop和响应式系统之间建立双向数据绑定。
@@ -14,13 +19,6 @@ import type { AnyProps } from '../types/index.js'
  * 核心功能：
  * - 提供对组件Prop的响应式访问
  * - 自动处理属性更新和依赖通知
- *
- * 使用示例：
- * ```typescript
- * const props = { count: 0 }; // 模拟的组件props对象
- * const boundCount = new ModelRef(props, 'count', 0);
- * boundCount.value = 10; // 会自动更新 props.count
- * ```
  *
  * 构造函数参数：
  * @param props - 目标对象，包含要绑定的属性
@@ -77,7 +75,12 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
     if (newValue === this._ref.value) return
     this._ref.value = newValue
     if (typeof this._props[this._eventName] === 'function') {
-      this._props[this._eventName](newValue) // 通过事件名称触发事件，并将新值作为参数传递
+      // 通过事件名称触发事件，并将新值作为参数传递
+      try {
+        this._props[this._eventName](newValue)
+      } catch (e) {
+        logger.error(`[ModelRef] ${this._eventName} call failed`, e)
+      }
     }
   }
 }
@@ -96,25 +99,60 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
  *
  * @example
  * ```jsx
- * // 在组件中使用
- * function MyInput(props: { value: string) {
- *   const valueRef = useModel(props, 'value')
+ * import { ref, watch, useModel, type WithModelEvent } from 'vue'
  *
- *   const handleChange = (e: Event) => {
- *     // 修改valueRef.value会自动更新props.value或其对应的Ref
- *     valueRef.value = e.target.value
- *   }
- *
- *   return <input value={valueRef} onInput={handleChange} />
+ * interface MyInputProps {
+ *   // modelValue 是 v-model 指令约定的属性名，无需显式声明更新事件
+ *   modelValue: string
+ *   // 自定义属性，需要显式声明更新事件
+ *   customValue: string
+ *   // 为 customValue 属性声明更新事件
+ *   'onUpdate:customValue': (v: string) => void
  * }
+ *
+ * // 包装一个支持双向绑定的输入组件
+ * function MyInput(props: MyInputProps) {
+ *   const valueRef = useModel(props, 'modelValue')
+ *   const customValueRef = useModel(props, 'customValue')
+ *
+ *   return <>
+ *     <input value={valueRef.value} onInput={(e) => valueRef.value = e.target.value} />
+ *     <input value={customValueRef.value} onInput={(e) => customValueRef.value = e.target.value} />
+ *   </>
+ * }
+ *
+ * // 在Props中显式声明更新事件不美观，可以使用 WithModelEvent 类型工具来简化
+ * export type MyInputProps = WithModelEvent<{
+ *   modelValue: string
+ *   customValue: string
+ * }, 'customValue'>
+ * // 或者
+ * function MyInput(props: WithModelEvent<MyInputProps, 'customValue'>){//...}
+ *
  *
  * // 使用组件
  * function App() {
  *   const value = ref('initial')
+ *   const customValue = ref('initial')
  *   watch(value,(newValue)=>{
  *     console.log('value changed:', newValue)
  *   })
- *   return <MyInput value={value}/>
+ *   watch(customValue, (newValue) => {
+ *     console.log('customValue changed:', newValue)
+ *   })
+ *   return <MyInput v-model={value} onUpdate:customValue={customValue} />
+ * }
+ *
+ * // 巧用小妙招
+ * function Foo(props: {show?: boolean}) {
+ *
+ *   const visible = useModel(props, 'show', false)
+ *
+ *   // 通过 useModel 来绕过 props 的只读限制
+ *   return <div>
+ *     {visible.value ? 'visible' : 'hidden'}
+ *     <button onClick={() => { visible.value = !visible.value }}>Toggle</button>
+ *   </div>
  * }
  * ```
  * @see {@linkcode ModelRef} - 实现双向绑定的属性代理的类
