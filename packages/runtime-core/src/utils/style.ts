@@ -152,19 +152,14 @@ export class StyleUtils {
       return classInput.split(' ').filter(Boolean)
     }
 
-    if (Array.isArray(classInput)) {
-      const classArray: string[] = []
-      for (let i = 0; i < classInput.length; i++) {
-        const item = unref(classInput[i])
-        if (typeof item === 'string') {
-          const text = item.trim()
-          if (text) classArray.push(text)
-        }
-      }
-      return classArray
-    }
-
     if (typeof classInput === 'object') {
+      if (Array.isArray(classInput)) {
+        const classArray: string[] = []
+        for (const classInputElement of classInput) {
+          classArray.push(...this.cssClassValueToArray(classInputElement))
+        }
+        return classArray
+      }
       // 如果是对象类型，返回键名数组
       return Object.keys(classInput).filter(key => classInput[key])
     }
