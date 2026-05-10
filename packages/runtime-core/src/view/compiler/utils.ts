@@ -1,5 +1,5 @@
 import { isRef } from '@vitarx/responsive'
-import type { ResolvedChildren, ValidChildren, View } from '../../types/index.js'
+import type { RenderChildren, ResolvedChildren, View } from '../../types/index.js'
 import { DynamicView } from '../implements/dynamic.js'
 import { resolveChildBase, resolveChildrenBase } from './children.js'
 
@@ -41,6 +41,6 @@ export function resolveChild(child: unknown): null | View {
  * @param children 子节点或子节点列表，可以是单个值、数组或嵌套数组
  * @returns {ResolvedChildren} 解析后的子节点数组
  */
-export function resolveChildren(children: ValidChildren): ResolvedChildren {
+export function resolveChildren(children: RenderChildren): ResolvedChildren {
   return resolveChildrenBase(children, resolveChild)
 }

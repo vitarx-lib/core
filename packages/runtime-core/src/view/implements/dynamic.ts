@@ -8,7 +8,7 @@ import type {
   HostContainer,
   HostNode,
   MountMode,
-  ValidChildren,
+  RenderChildren,
   View,
   ViewRenderer
 } from '../../types/index.js'
@@ -452,7 +452,7 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
       case 'empty':
         return new CommentView('v-if')
       case 'array':
-        return new ListView(resolveChildrenBase(value as ValidChildren), this.location)
+        return new ListView(resolveChildrenBase(value as RenderChildren), this.location)
     }
   }
 }

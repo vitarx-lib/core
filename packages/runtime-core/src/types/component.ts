@@ -1,5 +1,5 @@
 import { IS_RAW } from '@vitarx/responsive'
-import type { CodeLocation, ValidChild } from './view.js'
+import type { CodeLocation, RenderChild } from './view.js'
 
 export type AnyProps = { [k: string]: any }
 
@@ -43,7 +43,7 @@ export type Component<P extends AnyProps = any> = {
    * @param props - 组件属性对象
    * @param [location] - 组件位置信息，仅开发模式下存在
    */
-  (props: P, location?: CodeLocation): ValidChild
+  (props: P, location?: CodeLocation): RenderChild
   /**
    * 定义组件的默认属性。
    *

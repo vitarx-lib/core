@@ -1,5 +1,5 @@
 import { isRef } from '@vitarx/responsive'
-import type { ResolvedChildren, ValidChildren, View } from '../../types/index.js'
+import type { RenderChildren, ResolvedChildren, View } from '../../types/index.js'
 import { isView } from '../../utils/is.js'
 import { TextView } from '../implements/atomic.js'
 
@@ -55,15 +55,15 @@ export function resolveChildBase(child: unknown): View | null {
  * @returns 解析后的子节点数组
  */
 export function resolveChildrenBase(
-  children: ValidChildren,
+  children: RenderChildren,
   resolveChild: (child: unknown) => View | null = resolveChildBase
 ): ResolvedChildren {
   const childList: View[] = []
   if (children == null) return childList
 
-  const stack: ValidChildren[] = []
+  const stack: RenderChildren[] = []
 
-  const pushArrayToStack = (arr: ValidChildren[]) => {
+  const pushArrayToStack = (arr: RenderChildren[]) => {
     for (let i = arr.length - 1; i >= 0; i--) {
       stack.push(arr[i])
     }
@@ -96,7 +96,7 @@ export function resolveChildrenBase(
  * @returns {boolean} 返回一个布尔值，表示值是否是有效的子元素
  *          如果值是字符串、数字、视图、数组或引用，则返回true
  */
-export function isValidChild(value: any): value is ValidChildren {
+export function isValidChild(value: any): value is RenderChildren {
   const type = typeof value
   return (
     type === 'string' || type === 'number' || isView(value) || Array.isArray(value) || isRef(value)

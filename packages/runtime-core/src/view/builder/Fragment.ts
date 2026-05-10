@@ -1,10 +1,10 @@
-import type { ValidChildren } from '../../types/index.js'
+import type { RenderChildren } from '../../types/index.js'
 import { FragmentView } from '../implements/fragment.js'
 import type { DynamicProps } from './Dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
 export interface FragmentProps {
-  children?: ValidChildren
+  children?: RenderChildren
 }
 /**
  * FragmentView 构建器

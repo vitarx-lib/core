@@ -1,11 +1,11 @@
 import { useView } from '../runtime/context.js'
-import type { ResolvedChildren, ValidChildren, View } from '../types/index.js'
+import type { RenderChildren, ResolvedChildren, View } from '../types/index.js'
 import { resolveChild, resolveChildren } from '../view/compiler/utils.js'
 
 /**
  * 格式化组件的 props.children 为类型安全的 View 数组
  *
- * 当组件需要消费 children 时，使用此函数将 ValidChildren（可能包含 Ref、
+ * 当组件需要消费 children 时，使用此函数将 RenderChildren（可能包含 Ref、
  * 原始值等）归一化为 ResolvedChildren（readonly View[]）。
  *
  * 解决的问题：
@@ -26,13 +26,13 @@ import { resolveChild, resolveChildren } from '../view/compiler/utils.js'
  * }
  *
  * // 显式传参：手动指定 children 来源
- * function Test(props: { children: ValidChildren }) {
+ * function Test(props: { children: RenderChildren }) {
  *   const children = useChildren(props.children)
  *   return <div>{children}</div>
  * }
  * ```
  */
-export function useChildren(children?: ValidChildren | undefined): ResolvedChildren {
+export function useChildren(children?: RenderChildren | undefined): ResolvedChildren {
   if (arguments.length > 0) {
     return resolveChildren(children)
   }
@@ -40,7 +40,7 @@ export function useChildren(children?: ValidChildren | undefined): ResolvedChild
   if (!view) {
     throw new Error('useChildren() must be called in a component context')
   }
-  return resolveChildren(view.props.children as ValidChildren)
+  return resolveChildren(view.props.children as RenderChildren)
 }
 
 /**
@@ -68,13 +68,13 @@ export function useChildren(children?: ValidChildren | undefined): ResolvedChild
  * }
  *
  * // 显式传参
- * function Test(props: { children: ValidChildren }) {
+ * function Test(props: { children: RenderChildren }) {
  *   const child = useFastChild(props.children)
  *   return child
  * }
  * ```
  */
-export function useFastChild(children?: ValidChildren | undefined): View | null {
+export function useFastChild(children?: RenderChildren | undefined): View | null {
   if (arguments.length > 0) {
     return resolveChild(Array.isArray(children) ? children[0] : children)
   }

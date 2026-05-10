@@ -1,4 +1,4 @@
-import type { ClassProperties, ValidChildren } from '@vitarx/runtime-core'
+import type { ClassProperties, RenderChildren } from '@vitarx/runtime-core'
 import type { Properties } from 'csstype'
 import { type HTMLElementEvents } from './event.js'
 
@@ -199,7 +199,7 @@ interface PartAttributes {
   /**
    * 子元素
    */
-  children?: ValidChildren
+  children?: RenderChildren
   /**
    * 表单控件的类型
    *

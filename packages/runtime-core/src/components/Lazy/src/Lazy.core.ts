@@ -1,15 +1,8 @@
 import { shallowRef } from '@vitarx/responsive'
 import { isFunction, logger, withDelayTimeout } from '@vitarx/utils'
 import { defineValidate, onDispose, onInit } from '../../../runtime/index.js'
+import type { AnyProps, Component, ComponentProps, View, WithProps } from '../../../types/index.js'
 import { isView } from '../../../utils/index.js'
-import type {
-  AnyProps,
-  Component,
-  ComponentProps,
-  ExtractProps,
-  View,
-  WithProps
-} from '../../../types/index.js'
 import { createCommentView, createDynamicView, createView } from '../../../view/index.js'
 import { LAZY_LOADED_CACHE, LAZY_LOADING_CACHE, type LazyLoader } from './Lazy.cache.js'
 
@@ -147,7 +140,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
 
     try {
       const component = await loadingPromise
-      showView.value = createView(component, resolvedProps as ExtractProps<T>)
+      showView.value = createView(component, resolvedProps)
     } catch (e) {
       if (isFunction(onError)) {
         const fallback = onError(e)

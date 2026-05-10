@@ -3,7 +3,7 @@ import { type PickRequired, RequiredKeys } from '@vitarx/utils'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../view/index.js'
 import type { AnyProps, Component } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
-import type { ViewTag } from './view.js'
+import type { ViewDescriptor } from './view.js'
 
 /**
  * 可能是引用值的类型
@@ -165,7 +165,7 @@ type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
  *
  * @template T - 节点类型，必须继承自 ViewTag
  */
-export type WithProps<T extends ViewTag> = ExtractProps<T>
+export type WithProps<T extends ViewDescriptor> = ExtractProps<T>
 
 /**
  * 应用组件默认值类型
@@ -189,16 +189,11 @@ export type ComponentProps<C extends Component> =
   C extends Component<infer P> ? WithDefaultProps<C, P> : {}
 
 /**
- * 允许的属性类型
- */
-export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttributes
-
-/**
  * 提取视图属性
  *
  * @template T - 视图标签类型，必须继承自 ViewTag
  */
-export type ExtractProps<T extends ViewTag> = T extends Dynamic
+type ExtractProps<T extends ViewDescriptor> = T extends Dynamic
   ? DynamicProps
   : T extends Fragment
     ? FragmentProps
@@ -207,6 +202,12 @@ export type ExtractProps<T extends ViewTag> = T extends Dynamic
       : T extends Component
         ? ComponentProps<T>
         : AnyProps
+
+/**
+ * 允许的属性类型
+ */
+export type InferProps<T extends ViewDescriptor> = ExtractProps<T> & IntrinsicAttributes
+
 /**
  * 组件属性类型拓展
  *

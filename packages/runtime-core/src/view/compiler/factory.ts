@@ -5,11 +5,11 @@ import type {
   CodeLocation,
   Component,
   HostElementTag,
-  ValidChildren,
-  ValidProps,
+  InferProps,
+  InferView,
+  RenderChildren,
   View,
-  ViewOf,
-  ViewTag
+  ViewDescriptor
 } from '../../types/index.js'
 import { isViewBuilder } from '../../utils/index.js'
 import type { ViewBuilder } from '../builder/index.js'
@@ -49,7 +49,7 @@ export function createView<P extends AnyProps, V extends View>(
  */
 export function createView<T extends Component>(
   type: T,
-  props?: ValidProps<T> | null,
+  props?: InferProps<T> | null,
   location?: CodeLocation
 ): ComponentView<T>
 
@@ -65,7 +65,7 @@ export function createView<T extends Component>(
  */
 export function createView<T extends HostElementTag>(
   type: T,
-  props?: ValidProps<T> | null,
+  props?: InferProps<T> | null,
   location?: CodeLocation
 ): ElementView<T>
 
@@ -79,9 +79,9 @@ export function createView<T extends HostElementTag>(
  * @param location 代码位置信息，用于调试
  * @returns {View} 视图实例
  */
-export function createView<T extends ViewTag>(
+export function createView<T extends ViewDescriptor>(
   type: T,
-  props?: ValidProps<T> | null,
+  props?: InferProps<T> | null,
   location?: CodeLocation
 ): View
 /**
@@ -93,9 +93,9 @@ export function createView<T extends ViewTag>(
  * @param location 代码位置信息，用于调试
  * @returns {View} 创建的视图实例
  */
-export function createView<T extends ViewTag>(
+export function createView<T extends ViewDescriptor>(
   type: T,
-  props: ValidProps<T> | null = null,
+  props: InferProps<T> | null = null,
   location?: CodeLocation
 ): View {
   if (__VITARX_DEV__) {
@@ -150,7 +150,7 @@ export function createCommentView(text: string, location?: CodeLocation): Commen
  */
 export function createComponentView<T extends Component>(
   component: T,
-  props: ValidProps<T> | null = null,
+  props: InferProps<T> | null = null,
   location?: CodeLocation
 ): ComponentView<T> {
   if (__VITARX_DEV__ && import.meta.hot) {
@@ -172,7 +172,10 @@ export function createComponentView<T extends Component>(
  * @param location 代码位置信息，用于调试
  * @returns {FragmentView} 片段视图实例
  */
-export function createFragmentView(children: ValidChildren, location?: CodeLocation): FragmentView {
+export function createFragmentView(
+  children: RenderChildren,
+  location?: CodeLocation
+): FragmentView {
   return new FragmentView(children, location)
 }
 
@@ -204,7 +207,7 @@ export function createDynamicView<T = any>(
  */
 export function createElementView<T extends HostElementTag>(
   tag: T,
-  props: ValidProps<T> | null,
+  props: InferProps<T> | null,
   location?: CodeLocation
 ): ElementView<T> {
   return new ElementView(tag, props, location)
@@ -231,18 +234,18 @@ export function createListView(items?: Iterable<View>, location?: CodeLocation):
  * @param children - 元素的子元素
  * @returns {View} 返回对应类型的视图对象
  */
-export function h<T extends ViewTag>(
+export function h<T extends ViewDescriptor>(
   type: T,
-  propsOrChildren?: AnyProps | ValidChildren,
-  children?: ValidChildren
-): ViewOf<T> {
+  propsOrChildren?: AnyProps | RenderChildren,
+  children?: RenderChildren
+): InferView<T> {
   let resolvedProps: AnyProps | null = null // 解析后的属性对象
-  let resolvedChildren: ValidChildren | undefined // 解析后的子元素
+  let resolvedChildren: RenderChildren | undefined // 解析后的子元素
 
   // props is actually children
   if (propsOrChildren != null) {
     if (isValidChild(propsOrChildren)) {
-      resolvedChildren = propsOrChildren as ValidChildren
+      resolvedChildren = propsOrChildren as RenderChildren
     } else if (isPlainObject(propsOrChildren)) {
       resolvedProps = propsOrChildren as AnyProps
     }
@@ -258,5 +261,5 @@ export function h<T extends ViewTag>(
 
   const source = __VITARX_DEV__ ? getCallSource() : undefined
 
-  return createView(type, resolvedProps as ValidProps<T>, source) as ViewOf<T>
+  return createView(type, resolvedProps as InferProps<T>, source) as InferView<T>
 }

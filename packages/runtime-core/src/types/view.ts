@@ -42,25 +42,25 @@ export interface ViewContext {
   app?: App | null
 }
 /**
- * 渲染单元类型
+ * 可渲染的类型
  *
  * 可以是任意视图类型或原始类型（如 string、number 等）
  */
-export type RenderUnit = View | AnyPrimitive
+export type Renderable = View | AnyPrimitive
 
 /**
- * 有效子节点类型
+ * 可渲染的节点类型
  *
  * 可以是渲染单元或渲染单元的响应式引用
  */
-export type ValidChild = RenderUnit | Ref<RenderUnit>
+export type RenderChild = Renderable | Ref<Renderable>
 
 /**
- * 有效子节点集合类型
+ * 可渲染的节点集合类型
  *
  * 可以是单个有效子节点或可迭代的子节点集合
  */
-export type ValidChildren = ValidChild | Iterable<ValidChildren>
+export type RenderChildren = RenderChild | Iterable<RenderChildren>
 
 /**
  * 解析后的子节点类型
@@ -77,7 +77,7 @@ export type ResolvedChildren = readonly View[]
  * - 组件
  * - 视图构建器
  */
-export type ViewTag = HostElementTag | Component | ViewBuilder
+export type ViewDescriptor = HostElementTag | Component | ViewBuilder
 
 /**
  * 挂载类型
@@ -90,9 +90,9 @@ export type ViewTag = HostElementTag | Component | ViewBuilder
 export type MountMode = 'append' | 'insert' | 'replace'
 
 /**
- * ViewTag 转 View 类型
+ * ViewDescriptor 转 View 类型
  */
-export type ViewOf<T extends ViewTag> = T extends HostElementTag
+export type InferView<T extends ViewDescriptor> = T extends HostElementTag
   ? ElementView<T>
   : T extends ViewBuilder<any, infer V>
     ? V

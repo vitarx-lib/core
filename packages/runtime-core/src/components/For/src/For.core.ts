@@ -1,7 +1,7 @@
 import { type Ref, ShallowRef, shallowRef, untrack } from '@vitarx/responsive'
 import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
 import { defineValidate, getInstance, getRenderer, viewEffect } from '../../../runtime/index.js'
-import type { ValidChild, View } from '../../../types/index.js'
+import type { RenderChild, View } from '../../../types/index.js'
 import { resolveChild } from '../../../view/compiler/utils.js'
 import { CommentView, ListView } from '../../../view/index.js'
 import { checkKey, ensureMounted, getLIS, normalizeKeyResolver } from './For.utils.js'
@@ -32,7 +32,7 @@ import { checkKey, ensureMounted, getLIS, normalizeKeyResolver } from './For.uti
  * }
  * ```
  */
-export type ListItemFactory<T> = (item: T, index: Ref<number>) => ValidChild
+export type ListItemFactory<T> = (item: T, index: Ref<number>) => RenderChild
 /**
  * 列表项键值解析器类型
  *

@@ -6,8 +6,8 @@ import type {
   HostFragment,
   HostNode,
   MountMode,
-  ResolvedChildren,
-  ValidChildren
+  RenderChildren,
+  ResolvedChildren
 } from '../../types/index.js'
 import { resolveChildren } from '../compiler/utils.js'
 import { BaseView } from './base.js'
@@ -28,7 +28,7 @@ import { BaseView } from './base.js'
  * ```
  *
  * 构造函数参数：
- * - children: ValidChildren - 子视图数组，可以是单个视图或视图数组
+ * - children: RenderChildren - 子视图数组，可以是单个视图或视图数组
  * - location?: CodeLocation - 可选的代码位置信息，用于调试和错误追踪
  *
  * 特殊说明：
@@ -40,7 +40,7 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   public readonly kind = ViewKind.FRAGMENT
   public readonly children: ResolvedChildren
   protected hostNode: HostFragment | null = null
-  constructor(children: ValidChildren, location?: CodeLocation) {
+  constructor(children: RenderChildren, location?: CodeLocation) {
     super(location)
     this.children = resolveChildren(children)
   }

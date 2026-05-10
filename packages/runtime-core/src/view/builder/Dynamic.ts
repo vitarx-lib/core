@@ -1,6 +1,12 @@
 import { popProperty } from '@vitarx/utils'
 import { pruneCache } from '../../components/Freeze/src/Freeze.utils.js'
-import type { AnyProps, Component, ValidChildren, View, ViewTag } from '../../types/index.js'
+import type {
+  AnyProps,
+  Component,
+  RenderChildren,
+  View,
+  ViewDescriptor
+} from '../../types/index.js'
 import { isComponent } from '../../utils/is.js'
 import { createComponentView, createView } from '../compiler/factory.js'
 import { ExprRef } from '../compiler/ref.js'
@@ -30,7 +36,7 @@ export interface DynamicProps {
    * <Dynamic is={current.value} />
    * ```
    */
-  is: ViewTag | undefined | null | false
+  is: ViewDescriptor | undefined | null | false
   /**
    * 唯一标识
    *
@@ -74,7 +80,7 @@ export interface DynamicProps {
    *
    * 会原样传递给渲染的元素/组件
    */
-  children?: ValidChildren
+  children?: RenderChildren
   /**
    * 其他自定义属性
    *
