@@ -47,3 +47,8 @@ export type HostNode = HostElement | HostText | HostComment | HostFragment
  * 表示可以包含其他节点的宿主容器
  */
 export type HostContainer = HostElement | HostFragment | Vitarx.HostContainerNode
+
+/**
+ * CSS 样式规则类型
+ */
+export type StyleRules = Vitarx.HostCSSProperties

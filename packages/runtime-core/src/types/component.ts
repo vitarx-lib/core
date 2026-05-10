@@ -1,5 +1,4 @@
 import { IS_RAW } from '@vitarx/responsive'
-import type { RequiredKeys } from '@vitarx/utils'
 import type { CodeLocation, ValidChild } from './view.js'
 
 export type AnyProps = { [k: string]: any }
@@ -98,58 +97,3 @@ export type Component<P extends AnyProps = any> = {
    */
   displayName?: string
 }
-
-/**
- * 带默认值的属性类型
- *
- * 根据默认值定义 D，将属性类型 P 中具有默认值的属性转换为可选属性。
- * 这对于组件的 defaultProps 特别有用，可以自动将具有默认值的属性标记为可选。
- *
- * 如果默认值定义 D 是属性类型 P 的部分类型，则将 D 中存在的属性转换为可选属性；
- * 否则，保持原始属性类型不变。
- *
- * @template P - 原始属性类型
- * @template D - 默认值定义类型
- *
- * @example
- * ```ts
- * interface ButtonProps {
- *   text: string;
- *   disabled: boolean;
- *   size: 'small' | 'medium' | 'large';
- * }
- *
- * // 组件默认值定义
- * const defaultProps = {
- *   disabled: false,
- *   size: 'medium'
- * };
- *
- * // 使用 WithDefaultProps 转换属性类型
- * type ButtonPropsWithDefaults = WithDefaultProps<ButtonProps, typeof defaultProps>;
- * // 等价于:
- * // {
- * //   text: string; // 必需属性
- * //   disabled?: boolean; // 可选属性，因为有默认值
- * //   size?: 'small' | 'medium' | 'large'; // 可选属性，因为有默认值
- * // }
- * ```
- */
-export type WithDefaultProps<
-  P extends AnyProps,
-  D extends AnyProps | undefined | never
-> = D extends undefined | never
-  ? P
-  : Omit<P, keyof D> & {
-      [K in keyof D as K extends keyof P ? K : never]?: K extends keyof P ? P[K] : never
-    }
-
-/**
- * 组件props类型重载
- */
-export type ComponentProps<T extends Component> =
-  T extends Component<infer P>
-    ? 'defaultProps' extends RequiredKeys<T>
-      ? WithDefaultProps<P, T['defaultProps']>
-      : P
-    : {}

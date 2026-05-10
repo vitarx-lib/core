@@ -1,9 +1,9 @@
 import type { Ref } from '@vitarx/responsive'
-import type { PickRequired } from '@vitarx/utils'
+import { type PickRequired, RequiredKeys } from '@vitarx/utils'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../view/index.js'
-import type { AnyProps, Component, ComponentProps, WithDefaultProps } from './component.js'
+import type { AnyProps, Component } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
-import type { View, ViewTag } from './view.js'
+import type { ViewTag } from './view.js'
 
 /**
  * 可能是引用值的类型
@@ -105,11 +105,6 @@ export interface IntrinsicAttributes {
   [key: string]: unknown
 }
 
-/**
- * CSS 样式规则类型
- */
-export type StyleRules = Vitarx.HostCSSProperties
-
 type VModelValue<T> = T extends Ref<any, infer S> ? T | S : Ref<T> | T
 type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
   ? 'modelValue' extends keyof PickRequired<T>
@@ -152,38 +147,6 @@ type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
             'v-model'?: VModelValue<T['modelValue']>
           })
   : T
-type WithVModelUpdate<T extends AnyProps> = T & {
-  /**
-   * 双向绑定属性更新事件
-   *
-   * 组件内部使用 `useModel` 同步属性时，值变化会自动触发事件。
-   *
-   * @param v - 新的值
-   */
-  [K in keyof T & string as T extends `on${string}` ? never : `onUpdate:${K}`]?: (v: T[K]) => void
-}
-
-/**
- * 提取节点属性类型
- */
-export type ExtractProps<T extends ViewTag> = T extends Dynamic
-  ? DynamicProps
-  : T extends Fragment
-    ? FragmentProps
-    : T extends HostElementTag
-      ? IntrinsicElements[T]
-      : T extends Component
-        ? ComponentProps<T>
-        : AnyProps
-
-/**
- * createBlock 支持的属性类型推导
- *
- * 此属性类型是JSX/createBlock中可用的属性的联合类型，包括：
- * - 元素或组件定义的属性
- * - 全局属性（如key、ref、v-show等）
- */
-export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttributes
 
 /**
  * 根据视图标签类型推断其对应的属性类型
@@ -205,13 +168,51 @@ export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttribute
 export type WithProps<T extends ViewTag> = ExtractProps<T>
 
 /**
+ * 应用组件默认值类型
+ *
+ * @template C - 组件类型
+ * @template P - 组件的属性类型
+ */
+export type WithDefaultProps<C extends { defaultProps?: AnyProps }, P extends AnyProps> =
+  'defaultProps' extends RequiredKeys<C>
+    ? Omit<P, keyof C['defaultProps']> & {
+        [K in keyof C['defaultProps'] as K extends keyof P ? K : never]?: K extends keyof P
+          ? P[K]
+          : never
+      }
+    : P
+
+/**
+ * 组件属性类型
+ */
+export type ComponentProps<C extends Component> =
+  C extends Component<infer P> ? WithDefaultProps<C, P> : {}
+
+/**
+ * 允许的属性类型
+ */
+export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttributes
+
+/**
+ * 提取视图属性
+ *
+ * @template T - 视图标签类型，必须继承自 ViewTag
+ */
+export type ExtractProps<T extends ViewTag> = T extends Dynamic
+  ? DynamicProps
+  : T extends Fragment
+    ? FragmentProps
+    : T extends HostElementTag
+      ? IntrinsicElements[T]
+      : T extends Component
+        ? ComponentProps<T>
+        : AnyProps
+/**
  * 组件属性类型拓展
  *
  * @template C - 组件类型
  * @template P - 组件的默认属性类型
  */
-export type VitarxManagedAttributes<C extends Component, P extends AnyProps> = C extends (
-  props: IntrinsicElements[keyof IntrinsicElements]
-) => View
-  ? WithRefProps<P>
-  : WithVModel<WithRefProps<WithVModelUpdate<WithDefaultProps<P, C['defaultProps']>>>>
+export type VitarxManagedAttributes<C extends Component, P extends AnyProps> = WithVModel<
+  WithRefProps<WithDefaultProps<C, P>>
+>
