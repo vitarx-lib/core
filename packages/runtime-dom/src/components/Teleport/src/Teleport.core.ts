@@ -60,11 +60,14 @@ interface TeleportProps {
 /**
  * Teleport 组件，用于将其子组件渲染到 DOM 树的其他位置
  *
- * @param {TeleportProps} { children, to, defer, disabled } - 组件属性
- *   - children: 要被传送的子组件
- *   - to: 目标位置的选择器
- *   - defer: 是否延迟挂载（在 mounted 阶段挂载）
- *   - disabled: 是否禁用传送功能
+ * 注意：渲染后修改 to defer disabled 属性均不会生效。
+ *
+ * @param props - 属性
+ * @param props.children - 要被传送的子组件
+ * @param props.to - 目标位置的选择器
+ * @param [props.defer=false] - 是否延迟挂载（在 mounted 阶段挂载）
+ * @param [props.disabled=false] - 是否禁用传送功能
+ *
  * @returns {View} 返回一个锚点视图
  *
  * @example
@@ -91,7 +94,8 @@ interface TeleportProps {
  * </Teleport>
  * ```
  */
-function Teleport({ children, to, defer, disabled }: TeleportProps): View {
+function Teleport(props: TeleportProps): View {
+  const { children, to, defer, disabled } = props
   const child = useFastChild(children)
   // If there's no child, return a placeholder comment
   if (!child) return createCommentView('teleport:empty')
