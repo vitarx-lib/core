@@ -1,4 +1,4 @@
-import type { ValidChildren } from '@vitarx/runtime-core'
+import type { ClassProperties, ValidChildren } from '@vitarx/runtime-core'
 import type { Properties } from 'csstype'
 import { type HTMLElementEvents } from './event.js'
 
@@ -612,7 +612,7 @@ interface CustomHTMLAttributes {
    *
    * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
    */
-  class?: string | string[] | Record<string, boolean>
+  class?: ClassProperties
   /**
    * 未知属性
    *
