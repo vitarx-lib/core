@@ -36,12 +36,6 @@ import { createReadonlyProxy } from './readonly.js'
  *
  * // 但无法修改
  * readonlyReactive.count = 1; // 打印警告
- *
- * // 在组件中的应用
- * function MyComponent(props) {
- *   const { config } = readonly(props); // 确保组件不修改props
- *   return <div>{config.title}</div>;
- * }
  * ```
  */
 export function readonly<T extends AnyRecord, IsDeep extends boolean = true>(
