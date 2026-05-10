@@ -1,4 +1,4 @@
-import { EffectScope, isRef, markRaw, readonly, type Ref } from '@vitarx/responsive'
+import { EffectScope, isRef, markRaw, type Ref } from '@vitarx/responsive'
 import { isFunction, isPlainObject, isPromise, logger } from '@vitarx/utils'
 import { App } from '../../app/index.js'
 import { SUSPENSE_COUNTER, ViewKind } from '../../constants/index.js'
@@ -83,7 +83,14 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     }
     if (__VITARX_DEV__) {
       // 开发环境让属性对象只读
-      resolvedProps = readonly(resolvedProps, false)
+      resolvedProps = new Proxy(resolvedProps, {
+        get(target, key) {
+          return Reflect.get(target, key, target)
+        },
+        set() {
+          throw new Error(`[Vitarx Error] Component property objects should not be modified`)
+        }
+      })
       // 开发环境进行属性校验
       if (isFunction(component.validateProps)) {
         const result = component.validateProps(resolvedProps, location)
