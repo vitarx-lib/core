@@ -3,7 +3,7 @@ import type { PickRequired } from '@vitarx/utils'
 import type { Dynamic, DynamicProps, Fragment, FragmentProps } from '../view/index.js'
 import type { AnyProps, Component, ComponentProps, WithDefaultProps } from './component.js'
 import type { HostElementTag, IntrinsicElements } from './element.js'
-import type { ViewTag } from './view.js'
+import type { View, ViewTag } from './view.js'
 
 /**
  * 可能是引用值的类型
@@ -25,7 +25,7 @@ import type { ViewTag } from './view.js'
  * setValue(ref(42)); // 传入响应式引用
  * ```
  */
-export type MaybeRef<T> = T extends Ref<infer U, any> ? U | T : T | Ref<T>
+export type MaybeRef<T> = T extends Ref<infer U, any> ? U | T : T | Ref<T, never>
 
 /**
  * 属性支持引用值的类型
@@ -204,6 +204,14 @@ export type ValidProps<T extends ViewTag> = ExtractProps<T> & IntrinsicAttribute
  */
 export type WithProps<T extends ViewTag> = ExtractProps<T>
 
-export type JSXElementAttributes<C extends Component, P extends AnyProps> = WithVModel<
-  WithRefProps<WithVModelUpdate<WithDefaultProps<P, C['defaultProps']>>>
->
+/**
+ * 组件属性类型拓展
+ *
+ * @template C - 组件类型
+ * @template P - 组件的默认属性类型
+ */
+export type VitarxManagedAttributes<C extends Component, P extends AnyProps> = C extends (
+  props: IntrinsicElements[keyof IntrinsicElements]
+) => View
+  ? WithRefProps<P>
+  : WithVModel<WithRefProps<WithVModelUpdate<WithDefaultProps<P, C['defaultProps']>>>>

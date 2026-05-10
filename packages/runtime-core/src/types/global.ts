@@ -2,8 +2,7 @@ import type { AnyProps, Component } from './component.js'
 import type { ErrorHandler } from './hook.js'
 import type {
   IntrinsicAttributes as GlobalIntrinsicAttributes,
-  JSXElementAttributes,
-  WithRefProps
+  VitarxManagedAttributes
 } from './props.js'
 import type { View } from './view.js'
 
@@ -120,18 +119,16 @@ declare global {
      * 将原生 HTML 标签名映射到对应的属性类型，并添加 ref 支持
      * 例如：div、span、button 等标签的属性类型
      */
-    type IntrinsicElements = {
-      [tagName in keyof Vitarx.IntrinsicElements]: WithRefProps<Vitarx.IntrinsicElements[tagName]>
-    }
+    interface IntrinsicElements extends Vitarx.IntrinsicElements {}
     /**
      * 库管理的属性类型
      * 用于处理组件属性的类型转换和验证
      * C: 组件类型，P: 属性类型
      */
-    type LibraryManagedAttributes<C extends Component, P extends AnyProps> = JSXElementAttributes<
-      C,
-      P
-    >
+    type LibraryManagedAttributes<
+      C extends Component,
+      P extends AnyProps
+    > = VitarxManagedAttributes<C, P>
     interface ElementAttributesProperty {
       props: {}
     }
