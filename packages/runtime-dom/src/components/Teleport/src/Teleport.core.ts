@@ -98,11 +98,11 @@ function Teleport(props: TeleportProps): View {
   const { children, to, defer, disabled } = props
   const child = useFastChild(children)
   // If there's no child, return a placeholder comment
-  if (!child) return createCommentView('teleport:empty')
+  if (!child) return createCommentView('Teleport:empty')
   // 禁用时返回子组件
   if (disabled) return child
   // Create a placeholder comment
-  const placeholder = createCommentView(`teleport -> ${to}`)
+  const placeholder = createCommentView(`Teleport:${to}`)
   // 服务端渲染时提前返回占位符
   if (__VITARX_SSR__) return placeholder
   const instance = getInstance()!
