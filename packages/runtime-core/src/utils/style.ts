@@ -1,4 +1,5 @@
 import { unref } from '@vitarx/responsive'
+import type { Falsy } from '@vitarx/utils'
 import { isPlainObject, isString, toCamelCase, toKebabCase } from '@vitarx/utils'
 import type { StyleRules } from '../types/index.js'
 
@@ -67,7 +68,7 @@ export class StyleUtils {
    * @param {ClassProperties} c2 - class2
    * @returns {string[]} 合并后的数组，数组元素为类名
    */
-  static mergeCssClass(c1: ClassProperties, c2: ClassProperties): string[] {
+  static mergeCssClass(c1: ClassProperties | Falsy, c2: ClassProperties | Falsy): string[] {
     // 将 c1 和 c2 转换为数组
     const arr1 = StyleUtils.cssClassValueToArray(c1)
     const arr2 = StyleUtils.cssClassValueToArray(c2)
@@ -79,11 +80,14 @@ export class StyleUtils {
   /**
    * 合并两个style
    *
-   * @param {StyleProperties} style1 - 第一个样式对象或字符串
-   * @param {StyleProperties} style2 - 第二个样式对象或字符串
+   * @param style1 - 第一个样式对象或字符串
+   * @param style2 - 第二个样式对象或字符串
    * @returns {StyleRules} 合并后的style对象
    */
-  static mergeCssStyle(style1: StyleProperties, style2: StyleProperties): StyleRules {
+  static mergeCssStyle(
+    style1: StyleProperties | Falsy,
+    style2: StyleProperties | Falsy
+  ): StyleRules {
     // 如果style1是字符串，先转换为对象
     const obj1 = StyleUtils.cssStyleValueToObject(style1)
     // 如果style2是字符串，先转换为对象
@@ -96,7 +100,7 @@ export class StyleUtils {
   /**
    * 将style对象转换为字符串
    *
-   * @param {StyleProperties} styleObj - style对象
+   * @param styleObj - style对象
    * @returns {string} 转换后的style字符串
    */
   static cssStyleValueToString(styleObj: StyleProperties): string {
@@ -119,10 +123,10 @@ export class StyleUtils {
    *
    * 如果是对象，则会直接返回
    *
-   * @param {StyleProperties} style - style字符串
+   * @param style - style字符串
    * @returns {StyleRules}  转换后的style对象
    */
-  static cssStyleValueToObject(style: StyleProperties): StyleRules {
+  static cssStyleValueToObject(style: StyleProperties | Falsy): StyleRules {
     if (!style) return {}
     if (isString(style)) {
       const styleObj: Record<string, string> = {}
@@ -143,10 +147,10 @@ export class StyleUtils {
   /**
    * 将 class 属性转换为数组
    *
-   * @param {ClassProperties} classInput - 可以是 string, string[] 或对象类型
+   * @param classInput - 可以是 string, string[] 或对象类型
    * @returns {string[]} 返回一个数组，数组元素为类名
    */
-  static cssClassValueToArray(classInput: ClassProperties): string[] {
+  static cssClassValueToArray(classInput: ClassProperties | Falsy): string[] {
     if (!classInput) return []
     if (typeof classInput === 'string') {
       return classInput.split(' ').filter(Boolean)
@@ -170,10 +174,10 @@ export class StyleUtils {
   /**
    * 将 class 属性转换为字符串
    *
-   * @param {ClassProperties} classInput - 可以是 string, string[] 或对象类型
+   * @param classInput - 可以是 string, string[] 或对象类型
    * @returns {string} 返回一个字符串，字符串元素为类名
    */
-  static cssClassValueToString(classInput: ClassProperties): string {
+  static cssClassValueToString(classInput: ClassProperties | Falsy): string {
     if (!classInput) return ''
     if (typeof classInput === 'string') {
       return classInput.trim()
