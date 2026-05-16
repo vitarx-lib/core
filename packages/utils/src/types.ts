@@ -25,6 +25,10 @@ export type AnyWeakSet = WeakSet<WeakKey>
 export type AnySet = Set<any>
 /** 任意键 */
 export type AnyProperty = string | number | symbol
+/**
+ * 假值类型，包括 false、0、''、null、undefined 和 void
+ */
+export type Falsy = false | 0 | '' | null | undefined | void
 /** 任意集合对象 */
 export type AnyCollection = AnyMap | AnyWeakMap | AnyWeakSet | AnySet
 /** 任意对象类型 函数除外 */
