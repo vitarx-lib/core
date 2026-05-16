@@ -32,7 +32,7 @@ export type StyleProperties = string | Vitarx.HostCSSProperties
  * }
  * ```
  */
-export type ClassProperties = string | Array<any> | Record<string, boolean>
+export type ClassProperties = string | any[] | Record<string, boolean>
 /**
  * StyleUtils 类是一个用于处理 CSS 类和样式对象的静态工具类。
  * 提供了合并、转换 CSS 类和样式的方法，支持多种输入格式（字符串、数组、对象）之间的互相转换。
