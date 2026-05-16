@@ -9,13 +9,7 @@ type ResolvePropsResult<T extends AnyProps> = {
   props: T | null
 }
 
-const SPECIAL_PROP_MERGERS = {
-  style: StyleUtils.mergeCssStyle,
-  class: StyleUtils.mergeCssClass
-} as const
-
-const hasValidProp = (obj: AnyProps, key: string) =>
-  key in obj && obj[key] !== undefined && obj[key] !== null
+const hasValidProp = (obj: AnyProps, key: string): boolean => key in obj && obj[key] !== undefined
 
 /**
  * 处理 v-bind 属性绑定，将绑定对象的属性合并到目标 props 中
@@ -28,7 +22,7 @@ const hasValidProp = (obj: AnyProps, key: string) =>
  * @param bind 绑定属性源，可以是对象或数组形式
  * @returns {AnyProps} - 融合后的新 props 对象
  */
-export function bindProps(props: AnyProps, bind: BindAttributes): Omit<AnyProps, 'v-bind'> {
+export function bindProps(props: AnyProps, bind: BindAttributes): AnyProps {
   let binding: AnyProps
   let exclude: Set<string> | null = null
 
@@ -58,38 +52,21 @@ export function bindProps(props: AnyProps, bind: BindAttributes): Omit<AnyProps,
   }
 
   for (const key of keys) {
-    const inProps = hasValidProp(props, key)
-    const inBinding = hasValidProp(binding, key)
-
-    if (key in SPECIAL_PROP_MERGERS && inProps && inBinding) {
-      const merger = SPECIAL_PROP_MERGERS[key as keyof typeof SPECIAL_PROP_MERGERS]
-      Object.defineProperty(result, key, {
-        enumerable: true,
-        get() {
-          return merger(unref(props[key]), unref(binding[key]))
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      get() {
+        if (key === 'style') {
+          return StyleUtils.mergeCssStyle(props[key], unref(binding[key]))
         }
-      })
-      continue
-    }
-
-    if (inProps) {
-      Object.defineProperty(result, key, {
-        enumerable: true,
-        get() {
+        if (key === 'class') {
+          return StyleUtils.mergeCssClass(props[key], unref(binding[key]))
+        }
+        if (hasValidProp(props, key)) {
           return props[key]
         }
-      })
-      continue
-    }
-
-    if (inBinding) {
-      Object.defineProperty(result, key, {
-        enumerable: true,
-        get() {
-          return unref(binding[key])
-        }
-      })
-    }
+        return unref(binding[key])
+      }
+    })
   }
 
   return result
@@ -149,7 +126,7 @@ export function mergeProps(p1: AnyProps, p2: AnyProps): AnyProps {
       enumerable: true,
       configurable: true,
       get() {
-        if (hasValidProp(p2, key) && p2[key] !== undefined) {
+        if (hasValidProp(p2, key)) {
           return p2[key]
         }
         return p1[key]
