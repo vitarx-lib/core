@@ -34,6 +34,7 @@ export interface ViewSwitchTransaction {
    * 缓存 prev 视图
    *
    * 配置为 true 时 prev 视图的操作行为： prev.deactivate() + renderer.remove(prev.node)
+   * 配置为 false 时 prev 视图的操作行为： prev.dispose()
    *
    * @default `false`
    */
