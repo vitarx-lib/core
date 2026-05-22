@@ -1,4 +1,4 @@
-import { type Ref, unref, watch, Watcher } from '@vitarx/responsive'
+import { isRef, type Ref, watch, Watcher } from '@vitarx/responsive'
 import { isArray, logger } from '@vitarx/utils'
 import { ViewKind } from '../../constants/index.js'
 import { getRenderer, withDirectives } from '../../runtime/index.js'
@@ -19,6 +19,22 @@ import { BaseView } from './base.js'
 import { ListView } from './list.js'
 
 type SourceValueType = 'view' | 'text' | 'empty' | 'array'
+
+/**
+ * 递归解包 Ref，支持任意深度的嵌套 Ref
+ *
+ * 编译器产出的 BranchRef 值可能为 ExprRef（如 `{a ? <A/> : createContent()}`），
+ * 甚至多层嵌套 Ref。递归解包确保：
+ * 1. 所有层级的 `.value` 访问都被 watch 追踪，内层 Ref 变化能触发外层更新
+ * 2. 视图切换始终发生在当前 DynamicView 层级，onViewSwitch 能正常冒泡
+ *
+ * @param value - 待解包的值
+ * @returns 最内层的非 Ref 值
+ */
+function unrefDeep(value: unknown): unknown {
+  return isRef(value) ? unrefDeep(value.value) : value
+}
+
 /**
  * 视图切换事务接口
  * 负责协调 prev/next 视图、commit 逻辑
@@ -149,12 +165,12 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
    * 初始化视图
    */
   protected override doInit(): void {
-    this.#initView(unref(this.source.value))
+    this.#initView(unrefDeep(this.source.value))
     this.effect = watch(
-      () => unref(this.source.value), // 解包数据源，兼容嵌套ref
+      () => unrefDeep(this.source.value),
       newValue => {
         try {
-          this.#updateView(newValue)
+          this.#updateView(newValue as T)
         } catch (err) {
           if (this.owner) {
             this.owner.reportError(err, 'view:switch')

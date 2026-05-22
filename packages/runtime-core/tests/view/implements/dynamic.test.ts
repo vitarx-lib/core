@@ -344,3 +344,234 @@ describe('DynamicView 数组渲染', () => {
     }).not.toThrow()
   })
 })
+
+describe('DynamicView Ref 渲染', () => {
+  let container: HTMLElement
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+  })
+
+  afterEach(() => {
+    document.body.removeChild(container)
+  })
+
+  it('应该递归解包 Ref 值并渲染为文本', async () => {
+    const innerRef = ref('hello')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('hello')
+    // unrefDeep 解包后为字符串，应渲染为 TextView
+    expect(dynamicView.currentView).toBeInstanceOf(TextView)
+  })
+
+  it('应该响应内部 Ref 的变化', async () => {
+    const innerRef = ref('hello')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('hello')
+
+    // 更新内部 ref 的值
+    innerRef.value = 'world'
+    await nextTick()
+
+    expect(container.textContent).toBe('world')
+  })
+
+  it('应该支持从文本切换到 Ref', async () => {
+    const innerRef = ref('ref-value')
+    const source = ref<any>('text')
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('text')
+
+    source.value = innerRef
+    await nextTick()
+
+    expect(container.textContent).toBe('ref-value')
+    expect(dynamicView.currentView).toBeInstanceOf(TextView)
+  })
+
+  it('应该支持从 Ref 切换到文本', async () => {
+    const innerRef = ref('ref-value')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('ref-value')
+
+    source.value = 'plain-text'
+    await nextTick()
+
+    expect(container.textContent).toBe('plain-text')
+    expect(dynamicView.currentView).toBeInstanceOf(TextView)
+  })
+
+  it('应该支持从 Ref 切换到空值', async () => {
+    const innerRef = ref('ref-value')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('ref-value')
+
+    source.value = null
+    await nextTick()
+
+    expect(container.childNodes.length).toBe(1)
+    expect(container.childNodes[0].nodeType).toBe(8) // COMMENT_NODE
+  })
+
+  it('应该支持从空值切换到 Ref', async () => {
+    const innerRef = ref('ref-value')
+    const source = ref<any>(null)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.childNodes[0].nodeType).toBe(8)
+
+    source.value = innerRef
+    await nextTick()
+
+    expect(container.textContent).toBe('ref-value')
+    expect(dynamicView.currentView).toBeInstanceOf(TextView)
+  })
+
+  it('应该支持从 Ref 切换到数组', async () => {
+    const innerRef = ref('ref-value')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('ref-value')
+
+    source.value = ['a', 'b']
+    await nextTick()
+
+    expect(container.textContent).toBe('ab')
+    expect(dynamicView.currentView).toBeInstanceOf(ListView)
+  })
+
+  it('应该支持从数组切换到 Ref', async () => {
+    const innerRef = ref('ref-value')
+    const source = ref<any>(['a', 'b'])
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('ab')
+
+    source.value = innerRef
+    await nextTick()
+
+    expect(container.textContent).toBe('ref-value')
+    expect(dynamicView.currentView).toBeInstanceOf(TextView)
+  })
+
+  it('应该支持内部 Ref 为空值', async () => {
+    const innerRef = ref<any>(null)
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.childNodes.length).toBe(1)
+    expect(container.childNodes[0].nodeType).toBe(8) // COMMENT_NODE
+  })
+
+  it('应该支持内部 Ref 从空值切换到文本', async () => {
+    const innerRef = ref<any>(null)
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.childNodes[0].nodeType).toBe(8)
+
+    innerRef.value = 'updated'
+    await nextTick()
+
+    expect(container.textContent).toBe('updated')
+  })
+
+  it('应该支持内部 Ref 从文本切换到空值', async () => {
+    const innerRef = ref<any>('hello')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('hello')
+
+    innerRef.value = null
+    await nextTick()
+
+    expect(container.childNodes.length).toBe(1)
+    expect(container.childNodes[0].nodeType).toBe(8)
+  })
+
+  it('应该支持多层嵌套 Ref', async () => {
+    const deepRef = ref('deep-value')
+    const middleRef = ref<any>(deepRef)
+    const source = ref<any>(middleRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('deep-value')
+
+    // 更新最内层 ref
+    deepRef.value = 'updated-deep'
+    await nextTick()
+
+    expect(container.textContent).toBe('updated-deep')
+
+    // 更新中间层 ref
+    middleRef.value = ref('new-deep')
+    await nextTick()
+
+    expect(container.textContent).toBe('new-deep')
+  })
+
+  it('应该正确处理 Ref 渲染的销毁', async () => {
+    const innerRef = ref('hello')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    expect(container.textContent).toBe('hello')
+
+    expect(() => {
+      dynamicView.dispose()
+    }).not.toThrow()
+  })
+
+  it('销毁后内部 Ref 的变化不应影响已销毁的视图', async () => {
+    const innerRef = ref('hello')
+    const source = ref<any>(innerRef)
+    const dynamicView = new DynamicView(source)
+    dynamicView.init()
+    dynamicView.mount(container)
+
+    dynamicView.dispose()
+
+    innerRef.value = 'should-not-appear'
+    await nextTick()
+
+    expect(container.textContent).toBe('')
+  })
+})
