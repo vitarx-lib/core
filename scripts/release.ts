@@ -430,6 +430,51 @@ function rollback() {
 /* -------------------------------------------------- */
 
 /**
+ * 根据当前版本和发布类型计算下一个版本号
+ *
+ * @param current - 当前版本号
+ * @param type - 发布类型
+ * @returns 计算出的下一个版本号，如果类型无效则返回 null
+ *
+ * @remarks
+ * - major/minor/patch: 对于预发布版本，先剥离预发布标识再递增（如 4.0.0-beta.18 + major → 5.0.0）
+ * - premajor/preminor/prepatch: 使用 'alpha' 作为预发布标识符
+ * - prerelease: 递增当前预发布标识符（如 beta.18 → beta.19）；若无预发布标识则使用 'alpha'
+ * - release: 剥离预发布标识（如 4.0.0-beta.18 → 4.0.0）；若已是正式版则返回 null
+ */
+function computeNextVersion(current: string, type: (typeof RELEASE_TYPES)[number]): string | null {
+  const parsed = semver.parse(current)
+  if (!parsed) return null
+
+  switch (type) {
+    case 'major':
+    case 'minor':
+    case 'patch': {
+      // 对于预发布版本，semver.inc 只会剥离预发布标识而不递增
+      // 需要先剥离预发布标识，再基于正式版递增
+      const base = `${parsed.major}.${parsed.minor}.${parsed.patch}`
+      return semver.inc(base, type)
+    }
+    case 'premajor':
+    case 'preminor':
+    case 'prepatch':
+      return semver.inc(current, type, 'alpha')
+    case 'prerelease': {
+      // 如果当前有预发布标识，递增它（如 beta.18 → beta.19）；否则使用 alpha
+      const identifier = parsed.prerelease.length > 0 ? undefined : 'alpha'
+      return identifier ? semver.inc(current, type, identifier) : semver.inc(current, type)
+    }
+    case 'release': {
+      // 剥离预发布标识，返回正式版
+      if (parsed.prerelease.length === 0) return null
+      return `${parsed.major}.${parsed.minor}.${parsed.patch}`
+    }
+    default:
+      return null
+  }
+}
+
+/**
  * 交互式选择要发布的版本
  *
  * @param current - 当前版本号
@@ -452,8 +497,8 @@ async function selectVersion(current: string) {
   section('Select Version')
 
   RELEASE_TYPES.forEach((type, i) => {
-    const next = semver.inc(current, type as any, 'alpha')
-    console.log(`${chalk.yellow(i + 1 + '.')} ${type} → ${chalk.cyan(next)}`)
+    const next = computeNextVersion(current, type)
+    console.log(`${chalk.yellow(i + 1 + '.')} ${type} → ${chalk.cyan(next ?? '(N/A)')}`)
   })
   console.log(`${chalk.yellow('&. ')}${chalk.green('custom')}：输入一个自定义版本号`)
 
@@ -468,9 +513,8 @@ async function selectVersion(current: string) {
   const type = RELEASE_TYPES[Number(answer) - 1]
   let nextVersion: string | null
   if (type) {
-    nextVersion =
-      type === 'prerelease' ? semver.inc(current, type, 'alpha') : semver.inc(current, type)
-    if (!nextVersion) throw new Error('Version calculation failed')
+    nextVersion = computeNextVersion(current, type)
+    if (!nextVersion) throw new Error(`Version calculation failed for type: ${type}`)
   } else {
     nextVersion = answer
     if (!semver.valid(nextVersion)) throw new Error('Invalid version')
