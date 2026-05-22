@@ -35,5 +35,6 @@
     "useDefineForClassFields": true,
     "types": ["vitest/globals", "vite/client", "node"],
     "outDir": "dist"
-  }
+  },
+  "exclude": ["**/dist", "dist"]
 }
