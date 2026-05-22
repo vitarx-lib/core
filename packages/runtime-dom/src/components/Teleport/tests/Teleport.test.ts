@@ -73,7 +73,7 @@ describe('Teleport 组件', () => {
       teleportView.mount(container)
 
       // Teleport本身应该只渲染一个注释节点
-      expect(container.innerHTML).toContain('teleport')
+      expect(container.innerHTML).toContain('Teleport')
 
       // 子元素应该被传送到目标容器
       expect(targetContainer.querySelector('#child-element')).toBeTruthy()
@@ -142,7 +142,7 @@ describe('Teleport 组件', () => {
 
       // 即使挂载后，由于 defer，内容可能还未传送
       // 但这里我们主要测试组件是否正确初始化
-      expect(container.innerHTML).toContain('teleport')
+      expect(container.innerHTML).toContain('Teleport')
     })
 
     it('应该在 defer 为 false 时立即挂载', () => {
