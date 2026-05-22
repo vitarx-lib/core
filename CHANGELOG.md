@@ -1,3 +1,16 @@
+# [4.0.0-beta.19](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.18...v4.0.0-beta.19) (2026-05-22)
+
+
+### Bug Fixes
+
+* **runtime-dom:** 修正 Teleport 组件注释占位符格式 ([0023043](https://github.com/vitarx-lib/core/commit/0023043058bdf10fe2ff8220a40b91c646fc67a3))
+
+
+### Features
+
+* **runtime-core:** 支持递归解包多层嵌套 Ref 并响应其变化 ([f10b514](https://github.com/vitarx-lib/core/commit/f10b514e81ed51506fe5191a6d77546365b6d9c9))
+* **utils:** 添加假值类型 Falsy 定义 ([dcc384c](https://github.com/vitarx-lib/core/commit/dcc384cacf50280c2f1cdfd18ec25a573f2cd784))
+
 # [4.0.0-beta.18](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.17...v4.0.0-beta.18) (2026-05-10)
 
 
