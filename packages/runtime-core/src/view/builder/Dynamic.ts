@@ -1,4 +1,4 @@
-import { popProperty } from '@vitarx/utils'
+import { logger, popProperty } from '@vitarx/utils'
 import { pruneCache } from '../../components/Freeze/src/Freeze.utils.js'
 import type {
   AnyProps,
@@ -146,7 +146,12 @@ export const Dynamic = builder((props: DynamicProps, location): View => {
 
   const viewSource = new ExprRef(() => {
     const is = props['is']
-    if (!is) return new CommentView(`<Dynamic is=${String(is)} />`)
+    if (!is) {
+      if (__VITARX_DEV__) {
+        logger.warn('<Dynamic /> is missing the "is" prop', location)
+      }
+      return new CommentView(`<Dynamic is=${String(is)} />`)
+    }
     const key = props['key']
     if (cache && isComponent(is)) {
       let keyMap = cache.get(is)
