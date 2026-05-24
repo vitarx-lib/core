@@ -51,10 +51,15 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
   readonly [IS_REF]: true = true
   readonly [IS_SIGNAL]: true = true
   /**
+   * 计算结果缓存
+   * @private
+   */
+  private _value!: T
+  /**
    * 脏标记，标识是否需要重新计算
    * true表示依赖已变化，需要重新计算
    */
-  public dirty: boolean = true
+  private _dirty: boolean = true
   /**
    * 计算属性的getter函数
    * @private
@@ -97,21 +102,12 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
       throw new TypeError('[computed] getter must be a function or an object with get/set methods')
     }
     this._effect = () => {
-      if (!this.dirty) {
-        this.dirty = true
-        triggerSignal(this, 'dirty')
-      }
+      this.notify()
     }
     if (__VITARX_DEV__) {
       if (debuggerOptions) bindDebuggerOptions(this._effect, debuggerOptions)
     }
   }
-
-  /**
-   * 计算结果缓存
-   * @private
-   */
-  private _value!: T
 
   /**
    * 获取计算结果
@@ -151,6 +147,13 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
         '[computed] properties should not be modified directly unless a setter function is defined'
       )
     }
+  }
+
+  /**
+   * 获取计算属性是否脏
+   */
+  get dirty(): boolean {
+    return this._dirty
   }
 
   /**
@@ -208,7 +211,7 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
    *
    * @returns {this} 返回当前实例，以便支持链式调用
    */
-  recompute(): this {
+  private recompute(): this {
     // 调用重新计算方法
     trackEffect(() => {
       try {
@@ -216,10 +219,28 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
       } catch (e) {
         reportEffectError(this, e, 'computed.getter')
       } finally {
-        this.dirty = false
+        this._dirty = false
       }
     }, this._effect)
     // 返回当前实例，支持链式调用
+    return this
+  }
+
+  /**
+   * 通知计算属性已脏
+   *
+   * 该方法会对计算属性进行标记，表示其值已过时，需要重新计算，
+   * 使下一次访问 value 时会触发重新计算。
+   *
+   * 通常无需手动调用此方法，除非需要显式地通知计算属性已脏。
+   *
+   * @returns {this} 返回当前实例，以便支持链式调用
+   */
+  notify(): this {
+    if (!this.dirty) {
+      this._dirty = true
+      triggerSignal(this, 'dirty')
+    }
     return this
   }
 }
