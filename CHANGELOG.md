@@ -1,3 +1,10 @@
+# [4.0.0](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.19...v4.0.0) (2026-05-27)
+
+
+### Bug Fixes
+
+* **runtime-core:** 添加缺失 is prop 的开发环境警告提示 ([1e5031d](https://github.com/vitarx-lib/core/commit/1e5031da7c1ef79eeb59203783c3f50f6fc4137d))
+
 # [4.0.0-beta.19](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.18...v4.0.0-beta.19) (2026-05-22)
 
 
