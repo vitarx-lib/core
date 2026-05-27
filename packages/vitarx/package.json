@@ -12,6 +12,7 @@
     "url": "git+https://github.com/vitarx-lib/core",
     "directory": "packages/vitarx"
   },
+  "homepage": "https://vitarx.cn",
   "type": "module",
   "module": "./dist/index.esm-bundler.js",
   "types": "./dist/index.d.ts",
