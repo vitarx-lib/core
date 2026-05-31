@@ -1,9 +1,6 @@
 # Vitarx
 
-Vitarx 是一个现代化前端框架，融合了 **JSX 语法** 和 **响应式系统**，提供引擎级视图控制能力和完整的前端开发框架。  
-该包为 Vitarx 框架主入口，整合核心模块，包括响应式系统、运行时核心、DOM 渲染和工具函数。
-
----
+Vitarx 是一个 **响应式驱动** 的 JSX 前端框架。以信号粒度的精确依赖追踪取代虚拟 DOM 差量比对，通过引擎级视图控制实现最小化更新。
 
 ## 特性概览
 
@@ -20,34 +17,10 @@ Vitarx 是一个现代化前端框架，融合了 **JSX 语法** 和 **响应式
 | 📘 **TypeScript 完整支持** | 类型推导完整，开发体验友好                                      |
 | 🔌 **工具函数库**           | 深拷贝、类型检测、防抖/节流、渲染辅助函数等                             |
 
-
-## 官方文档
-
-[查看文档](https://vitarx.cn)
-
-## 安装
+## 开始开始
 
 ```bash
-# 使用 npm
-npm install vitarx
-
-# 使用 yarn
-yarn add vitarx
-
-# 使用 pnpm
-pnpm add vitarx
-```
-
-## 快速开始
-
-```typescript
-import { createApp } from 'vitarx'
-import App from './app'
-// 创建应用实例
-const app = createApp(App)
-
-// 挂载到 DOM 元素
-app.mount('#app')
+pnpm create vitarx@latest
 ```
 
 ## 导出内容
@@ -60,6 +33,13 @@ app.mount('#app')
 - [@vitarx/runtime-dom](../runtime-dom/README.md) - 浏览器端 DOM 渲染适配器
 - [@vitarx/runtime-ssr](../runtime-ssr/README.md) - 服务端渲染能力
 
+## 链接
+
+- [官方文档](https://vitarx.cn)
+- [GitHub](https://github.com/vitarx-lib/core)
+
 ## 许可证
 
 [MIT](./LICENSE)
+
+Copyright © 2024 - present, ZhuChongLin
