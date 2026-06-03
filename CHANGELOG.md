@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/vitarx-lib/core/compare/v4.0.0...v4.0.1) (2026-06-03)
+
+
+### Bug Fixes
+
+* **runtime-ssr:** 重构客户端水合和激活逻辑，修复片段占位符移位BUG ([c750e1b](https://github.com/vitarx-lib/core/commit/c750e1bb8e8db1ec072ddd7e728c7ac103670816))
+
 # [4.0.0](https://github.com/vitarx-lib/core/compare/v4.0.0-beta.19...v4.0.0) (2026-05-27)
 
 
