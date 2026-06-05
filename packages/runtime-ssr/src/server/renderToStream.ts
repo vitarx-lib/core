@@ -26,7 +26,7 @@ import type { StreamingSink } from '../shared/sink.js'
  */
 export async function renderToStream(
   root: SSRApp | View,
-  context: SSRContext = {},
+  context: SSRContext,
   options: StreamingSink
 ): Promise<void> {
   try {
