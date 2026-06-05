@@ -24,7 +24,7 @@ export type SSRContext<T = Record<string, any>> = T & SSRInternalContext
  * 在组件中调用此函数可以访问服务端渲染时的上下文数据，
  * 可用于在服务端写入状态，客户端恢复状态。
  *
- * @returns -  SSR上下文对象，如果不在SSR环境中则返回undefined
+ * @returns -  SSR上下文对象，如果不在SSR环境中则返回null
  *
  * @example
  * ```ts
