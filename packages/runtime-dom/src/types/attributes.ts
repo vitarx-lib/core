@@ -185,6 +185,7 @@ type AttributeNames =
   | 'width'
   | 'wrap'
   | 'children'
+  | 'role'
 
 /**
  * 判断一个属性P是否存在于W3C标准属性中
@@ -389,6 +390,23 @@ export type CSSProperties = {
  * 全局属性
  */
 interface GlobalAttributes {
+  /**
+   * 全局HTML属性`class`接受字符串、数组和`Record<string, boolean>`类型的对象。
+   *
+   * 当为对象时`Key`为类名，`Value` 应该为布尔值，决定是否为元素添加该类。
+   *
+   * ```jsx
+   * // 对象类型
+   * <div class={{ active: true, hidden: false,'my-class': true }}></div>
+   * // 数组类型
+   * <div class={['active', 'my-class']}></div>
+   * // `W3C`标准语法
+   * <div class="active my-class"></div>
+   * ```
+   *
+   * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
+   */
+  class?: ClassProperties
   /**
    * 全局属性 `style` 包含应用到元素的 CSS 样式声明。
    *
@@ -596,23 +614,6 @@ type CoverPropertiesNames = keyof CoverAttributes
  * 自定义全局HTML属性
  */
 interface CustomHTMLAttributes {
-  /**
-   * 全局HTML属性`class`接受字符串、数组和`Record<string, boolean>`类型的对象。
-   *
-   * 当为对象时`Key`为类名，`Value` 应该为布尔值，决定是否为元素添加该类。
-   *
-   * ```jsx
-   * // 对象类型
-   * <div class={{ active: true, hidden: false,'my-class': true }}></div>
-   * // 数组类型
-   * <div class={['active', 'my-class']}></div>
-   * // `W3C`标准语法
-   * <div class="active my-class"></div>
-   * ```
-   *
-   * @see https://developer.mozilla.org/zh-CN/docs/Web/HTML/Global_attributes/class 详细文档
-   */
-  class?: ClassProperties
   /**
    * 未知属性
    *
