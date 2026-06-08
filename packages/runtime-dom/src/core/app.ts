@@ -7,6 +7,7 @@ import {
   setRenderer,
   type View
 } from '@vitarx/runtime-core'
+import { isArray } from '@vitarx/utils'
 import { DOMRenderer } from './renderer.js'
 
 /**
@@ -42,6 +43,8 @@ export class WebApp extends App {
     // 如果传入的是字符串，则通过querySelector获取对应的DOM元素
     if (typeof container === 'string') {
       container = document.querySelector(container)!
+      // 如果querySelector返回的是NodeList，取第一个元素
+      if (container && isArray(container)) container = container[0]
       // 如果找不到对应的DOM元素，抛出错误
       if (!container) {
         throw new Error(
