@@ -99,10 +99,6 @@ export interface IntrinsicAttributes {
    *  第二个元素可以指定哪些属性不需要绑定。
    */
   'v-bind'?: BindAttributes | null | undefined
-  /**
-   * 支持传入未知属性
-   */
-  [key: string]: unknown
 }
 
 type VModelValue<T> = T extends Ref<any, infer S> ? T | S : Ref<T> | T

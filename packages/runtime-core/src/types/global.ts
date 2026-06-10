@@ -30,7 +30,9 @@ declare global {
      * 宿主平台包可以重写此接口以支持Tsx类型校验。
      */
     interface IntrinsicElements {
-      [K: string]: GlobalIntrinsicAttributes
+      [Tag: string]: GlobalIntrinsicAttributes & {
+        [p: string]: unknown
+      }
     }
     /**
      * 宿主平台片段节点
@@ -107,7 +109,7 @@ declare global {
      * 定义 JSX 元素的类型，可以是字符串（原生 HTML 标签）或组件
      * 例如：'div'、MyComponent 等
      */
-    type ElementType = keyof IntrinsicElements | Component
+    type ElementType = string | keyof IntrinsicElements | Component
     type Element = View
     /**
      * JSX 内置属性接口，扩展了 Vitarx 的内置属性
