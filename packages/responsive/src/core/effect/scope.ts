@@ -1,4 +1,4 @@
-import { type VoidCallback } from '@vitarx/utils'
+import { isFunction, type VoidCallback } from '@vitarx/utils'
 import { type EffectState } from './effect.js'
 import { NEXT_EFFECT, OWNER_SCOPE, PREV_EFFECT } from './symbol.js'
 
@@ -119,9 +119,11 @@ export class EffectScope {
    */
   constructor(options?: EffectScopeOptions) {
     this.name = options?.name || 'anonymous'
-    this.errorHandler = options?.errorHandler
-    if (this.errorHandler && typeof this.errorHandler !== 'function') {
-      throw new TypeError('[EffectScope] errorHandler must be a function')
+    if (options?.errorHandler) {
+      if (!isFunction(options.errorHandler)) {
+        throw new TypeError('[EffectScope] errorHandler must be a function')
+      }
+      this.errorHandler = options.errorHandler
     }
   }
 
