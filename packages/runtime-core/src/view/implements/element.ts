@@ -100,9 +100,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode): void {
     const renderer = getRenderer()
     if (!this.hostNode) {
-      // 判断是否为svg命名空间
-      const svg = (this.tag as string) === 'svg' || renderer.isSVGElement(containerOrAnchor)
-      this.hostNode = renderer.createElement(this.tag, svg)
+      this.hostNode = renderer.createElement(this.tag, containerOrAnchor)
     }
     if (this.props) this.setProps(this.hostNode, this.props, renderer)
     if (this.ref) applyRef(this.ref, this.hostNode)
@@ -126,7 +124,7 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
   private setProps(node: HostElement, props: AnyProps, renderer: ViewRenderer): void {
     const effects: ViewEffect[] = []
     for (const key in props) {
-      let prevHandler: any = null
+      let prevHandler: Function | null = null
       const effect = viewEffect(() => {
         try {
           // getter 执行，建立依赖
