@@ -19,9 +19,9 @@ export interface ViewRenderer {
    * 创建元素
    *
    * @param tag - 元素名称
-   * @param useSVGNamespace - 使用SVG命名空间
+   * @param parent - 即将要挂载的容器，用于继承命名空间！
    */
-  createElement<T extends HostElementTag>(tag: T, useSVGNamespace: boolean): HostElement<T>
+  createElement<T extends HostElementTag>(tag: T, parent: HostContainer): HostElement<T>
   /**
    * 创建文本节点
    *
@@ -55,6 +55,11 @@ export interface ViewRenderer {
    */
   isSVGElement(node: HostNode): boolean
   /**
+   * 判断是否为MathML元素
+   * @param node
+   */
+  isMathMLElement(node: HostNode): boolean
+  /**
    * 判断是否为文本节点
    *
    * @param node - 节点
@@ -62,14 +67,14 @@ export interface ViewRenderer {
   isFragment(node: HostNode): node is HostFragment
   /* ---------- 节点操作（结构） ---------- */
   /**
-   * 添加子节点
+   * 添加子节点到父节点
    *
    * @param child - 子节点
    * @param parent - 父节点
    */
   append(child: HostNode, parent: HostContainer): void
   /**
-   * 插入节点
+   * 插入节点到锚点之前
    *
    * 如果旧节点不存在于文档中时不执行任何操作
    *
@@ -109,5 +114,5 @@ export interface ViewRenderer {
    * @param nextValue - 属性值
    * @param prevValue - 上一次的属性值，兼容卸载旧的事件处理器
    */
-  setAttribute(el: HostElement, key: string, nextValue: any, prevValue: any): void
+  setAttribute(el: HostElement, key: string, nextValue: unknown, prevValue: unknown): void
 }

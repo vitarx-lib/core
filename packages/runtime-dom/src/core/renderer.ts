@@ -14,11 +14,12 @@ import {
   StyleUtils,
   type ViewRenderer
 } from '@vitarx/runtime-core'
-import type { HTMLEventOptions } from '../types/index.js'
+import { logger } from '@vitarx/utils'
+import type { DOMEventOptions } from '../types/index.js'
 
-const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/'
-const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink'
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg'
+const MATH_NAMESPACE = 'http://www.w3.org/1998/Math/MathML'
+const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml'
 
 export const __EXCLUDE_PROP_NAMES__ = [
   'className',
@@ -121,7 +122,8 @@ const PREDEFINED_DEFAULTS: Record<string, any> = {
   kind: '',
   srclang: '',
   label: '',
-  default: false
+  default: false,
+  role: null
 }
 
 /**
@@ -136,81 +138,7 @@ const PREDEFINED_DEFAULTS: Record<string, any> = {
  * 2. 属性不在集合中 → 直接移除
  * 3. 属性在集合中 → 查询默认值并重置
  */
-const NEEDS_RESET_PROPERTIES = new Set([
-  'checked',
-  'selected',
-  'disabled',
-  'readOnly',
-  'multiple',
-  'autofocus',
-  'required',
-  'hidden',
-  'value',
-  'defaultValue',
-  'placeholder',
-  'tabIndex',
-  'contentEditable',
-  'draggable',
-  'spellcheck',
-  'autocomplete',
-  'autocapitalize',
-  'autocorrect',
-  'dir',
-  'lang',
-  'title',
-  'name',
-  'type',
-  'src',
-  'href',
-  'rel',
-  'target',
-  'alt',
-  'width',
-  'height',
-  'id',
-  'accessKey',
-  'className',
-  'min',
-  'max',
-  'step',
-  'pattern',
-  'accept',
-  'action',
-  'method',
-  'enctype',
-  'cols',
-  'rows',
-  'wrap',
-  'colSpan',
-  'rowSpan',
-  'span',
-  'start',
-  'reversed',
-  'async',
-  'defer',
-  'crossOrigin',
-  'integrity',
-  'nonce',
-  'referrerPolicy',
-  'loading',
-  'decoding',
-  'playsInline',
-  'controls',
-  'autoplay',
-  'loop',
-  'muted',
-  'preload',
-  'poster',
-  'currentTime',
-  'playbackRate',
-  'volume',
-  'defaultPlaybackRate',
-  'defaultMuted',
-  'kind',
-  'srclang',
-  'label',
-  'default'
-])
+const NEEDS_RESET_PROPERTIES = new Set(Object.keys(PREDEFINED_DEFAULTS))
 
 /**
  * DOMRenderer渲染器，实现了ViewRenderer接口，用于在浏览器环境中进行DOM操作和渲染。
@@ -247,19 +175,41 @@ export class DOMRenderer implements ViewRenderer {
     // 其他类型节点（文本节点、注释节点等）不是 SVG 元素
     return false
   }
+  /**
+   * @inheritDoc
+   */
+  isMathMLElement(node: HostNode): boolean {
+    // 检查节点是否存在
+    if (!node) return false
+    // 处理 Fragment 节点
+    if (this.isFragment(node)) {
+      // 检查 startAnchor 和其父元素是否存在
+      const parentElement = node.$startAnchor?.parentElement
+      if (!parentElement) return false
+      node = parentElement
+    }
+    // 处理普通元素节点
+    if (this.isElement(node)) {
+      return node.namespaceURI === MATH_NAMESPACE
+    }
+    // 其他类型节点（文本节点、注释节点等）不是 MathML 元素
+    return false
+  }
   /** @inheritDoc */
   createComment(text: string): HostComment {
     return document.createComment(text)
   }
   /** @inheritDoc */
-  createElement<T extends HostElementTag>(tag: T, useSVGNamespace: boolean): HostElement<T> {
-    let el: Element
-    if (useSVGNamespace) {
-      el = document.createElementNS(SVG_NAMESPACE, tag)
+  createElement<T extends HostElementTag>(tag: T, parent: HostContainer): HostElement<T> {
+    let namespaceURI: string
+    if (tag === 'svg') {
+      namespaceURI = SVG_NAMESPACE
+    } else if (tag === 'math') {
+      namespaceURI = MATH_NAMESPACE
     } else {
-      el = document.createElement(tag)
+      namespaceURI = this.getNamespaceURI(parent)
     }
-    return el as HostElement<T>
+    return document.createElementNS(namespaceURI, tag) as HostElement<T>
   }
   /** @inheritDoc */
   createFragment(view: FragmentView | ListView): HostFragment {
@@ -285,7 +235,6 @@ export class DOMRenderer implements ViewRenderer {
       parent.appendChild(child)
     }
   }
-
   /** @inheritDoc */
   insert(child: HostNode, anchor: HostNode): void {
     // 如果锚点元素是Fragment，则插入到结束锚点之后
@@ -327,49 +276,40 @@ export class DOMRenderer implements ViewRenderer {
     }
   }
   /** @inheritDoc */
-  setAttribute(el: HostElement, name: string, nextValue: any, prevValue: any): void {
+  setAttribute(el: HostElement, name: string, nextValue: unknown, prevValue: unknown): void {
     if (__EXCLUDE_PROP_NAMES__.includes(name)) {
       return
     }
     try {
+      if (prevValue === nextValue) return
       if (nextValue == null || nextValue === false) {
         this.removeAttribute(el, name, prevValue)
         return
       }
-      // 处理事件属性
+      if (name === 'style') {
+        this.setStyle(el, nextValue as StyleProperties)
+        return
+      }
+      if (name === 'class') {
+        this.setClass(el, nextValue as ClassProperties)
+        return
+      }
+      // 处理 data- 和 aria- 属性
+      if (name.startsWith('data-') || name.startsWith('aria-')) {
+        el.setAttribute(name, String(nextValue))
+        return
+      }
+      if (name === 'autoFocus') {
+        el.autofocus = Boolean(nextValue)
+      }
+      // 清除旧事件
+      if (typeof prevValue === 'function') {
+        this.removeEventListener(el, name, prevValue)
+      }
+      // 绑定新事件
       if (typeof nextValue === 'function') {
-        if (prevValue === nextValue) return
-        // 清除旧事件
-        if (typeof prevValue === 'function') {
-          this.removeEventListener(el, name, prevValue)
-        }
-        // 绑定新事件
         this.addEventListener(el, name, nextValue)
         return
-      }
-      // 处理 data 属性
-      if (name.startsWith('data-')) {
-        el.setAttribute(name, nextValue)
-        return
-      }
-      // 处理 xlink 属性
-      if (name.startsWith('xlink:')) {
-        el.setAttributeNS(XLINK_NAMESPACE, name, String(nextValue))
-        return
-      }
-      switch (name) {
-        case 'style':
-          this.setStyle(el, nextValue)
-          return
-        case 'class':
-          this.setClass(el, nextValue)
-          return
-        case 'autoFocus':
-          el.autofocus = Boolean(nextValue)
-          return
-        case 'xmlns:xlink':
-          el.setAttributeNS(XMLNS_NAMESPACE, name, String(nextValue))
-          return
       }
       // 尝试直接设置属性
       if (this.trySetDirectProperty(el, name, nextValue)) {
@@ -378,7 +318,7 @@ export class DOMRenderer implements ViewRenderer {
       // 使用 setAttribute 作为后备方案
       el.setAttribute(name, nextValue === true ? '' : String(nextValue))
     } catch (error) {
-      console.error(`[DOMRenderer.setAttribute] error setting attribute "${name}"`, error, el)
+      logger.error(`[DOMRenderer.setAttribute] error setting attribute "${name}"`, error, el)
     }
   }
   /** @inheritDoc */
@@ -419,7 +359,7 @@ export class DOMRenderer implements ViewRenderer {
    * @param prevValue - 之前的属性值，用于判断是否需要重置
    */
   private removeAttribute(el: HostElement, key: string, prevValue?: any): void {
-    if (key === 'class' || key === 'className' || key === 'classname') {
+    if (key === 'class') {
       el.removeAttribute('class')
       return
     }
@@ -427,7 +367,7 @@ export class DOMRenderer implements ViewRenderer {
       el.removeAttribute('style')
       return
     }
-    if (typeof prevValue === 'function' && key.startsWith('on')) {
+    if (typeof prevValue === 'function') {
       this.removeEventListener(el, key, prevValue)
       return
     }
@@ -443,19 +383,19 @@ export class DOMRenderer implements ViewRenderer {
         } else {
           el.removeAttribute(key)
         }
-      } catch {
+      } catch (e) {
         el.removeAttribute(key)
       }
-    } else {
-      el.removeAttribute(key)
+      return
     }
+    el.removeAttribute(key)
   }
   private trySetDirectProperty<T extends Element>(el: T, name: string, value: any): boolean {
     if (!(name in el)) return false
     try {
       el[name as keyof T] = value
       return true
-    } catch {
+    } catch (e) {
       return false
     }
   }
@@ -475,7 +415,7 @@ export class DOMRenderer implements ViewRenderer {
   private removeEventListener(
     el: Element,
     name: string,
-    handler: (...args: any[]) => any,
+    handler: Function,
     useCapture: boolean = false
   ): void {
     const { event, options } = this.extractEventOptions(name)
@@ -501,8 +441,8 @@ export class DOMRenderer implements ViewRenderer {
   private addEventListener(
     el: Element,
     name: string,
-    handler: (...args: any[]) => any,
-    options?: HTMLEventOptions
+    handler: Function,
+    options?: DOMEventOptions
   ): void {
     const { event, options: eventOptions } = this.extractEventOptions(name)
     Object.assign(eventOptions, options)
@@ -552,7 +492,7 @@ export class DOMRenderer implements ViewRenderer {
    * @param prop - 属性名
    * @returns 属性的默认值，仅返回 boolean/number/string 类型，其他返回 undefined
    */
-  private getDefaultValue(tag: string, prop: string): any {
+  private getDefaultValue(tag: string, prop: string): unknown {
     if (prop in PREDEFINED_DEFAULTS) {
       return PREDEFINED_DEFAULTS[prop]
     }
@@ -590,8 +530,8 @@ export class DOMRenderer implements ViewRenderer {
    * extractEventOptions('onClickCapture') // { event: 'click', options: { capture: true } }
    * extractEventOptions('onClickCaptureOnce') // { event: 'click', options: { capture: true, once: true } }
    */
-  private extractEventOptions(name: string): { event: string; options: HTMLEventOptions } {
-    const options = {} as HTMLEventOptions
+  private extractEventOptions(name: string): { event: string; options: DOMEventOptions } {
+    const options = {} as DOMEventOptions
     let event = name.toLowerCase()
     if (event.startsWith('on')) event = event.slice(2)
     if (event.endsWith('passive')) {
@@ -607,5 +547,25 @@ export class DOMRenderer implements ViewRenderer {
       options.capture = true
     }
     return { event, options }
+  }
+  /**
+   * 获取节点的命名空间URI
+   * @param node
+   * @private
+   */
+  private getNamespaceURI(node: HostContainer): string {
+    if (!node) return HTML_NAMESPACE
+    // 处理 Fragment 节点
+    if (this.isFragment(node)) {
+      // 检查 startAnchor 和其父元素是否存在
+      const parentElement = node.$startAnchor?.parentElement
+      if (!parentElement) return HTML_NAMESPACE
+      node = parentElement
+    }
+    // 处理普通元素节点
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      return (node as Element).namespaceURI || HTML_NAMESPACE
+    }
+    return HTML_NAMESPACE
   }
 }
