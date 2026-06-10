@@ -10,12 +10,10 @@ import {
   type WithProps
 } from '@vitarx/runtime-core'
 import { isFunction, logger } from '@vitarx/utils'
-import type { VoidElementTag } from '../../../types/index.js'
 import type { BaseTransitionProps } from './index.js'
 import { getDuration, isElement, runTransition } from './Transition.utils.js'
 
-type ContainerTag = Exclude<HostElementTag, VoidElementTag>
-interface TransitionGroupProps<T, Tag extends ContainerTag>
+interface TransitionGroupProps<T, Tag extends HostElementTag>
   extends BaseTransitionProps, ListProps<T> {
   /** 包裹子节点的标签名 */
   tag?: Tag
@@ -69,7 +67,7 @@ interface TransitionGroupProps<T, Tag extends ContainerTag>
  * }
  * ```
  */
-function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
+function TransitionGroup<T, Tag extends HostElementTag = HostElementTag>(
   props: TransitionGroupProps<T, Tag>
 ): View {
   // 获取当前实例
@@ -195,7 +193,7 @@ function TransitionGroup<T, Tag extends ContainerTag = ContainerTag>(
   })
   // 根据是否指定 tag 决定返回结构
   return typeof tag === 'string'
-    ? createElementView(tag as ContainerTag, { children: listView, 'v-bind': props.props })
+    ? createElementView(tag as HostElementTag, { children: listView, 'v-bind': props.props })
     : listView
 }
 defineValidate(TransitionGroup, (props: AnyProps) => {

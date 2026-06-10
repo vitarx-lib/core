@@ -239,7 +239,7 @@ describe('TransitionGroup 组件', () => {
         children: (item: number) => {
           return createView('div', {
             id: `move-item-${item}`,
-            'data-id': item,
+            'data-id': String(item),
             style: 'position: relative; transition: transform 0.3s;',
             children: `Move Item ${item}`
           })
