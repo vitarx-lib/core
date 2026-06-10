@@ -1,6 +1,6 @@
 import { FragmentView, ListView, type MaybeRef } from '@vitarx/runtime-core'
 import type { CSSProperties } from './attributes.js'
-import type { HTMLElementTagMap, HTMLIntrinsicElement } from './element.js'
+import type { AllElementMap, HTMLIntrinsicElement } from './element.js'
 
 declare global {
   namespace Vitarx {
@@ -13,7 +13,7 @@ declare global {
     }
     interface HostTextNode extends Text {}
     interface HostCommentNode extends Comment {}
-    interface HostElementTagMap extends HTMLElementTagMap {}
+    interface HostElementTagMap extends AllElementMap {}
     interface HostCSSProperties extends CSSProperties {}
     interface IntrinsicAttributes {
       /**

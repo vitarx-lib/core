@@ -1,522 +1,3 @@
-type GlobalEventNames =
-  | 'onError'
-  | 'onBlur'
-  | 'onContextMenu'
-  | 'onFocus'
-  | 'onKeyDown'
-  | 'onKeyPress'
-  | 'onKeyUp'
-  | 'onClick'
-  | 'onDblClick'
-  | 'onMouseDown'
-  | 'onMouseMove'
-  | 'onMouseOut'
-  | 'onMouseOver'
-  | 'onMouseUp'
-  | 'onWheel'
-  | 'onScroll'
-  | 'onCopy'
-  | 'onCut'
-  | 'onPaste'
-  | 'onAbort'
-  | 'onTouchStart'
-  | 'onTouchEnd'
-  | 'onTouchCancel'
-  | 'onTouchMove'
-/**
- * 事件修饰符(大驼峰)
- */
-type EventModifier = 'Capture' | 'Once' | 'Passive' | 'OnceCapture'
-/**
- * 事件处理函数接口
- *
- * @template T - 元素
- * @template E - 事件类型，可以是Event或UIEvent
- */
-type EventHandler<T extends Element, E extends Event | UIEvent> = (this: T, event: E) => void
-
-/**
- * 所有事件映射，小驼峰事件名
- */
-interface HumpNameEventMap<T extends Element> {
-  /**
-   * 在发生错误时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Window/error_event
-   * @applies img, script, audio, video
-   */
-  onError?: EventHandler<T, ErrorEvent>
-  /**
-   * 当资源及其依赖资源已完成加载时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Window/load_event
-   * @applies img, script, link, audio, video
-   */
-  onLoad?: EventHandler<T, Event>
-  /**
-   * 当元素失去焦点时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/blur_event
-   * @applies 所有可聚焦元素(如input, select, a等)
-   */
-  onBlur?: EventHandler<T, FocusEvent>
-  /**
-   * 当元素的值发生改变时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/change_event
-   * @applies input, select, textarea
-   */
-  onChange?: EventHandler<T, Event>
-  /**
-   * 当右键点击元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/contextmenu_event
-   * @applies 所有元素
-   */
-  onContextMenu?: EventHandler<T, MouseEvent>
-  /**
-   * 当元素获得焦点时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/focus_event
-   * @applies 所有可聚焦元素(如input, select, a等)
-   */
-  onFocus?: EventHandler<T, FocusEvent>
-  /**
-   * 当元素获取输入时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/input_event
-   * @applies input, textarea, select
-   */
-  onInput?: EventHandler<T, InputEvent>
-  /**
-   * 当元素验证失败时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLInputElement/invalid_event
-   * @applies form, input, select, textarea
-   */
-  onInvalid?: EventHandler<T, Event>
-  /**
-   * 当表单重置时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLFormElement/reset_event
-   * @applies form
-   */
-  onReset?: EventHandler<T, Event>
-  /**
-   * 当搜索输入框提交搜索时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLInputElement/search_event
-   * @applies input[type="search"]
-   */
-  onSearch?: EventHandler<T, Event>
-  /**
-   * 当文本被选中时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/select_event
-   * @applies input[type="text"], textarea
-   */
-  onSelect?: EventHandler<T, Event>
-  /**
-   * 当表单提交时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLFormElement/submit_event
-   * @applies form
-   */
-  onSubmit?: EventHandler<T, SubmitEvent>
-  /**
-   * 当键盘按键被按下时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/keydown_event
-   * @applies 所有可聚焦元素和document
-   */
-  onKeyDown?: EventHandler<T, KeyboardEvent>
-  /**
-   * 当键盘按键被按下并释放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/keypress_event
-   * @applies 所有可聚焦元素和document
-   * @deprecated 建议使用keydown代替
-   */
-  onKeyPress?: EventHandler<T, KeyboardEvent>
-  /**
-   * 当键盘按键被释放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/keyup_event
-   * @applies 所有可聚焦元素和document
-   */
-  onKeyUp?: EventHandler<T, KeyboardEvent>
-  // 鼠标事件
-  /**
-   * 当元素被点击时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/click_event
-   * @applies 所有可见元素
-   */
-  onClick?: EventHandler<T, MouseEvent>
-  /**
-   * 当元素被双击时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/dblclick_event
-   * @applies 所有可见元素
-   */
-  onDblClick?: EventHandler<T, MouseEvent>
-  /**
-   * 当鼠标按钮在元素上按下时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mousedown_event
-   * @applies 所有可见元素
-   */
-  onMouseDown?: EventHandler<T, MouseEvent>
-  /**
-   * 当鼠标指针在元素上移动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mousemove_event
-   * @applies 所有可见元素
-   */
-  onMouseMove?: EventHandler<T, MouseEvent>
-  /**
-   * 当鼠标指针移出元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseout_event
-   * @applies 所有可见元素
-   */
-  onMouseOut?: EventHandler<T, MouseEvent>
-  /**
-   * 当鼠标指针移入元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseover_event
-   * @applies 所有可见元素
-   */
-  onMouseOver?: EventHandler<T, MouseEvent>
-  /**
-   * 当鼠标按钮在元素上释放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseup_event
-   * @applies 所有可见元素
-   */
-  onMouseUp?: EventHandler<T, MouseEvent>
-  /**
-   * 当鼠标滚轮在元素上滚动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/wheel_event
-   * @applies 所有可见元素
-   */
-  onWheel?: EventHandler<T, WheelEvent>
-  // 拖拽事件
-  /**
-   * 当元素被拖动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/drag_event
-   * @applies 所有设置了draggable=true的元素
-   */
-  onDrag?: EventHandler<T, DragEvent>
-  /**
-   * 当拖动操作结束时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragend_event
-   * @applies 所有设置了draggable=true的元素
-   */
-  onDragEnd?: EventHandler<T, DragEvent>
-  /**
-   * 当被拖动元素进入有效放置目标时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragenter_event
-   * @applies 所有元素
-   */
-  onDragEnter?: EventHandler<T, DragEvent>
-  /**
-   * 当被拖动元素离开有效放置目标时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragleave_event
-   * @applies 所有元素
-   */
-  onDragLeave?: EventHandler<T, DragEvent>
-  /**
-   * 当被拖动元素在有效放置目标上方时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragover_event
-   * @applies 所有元素
-   */
-  onDragOver?: EventHandler<T, DragEvent>
-  /**
-   * 当开始拖动元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragstart_event
-   * @applies 所有设置了draggable=true的元素
-   */
-  onDragStart?: EventHandler<T, DragEvent>
-  /**
-   * 当被拖动元素放置在有效放置目标上时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/drop_event
-   * @applies 所有元素
-   */
-  onDrop?: EventHandler<T, DragEvent>
-  /**
-   * 当元素的滚动条被滚动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/scroll_event
-   * @applies 带有滚动条的元素
-   */
-  onScroll?: EventHandler<T, Event>
-  // 剪贴板事件
-  /**
-   * 当用户复制元素内容时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/copy_event
-   * @applies 所有可编辑元素
-   */
-  onCopy?: EventHandler<T, ClipboardEvent>
-  /**
-   * 当用户剪切元素内容时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/cut_event
-   * @applies 所有可编辑元素
-   */
-  onCut?: EventHandler<T, ClipboardEvent>
-  /**
-   * 当用户粘贴内容到元素时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/paste_event
-   * @applies 所有可编辑元素
-   */
-  onPaste?: EventHandler<T, ClipboardEvent>
-  // 媒体事件
-  /**
-   * 当媒体加载终止时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/abort_event
-   * @applies audio, video, img
-   */
-  onAbort?: EventHandler<T, Event>
-  /**
-   * 当媒体可以开始播放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/canplay_event
-   * @applies audio, video
-   */
-  onCanPlay?: EventHandler<T, Event>
-  /**
-   * 当媒体可以无需暂停地播放完成时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/canplaythrough_event
-   * @applies audio, video
-   */
-  onCanPlayThrough?: EventHandler<T, Event>
-  /**
-   * 当字幕轨道发生变化时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLTrackElement/cuechange_event
-   * @applies track
-   */
-  onCueChange?: EventHandler<T, Event>
-  /**
-   * 当媒体时长变化时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/durationchange_event
-   * @applies audio, video
-   */
-  onDurationChange?: EventHandler<T, Event>
-  /**
-   * 当媒体被清空时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/emptied_event
-   * @applies audio, video
-   */
-  onEmptied?: EventHandler<T, Event>
-  /**
-   * 当媒体播放结束时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/ended_event
-   * @applies audio, video
-   */
-  onEnded?: EventHandler<T, Event>
-  /**
-   * 当媒体数据已加载时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/loadeddata_event
-   * @applies audio, video
-   */
-  onLoadedData?: EventHandler<T, Event>
-  /**
-   * 当媒体元数据已加载时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/loadedmetadata_event
-   * @applies audio, video
-   */
-  onLoadedMetadata?: EventHandler<T, Event>
-  /**
-   * 当媒体开始加载时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/loadstart_event
-   * @applies audio, video
-   */
-  onLoadStart?: EventHandler<T, Event>
-  /**
-   * 当媒体暂停时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/pause_event
-   * @applies audio, video
-   */
-  onPause?: EventHandler<T, Event>
-  /**
-   * 当媒体开始播放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/play_event
-   * @applies audio, video
-   */
-  onPlay?: EventHandler<T, Event>
-  /**
-   * 当媒体从暂停状态开始播放时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/playing_event
-   * @applies audio, video
-   */
-  onPlaying?: EventHandler<T, Event>
-  /**
-   * 当媒体下载时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/progress_event
-   * @applies audio, video
-   */
-  onProgress?: EventHandler<T, Event>
-  /**
-   * 当播放速率改变时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/ratechange_event
-   * @applies audio, video
-   */
-  onRateChange?: EventHandler<T, Event>
-  /**
-   * 当媒体完成跳转操作时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/seeked_event
-   * @applies audio, video
-   */
-  onSeeked?: EventHandler<T, Event>
-  /**
-   * 当媒体开始跳转操作时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/seeking_event
-   * @applies audio, video
-   */
-  onSeeking?: EventHandler<T, Event>
-  /**
-   * 当媒体加载意外停止时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/stalled_event
-   * @applies audio, video
-   */
-  onStalled?: EventHandler<T, Event>
-  /**
-   * 当媒体加载暂停时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/suspend_event
-   * @applies audio, video
-   */
-  onSuspend?: EventHandler<T, Event>
-  /**
-   * 当播放位置改变时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/timeupdate_event
-   * @applies audio, video
-   */
-  onTimeUpdate?: EventHandler<T, Event>
-  /**
-   * 当音量改变时触发
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/volumechange_event
-   * @applies audio, video
-   */
-  onVolumeChange?: EventHandler<T, Event>
-  /**
-   * 当媒体暂停但预期会继续时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/waiting_event
-   * @applies audio, video
-   */
-  onWaiting?: EventHandler<T, Event>
-  // 其他事件
-  /**
-   * 当details元素的展开/折叠状态改变时触发
-   * @see https://developer.mozilla.org/docs/Web/API/HTMLDetailsElement/toggle_event
-   * @applies details
-   */
-  onToggle?: EventHandler<T, Event>
-  // 触摸事件
-  /**
-   * 当触摸事件开始时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchstart_event
-   * @applies 所有元素
-   */
-  onTouchStart?: EventHandler<T, TouchEvent>
-  /**
-   * 当触摸事件结束时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchend_event
-   * @applies 所有元素
-   */
-  onTouchEnd?: EventHandler<T, TouchEvent>
-  /**
-   * 当触摸事件被取消时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchcancel_event
-   * @applies 所有元素
-   */
-  onTouchCancel?: EventHandler<T, TouchEvent>
-  /**
-   * 当触摸事件移动时触发
-   * @see https://developer.mozilla.org/docs/Web/API/Element/touchmove_event
-   * @applies 所有元素
-   */
-  onTouchMove?: EventHandler<T, TouchEvent>
-}
-/**
- * 所有事件映射，小写事件名
- */
-type LowerNameEventMap<T extends Element> = {
-  [K in keyof HumpNameEventMap<T> as Lowercase<K>]: HumpNameEventMap<T>[K]
-}
-
-/**
- * 所有事件映射，驼峰事件名
- */
-type EventNameMap = {
-  onerror: 'onError'
-  onload: 'onLoad'
-  onblur: 'onBlur'
-  onchange: 'onChange'
-  oncontextmenu: 'onContextMenu'
-  onfocus: 'onFocus'
-  oninput: 'onInput'
-  oninvalid: 'onInvalid'
-  onreset: 'onReset'
-  onsearch: 'onSearch'
-  onselect: 'onSelect'
-  onsubmit: 'onSubmit'
-  onkeydown: 'onKeyDown'
-  onkeypress: 'onKeyPress'
-  onkeyup: 'onKeyUp'
-  onclick: 'onClick'
-  ondblclick: 'onDblClick'
-  onmousedown: 'onMouseDown'
-  onmousemove: 'onMouseMove'
-  onmouseout: 'onMouseOut'
-  onmouseover: 'onMouseOver'
-  onmouseup: 'onMouseUp'
-  onwheel: 'onWheel'
-  ondrag: 'onDrag'
-  ondragend: 'onDragEnd'
-  ondragenter: 'onDragEnter'
-  ondragleave: 'onDragLeave'
-  ondragover: 'onDragOver'
-  ondragstart: 'onDragStart'
-  ondrop: 'onDrop'
-  onscroll: 'onScroll'
-  oncopy: 'onCopy'
-  oncut: 'onCut'
-  onpaste: 'onPaste'
-  onabort: 'onAbort'
-  oncanplay: 'onCanPlay'
-  oncanplaythrough: 'onCanPlayThrough'
-  oncuechange: 'onCueChange'
-  ondurationchange: 'onDurationChange'
-  onemptied: 'onEmptied'
-  onended: 'onEnded'
-  onloadeddata: 'onLoadedData'
-  onloadedmetadata: 'onLoadedMetadata'
-  onloadstart: 'onLoadStart'
-  onpause: 'onPause'
-  onplay: 'onPlay'
-  onplaying: 'onPlaying'
-  onprogress: 'onProgress'
-  onratechange: 'onRateChange'
-  onseeked: 'onSeeked'
-  onseeking: 'onSeeking'
-  onstalled: 'onStalled'
-  onsuspend: 'onSuspend'
-  ontimeupdate: 'onTimeUpdate'
-  onvolumechange: 'onVolumeChange'
-  onwaiting: 'onWaiting'
-  ontoggle: 'onToggle'
-  ontouchstart: 'onTouchStart'
-  ontouchend: 'onTouchEnd'
-  ontouchcancel: 'onTouchCancel'
-  ontouchmove: 'onTouchMove'
-}
-
-/**
- * 所有事件映射，小驼峰支持修饰符
- */
-type EventModifierMap<T extends Element> = {
-  [K in keyof HumpNameEventMap<T> as `${K}${EventModifier}`]: HumpNameEventMap<T>[K]
-}
-
-/**
- * 所有事件名，小写
- */
-type EventLowerNames = keyof LowerNameEventMap<Element>
-/**
- * 全局HTML事件接口，包含可在全局范围内使用的事件
- */
-type HTMLGlobalEvents<T extends Element> = {
-  [K in GlobalEventNames]: HumpNameEventMap<T>[K]
-} & {
-  [K in GlobalEventNames as `${K}${EventModifier}`]: HumpNameEventMap<T>[K]
-}
-type SupportHumpNameEvents<T extends Element> = {
-  [K in keyof T as K extends EventLowerNames ? EventNameMap[K] : never]?: K extends EventLowerNames
-    ? HumpNameEventMap<T>[EventNameMap[K]]
-    : never
-} & {
-  [K in keyof T as K extends EventLowerNames
-    ? `${EventNameMap[K]}${EventModifier}`
-    : never]?: K extends EventLowerNames
-    ? EventModifierMap<T>[`${EventNameMap[K]}${EventModifier}`]
-    : never
-}
 /**
  * 事件监听器配置选项接口
  *
@@ -526,7 +7,7 @@ type SupportHumpNameEvents<T extends Element> = {
  * // 配置一个只触发一次的点击事件监听器
  * element.addEventListener("click", handler, { once: true });
  */
-export interface HTMLEventOptions {
+export interface DOMEventOptions {
   /**
    * 是否在捕获阶段触发事件监听器
    *
@@ -554,8 +35,416 @@ export interface HTMLEventOptions {
    */
   passive?: boolean
 }
+
 /**
- * HTML元素事件接口
+ * 事件修饰符(大驼峰)
  */
-export type HTMLElementEvents<T extends Element> = SupportHumpNameEvents<T> &
-  Omit<HTMLGlobalEvents<T>, keyof SupportHumpNameEvents<T>>
+type EventModifier = 'Capture' | 'Once' | 'Passive' | 'OnceCapture'
+
+/**
+ * 事件处理函数接口
+ *
+ * @template T - 元素
+ * @template E - 事件类型，可以是Event或UIEvent
+ */
+export type VitarxEventHandler<T, E extends Event | UIEvent = Event> = (this: T, event: E) => void
+
+/**
+ * W3C标准事件映射
+ */
+interface W3CEventMap<T> {
+  /**
+   * 在发生错误时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Window/error_event
+   * @applies img, script, audio, video
+   */
+  onError?: VitarxEventHandler<T, ErrorEvent> | undefined
+  /**
+   * 当资源及其依赖资源已完成加载时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Window/load_event
+   * @applies img, script, link, audio, video
+   */
+  onLoad?: VitarxEventHandler<T> | undefined
+  /**
+   * 当元素失去焦点时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/blur_event
+   * @applies 所有可聚焦元素(如input, select, a等)
+   */
+  onBlur?: VitarxEventHandler<T, FocusEvent> | undefined
+  /**
+   * 当右键点击元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/contextmenu_event
+   * @applies 所有元素
+   */
+  onContextMenu?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当元素获得焦点时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/focus_event
+   * @applies 所有可聚焦元素(如input, select, a等)
+   */
+  onFocus?: VitarxEventHandler<T, FocusEvent> | undefined
+  /**
+   * 当元素获取输入时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/input_event
+   * @applies input, textarea, select
+   */
+  onInput?: VitarxEventHandler<T, InputEvent> | undefined
+  /**
+   * 当元素验证失败时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLInputElement/invalid_event
+   * @applies form, input, select, textarea
+   */
+  onInvalid?: VitarxEventHandler<T> | undefined
+  /**
+   * 当表单重置时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLFormElement/reset_event
+   * @applies form
+   */
+  onReset?: VitarxEventHandler<T> | undefined
+  /**
+   * 当搜索输入框提交搜索时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLInputElement/search_event
+   * @applies input[type="search"]
+   */
+  onSearch?: VitarxEventHandler<T> | undefined
+  /**
+   * 当文本被选中时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/select_event
+   * @applies input[type="text"], textarea
+   */
+  onSelect?: VitarxEventHandler<T> | undefined
+  /**
+   * 当表单提交时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLFormElement/submit_event
+   * @applies form
+   */
+  onSubmit?: VitarxEventHandler<T, SubmitEvent> | undefined
+  /**
+   * 当键盘按键被按下时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/keydown_event
+   * @applies 所有可聚焦元素和document
+   */
+  onKeyDown?: VitarxEventHandler<T, KeyboardEvent> | undefined
+  /**
+   * 当键盘按键被按下并释放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/keypress_event
+   * @applies 所有可聚焦元素和document
+   * @deprecated 建议使用keydown代替
+   */
+  onKeyPress?: VitarxEventHandler<T, KeyboardEvent> | undefined
+  /**
+   * 当键盘按键被释放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/keyup_event
+   * @applies 所有可聚焦元素和document
+   */
+  onKeyUp?: VitarxEventHandler<T, KeyboardEvent> | undefined
+  // 鼠标事件
+  /**
+   * 当元素被点击时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/click_event
+   * @applies 所有可见元素
+   */
+  onClick?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当元素被双击时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/dblclick_event
+   * @applies 所有可见元素
+   */
+  onDblClick?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标指针进入元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseenter_event
+   * @applies 所有可见元素
+   */
+  onMouseEnter?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标指针离开元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseleave_event
+   * @applies 所有可见元素
+   */
+  onMouseLeave?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标按钮在元素上按下时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mousedown_event
+   * @applies 所有可见元素
+   */
+  onMouseDown?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标指针在元素上移动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mousemove_event
+   * @applies 所有可见元素
+   */
+  onMouseMove?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标指针移出元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseout_event
+   * @applies 所有可见元素
+   */
+  onMouseOut?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标指针移入元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseover_event
+   * @applies 所有可见元素
+   */
+  onMouseOver?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标按钮在元素上释放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/mouseup_event
+   * @applies 所有可见元素
+   */
+  onMouseUp?: VitarxEventHandler<T, MouseEvent> | undefined
+  /**
+   * 当鼠标滚轮在元素上滚动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/wheel_event
+   * @applies 所有可见元素
+   */
+  onWheel?: VitarxEventHandler<T, WheelEvent> | undefined
+  // 拖拽事件
+  /**
+   * 当元素被拖动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/drag_event
+   * @applies 所有设置了draggable=true的元素
+   */
+  onDrag?: VitarxEventHandler<T, DragEvent> | undefined
+  /**
+   * 当拖动操作结束时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragend_event
+   * @applies 所有设置了draggable=true的元素
+   */
+  onDragEnd?: VitarxEventHandler<T, DragEvent> | undefined
+  /**
+   * 当被拖动元素进入有效放置目标时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragenter_event
+   * @applies 所有元素
+   */
+  onDragEnter?: VitarxEventHandler<T, DragEvent> | undefined
+  /**
+   * 当被拖动元素离开有效放置目标时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragleave_event
+   * @applies 所有元素
+   */
+  onDragLeave?: VitarxEventHandler<T, DragEvent> | undefined
+  /**
+   * 当被拖动元素在有效放置目标上方时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragover_event
+   * @applies 所有元素
+   */
+  onDragOver?: VitarxEventHandler<T, DragEvent> | undefined
+  /**
+   * 当开始拖动元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/dragstart_event
+   * @applies 所有设置了draggable=true的元素
+   */
+  onDragStart?: VitarxEventHandler<T, DragEvent> | undefined
+  /**
+   * 当被拖动元素放置在有效放置目标上时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/drop_event
+   * @applies 所有元素
+   */
+  onDrop?: VitarxEventHandler<T, DragEvent> | undefined
+  /**
+   * 当元素的滚动条被滚动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/scroll_event
+   * @applies 带有滚动条的元素
+   */
+  onScroll?: VitarxEventHandler<T> | undefined
+  // 剪贴板事件
+  /**
+   * 当用户复制元素内容时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/copy_event
+   * @applies 所有可编辑元素
+   */
+  onCopy?: VitarxEventHandler<T, ClipboardEvent> | undefined
+  /**
+   * 当用户剪切元素内容时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/cut_event
+   * @applies 所有可编辑元素
+   */
+  onCut?: VitarxEventHandler<T, ClipboardEvent> | undefined
+  /**
+   * 当用户粘贴内容到元素时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/paste_event
+   * @applies 所有可编辑元素
+   */
+  onPaste?: VitarxEventHandler<T, ClipboardEvent> | undefined
+  // 媒体事件
+  /**
+   * 当媒体加载终止时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/abort_event
+   * @applies audio, video, img
+   */
+  onAbort?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体可以开始播放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/canplay_event
+   * @applies audio, video
+   */
+  onCanPlay?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体可以无需暂停地播放完成时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/canplaythrough_event
+   * @applies audio, video
+   */
+  onCanPlayThrough?: VitarxEventHandler<T> | undefined
+  /**
+   * 当字幕轨道发生变化时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLTrackElement/cuechange_event
+   * @applies track
+   */
+  onCueChange?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体时长变化时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/durationchange_event
+   * @applies audio, video
+   */
+  onDurationChange?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体被清空时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/emptied_event
+   * @applies audio, video
+   */
+  onEmptied?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体播放结束时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/ended_event
+   * @applies audio, video
+   */
+  onEnded?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体数据已加载时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/loadeddata_event
+   * @applies audio, video
+   */
+  onLoadedData?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体元数据已加载时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/loadedmetadata_event
+   * @applies audio, video
+   */
+  onLoadedMetadata?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体开始加载时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/loadstart_event
+   * @applies audio, video
+   */
+  onLoadStart?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体暂停时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/pause_event
+   * @applies audio, video
+   */
+  onPause?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体开始播放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/play_event
+   * @applies audio, video
+   */
+  onPlay?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体从暂停状态开始播放时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/playing_event
+   * @applies audio, video
+   */
+  onPlaying?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体下载时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/progress_event
+   * @applies audio, video
+   */
+  onProgress?: VitarxEventHandler<T> | undefined
+  /**
+   * 当播放速率改变时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/ratechange_event
+   * @applies audio, video
+   */
+  onRateChange?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体完成跳转操作时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/seeked_event
+   * @applies audio, video
+   */
+  onSeeked?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体开始跳转操作时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/seeking_event
+   * @applies audio, video
+   */
+  onSeeking?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体加载意外停止时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/stalled_event
+   * @applies audio, video
+   */
+  onStalled?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体加载暂停时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/suspend_event
+   * @applies audio, video
+   */
+  onSuspend?: VitarxEventHandler<T> | undefined
+  /**
+   * 当播放位置改变时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/timeupdate_event
+   * @applies audio, video
+   */
+  onTimeUpdate?: VitarxEventHandler<T> | undefined
+  /**
+   * 当音量改变时触发
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/volumechange_event
+   * @applies audio, video
+   */
+  onVolumeChange?: VitarxEventHandler<T> | undefined
+  /**
+   * 当媒体暂停但预期会继续时触发
+   * @see https://developer.mozilla.org/docs/Web/API/HTMLMediaElement/waiting_event
+   * @applies audio, video
+   */
+  onWaiting?: VitarxEventHandler<T> | undefined
+  // 触摸事件
+  /**
+   * 当触摸事件开始时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchstart_event
+   * @applies 所有元素
+   */
+  onTouchStart?: VitarxEventHandler<T, TouchEvent> | undefined
+  /**
+   * 当触摸事件结束时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchend_event
+   * @applies 所有元素
+   */
+  onTouchEnd?: VitarxEventHandler<T, TouchEvent> | undefined
+  /**
+   * 当触摸事件被取消时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchcancel_event
+   * @applies 所有元素
+   */
+  onTouchCancel?: VitarxEventHandler<T, TouchEvent> | undefined
+  /**
+   * 当触摸事件移动时触发
+   * @see https://developer.mozilla.org/docs/Web/API/Element/touchmove_event
+   * @applies 所有元素
+   */
+  onTouchMove?: VitarxEventHandler<T, TouchEvent> | undefined
+}
+
+/**
+ * W3C事件映射与修饰符事件映射的联合类型
+ */
+type W3CEventWithModifierMap<T> = {
+  [K in keyof W3CEventMap<T> as `${K}${EventModifier}`]?: W3CEventMap<T>[K] | undefined
+}
+
+/**
+ * 全局事件接口
+ */
+export interface GlobalEventAttributes<T> extends W3CEventMap<T>, W3CEventWithModifierMap<T> {}
+
+export type WithEventAttributes<
+  Name extends `on${string}`,
+  T,
+  E extends Event | UIEvent = Event
+> = {
+  [K in Name]?: VitarxEventHandler<T, E> | undefined
+} & {
+  [K in Name as `${K}${EventModifier}`]?: VitarxEventHandler<T, E> | undefined
+}
