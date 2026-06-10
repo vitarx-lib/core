@@ -1,7 +1,6 @@
 import {
   FragmentView,
   getRenderer,
-  type HostElement,
   type HostNode,
   type HostView,
   ListView,
@@ -27,10 +26,7 @@ export function renderViewNode(
   switch (kind) {
     case ViewKind.ELEMENT:
       const parent = isArray(container) ? container[0].parentNode! : container
-      view['hostNode'] = renderer.createElement(
-        view.tag,
-        renderer.isSVGElement(parent as HostElement)
-      )
+      view['hostNode'] = renderer.createElement(view.tag, parent)
       break
     case ViewKind.TEXT:
       view['hostNode'] = renderer.createText(view.text)
