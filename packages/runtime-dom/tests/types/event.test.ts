@@ -4,7 +4,7 @@
  * 测试目标：验证事件类型定义和修饰符支持
  */
 import { describe, expect, it } from 'vitest'
-import type { HTMLEventOptions, HTMLIntrinsicElement } from '../../src/index.js'
+import type { DOMEventOptions, HTMLIntrinsicElement } from '../../src/index.js'
 
 describe('types/event', () => {
   describe('事件处理函数类型', () => {
@@ -13,7 +13,7 @@ describe('types/event', () => {
 
       const clickHandler: Required<ButtonProps>['onClick'] = function (
         this: HTMLButtonElement,
-        event
+        event: any
       ) {
         expect(this).toBeInstanceOf(HTMLButtonElement)
         expect(event).toBeInstanceOf(MouseEvent)
@@ -236,25 +236,26 @@ describe('types/event', () => {
       type DivProps = HTMLIntrinsicElement['div']
 
       const props: DivProps = {
-        onClickCaptureOnce: () => {},
-        onScrollPassiveCapture: () => {}
+        onClickOnceCapture: () => {},
+        onScrollOnceCapture: () => {}
       }
 
-      expect(typeof props.onClickCaptureOnce).toBe('function')
+      expect(typeof props.onClickOnceCapture).toBe('function')
+      expect(typeof props.onScrollOnceCapture).toBe('function')
     })
   })
 
   describe('HTMLEventOptions 接口', () => {
     it('capture 选项应该为可选布尔值', () => {
-      const options1: HTMLEventOptions = {
+      const options1: DOMEventOptions = {
         capture: true
       }
 
-      const options2: HTMLEventOptions = {
+      const options2: DOMEventOptions = {
         capture: false
       }
 
-      const options3: HTMLEventOptions = {}
+      const options3: DOMEventOptions = {}
 
       expect(options1.capture).toBe(true)
       expect(options2.capture).toBe(false)
@@ -262,11 +263,11 @@ describe('types/event', () => {
     })
 
     it('once 选项应该为可选布尔值', () => {
-      const options1: HTMLEventOptions = {
+      const options1: DOMEventOptions = {
         once: true
       }
 
-      const options2: HTMLEventOptions = {
+      const options2: DOMEventOptions = {
         once: false
       }
 
@@ -275,11 +276,11 @@ describe('types/event', () => {
     })
 
     it('passive 选项应该为可选布尔值', () => {
-      const options1: HTMLEventOptions = {
+      const options1: DOMEventOptions = {
         passive: true
       }
 
-      const options2: HTMLEventOptions = {
+      const options2: DOMEventOptions = {
         passive: false
       }
 
@@ -288,7 +289,7 @@ describe('types/event', () => {
     })
 
     it('应该支持所有选项的组合', () => {
-      const options: HTMLEventOptions = {
+      const options: DOMEventOptions = {
         capture: true,
         once: true,
         passive: false
@@ -300,7 +301,7 @@ describe('types/event', () => {
     })
 
     it('应该允许空选项对象', () => {
-      const options: HTMLEventOptions = {}
+      const options: DOMEventOptions = {}
 
       expect(options).toBeDefined()
       expect(Object.keys(options).length).toBe(0)

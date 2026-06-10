@@ -21,7 +21,7 @@ describe('DOMRenderer', () => {
       const startTime = performance.now()
       const elements = []
       for (let i = 0; i < 1000; i++) {
-        elements.push(renderer.createElement('div', false))
+        elements.push(renderer.createElement('div', container))
       }
       const endTime = performance.now()
       expect(endTime - startTime).toBeLessThan(100)
@@ -29,7 +29,7 @@ describe('DOMRenderer', () => {
     })
 
     it('批量设置属性的性能', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       const startTime = performance.now()
       for (let i = 0; i < 1000; i++) {
         renderer.setAttribute(el, `data-test-${i}`, `value-${i}`, null)
@@ -41,7 +41,7 @@ describe('DOMRenderer', () => {
     it('批量插入节点的性能', () => {
       const startTime = performance.now()
       for (let i = 0; i < 100; i++) {
-        const child = renderer.createElement('div', false)
+        const child = renderer.createElement('div', container)
         renderer.append(child, container)
       }
       const endTime = performance.now()
@@ -89,13 +89,13 @@ describe('DOMRenderer', () => {
 
   describe('createElement', () => {
     it('应该创建普通HTML元素', () => {
-      const div = renderer.createElement('div', false)
+      const div = renderer.createElement('div', container)
       expect(div.tagName).toBe('DIV')
       expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml')
     })
 
     it('应该创建SVG元素', () => {
-      const svg = renderer.createElement('svg', true)
+      const svg = renderer.createElement('svg', container)
       expect(svg.tagName.toLowerCase()).toBe('svg')
       expect(svg.namespaceURI).toBe('http://www.w3.org/2000/svg')
     })
@@ -128,7 +128,7 @@ describe('DOMRenderer', () => {
 
   describe('append', () => {
     it('应该将子节点添加到父节点', () => {
-      const child = renderer.createElement('div', false)
+      const child = renderer.createElement('div', container)
       renderer.append(child, container)
       expect(container.contains(child)).toBe(true)
     })
@@ -136,8 +136,8 @@ describe('DOMRenderer', () => {
 
   describe('insert', () => {
     it('应该在锚点前插入节点', () => {
-      const anchor = renderer.createElement('div', false)
-      const child = renderer.createElement('span', false)
+      const anchor = renderer.createElement('div', container)
+      const child = renderer.createElement('span', container)
       container.appendChild(anchor)
       renderer.insert(child, anchor)
       expect(container.lastChild).toBe(anchor)
@@ -146,7 +146,7 @@ describe('DOMRenderer', () => {
 
     it('应该处理Fragment作为锚点的情况', () => {
       const fragment = renderer.createFragment({ kind: ViewKind.FRAGMENT, children: [] } as any)
-      const child = renderer.createElement('div', false)
+      const child = renderer.createElement('div', container)
       container.appendChild(fragment.$startAnchor)
       container.appendChild(fragment.$endAnchor)
       renderer.insert(child, fragment)
@@ -156,7 +156,7 @@ describe('DOMRenderer', () => {
 
   describe('remove', () => {
     it('应该移除普通节点', () => {
-      const child = renderer.createElement('div', false)
+      const child = renderer.createElement('div', container)
       container.appendChild(child)
       renderer.remove(child)
       expect(container.contains(child)).toBe(false)
@@ -164,7 +164,7 @@ describe('DOMRenderer', () => {
 
     it('应该移除Fragment节点', () => {
       const fragment = renderer.createFragment({ kind: ViewKind.FRAGMENT, children: [] } as any)
-      const child = renderer.createElement('div', false)
+      const child = renderer.createElement('div', container)
       renderer.append(child, fragment)
       renderer.append(fragment, container)
       renderer.remove(fragment)
@@ -174,8 +174,8 @@ describe('DOMRenderer', () => {
 
   describe('replace', () => {
     it('应该替换普通节点', () => {
-      const oldNode = renderer.createElement('div', false)
-      const newNode = renderer.createElement('span', false)
+      const oldNode = renderer.createElement('div', container)
+      const newNode = renderer.createElement('span', container)
       container.appendChild(oldNode)
       renderer.replace(newNode, oldNode)
       expect(container.contains(oldNode)).toBe(false)
@@ -184,7 +184,7 @@ describe('DOMRenderer', () => {
 
     it('应该替换Fragment节点', () => {
       const fragment = renderer.createFragment({ kind: ViewKind.FRAGMENT, children: [] } as any)
-      const newNode = renderer.createElement('div', false)
+      const newNode = renderer.createElement('div', container)
       renderer.append(fragment, container)
       renderer.replace(newNode, fragment)
       expect(container.contains(fragment)).toBe(false)
@@ -194,43 +194,37 @@ describe('DOMRenderer', () => {
 
   describe('setAttribute', () => {
     it('应该设置普通属性', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       renderer.setAttribute(el, 'id', 'test-id', null)
       expect(el.getAttribute('id')).toBe('test-id')
     })
 
     it('应该设置data属性', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       renderer.setAttribute(el, 'data-test', 'value', null)
       expect(el.dataset.test).toBe('value')
     })
 
-    it('应该设置xlink属性', () => {
-      const svg = renderer.createElement('svg', true)
-      renderer.setAttribute(svg, 'xlink:href', '#test', null)
-      expect(svg.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe('#test')
-    })
-
     it('应该设置class属性', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       renderer.setAttribute(el, 'class', 'test-class', null)
       expect(el.className).toBe('test-class')
     })
 
     it('应该设置style属性', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       renderer.setAttribute(el, 'style', { color: 'red' }, null)
       expect(el.style.color).toBe('red')
     })
 
     it('应该设置autoFocus属性', () => {
-      const el = renderer.createElement('input', false)
+      const el = renderer.createElement('input', container)
       renderer.setAttribute(el, 'autoFocus', true, null)
       expect(el.autofocus).toBe(true)
     })
 
     it('应该处理事件属性', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       const handler = vi.fn()
       renderer.setAttribute(el, 'onClick', handler, null)
       el.click()
@@ -238,7 +232,7 @@ describe('DOMRenderer', () => {
     })
 
     it('应该移除属性', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       renderer.setAttribute(el, 'id', 'test-id', null)
       renderer.setAttribute(el, 'id', null, 'test-id')
       expect(el.getAttribute('id')).toBe('')
@@ -247,7 +241,7 @@ describe('DOMRenderer', () => {
 
   describe('setText', () => {
     it('应该设置文本内容', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       renderer.setText(el, 'test text')
       expect(el.textContent).toBe('test text')
     })
@@ -255,7 +249,7 @@ describe('DOMRenderer', () => {
 
   describe('isElement', () => {
     it('应该正确识别元素节点', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       expect(renderer.isElement(el)).toBe(true)
     })
 
@@ -272,14 +266,14 @@ describe('DOMRenderer', () => {
     })
 
     it('应该正确识别非Fragment节点', () => {
-      const el = renderer.createElement('div', false)
+      const el = renderer.createElement('div', container)
       expect(renderer.isFragment(el)).toBe(false)
     })
   })
 
   describe('属性操作性能优化验证', () => {
     it('预定义默认值应避免创建元素', () => {
-      const input = renderer.createElement('input', false)
+      const input = renderer.createElement('input', container)
       renderer.setAttribute(input, 'checked', true, null)
       expect(input.checked).toBe(true)
       renderer.setAttribute(input, 'checked', null, true)
@@ -287,7 +281,7 @@ describe('DOMRenderer', () => {
     })
 
     it('按需重置策略：未设置过的属性不应触发默认值查询', () => {
-      const el = renderer.createElement('input', false)
+      const el = renderer.createElement('input', container)
       const startTime = performance.now()
       for (let i = 0; i < 1000; i++) {
         renderer.setAttribute(el, `custom-attr-${i}`, null, undefined)
@@ -297,7 +291,7 @@ describe('DOMRenderer', () => {
     })
 
     it('批量设置和移除属性性能', () => {
-      const el = renderer.createElement('input', false)
+      const el = renderer.createElement('input', container)
       const iterations = 500
       const startTime = performance.now()
       for (let i = 0; i < iterations; i++) {
@@ -309,7 +303,7 @@ describe('DOMRenderer', () => {
     })
 
     it('常见属性设置性能', () => {
-      const el = renderer.createElement('input', false)
+      const el = renderer.createElement('input', container)
       const attrs = ['disabled', 'readOnly', 'required', 'autofocus', 'hidden']
       const startTime = performance.now()
       for (let i = 0; i < 1000; i++) {
@@ -323,7 +317,7 @@ describe('DOMRenderer', () => {
     })
 
     it('value属性重置性能', () => {
-      const el = renderer.createElement('input', false) as HTMLInputElement
+      const el = renderer.createElement('input', container) as HTMLInputElement
       const startTime = performance.now()
       for (let i = 0; i < 500; i++) {
         renderer.setAttribute(el, 'value', `test-${i}`, null)

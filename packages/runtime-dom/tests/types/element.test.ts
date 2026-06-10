@@ -4,16 +4,12 @@
  * 测试目标：验证元素类型映射和 JSX 类型定义
  */
 import { describe, expect, it } from 'vitest'
-import type {
-  HTMLElementTagMap,
-  HTMLIntrinsicElement,
-  HTMLVoidElementMap
-} from '../../src/index.js'
+import type { AllElementMap, HTMLIntrinsicElement } from '../../src/index.js'
 
 describe('types/element', () => {
   describe('元素标签映射', () => {
-    it('HTMLElementTagMap 应该包含常见 HTML 元素', () => {
-      type TagMap = HTMLElementTagMap
+    it('AllElementMap 应该包含常见 HTML 元素', () => {
+      type TagMap = AllElementMap
 
       // 验证类型映射存在
       const divTag: keyof TagMap = 'div'
@@ -27,8 +23,8 @@ describe('types/element', () => {
       expect(buttonTag).toBe('button')
     })
 
-    it('HTMLElementTagMap 应该包含 SVG 元素', () => {
-      type TagMap = HTMLElementTagMap
+    it('AllElementMap 应该包含 SVG 元素', () => {
+      type TagMap = AllElementMap
 
       const svgTag: keyof TagMap = 'svg'
       const pathTag: keyof TagMap = 'path'
@@ -39,30 +35,6 @@ describe('types/element', () => {
       expect(pathTag).toBe('path')
       expect(circleTag).toBe('circle')
       expect(rectTag).toBe('rect')
-    })
-
-    it('HTMLVoidElementMap 应该包含所有自闭合元素', () => {
-      type VoidMap = HTMLVoidElementMap
-
-      const voidTags: (keyof VoidMap)[] = [
-        'area',
-        'base',
-        'br',
-        'col',
-        'embed',
-        'hr',
-        'img',
-        'input',
-        'link',
-        'meta',
-        'source',
-        'track',
-        'wbr'
-      ]
-
-      voidTags.forEach(tag => {
-        expect(tag).toBeDefined()
-      })
     })
   })
 
@@ -130,7 +102,7 @@ describe('types/element', () => {
       const props: VideoProps = {
         src: '/video.mp4',
         controls: true,
-        autoplay: false,
+        autoPlay: false,
         loop: false,
         muted: true,
         width: 640,
