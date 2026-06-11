@@ -1,3 +1,19 @@
+## [4.0.2-alpha.0](https://github.com/vitarx-lib/core/compare/v4.0.1...v4.0.2-alpha.0) (2026-06-11)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复元素创建和事件处理类型问题 ([fc74079](https://github.com/vitarx-lib/core/commit/fc740790b550d81dfdfe8a5615daa407d7320dcc))
+* **runtime-dom:** 修复querySelector查询到多个元素导致的bug ([a5a68e4](https://github.com/vitarx-lib/core/commit/a5a68e49679891c2db2c88d58d6fdb99c2dc0e84))
+* **runtime-ssr:** 修复render中createElement调用参数错误 ([7b94049](https://github.com/vitarx-lib/core/commit/7b94049dccdeb8fe333e343d2f276a0d06dfc8c2))
+* **runtime-ssr:** 修正renderToStream函数context参数类型 ([9ee0e1a](https://github.com/vitarx-lib/core/commit/9ee0e1a6493e00a3de9be77c40d0b235036cf369))
+
+
+### Features
+
+* **renderer:** 支持MathML元素及命名空间继承 ([7f7fed3](https://github.com/vitarx-lib/core/commit/7f7fed3be9c532083d054fcf59a27b94eaed1a43))
+* **runtime-dom:** 支持全局属性 role 并优化 class 类型定义 ([77dbb2b](https://github.com/vitarx-lib/core/commit/77dbb2bcd4f4fd8c953c8ca1e370579a7ce616c1))
+
 ## [4.0.1](https://github.com/vitarx-lib/core/compare/v4.0.0...v4.0.1) (2026-06-03)
 
 
