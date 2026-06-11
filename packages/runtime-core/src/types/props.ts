@@ -212,6 +212,8 @@ export type InferProps<T extends ViewDescriptor> = ExtractProps<T> & VitarxIntri
  * @template C - 组件类型
  * @template P - 组件的默认属性类型
  */
-export type VitarxManagedAttributes<C extends Component, P extends AnyProps> = WithVModel<
-  WithRefProps<WithDefaultProps<C, P>>
->
+export type VitarxManagedAttributes<C, P> = C extends Component
+  ? P extends AnyProps
+    ? WithVModel<WithRefProps<WithDefaultProps<C, P>>>
+    : AnyProps
+  : P
