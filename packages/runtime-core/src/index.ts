@@ -96,7 +96,6 @@ export type {
   InferProps,
   InferView,
   InstanceRef,
-  IntrinsicAttributes,
   IntrinsicElements,
   MaybeRef,
   MountMode,
@@ -111,6 +110,7 @@ export type {
   ViewDescriptor,
   ViewRenderer,
   VitarxManagedAttributes,
+  VitarxIntrinsicAttributes,
   WithDefaultProps,
   WithProps,
   WithRefProps

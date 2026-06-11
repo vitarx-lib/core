@@ -80,26 +80,6 @@ export type BindAttributes =
  * 实例引用
  */
 export type InstanceRef<T = unknown> = Ref<T | null> | ((el: T) => void)
-/**
- * 支持的全局属性
- */
-export interface IntrinsicAttributes {
-  /**
-   * 引用组件/元素实例
-   */
-  ref?: InstanceRef<any>
-  /**
-   * 绑定属性
-   *
-   * 注意：不能通过 `v-bind` 指令绑定全局属性(ref、children...)。
-   *
-   * 可选值：
-   *  - { [key: string]: unknown }：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
-   *  - [props: { [key: string]: unknown }, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
-   *  第二个元素可以指定哪些属性不需要绑定。
-   */
-  'v-bind'?: BindAttributes | null | undefined
-}
 
 type VModelValue<T> = T extends Ref<any, infer S> ? T | S : Ref<T> | T
 type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
@@ -198,13 +178,33 @@ type ExtractProps<T extends ViewDescriptor> = T extends Dynamic
       : T extends Component
         ? ComponentProps<T>
         : AnyProps
+/**
+ * 支持的全局属性
+ */
+export interface VitarxIntrinsicAttributes {
+  /**
+   * 引用组件/元素实例
+   */
+  ref?: InstanceRef<any>
+  /**
+   * 绑定属性
+   *
+   * 注意：不能通过 `v-bind` 指令绑定全局属性(ref、children...)。
+   *
+   * 可选值：
+   *  - { [key: string]: unknown }：要绑定给元素的属性，`style`|`class`|`className`，会和原有值进行合并。
+   *  - [props: { [key: string]: unknown }, exclude?: string[]]：第一个元素为要绑定给节点的属性对象，
+   *  第二个元素可以指定哪些属性不需要绑定。
+   */
+  'v-bind'?: BindAttributes | null | undefined
+}
 
 /**
  * InferProps类型工具，用于推断 createView 可接受的属性类型
  *
  * @template T - 视图标签类型，必须继承自 ViewDescriptor
  */
-export type InferProps<T extends ViewDescriptor> = ExtractProps<T> & IntrinsicAttributes
+export type InferProps<T extends ViewDescriptor> = ExtractProps<T> & VitarxIntrinsicAttributes
 
 /**
  * 组件属性类型拓展

@@ -14,7 +14,7 @@ export type {
   WithRefProps,
   BindAttributes,
   InstanceRef,
-  IntrinsicAttributes,
+  VitarxIntrinsicAttributes,
   WithProps,
   WithDefaultProps,
   ComponentProps,

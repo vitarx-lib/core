@@ -1,9 +1,6 @@
 import type { AnyProps, Component } from './component.js'
 import type { ErrorHandler } from './hook.js'
-import type {
-  IntrinsicAttributes as GlobalIntrinsicAttributes,
-  VitarxManagedAttributes
-} from './props.js'
+import type { VitarxIntrinsicAttributes, VitarxManagedAttributes } from './props.js'
 import type { View } from './view.js'
 
 declare global {
@@ -30,9 +27,7 @@ declare global {
      * 宿主平台包可以重写此接口以支持Tsx类型校验。
      */
     interface IntrinsicElements {
-      [Tag: string]: GlobalIntrinsicAttributes & {
-        [p: string]: unknown
-      }
+      [Tag: string]: { [p: string]: unknown }
     }
     /**
      * 宿主平台片段节点
@@ -80,7 +75,7 @@ declare global {
     /**
      * Vitarx 框架内置固有属性
      */
-    interface IntrinsicAttributes extends GlobalIntrinsicAttributes {}
+    interface IntrinsicAttributes extends VitarxIntrinsicAttributes {}
     /**
      * App配置项
      */

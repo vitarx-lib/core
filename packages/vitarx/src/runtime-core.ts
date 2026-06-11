@@ -70,7 +70,7 @@ export type {
   DirectiveBinding,
   DirectiveHook,
   IntrinsicElements,
-  IntrinsicAttributes,
+  VitarxIntrinsicAttributes,
   MaybeRef,
   WithProps,
   ComponentPublicInstance,
