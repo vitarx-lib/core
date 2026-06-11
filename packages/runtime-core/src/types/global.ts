@@ -1,8 +1,17 @@
-import type { AnyProps, Component } from './component.js'
+import type { Component } from './component.js'
 import type { ErrorHandler } from './hook.js'
-import type { VitarxIntrinsicAttributes, VitarxManagedAttributes } from './props.js'
+import type { MaybeRef, VitarxIntrinsicAttributes, VitarxManagedAttributes } from './props.js'
 import type { View } from './view.js'
 
+/**
+ * 为 HTML 固有元素属性添加 MaybeRef 包装
+ *
+ * 使所有 HTML 属性支持传入 Ref/Computed 响应式值，
+ * 运行时会自动解包响应式值并追踪依赖。
+ */
+type IntrinsicElementWithRef<T> = {
+  [K in keyof T]: { [P in keyof T[K]]: MaybeRef<T[K][P]> }
+}
 declare global {
   namespace Vitarx {
     /**
@@ -116,16 +125,13 @@ declare global {
      * 将原生 HTML 标签名映射到对应的属性类型，并添加 ref 支持
      * 例如：div、span、button 等标签的属性类型
      */
-    interface IntrinsicElements extends Vitarx.IntrinsicElements {}
+    interface IntrinsicElements extends IntrinsicElementWithRef<Vitarx.IntrinsicElements> {}
     /**
      * 库管理的属性类型
      * 用于处理组件属性的类型转换和验证
      * C: 组件类型，P: 属性类型
      */
-    type LibraryManagedAttributes<
-      C extends Component,
-      P extends AnyProps
-    > = VitarxManagedAttributes<C, P>
+    type LibraryManagedAttributes<C, P> = VitarxManagedAttributes<C, P>
     interface ElementAttributesProperty {
       props: {}
     }
