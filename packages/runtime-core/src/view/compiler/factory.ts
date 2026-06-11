@@ -107,12 +107,20 @@ export function createView<T extends ViewDescriptor>(
   if (typeof type === 'string') {
     view = new ElementView(type, props, location)
   } else if (typeof type === 'function') {
+    if (__VITARX_DEV__ && import.meta.hot) {
+      if (typeof window !== 'undefined' && (window as any).__$VITARX_HMR$__) {
+        const resolveComponent: <C>(c: C) => C = (window as any).__$VITARX_HMR$__.resolveComponent
+        if (typeof resolveComponent === 'function') {
+          type = resolveComponent(type)
+        }
+      }
+    }
     view = isViewBuilder(type)
       ? type(props ? resolveBind(props) : {}, location)
-      : new ComponentView(type, props, location)
+      : new ComponentView(type as Component, props, location)
   } else {
     throw new TypeError(
-      `createView(type) expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}}`
+      `createView(type) expected string (for DOM elements) or function (for components and view builders), but received ${typeof type}`
     )
   }
   return view

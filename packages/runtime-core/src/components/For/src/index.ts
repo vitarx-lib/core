@@ -1,1 +1,1 @@
-export * from './For.core.js'
+export { For, type ForProps } from './For.core.js'

@@ -40,6 +40,7 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   public readonly kind = ViewKind.FRAGMENT
   public readonly children: ResolvedChildren
   protected hostNode: HostFragment | null = null
+
   constructor(children: RenderChildren, location?: CodeLocation) {
     super(location)
     this.children = resolveChildren(children)

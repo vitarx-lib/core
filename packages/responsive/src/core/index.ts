@@ -1,3 +1,54 @@
-export * from './effect/index.js'
-export * from './signal/index.js'
-export * from './scheduler/index.js'
+export {
+  addToActiveScope,
+  createScope,
+  Effect,
+  EffectScope,
+  getActiveScope,
+  getOwnerScope,
+  onScopeDispose,
+  onScopePause,
+  onScopeResume,
+  removeFromOwnerScope,
+  reportEffectError,
+  type DisposableEffect,
+  type EffectScopeErrorHandler,
+  type EffectScopeOptions,
+  type EffectState
+} from './effect/index.js'
+export {
+  clearAllJobs,
+  flushSync,
+  nextTick,
+  queueJob,
+  queuePostFlushJob,
+  queuePreFlushJob,
+  removeJob,
+  type JobRemovalMode,
+  type Scheduler
+} from './scheduler/index.js'
+export {
+  bindDebuggerOptions,
+  clearEffectLinks,
+  clearSignalLinks,
+  createDepLink,
+  destroyDepLink,
+  getActiveEffect,
+  hasLinkedEffect,
+  hasLinkedSignal,
+  hasPropTrack,
+  hasTrack,
+  iterateLinkedEffects,
+  iterateLinkedSignals,
+  trackEffect,
+  trackSignal,
+  triggerSignal,
+  untrack,
+  type DebuggerEvent,
+  type DebuggerHandler,
+  type DebuggerOptions,
+  type DepLink,
+  type EffectRunner,
+  type ExtraDebugData,
+  type Signal,
+  type SignalOpType
+} from './signal/index.js'

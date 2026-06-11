@@ -1,1 +1,1 @@
-export * from './helpers.js'
+export { readonly, shallowReadonly } from './helpers.js'

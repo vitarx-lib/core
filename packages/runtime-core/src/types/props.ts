@@ -200,7 +200,9 @@ type ExtractProps<T extends ViewDescriptor> = T extends Dynamic
         : AnyProps
 
 /**
- * 允许的属性类型
+ * InferProps类型工具，用于推断 createView 可接受的属性类型
+ *
+ * @template T - 视图标签类型，必须继承自 ViewDescriptor
  */
 export type InferProps<T extends ViewDescriptor> = ExtractProps<T> & IntrinsicAttributes
 

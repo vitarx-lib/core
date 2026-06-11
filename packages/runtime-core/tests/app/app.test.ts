@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { App } from '../../src/app/app'
+import { App } from '../../src/app/index.js'
 import { createView } from '../../src/index.js'
 
 describe('App 类', () => {

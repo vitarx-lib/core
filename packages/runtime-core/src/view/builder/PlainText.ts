@@ -4,7 +4,7 @@ import { CommentView, TextView } from '../implements/atomic.js'
 import { DynamicView } from '../implements/dynamic.js'
 import { builder, type ViewBuilder } from './factory.js'
 
-export interface TextProps {
+export interface PlainTextProps {
   text: string | number
 }
 
@@ -16,7 +16,7 @@ export interface TextProps {
  * @return {TextView} TextView对象
  */
 export const PlainText = builder(
-  (props: TextProps, location): TextView | DynamicView<string> | CommentView => {
+  (props: PlainTextProps, location): TextView | DynamicView<string> | CommentView => {
     const { value, isTrack } = hasPropTrack(props, 'text')
     if (__VITARX_DEV__ && !isString(value) && typeof value !== 'number') {
       logger.warn(
@@ -33,6 +33,9 @@ export const PlainText = builder(
   }
 )
 
-export type PlainText = ViewBuilder<TextProps, TextView | DynamicView<string> | CommentView> & {
+export type PlainText = ViewBuilder<
+  PlainTextProps,
+  TextView | DynamicView<string> | CommentView
+> & {
   __is_text: true
 }

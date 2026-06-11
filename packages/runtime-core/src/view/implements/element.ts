@@ -39,11 +39,6 @@ import { applyRef, BaseView } from './base.js'
  *
  * @template T - 扩展自 HostElementTag，表示 DOM 元素的标签名
  *
- * @constructor
- * @param {T} tag - DOM 元素的标签名（如 'div', 'span' 等）
- * @param {IntrinsicElements[T] | null} [props=null] - 元素的属性对象，包括事件处理器、样式、类名等
- * @param {CodeLocation} [location] - 可选的代码位置信息，用于调试
- *
  * @remarks
  * - 内部使用 directives 属性来管理指令映射表
  * - effects 属性用于管理视图的副作用，会在视图销毁时自动清理
@@ -66,6 +61,13 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
   /** 指令映射表 */
   private effects: ViewEffect[] | null = null
 
+  /**
+   * @constructor
+   *
+   * @param {T} tag - DOM 元素的标签名（如 'div', 'span' 等）
+   * @param {IntrinsicElements[T] | null} [props=null] - 元素的属性对象，包括事件处理器、样式、类名等
+   * @param {CodeLocation} [location] - 可选的代码位置信息，用于调试
+   */
   constructor(tag: T, props: IntrinsicElements[T] | null = null, location?: CodeLocation) {
     super(location)
     this.tag = tag

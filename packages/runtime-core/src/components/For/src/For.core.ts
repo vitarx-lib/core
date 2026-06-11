@@ -7,65 +7,13 @@ import { CommentView, ListView } from '../../../view/index.js'
 import { checkKey, ensureMounted, getLIS, normalizeKeyResolver } from './For.utils.js'
 
 /**
- * 列表项渲染工厂函数类型
- *
- * 定义了如何将列表数据项转换为可渲染的子元素。
- *
- * @template T - 列表项的数据类型
- * @param item - 当前列表项的数据
- * @param index - 当前项的索引引用（响应式）
- * @returns - 返回有效的子元素（View实例、字符串、数字等）
- *
- * @example
- * ```jsx
- * // 简单文本渲染
- * const renderTextItem: ListItemFactory<string> = (item, index) => {
- *   return `${item} (${index.value})`
- * }
- *
- * // 复杂组件渲染
- * const renderUserItem: ListItemFactory<User> = (user, index) => {
- *   return createView(UserCard, {
- *     user,
- *     index: index.value
- *   })
- * }
- * ```
- */
-export type ListItemFactory<T> = (item: T, index: Ref<number>) => RenderChild
-/**
- * 列表项键值解析器类型
- *
- * 定义了如何为列表项生成唯一标识，用于优化渲染性能和状态保持。
- *
- * @template T - 列表项的数据类型
- *
- * @example
- * ```jsx
- * // 使用函数形式 - 推荐
- * const keyResolver: ListKeyResolver<User> = (user) => user.id
- *
- * // 使用属性名形式
- * const keyResolver: ListKeyResolver<User> = 'id'
- *
- * // 在组件中使用
- * <For
- *   each={users}
- *   key={user => user.id}  // 或 key="id"
- *   children={(user) => <div>{user.name}</div>}
- * />
- * ```
- */
-export type ListKeyResolver<T> = keyof T | ((item: T) => any)
-
-/**
  * 列表项记录接口
  *
  * 内部用于跟踪列表中每个项的视图实例和索引信息。
  *
  * @internal
  */
-export interface ListItemRecord {
+interface ListItemRecord {
   /** 对应的视图实例 */
   view: View
   /** 索引的响应式引用 */
@@ -80,7 +28,7 @@ export interface ListItemRecord {
  *
  * @internal
  */
-export type ListItemMap = Map<unknown, ListItemRecord>
+type ListItemMap = Map<unknown, ListItemRecord>
 
 /**
  * 列表组件生命周期钩子接口
@@ -111,7 +59,7 @@ export type ListItemMap = Map<unknown, ListItemRecord>
  * />
  * ```
  */
-export interface ListLifecycleHook {
+interface ListLifecycleHook {
   /**
    * 列表项即将被移除时触发的回调函数
    *
@@ -177,7 +125,7 @@ export interface ListLifecycleHook {
  * />
  * ```
  */
-export interface ListProps<T> {
+export interface ForProps<T> extends ListLifecycleHook {
   /**
    * 要渲染的列表数据数组
    *
@@ -192,7 +140,7 @@ export interface ListProps<T> {
    * 用于定义每个列表项如何渲染，接收当前项和索引作为参数，
    * 返回有效的子元素（View、字符串、数字等）。
    */
-  children: ListItemFactory<T>
+  children: (item: T, index: Ref<number>) => RenderChild
 
   /**
    * 列表项的唯一标识生成器
@@ -204,10 +152,8 @@ export interface ListProps<T> {
    *
    * 虽然非必需，但强烈建议提供以获得更好的性能和状态保持。
    */
-  key?: ListKeyResolver<T>
+  key?: keyof T | ((item: T) => any)
 }
-
-export interface ForProps<T> extends ListProps<T>, ListLifecycleHook {}
 
 /**
  * For组件函数，用于渲染动态列表视图

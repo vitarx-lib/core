@@ -3,10 +3,89 @@ import html from './directives/html.js'
 import show from './directives/show.js'
 import text from './directives/text.js'
 
-export type * from './types/index.js'
-export * from './core/index.js'
-export * from './components/index.js'
-
 defineDirective('show', show)
 defineDirective('html', html)
 defineDirective('text', text)
+
+export {
+  Head,
+  Teleport,
+  Transition,
+  TransitionGroup,
+  type BaseTransitionProps,
+  type HeadProps,
+  type TeleportProps,
+  type TransitionCssClass,
+  type TransitionDuration,
+  type TransitionGroupProps,
+  type TransitionHandler,
+  type TransitionHooks,
+  type TransitionProps,
+  type TransitionType
+} from './components/index.js'
+export { __EXCLUDE_PROP_NAMES__, createApp, DOMRenderer, WebApp } from './core/index.js'
+export type {
+  AllElementMap,
+  AnchorHTMLAttributes,
+  AnnotationXmlAttributes,
+  AreaHTMLAttributes,
+  AudioHTMLAttributes,
+  BaseHTMLAttributes,
+  BlockquoteHTMLAttributes,
+  ButtonHTMLAttributes,
+  CanvasHTMLAttributes,
+  ColgroupHTMLAttributes,
+  ColHTMLAttributes,
+  CSSProperties,
+  DataHTMLAttributes,
+  DelHTMLAttributes,
+  DetailsHTMLAttributes,
+  DialogHTMLAttributes,
+  DOMEventOptions,
+  EmbedHTMLAttributes,
+  FieldsetHTMLAttributes,
+  FormHTMLAttributes,
+  GlobalEventAttributes,
+  HTMLAttributes,
+  HtmlHTMLAttributes,
+  HTMLIntrinsicElement,
+  IframeHTMLAttributes,
+  ImgHTMLAttributes,
+  InputHTMLAttributes,
+  InsHTMLAttributes,
+  KeygenHTMLAttributes,
+  LabelHTMLAttributes,
+  LiHTMLAttributes,
+  LinkHTMLAttributes,
+  MapHTMLAttributes,
+  MathElementAttributes,
+  MathMLElementAttributes,
+  MediaHTMLAttributes,
+  MenuHTMLAttributes,
+  MetaHTMLAttributes,
+  MeterHTMLAttributes,
+  ObjectHTMLAttributes,
+  OlHTMLAttributes,
+  OptgroupHTMLAttributes,
+  OptionHTMLAttributes,
+  OutputHTMLAttributes,
+  ParamHTMLAttributes,
+  ProgressHTMLAttributes,
+  QuoteHTMLAttributes,
+  ScriptHTMLAttributes,
+  SelectHTMLAttributes,
+  SlotHTMLAttributes,
+  SourceHTMLAttributes,
+  StyleHTMLAttributes,
+  SVGAttributes,
+  TableHTMLAttributes,
+  TdHTMLAttributes,
+  TextareaHTMLAttributes,
+  ThHTMLAttributes,
+  TimeHTMLAttributes,
+  TrackHTMLAttributes,
+  VideoHTMLAttributes,
+  VitarxEventHandler,
+  WebViewHTMLAttributes,
+  WithEventAttributes
+} from './types/index.js'

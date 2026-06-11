@@ -1,1 +1,1 @@
-export * from './Suspense.js'
+export { Suspense, type SuspenseProps } from './Suspense.js'

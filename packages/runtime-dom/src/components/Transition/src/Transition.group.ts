@@ -3,9 +3,9 @@ import {
   createElementView,
   defineValidate,
   For,
+  type ForProps,
   getInstance,
   type HostElementTag,
-  type ListProps,
   type View,
   type WithProps
 } from '@vitarx/runtime-core'
@@ -14,7 +14,9 @@ import type { BaseTransitionProps } from './index.js'
 import { getDuration, isElement, runTransition } from './Transition.utils.js'
 
 interface TransitionGroupProps<T, Tag extends HostElementTag>
-  extends BaseTransitionProps, ListProps<T> {
+  extends
+    BaseTransitionProps,
+    Omit<ForProps<T>, 'onEnter' | 'onLeave' | 'onBeforeUpdate' | 'onAfterUpdate'> {
   /** 包裹子节点的标签名 */
   tag?: Tag
   /** 元素移动时使用的类名，默认为 `${name}-move` */

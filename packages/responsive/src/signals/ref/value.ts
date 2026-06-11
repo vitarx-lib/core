@@ -11,6 +11,13 @@ import {
   type RefSignal
 } from '../shared/index.js'
 
+/**
+ * 定义 Ref 值的类型转换规则，用于决定 `.value` 访问时的返回类型：
+ *
+ * 1. 如果 T 是函数，保持为 T（函数通常不转为深层响应式）
+ * 2. 如果 T 是对象，转换为 Reactive<T>（使其具备响应式能力）
+ * 3. 其他基本类型保持为 T
+ */
 export type ToRefValue<T> = T extends AnyFunction ? T : T extends AnyObject ? Reactive<T> : T
 
 const toReactive = (val: any) => {

@@ -1,1 +1,1 @@
-export * from './helpers.js'
+export { render } from './helpers.js'

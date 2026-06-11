@@ -1,1 +1,1 @@
-export * from './Freeze.core.js'
+export { Freeze, type FreezeProps } from './Freeze.core.js'

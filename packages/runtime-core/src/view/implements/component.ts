@@ -47,10 +47,6 @@ import type { ViewSwitchHandler } from './dynamic.js'
  *
  * @template T - 组件类型，默认为 Component
  *
- * @param component - 组件实体函数，定义组件的实现
- * @param props - 传递给组件的属性对象，可以为 null
- * @param location - 可选的代码位置信息，用于调试
- *
  * @remarks
  * - 组件实例在初始化时创建，在销毁时释放
  * - 组件引用(ref)会在挂载时自动设置
@@ -70,6 +66,14 @@ export class ComponentView<T extends Component = Component> extends BaseView<
   public readonly props: AnyProps
   /** 组件运行时实例 */
   public instance: ComponentInstance<T> | null = null
+
+  /**
+   * @constructor
+   *
+   * @param component - 组件实体函数，定义组件的实现
+   * @param props - 传递给组件的属性对象，可以为 null
+   * @param [location] - 可选的代码位置信息，用于调试
+   */
   constructor(component: T, props: ComponentProps<T> | null = null, location?: CodeLocation) {
     super(location)
     this.component = component

@@ -1,2 +1,2 @@
-export * from './computed.js'
-export * from './helpers.js'
+export { Computed, type ComputedGetter, type ComputedSetter } from './computed.js'
+export { computed, isComputed } from './helpers.js'

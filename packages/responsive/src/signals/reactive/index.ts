@@ -1,1 +1,1 @@
-export * from './helpers.js'
+export { reactive, shallowReactive } from './helpers.js'

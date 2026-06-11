@@ -1,1 +1,1 @@
-export * from './Teleport.core.js'
+export { Teleport, type TeleportProps } from './Teleport.core.js'

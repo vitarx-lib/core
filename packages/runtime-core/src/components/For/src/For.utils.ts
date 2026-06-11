@@ -1,7 +1,7 @@
 import { isFunction, isObject, logger } from '@vitarx/utils'
 import type { CodeLocation, View } from '../../../types/index.js'
 import type { ListView } from '../../../view/index.js'
-import type { ListKeyResolver, ListLifecycleHook } from './For.core.js'
+import type { ForProps } from './For.core.js'
 
 /**
  * 获取给定数组的最长递增子序列（Longest Increasing Subsequence, LIS）
@@ -83,7 +83,7 @@ export function ensureMounted(
   view: View,
   listView: ListView,
   anchor: View | null,
-  cb: ListLifecycleHook['onEnter']
+  cb: ((view: View) => void) | undefined
 ): void {
   if (view.state !== listView.state) {
     if (view.isDetached) view.init(listView.ctx)
@@ -114,7 +114,7 @@ export function ensureMounted(
  * @returns 标准化的 key 解析函数，保证对同一 (item, index) 输入返回相同结果
  */
 export function normalizeKeyResolver<T>(
-  key: ListKeyResolver<T> | undefined,
+  key: ForProps<T>['key'] | undefined,
   location: CodeLocation | undefined,
   name: string
 ): (item: T, index: number) => unknown {

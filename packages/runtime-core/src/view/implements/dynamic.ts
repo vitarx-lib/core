@@ -114,9 +114,6 @@ export type ViewSwitchHandler = (tx: ViewSwitchTransaction) => void
  * source.value = new TextView('Custom') // 更新为自定义视图
  * ```
  *
- * @param source - 响应式数据源，视图会根据此数据的变化而更新
- * @param location - 可选，代码位置信息，用于错误追踪
- *
  * @remarks
  * - 视图切换过程是异步的，可以通过 owner.onViewSwitch 管理/配置事务
  * - 在视图切换期间，新的更新请求会被标记为脏(dirty)并在当前切换完成后处理
@@ -141,6 +138,13 @@ export class DynamicView<T = any> extends BaseView<ViewKind.DYNAMIC, HostNode> {
    * @private
    */
   #cancelTx: (() => void) | null = null
+
+  /**
+   * @constructor
+   *
+   * @param source - 响应式数据源，视图会根据此数据的变化而更新
+   * @param [location] - 可选，代码位置信息，用于错误追踪
+   */
   constructor(source: Ref, location?: CodeLocation) {
     super(location)
     this.source = source // 初始化数据源

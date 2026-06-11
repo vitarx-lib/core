@@ -1,12 +1,30 @@
-export * from './track.js'
-export * from './track.js'
-export * from './trigger.js'
-export * from './dep.js'
 export {
-  type SignalOpType,
+  bindDebuggerOptions,
   type DebuggerEvent,
-  type ExtraDebugData,
   type DebuggerHandler,
   type DebuggerOptions,
-  bindDebuggerOptions
+  type ExtraDebugData,
+  type SignalOpType
 } from './debug.js'
+export {
+  clearEffectLinks,
+  clearSignalLinks,
+  createDepLink,
+  destroyDepLink,
+  hasLinkedEffect,
+  hasLinkedSignal,
+  iterateLinkedEffects,
+  iterateLinkedSignals,
+  type DepLink,
+  type EffectRunner,
+  type Signal
+} from './dep.js'
+export {
+  getActiveEffect,
+  hasPropTrack,
+  hasTrack,
+  trackEffect,
+  trackSignal,
+  untrack
+} from './track.js'
+export { triggerSignal } from './trigger.js'
