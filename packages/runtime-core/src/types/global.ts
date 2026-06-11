@@ -9,9 +9,10 @@ import type { View } from './view.js'
  * 使所有 HTML 属性支持传入 Ref/Computed 响应式值，
  * 运行时会自动解包响应式值并追踪依赖。
  */
-type IntrinsicElementWithRef<T> = {
+export type IntrinsicElementsWithRefProps<T> = {
   [K in keyof T]: { [P in keyof T[K]]: MaybeRef<T[K][P]> }
 }
+
 declare global {
   namespace Vitarx {
     /**
@@ -125,7 +126,7 @@ declare global {
      * 将原生 HTML 标签名映射到对应的属性类型，并添加 ref 支持
      * 例如：div、span、button 等标签的属性类型
      */
-    interface IntrinsicElements extends IntrinsicElementWithRef<Vitarx.IntrinsicElements> {}
+    interface IntrinsicElements extends IntrinsicElementsWithRefProps<Vitarx.IntrinsicElements> {}
     /**
      * 库管理的属性类型
      * 用于处理组件属性的类型转换和验证

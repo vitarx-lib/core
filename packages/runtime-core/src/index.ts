@@ -113,7 +113,8 @@ export type {
   VitarxIntrinsicAttributes,
   WithDefaultProps,
   WithProps,
-  WithRefProps
+  WithRefProps,
+  IntrinsicElementsWithRefProps
 } from './types/index.js'
 export {
   isCommentView,

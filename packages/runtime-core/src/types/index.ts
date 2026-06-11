@@ -38,4 +38,4 @@ export type {
 } from './view.js'
 export type { DirectiveBinding, DirectiveHook, Directive, DirectiveMap } from './directive.js'
 export type { ErrorSource, ErrorInfo, ErrorHandler, HookStore, HookCallback } from './hook.js'
-export * from './global.js'
+export type { IntrinsicElementsWithRefProps } from './global.js'
