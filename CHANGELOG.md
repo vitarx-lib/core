@@ -1,3 +1,11 @@
+## [4.0.2](https://github.com/vitarx-lib/core/compare/v4.0.2-alpha.0...v4.0.2) (2026-06-12)
+
+
+### Bug Fixes
+
+* **runtime-core:** 为 HTML 固有元素属性添加响应式支持包装 ([0ac539a](https://github.com/vitarx-lib/core/commit/0ac539a7094574c9258e31f50e3b14af166f59b8))
+* **runtime-core:** 修正VitarxManagedAttributes类型定义的条件判断 ([1717c4e](https://github.com/vitarx-lib/core/commit/1717c4e704a7ff650d7cee3e4d4ab63aef7a569c))
+
 ## [4.0.2-alpha.0](https://github.com/vitarx-lib/core/compare/v4.0.1...v4.0.2-alpha.0) (2026-06-11)
 
 
