@@ -41,7 +41,7 @@ export abstract class ReactiveCollection<
    * @return 返回获取的属性值
    */
   protected doGet(target: T, p: string | symbol, _receiver: any): any {
-    this.triggerSignal('get', { key: p })
+    this.trackSignal('get', { key: p })
     const value = Reflect.get(target, p)
     return typeof value === 'function' ? value.bind(target) : value
   }
