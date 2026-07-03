@@ -1,3 +1,10 @@
+## [4.0.3-alpha.0](https://github.com/vitarx-lib/core/compare/v4.0.2...v4.0.3-alpha.0) (2026-07-03)
+
+
+### Bug Fixes
+
+* **responsive:** 修正属性访问时的信号追踪调用 ([a1c7b42](https://github.com/vitarx-lib/core/commit/a1c7b42fc7d111548b2a9167a3a25890144df53b))
+
 ## [4.0.2](https://github.com/vitarx-lib/core/compare/v4.0.2-alpha.0...v4.0.2) (2026-06-12)
 
 
