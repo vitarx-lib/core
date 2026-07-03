@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { watch } from '../../../src/index.js'
 import { MapReactive, WeakMapReactive } from '../../../src/signals/reactive/map.js'
 
 describe('signal/reactive/map', () => {
@@ -83,6 +84,56 @@ describe('signal/reactive/map', () => {
       reactiveMap.proxy.clear()
 
       expect(triggerSignalSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('regression: 集合依赖追踪', () => {
+    it('set() 改变 has() 结果时应触发 watch 回调', () => {
+      // 回归测试：集合读取未建立依赖关系导致 watch 不响应
+      const reactiveMap = new MapReactive(new Map())
+      const callback = vi.fn()
+
+      const watcher = watch(() => reactiveMap.proxy.has('key'), callback, {
+        flush: 'sync'
+      })
+
+      expect(callback).not.toHaveBeenCalled()
+
+      reactiveMap.proxy.set('key', 'value')
+
+      expect(callback).toHaveBeenCalledWith(true, false, expect.any(Function))
+
+      watcher.dispose()
+    })
+
+    it('set() 改变 get() 结果时应触发 watch 回调', () => {
+      const reactiveMap = new MapReactive(new Map())
+      const callback = vi.fn()
+
+      const watcher = watch(() => reactiveMap.proxy.get('key'), callback, {
+        flush: 'sync'
+      })
+
+      reactiveMap.proxy.set('key', 'value')
+
+      expect(callback).toHaveBeenCalledWith('value', undefined, expect.any(Function))
+
+      watcher.dispose()
+    })
+
+    it('delete() 改变 has() 结果时应触发 watch 回调', () => {
+      const reactiveMap = new MapReactive(new Map([['key', 'value']]))
+      const callback = vi.fn()
+
+      const watcher = watch(() => reactiveMap.proxy.has('key'), callback, {
+        flush: 'sync'
+      })
+
+      reactiveMap.proxy.delete('key')
+
+      expect(callback).toHaveBeenCalledWith(false, true, expect.any(Function))
+
+      watcher.dispose()
     })
   })
 })

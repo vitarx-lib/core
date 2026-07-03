@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { watch } from '../../../src/index.js'
 import { SetReactive, WeakSetReactive } from '../../../src/signals/reactive/set.js'
 
 describe('signal/reactive/set', () => {
@@ -92,6 +93,42 @@ describe('signal/reactive/set', () => {
       reactiveSet.proxy.clear()
 
       expect(triggerSignalSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('regression: 集合依赖追踪', () => {
+    it('add() 改变 has() 结果时应触发 watch 回调', () => {
+      // 回归测试：原始 bug —— watch(() => set.has(4)) 在 set.add(4) 后未触发
+      const reactiveSet = new SetReactive(new Set([1, 2, 3]))
+      const callback = vi.fn()
+
+      const watcher = watch(() => reactiveSet.proxy.has(4), callback, {
+        flush: 'sync'
+      })
+
+      // 首次执行仅收集依赖，不应调用回调
+      expect(callback).not.toHaveBeenCalled()
+
+      reactiveSet.proxy.add(4)
+
+      expect(callback).toHaveBeenCalledWith(true, false, expect.any(Function))
+
+      watcher.dispose()
+    })
+
+    it('delete() 改变 has() 结果时应触发 watch 回调', () => {
+      const reactiveSet = new SetReactive(new Set([1, 2, 3]))
+      const callback = vi.fn()
+
+      const watcher = watch(() => reactiveSet.proxy.has(1), callback, {
+        flush: 'sync'
+      })
+
+      reactiveSet.proxy.delete(1)
+
+      expect(callback).toHaveBeenCalledWith(false, true, expect.any(Function))
+
+      watcher.dispose()
     })
   })
 })

@@ -17,6 +17,22 @@ describe('signal/reactive/collection', () => {
       expect(reactiveCollection.target).toBe(target)
       expect(reactiveCollection.deep).toBe(false)
     })
+
+    it('should call trackSignal (not triggerSignal) on read operations', () => {
+      // 回归测试：读取操作必须通过 trackSignal 建立依赖关系，
+      // 之前误用 triggerSignal 导致 watch 无法响应集合变更
+      const target = new Map()
+      const reactiveCollection = new TestReactiveCollection(target)
+      const trackSignalSpy = vi.spyOn(reactiveCollection as any, 'trackSignal')
+      const triggerSignalSpy = vi.spyOn(reactiveCollection as any, 'triggerSignal')
+
+      // 读取 size 属性，应通过 doGet 调用 trackSignal 建立依赖关系
+      void (reactiveCollection.proxy as any).size
+
+      expect(trackSignalSpy).toHaveBeenCalledWith('get', { key: 'size' })
+      // 读取操作不应触发 triggerSignal('get', ...)，否则依赖关系无法建立
+      expect(triggerSignalSpy).not.toHaveBeenCalledWith('get', expect.anything())
+    })
   })
 
   describe('collectionClear', () => {
