@@ -27,8 +27,8 @@ type InstanceOf<T> = ShallowRef<
  * @example
  * ```tsx
  * function App() {
- *  const refDiv = refEl<HTMLDivElement>()
- *  const refFoo = refEl<YourWidget>()
+ *  const refDiv = useRef<HTMLDivElement>()
+ *  const refFoo = useRef<YourWidget>()
  *  onMounted(() => {
  *    console.log(refDiv.value?.textContent === '测试') // true
  *    // YourWidget 是类组件下面的示例才会是true，函数组件的实例可能是一个普通对象

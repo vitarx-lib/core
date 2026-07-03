@@ -66,8 +66,8 @@ export interface ViewSwitchTransaction {
    * 如果将 `forceFlush` 设置为 `true`，则会强制刷新事务，
    * 跳过检查 `prev` 是否已提交，强制将当前事务置为完成状态。
    *
-   * 如果在 `commitPrev()` 之前调用 `commitNext(true)` ，
-   * 需在适当时机调用 `commitPrev()` 或自行接管 `prev` 的卸载逻辑，否则可能会造成内存泄露或其他非预期影响。
+   * 如果在 `commitPrev()` 之前调用 `commitNext(true)`，
+   * 需在适当时机调用 `commitPrev()` 或自行接管 `prev` 的卸载逻辑，否则可能会造成内存泄漏或其他非预期影响。
    *
    * 注意：此方法在 `committed=true` 时调用无效。
    *

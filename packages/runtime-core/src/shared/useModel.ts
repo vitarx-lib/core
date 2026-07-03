@@ -99,7 +99,8 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
  *
  * @example
  * ```jsx
- * import { ref, watch, useModel, type WithModelEvent } from 'vue'
+ * import { ref, watch } from 'vitarx'
+ * import { useModel, type WithModelEvent } from 'vitarx'
  *
  * interface MyInputProps {
  *   // modelValue 是 v-model 指令约定的属性名，无需显式声明更新事件
