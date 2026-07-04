@@ -30,10 +30,12 @@ export type WithModelEvent<T extends AnyProps, K extends keyof T> = T & {
  * - 会自动处理原始值是否为 RefSignal 的情况
  * - 当属性值未改变时，不会触发更新
  */
-export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSignal<T[K]> {
+export class ModelRef<T extends AnyProps, K extends keyof T, V extends T[K]> implements RefSignal<
+  V extends void ? T[K] : Exclude<T[K], void>
+> {
   readonly [IS_REF] = true
   readonly [IS_SIGNAL] = true
-  private readonly _ref: ShallowRef<T[K]>
+  private readonly _ref: ShallowRef<V extends void ? T[K] : Exclude<T[K], void>>
   private readonly _props: T
   private readonly _eventName: string
   constructor(props: T, propName: K, defaultValue?: T[K]) {
@@ -57,7 +59,7 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
    *
    * @returns {any} 属性的当前值
    */
-  get value(): T[K] {
+  get value(): V extends void ? T[K] : Exclude<T[K], void> {
     return this._ref.value
   }
 
@@ -92,9 +94,10 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
  *
  * @template T - props对象的类型
  * @template K - 属性名的类型
+ * @template V - 属性值的类型
  * @param {T} props - 组件的props对象
  * @param {K} propName - 需要进行双向绑定的属性名
- * @param {T[K]} [defaultValue] - 可选，当属性不存在时的默认值
+ * @param {V} [defaultValue] - 可选，当属性不存在时的默认值
  * @returns { ModelRef } 返回一个 `ModelRef` 实例
  *
  * @example
@@ -158,10 +161,10 @@ export class ModelRef<T extends AnyProps, K extends keyof T> implements RefSigna
  * ```
  * @see {@linkcode ModelRef} - 实现双向绑定的属性代理的类
  */
-export function useModel<T extends AnyProps, K extends keyof T>(
+export function useModel<T extends AnyProps, K extends keyof T, V extends T[K]>(
   props: T,
   propName: K,
-  defaultValue?: T[K]
-): ModelRef<T, K> {
+  defaultValue?: V
+): ModelRef<T, K, V> {
   return new ModelRef(props, propName, defaultValue)
 }
