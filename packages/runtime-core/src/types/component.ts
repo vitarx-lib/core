@@ -8,7 +8,7 @@ export type AnyProps = { [k: string]: any }
  */
 export type ComponentPublicInstance = {
   readonly [IS_RAW]: true
-  readonly [key: string]: any
+  readonly [key: keyof any]: any
 }
 /**
  * 属性验证函数。
