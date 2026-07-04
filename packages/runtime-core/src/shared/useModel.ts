@@ -1,11 +1,4 @@
-import {
-  IS_REF,
-  IS_SIGNAL,
-  type RefSignal,
-  ShallowRef,
-  shallowRef,
-  watch
-} from '@vitarx/responsive'
+import { IS_REF, type Ref, ShallowRef, shallowRef, watch } from '@vitarx/responsive'
 import { logger } from '@vitarx/utils'
 import type { AnyProps } from '../types/index.js'
 
@@ -30,11 +23,10 @@ export type WithModelEvent<T extends AnyProps, K extends keyof T> = T & {
  * - 会自动处理原始值是否为 RefSignal 的情况
  * - 当属性值未改变时，不会触发更新
  */
-export class ModelRef<T extends AnyProps, K extends keyof T, V extends T[K]> implements RefSignal<
+export class ModelRef<T extends AnyProps, K extends keyof T, V extends T[K]> implements Ref<
   V extends void ? T[K] : Exclude<T[K], void>
 > {
   readonly [IS_REF] = true
-  readonly [IS_SIGNAL] = true
   private readonly _ref: ShallowRef<V extends void ? T[K] : Exclude<T[K], void>>
   private readonly _props: T
   private readonly _eventName: string
