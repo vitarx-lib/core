@@ -19,7 +19,7 @@ import type {
 } from '../../types/index.js'
 import { resolveProps } from '../compiler/props.js'
 import { resolveChildren } from '../compiler/utils.js'
-import { applyRef, BaseView } from './base.js'
+import { BaseView } from './base.js'
 
 /**
  * ElementView 类用于表示和管理 DOM 元素视图，支持属性、子元素、指令和引用等功能。
@@ -101,23 +101,34 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
   }
   protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode): void {
     const renderer = getRenderer()
-    if (!this.hostNode) {
-      this.hostNode = renderer.createElement(this.tag, containerOrAnchor)
-    }
+    // 创建元素节点
+    this.hostNode ??= renderer.createElement(this.tag, containerOrAnchor)
+    // 设置属性
     if (this.props) this.setProps(this.hostNode, this.props, renderer)
-    if (this.ref) applyRef(this.ref, this.hostNode)
+    // 设置引用
+    if (this.ref) this.ref.value = this.hostNode
+    // 应用指令
     applyDirective(this, this.hostNode, 'created')
+    // 节点渲染
     renderer[type](this.hostNode, containerOrAnchor)
+    // 子视图渲染
     for (const child of this.children) child.mount(this.hostNode, 'append')
+    // 应用指令
     applyDirective(this, this.hostNode, 'mounted')
   }
   protected override doDispose(root: boolean): void {
+    // 清理引用
+    if (this.ref) this.ref.value = null
+    // 清理副作用
     if (this.effects) {
       for (const effect of this.effects) effect.dispose()
       this.effects = null
     }
+    // 清理指令
     if (this.hostNode) applyDirective(this, this.hostNode, 'dispose')
+    // 清理子视图
     for (const child of this.children) child.dispose(false)
+    // 清理节点
     if (root && this.hostNode) {
       getRenderer().remove(this.hostNode)
       this.hostNode = null

@@ -25,7 +25,7 @@ import type {
 import { mergeProps, resolveProps } from '../compiler/props.js'
 import { resolveChild } from '../compiler/utils.js'
 import { CommentView } from './atomic.js'
-import { applyRef, BaseView } from './base.js'
+import { BaseView } from './base.js'
 import type { ViewSwitchHandler } from './dynamic.js'
 
 /**
@@ -151,15 +151,18 @@ export class ComponentView<T extends Component = Component> extends BaseView<
     this.instance.init()
     this.instance.subView.init(this.instance.subViewContext)
   }
-  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode) {
+  protected override doMount(containerOrAnchor: HostContainer | HostNode, type: MountMode): void {
+    // 设置引用
+    if (this.ref) this.ref.value = this.instance!.publicInstance
     // 父 -> 子
     this.instance!.beforeMount()
-    if (this.ref) applyRef(this.ref, this.instance!.publicInstance)
     this.subView!.mount(containerOrAnchor, type)
     // 子 -> 父
     this.instance!.show()
   }
   protected override doDispose(root: boolean): void {
+    // 移除引用
+    if (this.ref) this.ref.value = null
     // 父 -> 子
     this.instance!.dispose()
     this.subView!.dispose(root)

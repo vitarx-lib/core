@@ -1,5 +1,5 @@
 import { isRef, unref } from '@vitarx/responsive'
-import { isFunction, isPlainObject, popProperty } from '@vitarx/utils'
+import { isPlainObject, popProperty } from '@vitarx/utils'
 import { INTRINSIC_ATTRIBUTES } from '../../constants/attributes.js'
 import type { AnyProps, BindAttributes, InstanceRef } from '../../types/index.js'
 import { StyleUtils } from '../../utils/style.js'
@@ -98,7 +98,7 @@ export function resolveProps<T extends AnyProps>(props: T | null): ResolvePropsR
   const result: ResolvePropsResult<T> = {
     props: resolvedProps
   }
-  if (isRef(ref) || isFunction(ref)) result.ref = ref
+  if (isRef(ref)) result.ref = ref
   return result
 }
 

@@ -134,10 +134,7 @@ describe('ElementView', () => {
   })
 
   it('应该处理引用', () => {
-    let refElement: HTMLDivElement | null = null
-    const elementRef = (el: HTMLDivElement) => {
-      refElement = el
-    }
+    const elementRef = ref<HTMLDivElement | null>(null)
 
     const elementView = new ElementView('div', {
       ref: elementRef,
@@ -146,7 +143,7 @@ describe('ElementView', () => {
     elementView.init()
     elementView.mount(container)
 
-    expect(refElement).toBeTruthy()
-    expect(refElement!.tagName).toBe('DIV')
+    expect(elementRef.value).toBeTruthy()
+    expect(elementRef.value!.tagName).toBe('DIV')
   })
 })

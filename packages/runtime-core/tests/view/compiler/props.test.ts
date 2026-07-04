@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { ref } from '@vitarx/responsive'
+import { describe, expect, it } from 'vitest'
 import { bindProps, mergeProps, resolveProps } from '../../../src/view/compiler/props.js'
 
 describe('Props utils', () => {
@@ -59,12 +60,12 @@ describe('Props utils', () => {
     })
 
     it('应该提取 ref 属性', () => {
-      const refFn = vi.fn()
-      const props = { className: 'base', ref: refFn }
+      const refTest = ref()
+      const props = { className: 'base', ref: refTest }
       const result = resolveProps(props)
 
       expect(result).toHaveProperty('ref')
-      expect(result.ref).toBe(refFn)
+      expect(result.ref).toBe(refTest)
       expect(result.props).not.toHaveProperty('ref')
     })
 
@@ -81,7 +82,7 @@ describe('Props utils', () => {
       expect(result2.props).not.toHaveProperty('test')
     })
 
-    it('当 ref 不是函数或 ref 时不应该包含在结果中', () => {
+    it('当 ref 不是 Ref 时不应该包含在结果中', () => {
       const props = { className: 'base', ref: 'not-a-ref' }
       const result = resolveProps(props)
 

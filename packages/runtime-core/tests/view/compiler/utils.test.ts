@@ -1,7 +1,6 @@
 import { ref } from '@vitarx/responsive'
 import { createTextView, isDynamicView, isTextView, ViewKind } from '../../../src/index.js'
 import { resolveChild, resolveChildren } from '../../../src/view/compiler/utils.js'
-import { applyRef } from '../../../src/view/implements/base.js'
 
 describe('Compiler Utils', () => {
   describe('resolveChild', () => {
@@ -81,30 +80,6 @@ describe('Compiler Utils', () => {
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(3)
-    })
-  })
-
-  describe('applyRef', () => {
-    it('当 ref 不存在时应该直接返回', () => {
-      const el = document.createElement('div')
-      expect(() => applyRef(null as any, el)).not.toThrow()
-      expect(() => applyRef(undefined as any, el)).not.toThrow()
-    })
-
-    it('当 ref 是函数时应该调用该函数并传入元素', () => {
-      const refFn = vi.fn()
-      const el = document.createElement('div')
-      applyRef(refFn, el)
-
-      expect(refFn).toHaveBeenCalledWith(el)
-    })
-
-    it('当 ref 是对象时应该将元素的值赋给 ref 对象的 value 属性', () => {
-      const refObj = { value: null }
-      const el = document.createElement('div')
-      applyRef(refObj as any, el)
-
-      expect(refObj.value).toBe(el)
     })
   })
 })

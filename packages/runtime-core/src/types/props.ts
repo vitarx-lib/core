@@ -79,7 +79,7 @@ export type BindAttributes =
 /**
  * 实例引用
  */
-export type InstanceRef<T = unknown> = Ref<T | null> | ((el: T) => void)
+export type InstanceRef<T = unknown> = Ref<T | null>
 
 type VModelValue<T> = T extends Ref<any, infer S> ? T | S : Ref<T> | T
 type WithVModel<T extends AnyProps> = 'modelValue' extends keyof T
