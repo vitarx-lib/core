@@ -28,15 +28,15 @@ type InstanceOf<T> = ShallowRef<
  * ```tsx
  * function App() {
  *  const refDiv = useRef<HTMLDivElement>()
- *  const refFoo = useRef<YourWidget>()
+ *  // 假设 FooPublicInstance 是 Foo 组件暴露的公开实例类型
+ *  const refFoo = useRef<FooPublicInstance>()
  *  onMounted(() => {
  *    console.log(refDiv.value?.textContent === '测试') // true
- *    // YourWidget 是类组件下面的示例才会是true，函数组件的实例可能是一个普通对象
  *    console.log(refFoo.value !== null) // true
  *  })
  *  return <>
  *    <div ref={refDiv}>测试</div>
- *    <YourWidget ref={refFoo} />
+ *    <Foo ref={refFoo} />
  *  </>
  * }
  * ```
