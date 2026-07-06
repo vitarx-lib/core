@@ -1,3 +1,10 @@
+## [4.0.4](https://github.com/vitarx-lib/core/compare/v4.0.3...v4.0.4) (2026-07-06)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复 HMR 组件热更新异常BUG ([9a5f29b](https://github.com/vitarx-lib/core/commit/9a5f29bbf5686c38e2fcd772341e92efc56d0d59))
+
 ## [4.0.3](https://github.com/vitarx-lib/core/compare/v4.0.3-alpha.0...v4.0.3) (2026-07-06)
 
 
