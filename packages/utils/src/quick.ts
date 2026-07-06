@@ -25,10 +25,12 @@ export function popProperty<T extends object, K extends keyof T>(obj: T, key: K)
  * await sleep(1000)
  *
  * @param time - 毫秒
- * @returns Promise
+ * @returns Promise<void>
  */
-export function sleep(time: number): Promise<unknown> {
-  return new Promise(resolve => setTimeout(resolve, time))
+export function sleep(time: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, time)
+  })
 }
 
 type DeepMergeObjectOptions = {
