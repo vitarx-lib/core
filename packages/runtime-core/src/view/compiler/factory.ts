@@ -107,7 +107,7 @@ export function createView<T extends ViewDescriptor>(
   if (typeof type === 'string') {
     view = new ElementView(type, props, location)
   } else if (typeof type === 'function') {
-    if (__VITARX_DEV__ && import.meta.hot) {
+    if (__VITARX_DEV__) {
       if (typeof window !== 'undefined' && (window as any).__$VITARX_HMR$__) {
         const resolveComponent: <C>(c: C) => C = (window as any).__$VITARX_HMR$__.resolveComponent
         if (typeof resolveComponent === 'function') {
@@ -161,7 +161,7 @@ export function createComponentView<T extends Component>(
   props: InferProps<T> | null = null,
   location?: CodeLocation
 ): ComponentView<T> {
-  if (__VITARX_DEV__ && import.meta.hot) {
+  if (__VITARX_DEV__) {
     if (typeof window !== 'undefined' && (window as any).__$VITARX_HMR$__) {
       const resolveComponent: (c: T) => T = (window as any).__$VITARX_HMR$__.resolveComponent
       if (typeof resolveComponent === 'function') {
