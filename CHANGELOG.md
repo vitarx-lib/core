@@ -1,3 +1,14 @@
+## [4.0.3](https://github.com/vitarx-lib/core/compare/v4.0.3-alpha.0...v4.0.3) (2026-07-06)
+
+
+### Bug Fixes
+
+* **runtime-core:** 修复 useRef 的示例代码错误 ([cd78545](https://github.com/vitarx-lib/core/commit/cd78545d8d5b7a29caa5c191fe6fade7f0f7fb9b))
+* **runtime-core:** 修复 watch(ModelRef) 无效BUG ([76adace](https://github.com/vitarx-lib/core/commit/76adaceeeeefd1ef50c6ae0e9a96a09c68023e0f))
+* **runtime-core:** 修正 ComponentPublicInstance 索引签名类型 ([3fbdd29](https://github.com/vitarx-lib/core/commit/3fbdd29263fe0342a6f3e3afdf865216123bcc86))
+* **runtime-core:** 移除热更新判断中的 import.meta.hot 条件 ([ed37d2d](https://github.com/vitarx-lib/core/commit/ed37d2df598c04361487686ae49e7da6d0518485))
+* **utils:** 修正 sleep 函数返回类型声明 ([e2688ac](https://github.com/vitarx-lib/core/commit/e2688ac6bde88a49e5f8b1d042074264375c2aaf))
+
 ## [4.0.3-alpha.0](https://github.com/vitarx-lib/core/compare/v4.0.2...v4.0.3-alpha.0) (2026-07-03)
 
 
