@@ -19,6 +19,7 @@ import { ElementView } from '../implements/element.js'
 import { FragmentView } from '../implements/fragment.js'
 import { ComponentView, ListView } from '../implements/index.js'
 import { isValidChild } from './children.js'
+import { resolveHMRComponent } from './hmr.js'
 import { resolveBind } from './props.js'
 
 /**
@@ -102,19 +103,15 @@ export function createView<T extends ViewDescriptor>(
     if (props && !isPlainObject(props)) {
       throw new TypeError('createView(): props must be an object or null')
     }
+    // HMR: 将组件引用置换为热更新后的最新实现（仅函数类型生效，字符串标签跳过）
+    if (typeof type === 'function') {
+      type = resolveHMRComponent(type as Function) as T
+    }
   }
   let view: View
   if (typeof type === 'string') {
     view = new ElementView(type, props, location)
   } else if (typeof type === 'function') {
-    if (__VITARX_DEV__) {
-      if (typeof window !== 'undefined' && (window as any).__$VITARX_HMR$__) {
-        const resolveComponent: <C>(c: C) => C = (window as any).__$VITARX_HMR$__.resolveComponent
-        if (typeof resolveComponent === 'function') {
-          type = resolveComponent(type)
-        }
-      }
-    }
     view = isViewBuilder(type)
       ? type(props ? resolveBind(props) : {}, location)
       : new ComponentView(type as Component, props, location)
@@ -161,13 +158,9 @@ export function createComponentView<T extends Component>(
   props: InferProps<T> | null = null,
   location?: CodeLocation
 ): ComponentView<T> {
+  // HMR: 将组件引用置换为热更新后的最新实现
   if (__VITARX_DEV__) {
-    if (typeof window !== 'undefined' && (window as any).__$VITARX_HMR$__) {
-      const resolveComponent: (c: T) => T = (window as any).__$VITARX_HMR$__.resolveComponent
-      if (typeof resolveComponent === 'function') {
-        component = resolveComponent(component)
-      }
-    }
+    component = resolveHMRComponent(component as Function) as T
   }
   return new ComponentView(component, props, location)
 }
