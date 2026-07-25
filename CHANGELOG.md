@@ -1,3 +1,15 @@
+## [4.0.5](https://github.com/vitarx-lib/core/compare/v4.0.4...v4.0.5) (2026-07-25)
+
+
+### Bug Fixes
+
+* **responsive:** 修复hasTrack在untrack中调用时未正常捕获信号访问，并将untrack改名为untracked ([ed9c0b8](https://github.com/vitarx-lib/core/commit/ed9c0b86d8639495a849af699f32b5da2fb51fbf))
+
+
+### Features
+
+* **core:** 新增并导出 untracked 功能 ([401ebf2](https://github.com/vitarx-lib/core/commit/401ebf2d59764429c522ee735dd6c40e45921ec5))
+
 ## [4.0.4](https://github.com/vitarx-lib/core/compare/v4.0.3...v4.0.4) (2026-07-06)
 
 
