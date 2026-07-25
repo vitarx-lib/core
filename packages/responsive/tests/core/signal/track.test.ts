@@ -102,6 +102,10 @@ describe('depend/track', () => {
       const obj = { a: 1 }
       expect(hasPropTrack(obj, 'a').isTrack).toBe(false)
     })
+    it('should return true if there is an get ref deep reactive prop', () => {
+      const obj = ref({ a: 1 })
+      expect(hasPropTrack(obj.value, 'a').isTrack).toBe(true)
+    })
   })
   describe('untrack', () => {
     it('应该正确执行函数并返回结果', () => {
