@@ -139,33 +139,36 @@ export function trackSignal(
   type: SignalOpType = 'get',
   debugData?: ExtraDebugData
 ): void {
+  // 如果当前正在捕获访问信号，则设置当前活动的信号为传入的信号
+  if (isHasTracking) currentActiveSignal = signal
   // 跳过跟踪
-  if (isPauseTracking) return
-  if (isHasTracking) {
-    currentActiveSignal = signal
-  }
-  // 获取当前活动的副作用函数
-  const activeEffect = currentActiveEffect
-  // 如果没有活动的副作用函数，则直接返回
-  if (!activeEffect) return
+  if (isPauseTracking || !currentActiveEffect) return
   // 在开发环境下，触发跟踪回调
   if (__VITARX_DEV__) {
-    triggerOnTrack({ ...debugData, effect: activeEffect, signal, type })
+    triggerOnTrack({ ...debugData, effect: currentActiveEffect, signal, type })
   }
   // 执行实际的跟踪处理逻辑
-  trackHandler(activeEffect, signal)
+  trackHandler(currentActiveEffect, signal)
 }
 
 /**
- * 执行一个函数并临时停止跟踪依赖关系
+ * 执行一个函数，使其内部访问的信号不会被关联到当前的副作用
+ *
+ * @example
+ * ```typescript
+ * const data = reactive({ name: 'vitarx', age: 18 })
+ * watchEffect(() => {
+ *   console.log(data.name) // 输出：vitarx
+ *   console.log(untracked(() => data.age)) // 输出：18，但不会被关联
+ * })
+ *
+ * data.age++ // 不会触发副作用
+ * ```
  *
  * @param fn - 需要执行的函数，其内部的依赖关系不会被跟踪
  * @returns - 函数执行的结果
- *
- * 该函数通过设置 isPauseTracking 标志来临时停止依赖跟踪，
- * 执行完函数后无论成功与否都会恢复原来的跟踪状态
  */
-export function untrack<T>(fn: () => T): T {
+export function untracked<T>(fn: () => T): T {
   // 保存当前的跟踪状态
   const pre = isPauseTracking
   // 暂停跟踪
@@ -180,12 +183,26 @@ export function untrack<T>(fn: () => T): T {
 }
 
 /**
- * 检查给定的函数中是否有跟踪信号
+ * 执行一个函数，使其内部访问的信号不会被关联到当前的副作用
  *
- * 该 api 用于判断函数执行过程中是否有信号被跟踪。
+ * @deprecated api名称已于 4.0.5 版本废弃，请使用 `untracked` 代替，将于 5.0.0 版本移除
+ */
+export const untrack = untracked
+
+/**
+ * 检测给定的函数中是否触发了追踪信号
  *
+ * @example
+ * ```typescript
+ * const count = ref(0)
+ * const result = hasTrack(() => count.value)
+ * console.log(result.isTrack) // 输出：true
+ * console.log(result.value)   // 输出：0
+ * ```
+ *
+ * @template V - 函数返回值的类型
  * @param fn - 一个无参数函数，用于检测是否包含信号
- * @returns {boolean} 如果getter函数执行过程中有信号则返回true，否则返回false
+ * @returns { { isTrack: boolean; value: V } }
  */
 export function hasTrack<V>(fn: () => V): { isTrack: boolean; value: V } {
   const pre = isHasTracking
@@ -201,13 +218,25 @@ export function hasTrack<V>(fn: () => V): { isTrack: boolean; value: V } {
 }
 
 /**
- * 检查对象的属性上是否有信号跟踪
+ * 检查对象的属性是否为响应式信号
  *
- * `hasTrack(() => obj[key])` 的封装
+ * @example
+ * ```typescript
+ * const count = ref(0)
+ * const result = hasPropTrack(count, 'value')
+ * console.log(result.isTrack) // 输出：true
+ * console.log(result.value)   // 输出：0
  *
+ * const result2 = hasPropTrack({value:0}, 'value')
+ * console.log(result2.isTrack) // 输出：false
+ * console.log(result2.value)   // 输出：0
+ * ```
+ *
+ * @template T - 对象的类型
+ * @template K - 属性的键类型
  * @param obj - 要检查的对象
  * @param key - 要检查的属性键
- * @returns { boolean } 如果属性上有信号跟踪则返回true，否则返回false
+ * @returns { { isTrack: boolean; value: T[K] } }
  */
 export function hasPropTrack<T extends object, K extends keyof T>(
   obj: T,
