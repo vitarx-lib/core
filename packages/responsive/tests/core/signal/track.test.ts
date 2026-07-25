@@ -9,7 +9,7 @@ import {
   ref,
   trackEffect,
   trackSignal,
-  untrack
+  untracked
 } from '../../../src/index.js'
 
 describe('depend/track', () => {
@@ -91,10 +91,10 @@ describe('depend/track', () => {
 
       expect(hasTrack(fn).isTrack).toBe(true)
     })
-    it('should support capturing access in untrack', () => {
+    it('should support capturing access in untracked', () => {
       const test = ref('test')
       const fn = () => {
-        untrack(() => {
+        untracked(() => {
           return test.value
         })
       }
@@ -117,16 +117,16 @@ describe('depend/track', () => {
       expect(hasPropTrack(obj.value, 'a').isTrack).toBe(true)
     })
   })
-  describe('untrack', () => {
+  describe('untracked', () => {
     it('应该正确执行函数并返回结果', () => {
-      const result = untrack(() => 42)
+      const result = untracked(() => 42)
       expect(result).toBe(42)
     })
     it('应该在执行函数期间暂停跟踪', () => {
       const test = ref('test')
 
       const effect = () => {
-        untrack(() => {
+        untracked(() => {
           return test.value
         })
       }
@@ -140,7 +140,7 @@ describe('depend/track', () => {
         return test.value
       }
       const effect = () => {
-        untrack(() => {
+        untracked(() => {
           trackEffect(effect2)
           return test.value
         })

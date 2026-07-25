@@ -1,4 +1,4 @@
-import { type Ref, ShallowRef, shallowRef, untrack } from '@vitarx/responsive'
+import { type Ref, ShallowRef, shallowRef, untracked } from '@vitarx/responsive'
 import { isFunction, logger, type VoidCallback } from '@vitarx/utils'
 import { defineValidate, getInstance, getRenderer, viewEffect } from '../../../runtime/index.js'
 import type { RenderChild, View } from '../../../types/index.js'
@@ -259,7 +259,7 @@ export function For<T>(props: ForProps<T>): ListView {
     }
 
     // ===== 2️⃣ 非依赖执行阶段 =====
-    untrack(() => {
+    untracked(() => {
       props.onBeforeUpdate && props.onBeforeUpdate(listView.children)
 
       // 全量卸载

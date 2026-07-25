@@ -2,20 +2,20 @@
 
 // 信号创建
 export {
-  ref,
-  shallowRef,
-  reactive,
-  shallowReactive,
   computed,
+  reactive,
   readonly,
-  shallowReadonly
+  ref,
+  shallowReactive,
+  shallowReadonly,
+  shallowRef
 } from '@vitarx/responsive'
 
 // 信号转换
-export { toRef, toRefs, toValue, unref, toRaw, markRaw } from '@vitarx/responsive'
+export { markRaw, toRaw, toRef, toRefs, toValue, unref } from '@vitarx/responsive'
 
 // 类型判断
-export { isRef, isReactive, isReadonly, isComputed } from '@vitarx/responsive'
+export { isComputed, isReactive, isReadonly, isRef } from '@vitarx/responsive'
 
 // 观察器
 export { watch, watchEffect, watchPostEffect, watchSyncEffect } from '@vitarx/responsive'
@@ -26,35 +26,38 @@ export { EffectScope, onScopeDispose, onScopePause, onScopeResume } from '@vitar
 // 调度
 export { nextTick } from '@vitarx/responsive'
 
+/** @deprecated 已于 4.0.5 废弃，请使用 `untracked`，将于 5.0.0 移除 */
+export { untrack } from '@vitarx/responsive'
+
 // 工具
-export { untrack, untracked } from '@vitarx/responsive'
+export { untracked } from '@vitarx/responsive'
 
 // 公共类型
 export type {
-  Ref,
-  Reactive,
-  ShallowReactive,
-  ReadonlyObject,
+  CompareFunction,
   ComputedGetter,
   ComputedSetter,
-  CompareFunction,
   DebuggerEvent,
   DebuggerHandler,
-  FlushMode,
-  WatchCallback,
-  WatcherOnCleanup,
-  WatchOptions,
-  WatchSource,
-  EffectScopeOptions,
   DebuggerOptions,
+  DeepUnwrapRefs,
+  EffectScopeOptions,
+  FlushMode,
+  Reactive,
+  ReadonlyObject,
+  Ref,
+  ShallowReactive,
   ToRef,
   UnwrapRef,
   UnwrapRefs,
-  DeepUnwrapRefs
+  WatchCallback,
+  WatcherOnCleanup,
+  WatchOptions,
+  WatchSource
 } from '@vitarx/responsive'
 
 // 公共类
-export { Computed, Watcher, Effect } from '@vitarx/responsive'
+export { Computed, Effect, Watcher } from '@vitarx/responsive'
 
 // ======================== 进阶 API（不需要文档） ========================
 
@@ -63,7 +66,6 @@ export { IS_RAW, IS_REACTIVE, IS_READONLY, IS_REF, IS_SIGNAL, RAW_VALUE } from '
 
 // 进阶 API
 export {
-  flushSync,
   addToActiveScope,
   bindDebuggerOptions,
   clearAllJobs,
@@ -72,6 +74,7 @@ export {
   createDepLink,
   createScope,
   destroyDepLink,
+  flushSync,
   getActiveEffect,
   getActiveScope,
   getOwnerScope,
@@ -104,12 +107,12 @@ export type {
   EffectState,
   ExtraDebugData,
   JobRemovalMode,
-  Scheduler,
-  Signal,
-  SignalOpType,
   RawObject,
   RawValue,
   RefSignal,
+  Scheduler,
+  Signal,
+  SignalOpType,
   ToRefValue,
   UnwarpSources
 } from '@vitarx/responsive'
