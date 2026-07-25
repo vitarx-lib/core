@@ -43,6 +43,7 @@ export {
   trackSignal,
   triggerSignal,
   untrack,
+  untracked,
   type DebuggerEvent,
   type DebuggerHandler,
   type DebuggerOptions,

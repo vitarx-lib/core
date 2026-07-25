@@ -27,7 +27,7 @@ export { EffectScope, onScopeDispose, onScopePause, onScopeResume } from '@vitar
 export { nextTick } from '@vitarx/responsive'
 
 // 工具
-export { untrack } from '@vitarx/responsive'
+export { untrack, untracked } from '@vitarx/responsive'
 
 // 公共类型
 export type {

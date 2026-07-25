@@ -25,6 +25,7 @@ export {
   hasTrack,
   trackEffect,
   trackSignal,
-  untrack
+  untrack,
+  untracked
 } from './track.js'
 export { triggerSignal } from './trigger.js'
