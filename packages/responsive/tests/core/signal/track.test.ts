@@ -91,6 +91,15 @@ describe('depend/track', () => {
 
       expect(hasTrack(fn).isTrack).toBe(true)
     })
+    it('should support capturing access in untrack', () => {
+      const test = ref('test')
+      const fn = () => {
+        untrack(() => {
+          return test.value
+        })
+      }
+      expect(hasTrack(fn).isTrack).toBe(true)
+    })
   })
   describe('hasPropTrack', () => {
     it('should return true if there is an get reactive prop', () => {
@@ -102,6 +111,7 @@ describe('depend/track', () => {
       const obj = { a: 1 }
       expect(hasPropTrack(obj, 'a').isTrack).toBe(false)
     })
+
     it('should return true if there is an get ref deep reactive prop', () => {
       const obj = ref({ a: 1 })
       expect(hasPropTrack(obj.value, 'a').isTrack).toBe(true)
