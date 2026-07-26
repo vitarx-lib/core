@@ -49,14 +49,23 @@ export abstract class ValueWatcher<T> extends Watcher {
    * 依赖变化时执行的方法
    */
   protected override runEffect(): void {
-    // 获取当前值
-    const newValue = this.getter()
-    // 保存旧值，更新新值，并调用回调函数
+    // 获取当前值：getter 异常时不再污染 _value（原 getter 实现吞错返回 undefined as T），
+    // 仅 reportError 后返回，下次依赖变化时 getter 恢复正常再赋值并触发回调。
+    let newValue: T
+    try {
+      newValue = this.getter()
+    } catch (e) {
+      this.reportError(e, 'getter')
+      return
+    }
     const oldValue = this._value
-    // 使用 compare 函数比较新旧值，如果相同则直接返回
+    // 值未变化时直接返回：不执行 cleanup、不触发 callback，
+    // 避免释放上一次回调注册的资源却因回调未执行而无法重新注册（cleanup 时机修复）。
     if (this.compare(newValue, oldValue)) return
     this._value = newValue
-    // 调用回调函数，传入新值、旧值和清理函数
+    // 值变化时先执行 cleanup（释放上一次回调注册的资源），再触发新回调重新注册资源，
+    // 保证 cleanup 与 callback 严格配对。
+    this.runCleanup()
     this.runCallback(oldValue)
   }
   /**
