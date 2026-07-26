@@ -33,6 +33,43 @@ export type StyleProperties = string | Vitarx.HostCSSProperties
  * ```
  */
 export type ClassProperties = string | any[] | Record<string, boolean>
+
+/**
+ * 将 CSS 样式字符串按规则分割
+ *
+ * 跟踪括号和引号状态，避免在 url()、data URI 或引号内的分号处错误分割。
+ *
+ * @param style - CSS 样式字符串
+ * @returns 分割后的规则字符串数组
+ */
+function splitStyleRules(style: string): string[] {
+  const rules: string[] = []
+  let depth = 0
+  let inQuote: string | null = null
+  let start = 0
+  for (let i = 0; i < style.length; i++) {
+    const char = style[i]
+    if (inQuote) {
+      // 引号内：遇到匹配的引号则退出
+      if (char === inQuote) inQuote = null
+    } else if (char === '"' || char === "'") {
+      // 进入引号
+      inQuote = char
+    } else if (char === '(') {
+      depth++
+    } else if (char === ')') {
+      depth--
+    } else if (char === ';' && depth === 0) {
+      rules.push(style.slice(start, i))
+      start = i + 1
+    }
+  }
+  // 处理最后一条规则（末尾可能无分号）
+  if (start < style.length) {
+    rules.push(style.slice(start))
+  }
+  return rules
+}
 /**
  * StyleUtils 类是一个用于处理 CSS 类和样式对象的静态工具类。
  * 提供了合并、转换 CSS 类和样式的方法，支持多种输入格式（字符串、数组、对象）之间的互相转换。
@@ -130,8 +167,13 @@ export class StyleUtils {
     if (!style) return {}
     if (isString(style)) {
       const styleObj: Record<string, string> = {}
-      for (const styleRule of style.split(';')) {
-        const [key, value] = styleRule.split(':').map(s => s?.trim())
+      for (const styleRule of splitStyleRules(style)) {
+        // 使用 indexOf 只分割第一个冒号，避免截断含冒号的值
+        // （如 url(http://...)、data:image/png;base64,...）
+        const colonIndex = styleRule.indexOf(':')
+        if (colonIndex === -1) continue
+        const key = styleRule.slice(0, colonIndex).trim()
+        const value = styleRule.slice(colonIndex + 1).trim()
         if (key && value) {
           styleObj[toCamelCase(key)] = value // 转为驼峰命名
         }
@@ -160,7 +202,8 @@ export class StyleUtils {
       if (Array.isArray(classInput)) {
         const classArray: string[] = []
         for (const classInputElement of classInput) {
-          classArray.push(...this.cssClassValueToArray(classInputElement))
+          // 与 cssClassValueToString 保持一致：先解包 Ref 再递归处理
+          classArray.push(...this.cssClassValueToArray(unref(classInputElement)))
         }
         return classArray
       }

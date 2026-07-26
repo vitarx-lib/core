@@ -90,6 +90,41 @@ describe('Runtime Core Shared Utils - StyleUtils', () => {
       expect(StyleUtils.cssStyleValueToObject(null as any)).toEqual({})
       expect(StyleUtils.cssStyleValueToObject(undefined as any)).toEqual({})
     })
+
+    it('应该正确解析包含 URL 的样式值', () => {
+      const result = StyleUtils.cssStyleValueToObject(
+        'background: url(http://example.com/image.png); color: red;'
+      )
+      expect(result).toEqual({
+        background: 'url(http://example.com/image.png)',
+        color: 'red'
+      })
+    })
+
+    it('应该正确解析包含 data URI 的样式值', () => {
+      const result = StyleUtils.cssStyleValueToObject(
+        'background: url(data:image/png;base64,iVBORw0KGgo=)'
+      )
+      expect(result).toEqual({
+        background: 'url(data:image/png;base64,iVBORw0KGgo=)'
+      })
+    })
+
+    it('应该正确解析包含多个冒号的 content 值', () => {
+      const result = StyleUtils.cssStyleValueToObject("content: 'http://a:b'")
+      expect(result).toEqual({
+        content: "'http://a:b'"
+      })
+    })
+
+    it('应该正确解析 linear-gradient 值', () => {
+      const result = StyleUtils.cssStyleValueToObject(
+        'background: linear-gradient(to right, red, green)'
+      )
+      expect(result).toEqual({
+        background: 'linear-gradient(to right, red, green)'
+      })
+    })
   })
 
   describe('cssClassValueToArray', () => {
