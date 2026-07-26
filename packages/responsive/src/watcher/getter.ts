@@ -38,7 +38,13 @@ export class GetterWatcher<T> extends ValueWatcher<T> {
     options: WatcherOptions
   ) {
     super(callback, options)
-    this._value = this.getter()
+    // 初始化获取值：getter 异常时不再中断构造（与 runEffect 一致地 reportError），
+    // _value 保持未初始化，待下次依赖变化时 getter 恢复正常再赋值并触发回调。
+    try {
+      this._value = this.getter()
+    } catch (e) {
+      this.reportError(e, 'getter')
+    }
   }
   /**
    * 获取值并收集新依赖
@@ -48,11 +54,9 @@ export class GetterWatcher<T> extends ValueWatcher<T> {
    * @returns {T} 返回类型为泛型T的值
    */
   protected override getter(): T {
-    try {
-      return trackEffect(this._getter, this.effectHandle) // 收集信号并返回结果
-    } catch (e) {
-      this.reportError(e, 'getter')
-      return undefined as T
-    }
+    // getter 异常时不再吞错返回 undefined as T（会污染 _value 并欺骗类型系统），
+    // 改为向上抛出，由 ValueWatcher.runEffect 的 try-catch 统一处理：
+    // 异常时不更新 _value、不触发 callback，仅 reportError，下次依赖变化时重试。
+    return trackEffect(this._getter, this.effectHandle)
   }
 }
