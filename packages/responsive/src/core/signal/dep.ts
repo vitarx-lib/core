@@ -35,6 +35,11 @@ export interface Signal {
    * @internal
    */
   [SIGNAL_DEP_TAIL]?: DepLink
+
+  /**
+   * 兼容任意对象
+   */
+  [P: keyof any]: any
 }
 /**
  * EffectRunner 协议接口（内部使用）
