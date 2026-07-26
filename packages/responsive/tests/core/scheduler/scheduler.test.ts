@@ -153,4 +153,5 @@ describe('watcher/scheduler', () => {
       expect(job3).not.toHaveBeenCalled()
     })
   })
+
 })
