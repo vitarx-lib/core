@@ -1,7 +1,16 @@
 import { logger } from '@vitarx/utils'
+import type { App } from '../app/index.js'
 import { getApp } from '../runtime/index.js'
 
 let globalId = 0
+
+/**
+ * 各 App 实例独立的 ID 计数器
+ *
+ * 使用 WeakMap 管理，避免在 App 实例上挂载任意属性，
+ * 同时保证 App 实例被回收后计数器自动释放。
+ */
+const appIdCounters = new WeakMap<App, number>()
 
 /**
  * 生成应用内唯一的 id
@@ -25,15 +34,12 @@ export const useId = (prefix?: string): string => {
     return `${prefix || 'v'}-g-${globalId++}`
   }
 
-  // 初始化上下文内计数器
-  const ctx = appContext as Record<string, any>
-  if (typeof ctx.__v_global_id !== 'number') {
-    ctx.__v_global_id = 0
-  }
+  // 从 WeakMap 获取或初始化该 App 的计数器
+  const id = appIdCounters.get(appContext) ?? 0
+  appIdCounters.set(appContext, id + 1)
 
   // 计算前缀优先级：传入参数 > app.config.idPrefix > 'v'
-  const idPrefix = prefix ?? ctx.config?.idPrefix ?? 'v'
+  const idPrefix = prefix ?? appContext.config.idPrefix ?? 'v'
 
-  const id = ctx.__v_global_id++
   return `${idPrefix}-${id}`
 }
