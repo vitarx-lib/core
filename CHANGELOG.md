@@ -1,3 +1,26 @@
+## [4.0.6-alpha.0](https://github.com/vitarx-lib/core/compare/v4.0.5...v4.0.6-alpha.0) (2026-07-26)
+
+
+### Bug Fixes
+
+* **computed:** 修复计算属性异常时脏标记处理逻辑 ([73d8add](https://github.com/vitarx-lib/core/commit/73d8add33b33c760c4ef016ec5f9605f5f3331de))
+* **responsive:** 优化 ValueWatcher getter 异常处理逻辑 ([211f03d](https://github.com/vitarx-lib/core/commit/211f03dbb0d56957e46c7f9fe65c38c414d8a4de))
+* **responsive:** 优化依赖值变化处理逻辑 ([6f9e965](https://github.com/vitarx-lib/core/commit/6f9e965684b445b37bd694d8cbcdc2e8bcfbbafd))
+* **responsive:** 修复 EffectWatcher 重新执行时资源释放问题 ([f1f08fe](https://github.com/vitarx-lib/core/commit/f1f08feebffea7489da55a4d6219c6c933d36057))
+* **responsive:** 捕获trigger中effect的执行错误 ([92c2539](https://github.com/vitarx-lib/core/commit/92c25395e364e05937605fcdb676c78bff441606))
+* **runtime-core:** 修复 provide 返回 undefined 的行为 ([ee0c012](https://github.com/vitarx-lib/core/commit/ee0c0129629d4764df6e27af1d078a5246c7498f))
+* **runtime-core:** 避免异步加载组件销毁后的内存泄漏 ([b9b0c96](https://github.com/vitarx-lib/core/commit/b9b0c962ba6e01d3d944d42109b16eba5f4531db))
+* **scheduler:** 替换错误日志记录方式，提升错误处理能力 ([8babc1a](https://github.com/vitarx-lib/core/commit/8babc1abc90bba6d3900e1e1d40e9a3f6a891344))
+* **scope:** 增加对已释放scope的效应添加和运行的错误处理 ([f972210](https://github.com/vitarx-lib/core/commit/f972210f9e92937f97bb9766fae5c2119aa1ce52))
+* **style:** 修复包含复杂 CSS 值的样式字符串解析问题 ([4fea809](https://github.com/vitarx-lib/core/commit/4fea809e1ba4c00a0e5dcc6fd6d7efa17f8bfa28))
+* **track:** ⚠️ 修复依赖链接复用避免无限循环问题 ([60a5327](https://github.com/vitarx-lib/core/commit/60a5327952682070ebca472e03b471230d23ac53))
+* **watcher:** 修复响应式数据源的深度追踪逻辑 ([6ff09c1](https://github.com/vitarx-lib/core/commit/6ff09c177475e033210aee347da53ae8b9b56489))
+
+
+### Features
+
+* **reactive:** 增强对象响应式支持及边界情况处理 ([5c3f37b](https://github.com/vitarx-lib/core/commit/5c3f37bba270c4bd8dfceb7fcd837b9b8532873d))
+
 ## [4.0.5](https://github.com/vitarx-lib/core/compare/v4.0.4...v4.0.5) (2026-07-25)
 
 
