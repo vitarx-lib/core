@@ -2,50 +2,14 @@ import { logger, type VoidCallback } from '@vitarx/utils'
 import {
   bindDebuggerOptions,
   clearEffectLinks,
-  type DebuggerOptions,
   Effect,
   type EffectRunner,
-  EffectScope,
   queueJob,
   queuePostFlushJob,
   queuePreFlushJob,
   type Scheduler
 } from '../core/index.js'
-import type { FlushMode } from './types.js'
-
-/**
- * 观察器配置选项接口
- *
- * 该接口扩展了 EffectOptions，提供了专门用于观察器的额外配置选项。
- *
- * @property {DebuggerHandler} [onTrigger] - trigger 调试钩子
- * @property {DebuggerHandler} [onTrack] - track 调试钩子
- * @property {FlushMode} [flush='pre'] - 指定副作用执行时机
- * @property {boolean|EffectScope} [scope=true] - 作用域
- */
-export interface WatcherOptions extends DebuggerOptions {
-  /**
-   * 作用域
-   *
-   * - ture 表示当前效果将自动加入当前作用域。
-   * - false 表示当前效果将不会加入任何作用域。
-   * - EffectScope 对象 ：表示当前效果将加入指定的作用域。
-   *
-   * @default true
-   */
-  scope?: EffectScope | boolean
-  /**
-   * 指定副作用执行时机
-   *
-   * - 'pre'：在主任务之前执行副作用
-   * - 'main'：主任务（视图更新是主任务，业务侧不应该使用此模式）
-   * - 'post'：在主任务之后执行副作用
-   * - 'sync'：同步执行副作用
-   *
-   * @default 'pre'
-   */
-  flush?: FlushMode
-}
+import type { FlushMode, WatcherOptions } from './types.js'
 
 /**
  * Watcher 抽象基类
@@ -105,7 +69,9 @@ export abstract class Watcher extends Effect {
     }
     const execute = (): void => {
       if (this.isActive) {
-        this.runCleanup()
+        // cleanup 时机下沉到各子类 runEffect，由子类根据自身语义决定何时 cleanup：
+        // - EffectWatcher：每次执行前 cleanup（effect 必跑，资源需先释放再重新注册）
+        // - ValueWatcher：仅值变化时 cleanup（与 callback 严格配对，值未变化时不释放资源）
         this.runEffect()
       } else {
         this.dirty = true

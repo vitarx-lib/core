@@ -1,6 +1,6 @@
 import type { AnyFunction, VoidCallback } from '@vitarx/utils'
+import type { DebuggerOptions, EffectScope } from '../core/index.js'
 import type { Ref } from '../signals/index.js'
-import type { WatcherOptions } from './watcher.js'
 
 /**
  * 刷新模式
@@ -12,6 +12,42 @@ import type { WatcherOptions } from './watcher.js'
  * - 'sync': 同步执行，接收到触发信号后立即执行
  */
 export type FlushMode = 'pre' | 'main' | 'post' | 'sync'
+
+/**
+ * 观察器配置选项接口
+ *
+ * 该接口扩展了 DebuggerOptions，提供了专门用于观察器的额外配置选项。
+ * 此接口定义在 types.ts 以消除 watcher.ts ↔ types.ts 的循环依赖
+ * （types.ts 不再反向依赖 watcher.ts）。
+ *
+ * @property {DebuggerHandler} [onTrigger] - trigger 调试钩子
+ * @property {DebuggerHandler} [onTrack] - track 调试钩子
+ * @property {FlushMode} [flush='pre'] - 指定副作用执行时机
+ * @property {boolean|EffectScope} [scope=true] - 作用域
+ */
+export interface WatcherOptions extends DebuggerOptions {
+  /**
+   * 作用域
+   *
+   * - true 表示当前效果将自动加入当前作用域。
+   * - false 表示当前效果将不会加入任何作用域。
+   * - EffectScope 对象：表示当前效果将加入指定的作用域。
+   *
+   * @default true
+   */
+  scope?: EffectScope | boolean
+  /**
+   * 指定副作用执行时机
+   *
+   * - 'pre'：在主任务之前执行副作用
+   * - 'main'：主任务（视图更新是主任务，业务侧不应该使用此模式）
+   * - 'post'：在主任务之后执行副作用
+   * - 'sync'：同步执行副作用
+   *
+   * @default 'pre'
+   */
+  flush?: FlushMode
+}
 
 /**
  * 观察者清理回调函数类型

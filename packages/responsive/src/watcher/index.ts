@@ -1,5 +1,5 @@
 export { watch, watchEffect, watchPostEffect, watchSyncEffect } from './helpers.js'
-export { Watcher, type WatcherOptions } from './watcher.js'
+export { Watcher } from './watcher.js'
 export {
   type FlushMode,
   type WatcherOnCleanup,
@@ -7,5 +7,6 @@ export {
   type UnwarpSources,
   type WatchCallback,
   type CompareFunction,
-  type WatchOptions
+  type WatchOptions,
+  type WatcherOptions
 } from './types.js'
