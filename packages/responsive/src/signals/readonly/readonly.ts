@@ -20,12 +20,13 @@ type ReadonlyCollection<T extends AnyMap | AnySet | AnyWeakMap | AnyWeakSet> = T
 class ReadonlyProxyHandler<T extends object> implements ProxyHandler<T> {
   constructor(private readonly deep: boolean) {}
 
-  get(target: T, prop: string | symbol, _receiver: unknown): unknown {
+  get(target: T, prop: string | symbol): unknown {
     if (prop === IS_RAW) return true
     if (prop === IS_READONLY) return true
     if (prop === RAW_VALUE) return target
-    const value = Reflect.get(target, prop, target)
-    if (isRef(value)) return value.value
+    let value = Reflect.get(target, prop, target)
+    // ref 解包：深度模式下需对内部对象递归包装 readonly，
+    if (isRef(value)) value = value.value
     if (this.deep && isObject(value) && !value[IS_READONLY]) {
       return createReadonlyProxy(value, true)
     }
