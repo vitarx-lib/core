@@ -1,14 +1,15 @@
+import { logger } from '@vitarx/utils'
+
 /**
  * 任务调度器 - 基于优先级和参数合并的任务执行系统（函数式实现）
  *
  * 核心功能：
  * - 三阶段任务队列：preFlush（准备阶段）→ main（执行阶段）→ postFlush（清理阶段）
- * - 递归保护机制：防止任务无限递归调用，保障系统稳定性
  * - 微任务调度：基于 Promise 微任务的异步执行
  * - 同步执行支持：提供 flushSync 立即同步执行所有任务的能力
  *
  * 设计原理：
- * - 执行阶段捕获异常并记录递归次数，确保系统健壮性
+ * - 执行阶段捕获异常并记录，单任务异常不中断整体刷新流程
  */
 
 /**
@@ -121,7 +122,7 @@ function flushJobMap(queue: QueueSet): void {
         job()
       } catch (err) {
         // 捕获并记录异常，但不中断整个刷新流程
-        console.error('[Scheduler] Job execution error:', err)
+        logger.error('[Scheduler] Job execution error:', err)
       }
     }
     // 如果在执行过程中有新任务加入，它们会在下一轮循环中被处理
