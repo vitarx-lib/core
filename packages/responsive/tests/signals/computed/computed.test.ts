@@ -143,4 +143,39 @@ describe('signal/computed/computed', () => {
       expect(collectSignalSpy).toHaveBeenCalled()
     })
   })
+
+  // 回归测试：getter 抛错后 dirty 应保持 true，下次访问能重试
+  // 对应修复：computed.ts recompute() 中 _dirty=false 仅在 try 成功路径执行，
+  //          异常路径保持 _dirty=true，避免永久返回过期值
+  describe('error recovery', () => {
+    it('should keep dirty=true when getter throws and retry on next access', () => {
+      let shouldThrow = true
+      let callCount = 0
+      const source = ref(1)
+      // 无 owner scope：reportEffectError 直接抛出，验证异常路径 dirty 不被重置
+      const computed = new Computed(() => {
+        callCount++
+        if (shouldThrow) throw new Error('getter boom')
+        return source.value * 2
+      })
+
+      // 首次访问：getter 抛错，dirty 应保持 true（不再被 finally 错误重置为 false）
+      expect(() => computed.value).toThrow('getter boom')
+      expect(computed.dirty).toBe(true)
+      expect(callCount).toBe(1)
+
+      // 恢复 getter 正常，再次访问应重新计算（证明 dirty=true 触发了重试）
+      shouldThrow = false
+      expect(computed.value).toBe(2)
+      expect(computed.dirty).toBe(false)
+      expect(callCount).toBe(2)
+
+      // 依赖变化后能正常重新计算
+      source.value = 5
+      expect(computed.dirty).toBe(true)
+      expect(computed.value).toBe(10)
+      expect(computed.dirty).toBe(false)
+      expect(callCount).toBe(3)
+    })
+  })
 })
