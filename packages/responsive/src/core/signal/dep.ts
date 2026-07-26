@@ -35,7 +35,6 @@ export interface Signal {
    * @internal
    */
   [SIGNAL_DEP_TAIL]?: DepLink
-  [P: keyof any]: any
 }
 /**
  * EffectRunner 协议接口（内部使用）
@@ -73,7 +72,7 @@ export interface EffectRunner extends DebuggerOptions {
    *
    * ⚠️ 注意：依赖系统核心数据，请勿修改。
    */
-  [EFFECT_DEP_TAIL]?: DepLink
+  [EFFECT_DEP_TAIL]?: DepLink;
   (): void
 }
 /**
