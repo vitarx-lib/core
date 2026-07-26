@@ -1,6 +1,6 @@
 import type { AnyRecord } from '@vitarx/utils'
-import { hasOwnProperty, isObject } from '@vitarx/utils'
-import { clearSignalLinks, trackSignal, triggerSignal } from '../../core/index.js'
+import { hasOwnProperty, isObject, logger } from '@vitarx/utils'
+import { clearSignalLinks, type Signal, trackSignal, triggerSignal } from '../../core/index.js'
 import { IS_RAW, IS_REACTIVE, isRef } from '../shared/index.js'
 import { ReactiveSource } from './base.js'
 import { MapReactive, WeakMapReactive } from './map.js'
@@ -45,7 +45,7 @@ const setValue = <T extends object>(target: T, key: keyof T, value: any): boolea
  * @template T - 目标对象的类型，必须是一个对象类型
  * @template K - 目标对象键的类型，必须是 T 的键之一
  */
-export class ReactiveProperty<T extends object, K extends keyof T> {
+export class ReactiveProperty<T extends object, K extends keyof T> implements Signal {
   // 私有属性，用于存储代理对象，用于嵌套对象的响应式处理
   private proxy?: T[K]
   /**
@@ -122,6 +122,8 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
    * @returns {boolean} 如果目标对象包含指定属性则返回true，否则返回false
    */
   has(target: T, p: string | symbol): boolean {
+    // __proto__ 走原始路径，不纳入响应式追踪，避免原型链污染产生响应式副作用
+    if (p === '__proto__') return Reflect.has(target, p)
     // 跟踪信号，记录has操作和相关的键
     this.trackSignal('has', { key: p })
     // 使用Reflect.has检查目标对象是否包含指定属性并返回结果
@@ -134,6 +136,8 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
    * @returns {boolean} 返回一个布尔值，表示删除操作是否成功
    */
   deleteProperty(target: T, p: string | symbol): boolean {
+    // __proto__ 走原始路径，不纳入响应式追踪
+    if (p === '__proto__') return Reflect.deleteProperty(target, p)
     // 检查目标对象是否拥有该属性
     const hadOwn = hasOwnProperty(target, p)
     // 保存删除前的属性值
@@ -148,9 +152,28 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
         this.propertyMap.delete(p)
         sig.invalidate(oldValue)
       }
+      // 触发 ReactiveSource 结构信号：所有依赖该对象结构的 effect 都会被通知
+      // （包括 ownKeys 建立的迭代依赖，因为 trackSignal/triggerSignal 按 signal 对象建立/触发，
+      //   不区分 type/key，所以无需额外的迭代键占位来区分）
       this.triggerSignal('deleteProperty', { key: p, oldValue, newValue: undefined })
     }
     return result
+  }
+  /**
+   * 拦截键的枚举操作（for...in / Object.keys / Reflect.ownKeys 等）
+   *
+   * 通过追踪 ReactiveSource 自身建立迭代依赖。当对象结构变化（新增/删除属性）时，
+   * set / deleteProperty 触发的结构信号会通知到该依赖，使迭代型 effect 重新执行。
+   *
+   * 说明：trackSignal/triggerSignal 按 signal 对象（即本 ReactiveSource 实例）建立/触发依赖，
+   * 不依赖具体 key 区分，因此此处不需要额外的迭代键占位。
+   *
+   * @param target - 目标对象
+   * @returns 返回对象自身属性键数组
+   */
+  ownKeys(target: T): ArrayLike<string | symbol> {
+    this.trackSignal('ownKeys')
+    return Reflect.ownKeys(target)
   }
   /**
    * 获取对象属性值的处理方法
@@ -165,6 +188,8 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
    * @returns 返回属性值或信号值
    */
   protected doGet(target: T, p: string | symbol, receiver: any) {
+    // __proto__ 走原始路径，不纳入响应式追踪
+    if (p === '__proto__') return Reflect.get(target, p, receiver)
     let value: any // 用于存储获取到的属性值
     // 检查目标对象是否自身拥有该属性
     if (!hasOwnProperty(target, p)) {
@@ -197,6 +222,11 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
    * @returns {boolean} 返回设置操作是否成功
    */
   protected set(target: T, p: string | symbol, newValue: any, _receiver: any): boolean {
+    // __proto__ 走原始路径，不触发响应式信号，避免原型链污染的响应式副作用
+    if (p === '__proto__') {
+      Reflect.set(target, p, newValue)
+      return true
+    }
     // 已有 PropertySignal：必须走信号（它维护 proxy / 嵌套 reactive）
     const sig = this.propertyMap.get(p) // 获取属性对应的信号
     if (sig) {
@@ -205,11 +235,11 @@ export class ObjectReactive<T extends AnyRecord> extends ReactiveSource<T> {
       return true // 设置成功
     }
     // 检查属性是否已存在
-    const hadKey = hasOwnProperty(target, p as string)
+    const hadKey = hasOwnProperty(target, p)
     // 更新属性值
     setValue(target, p, newValue)
     // 如果是新属性，触发添加信号的回调
-    if (!hadKey) this.triggerSignal('set', { key: p, oldValue: undefined, newValue })
+    if (!hadKey) this.triggerSignal('set', { key: p, newValue })
     return true // 设置成功返回true
   }
 }
@@ -277,6 +307,22 @@ export class ArrayReactive<T extends any[]> extends ObjectReactive<T> {
       this.triggerSignal('set', { key: p, oldValue, newValue })
       return true
     }
+    // 数组索引扩展：通过索引赋值扩展数组（如 proxy[5]=1，当前 length=3）或
+    // push/unshift 等内部按索引 set 时，target.length 会自动增长，但 oldLength 不会同步、
+    // lengthSignal 也不会触发。此处主动检测 length 变化并同步触发。
+    if (typeof p === 'string') {
+      const index = Number(p)
+      if (Number.isInteger(index) && index >= target.length) {
+        const oldLen = this.oldLength
+        const result = super.set(target, p, newValue, receiver)
+        const newLen = target.length
+        if (newLen !== oldLen) {
+          this.oldLength = newLen
+          triggerSignal(this.lengthSignal, 'set', { oldValue: oldLen, newValue: newLen })
+        }
+        return result
+      }
+    }
     return super.set(target, p, newValue, receiver)
   }
 }
@@ -318,6 +364,13 @@ const setCache = (instance: ReactiveSource<any>) => {
  * @returns 返回目标对象的响应式代理
  */
 export function createReactive<T extends object, Deep extends boolean>(target: T, deep: Deep): T {
+  // 冻结对象不可变：创建代理后 set/delete 会静默失败却误触发信号，直接返回原对象
+  if (Object.isFrozen(target)) {
+    if (__VITARX_DEV__) {
+      logger.warn('[reactive] target is frozen, return as-is without proxy')
+    }
+    return target
+  }
   if (Array.isArray(target)) {
     return getCache(target, deep) ?? setCache(new ArrayReactive(target, deep))
   }
