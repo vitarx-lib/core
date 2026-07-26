@@ -195,12 +195,22 @@ export const untrack = untracked
 /**
  * 检测给定的函数中是否触发了追踪信号
  *
+ * hasTrack 会执行 fn 并检测其内部是否访问了响应式信号（触发 trackSignal）。
+ * fn 内访问的值会按响应式契约正常建立依赖——值被访问了就应该被跟踪。
+ * 如需"检测但不建立依赖"，应使用 `untracked` 包裹：
+ *
  * @example
  * ```typescript
  * const count = ref(0)
+ *
+ * // 检测 + 建立依赖（值被访问 → 正常跟踪）
  * const result = hasTrack(() => count.value)
  * console.log(result.isTrack) // 输出：true
  * console.log(result.value)   // 输出：0
+ *
+ * // 检测但不建立依赖（用 untracked 显式暂停跟踪）
+ * const result2 = untracked(() => hasTrack(() => count.value))
+ * console.log(result2.isTrack) // 输出：true
  * ```
  *
  * @template V - 函数返回值的类型
@@ -209,6 +219,8 @@ export const untrack = untracked
  */
 export function hasTrack<V>(fn: () => V): { isTrack: boolean; value: V } {
   const pre = isHasTracking
+  // 保存当前 active signal，避免嵌套 hasTrack 调用时互相污染检测结果
+  const prevActiveSignal = currentActiveSignal
   isHasTracking = true
   try {
     const value = fn()
@@ -216,7 +228,8 @@ export function hasTrack<V>(fn: () => V): { isTrack: boolean; value: V } {
     return { isTrack, value }
   } finally {
     isHasTracking = pre
-    if (!pre) currentActiveSignal = null
+    // 恢复外层的 active signal，保证嵌套调用各自独立
+    currentActiveSignal = prevActiveSignal
   }
 }
 
