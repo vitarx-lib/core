@@ -206,6 +206,9 @@ export class EffectScope {
    * @param effect - 要添加的效果对象
    */
   add(effect: DisposableEffect) {
+    if (this._state === 'disposed') {
+      throw new Error('[EffectScope] Cannot add effect to a disposed scope')
+    }
     if (effect[OWNER_SCOPE] === this) return
     if (effect[OWNER_SCOPE]) {
       throw new Error('[EffectScope] Cannot add effect that already belongs to another scope')
@@ -251,6 +254,9 @@ export class EffectScope {
    * @returns {T} 函数执行的结果
    */
   run<T>(fn: () => T): T {
+    if (this._state === 'disposed') {
+      throw new Error('[EffectScope] Cannot run in a disposed scope')
+    }
     const preScope = currentActiveScope
     try {
       currentActiveScope = this
