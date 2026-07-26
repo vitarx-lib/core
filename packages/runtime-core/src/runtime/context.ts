@@ -103,7 +103,7 @@ export function getComponentView(allowEmpty: boolean = false): ComponentView | n
  * 该函数用于从全局上下文中获取App类型的实例
  *
  * @template T - 应用程序实例的类型，默认为App
- * @returns {App | null} 返回App类型的实例，如果不存在则返回undefined
+ * @returns {App | null} 返回App类型的实例，如果不存在则返回null
  */
 export function getApp<T extends App = App>(): T | null {
   return activeComponentInstance ? (activeComponentInstance.app as T) : null
