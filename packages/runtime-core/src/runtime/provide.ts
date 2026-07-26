@@ -104,8 +104,9 @@ export function inject<T>(
   let parent: ComponentInstance | null = ctx.parent
   while (parent) {
     if (parent.provide?.has(name)) {
-      const value = parent.provide.get(name)
-      if (value !== undefined) return value
+      // 只要 key 存在就返回（即使值为 undefined），与 Vue 3 inject 语义一致：
+      // 最近提供者胜出，允许通过 provide(key, undefined) 覆盖祖先的值
+      return parent.provide.get(name)
     }
     parent = parent.parent
   }
