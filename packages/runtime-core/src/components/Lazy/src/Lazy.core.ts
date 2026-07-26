@@ -103,6 +103,13 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   if (cached) return createView(cached, resolvedProps)
 
   let cancelTask: (() => void) | undefined = undefined
+  /**
+   * 组件是否已销毁的标志位
+   *
+   * 用于防止异步加载完成后在已销毁的组件上创建视图，
+   * 避免内存泄漏和缓存污染（cancelTask 在 task 已 resolve 后无效）。
+   */
+  let isDisposed = false
   const showView = shallowRef<View>(createCommentView('Lazy:loading'))
 
   onInit(async (): Promise<void> => {
@@ -140,8 +147,12 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
 
     try {
       const component = await loadingPromise
+      // 组件已销毁则不再创建视图，避免内存泄漏
+      if (isDisposed) return
       showView.value = createView(component, resolvedProps)
     } catch (e) {
+      // 组件已销毁则不再处理错误，避免在已销毁的视图上操作
+      if (isDisposed) return
       if (isFunction(onError)) {
         const fallback = onError(e)
         if (isView(fallback)) showView.value = fallback
@@ -154,6 +165,7 @@ function Lazy<T extends Component>(props: LazyProps<T>): View {
   })
 
   onDispose(() => {
+    isDisposed = true
     cancelTask?.()
   })
   return createDynamicView(showView)
