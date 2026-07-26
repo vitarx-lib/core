@@ -91,5 +91,30 @@ describe('Runtime Core Shared Helpers - useModel', () => {
 
       expect(modelRef.value).toBe('default')
     })
+
+    it('应该在多个 ModelRef 共享同一数据源时保持双向同步', () => {
+      const value = ref(0)
+      const props = {
+        get value() {
+          return value.value
+        },
+        'onUpdate:value': (v: any) => (value.value = v)
+      }
+      const modelRef1 = useModel(props, 'value')
+      const modelRef2 = useModel(props, 'value')
+
+      expect(modelRef1).toBeInstanceOf(ModelRef)
+      expect(modelRef1.value).toBe(0)
+      expect(modelRef2).toBeInstanceOf(ModelRef)
+      expect(modelRef2.value).toBe(0)
+
+      modelRef1.value++
+
+      expect(value.value).toBe(1)
+      modelRef2.value++
+
+      expect(modelRef1.value).toBe(2)
+      expect(value.value).toBe(2)
+    })
   })
 })
