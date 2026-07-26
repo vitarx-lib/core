@@ -37,6 +37,9 @@ export class EffectWatcher<T = any> extends Watcher {
    * @protected
    */
   protected runEffect(): void {
+    // EffectWatcher 每次执行都会完整重跑 effect（无论值是否变化），
+    // 因此 cleanup 必须在 effect 重新执行前运行，释放上一次注册的资源（如定时器）。
+    this.runCleanup()
     try {
       trackEffect(() => this.effect(this.onCleanup), this.effectHandle)
     } catch (e) {
