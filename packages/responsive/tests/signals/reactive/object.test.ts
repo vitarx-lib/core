@@ -1,5 +1,6 @@
+import { logger } from '@vitarx/utils'
 import { describe, expect, it, vi } from 'vitest'
-import { ref } from '../../../src/index.js'
+import { reactive, ref, watch } from '../../../src/index.js'
 import {
   ArrayReactive,
   createReactive,
@@ -234,6 +235,148 @@ describe('signal/reactive/object', () => {
 
       expect(reactive).toBeDefined()
       expect(reactive.has(key)).toBe(true)
+    })
+  })
+
+  // ===================== 回归测试 =====================
+
+  // 回归测试：ownKeys trap 追踪 ReactiveSource 结构信号，新增/删除属性时触发迭代型 effect
+  // 对应实现：object.ts ownKeys trap 调用 trackSignal 建立依赖，set/deleteProperty 触发结构信号
+  describe('ownKeys reactivity', () => {
+    it('should trigger effect when adding a new property (for...in / Object.keys)', () => {
+      const obj: any = reactive({ count: 0 })
+      const cb = vi.fn()
+      // 读取 keys 数量建立 ReactiveSource 结构依赖（ownKeys trap）
+      const watcher = watch(() => Object.keys(obj).length, cb, { flush: 'sync' })
+
+      expect(cb).not.toHaveBeenCalled()
+
+      obj.newProp = 'x' // 新增属性 → 触发结构信号
+      expect(cb).toHaveBeenCalledWith(2, 1, expect.any(Function))
+
+      watcher.dispose()
+    })
+
+    it('should trigger effect when deleting a property', () => {
+      const obj: any = reactive({ count: 0, toDelete: 'x' })
+      const cb = vi.fn()
+      const watcher = watch(() => Object.keys(obj).length, cb, { flush: 'sync' })
+
+      expect(cb).not.toHaveBeenCalled()
+
+      delete obj.toDelete // 删除属性 → 触发结构信号
+      expect(cb).toHaveBeenCalledWith(1, 2, expect.any(Function))
+
+      watcher.dispose()
+    })
+
+    it('should trigger effect when adding property via for...in', () => {
+      const obj: any = reactive({ a: 1 })
+      const cb = vi.fn()
+      // for...in 同样走 ownKeys trap，建立 ReactiveSource 结构依赖
+      const watcher = watch(
+        () => {
+          let count = 0
+          for (const _ in obj) count++
+          return count
+        },
+        cb,
+        { flush: 'sync' }
+      )
+
+      obj.b = 2 // 新增属性 → 触发结构信号 → getter 重跑
+      expect(cb).toHaveBeenCalledWith(2, 1, expect.any(Function))
+
+      watcher.dispose()
+    })
+  })
+
+  // 回归测试：数组索引扩展（proxy[5]=1，length=3）应同步 oldLength 并触发 lengthSignal
+  // 对应修复：object.ts ArrayReactive.set 检测 index >= target.length 时同步 length
+  describe('array index expansion triggers length', () => {
+    it('should trigger length effect when setting index beyond current length', () => {
+      const arr = reactive([1, 2, 3])
+      const cb = vi.fn()
+      const watcher = watch(() => arr.length, cb, { flush: 'sync' })
+
+      expect(cb).not.toHaveBeenCalled()
+
+      arr[5] = 42 // 扩展数组，length 从 3 → 6
+      expect(arr.length).toBe(6)
+      expect(arr[5]).toBe(42)
+      expect(cb).toHaveBeenCalledWith(6, 3, expect.any(Function))
+
+      watcher.dispose()
+    })
+
+    it('should trigger length effect when using push', () => {
+      const arr = reactive([1, 2, 3])
+      const cb = vi.fn()
+      const watcher = watch(() => arr.length, cb, { flush: 'sync' })
+
+      expect(cb).not.toHaveBeenCalled()
+
+      arr.push(4) // push 内部按索引 set，触发 length 同步
+      expect(arr.length).toBe(4)
+      expect(cb).toHaveBeenCalledWith(4, 3, expect.any(Function))
+
+      watcher.dispose()
+    })
+  })
+
+  // 回归测试：__proto__ 走原始 Reflect 路径，不纳入响应式追踪
+  // 对应修复：object.ts doGet/set/has/deleteProperty 对 p === '__proto__' 跳过响应式逻辑
+  describe('__proto__ protection', () => {
+    it('should not trigger reactive effect when setting __proto__', () => {
+      const obj = reactive({ count: 0 })
+      const cb = vi.fn()
+      const watcher = watch(() => obj.count, cb, { flush: 'sync' })
+
+      // 设置 __proto__ 不应触发 count 的 watcher
+      ;(obj as any).__proto__ = { extra: 'data' }
+      expect(cb).not.toHaveBeenCalled()
+
+      watcher.dispose()
+    })
+
+    it('should not create ReactiveProperty for __proto__', () => {
+      const target = { count: 0 }
+      const reactiveObj = new ObjectReactive(target, true) as any
+
+      // 读取 __proto__ 不应在 propertyMap 中创建信号
+      const _ = reactiveObj.doGet(target, '__proto__', {})
+
+      // propertyMap 中不应存在 __proto__ 的 ReactiveProperty
+      expect(reactiveObj.propertyMap.has('__proto__')).toBe(false)
+    })
+  })
+
+  // 回归测试：冻结对象不可变，reactive 应直接返回原对象（不创建代理）
+  // 对应修复：object.ts createReactive 入口检测 Object.isFrozen 并 dev 警告
+  describe('frozen object handling', () => {
+    it('should return frozen object as-is without creating proxy', () => {
+      const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+      const frozen = Object.freeze({ count: 0 })
+
+      const result = reactive(frozen)
+
+      // 应返回原始冻结对象，而非代理
+      expect(result).toBe(frozen)
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[reactive] target is frozen, return as-is without proxy'
+      )
+
+      warnSpy.mockRestore()
+    })
+
+    it('should return frozen array as-is', () => {
+      const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+      const frozenArr = Object.freeze([1, 2, 3])
+
+      const result = reactive(frozenArr)
+
+      expect(result).toBe(frozenArr)
+      warnSpy.mockRestore()
     })
   })
 })
