@@ -1,3 +1,4 @@
+import { logger } from '@vitarx/utils'
 import { type ExtraDebugData, type SignalOpType, triggerOnTrigger } from './debug.js'
 import type { Signal } from './dep.js'
 import { SIGNAL_DEP_HEAD } from './symbol.js'
@@ -23,7 +24,11 @@ export function triggerSignal(
     if (__VITARX_DEV__) {
       triggerOnTrigger({ ...debugData, effect, signal, type })
     }
-    effect() // 调度effect的执行
+    try {
+      effect() // 调度effect的执行
+    } catch (e) {
+      logger.error('[triggerSignal] effect execution error:', e)
+    }
     link = next // 移动到下一个链接
   }
 }
