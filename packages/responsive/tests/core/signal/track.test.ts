@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { DEP_VERSION } from '../../../src/core/signal/symbol.js'
+import { DEP_VERSION, SIGNAL_DEP_HEAD } from '../../../src/core/signal/symbol.js'
 import {
   getActiveEffect,
   hasLinkedSignal,
@@ -9,8 +9,24 @@ import {
   ref,
   trackEffect,
   trackSignal,
-  untracked
+  untracked,
+  watch
 } from '../../../src/index.js'
+
+/**
+ * 统计一个 signal 的依赖链表节点数（用于验证 DepLink 是否被复用而非重复创建）
+ */
+const countSignalLinks = (signal: any): number => {
+  let n = 0
+  let link = signal[SIGNAL_DEP_HEAD]
+  const seen = new Set<any>()
+  while (link && !seen.has(link)) {
+    seen.add(link)
+    n++
+    link = link.sigNext
+  }
+  return n
+}
 
 describe('depend/track', () => {
   describe('getActiveEffect', () => {
@@ -148,6 +164,73 @@ describe('depend/track', () => {
       trackEffect(effect)
       expect(hasLinkedSignal(effect)).toBeFalsy()
       expect(hasLinkedSignal(effect2)).toBeTruthy()
+    })
+  })
+
+  /**
+   * 回归测试：trackHandler 必须复用已存在的 DepLink，而非每次 track 都新建节点。
+   *
+   * 背景：DEP_INDEX_MAP 此前从未被初始化为 WeakMap，导致 trackHandler 永远走 createDepLink
+   * 新建分支，配合 finalizeDeps 清理旧节点，会在 triggerSignal 迭代过程中形成
+   * "销毁-重建"循环，使多个 sync watcher 监听同一 signal 时触发永不终止（进程卡死）。
+   */
+  describe('DepLink 复用（DEP_INDEX_MAP 初始化回归）', () => {
+    it('同一 effect 多次 track 同一 signal 时应复用唯一 DepLink', () => {
+      const state = ref(0)
+      const effect = vi.fn(() => {
+        // 读取以建立依赖
+        void state.value
+      })
+
+      // 首次收集依赖
+      trackEffect(effect)
+      const linksAfterFirst = countSignalLinks(state)
+      expect(linksAfterFirst).toBe(1)
+
+      // 多次重新收集依赖，DepLink 应被复用而非累加
+      trackEffect(effect)
+      trackEffect(effect)
+      trackEffect(effect)
+
+      expect(countSignalLinks(state)).toBe(1)
+      expect(linksAfterFirst).toBe(1)
+    })
+
+    it('多个 sync watcher 监听同一 signal 触发时不应死循环', () => {
+      const state = ref(0)
+      const cb1 = vi.fn()
+      const cb2 = vi.fn()
+
+      watch(() => state.value, cb1, { flush: 'sync' })
+      watch(() => state.value, cb2, { flush: 'sync' })
+
+      // 两个 watcher 各占一个 DepLink
+      expect(countSignalLinks(state)).toBe(2)
+
+      // 触发变更：若 DepLink 未复用，此处会进入"销毁-重建"无限循环导致进程卡死
+      state.value = 1
+
+      expect(cb1).toHaveBeenCalledWith(1, 0, expect.any(Function))
+      expect(cb2).toHaveBeenCalledWith(1, 0, expect.any(Function))
+      // 触发后依赖链表长度应保持稳定
+      expect(countSignalLinks(state)).toBe(2)
+    })
+
+    it('多个 sync watcher 互相触发更新时不应死循环', () => {
+      // 模拟 useModel 双向绑定场景：watcher 回调写回另一个 ref 并联动
+      const a = ref(0)
+      const b = ref(0)
+
+      watch(() => a.value, () => (b.value = a.value), { flush: 'sync' })
+      watch(() => b.value, () => (a.value = b.value), { flush: 'sync' })
+
+      // 此处若无 DepLink 复用，sync 调度下会触发迭代不终止
+      expect(() => {
+        a.value = 1
+      }).not.toThrow()
+
+      expect(a.value).toBe(1)
+      expect(b.value).toBe(1)
     })
   })
 })

@@ -106,18 +106,21 @@ export function trackEffect<T>(collector: () => T, reactor: EffectRunner = colle
 const trackHandler = (effect: EffectRunner, signal: Signal): void => {
   let link: DepLink | undefined // 用于存储依赖链接的变量，初始值为undefined
   // 从效果对象中获取依赖索引映射
-  const index = effect[DEP_INDEX_MAP]
-
-  // 如果存在依赖索引映射，尝试从中获取信号对应的依赖链接
-  if (index) {
-    link = index.get(signal)
+  // 注意：DEP_INDEX_MAP 不会在 effect 创建时自动初始化，必须在此处惰性创建。
+  // 否则每次 track 都会因 index 为空而走 createDepLink 新建链表节点，
+  // 配合 finalizeDeps 的旧节点清理会形成"销毁-重建"循环，导致 triggerSignal 永不终止。
+  let index = effect[DEP_INDEX_MAP]
+  if (!index) {
+    index = effect[DEP_INDEX_MAP] = new WeakMap()
   }
+
+  // 尝试从索引映射中获取信号对应的依赖链接
+  link = index.get(signal)
 
   // 如果不存在依赖链接，则创建一个新的依赖链接
   if (!link) {
     link = createDepLink(effect, signal) // 创建新的依赖链接
-    // 如果存在依赖索引映射，则将新创建的链接存入映射中
-    if (index) index.set(signal, link)
+    index.set(signal, link) // 存入索引映射，便于后续复用
   }
 
   // 更新依赖链接中的版本号，与效果对象的当前版本保持一致
