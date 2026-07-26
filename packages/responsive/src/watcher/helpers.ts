@@ -17,11 +17,12 @@ import type {
   UnwarpSources,
   WatchCallback,
   WatcherOnCleanup,
+  WatcherOptions,
   WatchOptions,
   WatchSource
 } from './types.js'
 import type { ValueWatcher } from './value.js'
-import { Watcher, type WatcherOptions } from './watcher.js'
+import { Watcher } from './watcher.js'
 
 /**
  * 属性是否可枚举

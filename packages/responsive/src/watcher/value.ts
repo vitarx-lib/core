@@ -1,5 +1,5 @@
-import type { CompareFunction, WatchCallback } from './types.js'
-import { Watcher, type WatcherOptions } from './watcher.js'
+import type { CompareFunction, WatchCallback, WatcherOptions } from './types.js'
+import { Watcher } from './watcher.js'
 
 /**
  * ValueWatcher 值观察器抽象类

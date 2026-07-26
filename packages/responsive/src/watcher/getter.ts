@@ -1,7 +1,6 @@
 import { trackEffect } from '../core/index.js'
-import type { WatchCallback } from './types.js'
+import type { WatchCallback, WatcherOptions } from './types.js'
 import { ValueWatcher } from './value.js'
-import { type WatcherOptions } from './watcher.js'
 
 /**
  * GetterWatcher getter 观察器类

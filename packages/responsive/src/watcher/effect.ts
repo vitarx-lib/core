@@ -1,7 +1,7 @@
 import { isFunction } from '@vitarx/utils'
 import { trackEffect } from '../core/index.js'
-import type { WatcherOnCleanup } from './types.js'
-import { Watcher, type WatcherOptions } from './watcher.js'
+import type { WatcherOnCleanup, WatcherOptions } from './types.js'
+import { Watcher } from './watcher.js'
 
 /**
  * 副作用观察器

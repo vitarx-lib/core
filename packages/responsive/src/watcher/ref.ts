@@ -1,9 +1,8 @@
 import { createDepLink } from '../core/index.js'
 import { triggerOnTrack } from '../core/signal/debug.js'
 import type { RefSignal } from '../signals/index.js'
-import type { WatchCallback } from './types.js'
+import type { WatchCallback, WatcherOptions } from './types.js'
 import { ValueWatcher } from './value.js'
-import { type WatcherOptions } from './watcher.js'
 
 /**
  * RefSignalWatcher 是一个用于监听 RefSignal 值变化的观察者类。
