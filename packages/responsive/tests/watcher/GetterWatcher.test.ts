@@ -42,11 +42,16 @@ describe('watcher/GetterWatcher', () => {
         }
       }
 
+      // 构造时初始化 getter 抛错：构造函数 try-catch 捕获并 reportError，不中断构造
       const watcher = new TestValueWatcher(getter, callback, {})
-      const result = watcher['getter']()
 
+      // 构造时 reportError 已被调用（getter 在构造函数中执行一次）
+      expect(getter).toHaveBeenCalledTimes(1)
       expect(mockReportError).toHaveBeenCalledWith(error, 'getter')
-      expect(result).toBeUndefined()
+
+      // getter() 直接调用：异常向上抛出（不再吞错返回 undefined as T），
+      // 由 ValueWatcher.runEffect 的 try-catch 统一捕获处理
+      expect(() => watcher['getter']()).toThrow(error)
     })
   })
 })
