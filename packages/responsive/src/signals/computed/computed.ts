@@ -216,10 +216,11 @@ export class Computed<T> implements RefSignal<T>, DisposableEffect {
     trackEffect(() => {
       try {
         this._value = this._getter(this._value)
+        // 仅在 getter 成功执行后才清除脏标记，保证异常路径下次访问能重试
+        this._dirty = false
       } catch (e) {
         reportEffectError(this, e, 'computed.getter')
-      } finally {
-        this._dirty = false
+        // 保持 _dirty = true，下次访问 value 时重新计算，避免永久返回过期值
       }
     }, this._effect)
     // 返回当前实例，支持链式调用
