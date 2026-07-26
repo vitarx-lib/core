@@ -101,6 +101,7 @@ export function toRef<T extends object, K extends keyof T>(
   key: K,
   defaultValue?: T[K]
 ): PropertyRef<T, K>
+
 /**
  * 创建一个基于源的 RefSignal
  *
@@ -129,25 +130,25 @@ export function toRef<T extends object, K extends keyof T>(
  * console.log(countRef.value) // 1
  * ```
  */
-export function toRef(arg1: any, arg2?: any, arg3?: any): Ref {
-  // 对象属性重载：toRef(obj, key, defaultValue?)
+export function toRef(arg1: unknown, arg2?: unknown, arg3?: unknown): Ref {
   if (arguments.length >= 2) {
-    const object = arg1
-    const key = arg2
+    // 实现签名参数收窄为 unknown，此处按"对象+键"重载语义断言为可索引类型以进行属性访问
+    const object = arg1 as Record<PropertyKey, unknown>
+    const key = arg2 as PropertyKey
     const defaultValue = arg3
 
     const val = object[key]
     if (isRef(val)) return val
     const cached = propertyRefStore.get(object)?.get(key)
     if (cached) return cached
-    
+
     const p = new PropertyRef(object, key, defaultValue)
-    
+
     // 确保对象在WeakMap中有对应的Map
     if (!propertyRefStore.has(object)) {
       propertyRefStore.set(object, new Map())
     }
-    
+
     // 设置缓存
     propertyRefStore.get(object)!.set(key, p)
     return p
@@ -160,7 +161,7 @@ export function toRef(arg1: any, arg2?: any, arg3?: any): Ref {
 
   // 如果传入函数，则生成只读 ref
   if (typeof value === 'function') {
-    return new GetterRef(value)
+    return new GetterRef(value as () => unknown)
   }
 
   // 否则包装为普通 ref
@@ -195,9 +196,11 @@ export function toRefs<T extends object>(
   if (!skipWarn && !isReactive(obj)) {
     console.warn(`toRefs() called on a non-reactive object`)
   }
-  const ret: any = {}
-  for (const key in obj) {
-    ret[key] = toRef(obj, key)
+  // 使用精确类型构造，避免 any 逃逸（构造时 as 断言一次）；
+  // Reflect.ownKeys 仅遍历自身属性（不含原型链），比 for...in 更安全
+  const ret = {} as { [K in keyof T]: ToRef<T[K]> }
+  for (const key of Reflect.ownKeys(obj) as (keyof T)[]) {
+    ;(ret as Record<keyof T, unknown>)[key] = toRef(obj, key)
   }
   return ret
 }
