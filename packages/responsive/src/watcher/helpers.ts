@@ -27,6 +27,7 @@ import { Watcher, type WatcherOptions } from './watcher.js'
  * 属性是否可枚举
  */
 const isEnumerable = Object.prototype.propertyIsEnumerable
+
 /**
  * 递归遍历响应式代理对象，用于深度追踪内部属性变化
  *
@@ -292,9 +293,9 @@ export function watch<T>(
     }
   }
 
-  // 处理 RefSignal 类型数据源
-  if (isRefSignal(source)) {
-    watcher = new RefSignalWatcher(source, cb as any, watcherOptions)
+  // 处理 RefSignal 类型数据源：仅非 deep 时走 RefSignalWatcher 快捷路径，
+  if (isRefSignal(source) && !deep) {
+    watcher = new RefSignalWatcher(source, cb, watcherOptions)
     // 立即执行回调
     if (immediate) watcher.runCallback(watcher.value)
     return watcher
@@ -306,11 +307,13 @@ export function watch<T>(
 
   // 1. Getter 函数类型
   if (typeof source === 'function') {
-    getter = source
+    getter = deep ? () => traverse(source(), isNumber(deep) ? deep : Infinity) : source
   }
-  // 2. Ref 对象类型
+  // 2. Ref 对象类型（含 RefSignal + deep 降级到此分支）
   else if (isRef(source)) {
-    getter = () => source.value
+    getter = deep
+      ? () => traverse(source.value, isNumber(deep) ? deep : Infinity)
+      : () => source.value
   }
   // 3. 响应式对象类型
   else if (isReactive(source)) {
@@ -330,8 +333,7 @@ export function watch<T>(
         } else if (isReactive(s)) {
           // 遍历响应式对象以触发依赖追踪
           traverse(s, depth)
-          // 返回原始值而非代理对象
-          return s[IS_REACTIVE].target
+          return s
         } else if (isFunction(s)) {
           // 执行 getter 函数
           return (s as any)()
