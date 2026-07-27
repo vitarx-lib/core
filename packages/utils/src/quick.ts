@@ -1,5 +1,5 @@
 import { isArray, isObject, isPlainObject } from './detect.js'
-import type { AnyCallback, FnCallback } from './types'
+import type { AnyCallback } from './types'
 
 /**
  * 弹出对象属性。
@@ -135,10 +135,12 @@ export function deepMergeObject<T extends Record<string, any>, U extends Record<
  * @param {number} delay - 延迟时间（毫秒）
  * @returns {function} - 防抖后的函数
  */
-export function debounce<T extends AnyCallback>(func: T, delay: number): FnCallback<Parameters<T>> {
+export function debounce<T extends AnyCallback>(
+  func: T,
+  delay: number
+): { (...args: Parameters<T>): void; cancel: () => void } {
   let timeout: ReturnType<typeof setTimeout>
-
-  return function (...args: Parameters<T>) {
+  const f = function (...args: Parameters<T>): void {
     // 清除上次的定时器
     clearTimeout(timeout)
     // @ts-ignore
@@ -148,6 +150,8 @@ export function debounce<T extends AnyCallback>(func: T, delay: number): FnCallb
       func.apply(self, args)
     }, delay)
   }
+  f.cancel = () => clearTimeout(timeout)
+  return f
 }
 
 /**
@@ -162,17 +166,24 @@ export function debounce<T extends AnyCallback>(func: T, delay: number): FnCallb
 export function throttle<T extends AnyCallback>(
   callback: T,
   delay: number
-): FnCallback<Parameters<T>> {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-  return function (...args: Parameters<T>) {
+): { (...args: Parameters<T>): void; cancel: () => void } {
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  const f = function (...args: Parameters<T>): void {
     if (timeout) return
     // @ts-ignore
     const self = this
-    setTimeout(() => {
-      timeout = null
+    // 进入冷却：记录定时器引用，确保节流期间拦截后续调用
+    timeout = setTimeout(() => {
+      timeout = undefined
       callback.apply(self, args)
     }, delay)
   }
+  // 取消冷却中的定时器并重置状态，以便后续可重新触发
+  f.cancel = () => {
+    clearTimeout(timeout)
+    timeout = undefined
+  }
+  return f
 }
 
 /**
