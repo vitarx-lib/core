@@ -1,3 +1,10 @@
+## [4.0.6](https://github.com/vitarx-lib/core/compare/v4.0.6-alpha.0...v4.0.6) (2026-07-27)
+
+
+### Features
+
+* **utils:** 新增防抖和节流函数可取消功能 ([9fdb35c](https://github.com/vitarx-lib/core/commit/9fdb35cf45f223020e8ede6afef7f6cbc3d3aed9))
+
 ## [4.0.6-alpha.0](https://github.com/vitarx-lib/core/compare/v4.0.5...v4.0.6-alpha.0) (2026-07-26)
 
 
