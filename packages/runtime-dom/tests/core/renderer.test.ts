@@ -217,6 +217,58 @@ describe('DOMRenderer', () => {
       expect(el.style.color).toBe('red')
     })
 
+    it('应该只更新发生变化的style属性', () => {
+      const el = renderer.createElement('div', container)
+      const setProperty = vi.spyOn(el.style, 'setProperty')
+
+      renderer.setAttribute(el, 'style', { color: 'red', backgroundColor: 'white' }, null)
+      setProperty.mockClear()
+
+      renderer.setAttribute(el, 'style', { color: 'blue', backgroundColor: 'white' }, null)
+
+      expect(setProperty).toHaveBeenCalledTimes(1)
+      expect(setProperty).toHaveBeenCalledWith('color', 'blue', '')
+      expect(el.style.color).toBe('blue')
+      expect(el.style.backgroundColor).toBe('white')
+    })
+
+    it('删除style属性时不应遍历或清除外部写入的style', () => {
+      const el = renderer.createElement('div', container)
+
+      renderer.setAttribute(
+        el,
+        'style',
+        { color: 'red', transform: 'translate3d(var(--x), var(--y), 0)' },
+        null
+      )
+      el.style.setProperty('--x', '100px')
+      el.style.setProperty('--y', '50px')
+
+      renderer.setAttribute(el, 'style', { transform: 'translate3d(var(--x), var(--y), 0)' }, null)
+
+      expect(el.style.color).toBe('')
+      expect(el.style.getPropertyValue('--x')).toBe('100px')
+      expect(el.style.getPropertyValue('--y')).toBe('50px')
+      expect(el.style.transform).toBe('translate3d(var(--x), var(--y), 0)')
+    })
+
+    it('应该支持CSS自定义属性', () => {
+      const el = renderer.createElement('div', container)
+
+      renderer.setAttribute(el, 'style', { '--anchor-x': '10px' }, null)
+
+      expect(el.style.getPropertyValue('--anchor-x')).toBe('10px')
+    })
+
+    it('应该保留style值的!important优先级', () => {
+      const el = renderer.createElement('div', container)
+
+      renderer.setAttribute(el, 'style', 'color: red !important', null)
+
+      expect(el.style.color).toBe('red')
+      expect(el.style.getPropertyPriority('color')).toBe('important')
+    })
+
     it('应该设置autoFocus属性', () => {
       const el = renderer.createElement('input', container)
       renderer.setAttribute(el, 'autoFocus', true, null)
