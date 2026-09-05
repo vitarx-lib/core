@@ -1,3 +1,10 @@
+## [4.0.7](https://github.com/vitarx-lib/core/compare/v4.0.6...v4.0.7) (2026-09-05)
+
+
+### Bug Fixes
+
+* **runtime-dom:** patch styles without replacing cssText ([7553019](https://github.com/vitarx-lib/core/commit/7553019f26be1f49f1b3c1cde11cd5e7a59c44f4))
+
 ## [4.0.6](https://github.com/vitarx-lib/core/compare/v4.0.6-alpha.0...v4.0.6) (2026-07-27)
 
 
