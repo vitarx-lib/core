@@ -140,6 +140,52 @@ const PREDEFINED_DEFAULTS: Record<string, any> = {
  */
 const NEEDS_RESET_PROPERTIES = new Set(Object.keys(PREDEFINED_DEFAULTS))
 
+interface NormalizedStyleValue {
+  value: string
+  priority: string
+}
+
+function normalizeStyle(style: StyleProperties): Map<string, NormalizedStyleValue> {
+  const serialized = StyleUtils.cssStyleValueToString(style)
+  const result = new Map<string, NormalizedStyleValue>()
+  let start = 0
+  let depth = 0
+  let quote: string | null = null
+
+  const appendRule = (rule: string): void => {
+    const colon = rule.indexOf(':')
+    if (colon === -1) return
+    const name = rule.slice(0, colon).trim()
+    const value = rule.slice(colon + 1).trim()
+    if (name && value) {
+      const important = /\s*!important\s*$/i.test(value)
+      result.set(name, {
+        value: important ? value.replace(/\s*!important\s*$/i, '').trim() : value,
+        priority: important ? 'important' : ''
+      })
+    }
+  }
+
+  for (let index = 0; index < serialized.length; index++) {
+    const char = serialized[index]
+    if (quote) {
+      if (char === quote) quote = null
+    } else if (char === '"' || char === "'") {
+      quote = char
+    } else if (char === '(') {
+      depth++
+    } else if (char === ')') {
+      depth--
+    } else if (char === ';' && depth === 0) {
+      appendRule(serialized.slice(start, index))
+      start = index + 1
+    }
+  }
+
+  appendRule(serialized.slice(start))
+  return result
+}
+
 /**
  * DOMRenderer渲染器，实现了ViewRenderer接口，用于在浏览器环境中进行DOM操作和渲染。
  *
@@ -157,6 +203,9 @@ const NEEDS_RESET_PROPERTIES = new Set(Object.keys(PREDEFINED_DEFAULTS))
  * - 此类实例注册在运行时核心中，用于处理浏览器环境下的DOM操作和渲染。
  */
 export class DOMRenderer implements ViewRenderer {
+  /** 记录每个元素最近一次由 Vitarx 声明的样式，避免用 DOM 当前状态推断删除项。 */
+  private readonly styleSnapshots = new WeakMap<HostElement, Map<string, NormalizedStyleValue>>()
+
   /** @inheritDoc */
   isSVGElement(node: HostNode): boolean {
     // 检查节点是否存在
@@ -282,12 +331,12 @@ export class DOMRenderer implements ViewRenderer {
     }
     try {
       if (prevValue === nextValue) return
-      if (nextValue == null || nextValue === false) {
-        this.removeAttribute(el, name, prevValue)
-        return
-      }
       if (name === 'style') {
         this.setStyle(el, nextValue as StyleProperties)
+        return
+      }
+      if (nextValue == null || nextValue === false) {
+        this.removeAttribute(el, name, prevValue)
         return
       }
       if (name === 'class') {
@@ -337,12 +386,27 @@ export class DOMRenderer implements ViewRenderer {
     if (el.classList.length === 0) el.removeAttribute('class')
   }
   private setStyle(el: HostElement, style: StyleProperties): void {
-    const cssText = StyleUtils.cssStyleValueToString(style)
-    if (el.style.cssText !== cssText) {
-      el.style.cssText = cssText
+    const previous = this.styleSnapshots.get(el) ?? new Map<string, NormalizedStyleValue>()
+    const next = normalizeStyle(style)
+
+    for (const key of previous.keys()) {
+      if (!next.has(key)) {
+        el.style.removeProperty(key)
+      }
     }
-    // 如果没有有效样式，移除 style 属性
-    if (el.style.length === 0) el.removeAttribute('style')
+
+    for (const [key, nextValue] of next) {
+      const previousValue = previous.get(key)
+      if (
+        !previousValue ||
+        previousValue.value !== nextValue.value ||
+        previousValue.priority !== nextValue.priority
+      ) {
+        el.style.setProperty(key, nextValue.value, nextValue.priority)
+      }
+    }
+
+    this.styleSnapshots.set(el, next)
   }
   /**
    * 移除元素属性
