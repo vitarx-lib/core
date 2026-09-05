@@ -145,12 +145,19 @@ interface NormalizedStyleValue {
   priority: string
 }
 
+/**
+ * 标准化样式属性值，提取属性名和优先级
+ *
+ * 用于将 Vitarx 声明的样式属性值转换为浏览器可识别的格式，
+ * 并保留 !important 优先级。
+ *
+ * @param style - Vitarx 声明的样式属性值
+ * @returns - 输入的样式属性值
+ *
+ */
 function normalizeStyle(style: StyleProperties): Map<string, NormalizedStyleValue> {
   const serialized = StyleUtils.cssStyleValueToString(style)
   const result = new Map<string, NormalizedStyleValue>()
-  let start = 0
-  let depth = 0
-  let quote: string | null = null
 
   const appendRule = (rule: string): void => {
     const colon = rule.indexOf(':')
@@ -166,23 +173,11 @@ function normalizeStyle(style: StyleProperties): Map<string, NormalizedStyleValu
     }
   }
 
-  for (let index = 0; index < serialized.length; index++) {
-    const char = serialized[index]
-    if (quote) {
-      if (char === quote) quote = null
-    } else if (char === '"' || char === "'") {
-      quote = char
-    } else if (char === '(') {
-      depth++
-    } else if (char === ')') {
-      depth--
-    } else if (char === ';' && depth === 0) {
-      appendRule(serialized.slice(start, index))
-      start = index + 1
-    }
+  // 括号/引号感知的分割逻辑复用 StyleUtils.splitCssRules，避免与 runtime-core 重复实现
+  for (const rule of StyleUtils.splitCssRules(serialized)) {
+    appendRule(rule)
   }
 
-  appendRule(serialized.slice(start))
   return result
 }
 
@@ -407,12 +402,19 @@ export class DOMRenderer implements ViewRenderer {
     }
 
     this.styleSnapshots.set(el, next)
+
+    // 与旧版行为保持一致：Vitarx 声明的样式全部移除且 DOM 上无任何样式声明时，
+    // 清理残留的空 style 属性，避免影响 [style] 属性选择器与 outerHTML 序列化
+    if (el.style.length === 0) el.removeAttribute('style')
   }
   /**
    * 移除元素属性
    *
+   * 注意：style 属性不会进入此方法，setAttribute 中 style 分支在 null 检查之前
+   * 已被 setStyle 拦截处理（含快照 diff 与空属性清理）。
+   *
    * 性能优化策略：
-   * 1. 特殊属性（class/style/事件）快速路径处理
+   * 1. 特殊属性（class/事件）快速路径处理
    * 2. 按需重置：只有需要重置的属性才会查询默认值
    *    - prevValue === undefined：属性从未设置，直接移除
    *    - 属性不在 NEEDS_RESET_PROPERTIES 中：直接移除
@@ -425,10 +427,6 @@ export class DOMRenderer implements ViewRenderer {
   private removeAttribute(el: HostElement, key: string, prevValue?: any): void {
     if (key === 'class') {
       el.removeAttribute('class')
-      return
-    }
-    if (key === 'style') {
-      el.removeAttribute('style')
       return
     }
     if (typeof prevValue === 'function') {

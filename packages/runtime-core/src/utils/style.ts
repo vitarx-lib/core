@@ -35,42 +35,6 @@ export type StyleProperties = string | Vitarx.HostCSSProperties
 export type ClassProperties = string | any[] | Record<string, boolean>
 
 /**
- * 将 CSS 样式字符串按规则分割
- *
- * 跟踪括号和引号状态，避免在 url()、data URI 或引号内的分号处错误分割。
- *
- * @param style - CSS 样式字符串
- * @returns 分割后的规则字符串数组
- */
-function splitStyleRules(style: string): string[] {
-  const rules: string[] = []
-  let depth = 0
-  let inQuote: string | null = null
-  let start = 0
-  for (let i = 0; i < style.length; i++) {
-    const char = style[i]
-    if (inQuote) {
-      // 引号内：遇到匹配的引号则退出
-      if (char === inQuote) inQuote = null
-    } else if (char === '"' || char === "'") {
-      // 进入引号
-      inQuote = char
-    } else if (char === '(') {
-      depth++
-    } else if (char === ')') {
-      depth--
-    } else if (char === ';' && depth === 0) {
-      rules.push(style.slice(start, i))
-      start = i + 1
-    }
-  }
-  // 处理最后一条规则（末尾可能无分号）
-  if (start < style.length) {
-    rules.push(style.slice(start))
-  }
-  return rules
-}
-/**
  * StyleUtils 类是一个用于处理 CSS 类和样式对象的静态工具类。
  * 提供了合并、转换 CSS 类和样式的方法，支持多种输入格式（字符串、数组、对象）之间的互相转换。
  *
@@ -78,6 +42,7 @@ function splitStyleRules(style: string): string[] {
  * - 合并 CSS 类名（mergeCssClass）
  * - 合并 CSS 样式（mergeCssStyle）
  * - CSS 样式对象与字符串的互相转换（cssStyleValueToString, cssStyleValueToObject）
+ * - CSS 样式字符串按声明分割（splitCssRules）
  * - CSS 类名与数组、字符串的互相转换（cssClassValueToArray, cssClassValueToString）
  *
  * 示例用法：
@@ -98,6 +63,43 @@ function splitStyleRules(style: string): string[] {
  * - 空值和无效值会被自动过滤
  */
 export class StyleUtils {
+  /**
+   * 将 CSS 样式字符串按声明分割
+   *
+   * 跟踪括号和引号状态，避免在 url()、data URI 或引号内的分号处错误分割。
+   *
+   * @param style - CSS 样式字符串
+   * @returns 分割后的声明字符串数组（不含分号分隔符）
+   */
+  static splitCssRules(style: string): string[] {
+    const rules: string[] = []
+    let depth = 0
+    let inQuote: string | null = null
+    let start = 0
+    for (let i = 0; i < style.length; i++) {
+      const char = style[i]
+      if (inQuote) {
+        // 引号内：遇到匹配的引号则退出
+        if (char === inQuote) inQuote = null
+      } else if (char === '"' || char === "'") {
+        // 进入引号
+        inQuote = char
+      } else if (char === '(') {
+        depth++
+      } else if (char === ')') {
+        depth--
+      } else if (char === ';' && depth === 0) {
+        rules.push(style.slice(start, i))
+        start = i + 1
+      }
+    }
+    // 处理最后一条声明（末尾可能无分号）
+    if (start < style.length) {
+      rules.push(style.slice(start))
+    }
+    return rules
+  }
+
   /**
    * 合并两个class
    *
@@ -167,7 +169,7 @@ export class StyleUtils {
     if (!style) return {}
     if (isString(style)) {
       const styleObj: Record<string, string> = {}
-      for (const styleRule of splitStyleRules(style)) {
+      for (const styleRule of StyleUtils.splitCssRules(style)) {
         // 使用 indexOf 只分割第一个冒号，避免截断含冒号的值
         // （如 url(http://...)、data:image/png;base64,...）
         const colonIndex = styleRule.indexOf(':')

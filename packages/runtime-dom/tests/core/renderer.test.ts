@@ -269,6 +269,18 @@ describe('DOMRenderer', () => {
       expect(el.style.getPropertyPriority('color')).toBe('important')
     })
 
+    it('样式全部移除后应清理空的style属性', () => {
+      const el = renderer.createElement('div', container)
+
+      renderer.setAttribute(el, 'style', { color: 'red' }, null)
+      expect(el.hasAttribute('style')).toBe(true)
+
+      // style 置为 null：走 setStyle 快照 diff 路径
+      renderer.setAttribute(el, 'style', null, { color: 'red' })
+      expect(el.hasAttribute('style')).toBe(false)
+      expect(el.matches('[style]')).toBe(false)
+    })
+
     it('应该设置autoFocus属性', () => {
       const el = renderer.createElement('input', container)
       renderer.setAttribute(el, 'autoFocus', true, null)
