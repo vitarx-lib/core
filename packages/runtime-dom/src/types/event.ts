@@ -84,6 +84,12 @@ interface W3CEventMap<T> {
    */
   onFocus?: VitarxEventHandler<T, FocusEvent> | undefined
   /**
+   * 当元素失去焦点时触发（focusout 为 blur 的可冒泡版本，容器级失焦监听依赖它）
+   * @see https://developer.mozilla.org/docs/Web/API/Element/focusout_event
+   * @applies 所有元素
+   */
+  onFocusout?: VitarxEventHandler<T, FocusEvent> | undefined
+  /**
    * 当元素获取输入时触发
    * @see https://developer.mozilla.org/docs/Web/API/HTMLElement/input_event
    * @applies input, textarea, select
