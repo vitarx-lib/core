@@ -1,5 +1,5 @@
 import { nextTick, ref } from '@vitarx/responsive'
-import { For, createView, dynamic } from '@vitarx/runtime-core'
+import { createView, dynamic, For } from '@vitarx/runtime-core'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { Teleport } from '../src/index.js'
 
@@ -38,8 +38,8 @@ describe('dynamic + Teleport + For 开合不累积', () => {
     // 单例 children：For 渲染 items（模拟 Modal 内角色清单）
     const child = createView(For, {
       each: items,
-      key: (item) => item.id,
-      children: (item) => createView('div', { class: 'role', children: item.name })
+      key: (item: any) => item.id,
+      children: (item: any) => createView('div', { class: 'role', children: item.name })
     })
     // 模拟 Modal：dynamic(() => open ? <Teleport to="#xxx">{child}</Teleport> : null)
     const root = dynamic(() =>
