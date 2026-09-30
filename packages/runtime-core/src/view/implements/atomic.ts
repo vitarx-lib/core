@@ -42,8 +42,11 @@ abstract class BaseAtomicView<
   }
 
   protected override doDispose(root: boolean): void {
-    if (root && this.hostNode) {
-      getRenderer().remove(this.hostNode)
+    // 无条件归零 hostNode，保证 dispose 后可从零重新 init/mount；
+    // DOM 摘除仅在 root（父链统一移除），不破坏父容器递归移除语义。
+    // Teleport 传送内容的清理由 Teleport 自身 dispose 负责
+    if (this.hostNode) {
+      if (root) getRenderer().remove(this.hostNode)
       this.hostNode = null
     }
   }

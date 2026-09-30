@@ -128,9 +128,10 @@ export class ElementView<T extends HostElementTag = HostElementTag> extends Base
     if (this.hostNode) applyDirective(this, this.hostNode, 'dispose')
     // 清理子视图
     for (const child of this.children) child.dispose(false)
-    // 清理节点
-    if (root && this.hostNode) {
-      getRenderer().remove(this.hostNode)
+    // 清理节点：无条件归零 hostNode（root=false 单例子树动态复用时同样清引用，
+    // 避免复用旧 node 导致内容二次挂载）；DOM 摘除仅当 root
+    if (this.hostNode) {
+      if (root) getRenderer().remove(this.hostNode)
       this.hostNode = null
     }
   }

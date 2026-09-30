@@ -175,7 +175,13 @@ export class ListView extends BaseView<ViewKind.LIST, HostFragment> {
       this.remove(safeChild)
       safeChild.dispose(false)
     }
-    if (root && this.hostNode) getRenderer().remove(this.hostNode)
+    // 无条件归零 hostNode：dispose 后可重新 init/mount 从零重建；
+    // DOM 摘除保留 root 语义（仅被直接卸载时 remove 一次，避免性能退化）。
+    // 此前从不置 null，单例 ListView 重开挂载时 doMount 复用旧 fragment 致列表项重复
+    if (this.hostNode) {
+      if (root) getRenderer().remove(this.hostNode)
+      this.hostNode = null
+    }
   }
 
   /**

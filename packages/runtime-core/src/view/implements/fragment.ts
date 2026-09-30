@@ -50,8 +50,11 @@ export class FragmentView extends BaseView<ViewKind.FRAGMENT, HostFragment> {
   }
   protected override doDispose(root: boolean) {
     for (const child of this.children) child.dispose(false)
-    if (root && this.hostNode) {
-      getRenderer().remove(this.hostNode)
+    // 无条件归零 hostNode；DOM 摘除仅在 root（父链统一移除）。
+    // 之前 root=false 不归零，单例子树动态复用重开时经 doMount 复用旧
+    // fragment 引发内容二次挂载
+    if (this.hostNode) {
+      if (root) getRenderer().remove(this.hostNode)
       this.hostNode = null
     }
   }
