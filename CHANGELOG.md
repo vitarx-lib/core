@@ -1,3 +1,15 @@
+## [4.0.8](https://github.com/vitarx-lib/core/compare/v4.0.7...v4.0.8) (2026-09-30)
+
+
+### Bug Fixes
+
+* **runtime-core:** 视图 dispose 后置空 hostNode，修复动态复用下列表残留 ([45ab531](https://github.com/vitarx-lib/core/commit/45ab53132dfd0b69aa9c862e2782376f4054a770))
+
+
+### Features
+
+* **runtime-dom:** 添加 onFocusout 事件支持 ([6de8104](https://github.com/vitarx-lib/core/commit/6de810446db5abc814abb3653c322abebe56876d))
+
 ## [4.0.7](https://github.com/vitarx-lib/core/compare/v4.0.6...v4.0.7) (2026-09-05)
 
 
